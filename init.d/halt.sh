@@ -141,7 +141,7 @@ remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mou
 ebegin "Unmounting filesystems"
 unmounts="$( \
 	awk '{ \
-	    if (($3 !~ /^(proc|sysfs|devfs|tmpfs|usb(dev)?fs)$/) && \
+	    if (($3 !~ /^(proc|devpts|sysfs|devfs|tmpfs|usb(dev)?fs)$/) && \
 	        ($1 != "none") && \
 	        ($1 !~ /^(rootfs|\/dev\/root)$/) && \
 	        ($2 != "/")) \
