@@ -596,14 +596,6 @@ iface_start() {
 	done
 	eoutdent
 
-	# Enabling rp_filter causes wacky packets to be auto-dropped by
-	# the kernel.  Note that we only do this if it is not set via
-	# /etc/sysctl.conf ...
-	if [[ -e /proc/sys/net/ipv4/conf/${iface}/rp_filter && \
-			-z "$(grep -s '^[^#]*rp_filter' /etc/sysctl.conf)" ]]; then
-		echo -n 1 > /proc/sys/net/ipv4/conf/${iface}/rp_filter
-	fi
-
 	# Start any modules with _post_start
 	for mod in ${MODULES[@]}; do
 		if [[ function == $( type -t ${mod}_post_start ) ]]; then

@@ -16,6 +16,9 @@
     When specifing a module that isn't emerged, you now get an error
     telling you what to emerge
     Removed -p option from the diff call used for function removal
+    Removed rp_filter setting - fixes first part of bug #71971
+    Added sysctl.conf settings relating to rp_filter to sysctl.conf
+    - fixes last part of bug #71971
     
   19 Nov 2004; Aron Grffis <agriffis@gentoo.org>:
 
