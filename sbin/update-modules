@@ -67,6 +67,8 @@ EOF
 
 for cfg in ${MODDIR}/* ${CONF}
 do
+	[ -d ${cfg} ] && continue
+
 	[ ! -r ${cfg} ] && continue
 	
 	echo "### update-modules: start processing ${cfg}" >> ${TMPFILE}
