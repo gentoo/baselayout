@@ -47,16 +47,16 @@ getcols() {
 	echo "$2"
 }
 
-if [ -z "${EBUILD}" ]
+if [ -n "${EBUILD}" ] && [ "${*/ depend}" != "$*" ]
 then
-	COLS="`stty size 2> /dev/null`"
+	COLS="48 80"
 else
-	COLS=80
+	COLS="`stty size 2> /dev/null`"
 fi
 if [ "${COLS}" = "0 0" ]
 then
 	# Fix for serial tty (bug #11557)
-	COLS=80
+	COLS="24 80"
 	stty cols 80 &>/dev/null
 	stty rows 24 &>/dev/null
 else
@@ -67,7 +67,7 @@ ENDCOL=$'\e[A\e['${COLS}'G'
 # Now, ${ENDCOL} will move us to the end of the column;
 # irregardless of character width
 
-# now setup colors for easy reading
+# Now setup colors for easy reading
 if [ -n "${EBUILD}" ] && [ "${*/ depend}" = "$*" ]
 then
 	NOCOLOR="`python -c 'import portage; print portage.settings["NOCOLOR"]' 2> /dev/null`"
