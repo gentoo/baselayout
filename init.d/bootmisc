@@ -81,6 +81,7 @@ start() {
 		rm -f /tmp/esrv* &>/dev/null
 		rm -f /tmp/kio* &>/dev/null
 		rm -f /tmp/jpsock.* &>/dev/null
+		rm -f /tmp/.fam*
 		rm -rf /tmp/.esd* &>/dev/null
 		rm -rf /tmp/orbit-* &>/dev/null
 		rm -rf /tmp/ssh-* &>/dev/null
