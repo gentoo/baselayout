@@ -121,9 +121,17 @@ cat <<EOHELP
 EOHELP
 echo -e "    ${GREEN}before${OFF}"
 cat <<EOHELP
-      This, together with the 'use' dependancy type, can be used to control
-      startup order.  All services listed with 'before' will get started after
-      the service.
+      This, together with the 'after' dependancy type, can be used to control
+      startup order.  In core, 'before' and 'after' do not denote dependancy,
+      but should be used for order changes that should only be honoured during
+      a change of runlevel.  All services listed will get started *after* the
+      current service.
+            
+EOHELP
+echo -e "    ${GREEN}after${OFF}"
+cat <<EOHELP
+      All services listed will be started *before* the current service.  Have a
+      look at 'before' for more info.
       
 EOHELP
 echo -e "    ${GREEN}provide${OFF}"
@@ -137,8 +145,8 @@ cat <<EOHELP
 
 EOHELP
 cat <<EOHELP
-    Note that the 'need', 'use' and 'before' dependany types can have '*' as
-    argument.  Having:
+    Note that the 'need', 'use', 'before' and 'after' dependany types can have '*'
+    as argument.  Having:
 
     depend() {
     	before *
@@ -147,13 +155,14 @@ cat <<EOHELP
     will make the service be the first to start in the current runlevel, and:
     
     depend() {
-    	use *
+    	after *
     }
     
     will make the service the last to start.
     
     You should however be carefull how you use this,  as I really will not 
-    recommend using it with the 'need' dependancy type ... you have been warned!
+    recommend using it with the 'need' or 'use' dependancy type ... you have
+    been warned!
 
 EOHELP
 echo -e "${CYAN}'net' Dependancy and 'net.*' Services:${OFF}"

@@ -79,7 +79,7 @@ svc_stop() {
 	fi
 
 	#stop all services that should be before on runlevel change
-	for x in ${svcdir}/before/*/${myservice}
+	for x in ${svcdir}/after/*/${myservice}
 	do
 		if [ ! -L ${x} ]
 		then
@@ -169,7 +169,7 @@ svc_start() {
 	if [ ! -L ${svcdir}/started/${myservice} ]
 	then
 		#start anything that should be started before on runlevel change
-		for x in ${svcdir}/after/*/${myservice}
+		for x in ${svcdir}/before/*/${myservice}
 		do
 			if [ ! -L ${x} ]
 			then
