@@ -36,6 +36,27 @@ try() {
 	return ${retval}
 }
 
+# Check that $svcdir exists ...
+check_statedir() {
+	if [ ! -d "${svcdir}" ] 
+	then
+		if ! mkdir -p "${svcdir}" &> /dev/null
+		then
+			echo
+			eerror "For Gentoo Linux to function properly, \"${svcdir}\" need to exist."
+			eerror "Please mount your root partition read/write, and execute:"
+			echo
+			eerror "  # mkdir -p ${svcdir}"
+			echo; echo
+			/sbin/sulogin ${CONSOLE}
+			einfo "Unmounting filesystems"
+			/bin/mount -a -o remount,ro & >/dev/null
+			einfo "Rebooting"
+			/sbin/reboot -f
+		fi
+	fi
+}
+
 # Save $1
 argv1="$1"
 
@@ -66,7 +87,7 @@ then
 	
 	# Fix weird bug where there is a /dev/.devfsd in a unmounted /dev
 	mymounts="`awk '($3 == "devfs") { print "yes"; exit 0 }' /proc/mounts`"
-	if [ -e "/dev/.devfsd" -a "${mymounts}" = "yes" ]
+	if [ -e "/dev/.devfsd" -a "${mymounts}" != "yes" ]
 	then
 		rm -f /dev/.devfsd
 	fi
@@ -108,22 +129,9 @@ then
 		eend $?
 	fi
 
-	if [ ! -d "${svcdir}" ] && ! mkdir -p "${svcdir}" &> /dev/null
-	then
-		echo
-		eerror "For Gentoo Linux to function properly, \"${svcdir}\" need to exist."
-		eerror "Please mount your root partition read/write, and execute:"
-		echo
-		eerror "  # mkdir -p ${svcdir}"
-		echo; echo
-		/sbin/sulogin ${CONSOLE}
-		einfo "Unmounting filesystems"
-		/bin/mount -a -o remount,ro & >/dev/null
-		einfo "Rebooting"
-		/sbin/reboot -f
-	fi
-	
 	# Mount either a ramdisk or tmpfs if requested.
+	# we do this to temp mount, until we can get /var mounted ...
+	tsvcdir="/mnt/.init.d"
 	
 	# Should we use tmpfs or a ramdisk for caching dependency and
 	# general initscript data?  Note that the 'gentoo=tmpfs' kernel
@@ -131,18 +139,22 @@ then
 	if get_bootparam "tmpfs" || \
 	   [ "${svcmount}" = "yes" -a "${svcfstype}" = "tmpfs" ]
 	then
-		ebegin "Mounting tmpfs at ${svcdir}"
-		try mount -n -t tmpfs tmpfs "${svcdir}" \
+		mkdir -p "${tsvcdir}"
+		
+		ebegin "Mounting tmpfs at ${tsvcdir}"
+		try mount -n -t tmpfs tmpfs "${tsvcdir}" \
 			-o rw,mode=0644,size="${svcsize}"k
 		eend 0
 		
 	elif get_bootparam "ramfs" || \
 	     [ "${svcmount}" = "yes" -a "${svcfstype}" = "ramfs" ]
 	then
-		ebegin "Mounting ramdisk 0 at ${svcdir}"
+		mkdir -p "${tsvcdir}"
+		
+		ebegin "Mounting ramdisk 0 at ${tsvcdir}"
 		try dd if=/dev/zero of=/dev/ram0 bs=1k count="${svcsize}"
 		try /sbin/mke2fs -i 1024 -vm0 /dev/ram0 "${svcsize}"
-		try mount -n -t ext2 /dev/ram0 "${svcdir}" -o rw
+		try mount -n -t ext2 /dev/ram0 "${tsvcdir}" -o rw
 		eend 0
 	fi
 
@@ -188,6 +200,15 @@ then
 	# the 'boot' runlevel is executed.  Now also needed by some stuff in
 	# the 'sysinit' runlevel ...
 	export BOOT="yes"
+
+	# Check that $svcdir exists ...
+	check_statedir
+
+	# Since we are using tmpfs or ramfs, just bin to $tsvcdir to $svcdir
+	if get_bootparam "tmpfs" || get_bootparam "ramfs" || [ "${svcmount}" = "yes" ]
+	then
+		mount --bind "${tsvcdir}" "${svcdir}"
+	fi
 
 	# We do not want to break compadibility, so we do not fully integrate
 	# these into /sbin/rc, but rather start them by hand ...
