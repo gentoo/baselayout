@@ -8,69 +8,6 @@ trap ":" INT QUIT TSTP
 source /sbin/functions.sh
 umask 022
 
-init_splash() {
-
-	# This function has conditional function declarations in it. They
-	# look strange for people used to C, but they work (drobbins). This
-	# init_splash() function should be called after /proc is mounted.
-	# It will then either define real splash or stub splash functions,
-	# depending on whether splash should be enabled.
-
-	if [ -e /proc/splash -a -e /sbin/splash ]
-	then
-		local tscripts= nscripts=
-		
-		tscripts="$(ls -1R /etc/runlevels/ | grep -c $)"
-		nscripts="$(ls -1R /etc/runlevels/ | grep -c '^\B')"
-		export sscripts=$((${tscripts} - ${nscripts}))
-
-		if [ -n "$(grep 'splash=silent' /proc/cmdline 2>/dev/null)" ]
-		then
-			rc_splash() {
-				/sbin/splash "$1"
-				export progress=$(( ${progress} + 1 ))
-			}
-		else
-			rc_splash() {
-				return 0
-			}
-		fi
-		# Allows us to save variable info between runlevels (ie. rc iterations)
-		save_splash_info() {
-			echo "${sscripts}" > "${svcdir}/sscripts.tmp"
-			echo "${progress}" > "${svcdir}/progress.tmp"
-		}
-
-		# Retrieve splash state info
-		get_splash_info() {
-			export sscripts="$(cat ${svcdir}/sscripts.tmp)"
-			export progress="$(cat ${svcdir}/progress.tmp)"
-		}
-
-		get_splash_stop_info {
-	        # Figure out the number scripts we are going to stop for the progress meter :)
-			tscripts="$(ls -1R ${svcdir}/started | grep -c $)"
-			export cscripts=$((${tscripts} - 1))
-		}
-	else
-		rc_splash() {
-			return 0
-		}
-		
-		save_splash_info() {
-			return 0
-		}
-
-		get_splash_info() {
-			return 0
-		}
-
-		get_splash_stop_info() {
-			return 0
-		}
-	fi
-}
-
 try() {
 	local errstr=
 	local retval=0
@@ -146,6 +83,10 @@ get_critical_services() {
 # Save $1
 argv1="$1"
 
+# Progressbar begin
+splash_init
+# Progressbar end
+
 # First time boot stuff goes here.  Note that 'sysinit' is an internal runlevel
 # used to bring up local filesystems, and should not be started with /sbin/rc
 # directly ...
@@ -162,9 +103,6 @@ then
 	ebegin "Mounting proc at /proc"
 	try try mount -n -t proc none /proc
 	eend $?
-
-	init_splash
-	rc_splash "begin" 2>/dev/null
 
 	if [ -d /sys -a "$(get_KV)" -ge "$(KV_to_int '2.6.0')" ]
 	then
@@ -207,7 +145,6 @@ then
 		ebegin "Mounting ramfs at /dev"
 		try mount -n -t ramfs none /dev
 		eend $?
-		rc_splash "start"
 		ebegin "Configuring system to use udev"
 		einfo "  Populating /dev with device nodes..."
 		try tar -jxpf /lib/udev-state/devices.tar.bz2 -C /dev
@@ -219,7 +156,6 @@ then
 			ewarn "  Kernel was not compiled with hotplug support!"
 		fi
 		eend 0
-		rc_splash "start"
 		# Create problematic directories
 		mkdir -p /dev/{pts,shm}
 		# Same thing as /dev/.devfsd
@@ -235,7 +171,6 @@ then
 			ebegin "Mounting devfs at /dev"
 			try mount -n -t devfs none /dev
 			eend $?
-			rc_splash "start"
 		else
 			clear
 			echo
@@ -274,7 +209,6 @@ then
 				ebegin "Mounting devpts at /dev/pts"
 				try mount -n -t devpts none /dev/pts
 				eend $?
-				rc_splash "start"
 			fi
 		fi
 	fi
@@ -289,16 +223,18 @@ then
 			ebegin "Starting devfsd"
 			/sbin/devfsd /dev > /dev/null
 			eend $?
-			rc_splash "start"
 		fi
 	fi
+
+	# Progressbar begin
+	rc_splash "text"
+	# Progressbar end
 
 	if [ -x /sbin/irqbalance -a "$(get_KV)" -ge "$(KV_to_int '2.5.0')" ]
 	then
 		ebegin "Starting irqbalance"
 		/sbin/irqbalance
 		eend $?
-		rc_splash "start"
 	fi
 
 	# Mount either a ramdisk or tmpfs if requested.
@@ -317,7 +253,6 @@ then
 		try mount -n -t tmpfs tmpfs "${tsvcdir}" \
 			-o rw,mode=0644,size="${svcsize}"k
 		eend 0
-		rc_splash start
 		
 	elif get_bootparam "ramfs" || \
 	     [ "${svcmount}" = "yes" -a "${svcfstype}" = "ramfs" ]
@@ -329,7 +264,6 @@ then
 		try /sbin/mke2fs -i 1024 -vm0 /dev/ram0 "${svcsize}"
 		try mount -n -t ext2 /dev/ram0 "${tsvcdir}" -o rw
 		eend 0
-		rc_splash start
 	fi
 
 	# Swap needs to be activated *after* devfs has been mounted and *after*
@@ -338,7 +272,6 @@ then
 	ebegin "Activating (possible) swap"
 	/sbin/swapon -a &> /dev/null
 	eend 0
-	rc_splash start
 
 	# Set the console loglevel to 1 for a cleaner boot
 	# the logger should anyhow dump the ring-0 buffer at start to the
@@ -377,8 +310,16 @@ then
 	# these into /sbin/rc, but rather start them by hand ...
 	for x in ${CRITICAL_SERVICES}
 	do
+		# Progressbar begin
+		splash_update "inline" "${x}" "start"
+		# Progressbar end
+
 		if ! start_critical_service "${x}"
 		then
+			# Progressbar begin
+			rc_splash "stop" &> /dev/null &
+			# Progressbar end
+			
 			echo
 			eerror "One of more critical startup scripts failed to start!"
 			eerror "Please correct this, and reboot ..."
@@ -389,7 +330,6 @@ then
 			einfo "Rebooting"
 			/sbin/reboot -f
 		fi
-		rc_splash start
 	done
 	# Check that $svcdir exists ...
 	check_statedir
@@ -402,8 +342,6 @@ then
 
 	# Clear $svcdir from stale entries
 	rm -rf "${svcdir}"/*
-
-	save_splash_info
 
 	# Update the dependency cache
 	/sbin/depscan.sh
@@ -423,6 +361,9 @@ fi # Sysinit ends here
 
 if [ "${RUNLEVEL}" = "S" -a "${argv1}" = "sysinit" ]
 then
+	# Progressbar begin
+	splash_debug "${argv1}"
+	# Progressbar end
 	exit 0
 
 elif [ "${RUNLEVEL}" = "S" -a "${argv1}" = "boot" ]
@@ -440,9 +381,6 @@ then
 	# the 'boot' runlevel is executed
 	export BOOT="yes"
 
-	get_splash_info
-	rc_splash start
-	
 	# We reset argv1 to the bootlevel given on the kernel command line
 	# if there is one 
 	argv1="${BOOTLEVEL}"
@@ -470,8 +408,6 @@ then
 	if [ -f "${svcdir}/softlevel" ]
 	then
 		export SOFTLEVEL="$(< ${svcdir}/softlevel)"
-		get_splash_info
-		rc_splash start
 	else
 		export SOFTLEVEL="${BOOTLEVEL}"
 	fi
@@ -484,6 +420,10 @@ then
 	echo "${SOFTLEVEL}" > "${svcdir}/softlevel"
 fi
 
+# Progressbar begin
+splash_calc "${argv1}" "${svcdir}"
+# Progressbar end
+
 # For keeping a list of services that fails during boot/halt
 if [ ! -d "${svcdir}/failed" ]
 then
@@ -494,8 +434,6 @@ fi
 
 if [ "${SOFTLEVEL}" = "reboot" -o "${SOFTLEVEL}" = "shutdown" ]
 then
-	
-	get_splash_stop_info
 	myscripts=
 
 elif [ "${SOFTLEVEL}" = "single" ]
@@ -676,6 +614,10 @@ echo "${SOFTLEVEL}" > "${svcdir}/softlevel"
 if [ "${SOFTLEVEL}" = "reboot" -o "${SOFTLEVEL}" = "shutdown" ]
 then
 	source /sbin/functions.sh
+	
+	# Progressbar begin
+	splash_debug "${argv1}"
+	# Progressbar end
 
 	# Make sure that our $svcdir are clean for next reboot ...
 	rm -rf "${svcdir}"/*
@@ -727,14 +669,10 @@ then
 	done
 fi
 
-get_splash_info
-rc_splash start
-
 # Start scripts
 for i in ${EXTRA_SOFTSCRIPTS} $(dolisting "${svcdir}/softscripts/")
 do
 	dep_start "${i}"
-	rc_splash "${i} start"
 done
 
 # Wait for any services that may still be running ...
@@ -765,6 +703,9 @@ rm -rf "${svcdir}/failed" &> /dev/null
 
 # If we were in the boot runlevel, it is done now ...
 [ -n "${BOOT}" ] && unset BOOT
-save_splash_info
+
+# Progressbar begin
+splash_debug "${argv1}"
+# Progressbar end
 
 # vim:ts=4

@@ -2,9 +2,22 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
-* rc-scripts 1.4.3.11p1 (15 Sep 2003)
+* rc-scripts 1.4.3.11p2 (14 Sep 2003)
 
-  15 Oct 2003; Martin Schlemmer <azarah@gentoo.org>:
+  14 Oct 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Revert previous changes, and substitute it for the bootsplash patches
+    from Michael Aichler <micha@aichler.net>, bug #21019.  His www pages
+    can be reached at:
+    
+      http://www.aichler.net/gentoo/bootsplash/
+
+    I should note that the bootsplash stuff is not 100% tested.
+    
+
+* rc-scripts 1.4.3.11p1 (14 Sep 2003)
+
+  14 Oct 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Initial bootsplash patch as from LiveCD's.
 

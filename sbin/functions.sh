@@ -62,14 +62,14 @@ getcols() {
 if [ -n "${EBUILD}" ] && [ "${*/depend}" = "$*" ]
 then
 	# Check user pref in portage
-    RC_NOCOLOR="$(python -c 'import portage; print portage.settings["NOCOLOR"]' 2> /dev/null)"
+	RC_NOCOLOR="$(python -c 'import portage; print portage.settings["NOCOLOR"]' 2> /dev/null)"
 
 	[ "${RC_NOCOLOR}" = "true" ] && RC_NOCOLOR="yes"
 
 elif [ -n "${EBUILD}" ] && [ "${*/depend}" != "$*" ]
 then
 	# We do not want colors or stty to run during emerge depend
-    RC_NOCOLOR="yes"
+	RC_NOCOLOR="yes"
 	
 elif [ "$(/sbin/consoletype 2> /dev/null)" = "serial" ]
 then
@@ -135,7 +135,7 @@ get_bootconfig() {
 	local copt=
 	local newbootlevel=
 	local newsoftlevel=
-	
+
 	for copt in $(< /proc/cmdline)
 	do
 		case "${copt%=*}" in
@@ -154,7 +154,7 @@ get_bootconfig() {
 	else
 		export BOOTLEVEL="boot"
 	fi
-	
+
 	if [ -n "${newsoftlevel}" ]
 	then
 		export DEFAULTLEVEL="${newsoftlevel}"
@@ -196,6 +196,166 @@ setup_defaultlevels() {
 
 	return 0
 }
+
+#
+# void splash_init (void)
+#
+splash_init() {
+	pb_init=0
+	pb_count=0
+	pb_scripts=0
+	pb_rate=0
+
+	[ ! -e /proc/splash -o ! -e /sbin/splash ] && return 0
+	
+	if [ -f /etc/conf.d/bootsplash.conf ]
+	then
+		. /etc/conf.d/bootsplash.conf
+		if [ -n "${PROGRESS_SYSINIT_RATE}" ]
+		then
+			rate=$((65535*${PROGRESS_SYSINIT_RATE}/100))
+		fi
+	fi
+	
+	if [ "${RUNLEVEL}" = "S" ]
+	then
+		pb_scripts=5
+		pb_rate=16383
+		[ -n "${rate}" ] && pb_rate="${rate}"
+	fi
+
+	export pb_init pb_count pb_scripts pb_rate
+}
+#
+# void splash_calc (char *argv1, char *svcdir)
+#
+splash_calc() {
+	pb_runs=(/etc/runlevels/$1/*)
+	pb_runb=(/etc/runlevels/boot/*)
+	pb_scripts=${#pb_runs[*]}
+	pb_boot=${#pb_runb[*]}
+
+	[ ! -e /proc/splash -o ! -e /sbin/splash ] && return 0
+
+    if [ -f /etc/conf.d/bootsplash.conf ]
+	then
+        . /etc/conf.d/bootsplash.conf
+
+		if [ -n "${PROGRESS_SYSINIT_RATE}" ]
+		then
+			init_rate=$((65535*${PROGRESS_SYSINIT_RATE}/100))
+		fi
+		
+        if [ -n "${PROGRESS_BOOT_RATE}" ]
+		then
+            boot_rate=$((65535*${PROGRESS_BOOT_RATE}/100))
+        fi
+	fi
+
+	# In runlevel boot we have 5 already started scripts
+	#
+	if [ "${RUNLEVEL}" = "S" -a "${1}" = "boot" ]
+	then
+		pb_started=($(dolisting "${2}/started/"))
+		pb_scripts=$((${pb_boot} - ${#pb_started[*]}))
+		pb_init=16383
+		pb_rate=26213
+		pb_count=0
+		if [ -n "${init_rate}" -a -n "${boot_rate}" ]
+		then
+			pb_init="${init_rate}"
+			pb_rate=$((${init_rate} + ${boot_rate}))
+		fi
+	elif [ "${RUNLEVEL}" = "0" -o "${RUNLEVEL}" = "6" ]
+	then
+		pb_started=($(dolisting "${2}/started/"))
+		pb_scripts=${#pb_started[*]}
+		pb_rate=65534
+	else
+		pb_init=26213
+		pb_rate=65534
+		if [ -n "${init_rate}" -a -n "${boot_rate}" ]
+		then
+			pb_init=$((${init_rate} + ${boot_rate}))
+		fi
+	fi
+	
+	echo "pb_init=${pb_init}" > "${2}/progress"
+	echo "pb_rate=${pb_rate}" >> "${2}/progress"
+	echo "pb_count=${pb_count}" >> "${2}/progress"
+	echo "pb_scripts=${pb_scripts}" >> "${2}/progress"
+}
+#
+# void splash_update (char *svcdir, char *myscript, char *action)
+#
+splash_update() {
+	[ ! -e /proc/splash -o ! -e /sbin/splash ] && return 0
+	
+	if [ "${1}" = "inline" ]
+	then
+		/sbin/splash "$2" "$3"
+		pb_count=$((${pb_count} + 1))
+
+		# Only needed for splash_debug() 
+		pb_execed="${pb_execed} ${2:-inline}"
+	else
+		# Update only runlevel scripts, no dependancies (only true for startup)
+		if [ -z "$(ls -1 \"${1}/softscripts/\" 2> /dev/null | grep \"${2}\")" ]
+		then
+			[ "${RUNLEVEL}" != "0" -a "${RUNLEVEL}" != "6" ] && return
+		fi
+		# Source the current progress bar state
+		test -f "${1}/progress" && source "${1}/progress"
+
+		# Do not update an already executed script
+		for x in ${pb_execed}
+		do
+			[ "${x}" = "${2}" ] && return
+		done	
+		
+		/sbin/splash "$2" "$3"
+		pb_count=$((${pb_count} + 1))
+		
+		echo "pb_init=${pb_init}" > "${1}/progress"
+		echo "pb_rate=${pb_rate}" >> "${1}/progress"
+		echo "pb_count=${pb_count}" >> "${1}/progress"
+		echo "pb_scripts=${pb_scripts}" >> "${1}/progress"
+		echo "pb_execed=\"${pb_execed} ${2}\"" >> "${1}/progress"
+	fi
+}
+#
+# void splash_debug (char *argv1)
+#
+splash_debug() {
+	if [ -f /etc/conf.d/bootsplash.conf ]
+	then
+		source /etc/conf.d/bootsplash.conf
+
+		[ "${BOOTSPLASH_DEBUG}" = "yes" -a -n "${1}" ] || return
+		
+		if [ -f "${svcdir}/progress" ]
+		then
+			cat "${svcdir}/progress" > "/var/log/bootsplash.${1}"
+		else
+			echo "pb_init=${pb_init}" > "/var/log/bootsplash.${1}"
+			echo "pb_rate=${pb_rate}" >> "/var/log/bootsplash.${1}"
+			echo "pb_count=${pb_count}" >> "/var/log/bootsplash.${1}"
+			echo "pb_scripts=${pb_scripts}" >> "/var/log/bootsplash.${1}"
+			echo "pb_execed=\"${pb_execed}\"" >> "/var/log/bootsplash.${1}"
+		fi	
+	fi
+}
+
+if [ -e /proc/splash -a -e /sbin/splash ]
+then
+	rc_splash() {
+		/sbin/splash $*
+	}
+else
+	rc_splash() {
+		return 0
+	}
+fi
 
 # void esyslog(char* priority, char* tag, char* message)
 #
@@ -315,6 +475,9 @@ eend() {
 		fi
 	else
 		retval="$1"
+		
+		rc_splash "stop" &>/dev/null &
+		
 		if [ "$#" -ge 2 ]
 		then
 			shift
