@@ -317,7 +317,6 @@ ifconfig_add_address() {
 		config=( "${config[@]//peer/pointtopoint}" )
 	fi
 
-	ewarn "ifconfig ${iface} ${config[@]}"
 	ifconfig ${iface} ${config[@]} &>${devnull}
 	eend $?
 	return $?
