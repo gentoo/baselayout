@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  06 Feb 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Remove the apache user and let apache ebuilds handle it #77738.
+
   04 Feb 2005; Roy Marples <uberlord@gentoo.org>:
 
     It's now possible to configure addresses and routes for the loopback
