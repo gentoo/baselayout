@@ -8,6 +8,7 @@
     - fixed !module when it's not installed
     - we can now specify null inet addresses in the config
       this allows a pure inet6 setup
+    - shutdown lo the same way we bring it up
 
     net-scripts/net.modules.d/ifconfig
     - changed IPv6 to inet6 in output of adding inet6 addresses

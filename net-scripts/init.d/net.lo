@@ -1,6 +1,6 @@
 #!/sbin/runscript
 # net-scripts main code
-# Version 1.0.4
+# Version 1.0.5
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -642,21 +642,27 @@ stop() {
 		MODULES[i]=${mods[((${#mods[@]} - i - 1))]}
 	done
 
+	# Don't run any special shutdown functions for lo
+	if [[ ${IFACE} == lo ]]; then
+		ebegin "Shutting down ${IFACE}"
+		interface_iface_stop ${IFACE}
+		eend $?
+		return 0
+	fi
+
 	# Call user-defined predown function if it exists
-	if [[ ${IFACE} != lo ]]; then
-		if [[ $( type -t predown ) == function ]]; then
-			einfo "Running predown function"
-			eindent
-			predown ${IFACE} ; x=$?
-			eoutdent
-			if [[ ${x} != 0 ]]; then
-				eend 1 "predown ${IFACE} failed"
-				return 1
-			fi
-		elif is_net_fs /; then
-			eerror "root filesystem is network mounted -- can't stop ${IFACE}"
+	if [[ $( type -t predown ) == function ]]; then
+		einfo "Running predown function"
+		eindent
+		predown ${IFACE} ; x=$?
+		eoutdent
+		if [[ ${x} != 0 ]]; then
+			eend 1 "predown ${IFACE} failed"
 			return 1
 		fi
+	elif is_net_fs /; then
+		eerror "root filesystem is network mounted -- can't stop ${IFACE}"
+		return 1
 	fi
 
 	# pre Stop any modules
@@ -673,7 +679,7 @@ stop() {
 	done
 
 	# Call user-defined postdown function if it exists
-	if [[ ${IFACE} != lo && $( type -t postdown ) == function ]]; then
+	if [[ $( type -t postdown ) == function ]]; then
 		einfo "Running postdown function"
 		eindent
 		postdown ${IFACE}
