@@ -9,6 +9,8 @@ depend() {
 }
 
 start() {
+	local retval=0
+	
 	# LVM support for /usr, /home, /opt ....
 	# This should be done *before* checking local
 	# volumes, or they never get checked.
@@ -123,10 +125,11 @@ start() {
 		else
 			fsck -C -R -A -a
 		fi
-		if [ "$?" -eq 0 ]
+		retval=$?
+		if [ "${retval}" -eq 0 ]
 		then
 			eend 0
-		elif [ "$?" -eq 1 ]
+		elif [ "${retval}" -eq 1 ]
 		then
 			ewend 1 "Filesystem errors corrected."
 			#everything should be ok, so return a pass

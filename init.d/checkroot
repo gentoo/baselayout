@@ -9,6 +9,8 @@ depend() {
 }
 
 start() {
+	local retval=0
+	
 	if [ ! -f /fastboot ]
 	then
 		ebegin "Remounting root filesystem read-only (if necessary)"
@@ -25,10 +27,11 @@ start() {
 		else
 			fsck -C -a /
 		fi
-		if [ "$?" -eq 0 ]
+		retval=$?
+		if [ "${retval}" -eq 0 ]
 		then
 			eend 0
-		elif [ "$?" -eq 1 ]
+		elif [ "${retval}" -eq 1 ]
 		then
 			ewend 1 "Filesystem repaired"
 		else

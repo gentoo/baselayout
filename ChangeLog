@@ -7,6 +7,10 @@
     Fix start-stop-daemon to check the call to nice() correctly for failure,
     closing bug #14359, thanks to YAMAKURA Makoto <makoto@dsb.club.ne.jp>.
 
+    Fix globbing $? when checking return value of fsck in /etc/init.d/checkroot
+    and /etc/init.d/checkfs.  This closes bug #13320, thanks to good work from
+    Malcolm Scott <m@lcolm.org.uk>.
+
   21 Jan 2003; Mike Frysinger <vapier@gentoo.org>:
 
     Updated /etc/rc.conf to add elogind support #13790.
