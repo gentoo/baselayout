@@ -17,7 +17,7 @@ has been introduced.
 .B modules-update
 attempts to fix this by generating the configuration file from seperate
 files which are located in
-.IR /etc/modules.d .
+.IR /etc/modules.d/ .
 All files in that directory are assembled together to form
 .IR /etc/modules.conf .
 .PP
@@ -25,7 +25,7 @@ After generation a backup of the old file is put in
 .IR /etc/modules.conf.old .
 .SH "FILES"
 There are two types of file you can put in
-.IR /etc/modutils :
+.IR /etc/modules.d/ :
 normal files and exectuable files. Normal files contain standard modules
 configuration information, as described in
 .BR modules.conf (5).

@@ -33,6 +33,9 @@
     valid_iafter().  Fix this in /lib/rcscripts/sh/rc-services.sh, closing
     bugs #30327 and #31950.
 
+    Change an occurance of /etc/modutils in modules-update.8 to
+    /etc/modules.d/ closing bug #31171.
+
   19 Oct 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     More bootsplash fixes, bug #21019 (comment #21).
