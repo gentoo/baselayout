@@ -69,7 +69,7 @@ start() {
 	setupopts
 
 	ebegin "Setting system clock to hardware clock [${TBLURB}]"
-	if [ "${CLOCK}" = "UML" ] || [ "${CLOCK}" = "coLinux" ]
+	if [ "${TBLURB}" = "UML" ] || [ "${TBLURB}" = "coLinux" ]
 	then
 		ret=0
 
