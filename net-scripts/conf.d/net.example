@@ -250,6 +250,14 @@
 #slaves_bond0="eth0 eth1 eth2"
 #config_bond0=( "null" ) # You may not want to assign an IP the the bond
 
+# If any of the slaves require extra configuration - for example wireless or
+# ppp devices - we need to write a depend function for the bond so they get
+# configured correctly.
+# This is exactly the same as a depend() function in our init scripts
+#depend_br0() {
+#       need net.eth0 net.eth1
+#}
+
 #-----------------------------------------------------------------------------
 # ADSL
 # For ADSL support, emerge net-dialup/rp-pppoe 
@@ -317,10 +325,21 @@
 # To add ports to bridge br0
 #bridge_br0="eth0 eth1"
 
-# You NEED to configure the interface as well
-#config_br0=( "null" ) # This is needed so that dhcp is not started!
+# You need to configure the ports to null values so dhcp does not get started 
+#config_eth0=( "null" )
+#config_eth1=( "null" )
+
+# Finally give the bridge an address - dhcp or a static IP
 #config_br0=( "dhcp" )
 #config_br0=( "192.168.0.1/24" )
+
+# If any of the ports require extra configuration - for example wireless or
+# ppp devices - we need to write a depend function for the bridge so they get
+# configured correctly.
+# This is exactly the same as a depend() function in our init scripts
+#depend_br0() {
+#	need net.eth0 net.eth1
+#}
 
 # NOTE: This creates an interface called br0 - you can give the interface
 # any name you like

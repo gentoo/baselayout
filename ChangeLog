@@ -1,6 +1,16 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  08 Mar 2005; Roy Marples <uberlord@gentoo.org>:
+
+    rc-services.sh now does a /sbin/depscan.sh -u if we have not got
+    our deptree loaded
+
+    removed net_start/stop function from net.lo, bridge and bonding
+
+    net.lo now supports depend() per interface like so
+    depend_br0() { need net.eth0 net.eth1 }
+
   04 Mar 2005; Roy Marples <uberlord@gentoo.org>:
 
     applied STYLE updates to rc-status

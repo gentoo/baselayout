@@ -7,12 +7,10 @@
 RC_GOT_SERVICES="yes"
 
 [ "${RC_GOT_FUNCTIONS}" != "yes" ] && source /sbin/functions.sh
-[ "${RC_GOT_DEPTREE_INFO}" != "yes" -a -f "${svcdir}/deptree" ] \
-	&& source "${svcdir}/deptree"
 
 if [ "${RC_GOT_DEPTREE_INFO}" != "yes" ]
 then
-	if ! /sbin/depscan.sh
+	if ! /sbin/depscan.sh -u
 	then
 		echo
 		eerror "Error running '/sbin/depscan.sh'!"

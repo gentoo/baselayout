@@ -97,22 +97,15 @@ bridge_pre_start() {
 	done
 	eend 0
 
-	eindent
-	for i in ${ports}; do
-		# If the interface does not exist, it may be because another
-		# module needs to create it
-		net_start ${i} || continue
-
-		if ! interface_exists ${i} ; then
-			ewarn "interface ${i} does not exist"
-			continue
-		fi
-	done
-
-	echo 
-	eoutdent
 	einfo "Adding ports to ${iface}"
 	eindent
+
+	for i in ${ports}; do
+		interface_exists ${i} && continue 
+		eerror "interface ${i} does not exist"
+		bridge_stop ${iface} &>/dev/null
+		return 1
+	done
 
 	for i in ${ports}; do
 		ebegin "${i}"
@@ -155,12 +148,6 @@ bridge_stop() {
 	eoutdent
 	
 	brctl delbr ${iface} &>${devnull}
-
-	for i in ${ports}; do
-		net_stop ${i}
-	done
-	echo
-
 	eend 0
 	return 0
 }
