@@ -180,7 +180,7 @@ start() {
 		fi
 	fi
 
-	if [ -f /fastboot ]
+	if [ -f /fastboot -o -n "${CDBOOT}" ]
 	then
 		rm -f /fastboot
 	else

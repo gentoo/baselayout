@@ -135,7 +135,13 @@ sync;sync
 sleep 1
 sync
 sleep 1
-umount -a -r -n -t nodevfs,noproc,nosysfs,notmpfs &>/dev/null
+if [ -n "${CDBOOT}" ]
+then
+	#LiveCD: don't unmount the read-only livecd loopback filesystem or all our commands will disappear
+	mount | cut -f1 -d" " | grep -v livecd | xargs umount -r -n -t  nodevfs,noproc,nosysfs,notmpfs &>/dev/null
+else
+	umount -a -r -n -t nodevfs,noproc,nosysfs,notmpfs &>/dev/null
+fi
 if [ "$?" -ne 0 ]
 then
 	killall5 -9  &> /dev/null

@@ -23,6 +23,8 @@ start() {
 }
 
 stop() {
+	[ -n "${CDBOOT}" ] && return 0
+	
 	ebegin "Saving random seed"
 	# Carry a random seed from shut-down to start-up;
 	# see documentation in linux/drivers/char/random.c

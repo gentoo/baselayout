@@ -56,6 +56,10 @@ stop() {
 	local myopts=""
 	local TBLURB=""
 	local errstr=""
+
+	# Don't tweak hw clock on LiveCD halt
+	[ -n "${CDBOOT}" ] && return 0
+	
 	if [ "${CLOCK}" = "UTC" ]
 	then
 		myopts="--utc"

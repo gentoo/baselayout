@@ -11,7 +11,7 @@ depend() {
 start() {
 	local retval=0
 	
-	if [ ! -f /fastboot ]
+	if [ ! -f /fastboot -a -z "${CDBOOT}" ]
 	then
 		ebegin "Remounting root filesystem read-only (if necessary)"
 		mount / -n -o remount,ro &>/dev/null
@@ -62,7 +62,7 @@ start() {
 		mount / -n -o remount,rw &>/dev/null
 		if [ "$?" -ne 0 ]
 		then
-			eend 2 "Root filesystem could not be mounted read/write:("
+			eend 2 "Root filesystem could not be mounted read/write :("
 			/sbin/sulogin ${CONSOLE}
 		else
 			eend 0
