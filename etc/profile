@@ -1,35 +1,37 @@
 # /etc/profile:
 # $Header$
+#
+# That this file is used by any Bourne-shell derivative to setup the
+# environment for login shells.
 
-if [ -e "/etc/profile.env" ]
-then
+# Load environment settings from profile.env, which is created by
+# env-update from the files in /etc/env.d
+if [ -e "/etc/profile.env" ]; then
 	. /etc/profile.env
 fi
 
 # 077 would be more secure, but 022 is generally quite realistic
 umask 022
 
-if [ `/usr/bin/whoami` = 'root' ]
-then
-	# Do not set PS1 for dumb terminals
-	if [ "$TERM" != 'dumb'  ] && [ -n "$BASH" ]
-	then
-		export PS1='\[\033[01;31m\]\h \[\033[01;34m\]\W \$ \[\033[00m\]'
-	fi
-	export PATH="/bin:/sbin:/usr/bin:/usr/sbin:${ROOTPATH}"
+# Set up PATH depending on whether we're root or a normal user.
+# There's no real reason to exclude sbin paths from the normal user,
+# but it can make tab-completion easier when they aren't in the
+# user's PATH to pollute the executable namespace.
+#
+# It is intentional in the following line to use || instead of -o.
+# This way the evaluation can be short-circuited and calling whoami is
+# avoided.
+if [ "$EUID" = 0 ] || [ "`/bin/whoami`" = 'root' ]; then
+	PATH="/bin:/sbin:/usr/bin:/usr/sbin:${ROOTPATH}"
 else
-	# Do not set PS1 for dumb terminals
-	if [ "$TERM" != 'dumb'  ] && [ -n "$BASH" ]
-	then
-		export PS1='\[\033[01;32m\]\u@\h \[\033[01;34m\]\W \$ \[\033[00m\]'
-	fi
-	export PATH="/bin:/usr/bin:${PATH}"
+	PATH="/bin:/usr/bin:${PATH}"
 fi
+export PATH
 unset ROOTPATH
 
-if [ -z "$INPUTRC" -a ! -f "$HOME/.inputrc" ]
-then
-	export INPUTRC="/etc/inputrc"
+if [ -z "$INPUTRC" -a ! -f "$HOME/.inputrc" ]; then
+	INPUTRC="/etc/inputrc"
+	export INPUTRC
 fi
 
 # Extract the value of EDITOR
@@ -38,3 +40,26 @@ fi
 [ -z "$EDITOR" ] && EDITOR="/bin/nano"
 export EDITOR
 
+if [ -n "${BASH_VERSION}" ]; then
+	# Newer bash ebuilds include /etc/bash/bashrc which will setup PS1
+	# including color.  We leave out color here because not all
+	# terminals support it.
+	if [ -f /etc/bash/bashrc ]; then
+		# Bash login shells run only /etc/profile
+		# Bash non-login shells run only /etc/bash/bashrc
+		# Since we want to run /etc/bash/bashrc always we source it
+		# from here.  It is unfortunate that there is no way to do
+		# this *after* the user's .bash_profile runs (without putting
+		# it in the user's dot-files), but it shouldn't make any
+		# difference.
+		. /etc/bash/bashrc
+	else
+		export PS1='\u@\h \w \$ '
+	fi
+else
+	# Setup a bland default prompt.  Since this prompt should be useable
+	# on color and non-color terminals, as well as shells that don't
+	# understand sequences such as \h, don't put anything special in it.
+	PS1="`whoami`@`uname -n | cut -f1 -d.` \$ "
+	export PS1
+fi
