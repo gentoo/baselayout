@@ -6,6 +6,11 @@
 
     Remove /etc/DIR_COLORS, as coreutils provides it now.
 
+    Add RC_DEVICE_TARBALL to /etc/conf.d/rc to control use of device tarball.
+    Also modified /sbin/rc and /etc/init.d/halt.sh for this.
+
+    Start udevd if present.
+
   25 Feb 2004; Martin Schlemmer <azarah@gentoo.org>:
 
     Update to enable checking of mtimes on rc-scripts, and auto running

@@ -24,11 +24,20 @@ RC_PARALLEL_STARTUP="no"
 
 RC_NET_STRICT_CHECKING="no"
 
+# Set to "yes" if you want to save /dev to a tarball on shutdown
+# and restore it on startup.  This is useful if you have a lot of
+# custom device nodes that udev do not handle/know about.
+# (ONLY used by UDEV enabled systems!)
+
+RC_DEVICE_TARBALL="yes"
+
 # Set to "yes" if you want devfsd to start upon bootup.  This is
 # the default for Gentoo.
 # Set to "no" only if you understand the full implications.  A
 # number of files may need to be altered (i.e. /etc/inittab,
 # /etc/fstab, etc.).
+# Also note that it does _NOT_ start for UDEV enabled systems,
+# even if RC_DEVFSD_STARTUP="yes" ...
 
 RC_DEVFSD_STARTUP="yes"
 

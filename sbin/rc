@@ -222,8 +222,11 @@ then
 		try mount -n -t ramfs none /dev
 		eend $?
 		ebegin "Configuring system to use udev"
-		einfo "  Populating /dev with device nodes..."
-		try tar -jxpf /lib/udev-state/devices.tar.bz2 -C /dev
+		if [ "${RC_DEVICE_TARBALL}" = "yes" ]
+		then
+			einfo "  Populating /dev with device nodes..."
+			try tar -jxpf /lib/udev-state/devices.tar.bz2 -C /dev
+		fi
 		populate_udev
 		if [ -e /proc/sys/kernel/hotplug -a -x /sbin/hotplug ]
 		then
@@ -235,6 +238,11 @@ then
 			echo "/sbin/udev" > /proc/sys/kernel/hotplug
 		else
 			ewarn "  Kernel was not compiled with hotplug support!"
+		fi
+		if [ -x /sbin/udevd -a -e /proc/sys/kernel/hotplug ]
+		then
+			einfo "  Starting udevd..."
+			/sbin/udevd &
 		fi
 		eend 0
 		# Create problematic directories
