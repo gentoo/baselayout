@@ -40,7 +40,7 @@ RC_NET_STRICT_CHECKING="no"
 RC_PARALLEL_STARTUP="no"
 RC_USE_CONFIG_PROFILE="yes"
 
-# 
+#
 # Default values for e-message indentation and dots
 #
 RC_INDENTATION=''
@@ -105,11 +105,11 @@ get_bootconfig() {
 
 setup_defaultlevels() {
 	get_bootconfig
-	
+
 	if get_bootparam "noconfigprofile"
 	then
 		export RC_USE_CONFIG_PROFILE="no"
-	
+
 	elif get_bootparam "configprofile"
 	then
 		export RC_USE_CONFIG_PROFILE="yes"
@@ -121,7 +121,7 @@ setup_defaultlevels() {
 	then
 		export BOOTLEVEL="${BOOTLEVEL}.${DEFAULTLEVEL}"
 	fi
-									
+
 	if [ -z "${SOFTLEVEL}" ]
 	then
 		if [ -f "${svcdir}/softlevel" ]
@@ -155,15 +155,15 @@ get_libdir() {
 esyslog() {
 	local pri=
 	local tag=
-	
+
 	if [ -x /usr/bin/logger ]
 	then
 		pri="$1"
 		tag="$2"
-		
+
 		shift 2
 		[[ -z "$*" ]] && return 0
-		
+
 		/usr/bin/logger -p "${pri}" -t "${tag}" -- "$*"
 	fi
 
@@ -358,11 +358,11 @@ veinfon() { [[ "${RC_VERBOSE}" != yes ]] || einfon "$@"; }
 vewarn() { [[ "${RC_VERBOSE}" != yes ]] || ewarn "$@"; }
 veerror() { [[ "${RC_VERBOSE}" != yes ]] || eerror "$@"; }
 vebegin() { [[ "${RC_VERBOSE}" != yes ]] || ebegin "$@"; }
-veend() { 
+veend() {
 	[[ "${RC_VERBOSE}" == yes ]] && { eend "$@"; return $?; }
 	return ${1:-0}
 }
-veend() { 
+veend() {
 	[[ "${RC_VERBOSE}" == yes ]] && { ewend "$@"; return $?; }
 	return ${1:-0}
 }
@@ -386,7 +386,7 @@ wrap_rcscript() {
 		retval=0
 	fi
 	rm -f "${svcdir}/${myservice}-$$"
-	
+
 	return "${retval}"
 }
 
@@ -451,7 +451,7 @@ KV_to_int() {
 # int get_KV()
 #
 #    Return the kernel version (major, minor and micro concated) as an integer.
-#    Assumes X and Y of X.Y.Z are numbers.  Also assumes that some leading 
+#    Assumes X and Y of X.Y.Z are numbers.  Also assumes that some leading
 #    portion of Z is a number.
 #    e.g. 2.4.25, 2.6.10, 2.6.4-rc3, 2.2.40-poop, 2.0.15+foo
 #
@@ -473,7 +473,7 @@ get_bootparam() {
 	local x copt params retval=1
 
 	[ ! -r "/proc/cmdline" ] && return 1
-	
+
 	for copt in $(< /proc/cmdline)
 	do
 		if [ "${copt%=*}" = "gentoo" ]
@@ -484,7 +484,7 @@ get_bootparam() {
 					for (x in nodes)
 						print nodes[x]
 				}')"
-			
+
 			# Parse gentoo option
 			for x in ${params}
 			do
@@ -496,7 +496,7 @@ get_bootparam() {
 			done
 		fi
 	done
-	
+
 	return ${retval}
 }
 
@@ -521,26 +521,26 @@ dolisting() {
 	then
 		mypath="${mypath%/\*}"
 	fi
-	
+
 	for x in ${mypath}
 	do
 		[ ! -e "${x}" ] && continue
-		
+
 		if [ ! -d "${x}" ] && ( [ -L "${x}" -o -f "${x}" ] )
 		then
 			mylist="${mylist} $(ls "${x}" 2> /dev/null)"
 		else
 			[ "${x%/}" != "${x}" ] && x="${x%/}"
-			
+
 			cd "${x}"; tmpstr="$(ls)"
-			
+
 			for y in ${tmpstr}
 			do
 				mylist="${mylist} ${x}/${y}"
 			done
 		fi
 	done
-	
+
 	echo "${mylist}"
 }
 
@@ -550,13 +550,13 @@ dolisting() {
 #
 save_options() {
 	local myopts="$1"
-	
+
 	shift
 	if [ ! -d "${svcdir}/options/${myservice}" ]
 	then
 		mkdir -p -m 0755 "${svcdir}/options/${myservice}"
 	fi
-	
+
 	echo "$*" > "${svcdir}/options/${myservice}/${myopts}"
 
 	return 0
@@ -632,8 +632,8 @@ is_uml_sys() {
 # bool is_vserver_sys()
 #
 #   return 0 if the currently running system is a Linux VServer
-#   
-#   EXAMPLE:  if is_vserver_sys ; then ...                                    
+#
+#   EXAMPLE:  if is_vserver_sys ; then ...
 #
 is_vserver_sys() {
 	grep -qs '^s_context:[[:space:]]*[1-9]' /proc/self/status
@@ -660,9 +660,9 @@ get_mount_fstab() {
 #   Returns the reversed order of list
 #
 reverse_list() {
-		for (( i = $# ; i > 0 ; i -= 1 )); do
-				echo -n "${!i} "
-		done
+	for (( i = $# ; i > 0 ; --i )); do
+		echo -n "${!i} "
+	done
 }
 
 # void start_addon(addon)
@@ -670,15 +670,15 @@ reverse_list() {
 #   Starts addon.
 #
 start_addon() {
-		local addon=$1
+	local addon=$1
 
-		[[ -z ${addon} ]] && return 0
-		
-		[[ -r ${svclib}/addons/${addon}-start.sh ]] && {
-				(source "${svclib}/addons/${addon}-start.sh")
-		}
+	[[ -z ${addon} ]] && return 0
 
-		return 0
+	[[ -r ${svclib}/addons/${addon}-start.sh ]] && {
+		(source "${svclib}/addons/${addon}-start.sh")
+	}
+
+	return 0
 }
 
 # void start_volumes()
@@ -686,13 +686,13 @@ start_addon() {
 #   Starts all volumes in RC_VOLUME_ORDER.
 #
 start_volumes() {
-		local x=
+	local x=
 
-		for x in ${RC_VOLUME_ORDER}; do
-				start_addon "${x}"
-		done
+	for x in ${RC_VOLUME_ORDER}; do
+		start_addon "${x}"
+	done
 
-		return 0
+	return 0
 }
 
 # void stop_addon(addon)
@@ -700,15 +700,15 @@ start_volumes() {
 #   Stops addon.
 #
 stop_addon() {
-		local addon=$1
+	local addon=$1
 
-		[[ -z ${addon} ]] && return 0
-		
-		[[ -r ${svclib}/addons/${addon}-stop.sh ]] && {
-			(source "${svclib}/addons/${addon}-stop.sh")
-		}
+	[[ -z ${addon} ]] && return 0
 
-		return 0
+	[[ -r ${svclib}/addons/${addon}-stop.sh ]] && {
+		(source "${svclib}/addons/${addon}-stop.sh")
+	}
+
+	return 0
 }
 
 # void stop_volumes()
@@ -716,18 +716,18 @@ stop_addon() {
 #   Stops all volumes in RC_VOLUME_ORDER (reverse order).
 #
 stop_volumes() {
-		local x=
+	local x=
 
-		for x in $(reverse_list ${RC_VOLUME_ORDER}); do
-				stop_addon "${x}"
-		done
+	for x in $(reverse_list ${RC_VOLUME_ORDER}); do
+		stop_addon "${x}"
+	done
 
-		return 0
+	return 0
 }
 
 # bool is_older_than(reference, files/dirs to check)
 #
-#   return 0 if any of the files/dirs are newer than 
+#   return 0 if any of the files/dirs are newer than
 #   the reference file
 #
 #   EXAMPLE: if is_older_than a.out *.o ; then ...
@@ -736,12 +736,10 @@ is_older_than() {
 	local ref="$1"
 	shift
 
-	for x in "$@"
-	do
+	for x in "$@" ; do
 		[[ ${x} -nt ${ref} ]] && return 0
 
-		if [[ -d ${x} ]]
-		then
+		if [[ -d ${x} ]] ; then
 			is_older_than "${ref}" "${x}"/* && return 0
 		fi
 	done
@@ -771,7 +769,7 @@ then
 		RC_NOCOLOR="yes"
 		RC_ENDCOL="no"
 	fi
-	
+
 	for arg in "$@"
 	do
 		case "${arg}" in
