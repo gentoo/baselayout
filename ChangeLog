@@ -12,7 +12,7 @@
   16 Jul 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Add additional entries to /etc/services to support cyrus-imapd, thanks
-    to raker@gentoo.org.
+    to Nick Hadaway <raker@gentoo.org>.
 
     Update /etc/init.d/consolefont to resolve bug #4968.  This fixes a
     problem with non 7bit ascii symbols.
