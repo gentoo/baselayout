@@ -76,25 +76,24 @@ remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mou
 # This is needed to make sure we dont have a mounted filesystem
 # on a LVM volume when shutting LVM down ...
 ebegin "Unmounting filesystems"
-no_unmount="`mount | awk '{ if (($5 ~ /^(proc|sysfs|devfs|tmpfs|usb(dev)?fs)$/) ||
-                             ($1 ~ /^(rootfs|\/dev\/root)$/) ||
-                             ($3 = "/"))
+no_unmounts="`mount | awk '{ if (($5 ~ /^(proc|sysfs|devfs|tmpfs|usb(dev)?fs)$/) ||
+                                ($1 == "none") ||
+                                ($1 ~ /^(rootfs|\/dev\/root)$/) ||
+                                ($3 == "/"))
                            print $3
                        }' | sort | uniq`"
 for x in `awk '{ print $2 }' /proc/mounts | sort -r | uniq`
 do
 	do_unmount="yes"
 	
-	for y in ${no_unmount}
+	for y in ${no_unmounts}
 	do
 		[ "${x}" = "${y}" ] && do_unmount="no"
 	done
 	
-	if [ "${do_unmount}" = "yes" ] && \
-	   [ "${x}" != "/" -a "${x}" != "/dev" -a "${x}" != "/proc" -a \
-	     "${x}" != "/sys" -a "${x}" != "/mnt/livecd" ]
+	if [ "${do_unmount}" = "yes" -a "${x}" != "/mnt/livecd" ]
 	then
-		umount -f ${x} &>/dev/null || {
+		umount ${x} &>/dev/null || {
 		
 			# Kill processes still using this mount
 			/bin/fuser -k -m -9 "${x}" &>/dev/null
@@ -132,9 +131,9 @@ mount_readonly() {
 	local x=
 	local retval=0
 	
-	for x in `awk '{ print $2 }' /proc/mounts`
+	for x in `awk '$1 != "none" { print $2 }' /proc/mounts | sort -r`
 	do
-		mount -n -f -o remount,ro ${x} &>/dev/null
+		mount -n -o remount,ro ${x} &>/dev/null
 		retval=$((${retval} + $?))
 	done
 
