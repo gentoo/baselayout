@@ -163,9 +163,9 @@ esyslog() {
 		tag="$2"
 		
 		shift 2
-		[[ -z "$@" ]] && return 0
+		[[ -z "$*" ]] && return 0
 		
-		/usr/bin/logger -p "${pri}" -t "${tag}" -- "$@"
+		/usr/bin/logger -p "${pri}" -t "${tag}" -- "$*"
 	fi
 
 	return 0
