@@ -138,7 +138,8 @@ function depend_dbadd(type, service, deplist, 	x, deparray)
 					assert(mktree(SVCDIR "/broken/" service, 0755),
 					       "mktree(" SVCDIR "/broken/" service ", 0755)")
 				if (!isfile(SVCDIR "/broken/" service "/" deparray[x]))
-					system("touch " SVCDIR "/broken/" service "/" deparray[x])
+					assert(dosystem("touch " SVCDIR "/broken/" service "/" deparray[x]),
+					       "system(touch " SVCDIR "/broken/" service "/" deparray[x] ")")
 
 				continue
 			}
@@ -261,7 +262,8 @@ END {
 									depend_dbadd(j, depsplit[i], provides)
 						}
 
-						system("rm -rf " SVCDIR "/" typesplit[z] "/" providesplit[y])
+						assert(dosystem("rm -rf " SVCDIR "/" typesplit[z] "/" providesplit[y]),
+						       "system(rm -rf " SVCDIR "/" typesplit[z] "/" providesplit[y] ")")
 					}
 				}
 

@@ -25,6 +25,12 @@ BEGIN {
 			ENVFILES[ENVCOUNT] = TMPENVFILES[x]
 		}
 
+	if (ENVCOUNT == 0) {
+
+		eerror("No files to process!")
+		exit 1
+	}
+
 	ENVCACHE = SVCDIR "/envcache"
 	SHPROFILE = "/etc/profile.env"
 	CSHPROFILE = "/etc/csh.env"

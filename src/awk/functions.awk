@@ -129,6 +129,18 @@ function dosymlink(oldpath, newpath, 	ret)
 		return 1
 }
 
+# system() wrapper that normalize return codes ...
+function dosystem(command, 	ret)
+{
+	ret = 0
+
+	ret = system(command)
+	if (ret == 0)
+		return 1
+	else
+		return 0
+}
+
 # assert --- assert that a condition is true. Otherwise exit.
 # This is from the gawk info manual.
 function assert(condition, string)

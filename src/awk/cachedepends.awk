@@ -67,6 +67,11 @@ BEGIN {
 			RCSCRIPTS[RCCOUNT] = TMPRCSCRIPTS[x]
 		}
 
+	if (RCCOUNT == 0) {
+		eerror("No scripts to process!")
+		exit 1
+	}
+
 	DEPCACHE=SVCDIR "/depcache"
 
 	unlink(DEPCACHE)

@@ -21,7 +21,7 @@ bash ${svcdir}/depcache | \
 		-f /lib/rcscripts/awk/functions.awk \
 		-f /lib/rcscripts/awk/gendepends.awk
 
-eend $?
+eend $? "Failed to cache service dependencies"
 
 
 # vim:ts=4

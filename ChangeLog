@@ -2,6 +2,11 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  18 Nov 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add some more checks to src/awk/*.  Fix error printing for
+    /sbin/depscan.sh.
+
 * rc-scripts 1.4.2.2 (18 Nov 2002)
 
   18 Nov 2002; Martin Schlemmer <azarah@gentoo.org>:
