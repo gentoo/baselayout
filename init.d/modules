@@ -60,6 +60,12 @@ start() {
 		then
 			einfo "Using /etc/modules.autoload.d/kernel-${KV_MAJOR}.${KV_MINOR}:"
 			load_modules /etc/modules.autoload.d/kernel-"${KV_MAJOR}.${KV_MINOR}"
+			
+		elif [ ! -f /etc/modules.autoload.d/kernel-"${KV_MAJOR}.${KV_MINOR}" ]
+		then
+			ewarn "Missing /etc/modules.autoload.d/kernel-${KV_MAJOR}.${KV_MINOR}"
+			ewarn "Using /etc/modules.autoload.d/kernel-2.4 for the time being:"
+			load_modules /etc/modules.autoload.d/kernel-2.4
 		else
 			einfo "Using /etc/modules.autoload.d/kernel-2.4:"
 			load_modules /etc/modules.autoload.d/kernel-2.4
