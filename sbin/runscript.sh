@@ -252,7 +252,7 @@ svc_start() {
 					then
 						/etc/init.d/"${myserv}" start
 
-						# A 'need' dependancy is critical for startup
+						# A 'need' dependency is critical for startup
 						if [ "$?" -ne 0 -a -L "${svcdir}/need/${x}/${myservice}" ]
 						then
 							local netcount="$(ls -1 ${svcdir}/started/net.* 2> /dev/null | \
@@ -483,7 +483,7 @@ valid_iafter() {
 	done
 }
 
-# List broken dependancies of type 'need'
+# List broken dependencies of type 'need'
 broken() {
 	local x=""
 	if [ -d "${svcdir}/broken/$1" ]
@@ -634,7 +634,7 @@ do
 			restart
 		fi
 
-		# Restart dependancies as well
+		# Restart dependencies as well
 		if [ -L "${svcdir}/started/${myservice}" ]
 		then
 			for x in $(dolisting "${svcdir}/snapshot/")

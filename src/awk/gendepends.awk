@@ -158,7 +158,7 @@ function depend_dbadd(type, service, deplist, 	x, deparray)
 				ewarn("NEED:  can't find service \"" deparray[x] "\" needed by \"" service "\";")
 				ewarn("       continuing...")
 
-				# service is broken due to missing 'need' dependancies
+				# service is broken due to missing 'need' dependencies
 				if (!isdir(SVCDIR "/broken/" service))
 					assert(mktree(SVCDIR "/broken/" service, 0755),
 					       "mktree(" SVCDIR "/broken/" service ", 0755)")

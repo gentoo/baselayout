@@ -2,6 +2,21 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  28 Feb 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Merge some of the optimizations from Graham Forest <vladimir@gentoo.org>.
+
+    Fix spelling of dependency and some other spelling/grammer issues.
+    Thanks goes to Kerin Millar <kerin@recruit2recruit.net> and
+    Mike Frysinger <vapier@gentoo.org>, bug #15498.
+
+    Change $svcdir to '/var/lib/init.d' to be more FHS compliant, bug #15192.
+
+    Add 'Eterm' to /etc/skel/.bashrc, closing bug #14662.
+
+    Adjust comments about PROTOCOLS in /etc/rc.conf to try and prevent
+    bug #14556.
+
   27 Feb 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Finally fix /etc/init.d/halt.sh to unmount non critical mounts properly.
@@ -875,7 +890,7 @@
 
     Added caching of the "depend() { need foo; } " lines, and updated
     /etc/init.d/depscan.sh to touch the actual files less.  This should
-    speedup dependancy caching a lot, especially on slow machines.
+    speedup dependency caching a lot, especially on slow machines.
 
     Updated /etc/passwd to have users with no shell defined, use /bin/false
     for security.
@@ -889,8 +904,8 @@
     /etc/init.d/depscan.sh, /etc/init.d/functions.sh and
     /etc/init.d/runscript.sh for this (added wrap_rcscript() function).
 
-    Removed stopping of dependant services that have current service as
-    a 'use'dependancy ... should be less confusing now.
+    Removed stopping of dependent services that have current service as
+    a 'use'dependency ... should be less confusing now.
     Updated /etc/init.d/runscript.sh for this.
 
   28 Feb 2002; Martin Schlemmer <azarah@gentoo.org>:
@@ -982,7 +997,7 @@
     /etc/init.d/functions.sh for this.
 
     Updated /etc/init.d/depscan.sh to work with '*' as argument for
-    dependancy types.  This can be used with 'use' and 'before' to
+    dependency types.  This can be used with 'use' and 'before' to
     start a script last or first respectively.
 
     Added save_options() and get_options() to /etc/init.d/functions.sh
@@ -1061,11 +1076,11 @@
 
   28 Dec 2001; Martin Schlemmer (azarah@gentoo.org);
   
-    Updated /etc/init.d/depscan.sh to store info about missing dependancies
+    Updated /etc/init.d/depscan.sh to store info about missing dependencies
     of type 'need' in ${svcdir}/broken.  Also updated /etc/init.d/runscript.sh
-    to use this when starting a script ('need' dependancies is critical for
+    to use this when starting a script ('need' dependencies is critical for
     startup).  Added the broken() function to /etc/init.d/runscript.sh
-    to list the missing dependancies.
+    to list the missing dependencies.
 
     Updated /etc/init.d/runscript.sh for svc_start() to have better error
     checking.

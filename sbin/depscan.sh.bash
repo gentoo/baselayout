@@ -49,7 +49,7 @@ depend_dbadd() {
 				ewarn "NEED:  can't find service \"${x}\" needed by \"${myservice}\";"
 				ewarn "       continuing..."
 				
-				#$myservice is broken due to missing 'need' dependancies
+				#$myservice is broken due to missing 'need' dependencies
 				if [ ! -d ${svcdir}/broken/${myservice} ]
 				then
 					install -d -m0755 ${svcdir}/broken/${myservice}
@@ -209,7 +209,7 @@ do
 	wrap_rcscript ${svcdir}/cache/${myservice}.depend || {
 		einfo "ERROR:  ${x} has syntax errors in it, please fix this before"
 		einfo "        trying to execute this script..."
-		einfo "NOTE:  the dependancies for this script has not been calculated!"
+		einfo "NOTE:  the dependencies for this script has not been calculated!"
 		rm -f {svcdir}/cache/${x##*/}.depend
 		continue
 	}

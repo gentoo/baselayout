@@ -17,7 +17,7 @@ then
 	eend $?
 
 	# We need to properly terminate devfsd to save the permissions
-	if [ -n "`ps -A | gawk '/devfsd/ { print }'`" ]
+	if [ -n "`ps --no-heading -C 'devfsd'`" ]
 	then
 		ebegin "Stopping devfsd"
 		killall -15 devfsd &> /dev/null
@@ -47,7 +47,7 @@ halt -w &> /dev/null
 #
 # Unmount file systems, killing processes if we have to.
 # Unmount loopback stuff first
-remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $1}' /proc/mounts |sort -r`"
+remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $1}' /proc/mounts | sort -r`"
 [ -n "${remaining}" ] && {
 	sig=
 	retry=3
@@ -71,7 +71,7 @@ remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $1}' /proc/mou
 				eend $? "Failed to detach device ${dev}"
 			}
 		done
-		remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts |sort -r`"
+		remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts | sort -r`"
 		[ -z "${remaining}" ] && break
 		/bin/fuser -k -m ${sig} ${remaining} &> /dev/null
 		sleep 5

@@ -450,8 +450,8 @@ rm -rf "${svcdir}/softscripts.old" &> /dev/null
 
 # We want devfsd running after a change of runlevel (this is mostly if we return
 # from runlevel 'single')
-if [ -z "`ps -A | gawk '/devfsd/ { print }'`" ] && \
-   ([ -f /proc/mounts ] && [ -n "`gawk '/\/dev devfs/ { print }' /proc/mounts`" ])
+if [ -z "`ps --no-heading -C 'devfsd'`" -a \
+     -n "`gawk '/\/dev devfs/ { print }' /proc/mounts 2> /dev/null`" ]
 then
 	/sbin/devfsd /dev &> /dev/null
 fi

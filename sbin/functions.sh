@@ -22,7 +22,7 @@ svcfstype="tmpfs"
 svcsize=1024
 shmdir="/mnt/.shm"
 
-# Different types of dependancies
+# Different types of dependencies
 deptypes="need use"
 # Different types of order deps
 ordtypes="before after"

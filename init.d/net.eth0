@@ -13,22 +13,31 @@ depend() {
 }
 
 checkconfig() {
-	if [ -z "$(eval echo \$\{iface_${IFACE}\})" ]
+	if [ -z "${iface_IFACE}" ]
 	then
 		eerror "Please make sure that /etc/conf.d/net has \$iface_$IFACE set"
 		return 1
 	fi
 }
 
+setup_env() {
+	# No reason to check these multiple times in the file
+	iface_IFACE="$(eval echo \$\{iface_${IFACE}\})"
+	dhcpcd_IFACE="$(eval echo \$\{dhcpcd_${IFACE}\})"
+	inet6_IFACE="$(eval echo \$\{inet6_${IFACE}\})"
+	alias_IFACE="$(eval echo \$\{alias_${IFACE}\})"
+}
+
 start() {
-	checkconfig || return 1
-	local iface_args="$(eval echo \$\{iface_${IFACE}\})"
-	local dhcp_args="$(eval echo \$\{dhcpcd_${IFACE}\})"
 	local retval=0
+
+	setup_env
+	checkconfig || return 1
+	
 	ebegin "Bringing ${IFACE} up"
-	if [ "$(eval echo \$\{iface_${IFACE}\})" != "dhcp" ]
+	if [ "${iface_IFACE}" != "dhcp" ]
 	then
-		/sbin/ifconfig ${IFACE} ${iface_args} >/dev/null || {
+		/sbin/ifconfig ${IFACE} ${iface_IFACE} >/dev/null || {
 			retval=$?
 			eend ${retval} "Failed to bring ${IFACE} up"
 			return ${retval}
@@ -40,7 +49,7 @@ start() {
 			return ${retval}
 		}
 	else
-		/sbin/dhcpcd ${dhcp_args} ${IFACE} >/dev/null || {
+		/sbin/dhcpcd ${dhcpcd_IFACE} ${IFACE} >/dev/null || {
 			retval=$?
 			eend ${retval} "Failed to bring ${IFACE} up"
 			return ${retval}
@@ -48,7 +57,7 @@ start() {
 	fi
 	eend 0
 
-	if [ -n "$(eval echo \$\{alias_${IFACE}\})" ]
+	if [ -n "${alias_IFACE}" ]
 	then
 		local x=""
 		local num=0
@@ -56,7 +65,7 @@ start() {
 		local aliasnmask=""
 
 		ebegin "  Adding aliases"
-		for x in $(eval echo \$\{alias_${IFACE}\})
+		for x in ${alias_IFACE}
 		do
 			aliasbcast="$(eval echo \$\{broadcast_${IFACE}\} \| awk \'\{ print \$$((num + 1)) \}\')"
 			if [ -n "${aliasbcast}" ]
@@ -76,20 +85,20 @@ start() {
 			num=$((num + 1))
 			eend 0
 		done
-		save_options "alias" "$(eval echo \$\{alias_${IFACE}\})"
+		save_options "alias" "${alias_IFACE}"
 	fi
 
-	if [ -n "$(eval echo \$\{inet6_${IFACE}\})" ]
+	if [ -n "${inet6_IFACE}" ]
 	then
 		local x=""
 		ebegin "  Adding inet6 addresses"
-		for x in $(eval echo \$\{inet6_${IFACE}\})
+		for x in ${inet6_IFACE}
 		do
 			ebegin "    ${IFACE} inet6 add ${x}"
 			/sbin/ifconfig ${IFACE} inet6 add ${x} >/dev/null
 			eend 0
 		done
-		save_options "inet6" "$(eval echo \$\{inet6_${IFACE}\})"
+		save_options "inet6" "${inet6_IFACE}"
 	fi
 	
 	if [ -n "${gateway}" ] && [ "${gateway%/*}" = "${IFACE}" ]
@@ -117,10 +126,11 @@ start() {
 
 stop() {
 	local myalias="$(get_options alias)"
+	local myinet6="$(get_options inet6)"
+
 	ebegin "Bringing ${IFACE} down"
 
 	# Also down the inet6 interfaces
-	local myinet6="$(get_options inet6)"
 	if [ -n "${myinet6}" ]
 	then
 		local x=""
@@ -142,7 +152,7 @@ stop() {
 		done
 	fi
 
-	if [ "$(eval echo \$\{iface_${IFACE}\})" = "dhcp" ]
+	if [ "${iface_IFACE}" = "dhcp" ]
 	then
 		/sbin/dhcpcd -k ${IFACE} &>/dev/null
 	

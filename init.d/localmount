@@ -22,14 +22,17 @@ start() {
 		USBFS="usbdevfs"
 	fi
 
+	# Cache whether USBFS is 
+	USBBOOL="$(egrep "${USBFS}" /proc/filesystems)"
+
 	# Mount usbdevfs if kernel have support
-	if [ -z "$(egrep "${USBFS}" /proc/filesystems)" ]
+	if [ -z "${USBBOOL}" ]
 	then
 		# >/dev/null to hide errors from non-USB users
 		modprobe usbcore &>/dev/null
 	fi
-	if [ -n "$(egrep "${USBFS}" /proc/filesystems)" ] && [ -e /proc/bus/usb ] && \
-	   [ ! -e /proc/bus/usb/devices ]
+	if [ -n "${USBBOOL}" ] && \
+	   [ -e /proc/bus/usb -a ! -e /proc/bus/usb/devices ]
 	then
 		ebegin "Mounting USB device filesystem (${USBFS})"
 		mount -t ${USBFS} ${USBFS} /proc/bus/usb &>/dev/null

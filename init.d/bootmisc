@@ -41,7 +41,8 @@ start() {
 		# Clean up any stale locks.
 		#
 		ebegin "Cleaning /var/lock, /var/run"
-		( cd /var/lock && find . -type f -exec rm -f -- {} \; 1>&2 )
+		( find /var/lock -type f -print0 | xargs -0 rm -f -- 1>&2 )
+		
 		#
 		# Clean up /var/run and create /var/run/utmp so that we can login.
 		#
@@ -50,16 +51,16 @@ start() {
 			local daemon="${x##*/}"
 			daemon="${daemon%*.pid}"
 			# Do not remove pidfiles of already running daemons
-			if [ "$(ps -A | awk '{print $4}' | egrep "${daemon}")" != "${daemon}" ]
+			if [ -z "`ps --no-heading -C "${daemon}"`" ]
 			then
-				if [ -f ${x} -o -L ${x} ]
+				if [ -f "${x}" -o -L "${x}" ]
 				then
-					rm -f ${x}
+					rm -f "${x}"
 				fi
 			fi
 		done
 		# Setup login records
-		: > /var/run/utmp
+		> /var/run/utmp
 		touch /var/log/wtmp
 		chgrp utmp /var/run/utmp /var/log/wtmp
 		chmod 0664 /var/run/utmp /var/log/wtmp
@@ -76,16 +77,8 @@ start() {
 		# Clean up /tmp directory
 		#
 		ebegin "Cleaning /tmp directory"
-		rm -f /tmp/.X*-lock &>/dev/null
-		rm -f /tmp/esrv* &>/dev/null
-		rm -f /tmp/kio* &>/dev/null
-		rm -f /tmp/jpsock.* &>/dev/null
-		rm -f /tmp/.fam*
-		rm -rf /tmp/.esd* &>/dev/null
-		rm -rf /tmp/orbit-* &>/dev/null
-		rm -rf /tmp/ssh-* &>/dev/null
-		rm -rf /tmp/ksocket-* &>/dev/null
-		rm -rf /tmp/.*-unix &>/dev/null
+		rm -f /tmp/.X*-lock /tmp/esrv* /tmp/kio* /tmp/jpsock.* /tmp/.fam* &>/dev/null
+		rm -rf /tmp/.esd* /tmp/orbit-* /tmp/ssh-* /tmp/ksocket-* /tmp/.*-unix &>/dev/null
 		# Make sure our X11 stuff have the correct permissions
 		mkdir -p /tmp/.{ICE,X11}-unix &>/dev/null
 		chown root.root /tmp/.{ICE,X11}-unix &>/dev/null
@@ -98,11 +91,12 @@ start() {
 	#
 	[ -f /etc/resolv.conf ] || touch /etc/resolv.conf &>/dev/null
 
-	if test -c /dev/ttyp0 &> /dev/null
-	then
-		chmod 666 /dev/tty[p-za-e][0-9a-f] &>/dev/null
-		chown root:tty /dev/tty[p-za-e][0-9a-f] &>/dev/null
-	fi
+# This should be handled by devfsd ...
+#	if test -c /dev/ttyp0 &>/dev/null
+#	then
+#		chmod 666 /dev/tty[p-za-e][0-9a-f] &>/dev/null
+#		chown root:tty /dev/tty[p-za-e][0-9a-f] &>/dev/null
+#	fi
 }
 
 

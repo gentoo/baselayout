@@ -48,7 +48,7 @@ RC_FAIL_ON_ZOMBIE="no"
  
 # rc-scripts dep-cache directory
 
-svcdir="/var/state/init.d"
+svcdir="/var/lib/init.d"
 
 
 # Should we mount $svcdir as a tmpfs or ramfs for some speed

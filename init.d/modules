@@ -27,12 +27,10 @@ start() {
 	eend $? "Failed to calculate dependencies"
 
 	# Loop over every line in /etc/modules.autoload.
-	(cat /etc/modules.autoload; echo) | # make sure there is a LF at the end
+	(egrep -v "^#|^$" /etc/modules.autoload; echo) | # make sure there is a LF at the end
 	while read module args
 	do
-		case "${module}" in
-			\#*|"") continue ;;
-		esac
+		[ -z "${module}" ] && continue
 		ebegin "  Loading module ${module}"
 		modprobe ${module} ${args} &>/dev/null
 		eend $? "  Failed to load ${module}"
