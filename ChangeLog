@@ -27,7 +27,7 @@
 
     Fix a logic error in /lib/rcscripts/sh/rc-services.sh that cause the
     get_dep_info() function to skip the last entry in the RC_DEPEND_TREE
-    array (in my case 'net') to be ignored.
+    array (in my case 'net').
 
     We did not handle the 'net' dependency properly in valid_iuse() and
     valid_iafter().  Fix this in /lib/rcscripts/sh/rc-services.sh, closing
