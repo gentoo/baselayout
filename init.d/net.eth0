@@ -61,25 +61,11 @@ iface_start() {
 		# Check that eth0 was not brough up by the kernel ...
 		if [ "${status_IFACE}" != "up" ]
 		then
-			# The interface has to be up before we can check
-			# that it has a carrier ...
-			/sbin/ifconfig ${IFACE} up >/dev/null || {
+			/sbin/dhcpcd ${dhcpcd_IFACE} ${IFACE} >/dev/null || {
 				retval=$?
 				eend ${retval} "Failed to bring ${IFACE} up"
 				return ${retval}
 			}
-			# Check that the interface has a carrier
-			if ifconfig ${IFACE} | grep -qc 'RUNNING' &>/dev/null
-			then
-				/sbin/dhcpcd ${dhcpcd_IFACE} ${IFACE} >/dev/null || {
-					retval=$?
-					eend ${retval} "Failed to bring ${IFACE} up"
-					return ${retval}
-				}
-			else
-				eend 1 "${IFACE} is not plugged in or has no carrier signal"
-				return 1
-			fi
 		fi
 	fi
 	eend 0
