@@ -512,9 +512,9 @@ wrap_rcscript() {
 	( echo "function test_script() {" ; cat "$1"; echo "}" ) \
 		> "${svcdir}/${myservice}-$$"
 
-	if source "${svcdir}/${myservice}-$$" &> /dev/null
+	if source "${svcdir}/${myservice}-$$"
 	then
-		test_script &> /dev/null
+		test_script
 		retval=0
 	fi
 	rm -f "${svcdir}/${myservice}-$$"

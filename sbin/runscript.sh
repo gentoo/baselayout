@@ -360,7 +360,7 @@ svc_restart() {
 }
 
 svc_status() {
-	# The basic idea here is to have some sort of consistant
+	# The basic idea here is to have some sort of consistent
 	# output in the status() function which scripts can use
 	# as an generic means to detect status.  Any other output
 	# should thus be formatted in the custom status() function
@@ -386,7 +386,8 @@ svc_status() {
 	status
 }
 
-wrap_rcscript "${myscript}" || {
+rcscript_errors=$(wrap_rcscript "${myscript}" 2>&1) || {
+	echo "${rcscript_errors}" >&2
 	eerror "ERROR:  \"${myscript}\" has syntax errors in it; not executing..."
 	exit 1
 }
