@@ -52,45 +52,20 @@ do
 		fi
 	fi
 done
-	
-if [ -e /dev/.devfsd ] 
-then
-	wrongmount=1
-	clear
-	echo
-	einfo "The Gentoo Linux system initialization scripts have detected that /dev"
-	einfo "has been automatically mounted by the kernel.  This behavior will"
-	einfo "prevent devfs from automatically saving and restoring device"
-	einfo "permissions.  While not optimal, your system will still be able to boot,"
-	einfo "but any changes to permissions in /dev will not be persistent until you"
-	einfo "fix this problem."
-	echo
-	einfo "Fortunately, the fix for this problem is quite simple; all you need to"
-	einfo "do is pass the \"devfs=nomount\" boot option to the kernel (via GRUB"
-	einfo "or LILO) the next time you boot.  Then /dev will not be auto-mounted."
-	einfo "The next time you compile your kernel, be sure that you do not"
-	einfo "enable the \"Automatically mount filesystem at boot\" devfs kernel"
-	einfo "configuration option.  Then the \"devfs=nomount\" hack will no longer be"
-	einfo "needed."
-	echo
-	read -t 15 -p "(hit Enter to continue or wait 15 seconds...)" 
-else	
-	wrongmount=0
-	ebegin "Moving /dev to /dev-state"; try mount -n --bind /dev /dev-state; eend
-	ebegin "Mounting devfs at /dev"; try mount -n -t devfs none /dev; eend
-	if [ -d /dev-state/compat ]
-	then
-		ebegin "Copying devices from /dev-state/compat to /dev"
-		cp -ax /dev-state/compat/* /dev
-		eend
-	fi
-fi
 
+#with the new way, /dev can be mounted by the kernel ...
+wrongmount=0
+
+if [ "$devfs" = "yes" ] && [ ! -e /dev/.devfsd ]
+then
+	ebegin "Mounting devfs at /dev"; try mount -n -t devfs none /dev; eend
+fi
+	
 #mount shm and do dep scan	
 mountshm 
 /etc/init.d/depscan.sh
 
-if [ "$devfs" = "yes" ]
+if [ "$devfs" = "yes" ] && [ -e /dev/.devfsd ]
 then
 	ebegin "Starting devfsd"; /sbin/devfsd /dev >/dev/null 2>&1; eend $?
 fi
@@ -104,6 +79,11 @@ eend
 
 #Now that swap has been activated, we can calculate a reasonable size limit
 #for /dev/shm so that it doesn't exhaust VM if filled.
+
+#set the console loglevel to 1, as we want a cleaner boot
+#the logger should anyhow dump the ring-0 buffer at start to the
+#logs, and that with dmesg can be used to check for problems
+/bin/dmesg -n 1
 
 exec /sbin/init.system $*
 #rename to init.system

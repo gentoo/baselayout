@@ -2,13 +2,14 @@
 
 depend() {
 	need bootmisc localmount
-	use sysklogd metalog syslog-ng
+#	use logger
 }
 
 start() {
 	[ -f /proc/modules ] || return
 	[ -e /sbin/depmod ] || return
 	ebegin "Calculating module dependencies"
+	update-modules > /dev/null
 	depmod -a > /dev/null
 	eend $?
 

@@ -5,30 +5,53 @@ depend() {
 }
 
 start() {
-	source /etc/rc.conf
 	local myopts
 	myopts=""
 	if [ ! -f /etc/adjtime ]
 	then
 		echo "0.0 0 0.0" > /etc/adjtime
 	fi
-
 	if [ "$CLOCK" = "UTC" ]
 	then
 		myopts="--utc"
-		TBLURB="UTC"
+		TBLURB="[UTC]"
 	else
-		TBLURB="Local Time"
+		myopts="--localtime"
+		TBLURB="[Local Time]"
 	fi
 
 	if [ -x /sbin/hwclock ]
 	then
 		ebegin "Setting system clock to hardware clock ${TBLURB}"
 			/sbin/hwclock --adjust ${myopts} 1>&2
-			/sbin/hwclock --hctosys ${myopts} 1>&2
+			/sbin/hwclock --hctosys ${myopts} 1>&2 
+		eend 0 
+	else
+		eend 1 "hwclock executable not found"
+	fi
+	return
+}
+
+stop() {
+	local myopts
+	myopts=""
+        if [ "$CLOCK" = "UTC" ]
+	then
+		myopts="--utc"
+		TBLURB="[UTC]"
+	else
+		myopts="--localtime"
+		TBLURB="[Local Time]"
+	fi
+
+	if [ -x /sbin/hwclock ]
+	then
+		ebegin "Syncing hardware clock to system clock ${TBLURB}"
+			/sbin/hwclock --systohc ${myopts} 1>&2
 		eend 0
 	else
 		eend 1 "hwclock executable not found"
 	fi
 	return
 }
+												

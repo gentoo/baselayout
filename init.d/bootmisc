@@ -35,10 +35,12 @@ start() {
 	rm -f /tmp/.X*-lock
 	rm -f /tmp/esrv*
 	rm -f /tmp/kio*
+	rm -f /tmp/jpsock.*
 	rm -rf /tmp/.esd*
 	rm -rf /tmp/orbit-*
 	rm -rf /tmp/ssh-*
 	rm -rf /tmp/ksocket-*
+	rm -rf /tmp/.*-unix
 	eend 0
 
 	#

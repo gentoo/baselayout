@@ -12,8 +12,11 @@ checkconfig() {
 }
 
 start() {
-	checkconfig || return 1
-	myhost=`cat /etc/hostname` 1>&2
+	if [ ! checkconfig ] ; then
+		myhost=localhost
+	else
+		myhost=`cat /etc/hostname` 1>&2
+	fi
 	ebegin "Setting hostname to $myhost"
 	/bin/hostname ${myhost}
 	eend $?

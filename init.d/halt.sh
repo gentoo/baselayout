@@ -4,6 +4,15 @@
 ebegin "Deactivating swap"
 swapoff -a 1>&2
 eend $?
+
+#we need to properly terminate devfsd to save the permissions
+if [ "`ps -A |grep devfsd`" ]
+then
+	ebegin "Stopping devfsd"
+	killall -15 devfsd >/dev/null 2>&1
+	eend $?
+fi
+
 ebegin "Sending all processes the TERM signal"
 killall5 -15
 eend $?

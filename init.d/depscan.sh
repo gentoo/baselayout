@@ -1,5 +1,12 @@
 #!/bin/bash
 
+#needed for $SYSLOGGER (/etc/rc.conf overrides /etc/conf.d/basic).
+[ -e /etc/conf.d/basic ] && source /etc/conf.d/basic
+[ -e /etc/rc.conf ]      && source /etc/rc.conf
+
+#set default if it is not set
+[ "$SYSLOGGER" = "" ] && SYSLOGGER="sysklogd metalog syslog-ng"
+
 source /etc/init.d/functions.sh
 svcdir=/dev/shm/.init.d
 
@@ -35,6 +42,14 @@ depend_dbadd() {
 				continue
 			fi
 		fi
+
+		#ugly bug ... if a service depends on itself, it creates
+		#a 'mini fork bomb' effect, and breaks things...
+		if [ "$x" = "$myservice" ]
+		then
+			einfo "depend: service \"${x}\" can't depend on itself; continuing..."
+			continue
+		fi
 		if [ ! -d ${svcdir}/${mytype}/${x} ]
 		then
 			install -d -m0755 ${svcdir}/${mytype}/${x}
@@ -57,7 +72,7 @@ use() {
 ebegin "Caching service dependencies"
 rm -rf ${svcdir}/need/*
 rm -rf ${svcdir}/use/*
-for x in /etc/runlevels/*/*
+for x in /etc/init.d/*
 do
 	if [ ! -L $x ]
 	then
@@ -86,6 +101,7 @@ do
 	fi
 	if [ "$USE" != "" ]
 	then
+		USE=${USE/logger/${SYSLOGGER}}
 		depend_dbadd use $myservice $USE
 	fi
 done

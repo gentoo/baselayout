@@ -8,15 +8,114 @@
   tarball.sh to include the new man directory. Updated baselayout to install
   these manpages. Slightly tweak the /etc/modules.autoload comments.
 
+  28 Nov 2001; Martin Schlemmer (azarah@gentoo.org): Updated /sbin/init
+    to work correctly with the 'gentoo=nodevfs' option, and cleaned 
+    out old code.
+
+    Updated /etc/init.d/bootmisc with additional lock files to clean.
+
+    Updated /etc/init.d/hdparm to check if devfs is used.
+
+  27 Nov 2001; Martin Schlemmer (azarah@gentoo.org): Updated
+  /etc/init.d/depscan.sh for a virtual 'use' depend, called 'logger'
+  that can be used for services that needs to have a logger started
+  before they are started.  Updated /etc/conf.d/basic with $SYSLOGGER
+  that is used to define what loggers the 'logger' depend represent.
+  Also updated /etc/init.d/hdparm and /etc/init.d/modules to use
+  this new depend.
+
+  26 Nov 2001; Martin Schlemmer (azarah@gentoo.org): Updated
+  /etc/passwd and /etc/group with minor fixes to pass pwck and grpck.
+
+  25 Nov 2001; Martin Schlemmer (azarah@gentoo.org): Changed umask in
+    /etc/profile for the user to 077 for security.
+
+    Added a localhost line to /etc/hosts after yet another post to gentoo-user.
+    I cant see any problem with this, and since nobody else wants to take the
+    plunge ....
+
+    Added a stop() function to /etc/init.d/clock.  Also removed uneeded
+    'source /etc/rc.conf' line.
+
+    Updated /etc/init.d/hostname to set the hostname to 'localhost' if
+    /etc/hostname is invalid.
+
+    Updated /etc/init.d/hdparm to display a [ok] for each drive it optimizes.
+
+    Updated /sbin/init to move the entries in /lib/dev-state to /dev before
+    running devfsd, as it did still not save settings properly.  Also removed
+    old /dev-state/compat stuff.
+
+    Removed a stupid bug out of /sbin/init ... /lib/dev-state/* was moved
+    to /dev *before* /dev was mounted.
+
+    Seems the .keep files in /lib/dev-state/pts and /lib/dev-state/shm 
+    caused /sbin/init to lock while moving /lib/dev-state/* to /dev. Added
+    the needed fixes to the baselayout ebuild.
+
+    On second thoughts, removed the 'try' out of the code that moves
+    /lib/dev-state/* to /dev, since this is not a critical task, and
+    booting will still continue on failure.
+
   25 Nov 2001; ncsd, the name service cache daemon script, has been removed
   from the default "default" runlevel.  It still exists in the archive so that
-  users who want/need it can add it easily. 
+  users who want/need it can add it easily.
 
   25 Nov 2001; Updated the /etc/fstab; removed usbdevfs (explicitly mounted),
-  removed notail from the ext2 boot partition, other cleanups. 
+  removed notail from the ext2 boot partition, other cleanups.
 
   25 Nov 2001; Fixed init.d/clock script to work in UTC mode.
-  
+
+  24 Nov 2001; Martin Schlemmer (azarah@gentoo.org): Added /etc/devfsd.conf
+    and updated /sbin/init to use a new scheme for saving /dev permissions.
+    Also moved /dev-state to /lib/dev-state which is a more standard location.
+
+    Added /etc/conf.d and moved rc.conf there as /etc/conf.d/basic.  Created
+    /etc/rc.conf again as a blank file .. the website should be updated to
+    say that the user should look in /etc/conf.d/* for stuff to configure.
+
+    Added /etc/init.d/hdparm and /etc/conf.d/hdparm; a script and config
+    file for setting generic optimizations for the disk drives.
+
+    Fixed a ugly bug in /etc/init.d/depscan.sh.  If a service depended on
+    itself, calling depscan.sh or changing runlevels cause a tempory effect
+    similar to a 'mini fork bomb'.  Afterwards the depends was broken, and
+    changing runlevels did not want to work.
+
+    Updated /etc/init.d/halt.sh to terminate and display message for devfsd.
+    More cosmetic than anything else, but cant hurt with the new dev-state
+    scheme.
+
+    Removed config stuff from /etc/init.d/net.eth0, and moved it to 
+    /etc/conf.d/net.eth0.  Also added a comment to this effect.
+
+    Removed config stuff from /etc/init.d/net.eth0-dhcp, and moved it to
+    /etc/conf.d/net.eth0-dhcp.  Also added a comment to this effect.
+
+    Updated gentoo-src/rc-scripts/rc-lists/default to add /etc/init.d/hdparm
+    to the default runlevel.
+
+    Updated /sbin/init to set the console log level to 1, so that bootup
+    can be much cleaner.  Also updated /etc/init.d/modules not to have
+    a logger in it 'use' depends, as it should not be needed anymore.
+
+    Updated /sbin/rc to check if devfsd is still running between runlevel
+    changes.
+
+    Updated /etc/init.d/modules to run update-modules.  We want to be sure
+    /etc/modules.conf is updated when running depmod -a.
+
+    Change ftp's uid to 21 in /etc/passwd (was the same as bind).  Also
+    added a entry for xfs (X Font Server) in /etc/passwd and /etc/group.
+
+    Added /etc/init.d/net.ppp0, /etc/conf.d/net.ppp0 and
+    /usr/lib/ppp/chat-default as part of my new pppd scripts.  Also
+    updated tarball.sh to handle ppp/chat-default.
+
+    Added /etc/skel/.bash* to make things cleaner and set $INPUTRC.
+
+    Minor changes I forgot about.
+
   17 Nov 2001; Donny Davies (woodchip@gentoo.org): Added /etc/shells file
   to rc-scripts.  Can remove it from sys-libs/shadow at the next release.
 
@@ -33,28 +132,28 @@
   Removed try() out of init.d/runscript.sh (why was this here ?).
 
   14 Nov 2001; Martin Schlemmer (azarah@gentoo.org): init.d/bootmisc:  Now
-  cleans /tmp.  Also creates /etc/resolv.conf if it doesn't exist.
+    cleans /tmp.  Also creates /etc/resolv.conf if it doesn't exist.
 
-  init.d/hostname:  Added check for a valid /etc/hostname.
+    init.d/hostname:  Added check for a valid /etc/hostname.
 
-  init.d/keymaps:  Added check for valid $KEYMAP.
+    init.d/keymaps:  Added check for valid $KEYMAP.
 
-  init.d/modules:  Added sysklogd, metalog, syslog-ng as 'use' deps.  This
-  should solve Woodchip's syslog+glue issue.  We just have to change the
-  console loglevel for metalog and syslog-ng (sysklogd already updated) not to
-  output info and warnings, etc to the console, then boot will be much cleaner.
-  Also the install guide will need changing to add the loggers to 'boot' and
-  not 'default' runlevel.
+    init.d/modules:  Added sysklogd, metalog, syslog-ng as 'use' deps.  This
+    should solve Woodchip's syslog+glue issue.  We just have to change the
+    console loglevel for metalog and syslog-ng (sysklogd already updated) not to
+    output info and warnings, etc to the console, then boot will be much cleaner.
+    Also the install guide will need changing to add the loggers to 'boot' and
+    not 'default' runlevel.
 
-  init.d/mountall.test:  Hopefully updated to the new rc-scripts style.  Is
-  this really needed (I cannot see that it is used anywhere ...)?
+    init.d/mountall.test:  Hopefully updated to the new rc-scripts style.  Is
+    this really needed (I cannot see that it is used anywhere ...)?
 
   13 Nov 2001; Martin Schlemmer (azarah@gentoo.org): Updated
-  init.d/runscript.sh, init.d/depscan.sh and sbin/rc with a new depend called
-  'uses'.  It basically have the same usage as 'need', except that it do not
-  start services that is not in the current and 'boot' runlevels.
+    init.d/runscript.sh, init.d/depscan.sh and sbin/rc with a new depend called
+    'uses'.  It basically have the same usage as 'need', except that it do not
+    start services that is not in the current and 'boot' runlevels.
 
-  Updated init.d/netmount to use the 'uses' depend.
+    Updated init.d/netmount to use the 'uses' depend.
 
   11 Nov 2001; Martin Schlemmer (azarah@gentoo.org): Fixed init.d/runscript.sh
   not to destroy the 'need' depends in /${svcdir}/need.  This caused subsequent

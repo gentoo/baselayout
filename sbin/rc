@@ -132,3 +132,10 @@ done
 # to recreate the deps after a change in runlevel)
 /etc/init.d/depscan.sh >/dev/null 2>/dev/null
 
+#we want devfsd running after a change of runlevel (this is mostly if we return
+#from runlevel 'single')
+if [ "`cat /proc/mounts | grep '/dev devfs'`" ] && [ ! "`ps -A |grep devfsd`" ]
+then
+	/sbin/devfsd /dev >/dev/null 2>&1
+fi
+
