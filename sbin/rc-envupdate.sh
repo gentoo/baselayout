@@ -30,9 +30,20 @@ parse_envd() {
 	>${svcdir}/varlist
 	>${svcdir}/vardata
 
+	local myenvd_files=""
+
 	#generate our variable list
 	for x in $(dolisting /etc/env.d/)
 	do
+		# Ignore backup files
+		if [ "$(echo ${x} | /bin/sed "s:\~$::")" = "${x}" ] && \
+		   [ "$(echo ${x} | /bin/sed "s:\.bak$::")" = "${x}" ]
+		then
+			myenvd_files="${myenvd_files} ${x}"
+		else
+			continue
+		fi
+
 		VARLIST="$(/bin/cat ${svcdir}/varlist)"
 		local variable=""
 		local value=""
@@ -63,7 +74,7 @@ parse_envd() {
 	done
 	
 	#now generate the the variable data
-	for x in $(dolisting /etc/env.d/)
+	for x in ${myenvd_files}
 	do
 		source ${svcdir}/vardata
 		VARLIST="$(/bin/cat ${svcdir}/varlist)"

@@ -2,6 +2,11 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  10 May 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+  Resolve bug #2505 ... /sbin/rc-envupdate.sh should not use
+  backup files to generate /etc/profile.env.
+
   6 May 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Fixed /sbin/rc-envupdate.sh to only use the $KDEDIR of the highest
