@@ -121,10 +121,9 @@ wpa_supplicant_pre_start() {
 		eend 1
 		return 1
 	fi
-	eend 0
 
 	eindent
-	vebegin "Waiting for association"
+	veinfo "Waiting for association"
 	eval timeout=\"\$\{wpa_timeout_${ifvar}:-60\}\"
 	for (( i=0; i<${timeout}; i++ )); do
 		wpa_supplicant_associated ${iface} && break
@@ -140,7 +139,7 @@ wpa_supplicant_pre_start() {
 			return 1
 		fi
 	fi
-	veend 0
+	eend 0
 
 	# Set ESSID for essidnet and report
 	ESSID=$( wpa_supplicant_get_essid ${iface} )

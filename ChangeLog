@@ -16,6 +16,10 @@
     instead of the old peer_dns_${IFACE}, peer_ntp_${IFACE}, peer_nis_${IFACE}
     ones
 
+    removed modules use dependancy in net.lo and added installed
+    - this allows use to provide "virtual" modules which are only "installed"
+      when other depended modules are installed
+
 * rc-scripts 1.6.7 (03 Dec 2004)
 
   03 Dec 2004; Mike Frysinger <vapier@gentoo.org>:

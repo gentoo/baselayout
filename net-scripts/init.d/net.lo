@@ -45,10 +45,12 @@ need() {
 	[[ $# -gt 1 ]] && x=$( echo -e "${x// /\n}" | sort | xargs )
 	eval "${MODULE}_need() { echo \"$x\"; }"
 }
-use() {
+installed() {
 	local x="$*"
 	[[ $# -gt 1 ]] && x=$( echo -e "${x// /\n}" | sort | xargs )
-	eval "${MODULE}_use() { echo \"$x\"; }"
+	# We deliberately misspell this as _installed will probably be used
+	# at some point
+	eval "${MODULE}_instlled() { echo \"$x\"; }"
 }
 
 sort() {
@@ -120,7 +122,7 @@ module_load_minimum() {
 # Load and check each module for sanity
 # If the module is not installed, the functions are to be removed
 modules_load_auto() {
-	local e f i j before after beforefuncs afterfuncs diffs unload
+	local e f i j beforefuncs afterfuncs diffs unload
 
 	# Populate the MODULES array
 	MODULES=( $( find ${MODULES_DIR}/ -maxdepth 1 -type f | sort ) )
@@ -129,7 +131,6 @@ modules_load_auto() {
 	# important that module functions and variables are prefixed with
 	# the module name, for example iproute2_
 
-#	before="$( typeset -f )"
 	beforefuncs="$( typeset -F )"
 	j=${#MODULES[@]}
 	loaded_interface=false
@@ -138,25 +139,6 @@ modules_load_auto() {
 		unload=false
 		module_load_minimum ${MODULES[i]} || unload=true
 		MODULES[i]=${MODULES[i]##*/}
-
-# Checking if the module has modified any functions is too expensive on CPU
-# at the moment
-# Plus it isn't entirely reliable
-
-#		# Double check that we've only *added* to the function list, not
-#		# replaced.  This is as much protection for devs as for users ;-)
-#		after="$( typeset -f )"
-#		diffs="$( diff -U0 -p <( echo "${before}" ) <( echo "${after}" ) 2>/dev/null | \
-#			awk 'BEGIN { ORS = " "; }				# no need for xargs
-#				 /^@@ / { f = $(NF-1); }			# collect function names reported by diff
-#				 /^-/ && $2 == "()" { f = substr($1, 2); }	# override when functions are removed
-#				 /^+/ && $2 == "()" { f = ""; }			# ignore when functions are added
-#				 /^-/ && f { print f; f = ""; }			# report only once per function
-#				 ' )"
-#		if [[ -n ${diffs} ]]; then
-#			eerror "${MODULES[i]} modified functions: ${diffs}"
-#			return 1
-#		fi
 
 		! ${unload} && ${MODULES[i]}_check_installed false || unload=true
 
@@ -170,9 +152,6 @@ modules_load_auto() {
 			unset MODULES[i]
 			unsetfuncs="${unsetfuncs} $( diff -U0 <( echo "${beforefuncs}" ) <( echo "${afterfuncs}" ) 2>/dev/null \
 				| awk 'BEGIN { ORS = " "; } /+declare -f/ { print $3; }' )"
-#			before="$( typeset -f )"
-#		else
-#			before="${after}"
 		fi
 		beforefuncs="${afterfuncs}"
 
@@ -183,7 +162,7 @@ modules_load_auto() {
 }
 
 
-# bool modules_check_use(void)
+# bool modules_check_installed(void)
 #
 # Ensure that all modules have the required modules loaded
 # This enables us to remove modules from the MODULES array
@@ -192,20 +171,17 @@ modules_load_auto() {
 # settings for the specific ESSID connected to as the user
 # may be using a daemon to configure wireless instead of our
 # iwconfig module
-modules_check_use() {
+modules_check_installed() {
 	local i j missingdeps nmods=${#MODULES[@]}
 
 	for (( i=0; i<nmods; i++ )); do
-		[[ $( type -t ${MODULES[i]}_use ) != function ]] && continue
-		for j in $( ${MODULES[i]}_use ); do
+		[[ $( type -t ${MODULES[i]}_instlled ) != function ]] && continue
+		for j in $( ${MODULES[i]}_instlled ); do
 			missingdeps=true
-			for (( k=0; k<nmods; k++ )); do
-				[[ -z ${MODULES[k]} ]] && continue
-				[[ ${j} != ${MODULES[k]} && ${j} != ${PROVIDES[k]} ]] && continue
-				missingdeps=false
-				break
-			done
-			${missingdeps} && unset MODULES[i] && unset PROVIDES[i]
+			if [[ $( type -t ${j}_check_installed ) == function ]]; then
+				${j}_check_installed && missingdeps=false
+			fi
+			${missingdeps} && unset MODULES[i] && unset PROVIDES[i] && break
 		done
 	done
 
@@ -463,7 +439,6 @@ modules_load()  {
 	done
 
 	if [[ -z ${modules_force[@]} ]]; then
-		modules_check_use || return 1
 		if ${starting}; then
 			modules_check_user || return 1
 		fi
@@ -476,14 +451,16 @@ modules_load()  {
 		modules_sort
 	fi
 
-	[[ ${iface} != lo ]] && veinfo "modules: ${MODULES[@]}"
-	eindent
-
 	# Setup class wrappers: interface_up -> iproute2_up, for example
 	j=${#MODULES[@]}
 	for (( i=0; i<j; i++ )); do
 		module_class_wrap ${MODULES[i]} ${PROVIDES[i]}
 	done
+
+	modules_check_installed || return 1
+
+	[[ ${iface} != lo ]] && veinfo "modules: ${MODULES[@]}"
+	eindent
 
 	[[ ${iface} != lo && ${starting} == true ]] && p=true
 	modules_check_depends ${p} || return 1

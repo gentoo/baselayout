@@ -15,16 +15,14 @@
 essidnet_depend() {
 	before interface
 	after wireless
-	use wireless
-	need interface
+	installed wireless
 }
 
 # bool essidnet_check_installed(void)
 #
-# Returns 1 if wireless-tools is installed, otherwise 0
+# Always returns 0 as we are "installed" by wireless in the depend function
 essidnet_check_installed() {
-	[[ -x /usr/sbin/iwconfig ]] && return 0
-	return 1
+	return 0
 }
 
 # char* essidnet_provides(void)
