@@ -33,6 +33,9 @@ start() {
 			eend 0
 		fi
 
+		# Reset pam_console permissions
+		rm -rf /var/run/console.lock /var/run/console/*
+
 		#
 		# Clean up any stale locks.
 		#
@@ -47,6 +50,9 @@ start() {
 		: > /var/run/utmp
 		#remove /var/run/utmpx
 		rm -f /var/run/utmpx
+		# Reset pam_console permissions
+		[ -x /sbin/pam_console_apply -a ! -c /dev/.devfsd ] && \
+			/sbin/pam_console_apply -r
 		#create the .keep to stop portage from removing /var/lock
 		>/var/lock/.keep
 		eend 0

@@ -2,6 +2,13 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  20 Aug 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update /etc/init.d/bootmisc to reset pam_console permissions.
+    
+    Update /etc/devfsd.conf to have the "pam_console_apply_devfsd.so"
+    line for getting devfs to work with pam_console.
+
   12 Aug 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Update /etc/init.d/keymaps to first load the windowkeys.inc then
