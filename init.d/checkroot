@@ -71,6 +71,9 @@ start() {
 
 	if [ "${BOOT}" = "yes" ]
 	then
+		local x=
+		local y=
+		
 		#
 		# Create /etc/mtab
 		#
@@ -80,6 +83,18 @@ start() {
 		mount -f /
 		# Make sure we do not have these in there
 		egrep -v '^(rootfs|/dev/root)' /proc/mounts >> /etc/mtab
+		# Now make sure /etc/mtab have additional info (gid, etc) in there
+		for x in $(awk '{ print $2 }' /proc/mounts | uniq)
+		do
+			for y in $(awk '{ print $2 }' /etc/fstab)
+			do
+				if [ "${x}" = "${y}" ]
+				then
+					mount -f -o remount $x
+					continue
+				fi
+			done
+		done
 
 		# Remove stale backups
 		rm -f /etc/mtab~ /etc/mtab~~

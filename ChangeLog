@@ -15,6 +15,10 @@
     Revert carrier detection check, as there is currently too many
     issues with it, bug #33272.
 
+    Make sure we mount already mounted mount (done in /sbin/rc) with
+    correct permissions, etc, bug #33764.  Modified /etc/init.d/checkroot
+    for this.
+
   16 Nov 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix carrier detection - we need to do a 'ifconfig $IFACE up' else
