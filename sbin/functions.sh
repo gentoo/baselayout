@@ -101,6 +101,7 @@ esyslog() {
 		pri="$1"
 		tag="$2"
 		shift 2
+		[ -z "$*" ] && return 0
 		/usr/bin/logger -p ${pri} -t ${tag} -- $*
 	fi
 }
