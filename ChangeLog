@@ -2,6 +2,10 @@
 # Copyright 2001 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  25 Nov 2001; ncsd, the name service cache daemon script, has been removed
+  from the default "default" runlevel.  It still exists in the archive so that
+  users who want/need it can add it easily. 
+
   25 Nov 2001; Updated the /etc/fstab; removed usbdevfs (explicitly mounted),
   removed notail from the ext2 boot partition, other cleanups. 
 

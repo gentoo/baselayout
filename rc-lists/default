@@ -1,10 +1,2 @@
-#alsa  
 local  
-#net.eth0  
 netmount  
-nscd  
-#svc-dcron  
-#svc-klog  
-#svc-sshd  
-#svc-syslog  
-#svc-xinetd
