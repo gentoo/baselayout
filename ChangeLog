@@ -2,6 +2,19 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+* rc-scripts 1.3.9 (25 Aug 2002)
+
+  25 Aug 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update /sbin/rc to fix some spelling/slang mistakes.  Closes
+    bug #6887.
+
+    Move /etc/init.d/net.ppp0 's config to /etc/conf.d/net.ppp0.
+    This closes bug #6378.
+
+    Add IPv6 support to /etc/init.d/net.eth0.  Closes bug #6175,
+    with many thanks to Asbjorn Sannes <ace@sannes.org>.
+
   20 Aug 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Update /etc/init.d/bootmisc to reset pam_console permissions.

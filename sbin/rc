@@ -59,7 +59,7 @@ then
 		devfs="no"
 	fi
 	
-	#fix wierd bug where there is a /dev/.devfsd in a unmounted /dev
+	#fix weird bug where there is a /dev/.devfsd in a unmounted /dev
 	mymounts="$(awk '$3 ~ "devfs" { print $0 }' /proc/mounts)"
 	if [ -e /dev/.devfsd ] && [ -z "${mymounts}" ]
 	then
@@ -335,7 +335,7 @@ done
 #clean the old runlevel
 rm -rf ${svcdir}/softscripts.old &>/dev/null
 
-#depends gets newked, so update them
+#depends gets nuked, so update them
 #(this problem should be solved now, but i think it will be a good idea
 # to recreate the deps after a change in runlevel)
 

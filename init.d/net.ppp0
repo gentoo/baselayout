@@ -6,64 +6,10 @@
 # 
 # $Header$
 
-
-PEER="MyPeer"                   # Define peer (aka ISP)
-DEBUG="no"                      # Turn on debugging
-PERSIST="no"                    # Redial after being dropped
-ONDEMAND="no"                   # Only bring the interface up on demand?
-MODEMPORT="/dev/ttyS1"          # TTY device modem is connected to
-LINESPEED="115200"              # Speed pppd should try to connect at
-INITSTRING=""                   # Extra init string for the modem
-DEFROUTE="yes"                  # Must pppd set the default route?
-HARDFLOWCTL="yes"               # Use hardware flow control?
-ESCAPECHARS="yes"               # Use escape caracters ?
-PPPOPTIONS=""                   # Extra options for pppd
-USERNAME="user"                 # The PAP/CHAP username
-PASSWORD="passwd"               # Your password/secret.  Ugly I know, but i
-                                # will work on something more secure later
-                                # on.  700 permission on /etc/init.d/net.ppp0
-                                # should be enouth for now.
-NUMBER="9180000"                # The telephone number of your ISP
-REMIP=""                        # The ip of the remote box if it should be set
-NETMASK=""                      # Netmask
-IPADDR=""                       # Our IP if we have a static one
-MRU="768"                       # Sets the MRU
-MTU="768"                       # Sets the MTU
-RETRYTIMEOUT="60"               # Retry timeout for when ONDEMAND="yes" or
-                                # PERSIST="yes"
-IDLETIMEOUT="600"               # Idle timeout for when ONDEMAND="yes"
-PEERDNS="no"                    # Should pppd set the peer dns?
-
-# This does not currently work due to a bug in pppd (I think)
-FWSCRIPT="/etc/init.d/firewall" # Optional FW script that pppd should start
-                                # and stop when the link comes up or drop.
-                                # It should be a script that takes one
-                                # argument, namely the action that should
-                                # be taken (start|stop).  The name of the
-                                # external interface on which the firewall
-                                # should be activated, should be hardcoded
-                                # into the script (you will tipically have
-                                # fw.ppp0, fw.ppp1, etc if you have more than
-                                # one ppp interface).
-                                #
-                                # called: ${FWSCRIPT} [start|stop]
-
-AUTOCFGFILES="yes"              # By default this scripts will generate
-                                # /etc/ppp/chat-isp, /etc/ppp/chap-secrets,
-                                # /etc/ppp/pap-secrets and /etc/ppp/peers/isp
-                                # automagically.  Set to "no" if you experience
-                                # problems, or need specialized scripts.  You
-                                # will have to create these files by hand then.
-                                # Also, the FWSCRIPT feature will not work.
+# NB: Config is in /etc/conf.d/net.$IFACE
 
 
-# Directory where the templates is stored
-TEMPLATEDIR=/etc/ppp
-
-
-# Do not change .. for determining name of interface
-DEVICE="${1##*.}"
-
+# Misc internal variables
 CMD_LINE=""
 FUNCT="${2}"
 
@@ -74,18 +20,18 @@ checkconfig() {
 		return 1
 	fi
 
-	if [ -e "/var/run/ppp-${DEVICE}.pid" ] && [ "${FUNCT}" = "start" ] ; then
+	if [ -e "/var/run/ppp-${IFACE}.pid" ] && [ "${FUNCT}" = "start" ] ; then
 		eerror "ppp0 is already up"
 		return 1
 	fi
 
-	if [ ! -e "/var/run/ppp-${DEVICE}.pid" ] && [ "${FUNCT}" = "stop" ] ; then
+	if [ ! -e "/var/run/ppp-${IFACE}.pid" ] && [ "${FUNCT}" = "stop" ] ; then
 
 		eerror "ppp0 not up"
 		
 		# Do our own cleanup
-		if [ -L ${svcdir}/started/net.${DEVICE} ] ; then
-			rm -f ${svcdir}/started/net.${DEVICE}
+		if [ -L ${svcdir}/started/net.${IFACE} ] ; then
+			rm -f ${svcdir}/started/net.${IFACE}
 		fi
 
 		return 1
@@ -100,7 +46,7 @@ start() {
 	setup_cmd_line
 	setup_cfg_files
 
-	ebegin "Bringing ${DEVICE} up"
+	ebegin "Bringing ${IFACE} up"
 	if [ -x "`which pppd`" ]; then
 
 		if [ "${DEFROUTE}" = "yes" ] ; then
@@ -108,7 +54,7 @@ start() {
 		fi
 
 		/usr/sbin/pppd ${CMD_LINE} ${MODEMPORT} ${LINESPEED} \
-			ipparam ${DEVICE} linkname ${DEVICE} call ${PEER} \
+			ipparam ${IFACE} linkname ${DEVICE} call ${PEER} \
 			noauth ${PPPOPTIONS}
         fi
         eend
@@ -118,16 +64,16 @@ stop() {
 
 	checkconfig || return 1
 
-	ebegin "Bringing ${DEVICE} down"
+	ebegin "Bringing ${IFACE} down"
 	if [ -x "`which ifconfig`" ]; then
 
-		if [ ! "`/sbin/ifconfig |grep ${DEVICE}`" ] ; then
+		if [ ! "`/sbin/ifconfig |grep ${IFACE}`" ] ; then
 			eerror "Interface seems to be down already"
 			return 1
 		fi
 		
-#		/sbin/ifconfig ${DEVICE} down
-		kill "`cat /var/run/ppp-${DEVICE}.pid |grep -v ${DEVICE}`"
+#		/sbin/ifconfig ${IFACE} down
+		kill "`cat /var/run/ppp-${IFACE}.pid |grep -v ${DEVICE}`"
 	fi
 	eend
 }
@@ -240,3 +186,6 @@ setup_cfg_files() {
 		fi
 	fi
 }
+
+
+# vim:ts=4

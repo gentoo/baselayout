@@ -6,8 +6,8 @@
 #NB: Config is in /etc/conf.d/net
 
 
-#for pcmcia users. note that pcmcia must be added to the same
-#runlevel as the net.* script that needs it.
+# For pcmcia users. note that pcmcia must be added to the same
+# runlevel as the net.* script that needs it.
 depend() {
 	use pcmcia
 }
@@ -70,6 +70,19 @@ start() {
 		done
 		save_options "alias" "$(eval echo \$\{alias_${IFACE}\})"
 	fi
+
+	if [ -n "$(eval echo \$\{inet6_${IFACE}\})" ]
+	then
+		local x=""
+		ebegin "  Adding inet6 addresses"
+		for x in $(eval echo \$\{inet6_${IFACE}\})
+		do
+			ebegin "    ${IFACE} inet6 add ${x}"
+			/sbin/ifconfig ${IFACE} inet6 add ${x} >/dev/null
+			eend 0
+		done
+		save_options "inet6" "$(eval echo \$\{inet6_${IFACE}\})"
+	fi
 	
 	if [ -n "${gateway}" ] && [ "${gateway%/*}" = "${IFACE}" ]
 	then
@@ -85,9 +98,8 @@ start() {
 		eend 0
 	fi
 
-	#enabling rp_filter causes wacky packets to be auto-dropped by
-	#the kernel
-
+	# Enabling rp_filter causes wacky packets to be auto-dropped by
+	# the kernel
 	if [ -e /proc/sys/net/ipv4/conf/${IFACE}/rp_filter ]
 	then
 		echo 1 > /proc/sys/net/ipv4/conf/${IFACE}/rp_filter
@@ -97,14 +109,26 @@ start() {
 stop() {
 	local myalias="$(get_options alias)"
 	ebegin "Bringing ${IFACE} down"
-	#do some cleanup in case the amount of aliases change
+
+	# Also down the inet6 interfaces
+	local myinet6="$(get_options inet6)"
+	if [ -n "${myinet6}" ]
+	then
+		local x=""
+		for x in ${myinet6}
+		do
+			/sbin/ifconfig ${IFACE} inet6 del ${x} >/dev/null
+		done
+	fi
+	
+	# Do some cleanup in case the amount of aliases change
 	if [ -n "${myalias}" ]
 	then
 		local x=""
 		local num=0
 		for x in ${myalias}
 		do
-			/sbin/ifconfig ${IFACE}:${num} down &>/dev/null
+			/sbin/ifconfig ${IFACE}:${num} down >/dev/null
 			num=$((num + 1))
 		done
 	fi
@@ -124,7 +148,7 @@ stop() {
 		done
 		echo "done"
 	else
-		/sbin/ifconfig ${IFACE} down &>/dev/null
+		/sbin/ifconfig ${IFACE} down >/dev/null
 	fi
 	eend 0
 }
