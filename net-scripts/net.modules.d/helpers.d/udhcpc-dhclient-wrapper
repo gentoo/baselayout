@@ -1,14 +1,12 @@
 #!/bin/bash
 # udhcpc dhclient wrapper for net-scripts
-# Version 0.6.3
+# Version 0.6.4
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
 
 # Instead of writing new functions for udhcpc, we simply map their variables
 # over to dhclient style ones and call those scripts!
-
-set
 
 iface_type=${1}
 

@@ -1,5 +1,5 @@
 # Wireless module for net-scripts
-# Version 0.6.3
+# Version 0.6.4
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
@@ -125,8 +125,10 @@ wireless_report() {
 	local essid
 
 	# We do this so that we get a 100% valid report
-	while [[ -z ${essid} ]]; do
+	while true ; do
 		essid=$( wireless_get_essid ${iface} )
+		[[ -n ${essid} ]] && break
+		sleep 1
 	done
 
 	local wep_status=$( wireless_wep_status ${iface} )
@@ -805,38 +807,38 @@ wireless_configure() {
 
 	# Do we have a preferred Access Point list specific to the interface?
 	eval e=( \"\$\{preferred_aps_${iface}\[@\]\}\" )
-	[[ -n ${e} ]] && preferred_aps=( "${e}" )
+	[[ -n ${e} ]] && preferred_aps=( "${e[@]}" )
 
 	# Do we have a blacklist Access Point list specific to the interface?
 	eval e=( \"\$\{blacklist_aps_${iface}\[@\]\}\" )
-	[[ -n ${e} ]] && blacklist_aps=( "${e}" )
-
-	wireless_scan ${iface} || return 1
-	wireless_scan_report
-
-	# Strip AP's from the list that have already been associated with
-	# other wireless cards in the system if requested
-	eval e=\"\$\{unique_ap_${iface}\}\"
-	[[ -n ${e} ]] && unique_ap=${e}
-	unique_ap=$( echo ${unique_ap:-no} | tr '[:upper:]' '[:lower:]' )
-	[[ no != ${unique_ap} ]] && wireless_strip_associated ${iface}
-
-	# We may want to introduce a variable here so the
-	# user can change the connect order
-	# For people mainly in publig hotspots, force_preferred
-	# would be at the end to make things faster if they have
-	# a big preferred list
-	wireless_connect_preferred ${iface} && return 0
-	wireless_force_preferred ${iface} && return 0
+	[[ -n ${e} ]] && blacklist_aps=( "${e[@]}" )
 
 	# Are we forcing preferred only?
 	eval e=\"\$\{preferred_only_${iface}\}\"
 	[[ -n ${e} ]] && preferred_only=${e}
 	preferred_only=$( echo ${preferred_only:-no} | tr '[:upper:]' '[:lower:]' )
-	[[ ${preferred_only} == no ]] && wireless_connect_not_preferred ${iface} && return 0
+
+	if [[ ${preferred_only} == force ]]; then
+		wireless_force_preferred ${iface} && return 0
+	else
+		wireless_scan ${iface} || return 1
+		wireless_scan_report
+
+		# Strip AP's from the list that have already been associated with
+		# other wireless cards in the system if requested
+		eval e=\"\$\{unique_ap_${iface}\}\"
+		[[ -n ${e} ]] && unique_ap=${e}
+		unique_ap=$( echo ${unique_ap:-no} | tr '[:upper:]' '[:lower:]' )
+		[[ no != ${unique_ap} ]] && wireless_strip_associated ${iface}
+
+		wireless_connect_preferred ${iface} && return 0
+		wireless_force_preferred ${iface} && return 0
+		[[ ${preferred_only} == no ]] && wireless_connect_not_preferred ${iface} && return 0
+	fi
 
 	e="associate with"
 	[[ -z ${mac_APs} ]] && e="find"
+	[[ ${preferred_only} == force ]] && e="force"
 	e="  Couldn't ${e} any access points on ${iface}"
 	
 	eval ESSID=\"\$\{adhoc_essid_${iface}\}\"
@@ -858,15 +860,16 @@ wireless_configure() {
 wireless_pre_start() {
 	local iface=${1} r=0 local wasup=true
 
-	if ! interface_is_up ${iface} ; then
-		interface_up ${iface}
-		wasup=false
-	fi
-
 	if ! wireless_check_extensions ${iface} ; then
-		einfo "  Wireless extensions not found for ${iface}"
-		! ${wasup} && interface_down ${iface}
-		return 0
+		if ! interface_is_up ${iface} ; then
+			interface_up ${iface}
+			wasup=false
+		fi
+		if ! wireless_check_extensions ${iface} ; then
+			einfo "  Wireless extensions not found for ${iface}"
+			! ${wasup} && interface_down ${iface}
+			return 0
+		fi
 	fi
 
 	einfo "  Configuring wireless network for ${iface}"
@@ -884,7 +887,7 @@ wireless_pre_start() {
 	eerror "Failed to configure wireless for ${iface}"
 	wireless_defaults ${iface}
 	unset ESSID
-	! ${wasup} && interface_down ${iface}
+	interface_down ${iface}
 	return 1
 }
 

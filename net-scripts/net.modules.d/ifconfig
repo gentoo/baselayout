@@ -1,5 +1,5 @@
 # ifconfig module for net-scripts
-# Version 0.6.3
+# Version 0.6.4
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
@@ -212,14 +212,6 @@ ifconfig_setup_vars() {
         # BACKWARD COMPATIBILITY: check for space-separated inet6 addresses
         if [[ ${#inet6_IFACE[@]} == 1 && ${inet6_IFACE} == *' '* ]]; then
                 inet6_IFACE=( ${inet6_IFACE} )
-        fi
-
-        # Validate some variables
-        if [[ -z ${config_IFACE} ]]; then
-                eerror "Please make sure that /etc/conf.d/net has one of the following set:"
-                eerror "  \$ifconfig_$iface for new-style configuration"
-                eerror "  \$iface_$iface for old-style configuration"
-                return 1
         fi
 }
 

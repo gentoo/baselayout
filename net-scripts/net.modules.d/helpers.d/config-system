@@ -1,6 +1,6 @@
 #!/bin/bash
 # config-system module for net-scripts
-# Version 0.6.3
+# Version 0.6.4
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
@@ -8,6 +8,7 @@
 source /etc/conf.d/net
 
 # This routine configures the local host for non-ip and routing info
+# from a DHCP client
 config_system() {
         local current_hostname=$( hostname ) peer
         if [[ -n ${new_host_name} ]] && [[ -z ${current_hostname} || ${current_hostname} != ${new_host_name} ]]; then

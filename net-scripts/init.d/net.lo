@@ -1,9 +1,11 @@
 #!/sbin/runscript
 # net-scripts main code
-# Version 0.6.3
+# Version 0.6.4
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
+# Many thanks to Aron Griffis (agriffis@gentoo.org)
+# for help, ideas and patches
 
 #NB: Config is in /etc/conf.d/net
 
@@ -24,22 +26,22 @@ depend() {
 # These are callbacks so mods[i] will be set.
 after() {
 	local x="$*"
-	[[ $# -gt 1 ]] && x=$(echo -e "${x// /\n}" | sort | xargs)
+	[[ $# -gt 1 ]] && x=$( echo -e "${x// /\n}" | sort | xargs )
 	eval "${mods[i]}_after() { echo \"$x\"; }"
 }
 before() {
 	local x="$*"
-	[[ $# -gt 1 ]] && x=$(echo -e "${x// /\n}" | sort | xargs)
+	[[ $# -gt 1 ]] && x=$( echo -e "${x// /\n}" | sort | xargs )
 	eval "${mods[i]}_before() { echo \"$x\"; }"
 }
 need() {
 	local x="$*"
-	[[ $# -gt 1 ]] && x=$(echo -e "${x// /\n}" | sort | xargs)
+	[[ $# -gt 1 ]] && x=$( echo -e "${x// /\n}" | sort | xargs )
 	eval "${mods[i]}_need() { echo \"$x\"; }"
 }
 use() {
 	local x="$*"
-	[[ $# -gt 1 ]] && x=$(echo -e "${x// /\n}" | sort | xargs)
+	[[ $# -gt 1 ]] && x=$( echo -e "${x// /\n}" | sort | xargs )
 	eval "${mods[i]}_use() { echo \"$x\"; }"
 }
 
@@ -57,7 +59,7 @@ modules_load()
 	local loaded_interface changed_something tmp modnums missingdeps
 	local -a mods=( $( find /etc/net.modules.d/ -maxdepth 1 -type f | sort ) ) umods sort_history
 
-	[[ lo != ${iface} ]] && ebegin "Loading networking scripts"
+	[[ lo != ${iface} ]] && ebegin "Loading networking modules"
 
 	# Each of these sources into the global namespace, so it's
 	# important that module functions and variables are prefixed with
@@ -65,7 +67,7 @@ modules_load()
 	before=$( typeset -f )
 	j=${#mods[@]}
 	loaded_interface=false
-	for ((i=0; i < j; i++ )); do
+	for (( i=0; i < j; i++ )); do
 		if ! source ${mods[i]} ; then
 			eerror "  ${mods[i]##*/} failed a sanity check - will not load"
 			unset mods[i]
@@ -80,7 +82,7 @@ modules_load()
 
 		e=false
 		for p in check_installed provides check_depends depend; do
-			[[ $(type -t ${mods[i]}_${p}) == function ]] && continue
+			[[ $( type -t ${mods[i]}_${p} ) == function ]] && continue
 			eerror "  ${mods[i]} does not support the required function ${p}\n"
 			e=true
 		done
@@ -143,11 +145,11 @@ modules_load()
 			fi
 
 			k=${#mods[@]}
-			for ((j=0; j < k; j++)); do
+			for (( j=0; j < k; j++ )); do
 				if [[ $( ${mods[j]}_provides ) == $( ${umods[i]}_provides ) && ${umods[i]} != ${mods[j]} ]]; then
 					# We don't have a match - now ensure that we still provide an alternative
 					# This is to handle our preferred modules
-					for ((e=0; e < k; e++)); do
+					for (( e=0; e < k; e++ )); do
 						[[ ${e} -eq ${j} || -z ${mods[e]} ]] && continue
 						if [[ $( ${mods[e]}_provides ) == $( ${umods[i]}_provides ) ]]; then
 							unset mods[j]
@@ -164,9 +166,9 @@ modules_load()
 		# our own modules and the preferred list AND the user modules
 		# list doesn't specify a preferrence
 		k=${#mods[@]}
-		for ((i=0; i < k - 1; i++)); do
+		for (( i=0; i < k-1; i++ )); do
 			[[ -z ${mods[i]} ]] && continue			
-			for ((j=i + 1; j < k; j++ )); do
+			for (( j=i+1; j < k; j++)); do
 				[[ -z ${mods[j]} ]] && continue
 				[[ $( ${mods[i]}_provides ) == $( ${mods[j]}_provides ) ]] && unset mods[j]
 			done
@@ -177,7 +179,7 @@ modules_load()
 	# Sort our modules
 	# We do this by assigning numbers to each module
 	modnums=()
-	for ((i=0; i < ${#mods[@]}; i++)); do
+	for (( i=0; i < ${#mods[@]}; i++ )); do
 		modnums[i]=${i}
 	done
 
@@ -185,12 +187,12 @@ modules_load()
 	# until we don't swap anymore. The sort_history array prevents
 	# the possibility of an infinite loop
 	sort_history[0]="${modnums[*]}"
-	for ((k=1; 1; k++)); do
+	for (( k=1; 1; k++ )); do
 		changed_something=false
-		for ((i=0; i < ${#mods[@]}; i++)); do
+		for (( i=0; i < ${#mods[@]}; i++ )); do
 			if [[ $( type -t ${mods[i]}_after ) == function ]]; then
 				for p in $( ${mods[i]}_after ); do
-					for ((j=0; j < ${#mods[@]}; j++)); do
+					for (( j=0; j < ${#mods[@]}; j++ )); do
 						[[ ${p} != ${mods[j]} && ${p} != $( ${mods[j]}_provides ) ]] && continue
 						if [[ ${modnums[i]} -lt ${modnums[j]} ]]; then
 							tmp=${modnums[i]}
@@ -203,7 +205,7 @@ modules_load()
 			fi
 			if [[ $( type -t ${mods[i]}_before ) == function ]]; then
 				for p in $( ${mods[i]}_before ); do
-					for ((j=0; j < ${#mods[@]}; j++)); do
+					for (( j=0; j < ${#mods[@]}; j++ )); do
 						[[ ${p} != ${mods[j]} && ${p} != $( ${mods[j]}_provides ) ]] && continue
 						if [[ ${modnums[i]} -gt ${modnums[j]} ]]; then
 							tmp=${modnums[i]}
@@ -238,7 +240,7 @@ modules_load()
 	for i in ${MODULES[@]}; do
 		p=$( ${i}_provides )
 		[[ ${p} == ${i} ]] && continue
-		for j in $(typeset -f | grep -o ^${i}_'[^ ]*' ); do
+		for j in $( typeset -f | grep -o ^${i}_'[^ ]*' ); do
 			eval "${p}${j#${i}}() { ${j} \"\$@\"; }"
 		done
 	done
@@ -289,7 +291,7 @@ get_device() {
 # VLAN interfaces (for example eth0.0, eth0.1).  VLAN setup is accomplished by
 # calling itself recursively.
 iface_start() {
-	local iface=${1} mod i label x conf
+	local iface=${1} mod i label x conf warn=false
 
 	# Localise and initialise variables
 	for mod in ${MODULES[@]}; do
@@ -304,15 +306,24 @@ iface_start() {
 		fi
 	done
 
+	# Provide a default of DHCP if no configuration is set
 	if [[ -z ${config_IFACE} ]]; then
-		eerror "configuration has not been set!"
-		return 1
+		if [[ $( type -t dhcp_start ) == function ]]; then
+			config_IFACE=( "dhcp" )
+			warn=true
+		else
+			eerror "Cannot default to dhcp as there is no dhcp module loaded"
+			eerror "Configuration not set for ${iface}"
+			return 1
+		fi
 	fi
 
 	ebegin "Bringing ${iface} up"
-	for ((i=0; i < ${#config_IFACE[@]}; i++)); do
+	for (( i=0; i < ${#config_IFACE[@]}; i++ )); do
 		# Set a label for the alias if $i > 0
 		[[ ${i} -eq 0 ]] && label=${iface} || label=${iface}:${i}
+
+		${warn} && ewarn "  Configuration not set for ${iface} - assuming dhcp"
 
 		# We convert it to an array - this has the added
 		# bonus of trimming spaces!
@@ -335,8 +346,9 @@ iface_start() {
 		fi
 
 		# We need to test to see if it's an IP address or a function
-		# We do this by testing if there is only 1 parameter
-		if [[ ${#conf[@]} -eq 1 ]]; then
+		# We do this by testing if the 1st character is a digit
+		x=${conf[0]:0:1}
+		if [[ ${x//[![:digit:]]/} != ${x} ]]; then
 			eerror "No loaded modules provide \"${conf[0]}\" (${conf[0]}_start)"
 			# Only return failure if it was the first address for the interface
 			[[ ${i} -eq 0 ]] && return 1
@@ -497,7 +509,7 @@ stop() {
 	done
 
 	# Call user-defined postdown function if it exists
-	if [[ ${IFACE} != lo && $(type -t postdown) == function ]]; then
+	if [[ ${IFACE} != lo && $( type -t postdown ) == function ]]; then
 		einfo "Running postdown function"
 		postdown ${IFACE}
 	fi

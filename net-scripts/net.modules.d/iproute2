@@ -1,5 +1,5 @@
 # iproute2 module for net-scripts
-# Version 0.6.3
+# Version 0.6.4
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
@@ -197,16 +197,6 @@ iproute2_setup_vars() {
         eval config_IFACE=( \"\$\{ipaddr_${iface}\[@\]\}\" )
         eval config_fallback_IFACE=( \"\$\{ipaddr_fallback_${iface}\[@\]\}\" )
         eval iproute_IFACE=( \"\$\{iproute_${iface}\[@\]\}\" )
-
-	# Backwards compat
-	
-
-	# Validate some variables
-	if [[ -z ${config_IFACE} ]]; then
-		eerror "Please make sure that /etc/conf.d/net has the following set:"
-		eerror "  \$ipaddr_$iface"
-                return 1
-        fi
 }
 
 # void iproute2_iface_stop(char *interface)

@@ -135,6 +135,7 @@
 
 # You can also override the interface settings found in /etc/conf.d/net
 # per ESSID - which is very handy if you use different networks a lot
+# At this time, the only settings you cannot override are the peer_* settings
 #ifconfig_ESSID=( "dhcp" )
 #dhcpcd_ESSID="-t 5"
 #inet6_ESSID=()
@@ -181,7 +182,9 @@
 #preferred_aps_eth0=( "ESSID 3" "ESSID 4" )
 
 # You can also say whether we only connect to preferred APs or not
-# Values are "yes" and "no"
+# Values are "yes", "no" and "force"
+# "force" means it forceably connects to the APs in order and does not bother
+# to scan
 # Default is "no"
 #preferred_only="no"
 #preferred_only_eth0="no"

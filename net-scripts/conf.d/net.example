@@ -19,7 +19,10 @@
 # In this case we prefer pump over dhcpcd
 #modules_eth0=( "pump" )
 
-# Setup the interface as before
+# NOTE - If you do not specify a configuration, and a DHCP module is available
+# then DHCP will be selected by default
+# This means that you may not have to configure *anything* to get a working
+# network.
 
 ##############################################################################
 # INTERFACE HANDLERS
@@ -82,7 +85,7 @@
 
 ##############################################################################
 # DHCP
-# DHCP can be provided by dhcpcd (default), pump, dhclient or udhcpc
+# DHCP can be provided by dhcpcd (default), dhclient, udhcpc or pump
 # For dhcpcd support, emerge net-misc/dhcpcd
 # For dhclient support, emerge net-misc/dhcp and add "dhclient" to the modules
 # array above like so
@@ -120,6 +123,8 @@
 # See the dhclient man page for details
 
 # GENERIC DHCP OPTIONS
+# These can be set globally or per interface
+
 # To stop DHCP from overwritting DNS (/etc/resolv.conf) use the below settings
 # peer_dns="no"
 # peer_dns_eth0="no"
