@@ -416,7 +416,10 @@ END {
 	# Generate the resolved CACHEDTREE
 	for (x = 1;x <= RC_NUMBER;x++) {
 
-		print "depinfo_" DEPTREE[x,NAME] "() {" >> (CACHEDTREE)
+		tmpname = DEPTREE[x,NAME]
+		gsub(/\./, "", tmpname)
+
+		print "depinfo_" tmpname "() {" >> (CACHEDTREE)
 		print "    export rc_name=\"" DEPTREE[x,NAME] "\"" >> (CACHEDTREE)
 
 		for (y = 2; y <= 8; y++) {

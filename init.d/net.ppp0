@@ -22,7 +22,8 @@ checkconfig() {
 		return 1
 	fi
 
-	if [ -e "/var/run/ppp-${IFACE}.pid" -a "${FUNCT}" = "start" ]
+	if [ -e "/var/run/ppp-${IFACE}.pid" -o -e "/var/run/${IFACE}.pid" ] && \
+	   [ "${FUNCT}" = "start" ]
 	then
 		eerror "ppp0 is already up"
 		return 1
@@ -44,10 +45,10 @@ start() {
 		then
 			[ -n "$(/sbin/route | egrep 'default')" ] && route del default
 		fi
-
+		# Added hide-password here, can't be too sure...
 		/usr/sbin/pppd ${CMD_LINE} ${MODEMPORT} ${LINESPEED} \
 			ipparam ${IFACE} linkname ${IFACE} call ${PEER} \
-			noauth ${PPPOPTIONS}
+			noauth ${PPPOPTIONS} hide-password
 	fi
 	eend
 }
@@ -69,7 +70,14 @@ stop() {
 		fi
 		
 #		/sbin/ifconfig ${IFACE} down
-		kill $(egrep -v "${IFACE}" /var/run/ppp-${IFACE}.pid)
+		if [ -e /var/run/ppp-${IFACE}.pid ]
+		then
+			kill $(egrep -v "${IFACE}" /var/run/ppp-${IFACE}.pid)
+
+		elif [ -e /var/run/${IFACE}.pid ]
+		then
+			kill $(egrep -v "${IFACE}" /var/run/${IFACE}.pid)
+		fi
 	fi
 	eend
 }
@@ -188,10 +196,13 @@ setup_cfg_files() {
 				>>/etc/ppp/ip-up
 			echo "/bin/cat /etc/ppp/resolv.conf >> /etc/resolv.conf" \
 				>>/etc/ppp/ip-up
+			# Change perms because it b0rked kppp
+			echo "chmod 640 /etc/resolv.conf" >>/etc/ip-up
 				
 			# ip-down: restore original /etc/resolv.conf
 			echo "/bin/mv -f /etc/resolv.conf.old /etc/resolv.conf" \
-				>>/etc/ppp/ip-down 
+				>>/etc/ppp/ip-down
+			echo "chmod 640 /etc/resolv.conf" >>/etc/ip-down 
 		fi
 	fi
 }

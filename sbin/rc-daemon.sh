@@ -6,7 +6,7 @@
 # RC functions to work with daemons (very alpha for now, and not finished)
 
 
-export RC_GOT_DAEMON="yes"
+RC_GOT_DAEMON="yes"
 
 [ "${RC_GOT_FUNCTIONS}" != "yes" ] && source /sbin/functions.sh
 

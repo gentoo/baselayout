@@ -3,7 +3,7 @@
 # $Header$
 
 
-export RC_GOT_FUNCTIONS="yes"
+RC_GOT_FUNCTIONS="yes"
 
 umask 022
 

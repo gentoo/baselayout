@@ -2,6 +2,27 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  14 May 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    We should not export the RC_GOT_* variables, as it breaks on some systems,
+	thanks to J?rg Gollnick <gentoo-bugs@wurzelbenutzer.de>, bug #20851.
+
+	From C. Brewer <killian@gentoo.org>:
+	- Add hide-password to the connect cmd-line of /etc/init.d/net.ppp0, which is
+	  suppose to be default, but why take chances?
+	- Also, echoing chmod 640 in the resolv.conf two-step at the end to solve the
+	  kppp complaint.
+
+  13 May 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    For the network functions, the dependency code tried to create a funcion
+	with a '.' in the name, causing the network rc-scripts to not have any
+	dependencies.  This should fix bug #20849 's order issue, thanks to
+	YAMAKURA Makoto <makoto@dsb.club.ne.jp> for noticing.
+
+	Fix query_{before,after} to also check 'net' if 'service2' is a network
+	service.
+
   12 May 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     More cleanups:

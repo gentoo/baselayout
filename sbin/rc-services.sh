@@ -7,7 +7,7 @@
 # RC Dependency and misc service functions
 
 
-export RC_GOT_SERVICES="yes"
+RC_GOT_SERVICES="yes"
 
 [ "${RC_GOT_FUNCTIONS}" != "yes" ] && source /sbin/functions.sh
 [ "${RC_GOT_DEPTREE_INFO}" != "yes" -a -f "${svcdir}/deptree" ] \
@@ -28,15 +28,21 @@ fi
 #   Set the Dependency variables to contain data for 'service'
 #
 get_dep_info() {
+	local myservice="${1/\./}"
+	
 	[ -z "$1" ] && return 1
 
 	# We already have the right stuff ...
 	[ "${rc_name}" = "$1" ] && return 0
 	
 	# If no 'depinfo_$1' function exist, then we have problems.
-	[ -z "$(declare -F "depinfo_$1")" ] && return 1
+	if [ -z "$(declare -F "depinfo_${myservice}")" ]
+	then
+		eerror "Could not get dependency info for \"$1\"!"
+		exit 1
+	fi
 
-	"depinfo_$1"
+	"depinfo_${myservice}"
 
 	return 0
 }
@@ -315,6 +321,21 @@ service_failed() {
 	return 1
 }
 
+# bool net_service(service)
+#
+#   Returns true if 'service' is a service controlling a network interface
+#
+net_service() {
+	[ -z "$1" ] && return 1
+
+	if [ "${1%%.*}" = "net" -a "${1##*.}" != "$1" ]
+	then
+		return 0
+	fi
+
+	return 0
+}
+
 # void schedule_service_startup(service)
 #
 #   Schedule 'service' for startup, in parallel if possible.
@@ -366,13 +387,13 @@ schedule_service_startup() {
 		fi
 
 		if iparallel "$1"
-		then		
+		then
 			eval start_service "$1" \&
 		else
 			# Do not start with any service running if we cannot start
 			# this service in parallel ...
 #			wait
-
+			
 			start_service "$1"
 		fi
 	else
@@ -446,15 +467,14 @@ valid_iafter() {
 #   modify 'deplist' with the info.
 #
 trace_depend() {
-	local deps=
 	local x=
 	local y=
 	local add=
 
 	[ -z "$1" -o -z "$2" -o -z "$3" ] && return 1
-	
+
 	# Build the list of services that 'deptype' on this one
-	for x in $("$1" "$2")
+	for x in "$("$1" "$2")"
 	do
 		add="yes"
 		
@@ -501,6 +521,7 @@ list_depend_trace() {
 query_before() {
 	local x=
 	local list=
+	local netservice="no"
 
 	[ -z "$1" -o -z "$2" ] && return 1
 
@@ -508,10 +529,15 @@ query_before() {
 	do
 		trace_depend "${x}" "$1" "list"
 	done
+
+	net_service "$2" && netservice="yes"
 	
 	for x in ${list}
 	do
 		[ "${x}" = "$2" ] && return 0
+
+		# Also match "net" if this is a network service ...
+		[ "${netservice}" = "yes" -a "${x}" = "net" ] && return 0
 	done
 
 	return 1
@@ -525,6 +551,7 @@ query_before() {
 query_after() {
 	local x=
 	local list=
+	local netservice="no"
 
 	[ -z "$1" -o -z "$2" ] && return 1
 
@@ -533,9 +560,14 @@ query_after() {
 		trace_depend "${x}" "$1" "list"
 	done
 
+	net_service "$2" && netservice="yes"
+
 	for x in ${list}
 	do
 		[ "${x}" = "$2" ] && return 0
+
+		# Also match "net" if this is a network service ...
+		[ "${netservice}" = "yes" -a "${x}" = "net" ] && return 0
 	done
 
 	return 1
