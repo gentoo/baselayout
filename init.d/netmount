@@ -12,8 +12,7 @@ depend() {
 	# Only have Portmap as a dependency if there is a nfs mount in fstab.
 	#
 	local nfsmounts="$(grep -v "^#" /etc/fstab | \
-		awk '{ print $3 >/dev/null } /nfs/ { print }' | \
-		awk '{ print $4 >/dev/null } ! /noauto/ { print }')"
+		awk '$3 == "nfs" && $4 !~ /noauto/ { print $0 }')"
 	
 	if [ -n "${nfsmounts}" ]
 	then

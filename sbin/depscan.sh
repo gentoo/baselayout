@@ -136,6 +136,7 @@ cache_depend() {
 
 	local myline=""
 	local dowrite=1
+	local mycount=0
 	local bcount=0
 	local ecount=0
 	(cat ${1}) | { while read myline
@@ -146,16 +147,12 @@ cache_depend() {
 			fi
 			if [ "${dowrite}" -eq 0 ]
 			then
-				local mycount="$(echo ${myline} | grep --mmap -oe "{" | wc -l)"
+				local mycount="$(echo ${myline} | grep --mmap -oe '{' | wc -l)"
 				bcount=$(( $bcount + $mycount ))
-			fi
-			if [ "${dowrite}" -eq 0 ]
-			then
+				
 				echo "${myline}" >> ${svcdir}/cache/${1##*/}.depend
-			fi
-			if [ "${dowrite}" -eq 0 ]
-			then
-				local mycount="$(echo ${myline} | grep --mmap -oe "}" | wc -l)"
+				
+				local mycount="$(echo ${myline} | grep --mmap -oe '}' | wc -l)"
 				ecount=$(( $ecount + $mycount ))
 			fi
 			if [ "${myline/\}/}" != "${myline}" ] && \
