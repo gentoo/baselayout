@@ -4,9 +4,11 @@
 
 * rc-scripts 1.3.1 (23 Mar 2002)
 
-  23 March 2002; Daniel Robbins <drobbins@gentoo.org>: rolling a new
-  release since there are a lot of important bug fixes in here that
-  are needed.
+  23 March 2002; Daniel Robbins <drobbins@gentoo.org>: init.d/net.eth0: fix for
+  DHCP lease release from Jim Nutt.
+  
+  23 March 2002; Daniel Robbins <drobbins@gentoo.org>: rolling a new release
+  since there are a lot of important bug fixes in here that are needed.
 
   23 March 2002; Martin Schlemmer <azarah@gentoo.org>:
 
