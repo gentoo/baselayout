@@ -81,13 +81,14 @@ wpa_supplicant_get_ap_mac_address() {
 # Note that just because we are associated does not mean we are using the
 # correct encryption keys
 wpa_supplicant_associated() {
-	local -a status=( $( wpa_cli -i${1} status | awk -F= '/^key_mgmt|^wpa_state/ { print $2 }' ) )
+	local -a status=( "$( wpa_cli -i${1} status | awk -F= '/^key_mgmt|^wpa_state|^EAP state/ { print "\""$2"\"" }' )" )
 
-	if [[ ${status[0]} == NONE ]]; then
-		[[ ${status[1]} == ASSOCIATED ]]
-	else
-		[[ ${status[1]} == COMPLETED ]]
-	fi
+	case ${status[0]} in
+		"NONE"	)		[[ ${status[1]} == "ASSOCIATED" ]] ;;
+		"IEEE 802.1X (no WPA)")	[[ ${status[2]} == "SUCCESS" ]] ;;
+		*)			[[ ${status[1]} == "COMPLETED" ]] ;;
+	esac
+
 	return $?
 }
 
@@ -205,7 +206,7 @@ wpa_supplicant_pre_start() {
 
 	# Set ESSID for essidnet and report
 	ESSID=$( wpa_supplicant_get_essid ${iface} )
-	local -a status=( "$( wpa_cli -i${iface} status | awk -F= '/^bssid|^pairwise_cipher|^key_mgmt/ { print $2 }' )" )
+	local -a status=( "$( wpa_cli -i${iface} status | awk -F= '/^bssid|^pairwise_cipher|^key_mgmt/ { print "\""$2"\"" }' )" )
 	local mac=$( echo ${status[0]} | tr '[:lower:]' '[:upper:]' )
 	einfo "${iface} connected to \"${ESSID//\\\\/\\\\}\" at ${mac}"
 
