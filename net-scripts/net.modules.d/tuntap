@@ -46,7 +46,7 @@ tuntap_check_depends() {
 # Returns a string spaced with possible user set
 # configuration variables
 tuntap_get_vars() {
-	echo "tuntap_${1}"
+	echo "tunctl_${1}"
 }
 
 # bool tuntap_pre_start(char *iface)
@@ -62,7 +62,7 @@ tuntap_pre_start() {
 	[[ ${itype} != "tun" && ${itype} != "tap" ]] && return 0
 
 	# Get our options
-	eval opts=\"\$\{tuntap_${iface}\}\"
+	eval opts=\"\$\{tunctl_${iface}\}\"
 
 	ebegin "Creating Tun/Tap interface ${iface}"
 	tunctl ${opts} -t ${iface} &>${devnull}

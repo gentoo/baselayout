@@ -55,15 +55,15 @@ bridge_check_depends() {
 # Returns a string spaced with possible user set
 # configuration variables
 bridge_get_vars() {
-	echo "bridge_devices_${1}"
+	echo "bridge_${1} brctl_${1}"
 }
 
-# char* bridge_get_interfaces(char *interface)
+# char* bridge_get_ports(char *interface)
 #
 # Returns a string spaced with interfaces added to the given bridge
 # The awk statement kinda makes sense - would be much easier if the
 # brctl program exported the bridge name on each line :/
-bridge_get_interfaces() {
+bridge_get_ports() {
 	brctl show | awk -v iface=${1} -v got=0 \
 		'$1 == iface || got == 1 { \
 			if ( got == 0 ) \
@@ -79,10 +79,11 @@ bridge_get_interfaces() {
 #
 # #set up bridge
 bridge_pre_start() {
-	local iface=${1} ifaces i e
-	eval ifaces=\"\$\{bridge_${iface}\}\"
+	local iface=${1} ports i e x
+	local -a opts
+	eval ports=\"\$\{bridge_${iface}\}\"
 
-	[[ -z ${ifaces} ]] && return 0
+	[[ -z ${ports} ]] && return 0
 
 	# Destroy the bridge if it exists
 	bridge_stop ${iface}
@@ -94,8 +95,17 @@ bridge_pre_start() {
 		return 1
 	fi
 
+	eval opts=( \"\$\{brctl_${iface}\[@\]\}\" )
+	for (( i=0; i<${#opts[@]}; i++ )); do
+		x=${opts[i]/ / ${iface} }
+		[[ ${x} == ${i} ]] && x="${x} ${iface}"
+		e=$( brctl ${x} 2>&1 1>/dev/null )
+		[[ -n ${e} ]] && ewarn "${e}"
+	done
+	eend 0
+
 	eindent
-	for i in ${ifaces}; do
+	for i in ${ports}; do
 		# If the interface does not exist, it may be because another
 		# module needs to create it
 		net_start ${i} || continue
@@ -105,7 +115,7 @@ bridge_pre_start() {
 			continue
 		fi
 
-		ebegin "Adding interface ${i}"
+		ebegin "Adding port ${i}"
 		e=$( brctl addif ${iface} ${i} 2>&1 \
 			&& interface_del_addresses ${i} \
 			&& interface_set_flag ${i} promisc true )
@@ -116,7 +126,6 @@ bridge_pre_start() {
 	done
 	eoutdent
 
-	eend 0
 	return 0
 }
 
@@ -133,10 +142,10 @@ bridge_stop() {
 	ebegin "Destroying bridge ${iface}"
 	interface_down ${iface}
 	
- 	local ifaces=$( bridge_get_interfaces ${1} ) i
+ 	local ports=$( bridge_get_ports ${1} ) i
 	eindent
-	for i in ${ifaces}; do
-		ebegin "Removing interface ${i}"
+	for i in ${ports}; do
+		ebegin "Removing port ${i}"
 		interface_down ${iface}
 		interface_set_flag ${i} promisc false
 		brctl delif ${iface} ${i} &>${devnull}

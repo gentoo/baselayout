@@ -285,13 +285,13 @@
 
 # For passing custom options to tunctl use something like the following.  This
 # example sets the owner to adm
-#tuntap_tap0="-u adm"
+#tunctl_tap0="-u adm"
 
 #-----------------------------------------------------------------------------
 # Bridging (802.1d)
 # For bridging support emerge net-misc/bridge-utils
 
-# To add interfaces to bridge br0
+# To add ports to bridge br0
 #bridge_br0="eth0 eth1"
 
 # You NEED to configure the interface as well
@@ -301,6 +301,10 @@
 
 # NOTE: This creates an interface called br0 - you can give the interface
 # any name you like
+
+# Below is an example of configuring the bridge
+# Consult "man brctl" for more details
+#brctl_br0=( "setfd 0" "sethello 0" "stp off" )
 
 #-----------------------------------------------------------------------------
 # Tunnelling
