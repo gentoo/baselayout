@@ -81,7 +81,7 @@ svc_stop() {
 	local depservice=""
 	if [ ! -L ${svcdir}/started/${myservice} ]
 	then
-		einfo "ERROR:  \"${myservice}\" has not yet been started."
+		eerror "ERROR:  \"${myservice}\" has not yet been started."
 		return 1
 	fi
 
@@ -119,7 +119,7 @@ svc_stop() {
 	
 	if [ -L /etc/init.d/boot/${myservice} ]
 	then
-		einfo "WARNING:  you are stopping a boot service."
+		ewarn "WARNING:  you are stopping a boot service."
 	fi
 	if [ "${NETSERVICE}" = "yes" ]
 	then
@@ -588,9 +588,9 @@ do
 			   [ -z "$(grep svc_start /etc/init.d/${myservice})" ]
 			then
 				echo
-				einfo "Please use 'svc_stop; svc_start' and not 'start; stop' to restart the service"
-				einfo "in the custom 'restart()' function.  Run ${myservice} without arguments for"
-				einfo "more info."
+				ewarn "Please use 'svc_stop; svc_start' and not 'start; stop' to"
+				ewarn "restart the service in its custom 'restart()' function."
+				ewarn "Run ${myservice} without arguments for more info."
 				echo
 				svc_restart
 			else
