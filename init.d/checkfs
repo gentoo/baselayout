@@ -25,15 +25,12 @@ start() {
 	fi
 
 	# Start software raid
-	if [ -x /sbin/raidstart ] && [ -f /etc/raidtab ] && [ -f /proc/mdstat ]
+	if [ -x /sbin/raidstart -a -f /etc/raidtab -a -f /proc/mdstat ]
 	then
-		if [ `grep "persistent-superblock" /etc/raidtab | awk '{print $2}'` == 0 ]
-		then
-			ebegin "Starting software RAID"
-			# still echo stderr for debugging
-			/sbin/raidstart --all >/dev/null
-			eend $? "Failed to start software RAID"
-		fi
+		ebegin "Starting software RAID"
+		# still echo stderr for debugging
+		/sbin/raidstart --all >/dev/null
+		eend $? "Failed to start software RAID"
 	fi
 
 	if [ -f /fastboot ]

@@ -84,6 +84,14 @@ do
 done
 eend 0
 
+#stop RAID
+if [ -x /sbin/raidstart -a -f /etc/raidtab -a -f /proc/mdstat ]
+then
+	ebegin "Stopping software RAID"
+	raidstop -a
+	eend $? "Failed to stop software RAID"
+fi
+
 #stop LVM
 if [ -x /sbin/vgchange -a -f /etc/lvmtab ] && [ -d /proc/lvm ]
 then
@@ -134,5 +142,6 @@ then
 fi
 
 [ -f /etc/killpower ] && ups_kill_power
+
 
 # vim:ts=4
