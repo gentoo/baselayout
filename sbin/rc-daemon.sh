@@ -53,6 +53,9 @@ setup_daemon_vars() {
 			--pid=*)
 				pidfile=${sargs[i]##--pid=}
 				;;
+			-t|--test|-o|--oknodo)
+				nothing=true
+				;;
 		esac
 	done
 
@@ -183,8 +186,14 @@ stop_daemon() {
 # how we are called
 start-stop-daemon() {
 	local args=" $* " ssdargs exeargs
-	local exe name pidfile pid stopping
+	local exe name pidfile pid stopping nothing=false
 	setup_daemon_vars
+
+	# We pass --oknodo and --test directly to start-stop-daemon and return
+	if ${nothing}; then
+		/sbin/start-stop-daemon ${args}
+		return $?
+	fi
 
 	if ${stopping}; then
 		stop_daemon 
