@@ -24,5 +24,5 @@ proc			/proc		proc		defaults		0 0
 # (tmpfs is a dynamically expandable/shrinkable ramdisk, and will use almost no
 #  memory if not populated with files)
 
-#tmpfs			/dev/shm	tmpfs		defaults		0 0
+tmpfs			/dev/shm	tmpfs		defaults		0 0
 

@@ -2,6 +2,10 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  22 Sep 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    NGPT support.
+
   17 Sep 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Did a small fix to /etc/init.d/net.eth0, thanks to

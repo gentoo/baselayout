@@ -134,6 +134,15 @@ then
 		try mount -n -t ext2 /dev/ram0 ${svcdir} -o rw; \
 		eend 0
 	fi
+
+	# POSIX shared memory support
+	try mount -n /dev/shm
+
+	# NGPT support (http://www-124.ibm.com/developerworks/oss/pthreads/)
+	if [ -x /usr/bin/ngptinit ]
+	then
+		/usr/bin/ngptinit &> /dev/null
+	fi
 	
 	/sbin/depscan.sh
 

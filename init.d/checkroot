@@ -53,8 +53,8 @@ start() {
 		# create /etc/mtab (done by forcing current mounted filesystems)
 		# NB:  this needs to be updated if our /sbin/rc mounts change ...
 		> /etc/mtab
-		mount -f -o rw / &>/dev/null
-		mount -f /proc &>/dev/null
+		mount -f -o rw / &> /dev/null
+		mount -f /proc &> /dev/null
 
 		# Remove stale backups
 		rm -f /etc/mtab~ /etc/mtab~~
@@ -62,7 +62,7 @@ start() {
 		# should /dev be mounted ?
 		if ! get_bootparam "nodevfs" && [ -e /dev/.devfsd ]
 		then
-			mount -f -t devfs none /dev &>/dev/null
+			mount -f -t devfs none /dev &> /dev/null
 		fi
 		
 		# should we mount a ramdisk or tmpfs?
@@ -70,11 +70,14 @@ start() {
 		then
 			# using tmpfs
 			mount -f -t tmpfs tmpfs ${svcdir} \
-				-o rw,mode=0644,size=${svcsize}k &>/dev/null
+				-o rw,mode=0644,size=${svcsize}k &> /dev/null
 		else
 			# using a ramdisk
-			mount -f -t ext2 /dev/ram0 ${svcdir} -o rw &>/dev/null
+			mount -f -t ext2 /dev/ram0 ${svcdir} -o rw &> /dev/null
 		fi
+
+		# POSIX shared memory support
+		mount -f /dev/shm &> /dev/null
 	fi
 }
 
