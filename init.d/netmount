@@ -4,17 +4,16 @@ depend() {
 	need net
 }
 
-fstypes="nfs,ncpfs,smbfs"
-
 start() {
 	ebegin "Mounting network filesystems"
-	mount -at $fstypes 
+	mount -at nfs,ncpfs,smbfs 
 	eend $? 
 }
 
 stop() {
 	ebegin "Unmounting network filesystems"
-	umount -art $fstypes
+	# umount -art $fstypes doesn't seem to work, so...
+	umount `/proc/mounts | awk '{ print $3 " " $2 }' | grep -E ^'nfs|ncpfs|smbfs' | awk 'BEGIN { ORS=" "} { print $2 }'`
 	eend $?
 }
 
