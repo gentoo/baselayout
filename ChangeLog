@@ -10,6 +10,9 @@
     Fix bug 56856: Get rid of net.rej and integrate missing stuff to
     conf.d/net
 
+    Apply half of spock's patch in bug 45784: Check for
+    conf.d/bootsplash instead of conf.d/bootsplash.conf
+
   21 Jul 2004; Aron Griffis <agriffis@gentoo.org>:
 
     Fix bug 26952: Use /etc/bash/bashrc to setup PS1, testing $- to

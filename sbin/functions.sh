@@ -29,6 +29,9 @@ RC_QUIET_STDOUT="no"
 # Should we use color?
 RC_NOCOLOR="no"
 
+# Location of bootsplash.conf, which changed in bootsplash-0.6-r12 #45784
+BOOTSPLASH_CONF=/etc/conf.d/bootsplash.conf
+[[ -f ${BOOTSPLASH_CONF} ]] || BOOTSPLASH_CONF=/etc/conf.d/bootsplash
 
 #
 # Default values for rc system
@@ -129,9 +132,9 @@ splash_init() {
 		return 0
 	fi
 	
-	if [ -f /etc/conf.d/bootsplash.conf ]
+	if [ -f ${BOOTSPLASH_CONF} ]
 	then
-		. /etc/conf.d/bootsplash.conf
+		source ${BOOTSPLASH_CONF}
 		if [ -n "${PROGRESS_SYSINIT_RATE}" ]
 		then
 			rate=$((65535*${PROGRESS_SYSINIT_RATE}/100))
@@ -159,9 +162,9 @@ splash_calc() {
 
 	[ ! -e /proc/splash -o ! -x /sbin/splash ] && return 0
 
-	if [ -f /etc/conf.d/bootsplash.conf ]
+	if [ -f ${BOOTSPLASH_CONF} ]
 	then
-		. /etc/conf.d/bootsplash.conf
+		source ${BOOTSPLASH_CONF}
 
 		if [ -n "${PROGRESS_SYSINIT_RATE}" ]
 		then
@@ -260,9 +263,9 @@ splash_debug() {
 
 	[ ! -e /proc/splash -o ! -x /sbin/splash ] && return 0
 	
-	if [ -f /etc/conf.d/bootsplash.conf ]
+	if [ -f ${BOOTSPLASH_CONF} ]
 	then
-		source /etc/conf.d/bootsplash.conf
+		source ${BOOTSPLASH_CONF}
 
 		[ "${BOOTSPLASH_DEBUG}" = "yes" -a -n "${softlevel}" ] || return
 		
