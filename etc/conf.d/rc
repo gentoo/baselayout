@@ -15,8 +15,17 @@ RC_TTY_NUMBER=11
 
 RC_PARALLEL_STARTUP="no"
 
-# Set to "yes" if you require a net.* service running (other than 
-# just net.lo) to satisfy the generic 'net' dependency
+# RC_NET_STRICT_CHECKING allows some flexability with the 'net' service.
+# The following values are allowed:
+#  no    - This basically means that at least one net.* service besides net.lo
+#          must be up.  This can be used by notebook users that have a wifi and
+#          a static nic, and only wants one up at any given time to have the
+#          'net' service seen as up.
+#  lo    - This is the same as the 'no' option, but net.lo is also counted.
+#          This should be useful to people that do not care about any specific
+#          interface being up at boot.
+#  yes   - For this ALL network interfaces MUST be up for the 'net' service to
+#          be considered up.
 
 RC_NET_STRICT_CHECKING="no"
 

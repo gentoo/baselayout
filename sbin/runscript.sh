@@ -131,12 +131,9 @@ svc_stop() {
 			if in_runlevel "${myservice}" "${BOOTLEVEL}" || \
 			   in_runlevel "${myservice}" "${mylevel}"
 			then
-				local netcount="$(ls -1 "${svcdir}"/started/net.* 2> /dev/null | \
-					grep -v 'net\.lo' | egrep -c "\/net\.[[:alnum:]]+$")"
-
 				# Only worry about net.* services if this is the last one running,
 				# or if RC_NET_STRICT_CHECKING is set ...
-				if [ "${netcount}" -lt 1 -o "${RC_NET_STRICT_CHECKING}" = "yes" ]
+				if is_net_up
 				then
 					mydeps="net"
 				fi
@@ -276,13 +273,10 @@ svc_start() {
 						# A 'need' dependency is critical for startup
 						if [ "$?" -ne 0 ] && ineed -t "${myservice}" "${x}" >/dev/null
 						then
-							local netcount="$(ls -1 ${svcdir}/started/net.* 2> /dev/null | \
-								grep -v 'net\.lo' | egrep -c "\/net\.[[:alnum:]]+$")"
-						
 							# Only worry about a net.* service if we do not have one
-							# up and running already, or if RC_NET_SCTRICT_CHECKING
+							# up and running already, or if RC_NET_STRICT_CHECKING
 							# is set ....
-							if [ "${netcount}" -lt 1 -o "${RC_NET_STRICT_CHECKING}" = "yes" ]
+							if is_net_up
 							then
 								startfail="yes"
 							fi

@@ -556,6 +556,39 @@ net_service() {
 	return 0
 }
 
+# bool is_net_up()
+#
+#    Return true if service 'net' is considered up, else false.
+#
+#    Notes for RC_NET_STRICT_CHECKING values:
+#      lo    Interface 'lo' is counted and if only it is up, net is up.
+#      no    Interface 'lo' is not counted, and net is down even with it up,
+#            so there have to be at least one other interface up.
+#      yes   All interfaces must be up.
+is_net_up() {
+	local netcount=0
+
+	case "${RC_NET_STRICT_CHECKING}" in
+		lo)
+			netcount="$(ls -1 "${svcdir}"/started/net.* 2> /dev/null | \
+			            egrep -c "\/net\..*$")"
+			;;
+		*)
+			netcount="$(ls -1 "${svcdir}"/started/net.* 2> /dev/null | \
+			            grep -v 'net\.lo' | egrep -c "\/net\..*$")"
+			;;
+	esac
+
+	# Only worry about net.* services if this is the last one running,
+	# or if RC_NET_STRICT_CHECKING is set ...
+	if [ "${netcount}" -lt 1 -o "${RC_NET_STRICT_CHECKING}" = "yes" ]
+	then
+		return 1
+	fi
+
+	return 0
+}
+
 # void schedule_service_startup(service)
 #
 #   Schedule 'service' for startup, in parallel if possible.

@@ -12,6 +12,8 @@
 
     Move things around in /sbin/functions.sh to have all functions above.
 
+    Add the 'lo' option to RC_NET_STRICT_CHECKING to resolve bug #29225.
+
   28 Oct 2004; Martin Schlemmer <azarah@gentoo.org>:
 
     Only add files not managed by udev to device tarball, bug #57110.
