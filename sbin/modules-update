@@ -158,6 +158,8 @@ if [[ -f ${CFGFILE} ]] || ! ${KERNEL_2_6} ; then
 	generate_config "${CONF}" "${MODDIR}" "${TMPFILE}" 0
 
 	mv -f "${TMPFILE}" "${CFGFILE}"
+else
+	rm -f "${TMPFILE}"
 fi
 
 if [[ -x /sbin/generate-modprobe.conf ]] && ${KERNEL_2_6} ; then

@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  23 Mar 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Get modules-update to clean up after itself if we on a 2.6 kernel without
+    modules.conf.
+
   22 Mar 2005; Roy Marples <uberlord@gentoo.org>:
 
     revamped rc-services.sh for STYLE updates and code rationalisation.
