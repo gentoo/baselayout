@@ -2,119 +2,108 @@
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 # $Header$
 
-  18 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
+23 Feb 2005 Martin Schlemmer <azarah@gentoo.org>
 
-    Makefile: Add -fbounds-checking support when DEBUG=1.
-    misc.h: Scrap STRING_LIST_FOR_EACH_SAFE() and recode from scratch fixing
-            invalid pointer operations.
-    misc.c: Remove the last strlen() from strndup() that caused an overrun.
+        * misc.c: Fix memory leak in mktree().
 
-  17 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
+18 Feb 2005 Martin Schlemmer <azarah@gentoo.org>
 
-    misc.c: Fix overrun in strndup(), thanks to report from
-            Ned Ludd <solar@gentoo.org>.
+        * Makefile: Add -fbounds-checking support when DEBUG=1.
+        
+        * misc.h: Scrap STRING_LIST_FOR_EACH_SAFE() and recode from scratch
+        fixing invalid pointer operations.
+        
+        * misc.c: Remove the last strlen() from strndup() that caused an
+        overrun.
 
-  17 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
+17 Feb 2005 Martin Schlemmer <azarah@gentoo.org>:
 
-    debug.h, misc.h, simple-regex.c: Print debug/errors to stderr, patch from
-                                     Ned Ludd <solar@gentoo.org>.
+        * misc.c: Fix overrun in strndup(), thanks to report from
+        Ned Ludd <solar@gentoo.org>.
 
-  17 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
+        * debug.h, misc.h, simple-regex.c: Print debug/errors to stderr, patch
+        from Ned Ludd <solar@gentoo.org>.
 
-    debug.h: Replace invalid EXIT_FAILSTATUS with EXIT_FAILURE.
-    parse.c: Modify parse_print_body() to be more ash friendly - suggestions
-             from Ned Ludd <solar@gentoo.org>.
+        * debug.h: Replace invalid EXIT_FAILSTATUS with EXIT_FAILURE.
+        
+        * parse.c: Modify parse_print_body() to be more ash friendly.
+        Suggestions from Ned Ludd <solar@gentoo.org>.
 
-  17 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
+        * debug.h: Remove the 'errno = ESPIPE' in DBG_MSG() for now, as it
+        seems to be fixed by the select() changes.
 
-    debug.h: Remove the 'errno = ESPIPE' in DBG_MSG() for now, as it seems to
-             be fixed by the select() changes.
+        * parse.c: Disable write select() for now, as it is not needed.
 
-  17 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
+        * depscan.c: Only print EINFO msg if we actually update the cache.
+        
+        * parse.c: Rename write_output() macro to PRINT_TO_BUFFER().
 
-    parse.c: Disable write select() for now, as it is not needed.
+        * parse.c
+        * parse.h: Rewrote large parts of generate_stage[12]() and their
+        machanics to use select() when writing to the pipes.  This fixes a
+        buffering issue where too much data would cause the write to be
+        truncated, and the read pipe would then wait forever.
 
-  17 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
+        * misc.c: Fix gbasename() to compile under gcc-2.95.3.
+        
+        * parse.c: Switch to stdio based io for reading pipes in
+        generate_stage2().
 
-    depscan.c: Only print EINFO msg if we actually update the cache.
-    parse.c: Rename write_output() macro to PRINT_TO_BUFFER().
+        * misc.c
+        * misc.h: Add gbasename() that is similar to GNU's basename().
+        
+        * parse.c: Use gbasename() instead of POSIX version.
 
-  17 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
+        * parse.c: Fix write_legacy_stage3() to quote the mtime in its output.
 
-    parse.c, parse.h: Rewrote large parts of generate_stage[12]() and their
-                      machanics to use select() when writing to the pipes.
-                      This fixes a buffering issue where too much data would
-                      cause the write to be truncated, and the read pipe would
-                      then wait forever.
+        * misc.c
+        * parse.c: Change type of length from int to size_t to avoid warnings
+        when compiled for darwin.
 
-  17 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
+        * misc.c
+        misc.h: Add strndup() instead of relying on glibc's implementation
+        (should fix some issues on bsd and darwin).
 
-    misc.c: Fix gbasename() to compile under gcc-2.95.3.
-    parse.c: Switch to stdio based io for reading pipes in generate_stage2().
+        * depend.c
+        * simple-regex.c: Do not define _GNU_SOURCE, but rather use our
+        strndup() from misc.h.
 
-  17 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
+        * parse.c: Do not define _GNU_SOURCE, but rather use our strndup() from
+        misc.h.  Also change all usage of basename() to conform to POSIX, and
+        do not use the GNU variants.
 
-    misc.c, misc.h: Add gbasename() that is similar to GNU's basename().
-    parse.c: Use gbasename() instead of POSIX version.
+16 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
 
-  17 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
+        * depscan.c: Add uid check and quit if user is not root.
 
-    parse.c: Fix write_legacy_stage3() to quote the mtime in its output.
+        * depend.c
+        * depend.h: Change service_type_names declaration in depend.h to extern
+        and move the definition to depend.c to avoid warnings.
 
-  17 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
+        * README: New file.
 
-    misc.c, parse.c: Change type of length from int to size_t to avoid warnings
-                     when compiled for darwin.
+        * depscan.c: Add delete_var_dirs() to delete volatile directories in
+        svcdir.  Change 'char *' declarations for create_directory() and
+        create_var_dirs() to 'const char*'.
+        
+        * misc.h
+        * misc.c: Add rmtree() function.  Fix ls_dir() not to include '.' and
+        '..' in its listing.  Fix segfault in ls_dir() if the file list is
+        empty.
 
-  17 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
+        Add Header tags to all source files and Makefile.
 
-    misc.c, misc.h: Add strndup() instead of relying on glibc's implementation
-                    (should fix some issues on bsd and darwin).
-    depend.c, simple-regex.c: Do not define _GNU_SOURCE, but rather use our
-                              strndup() from misc.h.
-    parse.c: Do not define _GNU_SOURCE, but rather use our strndup() from
-             misc.h.  Also change all usage of basename() to conform to POSIX,
-             and not use the GNU variants.
+        * debug.h: perror() set errno to ESPIPE for some reason - restore errno
+        after calling perror().
+        
+        * depscan.c: Add code to create svcdir and co if missing.
+        
+        * misc.c: Add missing '\n' to DBG_MSG in mktree().
+        
+        * misc.h: Add a comment about strcatpaths() allocating the memory needed.
 
-  16 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
-
-    depscan.c: Add uid check and quit if user is not root.
-
-  16 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
-
-    depend.c, depend.h: Change service_type_names declaration in depend.h to
-                        extern and move the definition to depend.c to avoid
-                        warnings.
-
-  16 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
-
-    Add README.
-
-  16 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
-
-    depscan.c: Add delete_var_dirs() to delete volatile directories in svcdir.
-               Change 'char *' declarations for create_directory() and
-               create_var_dirs() to 'const char*'.
-    misc.h, misc.c: Add rmtree() function.  Fix ls_dir() not to include '.'
-                    and '..' in its listing.  Fix segfault in ls_dir() if the
-                    file list is empty.
-
-  16 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
-
-    Add Header tags to all source files and Makefile.
-
-  16 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
-
-    debug.h: perror() set errno to ESPIPE for some reason - restore errno after
-             calling perror().
-    depscan.c: Add code to create svcdir and co if missing.
-    misc.c: Add missing '\n' to DBG_MSG in mktree().
-    misc.h: Add a comment about strcatpaths() allocating the memory needed.
-
-  16 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
-
-    Initial checkin.  Still rough in some parts, but should be 100%
-    similar in output to depscan.sh and co.
+        Initial checkin.  Still rough in some parts, but should be 100% similar
+        in output to depscan.sh and co.
 
 
 # vim:expandtab

@@ -284,6 +284,9 @@ int mktree(const char *pathname, mode_t mode) {
 		} while ((NULL != token) && (0 == strlen(token)));
 	}
 
+	free(temp_name);
+	free(temp_token);
+	
 	return 0;
 
 error:
