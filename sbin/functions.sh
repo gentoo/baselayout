@@ -59,9 +59,9 @@ then
 	COLS="24 80"
 	stty cols 80 &>/dev/null
 	stty rows 24 &>/dev/null
-else
-	COLS="`getcols ${COLS}`"
 fi
+
+COLS="`getcols ${COLS}`"
 COLS=$((${COLS} -7))
 ENDCOL=$'\e[A\e['${COLS}'G'
 # Now, ${ENDCOL} will move us to the end of the column;
