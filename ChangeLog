@@ -13,6 +13,8 @@
 
     Add 'after hotplug' to /etc/init.d/consolefont, bug #30856.
 
+    Add entry for floppy in /etc/fstab, bug #30574.
+
   14 Sep 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Change update-modules to modules-update in manpage, bug #28101.
