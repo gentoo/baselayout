@@ -22,6 +22,9 @@
        for bash variable names.  Changed things to use an array fixing this.
        This closes bug #24092.
 
+    Change /sbin/rc again to not set the hotplug agent to /sbin/udev, as
+    /sbin/hotplug will call udev as well.
+
   19 Oct 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     More bootsplash fixes, bug #21019 (comment #21).
