@@ -649,12 +649,10 @@ dep_stop() {
 		# not in the previous runlevel, and we are not shutting down,
 		# rebooting or going to single runlevel.  This is because the user
 		# might have started it (net.ppp?), or possibly hotplug ...
-		if [ "${myservice%%.*}" = "net" -a \
-		     "${myservice##*.}" != "${myservice}" ] && \
+		if net_service "${myservice}" && \
 		   [ "${SOFTLEVEL}" != "reboot" -a \
 		     "${SOFTLEVEL}" != "shutdown" -a \
-		     "${SOFTLEVEL}" != "single" -a \
-		     "${SOFTLEVEL}" != "boot" ]
+		     "${SOFTLEVEL}" != "single" ]
 		then
 			if [ -n "${OLDSOFTLEVEL}" ] && \
 			   ! in_runlevel "${myservice}" "${OLDSOFTLEVEL}"
