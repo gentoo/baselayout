@@ -2,6 +2,16 @@
 # Copyright 2001 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+* rc-scripts 1.2.2 (8 Dec 2001)
+
+  8  Dec 2001; Donny Davies (woodchip@gentoo.org): Added start-stop-daemon.c
+  to rc-scripts/sbin source.  Moved rc-scripts/init.d/runscript.c to
+  rc-scripts/sbin/runscript.c.  Added manpage for start-stop-daemon.
+  Start-stop-daemon is moved here from sysvinit by the way.  There is stuff
+  in this ChangeLog that needs to be removed! Like the changes to hosts,
+  profile.  /etc/{passwd,group} have minor UID and GID type fixes for
+  users ftp, postgres, xfs.
+
   29 Nov 2001; Donny Davies (woodchip@gentoo.org): Added a man directory
   to rc-scripts.  Checked in two manpages there, one for modules.autoload.5
   and one for update-modules.8. These were adapted from Debian. Updated
