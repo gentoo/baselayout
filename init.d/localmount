@@ -18,7 +18,7 @@ start() {
 	fi
 	# Mount local filesystems in /etc/fstab.
 	ebegin "Mounting local filesystems"
-	mount -at nonfs,noproc,noncpfs,nosmbfs,noshm
+	mount -at nocoda,nonfs,noproc,noncpfs,nosmbfs,noshm
 	eend $?
 	if [ -z "`grep usbdevfs /proc/filesystems`" ]
 	then
