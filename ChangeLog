@@ -2,6 +2,16 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  14 March 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix the GID and UID of nobody and nogroup in /etc/passwd and
+    /etc/group to match those of Debian, FBSD and others.  Thanks
+    to those who reported it, and Woodchip for looking up the
+    proper values.
+
+    Update /etc/init.d/net.eth0 to properly down DHCP interfaces.
+    This resolves bug #1150, thanks to Paul Fleischer.
+
   11 March 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Updated /etc/init.d/functions.sh not to use /usr/bin/basename,

@@ -28,13 +28,13 @@ start() {
 	ebegin "Bringing ${IFACE} up"
 	if [ "$(eval echo \$\{iface_${IFACE}\})" != "dhcp" ]
 	then
-		/sbin/ifconfig ${IFACE} ${iface_args} &>/dev/null || {
+		/sbin/ifconfig ${IFACE} ${iface_args} >/dev/null || {
 			retval=$?
 			eend ${retval} "Failed to bring ${IFACE} up"
 			return ${retval}
 		}
 	else
-		/sbin/dhcpcd ${dhcp_args} ${IFACE} &>/dev/null || {
+		/sbin/dhcpcd ${dhcp_args} ${IFACE} >/dev/null || {
 			retval=$?
 			eend ${retval} "Failed to bring ${IFACE} up"
 			return ${retval}
@@ -61,7 +61,7 @@ start() {
 	then
 		ebegin "  Setting default gateway"
 		/sbin/route add -net default gw ${gateway#*/} dev ${gateway%/*} \
-			netmask 0.0.0.0 metric 1 &>/dev/null || {
+			netmask 0.0.0.0 metric 1 >/dev/null || {
 			
 			local error=$?
 			ifconfig ${IFACE} down &>/dev/null
@@ -94,7 +94,13 @@ stop() {
 			num=$((num + 1))
 		done
 	fi
-	/sbin/ifconfig ${IFACE} down &>/dev/null
+	
+	if [ "$(eval echo \$\{iface_${IFACE}\})" != "dhcp" ]
+	then
+		/sbin/ifconfig ${IFACE} down >/dev/null
+	else
+		/sbin/dhcpcd -k ${IFACE} >/dev/null
+	fi
 	eend $? "Failed to down ${IFACE}"
 }
 

@@ -1,4 +1,4 @@
-nogroup::-2:
+nogroup::65533:
 root::0:root
 bin::1:root,bin,daemon
 daemon::2:root,bin,daemon
