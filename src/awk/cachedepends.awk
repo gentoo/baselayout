@@ -4,67 +4,67 @@
 # $Header$
 
 function print_start() {
-	print "source /sbin/functions.sh" 
-	print "" 
-	print "need() {" 
-	print "	echo \"NEED $*\"; return 0" 
-	print "}" 
-	print "" 
-	print "use() {" 
-	print "	echo \"USE $*\"; return 0" 
-	print "}" 
-	print "" 
-	print "before() {" 
-	print "	echo \"BEFORE $*\"; return 0" 
-	print "}" 
-	print "" 
-	print "after() {" 
-	print "	echo \"AFTER $*\"; return 0" 
-	print "}" 
-	print "" 
-	print "provide() {" 
-	print "	echo \"PROVIDE $*\"; return 0" 
-	print "}" 
-	print "" 
-	print "parallel() {"
-	print "	echo \"PARALLEL $*\"; return 0"
-	print "}"
-	print ""
+	print "source /sbin/functions.sh" >> (SVCDIR "/depcache")
+	print "" >> (SVCDIR "/depcache")
+	print "need() {" >> (SVCDIR "/depcache")
+	print "	echo \"NEED $*\"; return 0" >> (SVCDIR "/depcache")
+	print "}" >> (SVCDIR "/depcache")
+	print "" >> (SVCDIR "/depcache")
+	print "use() {" >> (SVCDIR "/depcache")
+	print "	echo \"USE $*\"; return 0" >> (SVCDIR "/depcache")
+	print "}" >> (SVCDIR "/depcache")
+	print "" >> (SVCDIR "/depcache")
+	print "before() {" >> (SVCDIR "/depcache")
+	print "	echo \"BEFORE $*\"; return 0" >> (SVCDIR "/depcache")
+	print "}" >> (SVCDIR "/depcache")
+	print "" >> (SVCDIR "/depcache")
+	print "after() {" >> (SVCDIR "/depcache")
+	print "	echo \"AFTER $*\"; return 0" >> (SVCDIR "/depcache")
+	print "}" >> (SVCDIR "/depcache")
+	print "" >> (SVCDIR "/depcache")
+	print "provide() {" >> (SVCDIR "/depcache")
+	print "	echo \"PROVIDE $*\"; return 0" >> (SVCDIR "/depcache")
+	print "}" >> (SVCDIR "/depcache")
+	print "" >> (SVCDIR "/depcache")
+	print "parallel() {" >> (SVCDIR "/depcache")
+	print "	echo \"PARALLEL $*\"; return 0" >> (SVCDIR "/depcache")
+	print "}" >> (SVCDIR "/depcache")
+	print "" >> (SVCDIR "/depcache")
 }
 
 function print_header1() {
-	print "#*** " MYFILENAME " ***" 
-	print "" 
-	print "myservice=\"" MYFILENAME "\"" 
-	print "myservice=\"${myservice##*/}\"" 
-	print "echo \"RCSCRIPT ${myservice}\"" 
-	print "" 
+	print "#*** " MYFILENAME " ***" >> (SVCDIR "/depcache")
+	print "" >> (SVCDIR "/depcache")
+	print "myservice=\"" MYFILENAME "\"" >> (SVCDIR "/depcache")
+	print "myservice=\"${myservice##*/}\"" >> (SVCDIR "/depcache")
+	print "echo \"RCSCRIPT ${myservice}\"" >> (SVCDIR "/depcache")
+	print "" >> (SVCDIR "/depcache")
 }
 
 function print_header2() {
-	print "(" 
-	print "  # Get settings for rc-script ..." 
-	print "  [ -e /etc/conf.d/basic ]                 && source /etc/conf.d/basic" 
-	print "" 
-	print "  [ -e \"/etc/conf.d/${myservice}\" ]        && source \"/etc/conf.d/${myservice}\"" 
-	print "" 
-	print "  [ -e /etc/conf.d/net ]                   && \\" 
-	print "  [ \"${myservice%%.*}\" = \"net\" ]           && \\" 
-	print "  [ \"${myservice##*.}\" != \"${myservice}\" ] && source /etc/conf.d/net" 
-	print "" 
-	print "  [ -e /etc/rc.conf ]                      && source /etc/rc.conf" 
-	print "" 
-	print "  depend() {" 
-	print "    return 0" 
-	print "  }" 
-	print "" 
+	print "(" >> (SVCDIR "/depcache")
+	print "  # Get settings for rc-script ..." >> (SVCDIR "/depcache")
+	print "  [ -e /etc/conf.d/basic ]                 && source /etc/conf.d/basic" >> (SVCDIR "/depcache")
+	print "" >> (SVCDIR "/depcache")
+	print "  [ -e \"/etc/conf.d/${myservice}\" ]        && source \"/etc/conf.d/${myservice}\"" >> (SVCDIR "/depcache")
+	print "" >> (SVCDIR "/depcache")
+	print "  [ -e /etc/conf.d/net ]                   && \\" >> (SVCDIR "/depcache")
+	print "  [ \"${myservice%%.*}\" = \"net\" ]           && \\" >> (SVCDIR "/depcache")
+	print "  [ \"${myservice##*.}\" != \"${myservice}\" ] && source /etc/conf.d/net" >> (SVCDIR "/depcache")
+	print "" >> (SVCDIR "/depcache")
+	print "  [ -e /etc/rc.conf ]                      && source /etc/rc.conf" >> (SVCDIR "/depcache")
+	print "" >> (SVCDIR "/depcache")
+	print "  depend() {" >> (SVCDIR "/depcache")
+	print "    return 0" >> (SVCDIR "/depcache")
+	print "  }" >> (SVCDIR "/depcache")
+	print "" >> (SVCDIR "/depcache")
 }
 
 function print_end() {
-	print "" 
-	print "  depend" 
-	print ")" 
-	print "" 
+	print "" >> (SVCDIR "/depcache")
+	print "  depend" >> (SVCDIR "/depcache")
+	print ")" >> (SVCDIR "/depcache")
+	print "" >> (SVCDIR "/depcache")
 }
 
 BEGIN {
@@ -82,7 +82,7 @@ BEGIN {
 	# and do not process scripts, source or backup files.
 	for (x in TMPRCSCRIPTS)
 		if (((isfile(TMPRCSCRIPTS[x])) || (islink(TMPRCSCRIPTS[x]))) &&
-		    (TMPRCSCRIPTS[x] !~ /((\.(sh|c|bak))|\~)$/)) {
+		    (TMPRCSCRIPTS[x] !~ /((\.(c|bak))|\~)$/)) {
 
 			RCCOUNT++
 
@@ -110,6 +110,13 @@ BEGIN {
 				gsub(/[[:space:]]+/, "")
 
 				if ($0 == "#!/sbin/runscript") {
+
+					if (RCSCRIPTS[count] ~ /\.sh$/) {
+
+						ewarn(RCSCRIPTS[count] " is invalid (should not end with '.sh')")
+						NEXTFILE = 1
+						continue
+					}
 				
 					ISRCSCRIPT = 1
 					print_header1()
@@ -129,7 +136,7 @@ BEGIN {
 					GOTDEPEND = 1
 
 					print_header2()
-					print "  # Actual depend() function ..." 
+					print "  # Actual depend() function ..." >> (SVCDIR "/depcache")
 				}
 	
 				# We have the depend function...
@@ -147,10 +154,10 @@ BEGIN {
 					# Make sure depend() contain something, else bash
 					# errors out (empty function).
 					if ((SBCOUNT > 0) && (COUNT == 0))
-						print "  \treturn 0"
+						print "  \treturn 0" >> (SVCDIR "/depcache")
 		
 					# Print the depend() function
-					print "  " $0 
+					print "  " $0 >> (SVCDIR "/depcache")
 		
 					# If COUNT=0, and SBCOUNT>0, it means we have read
 					# all matching '{' and '}' for depend(), so stop.

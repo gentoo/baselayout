@@ -28,31 +28,29 @@ do
 done
 
 # Clean out the non volitile directories ...
-rm -rf ${svcdir}/{broken,snapshot}/*
+rm -rf ${svcdir}/dep{cache,tree} ${svcdir}/{broken,snapshot}/*
+
+retval=0
 
 cd /etc/init.d
 
-if [ "${RC_DEBUG}" = "yes" ]
-then
-	/bin/gawk -v SVCDIR="${svcdir}" \
-		-f /lib/rcscripts/awk/functions.awk \
-		-f /lib/rcscripts/awk/cachedepends.awk \
-		> "${svcdir}/depcache"
-fi
-
 /bin/gawk -v SVCDIR="${svcdir}" \
 	-f /lib/rcscripts/awk/functions.awk \
-	-f /lib/rcscripts/awk/cachedepends.awk \
-\
-| bash | \
+	-f /lib/rcscripts/awk/cachedepends.awk || \
+	retval=1
+
+bash "${svcdir}/depcache" | \
 \
 /bin/gawk -v SVCDIR="${svcdir}" \
 	-v DEPTYPES="${deptypes}" \
 	-v ORDTYPES="${ordtypes}" \
 	-f /lib/rcscripts/awk/functions.awk \
-	-f /lib/rcscripts/awk/gendepends.awk
+	-f /lib/rcscripts/awk/gendepends.awk || \
+	retval=1
 
-eend $? "Failed to cache service dependencies"
+eend ${retval} "Failed to cache service dependencies"
+
+exit ${retval}
 
 
 # vim:ts=4
