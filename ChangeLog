@@ -5,6 +5,9 @@
 
     Add UPS kill fixes for halt.sh by Lee Weisz / Remy Blank #46440.
 
+    Define a few more {for,back}ward-word bindings in inputrc to fix up 
+    the different GUI terminals #53770 by Arturo Alberto Busleiman.
+
   10 Feb 2005; Roy Marples <uberlord@gentoo.org>:
 
     net.lo now supports fallback_route - fixes #75676
