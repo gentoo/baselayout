@@ -2,6 +2,13 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  26 May 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update /etc/init.d/netmount not to try and mount NFS filesystems
+    if portmap was not started.  This is to stop "hang" problems for
+    new users who do not add portmap to the default runlevel.  See
+    bug #2555.
+
   19 May 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Move $EDITOR from /etc/profile to /etc/env.d/00basic.

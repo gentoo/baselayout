@@ -10,8 +10,20 @@ depend() {
 }
 
 start() {
+	local rcfilesystems=""
+
+	# Only try to mount NFS filesystems if portmap was started.
+	# This is to fix "hang" problems for new users who do not
+	# add portmap to the default runlevel.
+	if [ -L ${svcdir}/started/portmap ]
+	then
+		rcfilesystems="coda,nfs,ncpfs,smbfs"
+	else
+		rcfilesystems="coda,ncpfs,smbfs"
+	fi
+
 	ebegin "Mounting network filesystems"
-	mount -at coda,nfs,ncpfs,smbfs >/dev/null
+	mount -at ${rcfilesystems} >/dev/null
 
 	if [ "$?" -ne 0 ]
 	then
