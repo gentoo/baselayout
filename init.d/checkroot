@@ -28,8 +28,13 @@ start() {
 
 	if [ "$BOOT" = "yes" ]
 	then
-		#create /etc/mtab
-		cp -f /proc/mounts /etc/mtab
+		# create /etc/mtab (done by forcing current mounted filesystems)
+		# NB:  this needs to be updated if our /sbin/rc mounts change ...
+		> /etc/mtab
+		mount -f /
+		mount -f /proc
+		mount -f -t devfs none /dev
+		mount -f -t tmpfs tmpfs /dev/shm -o rw,mode=0644,size=4m
 	fi
 	
 	return

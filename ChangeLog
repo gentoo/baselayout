@@ -2,16 +2,17 @@
 # Copyright 2001 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  27 Jan 2002: Martin Schlemmer (azarah@gentoo.org): added charset
+  map file support to /etc/init.d/consolefont and the setting to
+  /etc/rc.conf.
+
   25 Jan 2002: Martin Schlemmer (azarah@gentoo.org): fixed dircolors
   in skel files to support both versions of dircolors.
 
   23 Jan 2002: Martin Schlemmer (azarah@gentoo.org): fixed bug
-    in the restart stuff of /etc/init.d/runscript.sh that caused
-    a restart of a 'net' service not to restart services again
-    that depended on it.
-
-    Change the way /etc/mtab is created in /etc/init.d/checkroot to
-    be more generic.
+  in the restart stuff of /etc/init.d/runscript.sh that caused
+  a restart of a 'net' service not to restart services again
+  that depended on it.
 
 * rc-scripts 1.2.5 (20 Jan 2002)
 

@@ -10,8 +10,15 @@ depend() {
 
 start() {
 	if [ -n "$CONSOLEFONT" ] ; then
-		if [ -e /usr/bin/consolechars ] ; then
-			/usr/bin/consolechars --font=${CONSOLEFONT}
+		if [ -x /usr/bin/consolechars ] ; then
+			local param x
+			if [ -n "$CONSOLETRANSLATION" ] ; then
+				param="-m ${CONSOLETRANSALTION}"
+			fi
+			for x in 1 2 3 4 5 6 ; do
+				/usr/bin/consolechars -f ${CONSOLEFONT} ${param} \
+					--tty=/dev/vc/${x}
+			done
 		fi
 	fi
 	return
