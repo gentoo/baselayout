@@ -1,0 +1,10 @@
+# ChangeLog for Gentoo System Intialization core utilities.
+# Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
+
+  16 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Initial checkin.  Still rough in some parts, but should be 100%
+    similar in output to depscan.sh and co.
+
+
+# vim:expandtab
