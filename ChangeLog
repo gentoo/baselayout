@@ -4,9 +4,9 @@
 
   29 Nov 2001; Donny Davies (woodchip@gentoo.org): Added a man directory
   to rc-scripts.  Checked in two manpages there, one for modules.autoload.5
-  and one for update-modules.8.  Need to edit update-modules.8.  I think
-  baselayout needs to be updated to install these manpages, so Ill look at
-  that once update-modules.8 is tidied up. :/
+  and one for update-modules.8. These were adapted from Debian. Updated
+  tarball.sh to include the new man directory. Updated baselayout to install
+  these manpages. Slightly tweak the /etc/modules.autoload comments.
 
   25 Nov 2001; ncsd, the name service cache daemon script, has been removed
   from the default "default" runlevel.  It still exists in the archive so that
