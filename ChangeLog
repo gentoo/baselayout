@@ -2,6 +2,21 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  17 Feb 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix /etc/inputrc for dvorak keyboard layout, bug #2599 again.
+
+  16 Feb 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix the 'source /etc/profile.env' to be '. /etc/profile' to have ksh
+    support.  This resolves bug #14994.
+
+    Move EDITOR to /etc/rc.conf.  Also update /etc/profile to set EDITOR
+    according to /etc/rc.conf.
+
+    Update /etc/init.d/checkfs to fix bug #14282.  It did not exclude comments,
+    and used 'basename' which is located in /usr/bin.
+
   13 Feb 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Merge changes from Nick Jones <carpaski@gentoo.org> to not run stty if

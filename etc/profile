@@ -3,13 +3,13 @@
 
 if [ -e "/etc/profile.env" ]
 then
-	source /etc/profile.env
+	. /etc/profile.env
 fi
 
-#077 would be more secure, but 022 is generally quite realistic
+# 077 would be more secure, but 022 is generally quite realistic
 umask 022
 
-if [ `/usr/bin/whoami` = 'root' ]
+if [ "`/usr/bin/whoami`" = 'root' ]
 then
 	if [ "$SHELL" = '/bin/bash' ] || [ "$SHELL" = '/bin/sh' ]
 	then
@@ -25,6 +25,37 @@ else
 fi
 unset ROOTPATH
 
-if [ -z "$INPUTRC" -a ! -f "$HOME/.inputrc" ]; then
+if [ -z "$INPUTRC" -a ! -f "$HOME/.inputrc" ]
+then
 	export INPUTRC="/etc/inputrc"
 fi
+
+# Extract the value of EDITOR
+get_editor() {
+	[ ! -f "$1" ] && return
+	
+	local editor="`gawk '
+		/^[[:space:]]*EDITOR[[:space:]]*=/ {
+
+			sub(/^[[:space:]]*EDITOR[[:space:]]*=/, "")
+			EDITOR = $0
+		}
+		
+		END { print EDITOR }
+	' $1`"
+
+	bash -c "eval echo $editor"
+}
+
+if [ -f /etc/rc.conf -a -n "`get_editor /etc/rc.conf`" ]
+then
+	export EDITOR="`get_editor /etc/rc.conf`"
+
+elif [ -f /etc/conf.d/basic -a -n "`get_editor /etc/conf.d/basic`" ]
+then
+	export EDITOR="`get_editor /etc/conf.d/basic`"
+
+else
+	export EDITOR="/bin/nano"
+fi
+

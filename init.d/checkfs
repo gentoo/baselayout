@@ -42,9 +42,9 @@ start() {
 		local rc=0
 		local retval=0
         
-		for i in `grep "^[^*]*raiddev" /etc/raidtab | awk '{print $2}'`
+		for i in `grep "^[^*]*raiddev" /etc/raidtab | awk '$0 !~ /^[[:space:]]*#/ {print $2}'`
 		do
-			local raiddev="`basename ${i}`"
+			local raiddev="${i##*/}"
 			local raidstat="$(egrep "^${raiddev} : active" /proc/mdstat)"
 			
 			if [ -z "${raidstat}" ]

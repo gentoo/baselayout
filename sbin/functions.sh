@@ -47,7 +47,7 @@ getcols() {
 	echo "$2"
 }
 
-if [ -n "${EBUILD}" ] && [ "${*/ depend}" != "$*" ]
+if [ -n "${EBUILD}" ] && [ "${*/depend}" != "$*" ]
 then
 	COLS="48 80"
 else
@@ -68,11 +68,11 @@ ENDCOL=$'\e[A\e['${COLS}'G'
 # irregardless of character width
 
 # Now setup colors for easy reading
-if [ -n "${EBUILD}" ] && [ "${*/ depend}" = "$*" ]
+if [ -n "${EBUILD}" ] && [ "${*/depend}" = "$*" ]
 then
 	NOCOLOR="`python -c 'import portage; print portage.settings["NOCOLOR"]' 2> /dev/null`"
 fi
-if [ -n "${EBUILD}" ] && [ "${*/ depend}" = "$*" ] && [ "${NOCOLOR}" = "true" ]
+if [ -n "${EBUILD}" ] && [ "${*/depend}" = "$*" ] && [ "${NOCOLOR}" = "true" ]
 then
 	GOOD=""
 	WARN=""
