@@ -3,18 +3,20 @@ export TMP="${TMP:-/tmp}"
 export V="1.6.10"
 export DEST="${TMP}/rc-scripts-${V}"
 
-echo "Performing sanity checks ..."
-cvsfiles=$(cvs up 2>&1 | egrep -v '^(U|P)')
-if [[ -n ${cvsfiles} ]] ; then
-	echo "Refusing to package tarball until cvs is in sync:"
-	echo "$cvsfiles"
-	exit 1
-fi
-cvsfiles=$(find . -name '.#*')
-if [[ -n ${cvsfiles} ]] ; then
-	echo "Refusing to package tarball until these files are removed:"
-	echo "$cvsfiles"
-	exit 1
+if [[ $1 != "-f" ]] ; then
+	echo "Performing sanity checks (run with -f to skip) ..."
+	cvsfiles=$(find . -name '.#*')
+	if [[ -n ${cvsfiles} ]] ; then
+		echo "Refusing to package tarball until these files are removed:"
+		echo "$cvsfiles"
+		exit 1
+	fi
+	cvsfiles=$(cvs up 2>&1 | egrep -v '^(U|P)')
+	if [[ -n ${cvsfiles} ]] ; then
+		echo "Refusing to package tarball until cvs is in sync:"
+		echo "$cvsfiles"
+		exit 1
+	fi
 fi
 
 echo "Creating tarball ..."
