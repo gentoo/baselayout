@@ -27,6 +27,9 @@ for x in bin etc init.d sbin src rc-lists man ; do
 	cp -ax $x ${DEST}
 done
 
+# do not yet package src/core stuff
+rm -rf ${DEST}/src/core
+
 # copy net-scripts and remove older stuff
 install -d -m0755 ${DEST}/lib/rcscripts
 cp -ax net-scripts/init.d ${DEST}
