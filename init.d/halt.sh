@@ -112,19 +112,18 @@ remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mou
 }
 
 # Try to unmount all filesystems (no /proc,tmpfs,devfs,etc).
-# This is needed to make sure we dont have a mounted filesystem
+# This is needed to make sure we dont have a mounted filesystem 
 # on a LVM volume when shutting LVM down ...
 ebegin "Unmounting filesystems"
-no_unmounts="`mount | awk '{ if (($5 ~ /^(proc|sysfs|devfs|tmpfs|usb(dev)?fs)$/) ||
-                                ($1 == "none") ||
-                                ($1 ~ /^(rootfs|\/dev\/root)$/) ||
-                                ($3 == "/"))
-                           print $3
-                       }' | sort -u`"
-for x in `awk '{ print $2 }' /proc/mounts | sort -ru`
+unmounts="$( \
+	awk '{ \
+	    if (($3 !~ /^(proc|sysfs|devfs|tmpfs|usb(dev)?fs)$/) && \
+	        ($1 != "none") && \
+	        ($1 !~ /^(rootfs|\/dev\/root)$/) && \
+	        ($2 != "/")) \
+	      print $2 }' /proc/mounts | sort -ur)"
+for x in $unmounts
 do
-	do_unmount="yes"
-
 	# Do not umount these if we are booting off a livecd
 	if [ -n "${CDBOOT}" ] && \
 	   [ "${x}" = "/mnt/cdrom" -o "${x}" = "/mnt/livecd" ]
@@ -132,20 +131,14 @@ do
 		continue
 	fi
 
-	for y in ${no_unmounts}
-	do
-		[ "${x}" = "${y}" ] && do_unmount="no"
-	done
-
-	if [ "${do_unmount}" = "yes" ]
+	x="${x//\\040/ }"
+	if ! umount "${x}" &>/dev/null
 	then
-		umount "${x}" &>/dev/null || {
-			# Kill processes still using this mount
-			/bin/fuser -k -m -9 "${x}" &>/dev/null
-			sleep 2
-			# Now try to unmount it again ...
-			umount -f -r "${x}" &>/dev/null
-		}
+		# Kill processes still using this mount
+		/bin/fuser -k -m -9 "${x}" &>/dev/null
+		sleep 2
+		# Now try to unmount it again ...
+		umount -f -r "${x}" &>/dev/null
 	fi
 done
 eend 0
@@ -205,38 +198,50 @@ ups_kill_power() {
 mount_readonly() {
 	local x=
 	local retval=0
+	local cmd="$1"
 
-	for x in `awk '$1 != "none" { print $2 }' /proc/mounts | sort -r`
+	# Get better results with a sync and sleep
+	sync; sync
+	sleep 1
+
+	for x in $(awk '$1 != "none" { print $2 }' /proc/mounts | sort -r)
 	do
-		# ${x} needs to be quoted to handle octal sequences such as
-		# \040 (see bug 51351)
-		mount -n -o remount,ro "${x}" &>/dev/null
+		x="${x//\\040/ }"
+		if [ "${cmd}" = "u" ]
+		then
+			umount -r -r "${x}"
+		else
+			mount -n -o remount,ro "${x}" &>/dev/null
+		fi
 		retval=$((${retval} + $?))
 	done
+	[ ${retval} -ne 0 ] && killall5 -9 &>/dev/null
 
 	return ${retval}
 }
 
+# Since we use `mount` in mount_readonly(), but we parse /proc/mounts, we 
+# have to make sure our /etc/mtab and /proc/mounts agree
+cp /proc/mounts /etc/mtab &>/dev/null
 ebegin "Remounting remaining filesystems readonly"
-# Get better results with a sync and sleep
-sync; sync
-sleep 1
+mount_worked=0
 if ! mount_readonly
 then
-	killall5 -9  &>/dev/null
-	sync; sync
-	sleep 1
 	if ! mount_readonly
 	then
-		eend 1
-		sync; sync
-		[ -f /etc/killpower ] && ups_kill_power
-		/sbin/sulogin -t 10 /dev/console
-	else
-		eend 0
+		# If these things really don't want to remount ro, then 
+		# let's try to force them to unmount
+		if ! mount_readonly u
+		then
+			mount_worked=1
+		fi
 	fi
-else
-	eend 0
+fi
+eend ${mount_worked}
+if [ ${mount_worked} -eq 1 ]
+then
+	[ -f /etc/killpower ] && ups_kill_power
+	/sbin/sulogin -t 10 /dev/console
 fi
 
 # Inform if there is a forced or skipped fsck

@@ -1,6 +1,13 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+  03 Dec 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Simply filesystem unmounting in halt.sh.  Based upon work by Georg Sauthoff 
+    #68697.  Also clean up the filesystem remounting readonly.  As a last 
+    resort to filesystems which won't remount readonly, we try to unmount them 
+    with the force/readonly options.  Idea from #70349.
+
   03 Dec 2004; Roy Marples <uberlord@gentoo.org>:
 
     Fixed config-system for only changing hostname when needed
