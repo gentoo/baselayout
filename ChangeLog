@@ -2,6 +2,19 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  02 Jan 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix src/awk/genenviron.awk to work with multiple 'need', 'use', etc
+    lines, as it seems users do not note the need to have them all on
+    one line ....
+
+    Fix /sbin/runscript.sh to detect 'net.adsl', or any other net.*
+    script not ending on a digit.  This closes bug #12887.
+
+    Fix get_KV to also check micro version of kernel;  add KV_to_int()
+    helper function for get_KV.  Update /etc/init.d/localmount to work
+    with new get_KV ...
+
   28 Dec 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Add support for generate-modprobe.conf or generating /etc/modprobe.conf

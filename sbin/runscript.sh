@@ -111,7 +111,7 @@ svc_stop() {
 		     -L /etc/runlevels/${mylevel}/${myservice} ]
 		then
 			local netcount="$(ls -1 ${svcdir}/started/net.* \
-				2> /dev/null | egrep -c "\/net\..*[[:digit:]]+$")"
+				2> /dev/null | egrep -c "\/net\..*[[:alnum:]]+$")"
 
 			if [ "${netcount}" -lt 1 -o "${RC_NET_STRICT_CHECKING}" = "yes" ]
 			then
@@ -251,7 +251,7 @@ svc_start() {
 						if [ "$?" -ne 0 -a -L ${svcdir}/need/${x}/${myservice} ]
 						then
 							local netcount="$(ls -1 ${svcdir}/started/net.* \
-								2> /dev/null | egrep -c "\/net\..*[[:digit:]]+$")"
+								2> /dev/null | egrep -c "\/net\..*[[:alnum:]]+$")"
 							
 							if [ "${netcount}" -lt 1 -o "${RC_NET_STRICT_CHECKING}" = "yes" ]
 							then
@@ -594,11 +594,11 @@ do
 		
 		#create a snapshot of started services
 		rm -rf ${svcdir}/snapshot/*
-		cp ${svcdir}/started/* ${svcdir}/snapshot/
+		cp -a ${svcdir}/started/* ${svcdir}/snapshot/
 		
 		#simple way to try and detect if the service use svc_{start,stop}
 		#to restart if it have a custom restart() funtion.
-		if [ -n "$(egrep 'restart()' /etc/init.d/${myservice})" ]
+		if [ -n "$(egrep '^[[:space:]]*restart[[:space:]]*()' /etc/init.d/${myservice})" ]
 		then
 			if [ -z "$(egrep 'svc_stop' /etc/init.d/${myservice})" -o \
 			     -z "$(egrep 'svc_start' /etc/init.d/${myservice})" ]

@@ -15,7 +15,7 @@ start() {
 	eend $? "Some local filesystem failed to mount"
 
 	# Check what kernel we are running ...
-	if [ "$(get_KV)" -gt "24" ]
+	if [ "$(get_KV)" -ge "$(KV_to_int '2.5.0')" ]
 	then
 		USBFS="usbfs"
 	else

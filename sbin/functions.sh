@@ -7,10 +7,9 @@
 	PATH="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/sbin"
 
 # Make sure that /sbin and /usr/sbin are in $PATH
-[ "${PATH/^\/sbin:}" = "${PATH}" -a "${PATH/:\/sbin:}" = "${PATH}" ] && \
-	PATH="/sbin:${PATH}"
-[ "${PATH/^\/usr\/sbin:}" = "${PATH}" -a "${PATH/:\/usr\/sbin:}" = "${PATH}" ] && \
-	PATH="/usr/sbin:${PATH}"
+[ -z "`echo ${PATH} | egrep '^/sbin:|:/sbin:' 2> /dev/null `" -o \
+  -z "`echo ${PATH} | egrep '^/usr/sbin:|:/usr/sbin:' 2> /dev/null `" ] && \
+	PATH="/sbin:/usr/sbin:${PATH}"
 
 # daemontools dir
 SVCDIR="/var/lib/supervise"
@@ -52,15 +51,15 @@ getcols() {
 	echo "$2"
 }
 
-COLS="$(stty size 2>/dev/null)"
-if [ "$COLS" = "0 0" ]
+COLS="`stty size 2> /dev/null`"
+if [ "${COLS}" = "0 0" ]
 then
 	# Fix for serial tty (bug #11557)
     COLS=80
     stty cols 80 &>/dev/null
     stty rows 24 &>/dev/null
 else
-    COLS="$(getcols ${COLS})"
+    COLS="`getcols ${COLS}`"
 fi
 COLS=$((${COLS} -7))
 ENDCOL=$'\e[A\e['${COLS}'G'
@@ -222,15 +221,43 @@ checkserver() {
 	return 0
 }
 
+# int KV_to_int(string)
+#
+#   Convert a string type kernel version (2.4.0) to an int (132096)
+#   for easy compairing or versions ...
+#
+KV_to_int() {
+	[ -z "$1" ] && return 1
+    
+	local KV="`echo $1 | \
+		awk '{ tmp = $0; gsub(/^[0-9\.]*/, "", tmp); sub(tmp, ""); print }'`"
+	local KV_MAJOR="`echo "${KV}" | cut -d. -f1`"
+	local KV_MINOR="`echo "${KV}" | cut -d. -f2`"
+	local KV_MICRO="`echo "${KV}" | cut -d. -f3`"
+	local KV_int="$((KV_MAJOR * 65536 + KV_MINOR * 256 + KV_MICRO))"
+    
+	# We make version 2.2.0 the minimum version we will handle as
+	# a sanity check ... if its less, we fail ...
+	if [ "${KV_int}" -ge "131584" ]
+	then 
+		echo "${KV_int}"
+
+		return 0
+	else
+		return 1
+	fi
+}   
+
 # int get_KV()
 #
-#   return the kernel version (major and minor concated) as a integer
-#
+#   return the kernel version (major, minor and micro concated) as an integer
+#   
 get_KV() {
-	local KV_MAJOR="`uname -r | cut -d. -f1`"
-	local KV_MINOR="`uname -r | cut -d. -f2`"
+	local KV="`uname -r 2> /dev/null`"
 
-	echo "${KV_MAJOR}${KV_MINOR}"
+	echo "`KV_to_int ${KV}`"
+
+	return $?
 }
 
 # bool get_bootparam(param)
@@ -247,13 +274,13 @@ get_bootparam() {
 	local copt=""
 	local parms=""
 	local retval=1
-	for copt in $(cat /proc/cmdline)
+	for copt in `cat /proc/cmdline`
 	do
 		if [ "${copt%=*}" = "gentoo" ]
 		then
 			parms="${copt##*=}"
 			#parse gentoo option
-			if [ "$(eval echo \${parms/${1}/})" != "${parms}" ]
+			if [ "`eval echo \${parms/${1}/}`" != "${parms}" ]
 			then
 				retval=0
 			fi
@@ -291,14 +318,14 @@ dolisting() {
 		fi
 		if [ ! -d ${x} ] && ( [ -L ${x} -o -f ${x} ] )
 		then
-			mylist="${mylist} $(ls ${x} 2>/dev/null)"
+			mylist="${mylist} `ls ${x} 2> /dev/null`"
 		else
 			if [ "${x%/}" != "${x}" ]
 			then
 				x="${x%/}"
 			fi
 			cd ${x}
-			tmpstr="$(ls)"
+			tmpstr="`ls`"
 			for y in ${tmpstr}
 			do
 				mylist="${mylist} ${x}/${y}"

@@ -63,36 +63,61 @@ BEGIN {
 	if ($1 == "NEED") {
 		sub(/NEED[[:space:]]*/, "")
 
-		if ($0 != "")
-			DEPTREE[RCNUMBER,NEED] = $0
+		if ($0 != "") {
+		
+			if (DEPTREE[RCNUMBER,NEED] != "")
+				DEPTREE[RCNUMBER,NEED] = DEPTREE[RCNUMBER,NEED] " " $0
+			else
+				DEPTREE[RCNUMBER,NEED] = $0
+		}
 	}
 
 	if ($1 == "USE") {
 		sub(/USE[[:space:]]*/, "")
 
-		if ($0 != "")
-			DEPTREE[RCNUMBER,USE] = $0
+		if ($0 != "") {
+
+			if (DEPTREE[RCNUMBER,USE] != "")
+				DEPTREE[RCNUMBER,USE] = DEPTREE[RCNUMBER,USE] " " $0
+			else
+				DEPTREE[RCNUMBER,USE] = $0
+		}
 	}
 
 	if ($1 == "BEFORE") {
 		sub(/BEFORE[[:space:]]*/, "")
 
-		if ($0 != "")
-			DEPTREE[RCNUMBER,BEFORE] = $0
+		if ($0 != "") {
+
+			if (DEPTREE[RCNUMBER,BEFORE] != "")
+				DEPTREE[RCNUMBER,BEFORE] = DEPTREE[RCNUMBER,BEFORE] " " $0
+			else
+				DEPTREE[RCNUMBER,BEFORE] = $0
+		}
 	}
 
 	if ($1 == "AFTER") {
 		sub(/AFTER[[:space:]]*/, "")
 
-		if ($0 != "")
-			DEPTREE[RCNUMBER,AFTER] = $0
+		if ($0 != "") {
+
+			if (DEPTREE[RCNUMBER,AFTER] != "")
+				DEPTREE[RCNUMBER,AFTER] = DEPTREE[RCNUMBER,AFTER] " " $0
+			else
+				DEPTREE[RCNUMBER,AFTER] = $0
+		}
 	}
 
 	if ($1 == "PROVIDE") {
 		sub(/PROVIDE[[:space:]]*/, "")
 
-		if ($0 != "")
-			DEPTREE[RCNUMBER,PROVIDE] = $0
+		if ($0 != "") {
+
+			if (DEPTREE[RCNUMBER,PROVIDE] != $0)
+				DEPTREE[RCNUMBER,PROVIDE] = DEPTREE[RCNUMBER,PROVIDE] " " $0
+			else
+				DEPTREE[RCNUMBER,PROVIDE] = $0
+		}
 	}
 }
 
