@@ -1,4 +1,4 @@
-# /etc/conf.d/local.start:
+# /etc/conf.d/local.start
 # $Header$
 
 # This is a good place to load any misc.
