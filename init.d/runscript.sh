@@ -439,19 +439,26 @@ do
 		else
 			restart
 		fi
+
+		if [ "${myservice%%.*}" = "net" ] && [ "${myservice##*.}" != "$myservice" ]
+		then
+			depservice="net"
+		else
+			depservice="$myservice"
+		fi
 			
 		#restart dependancies as well
 		if [ -L ${svcdir}/started/${myservice} ]
 		then
 			for mytype in ${deptypes}
 			do
-				if [ -d ${svcdir}/${mytype}/${myservice} ]
+				if [ -d ${svcdir}/${mytype}/${depservice} ]
 				then
 					for x in ${svcdir}/snapshot/*
 					do
-						if [ -L ${svcdir}/${mytype}/${myservice}/${x##*/} ] && [ ! -L ${svcdir}/started/${x##*/} ]
+						if [ -L ${svcdir}/${mytype}/${depservice}/${x##*/} ] && [ ! -L ${svcdir}/started/${x##*/} ]
 						then
-							${svcdir}/${mytype}/${myservice}/${x##*/} start
+							${svcdir}/${mytype}/${depservice}/${x##*/} start
 						fi
 					done
 				fi

@@ -2,6 +2,11 @@
 # Copyright 2001 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  23 Jan 2002: Martin Schlemmer (azarah@gentoo.org): fixed bug
+  in the restart stuff of /etc/init.d/runscript.sh that caused
+  a restart of a 'net' service not to restart services again
+  that depended on it.
+
 * rc-scripts 1.2.5 (20 Jan 2002)
 
   20 Jan 2002: Martin Schlemmer (azarah@gentoo.org): updated
