@@ -8,6 +8,10 @@
     #52881 #55939 #58997 #66166 #66297.  Gleaned many from the IANA 
     list/Fedora/FreeBSD/Debian.
 
+    Change the test for /proc/cmdline from -e to -r.  On grsecurity 
+    based systems for example, the file may exist, but not be readable 
+    by non-root users (patch by Ned Ludd).
+
   03 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
 
     Add support for NFSv4 from #25106 to the netmount script.  Don't 

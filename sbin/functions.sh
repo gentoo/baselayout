@@ -437,7 +437,7 @@ get_KV() {
 get_bootparam() {
 	local x copt params retval=1
 
-	[ ! -e "/proc/cmdline" ] && return 1
+	[ ! -r "/proc/cmdline" ] && return 1
 	
 	for copt in $(< /proc/cmdline)
 	do
@@ -584,7 +584,7 @@ then
 		esac
 	done
 
-	if [ -e "/proc/cmdline" ]
+	if [ -r "/proc/cmdline" ]
 	then
 		setup_defaultlevels
 	fi
