@@ -34,9 +34,13 @@ start() {
 	# add portmap to the default runlevel.
 	if [ -L ${svcdir}/started/portmap ]
 	then
-		rcfilesystems="coda,nfs,ncpfs,smbfs,cifs"
+		rcfilesystems="${NET_FS_LIST// /,}"		# convert to comma-separated
 	else
-		rcfilesystems="coda,ncpfs,smbfs,cifs"
+		rcfilesystems=" ${NET_FS_LIST} "
+		rcfilesystems=${rcfilesystems// nfs /}	# remove nfs
+		rcfilesystems=${rcfilesystems# }		# remove front and
+		rcfilesystems=${rcfilesystems% }		#   back spaces
+		rcfilesystems=${rcfilesystems// /,}		# convert to comma-separated
 	fi
 
 	ebegin "Mounting network filesystems"

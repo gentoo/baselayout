@@ -10,7 +10,7 @@ depend() {
 start() {
 	# Mount local filesystems in /etc/fstab.
 	ebegin "Mounting local filesystems"
-	mount -at nocoda,nonfs,noproc,noncpfs,nosmbfs,noshm,nocifs >/dev/null
+	mount -at noproc,noshm,no${NET_FS_LIST// /,no} >/dev/null
 	eend $? "Some local filesystem failed to mount"
 
 	# Make sure we insert usbcore if its a module

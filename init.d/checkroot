@@ -25,8 +25,7 @@ start() {
 			# it'll be deleted in that script.
 			retval=$?
 		else
-			if mount -vf -o remount / | \
-				awk '{ if ($5 !~ /coda|nfs|ncpfs|smbfs|cifs/) exit 0; else exit 1; }'
+			if ! is_net_fs /
 			then
 				fsck -A -C -T -a /
 			fi

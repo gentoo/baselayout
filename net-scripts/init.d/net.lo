@@ -501,10 +501,15 @@ stop() {
 	modules_load ${IFACE} true || return 1
 
 	# Call user-defined predown function if it exists
-	if [[ ${IFACE} != lo && function == $(type -t predown) ]]; then
-		einfo "Running predown function"
-		if ! predown ${IFACE} ; then
-			eerror "predown ${IFACE} failed"
+	if [[ ${IFACE} != lo ]]; then
+		if [[ $( type -t predown ) == function ]]; then
+			einfo "Running predown function"
+			if ! predown ${IFACE} ; then
+				eerror "predown ${IFACE} failed"
+				return 1
+			fi
+		elif is_net_fs /; then
+			eerror "root filesystem is network mounted -- can't stop ${IFACE}"
 			return 1
 		fi
 	fi

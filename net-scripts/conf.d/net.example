@@ -246,12 +246,14 @@
 #}
 
 #predown() {
-#	# Test to make sure the root filesystem is not mounted via NFS.
-#	# Interface ($1) is ignored but could also be tested.
-#	#if grep -q ' / nfs ' /proc/mounts; then
-#	#	ewarn "Root is NFS mounted, aborting deconfiguration of $1"
-#	#	return 1
-#	#fi
+#	# The default in the script is to test for NFS root and disallow
+#	# downing interfaces in that case.  Note that if you specify a
+#	# predown() function you will override that logic.  Here it is, in
+#	# case you still want it...
+#	if is_net_fs /; then
+#		eerror "root filesystem is network mounted -- can't stop ${IFACE}"
+#		return 1
+#	fi
 #
 #	# Remember to return 0 on success
 #	return 0

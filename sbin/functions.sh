@@ -624,4 +624,21 @@ else
 	BRACKET=$'\e[34;01m'
 fi
 
+# Network filesystems list for common use in rc-scripts.
+# This variable is used in is_net_fs and other places such as
+# localmount.
+NET_FS_LIST="cifs coda ncpfs nfs smbfs"
+
+# bool is_net_fs(path)
+#
+#   return 0 if path is the mountpoint of a networked filesystem
+#
+#   EXAMPLE:  if is_net_fs / ; then ...
+#
+is_net_fs() {
+	local fstype=$(mount -o remount -fv "$1" | awk '{print $(NF-1)}')
+	[[ " ${NET_FS_LIST} " == *" ${fstype} "* ]]
+	return $?
+}
+
 # vim:ts=4

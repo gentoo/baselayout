@@ -8,6 +8,9 @@
     provided now by net-scripts and net.ppp0 is shipped in
     net-dialup/ppp
 
+    Create NET_FS_LIST and is_net_fs in functions.sh and use them in
+    checkroot, localmount, netmount, net.example, and net.lo
+
   09 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
 
     If the hostname has already been set via the kernel/dhcp, don't 
