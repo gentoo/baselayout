@@ -111,13 +111,13 @@ do
 	
 	if [ "${do_unmount}" = "yes" ]
 	then
-		umount ${x} &>/dev/null || {
+		umount "${x}" &>/dev/null || {
 		
 			# Kill processes still using this mount
 			/bin/fuser -k -m -9 "${x}" &>/dev/null
 			sleep 2
 			# Now try to unmount it again ...
-			umount -f -r ${x} &>/dev/null
+			umount -f -r "${x}" &>/dev/null
 		}
 	fi
 done
@@ -151,7 +151,9 @@ mount_readonly() {
 	
 	for x in `awk '$1 != "none" { print $2 }' /proc/mounts | sort -r`
 	do
-		mount -n -o remount,ro ${x} &>/dev/null
+		# ${x} needs to be quoted to handle octal sequences such as
+		# \040 (see bug 51351)
+		mount -n -o remount,ro "${x}" &>/dev/null
 		retval=$((${retval} + $?))
 	done
 

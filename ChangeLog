@@ -13,6 +13,9 @@
     Apply half of spock's patch in bug 45784: Check for
     conf.d/bootsplash instead of conf.d/bootsplash.conf
 
+    Fix bug 51351: Quote parsed output of /proc/filesystems to handle
+    octal sequences in mountpoint such as encoded spaces (\040)
+
   21 Jul 2004; Aron Griffis <agriffis@gentoo.org>:
 
     Fix bug 26952: Use /etc/bash/bashrc to setup PS1, testing $- to
