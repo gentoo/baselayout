@@ -28,8 +28,6 @@
 # grab code from functions.sh so we don't have to reproduce it
 source /sbin/functions.sh
 runleveldir=/etc/runlevels
-COLS="$((COLS - 6))"
-[ "${COLS:0:1}" == "-" ] && COLS="80"
 
 # grab settings from conf.d/rc
 source /etc/conf.d/rc
@@ -172,7 +170,7 @@ fi
 ################################################################################
 # Define a helper method for printing the status of a service; '[ xxx ]'
 print_msg() {
-	printf "${BRACKET}[ $1%-7s ${BRACKET}]${NORMAL}\n" "$2"
+	printf "%-$((COLS - 4 - ${#3}))s%s\n" "$1" "${BRACKET}[ $2$3 ${BRACKET}]${NORMAL}"
 }
 
 # if --all wasnt specified, dont print everything
@@ -191,16 +189,15 @@ fi
 for level in ${runlevelidxs} ; do
 	echo "Runlevel: ${HILITE}${level}${NORMAL}"
 	for service in ${runlevels[${arridx}]} ; do
-		printf "  %-${COLS}s" "${service}"
 		if [ $(in_list "${started}" "${service}") -eq 1 ] ; then
-			print_msg "${GOOD}" "started"
+			print_msg "${service}" "${GOOD}" 'started'
 		else
 			if [ -n "${failed}" ] && [ $(in_list "${failed}" "${service}") -eq 1 ] ; then
-				print_msg "${BAD}", "failed"
+				print_msg "${service}" "${BAD}" 'failed'
 			elif [ -n "${broken}" ] && [ $(in_list "${broken}" "${service}") -eq 1 ] ; then
-				print_msg "${BAD}", "broken"
+				print_msg "${service}" "${BAD}" 'broken'
 			else
-				print_msg "${WARN}" "  off"
+				print_msg "${service}" "${WARN}" '  off'
 			fi
 		fi
 	done
