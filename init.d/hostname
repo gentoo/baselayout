@@ -3,6 +3,14 @@
 # Distributed under the terms of the GNU General Public License v2 
 # $Header$
 
+# This only set what /bin/hostname returns.  If you need to setup NIS, meaning
+# what /bin/domainname returns, please see:
+#
+#   http://www.linux-nis.org/nis-howto/HOWTO/
+#
+# To have a proper FQDN, you need to setup /etc/hosts and /etc/resolv.conf
+# properly (domain entry in /etc/resolv.conf, and FQDN in /etc/hosts).
+
 
 depend() {
 	need checkroot
@@ -18,18 +26,11 @@ checkconfig() {
 
 start() {
 	local myhost="localhost"
-	local mydomain="localdomain"
 	local retval=0
 	
 	if checkconfig
 	then
 		myhost="$(awk '{ sub(/\..*/, ""); print }' /etc/hostname)"
-		mydomain="$(awk '{ if (sub(/^[^\.]*\./, "")) print }' /etc/hostname)"
-
-		if [ -z "${mydomain}" ]
-		then
-			mydomain="localdomain"
-		fi
 	fi
 	
 	ebegin "Setting hostname to ${myhost}"
@@ -37,14 +38,9 @@ start() {
 	retval=$?
 	eend ${retval} "Failed to set the hostname"
 	
-	ebegin "Setting domainname to ${mydomain}"
-	/bin/domainname "${mydomain}"
-	retval=$(($retval + $?))
-	eend ${retval} "Failed to set the domainname"
-
 	if [ "${retval}" -eq 0 ]
 	then
-		#setup $HOSTNAME
+		# setup $HOSTNAME
 		echo "HOSTNAME=\"${myhost}\"" >/etc/env.d/01hostname
 	fi
 

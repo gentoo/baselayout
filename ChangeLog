@@ -2,9 +2,32 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+* rc-scripts 1.4.3.6 (27 Apr 2003)
+
   27 Apr 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Add a 'save' function /etc/init.d/clock, bug #19685.
+
+    Add a slocate group to /etc/group, bug #19604.
+
+    Do not stop a network service if we do not reboot on runlevel change,
+    as it could have been started by the user or hotplug.  This should
+    address bug #12763; modified /sbin/rc for this.
+
+    Fix /etc/init.d/hostname to set only the hostname, and not the NIS
+    domainname.
+
+    Fix /etc/init.d/keymaps to be able to set the extended keymap in rc.conf.
+    This should close bug #16884.
+
+    Fix /etc/profile to be /bin/sh compadible, bug #18918.
+
+    Change the swap comments in /sbin/rc to "Activating (possible) swap" to
+    be more 'generic' ?  Only try to disable swap if any devices/files was
+    activated.  This should close bug #19089.
+
+	Fix /etc/init.d/checkroot to only remount / rw if not set explicitly to
+	rw in /etc/fstab, bug #19158.
 
   24 Apr 2003; Martin Schlemmer <azarah@gentoo.org>:
 
@@ -1472,44 +1495,44 @@
 
 [old changelog format follows]
 
-	*lots of scripts; woodchip
-	removed old rc5 scripts from cvs
+    *lots of scripts; woodchip
+    removed old rc5 scripts from cvs
 
-	*init.d/runscript.sh; agriffis
-	Added support for rc.conf and home-grown functions
-	
-	*init.d/modules;
-	Now correctly looks at /etc/modules.autoload
+    *init.d/runscript.sh; agriffis
+    Added support for rc.conf and home-grown functions
+    
+    *init.d/modules;
+    Now correctly looks at /etc/modules.autoload
 
 rc-scripts-1.1.6, released 15 Sep 2001
 ======================================
 
-	*init.d/runscript.sh, others
-	Handling of "net" dependencies resolve to all net devices in
-	/etc/runlevels/boot and /etc/runlevels/[curr-runlevel].  INTERFACES
-	variable in /etc/rc.conf has been removed.
-	
-	*init.d/runscript.sh
-	New "zap" option for manually resetting the state of an initscript
-	to stopped.
+    *init.d/runscript.sh, others
+    Handling of "net" dependencies resolve to all net devices in
+    /etc/runlevels/boot and /etc/runlevels/[curr-runlevel].  INTERFACES
+    variable in /etc/rc.conf has been removed.
+    
+    *init.d/runscript.sh
+    New "zap" option for manually resetting the state of an initscript
+    to stopped.
 
-	*init.d/{samba,sysklogd,sshd}
-	Removed from CVS; they live in their respective packages.
+    *init.d/{samba,sysklogd,sshd}
+    Removed from CVS; they live in their respective packages.
 
 rc-scripts-1.1.5, released 02 Sep 2001
 ====================================
 
-	*sbin/rc-update
-	New version of the rc-update command for the new initscripts.  Works
-	similarly to the old version, except this one updates our dependency
-	cache.
+    *sbin/rc-update
+    New version of the rc-update command for the new initscripts.  Works
+    similarly to the old version, except this one updates our dependency
+    cache.
 
-	*init.d/functions.sh
-	New and better looking informational message functions (einfo, einfon).
-	Brand new message functions (ewarn).
+    *init.d/functions.sh
+    New and better looking informational message functions (einfo, einfon).
+    Brand new message functions (ewarn).
 
-	*sbin/init, init.d/checkroot
-	We're going back to a /proc/mounts-based mtab symlink because it's 
-	just plain better.  Appropriate changes made.
+    *sbin/init, init.d/checkroot
+    We're going back to a /proc/mounts-based mtab symlink because it's 
+    just plain better.  Appropriate changes made.
 
 # vim:expandtab

@@ -37,11 +37,15 @@ start() {
 	# New kbd support ...
 	if [ -x /bin/loadkeys ]
 	then
-		/bin/loadkeys -q windowkeys ${KEYMAP} >/dev/null
+		[ -z "${EXTENDED_KEYMAP}" ] && local EXTENDED_KEYMAP="windowkeys"
+		
+		/bin/loadkeys -q ${EXTENDED_KEYMAP} ${KEYMAP} >/dev/null
 	# Old console-tools support ...
 	elif [ -x /usr/bin/loadkeys ]
 	then
-		/usr/bin/loadkeys -q windowkeys.inc ${KEYMAP} >/dev/null
+		[ -z "${EXTENDED_KEYMAP}" ] && local EXTENDED_KEYMAP="windowkeys.inc"
+		
+		/usr/bin/loadkeys -q ${EXTENDED_KEYMAP} ${KEYMAP} >/dev/null
 	else
 		eend 1 "loadkeys executable not found"
 		return 1

@@ -44,14 +44,19 @@ start() {
 		fi
 	fi
 
-	ebegin "Remounting root filesystem read/write"
-	mount / -n -o remount,rw &>/dev/null
-	if [ "$?" -ne 0 ]
+	# Should we mount root rw ?
+	if mount -vf -o remount / 2> /dev/null | \
+			awk '{ if ($6 ~ /rw/) exit 0; else exit 1; }'
 	then
-		eend 2 "Root filesystem could not be mounted R/W :("
-		/sbin/sulogin ${CONSOLE}
-	else
-		eend 0
+		ebegin "Remounting root filesystem read/write"
+		mount / -n -o remount,rw &>/dev/null
+		if [ "$?" -ne 0 ]
+		then
+			eend 2 "Root filesystem could not be mounted read/write:("
+			/sbin/sulogin ${CONSOLE}
+		else
+			eend 0
+		fi
 	fi
 
 	if [ "${BOOT}" = "yes" ]

@@ -62,7 +62,7 @@ stop() {
 
 		if [ -z "$(/sbin/ifconfig | egrep "${IFACE}")" ]
 		then
-			eerror "Interface seems to be down already"
+			ewarn "Interface seems to be down already"
 			# We should return 0 here, else svc_stop() will not remove
 			# the 'started' symlink ...
 			return 0

@@ -73,15 +73,19 @@ then
 	echo -e " Copyright 2001-2003 Gentoo Technologies, Inc.; Distributed under the GPL"
 	echo
 
-	ebegin "Mounting /proc"; \
+	ebegin "Mounting proc at /proc"; \
 	try mount -n /proc; \
 	eend $?
 
 	if [ "$(get_KV)" -ge "$(KV_to_int '2.5.0')" -a -d /sys ]
 	then
-		ebegin "Mounting /sys"
+		ebegin "Mounting sysfs at /sys"
 		mount -t sysfs none /sys
 		eend $?
+	
+	elif [ "$(get_KV)" -ge "$(KV_to_int '2.5.0')" ]
+	then
+		ewarn "No /sys to mount sysfs needed in 2.5+ kernels!"
 	fi
 
 	# Check if the user disabled devfs
@@ -139,12 +143,12 @@ then
 			if [ -e "/dev/.devfsd" -a "${mymounts}" = "yes" -a ! -d /dev/pts ]
 			then
 				# Make sure we have /dev/pts
-				mkdir -p /dev/pts
+				mkdir -p /dev/pts &> /dev/null
 			fi
 
 			if [ -d /dev/pts ]
 			then
-				ebegin "Mounting /dev/pts"; \
+				ebegin "Mounting devpts at /dev/pts"; \
 				try mount -n -t devpts none /dev/pts; \
 				eend $?
 			fi
@@ -218,7 +222,7 @@ then
 		# Swap needs to be activated *after* devfs has been mounted and *after*
 		# devfsd has been started, so that the fstab can be properly parsed
 		# and only if the server/Gentoo box is initialized ...
-		ebegin "Activating swap"
+		ebegin "Activating (possible) swap"
 		/sbin/swapon -a &> /dev/null
 		eend 0
 	fi
@@ -290,11 +294,19 @@ then
 	exit 0
 fi
 
+if [ -f "${svcdir}/softlevel" ]
+then
+	# Set OLDSOFTLEVEL if we had a valid SOFTLEVEL
+	export OLDSOFTLEVEL="`< ${svcdir}/softlevel`"
+else
+	export OLDSOFTLEVEL=
+fi
+	
 if [ -z "${argv1}" ]
 then
 	if [ -f "${svcdir}/softlevel" ]
 	then
-		export SOFTLEVEL="`cat ${svcdir}/softlevel`"
+		export SOFTLEVEL="`< ${svcdir}/softlevel`"
 	else
 		export SOFTLEVEL="boot"
 	fi
@@ -379,10 +391,28 @@ dep_stop() {
 		continue
 	fi
 	myservice="${1##*/}"
-	
+
+	# Candidate for zapping
 	if [ ! -L "${svcdir}/softscripts.new/${myservice}" ]
 	then
-		# Candidate for zapping
+		# If this is a 'net' service, we do not want to stop it if it was
+		# not in the previous runlevel, and we are not shutting down,
+		# rebooting or going to single runlevel.  This is because the user
+		# might have started it (net.ppp?), or possibly hotplug ...
+		if [ "${myservice%%.*}" = "net" -a \
+		     "${myservice##*.}" != "${myservice}" ] && \
+		   [ "${SOFTLEVEL}" != "reboot" -a \
+		     "${SOFTLEVEL}" != "shutdown" -a \
+		     "${SOFTLEVEL}" != "single" ]
+		then
+			if [ -n "${OLDSOFTLEVEL}" ] && \
+			   [ ! -L "/etc/runlevels/${OLDSOFTLEVEL}/${myservice}" ]
+			then
+				# This service is not in the previous runlevel, so
+				# do not stop it ...
+				break
+			fi
+		fi
 
 		# Should not work for 'use'
 		if [ ! -d "${svcdir}/need/${myservice}" ]
