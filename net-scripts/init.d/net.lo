@@ -55,6 +55,7 @@ modules_load()
 {
 	local iface=${1} all=${2:-false} i j k p e before after diffs mod
 	local loaded_interface changed_something tmp modnums missingdeps
+	local sort_history
 	local -a mods=( $( find /etc/net.modules.d/ -maxdepth 1 -type f | sort ) ) umods
 
 	[[ lo != ${iface} ]] && ebegin "Loading networking scripts"
@@ -181,9 +182,10 @@ modules_load()
 	done
 
 	# Then we swap numbers based on and after/before flags
-	# until we don't swap anymore. Yes, there's the potential for
-	# an infinite loop if module developers are clumsy
-	while true; do
+	# until we don't swap anymore.  The sort_history array prevents
+	# any possibility of an infinite loop
+	sort_history[0]="${modnums[*]}"		# capture starting state
+	for ((k=1; 1; k++)); do
 		changed_something=false
 		for ((i=0; i < ${#mods[@]}; i++)); do
 			if [[ function == $( type -t ${mods[i]}_after ) ]]; then
@@ -213,7 +215,16 @@ modules_load()
 				done
 			fi
 		done
+
 		${changed_something} || break
+
+		# Make sure we aren't repeating a previous state.
+		# First time through, k=1, k/2=0.
+		sort_history[k]="${modnums[*]}"
+		if [[ ${sort_history[k]} == ${sort_history[k/2]} ]]; then
+			eerror "detected an infinite loop sorting modules; blundering ahead"
+			break
+		fi
 	done
 
 	# Finally we sort our modules in number order and volia :)
