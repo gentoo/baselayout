@@ -2,6 +2,14 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  17 Oct 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Bootsplash fixes from Michael Aichler <micha@aichler.net>, (comment #15
+    and #16 from bug #21019).
+
+    Bootsplash coded did not play nice with boot profiles, so I fixed that
+    as well.  Some other style tweaks.
+
 * rc-scripts 1.4.3.11p2 (14 Sep 2003)
 
   14 Oct 2003; Martin Schlemmer <azarah@gentoo.org>:

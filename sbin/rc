@@ -421,7 +421,7 @@ then
 fi
 
 # Progressbar begin
-splash_calc "${argv1}" "${svcdir}"
+splash_calc
 # Progressbar end
 
 # For keeping a list of services that fails during boot/halt
@@ -616,7 +616,7 @@ then
 	source /sbin/functions.sh
 	
 	# Progressbar begin
-	splash_debug "${argv1}"
+	splash_debug "${SOFTLEVEL}"
 	# Progressbar end
 
 	# Make sure that our $svcdir are clean for next reboot ...
@@ -672,7 +672,7 @@ fi
 # Start scripts
 for i in ${EXTRA_SOFTSCRIPTS} $(dolisting "${svcdir}/softscripts/")
 do
-	dep_start "${i}"
+	dep_start "${i##*/}"
 done
 
 # Wait for any services that may still be running ...
@@ -705,7 +705,8 @@ rm -rf "${svcdir}/failed" &> /dev/null
 [ -n "${BOOT}" ] && unset BOOT
 
 # Progressbar begin
-splash_debug "${argv1}"
+splash_debug "${SOFTLEVEL}"
 # Progressbar end
+
 
 # vim:ts=4
