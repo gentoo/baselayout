@@ -1,14 +1,11 @@
-#!/bin/sh
-#RCUPDATE:1 2 3 4 5:19:This line is required for script management
+#!/sbin/runscript
 
 klog="/usr/sbin/klogd"
 slog="/usr/sbin/syslogd"
 
-. /etc/rc.d/config/functions
-. /etc/rc.d/config/basic
+. /etc/init.d/functions.sh
 
 SERVICE=sysklogd
-opts="start stop"
 
 start() {
     ebegin "Starting syslogd, klogd"
@@ -28,7 +25,6 @@ stop() {
     eend $retval 
 }
 
-doservice ${@}
 
 
 
