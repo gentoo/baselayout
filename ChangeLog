@@ -11,7 +11,14 @@
     Revert pam_console_apply udev check in bootmisc/halt.sh since 
     the bug is with pam_console_apply and not udev/pam.
 
-    Use ${EUID} instead of $(id -u) to help out BSD in runscript.sh
+    Use ${EUID} instead of $(id -u) to help out BSD in runscript.sh.
+
+    Allow users to select ramfs instead of default tmpfs for mounting 
+    on /dev with udev #69091.
+
+    Add issue.devfix which would be auto copied to /etc/issue if 
+    /sbin/rc detects the user is missing /dev/null or /dev/console.  
+    Includes a simple explanation/fix for what's wrong.
 
   26 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
 
@@ -55,12 +62,9 @@
 
   24 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
 
-    Mount tmpfs instead of ramfs on /dev when using udev systems.  
+    Mount tmpfs instead of ramfs on /dev when using udev systems.
     The problem with ramfs is that it has no size limitations so 
-    one could easily take down their machine by accident.  Perhaps 
-    this could be made into a configuration option (type is ramfs, 
-    tmpfs, or ramdisk and size is xxxx), but for now we'll just 
-    force tmpfs unless someone cares ;) #68653.
+    one could easily take down their machine by accident #68653.
 
 * rc-scripts 1.6.3 (23 Oct 2004)
 

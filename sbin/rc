@@ -125,12 +125,9 @@ then
 	# Setup initial $PATH just in case
 	PATH="/bin:/sbin:/usr/bin:/usr/sbin:${PATH}"
 
-	if [ ! -c /dev/null ]
-	then
-		echo -e "${BAD}Your root filesystem is missing /dev/null !${NORMAL}"
-		echo -e "${BAD}You should really get this sorted out.${NORMAL}"
-		echo -e "${BAD}A simple 'mknod /dev/null c 1 3' should work.${NORMAL}"
-	fi
+	# Help users recover their systems incase these go missing
+	[ -c /dev/null ] && dev_null=1 || dev_null=0
+	[ -c /dev/console ] && dev_console=1 || dev_console=0
 
 	echo
 	echo -e "${GOOD}Gentoo Linux${GENTOO_VERS}; ${BRACKET}http://www.gentoo.org/${NORMAL}"
@@ -180,7 +177,7 @@ then
 	#  - check boot parameters
 	#  - make sure the required binaries exist
 	#  - make sure the kernel has support
-	if [ "${RC_DEVICES}" == "static" ]
+	if [ "${RC_DEVICES}" = "static" ]
 	then
 		ebegin "Using existing device nodes in /dev"
 		eend 0
@@ -200,7 +197,7 @@ then
 		esac
 
 		# Check udev prerequisites and kernel params
-		if [ "${udev}" == "yes" ]
+		if [ "${udev}" = "yes" ]
 		then
 			if get_bootparam "noudev" || \
 			   [ ! -x /sbin/udev -o -e "/dev/.devfsd" ] || \
@@ -211,20 +208,24 @@ then
 		fi
 
 		# Check devfs prerequisites and kernel params
-		if [ "${devfs}" == "yes" ]
+		if [ "${devfs}" = "yes" ]
 		then
-			if get_bootparam "nodevfs" || [ "${udev}" == "yes" ]
+			if get_bootparam "nodevfs" || [ "${udev}" = "yes" ]
 			then
 				devfs="no"
 			fi
 		fi
 
 		# Actually start setting up /dev now
-		if [ "${udev}" == "yes" ]
+		if [ "${udev}" = "yes" ]
 		then
 			# Setup temporary storage for /dev
-			ebegin "Mounting tmpfs at /dev"
-			try mount -n -t tmpfs none /dev
+			if [ "${RC_DEVICE_FS}" != "tmpfs" -a "${RC_DEVICE_FS}" != "ramfs" ]
+			then
+				RC_DEVICE_FS="tmpfs"
+			fi
+			ebegin "Mounting ${RC_DEVICE_FS} at /dev"
+			try mount -n -t ${RC_DEVICE_FS} none /dev
 			eend $?
 
 			# Actually get udev rolling
@@ -274,7 +275,7 @@ then
 
 			# Did the user want udev in the config file but for 
 			# some reason, udev support didnt work out ?
-			if [ "${fellback_to_devfs}" == "yes" ]
+			if [ "${fellback_to_devfs}" = "yes" ]
 			then
 				ewarn "You wanted udev but support for it was not available!"
 				ewarn "Please review your system after it's booted!"
@@ -282,7 +283,7 @@ then
 		fi
 
 		# OK, if we got here, things are probably not right :)
-		if [ "${devfs}" == "no" ] && [ "${udev}" == "no" ]
+		if [ "${devfs}" = "no" ] && [ "${udev}" = "no" ]
 		then
 			clear
 			echo
@@ -310,7 +311,7 @@ then
 			# Only try to create /dev/pts if we have /dev mounted dynamically,
 			# else it might fail as / might be still mounted readonly.
 			if [ ! -d /dev/pts ] && \
-			   [ "${devfs}" == "yes" -o "${udev}" == "yes" ]
+			   [ "${devfs}" = "yes" -o "${udev}" = "yes" ]
 			then
 				# Make sure we have /dev/pts
 				mkdir -p /dev/pts &>/dev/null || \
@@ -349,7 +350,7 @@ then
 			break
 		fi
 	done
-	if [ "${svcmount}" == "yes" ]
+	if [ "${svcmount}" = "yes" ]
 	then
 		check_statedir "${tsvcdir}"
 
@@ -443,7 +444,7 @@ then
 	check_statedir "${svcdir}"
 
 	# Since we are mounting the svcdir in ram, bind it over
-	if [ "${svcmount}" == "yes" ]
+	if [ "${svcmount}" = "yes" ]
 	then
 		mount --bind "${tsvcdir}" "${svcdir}"
 	fi
@@ -474,6 +475,20 @@ then
 			mark_service_started "${x}"
 		done
 	)
+
+	# If the user's /dev/null or /dev/console are missing, we 
+	# should help them out and explain how to rectify the situation
+	if [ ${dev_null} -eq 0 -o ${dev_console} -eq 0 ] \
+	    && [ -e /usr/share/baselayout/issue.devfix ]
+	then
+		# Backup current /etc/issue
+		if [ -e /etc/issue -a ! -e /etc/issue.devfix ]
+		then
+			mv /etc/issue /etc/issue.devfix
+		fi
+
+		cp /usr/share/baselayout/issue.devfix /etc/issue
+	fi
 
 	# Setup login records ... this has to be done here because when 
 	# we exit this runlevel, init will write a boot record to utmp

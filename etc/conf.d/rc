@@ -28,12 +28,20 @@ RC_NET_STRICT_CHECKING="no"
 
 RC_DEVICES="auto"
 
+# UDEV OPTION:
 # Set to "yes" if you want to save /dev to a tarball on shutdown
 # and restore it on startup.  This is useful if you have a lot of
 # custom device nodes that udev does not handle/know about.
-# (ONLY used by UDEV enabled systems!)
 
 RC_DEVICE_TARBALL="yes"
+
+# UDEV OPTION:
+# FS type that should be used for /dev.  Currently just tmpfs and 
+# ramfs are supported.  The downside of tmpfs is that you have to 
+# enable support for it in the kernel.  The downside of ramfs is 
+# that it has no size restrictions.
+
+RC_DEVICE_FS="tmpfs"
 
 
 
