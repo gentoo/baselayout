@@ -24,6 +24,10 @@
     net-scripts/net.modules.d/iwconfig
     - improve error message when card does not support scanning
 
+    net-scripts/conf.d/wireless.example
+    - fixed comment regarding preferred_aps not working with cards that don't
+      support scanning
+
   02 Nov 2004; Roy Marples <uberlord@gentoo.org>:
 
     net-scripts/conf.d/net.example

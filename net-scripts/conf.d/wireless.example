@@ -206,9 +206,8 @@
 #unique_ap="yes"
 #unique_ap_eth0="yes"
 
-# IMPORTANT: preferred_aps, preferred_only, blacklisted_aps and
-# unique_ap only work when essid_eth0 is not set and your card
-# is capable of scanning
+# IMPORTANT: preferred_only, blacklisted_aps and unique_ap only work when
+# essid_eth0 is not set and your card is capable of scanning
 
 # NOTE: preferred_aps  list ignores blacklisted_aps - so if you have
 # the same ESSID in both, well, you're a bit silly :p
