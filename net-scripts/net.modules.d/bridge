@@ -96,6 +96,10 @@ bridge_pre_start() {
 
 	eindent
 	for i in ${ifaces}; do
+		# If the interface does not exist, it may be because another
+		# module needs to create it
+		net_start ${i} || continue
+
 		if ! interface_exists ${i} ; then
 			ewarn "interface ${i} does not exist"
 			continue
@@ -121,14 +125,15 @@ bridge_pre_start() {
 # Removes the device
 # returns 0
 bridge_stop() {
-	local iface=${1} ifaces=$( bridge_get_interfaces ${1} ) i
+	local iface=${1} is_bridge=$( brctl show | awk -v iface=${1} '$1 == iface {print $1}' )
 	
 	bridge_check_installed || return 1
-	[[ -z ${ifaces} ]] && return 1
+	[[ -z ${is_bridge} ]] && return 1
 
 	ebegin "Destroying bridge ${iface}"
 	interface_down ${iface}
 	
+ 	local ifaces=$( bridge_get_interfaces ${1} ) i
 	eindent
 	for i in ${ifaces}; do
 		ebegin "Removing interface ${i}"

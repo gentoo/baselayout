@@ -61,6 +61,15 @@ bonding_post_start() {
 	
 	# must force the slaves to a particular state before adding them
 	for s in ${slaves}; do
+		# If the interface does not exist, it may be because another
+		# module needs to create it
+		net_start ${i} || continue
+
+		if ! interface_exists ${i} ; then
+			ewarn "interface ${i} does not exist"
+			continue
+		fi
+
 		interface_del_addresses ${s}
 		interface_up ${s}
 	done

@@ -4,7 +4,16 @@
 
   05 Nov 2004; Roy Marples <uberlord@gentoo.org>:
 
+    net-scripts/net.modules.d/bridge
+    - fixed destroying a bridge if no ports were added
+    - starts interfaces if they don't exist - fixed bug #65153
+
+    net-scrips/net.modules.d/bonding
+    - starts interfaces if they don't exist
+
     net-scripts/init.d/net.lo
+    - added net_start() function to start depandant ifaces
+      so that bridge br0 can active tun0 which net.tun0 has to create
     - added use dependany on wlan incase we're using linux-wlan-ng drivers
       fixes bug #64978
     - moved start() to run_start() and stop() to run_stop()
