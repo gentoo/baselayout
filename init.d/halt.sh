@@ -112,7 +112,9 @@ fi
 ebegin "Remounting remaining filesystems readonly"
 # Get better results with a sync and sleep
 sync;sync
-sleep 2
+sleep 1
+sync
+sleep 1
 umount -a -r -n -t nodevfs,noproc,notmpfs &>/dev/null
 if [ "$?" -ne 0 ]
 then

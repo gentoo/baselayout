@@ -2,6 +2,12 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  08 Dec 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add another sync to /etc/init.d/halt.sh, closing bug 8173.
+
+    Add smmsp uid and gid.  Closes bug #8952.
+
   04 Dec 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Setup colums, etc up properly for serial consoles in /sbin/functions.sh.
