@@ -11,6 +11,9 @@
     settings suggested by the manpage #37314.  Make checkroot respect 
     a fs_passno setting of 0 when dealing with / #39212.
 
+    Don't pipe swapon in localmount to /dev/null and ignore return 
+    codes anymore.  A swapon that works shows no output #39834.
+
   02 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
 
     Break up the COL/COLOR code properly this time.  Not all serial 

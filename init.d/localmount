@@ -39,8 +39,8 @@ start() {
 
 	# Swap on loopback devices, and other weirdnesses
 	ebegin "Activating (possibly) more swap"
-	/sbin/swapon -a &>/dev/null
-	eend 0
+	/sbin/swapon -a
+	eend $?
 
 	dm-crypt-start
 }
