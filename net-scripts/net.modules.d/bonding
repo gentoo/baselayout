@@ -1,0 +1,89 @@
+# Interface bonding module for net-scripts
+# Copyright 2004 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# Contributed by Roy "UberLord" Marples <uberlord@rsm.demon.co.uk>
+# $Header$
+#
+# Based on code from Gentoo Linux /etc/init.d/net.eth0 version 1.45
+
+# bool bonding_check_installed(void)
+#
+# Returns 1 if ifenslave is installed, otherwise 0
+bonding_check_installed() {
+	[[ -x /sbin/ifenslave ]] && return 0
+	[[ ${1} == true ]] && eerror "For link aggregation (bonding) support, emerge net-misc/ifenslave"
+	return 1
+}
+
+# char* bonding_provides(void)
+#
+# Returns a string to change module definition for starting up
+bonding_provides() {
+	echo "bonding"
+}
+
+# bool bonding_check_depends(void)
+#
+# Checks to see if we have the necessary package installed
+# and the handler supports the necessary functionality
+bonding_check_depends() {
+	local e
+
+	interface_provides up || e="up"
+	interface_provides down || e="down"
+	interface_provides del_addresses || e="del_addresses"
+	[[ -z ${e} ]] && return 0
+
+	eerror "bonding: interface is missing the required function ${e}\n"
+	return 1
+}
+bonding_post_start() {
+	local iface=${1} slaves s
+
+	eval slaves=\"\$\{slaves_${iface}\}\"
+	[[ -z ${slaves} ]] && return 0
+
+	if [[ -n "${iface/bond*/}" ]]; then
+		eerror "${iface} is not capable of bonding"
+		return 1
+	fi
+	
+	# must force the slaves to a particular state before adding them
+	for s in ${slaves}; do
+		interface del_addresses ${s}
+		interface up ${s}
+	done
+
+	# now force the master to up
+	interface up ${iface}
+
+	# finally add in slaves
+	/sbin/ifenslave ${iface} ${slaves} &>${devnull}
+
+	return 0 #important
+}
+
+bonding_pre_stop() {
+	local iface=${1} slaves s
+
+	bonding_check_installed || return 1
+
+	# return silently if this is not a bonding interface
+	[[ -n "${iface/bond*/}" ]] && return 1
+
+	# don't trust the config, get the active list instead
+	slaves=$(awk '/^Slave Interface:/ { printf $3" " }' /proc/net/bonding/${iface})
+	[[ -n ${slaves} ]] && return 1
+
+	# remove all slaves
+	echo /sbin/ifenslave -d ${iface} ${slaves}
+	/sbin/ifenslave -d ${IFACE} ${slaves_IFACE} &>${devnull}
+
+	# reset all slaves
+	for s in ${slaves}; do
+		interface del_addresses ${s}
+		interface down ${s}
+	done
+
+	return 0
+}

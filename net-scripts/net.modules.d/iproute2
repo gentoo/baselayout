@@ -1,0 +1,254 @@
+# iproute2 module for net-scripts
+# Copyright 2004 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# Contributed by Roy "UberLord" Marples <uberlord@rsm.demon.co.uk>
+# $Header$
+#
+# Based on code from Gentoo Linux /etc/init.d/net.eth0 version 1.45
+
+# Fix any potential localisation problems
+# Note that LC_ALL trumps LC_anything_else according to locale(7)
+ip() {
+	LC_ALL=C /sbin/ip "$@"
+}
+
+# bool iproute2_check_installed(void)
+#
+# Returns 1 if iproute2 is installed, otherwise 0
+iproute2_check_installed() {
+	[[ -x /sbin/ip ]] && return 0
+	[[ ${1} == true ]] && eerror "For ifconfig support, emerge sys-apps/net-tools"
+	return 1
+}
+
+# char* iproute2_provides(void)
+#
+# Returns a string to change module definition for starting up
+iproute2_provides() {
+	echo "interface"
+}
+
+# bool iproute2_check_depends(void)
+#
+# Checks to see if we have the necessary package installed
+iproute2_check_depends() {
+	local e
+
+	[[ -z ${e} && $(type -t get_device) != function ]] && e="get_device"
+	[[ -z ${e} ]] && return 0
+	eerror "iproute2: net.eth0 is missing the required function ${e}\n"
+	return 1	
+}
+
+# void iproute2_up(char *interface)
+#
+# provides a generic interface for bringing interfaces up
+iproute2_up() {
+	ip link set up dev ${1} &>${devnull}
+}
+
+# void iproute2_down(char *interface)
+#
+# provides a generic interface for bringing interfaces up
+iproute2_down() {
+	ip link set down dev ${1} &>${devnull}
+}
+
+# void loopback_create(void)
+#
+# Creates our loopback interface
+iproute2_loopback_create() {
+	ip addr add 127.0.0.1/8 dev lo brd + scope host &>/dev/null
+	iproute2_up lo
+	ip route add 127.0.0.0/8 dev lo &>/dev/null
+}
+
+# void iproute2_get_status(char *interface)
+#
+# Test that the interface has an address and is configured UP.
+# If successful, echoes "up" on stdout, otherwise echoes nothing.
+iproute2_get_status() {
+	ip addr show ${1} 2>${devnull} | xargs | grep -Eq \
+		'\<UP\>.*\<inet6?' && echo up
+}
+
+# void iproute2_get_address(char *interface)
+#
+# Fetch the address retrieved by DHCP.  If successful, echoes the
+# address on stdout, otherwise echoes nothing.
+iproute2_get_address() {
+	ip addr show ${1} 2>${devnull} | awk '/inet/ {print $2}' | cut -d/ -f1
+}
+
+# void get_mac_address(char *interface)
+#
+# Fetch the mac address assingned to the network card
+iproute2_get_mac_address() {
+	ip addr show ${1} 2>${devnull} | awk '/link/ {print $2}' | cut -d/ -f1
+}
+
+# void get_vlans(char *interface)
+#
+# Fetch the configured vlans for an interface.  Outputs a space
+# separated list on stdout.  For example "eth0.1 eth0.2 eth0.3"
+iproute2_get_vlans() {
+	ip addr show 2>${devnull} | \
+		awk -v re="^${1}[.]" -F'[[:space:]:]+' \
+		'$0~/^[0-9]/ && $2~re {print $2}' | xargs
+}
+
+# void iproute2_get_aliases_rev(char *interface)
+#
+# Fetch the list of aliases for an interface.  
+# Outputs a space-separated list on stdout, in reverse order, for
+# example "eth0:2 eth0:1"
+iproute2_get_aliases_rev() {
+	local iface=$( get_device ${1} )
+	ip addr show ${iface} 2>${devnull} | awk -v re="^${1}:" \
+		'$NF~re {print $NF}' | tac | xargs
+}
+
+# bool iproute2_del_addresses(char *interface)
+#
+# Remove addresses from interface.  Returns 0 (true) if there
+# were addresses to remove (whether successful or not).  Returns 1
+# (false) if there were no addresses to remove.
+iproute2_del_addresses() {
+	local inet inet6 label=${1} iface=$( get_device ${1} ) x e
+
+	inet="$(ip addr show ${iface} label ${label} \
+		| awk '$1=="inet" {print $2}')"
+	if [[ -n ${inet} ]]; then
+		e=$(ip addr del ${inet} dev ${iface} label ${label} 2>&1)
+		case "${x}" in
+			'RTNETLINK answers: Invalid argument'|'') ;;
+			*) printf '%s\n' "${e}" >&2 ;;
+		esac
+	fi
+
+	inet6="$(ip addr show ${iface} label ${label} \
+		| awk '$1=="inet6" {print $2}')"
+	[[ -z ${inet6} ]] && return 1
+
+	einfo "  Removing inet6 addresses"
+	for x in ${inet6}; do 
+		einfo "    ${iface} inet6 del ${x}"
+		e=$( ip addr del ${x} dev ${iface} label $label} 2>&1 )
+		case "${e}" in
+			'RTNETLINK answers: Invalid argument'|'') ;;
+			*) printf '%s\n' "${e}" >&2 ;;
+		esac
+	done
+	return 0
+}
+
+# char* iproute2_get_vars(char *interface)
+#
+# Returns a string spaced with possible user set
+# configuration variables
+iproute2_get_vars() {
+        echo "ipaddr_${1} ipaddr_fallback_${1} iproute_${1}"
+}
+
+# void ifconfig_local_vars(void)
+#
+# Returns a string command to localise variables
+iproute2_local_vars() {
+	echo "local -a config_IFACE iproute_IFACE config_fallback_IFACE"
+}
+
+# bool iproute2_setup_vars(char *iface)
+#
+# Setup variables based on $1 and content of /etc/conf.d/net
+# The following variables are set, which should be declared local by
+# the calling routine.
+#       config_IFACE			(array of ipaddr lines)
+#       config_fallback_IFACE 	(fallback config if a module fails)
+#       iproute_IFACE			(array of route lines)
+#
+# Returns 0 (true) if variables are set successfully, non-zero
+# otherwise
+iproute2_setup_vars() {
+	local iface="${1//./_}"
+
+        # iproute2-style config vars
+        eval config_IFACE=( \"\$\{ipaddr_${iface}\[@\]\}\" )
+        eval config_fallback_IFACE=( \"\$\{ipaddr_fallback_${iface}\[@\]\}\" )
+        eval iproute_IFACE=( \"\$\{iproute_${iface}\[@\]\}\" )
+
+	# Backwards compat
+	
+
+	# Validate some variables
+	if [[ -z ${config_IFACE} ]]; then
+		eerror "Please make sure that /etc/conf.d/net has the following set:"
+		eerror "  \$ipaddr_$iface"
+                return 1
+        fi
+}
+
+# void iproute2_iface_stop(char *interface)
+#
+# Do final shutdown for an interface or alias.
+iproute2_iface_stop() {
+	local label=${1} iface=$( get_device ${1} )
+
+	# Shut down the link if this isn't an alias or vlan
+	[[ ${label} == ${iface} ]] && iproute2_down ${iface}
+}
+
+# bool iproute2_iface_start(char *interface, char *options ...)
+#
+# Starts the interface
+# Returns 0 on success, otherwise 1
+iproute2_iface_start() {
+	local label=${1} iface=$(get_device ${1})
+
+	# Extract the config
+	local -a config=( "$@" )
+	config=${config[@]:1}
+
+	# If the address already exists then the following command
+	# will fail.  Catch the failure and be graceful
+	x=$(ip addr add dev ${iface} ${config} label ${label} 2>&1)
+	case "${x}" in
+		'RTNETLINK answers: File exists'|'') ;;
+		*) printf '%s\n' "${x}" >&2 ;;
+	esac
+
+	# Make sure the address was added
+	if [[ $(ip addr show dev ${iface}) == *${config%% *}* ]]; then
+		eend 0
+	else
+		eend 1
+		# Return failure if it's not an alias
+		[[ ${i} -eq 0 ]] && return 1
+	fi
+}
+
+# bool iproute2_post_start(char *interface)
+#
+# Runs any post_start stuff on our interface and adds routes
+# Always returns 0
+iproute2_post_start() {
+	local iface=${1} i x
+
+	# Make sure interface is marked UP
+	iproute2_up ${iface}
+
+	[[ -z ${iproute_IFACE} ]] && return 0
+
+	# Set routes with ip route -- this might also include default route
+	einfo "  Adding routes"
+	for ((i = 0; i < ${#iproute_IFACE[@]}; i = i + 1)); do
+		einfo "    ${iproute_IFACE[i]}"
+		x=$( ip route add dev ${iface} ${iproute_IFACE[i]} 2>&1 )
+		case "${x}" in
+			'RTNETLINK answers: File exists'|'') ;;
+			*) printf '%s\n' "${x}" >&2 ;;
+		esac
+		eend $?
+	done
+
+	return 0
+}

@@ -1,0 +1,119 @@
+# VLAN module for net-scripts
+# Copyright 2004 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# Contributed by Roy "UberLord" Marples <uberlord@rsm.demon.co.uk>
+# $Header$
+#
+# Based on code from Gentoo Linux /etc/init.d/net.eth0 version 1.45
+
+# bool vlan_check_installed(void)
+#
+# Returns 1 if vconfig is installed, otherwise 0
+vlan_check_installed() {
+	[[ -x /sbin/vconfig ]] && return 0
+	[[ true == ${1} ]] && eerror "For VLAN (802.1q) support, emerge net-misc/vconfig"
+	return 1
+}
+
+# char* vlan_provides(void)
+#
+# Returns a string to change module definition for starting up
+vlan_provides() {
+	echo "vlan"
+}
+
+# bool vlan_check_depends(void)
+#
+# Checks to see if we have the necessary package installed
+# and the handler supports the necessary functionality
+vlan_check_depends() {
+	local e
+
+	interface_provides get_vlans || e="get_vlans"
+	if [[ -n ${e} ]]; then
+		eerror "vlan: interface is missing the required function ${e}\n"
+		return 1
+	fi
+
+	[[ -z ${e} && function != $( type -t iface_start ) ]] && e="iface_start"
+	[[ -z ${e} && function != $( type -t iface_stop ) ]] && e="iface_stop"
+	[[ -z ${e} ]] && return 0
+
+	eerror "vlan: net.eth0 is missing the required function ${e}\n"
+	return 1
+}
+
+# char* vlan_get_vars(char *interface)
+#
+# Returns a string spaced with possible user set
+# configuration variables
+vlan_get_vars() {
+        echo "vlans_${1} iface_${1}_vlans"
+}
+
+# char* vlan_local_vars(void)
+#
+# Returns a string  containing a command to localise vars
+vlan_local_vars() {
+	echo "local vlans_IFACE"
+}
+
+# bool setup_vars(char *iface)
+#
+# Setup variables based on $1 and content of /etc/conf.d/net
+# The following variables are set, which should be declared local by
+# the calling routine.
+#	vlans_IFACE				(space-separated list)
+#
+# Returns 0 (true) if variables are set successfully, non-zero
+# otherwise
+vlan_setup_vars() {
+	local iface="${1//./_}"
+
+	eval vlans_IFACE=\"\$\{vlans_${iface}\}\"
+
+	# BACKWARD COMPATIBILITY: check for old vlan variable name
+	eval local vlans_IFACE_old=\"\$\{iface_${iface}_vlans\}\"
+	if [[ -n ${vlans_IFACE_old} && -z ${vlans_IFACE} ]]; then
+		vlans_IFACE=${vlans_IFACE_old}
+	fi
+
+	return 0
+}
+
+# bool vlan_post_start(char *iface)
+#
+# Starts VLANs for a given interface
+#
+# Always returns 0 (true) 
+vlan_post_start() {
+	local iface=${1} vlan
+
+	# Start vlans for this interface
+	for vlan in ${vlans_IFACE}; do
+		einfo "  Adding VLAN ${vlan} to ${iface}"
+		/sbin/vconfig add ${iface} ${vlan} >${devnull}
+		eend $? && iface_start ${iface}.${vlan}
+	done
+
+	return 0
+}
+
+# bool vlan_pre_stop(char *iface)
+#
+# Stops VLANs for a given interface
+#
+# Always returns 0 (true) 
+vlan_pre_stop() {
+	local iface=${1} vlan
+
+	vlan_check_installed || return 0
+
+	for vlan in $( interface get_vlans ${iface} ); do
+		einfo "Removing VLAN ${vlan##*.} from ${iface}"
+		iface_stop ${vlan}
+		/sbin/vconfig rem ${vlan} >${devnull}
+	done
+
+	return 0
+}

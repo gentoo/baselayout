@@ -1,0 +1,88 @@
+# macchanger module for net-scripts
+# Copyright 2004 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# Contributed by Roy "UberLord" Marples <uberlord@rsm.demon.co.uk>
+# $Header$
+#
+# Based on code from Gentoo Linux /etc/init.d/net.eth0 version 1.45
+
+# char* macchanger_provides(void)
+#
+# Returns a string to change module definition for starting up
+macchanger_provides() {
+	echo "macchanger"
+}
+
+# bool macchanger_check_installed(void)
+#
+# Returns 1 if macchanger is installed, otherwise 0
+macchanger_check_installed() {
+	[[ -x /sbin/macchanger ]] && return 0
+	[[ true == ${1} ]] && eerror "For changing MAC addresses, emerge net-analyzer/macchanger"
+	return 1
+}
+
+# int macchanger_priority(void)
+#
+# Returns the priority of the module - lower is more important
+macchanger_priority() {
+	echo 0
+}
+
+# bool macchanger_check_depends(void)
+#
+# Checks to see if we have the necessary package installed
+# and the handler supports the necessary functionality
+macchanger_check_depends() {
+	local e
+
+	interface_provides get_mac_address || e="get_mac_address"
+	[[ -z ${e} ]] && return 0
+
+	eerror "macchanger: interface is missing the required function ${e}\n"
+	return 1
+}
+
+# bool macchanger_pre_start(char *iface)
+#
+# Configures the MAC address for iface 
+macchanger_pre_start() {
+	local iface=${1} mac opts e
+
+	eval mac=\"\$\{mac_${iface}\}\"
+	[[ -z ${mac} ]] && return 0
+
+	case "${mac}" in
+		# specific mac-addr, i wish there were a shorter way to specify this 
+		[0-9a-zA-Z][0-9a-zA-Z]:[0-9a-zA-Z][0-9a-zA-Z]:[0-9a-zA-Z][0-9a-zA-Z]:[0-9a-zA-Z][0-9a-zA-Z]:[0-9a-zA-Z][0-9a-zA-Z]:[0-9a-zA-Z][0-9a-zA-Z]) opts="${opts} --mac=${mac}" ;;
+
+		# increment MAC address, default macchanger behavior
+		increment) opts="${opts}" ;;
+
+		# randomize just the ending bytes
+		random-ending) opts="${opts} -e" ;;
+
+		# keep the same kind of physical layer (eg fibre, copper)
+		random-samekind) opts="${opts} -a" ;;
+
+		# randomize to any known vendor of any physical layer type
+		random-anykind) opts="${opts} -A" ;;
+
+		# fully random bytes
+		random-full) opts="${opts} -r" ;;
+
+		# default case is just to pass on all the options
+		*) opts="${opts} ${mac}" ;;
+	esac
+
+	e=$( /sbin/macchanger ${opts} ${IFACE} )
+	if [[ -n ${e} ]]; then
+		eerror "Failed to set MAC address"
+		return 1
+	fi
+
+	mac=$( interface get_mac_address ${iface} )
+	einfo "  MAC address for ${iface} changed to ${mac}"
+
+	return 0 #important
+}

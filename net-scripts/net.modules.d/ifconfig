@@ -1,0 +1,259 @@
+# ifconfig module for net-scripts
+# Copyright 2004 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# Contributed by Roy "UberLord" Marples <uberlord@rsm.demon.co.uk>
+# $Header$
+#
+# Based on code from Gentoo Linux /etc/init.d/net.eth0 version 1.45
+
+# Fix any potential localisation problems
+# Note that LC_ALL trumps LC_anything_else according to locale(7)
+ifconfig() {
+	LC_ALL=C /sbin/ifconfig "$@"
+}
+
+# bool ifconfig_check_installed(void)
+#
+# Returns 1 if ifconfig is installed, otherwise 0
+ifconfig_check_installed() {
+	[[ -x /sbin/ifconfig ]] && return 0
+	[[ ${1} == true ]] && eerror "For ifconfig support, emerge sys-apps/ifconfig"
+	return 1
+}
+
+# char* ifconfig_provides(void)
+#
+# Returns a string to change module definition for starting up
+ifconfig_provides() {
+	echo "interface"
+}
+
+# bool ifconfig_check_depends(void)
+#
+# Checks to see if we have the necessary package installed
+ifconfig_check_depends() {
+	return 0
+}
+
+# void ifconfig_up(char *options ...)
+#
+# provides a generic interface for bringing interfaces up
+ifconfig_up() {
+	ifconfig ${1} up &>${devnull}
+}
+
+# void ifconfig_down(char *iface)
+#
+# provides a generic interface for bringing interfaces down
+ifconfig_down() {
+	ifconfig ${1} down &>${devnull}
+}
+
+# void ifconfig_loopback_create(void)
+#
+# Creates our loopback interface
+ifconfig_loopback_create() {
+	ifconfig lo 127.0.0.1 up 2>/dev/null
+	/sbin/route add -net 127.0.0.0 netmask 255.0.0.0 \
+		gw 127.0.0.1 dev lo 2> /dev/null
+}
+
+# void ifconfig_get_status(char *interface)
+#
+# Test that the interface has an address and is configured UP.
+# If successful, echoes "up" on stdout, otherwise echoes nothing.
+ifconfig_get_status() {
+	ifconfig ${1} 2>${devnull} | xargs | grep -Eq \
+		'\<addr:.*\<UP\>' && echo up
+}
+
+# void ifconfig_get_address(char *interface)
+#
+# Fetch the address retrieved by DHCP.  If successful, echoes the
+# address on stdout, otherwise echoes nothing.
+ifconfig_get_address() {
+	ifconfig ${1} | grep -m1 -o 'inet addr:[^ ]*' | cut -d: -f2
+}
+
+# void ifconfig_get_mac_address(char *interface)
+#
+# Fetch the mac address assingned to the network card
+ifconfig_get_mac_address() {
+	ifconfig ${1} | grep -m1 -o 'HWaddr [^ ]*' | cut -d" " -f2
+}
+
+# void ifconfig_get_vlans(char *interface)
+#
+# Fetch the configured vlans for an interface.  Outputs a space
+# separated list on stdout.  For example "eth0.1 eth0.2 eth0.3"
+ifconfig_get_vlans() {
+	ifconfig | grep -o "^${1}[.][^ ]*" | xargs
+}
+
+# void ifconfig_get_aliases_rev(char *interface)
+#
+# Fetch the list of aliases for an interface.  
+# Outputs a space-separated list on stdout, in reverse order, for
+# example "eth0:2 eth0:1"
+ifconfig_get_aliases_rev() {
+	ifconfig ${1} | grep -o "^${1}:[0-9]*" | tac | xargs
+}
+
+# bool ifconfig_interface_del_addresses(char *interface)
+#
+# Remove addresses from interface.  Returns 0 (true) if there
+# were addresses to remove (whether successful or not).  Returns 1
+# (false) if there were no addresses to remove.
+ifconfig_del_addresses() {
+	local inet6 iface=${1} x
+
+	ifconfig ${iface} 0.0.0.0
+
+	inet6="$(ifconfig ${iface} | awk '$1=="inet6" {print $3}')"
+	[[ -z ${inet6} ]] && return 1
+
+	einfo "  Removing inet6 addresses"
+	for x in ${inet6}; do
+		einfo "    ${iface} inet6 del ${x}"
+		ifconfig ${iface} inet6 del ${x}
+	done
+
+	return 0
+}
+
+# char* ifconfig_get_vars(char *interface)
+#
+# Returns a string spaced with possible user set
+# configuration variables
+ifconfig_get_vars() {
+        echo "ifconfig_${1} ifconfig_fallback_${1} routes_${1} inet6_${1} iface_${1} alias_${1} broadcast_${1} netmask_${1}"
+	# The depreciated gateway var has to be handeled by
+	# each module if needed
+}
+
+# void ifconfig_local_vars(void)
+#
+# Returns a string command to localise variables
+ifconfig_local_vars() {
+	echo "local -a config_IFACE routes_IFACE inet6_IFACE config_fallback_IFACE"
+}
+
+# bool ifconfig_setup_vars(char *iface)
+#
+# Setup variables based on $1 and content of /etc/conf.d/net
+# The following variables are set, which should be declared local by
+# the calling routine.
+#       config_IFACE			(array of ifconfig lines, replaces iface_IFACE)
+#       routes_IFACE			(array of route lines)
+#       inet6_IFACE			(array of inet6 lines)
+#       config_fallback_IFACE 	(fallback ifconfig if a module fails)
+#
+# Returns 0 (true) if variables are set successfully, non-zero
+# otherwise
+ifconfig_setup_vars() {
+        local iface="${1//./_}" i
+
+        eval config_IFACE=( \"\$\{ifconfig_$iface\[@\]\}\" )
+        eval config_fallback_IFACE=( \"\$\{ifconfig_fallback_$iface\[@\]\}\" )
+        eval routes_IFACE=( \"\$\{routes_$iface\[@\]\}\" )
+        eval inet6_IFACE=( \"\$\{inet6_$iface\[@\]\}\" )
+
+	# BACKWARD COMPATIBILITY: set the default gateway
+	if [[ ${gateway} == ${iface}/* ]]; then
+		# We don't add the old gateway if one has been set in routes_IFACE
+		local gw=false
+		for i in "${routes_IFACE[@]}"; do
+			if [[ "default gw " == "${i:0:11}" ]]; then
+				gw=true
+				break;
+			fi
+		done
+		[[ false == ${gw} ]] && routes_IFACE=( "${routes_IFACE[@]}" "default gw ${gateway#*/}" )
+	fi
+
+        # BACKWARD COMPATIBILITY: populate the config_IFACE array
+        # if iface_IFACE is set (fex. iface_eth0 instead of ifconfig_eth0)
+        eval local iface_IFACE=\"\$\{iface_$iface\}\"
+        if [[ -n ${iface_IFACE} && -z ${config_IFACE} ]]; then
+                # Make sure these get evaluated as arrays
+                local -a aliases broadcasts netmasks
+
+                # Start with the primary interface
+                config_IFACE=( "${iface_IFACE}" )
+
+                # ..then add aliases
+                eval aliases=( \$\{alias_$iface\} )
+                eval broadcasts=( \$\{broadcast_$iface\} )
+                eval netmasks=( \$\{netmask_$iface\} )
+                for ((i = 0; i < ${#aliases[@]}; i = i + 1)); do
+                        config_IFACE[i+1]="${aliases[i]} ${broadcasts[i]:+broadcast ${broadcasts[i]}} ${netmasks[i]:+netmask ${netmasks[i]}}"
+		done
+        fi
+
+        # BACKWARD COMPATIBILITY: check for space-separated inet6 addresses
+        if [[ ${#inet6_IFACE[@]} == 1 && ${inet6_IFACE} == *' '* ]]; then
+                inet6_IFACE=( ${inet6_IFACE} )
+        fi
+
+        # Validate some variables
+        if [[ -z ${config_IFACE} ]]; then
+                eerror "Please make sure that /etc/conf.d/net has one of the following set:"
+                eerror "  \$ifconfig_$iface for new-style configuration"
+                eerror "  \$iface_$iface for old-style configuration"
+                return 1
+        fi
+}
+
+# void ifconfig_iface_stop(char *interface)
+#
+# Do final shutdown for an interface or alias.
+ifconfig_iface_stop() {
+	ifconfig_down $@
+}
+
+# bool ifconfig_iface_start(char *iface)
+#
+# Bring up iface using ifconfig utilities, called from iface_start
+#
+# Returns 0 (true) when successful on the primary interface, non-zero
+# (false) when the primary interface fails.  Aliases are allowed to
+# fail, the routine should still return success to indicate that
+# net.eth0 was successful
+ifconfig_post_start() {
+	local iface=${1} i
+
+	# Make sure interface is marked UP
+	ifconfig_up ${iface}
+
+	# Add IPv6 addresses
+	if [[ -n ${inet6_IFACE} ]]; then
+		einfo "  Adding IPv6 addresses"
+		for ((i = 0; i < ${#inet6_IFACE[@]}; i = i + 1)); do
+			einfo "    ${inet6_IFACE[i]}"
+			ifconfig ${iface} inet6 add ${inet6_IFACE[i]} >${devnull}
+			eend $?
+		done
+	fi
+
+	# Add routes for this interface, might even include default gw
+	if [[ -n ${routes_IFACE} ]] ; then
+		einfo "  Adding routes"
+		for ((i = 0; i < ${#routes_IFACE[@]}; i = i + 1)); do
+			einfo "    ${routes_IFACE[i]}"
+			/sbin/route add ${routes_IFACE[i]}
+			eend $?
+		done
+	fi
+	
+	return 0
+}
+
+# bool ifconfig_iface_start(char *iface, char *options ...)
+#
+# Starts the interface with the given options
+# Returns the value of the ifconfig command
+ifconfig_iface_start() {
+	ifconfig $@ &>${devnull}
+	eend $?
+	return $?
+}

@@ -1,0 +1,377 @@
+#!/sbin/runscript
+# net-scripts main code
+# Copyright 2004 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# Contributed by Roy "UberLord" Marples <uberlord@rsm.demon.co.uk>
+# $Header$
+#
+# Based on code from Gentoo Linux /etc/init.d/net.eth0 version 1.45
+
+#NB: Config is in /etc/conf.d/net
+
+if [[ -n $NET_DEBUG ]]; then
+	set -x
+	devnull=/dev/stderr
+else
+	devnull=/dev/null
+fi
+
+# For pcmcia users. note that pcmcia must be added to the same
+# runlevel as the net.* script that needs it.
+depend() {
+	use hotplug pcmcia usb bridge
+}
+
+interface() {
+	local -a p=( "$@" "xxx" )
+	local c
+	(( c = ${#p[@]} - 2 ))
+
+	${IFMODULE}_${p[0]} ${p[@]:1:${c}}
+}
+
+interface_provides() {
+	[[ function == $( type -t ${IFMODULE}_${1} ) ]] && return 0
+	return 1
+}
+
+# bool modules_load(char *iface, bool all)
+#
+# Loads the defined handler and modules for the interface
+# Returns 0 on success, otherwise 1
+modules_load() {
+	local iface=${1} all=${2} i j p um e
+	local -a mods=( $( find /etc/net.modules.d/ -type f | sort ) ) umods
+
+	[[ lo != ${iface} ]] && ebegin "Loading networking scripts"
+
+	for ((i = 0; i < ${#mods[@]}; i++ )); do
+		source ${mods[i]} || {
+			eerror "${mods[i]##*/} failed a sanity check - aborting"
+			return 1
+		}
+		mods[i]=${mods[i]##*/}
+		unset e
+		[[ -z ${e} && function != $( type -t ${mods[i]}_check_installed ) ]] && e=${mods[i]}_check_intalled
+		[[ -z ${e} && function != $( type -t ${mods[i]}_provides ) ]] && e=${mods[i]}_provides
+		[[ -z ${e} && function != $( type -t ${mods[i]}_check_depends ) ]] && e=${mods[i]}_check_depends
+		if [[ -n ${e} ]]; then
+			eerror "${mods[i]} does not support the required function ${e}\n"
+			return 1
+		fi
+	done
+
+	# We need this to be in a seperate loop
+	for ((i = 0; i < ${#mods[@]}; i++ )); do
+		${mods[i]}_check_installed || unset mods[i]
+	done
+	# Squash the array
+	mods=( "${mods[@]}" )
+
+	if [[ true != ${all} ]]; then
+		# Has the interface got any specific modules?
+		eval umods=( \"\$\{modules_${iface}\[@\]\}\" )
+
+		# If not then has a global setting been made?
+		[[ -z ${umods} ]] && eval umods=( \"\$\{modules\[@\]\}\" )
+
+		# First we strip any modules that conflict from user settings
+		# So if the user specifies pump then we don't use dhcpcd
+		for um in ${umods[@]}; do
+			[[ function != $( type -t ${um}_provides ) ]] && {
+				eerror "${um} is not a valid module"
+				return 1
+			}
+			up=$( ${um}_provides )
+			for ((i = 0; i < ${#mods[@]}; i++ )); do
+				[[ function != $( type -t ${mods[i]}_provides ) ]] && continue
+				p=$( ${mods[i]}_provides )
+				if [[ ${up} == ${p} && ${um} != ${mods[i]} ]]; then
+					unset mods[i]
+					# Squash the array
+					mods=( "${mods[@]}" )
+					break;
+				fi
+			done
+		done
+	fi
+
+	# Then we strip conflicting modules
+	for ((i = 0; i < ${#mods[@]} - 1; i++)); do
+		[[ function != $( type -t ${mods[i]}_provides ) ]] && continue
+		p=$( ${mods[i]}_provides )
+		for ((j = i + 1; j < ${#mods[@]}; j++ )); do
+			[[ function != $( type -t ${mods[j]}_provides ) ]] && continue
+			up=$( ${mods[j]}_provides )
+			[[ ${p} == ${up} ]] && unset mods[j]
+		done
+	done
+	# Squash the array
+	mods=( "${mods[@]}" )
+
+	# Move interface to the front and reload it
+	for ((i = 0; i < ${#mods[@]}; i++)); do
+		[[ interface != $( ${mods[i]}_provides ) ]] && continue
+		IFMODULE=${mods[i]}
+		mods[i]=${mods[0]}
+		mods[0]=${IFMODULE}
+		break
+	done
+
+	MODULES=( "${mods[@]}" )
+	[[ lo != ${iface} ]] && einfo "  modules: ${MODULES[@]}"
+
+	# Ensure that our handler supports our modules
+	# And the handler has it's software installed
+	for i in ${MODULES[@]}; do
+		${i}_check_depends || return 1
+		e=$( ${i}_provides )
+		[[ lo != ${iface} && ${e} != ${i} ]] && einfo "    ${i} provides ${e}"
+	done
+
+	return 0
+}
+
+# char* get_device(char *iface)
+#
+# Gets the base device of the interface
+# Can handle eth0:1 and eth0.1
+# Which returns eth0 in this case
+get_device() {
+	local iface=${1}
+	local dev=${iface%%.*}
+	[[ ${dev} == ${iface} ]] && dev=${iface%%:*}
+	echo ${dev}
+}
+
+# bool iface_start(char *interface)
+#
+# iface_start is called from start.  It's expected to start the base
+# interface (for example "eth0"), aliases (for example "eth0:1") and to start
+# VLAN interfaces (for example eth0.0, eth0.1).  VLAN setup is accomplished by
+# calling itself recursively.
+iface_start() {
+	local iface=${1} mod i label x conf
+
+	# Localise and initialise variables
+	for mod in ${MODULES[@]}; do
+		x="${mod}_local_vars"
+		if [[ function == $( type -t ${x} ) ]]; then
+			x=$( ${x} )
+			${x}
+		fi
+		x="${mod}_setup_vars"
+		if [[ function == $( type -t ${x} ) ]]; then
+			${x} ${iface} || return 1
+		fi
+	done
+
+	if [[ -z ${config_IFACE} ]]; then
+		eerror "configuration has not been set!"
+		return 1
+	fi
+
+	ebegin "Bringing ${iface} up"
+	for ((i = 0; i < ${#config_IFACE[@]}; i++)); do
+		# Set a label for the alias if $i > 0
+		[[ ${i} -eq 0 ]] && label=${iface} || label=${iface}:${i}
+
+		# We convert it to an array - this has the added
+		# bonus of trimming spaces!
+		conf=( ${config_IFACE[i]} )
+		einfo "  ${label} ${conf[0]}"
+		
+		# Remap module provides to functions
+		for mod in ${MODULES[@]}; do
+			x=$( ${mod}_provides )
+			if [[ ${x} == ${conf[0]} ]]; then
+				conf[0]=${mod}
+				break;
+			fi
+		done
+
+		# Do we have a function for our config?
+		if [[ function == $( type -t ${conf[0]}_start ) ]]; then
+			${conf[0]}_start ${label} && continue
+			if [[ -n ${config_fallback_IFACE[i]} ]]; then
+				einfo "    Trying fallback configuration"
+				config_IFACE[i]=${config_fallback_IFACE[i]}
+				config_fallback_IFACE[i]=''
+				(( i = i - 1 )) # since the loop will increment it
+			else
+				# Only return failure if it was the first address for the interface
+				[[ ${i} -eq 0 ]] && return 1
+				continue
+			fi
+		fi
+
+		# We need to test to see if it's an IP address or a function
+		# We do this by testing if there is only 1 parameter
+		if [[ ${#conf[@]} -eq 1 ]]; then
+			eerror "No loaded modules provide \"${conf[0]}\" (${conf[0]}_start)"
+			# Only return failure if it was the first address for the interface
+			[[ ${i} -eq 0 ]] && return 1
+			continue
+		fi
+
+		interface iface_start ${label} ${conf[@]} && continue
+		# Only return failure if it was the first address for the interface
+		[[ ${i} -eq 0 ]] && return 1
+	done
+
+	# Enabling rp_filter causes wacky packets to be auto-dropped by
+	# the kernel.  Note that we only do this if it is not set via
+	# /etc/sysctl.conf ...
+	if [[ -e /proc/sys/net/ipv4/conf/${iface}/rp_filter && \
+			-z "$(grep -s '^[^#]*rp_filter' /etc/sysctl.conf)" ]]; then
+		echo -n 1 > /proc/sys/net/ipv4/conf/${iface}/rp_filter
+	fi
+
+	# Start any modules with _post_start
+	# We do this here as the variables were localised in this function
+	for mod in ${MODULES[@]}; do
+		if [[ function == $( type -t ${mod}_post_start ) ]]; then
+			${mod}_post_start ${iface} || return 1
+		fi
+	done
+
+	return 0
+}
+
+# bool iface_stop(char *interface)
+#
+# iface_stop: bring down an interface.  Don't trust information in
+# /etc/conf.d/net since the configuration might have changed since
+# iface_start ran.  Instead query for current configuration and bring
+# down the interface.
+#
+# However, we are currently reliant on handler and modules specified
+# in /etc/conf.d/net
+iface_stop() {
+	local iface=${1} i aliases need_begin=false mod
+
+	ebegin "Bringing ${iface} down"
+
+	# Collect list of aliases for this interface.
+	# List will be in reverse order.
+	aliases=$( interface get_aliases_rev ${iface} )
+	[[ -n ${aliases} ]] && need_begin=true
+
+	# Stop aliases before primary interface.
+	# Note this must be done in reverse order, since ifconfig eth0:1 
+	# will remove eth0:2, etc.  It might be sufficient to simply remove 
+	# the base interface but we're being safe here.
+	for i in ${aliases} ${iface}; do
+		# Stop all our modules
+		for mod in ${MODULES[@]}; do
+			[[ function == $( type -t ${mod}_stop ) ]] && ${mod}_stop ${i} && need_begin=true
+		done
+
+		# Delete all the addresses for this alias
+		interface del_addresses ${i}
+		# && need_begin=true
+
+		# Do final shut down of this alias
+		${need_begin} && einfo "  Stopping ${i}"
+		interface iface_stop ${i}
+		eend $?
+	done
+
+	return 0
+}
+
+# bool start(void)
+#
+# Brings up ${IFACE}.  Calls preup, iface_start, then postup.
+# Returns 0 (success) unless preup or iface_start returns 1 (failure).
+# Ignores the return value from postup.
+start() {
+	local mod IFMOD
+	local -a MODULES
+
+	modules_load ${IFACE}
+	eend $?
+	[[ 0 != $? ]] && return 1
+
+	if [[ lo == ${IFACE} ]]; then
+		ebegin "Bringing ${IFACE} up"
+		interface loopback_create
+		eend $?
+		return $?
+	fi
+
+	# Call user-defined preup function if it exists
+	if [[ function == $( type -t preup ) ]]; then
+		einfo "Running preup function"
+		preup ${IFACE} || {
+			eerror "preup ${IFACE} failed"
+			return 1
+		}
+	fi
+
+	# pre Start any modules with
+	for mod in ${MODULES[@]}; do
+		if [[ function == $( type -t ${mod}_pre_start ) ]]; then
+			${mod}_pre_start ${IFACE} || return 1
+		fi
+	done
+
+	# Start the interface
+	iface_start ${IFACE} || return 1
+
+	# post Start modules is called in iface_start
+	# as that's where the functions get localised
+	# and they may have to call iface_start recursively
+
+	# Call user-defined postup function if it exists
+	if [[ function == $( type -t postup ) ]]; then
+		einfo "Running postup function"
+		postup ${IFACE}
+	fi
+
+	return 0
+}
+
+# bool stop(void)
+#
+# Brings down ${IFACE}.  If predown call returns non-zero, then
+# stop returns non-zero to indicate failure bringing down device.
+# In all other cases stop returns 0 to indicate success.
+stop() {
+	local mod IFMOD
+	local -a MODULES
+
+	modules_load ${IFACE} all || return 1
+
+	# Call user-defined predown function if it exists
+	if [[ lo != ${IFACE} && function == $(type -t predown) ]]; then
+		einfo "Running predown function"
+		predown ${IFACE} || {
+			eerror "predown ${IFACE} failed"
+			return 1
+		}
+	fi
+
+	# pre Stop any modules
+	for mod in ${MODULES[@]}; do
+		[[ function == $( type -t ${mod}_pre_stop ) ]] && ${mod}_pre_stop ${IFACE}
+	done
+
+	iface_stop ${IFACE} || return 1  # always succeeds, btw
+
+	# post Stop any modules
+	for mod in ${MODULES[@]}; do
+		# We have already taken down the interface, so no need to error
+		[[ function == $( type -t ${mod}_post_stop ) ]] && ${mod}_post_stop ${IFACE}
+	done
+
+	# Call user-defined postdown function if it exists
+	if [[ lo != ${IFACE} && $(type -t postdown) == function ]]; then
+		einfo "Running postdown function"
+		postdown ${IFACE}
+	fi
+
+	return 0
+}
+
+# vim:ts=4

@@ -1,0 +1,205 @@
+##############################################################################
+#
+#                      READ THIS COMMENT FIRST
+#
+# We now support modular networking scripts which means we can easily
+# add support for new interface types  and modules whilst keeping compatability
+# with existing ones
+
+# Modules only load by default if the package they need is installed
+# If you specify a module here that doesn't have it's package installed then
+# you get an error stating which package you need to install
+
+# Prefer iproute2 over ifconfig
+#modules=( "iproute2" )
+
+# You can also specify modules for an interface
+#modules_eth1=( "pump" )
+
+# Setup the interface as before
+
+##############################################################################
+# INTERFACE HANDLERS
+
+##############################################################################
+# IFCONFIG (net-tools)
+# For net-tools support, emerge sys-apps/net-tools
+# For a static configuration, use something like this.  This sets the primary
+# eth0 address to 192.168.0.2 and adds two aliases, eth0:1 and eth0:2
+#ifconfig_eth0=(
+#	"192.168.0.2 broadcast 192.168.0.255 netmask 255.255.255.0"
+#	"192.168.0.3 broadcast 192.168.0.255 netmask 255.255.255.0"
+#	"192.168.0.4 broadcast 192.168.0.255 netmask 255.255.255.0"
+#)
+
+# This is just like setting the gateway config option in the old-style iface
+# config, but allows one to add custom routes.  This should not be needed if you
+# are obtaining an address via DHCP since the default route should be set
+# automatically.
+#routes_eth0=(
+#	"default gw 192.168.0.1"
+#)
+
+##############################################################################
+# IPROUTE2
+# For iproute2 support, emerge sys-apps/iproute2 and add "iproute2" to the modules array above like so
+#modules=( "iproute2" )
+
+# For a static configuration, use something like this.  This sets the primary
+# eth0 address to 192.168.0.2 and adds two aliases, eth0:1 and eth0:2.
+# You may also pass advanced ip addr commands via this option.
+#ipaddr_eth0=(
+#	"192.168.0.2/24 brd 192.168.0.255"
+#	"192.168.0.3/24 brd 192.168.0.255"
+#	"192.168.0.4/24 brd 192.168.0.255"
+#)
+
+# The following will set up the default gateway. You can also pass advanced
+# route configs via this option.
+#iproute_eth0=(
+#	"default via 192.168.0.1"
+#)
+
+##############################################################################
+# INTERFACE MODULES
+
+##############################################################################
+# WIRELESS (802.11 support)
+# For wireless support, emerge net-wireless/wireless-tools
+#
+# Wireless options are held in /etc/conf.d/wireless - but could be here too
+# The wireless setting are generally not configured for a specific interface
+# as they are more geared towards specific ESSID's
+#
+# When an interface has been associated with an Access Point, a global
+# variable called ESSID is set to the Access Point's ESSID for use in the
+# pre/post user functions below - although it's probably only really
+# usefull in the postup() function
+
+##############################################################################
+# DHCP
+# DHCP can be provided by dhcpcd (default) or pump
+# For dhcpcd support, emerge net-misc/dhcpcd
+# For pump support, emerge net-misc/pump and add "pump" to the modules array above like so
+#modules=( "pump" )
+
+#This is how to configure eth0 for dhcp (regardless of using dhcpcd or pump)
+# for iproute2
+#ipaddr=( "dhcp" )
+# and net-tools
+#ifconfig=( "dhcp" )
+
+# For passing custom options to dhcpcd use something like the following.  This
+# example reduces the timeout for retrieving an address from 60 seconds (the
+# default) to 10 seconds.  Note that this might be too short for some servers,
+# so the default is encouraged unless you know what you're doing.
+#dhcpcd_eth0="-t 10"
+
+# pump doesn't have many runtime options, instead they are configured in /etc/pump.conf
+# You can pass options to pump in a similar manner to dhcpcd though
+#pump_eth0="--hostname=myhostname"
+
+##############################################################################
+# VLAN (802.1q support)
+# For VLAN support, emerge net-misc/vconfig
+
+# Specify the VLAN numbers for the interface like so
+# Please ensure your VLAN IDs are NOT zero-padded
+#vlans_eth0="1 2"
+
+# Then setup the interface for each VLAN using either iproute2 or ifconfig like so
+#ipaddr_eth0_1=( "dhcp" )
+#ipaddr_eth0_2=( "172.16.2.1/23 brd 172.16.3.255" )
+# This configures eth0_1 to use DHCP and eth0_2 for a static address
+
+##############################################################################
+# Bonding (802.1q support)
+# For link bonding/trunking emerge net-misc/ifenslave
+
+# if you are using any of the slave interfaces, it is important that you remove
+# configurations for them and take them down first!
+#slaves_bond0="eth2"
+#ipaddr_bond0=( "172.16.2.1/23 brd 172.16.3.255" )
+
+##############################################################################
+# MAC changer
+# For changing MAC addresses emerge net-analyzer/macchanger
+
+# - to set a specific MAC address
+#mac_eth0="00:11:22:33:44:55"
+# - to randomize the last 3 bytes only
+#mac_eth0="random-ending"
+# - to randomize between the same physical type of connection (eg fibre, copper, wireless) , all vendors
+#mac_eth0="random-samekind"
+# - to randomize between any physical type of connection (eg fibre, copper, wireless) , all vendors
+#mac_eth0="random-anykind"
+# - full randomization - WARNING: some MAC addresses generated by this may NOT act as expected
+#mac_eth0="random-full"
+# custom - passes all parameters directly to net-analyzer/macchanger
+#mac_eth0="some custom set of parameters"
+
+
+##############################################################################
+#   ADVANCED CONFIGURATION
+#   ----------------------
+#   The items in this section can be combined with one of the sections
+#   above to create a complete network configuration.  None of the
+#   items in this section are necessary to configure for most users.
+##############################################################################
+
+# Four functions can be defined which will be called surrounding the
+# start/stop operations.  The functions are called with the interface
+# name first so that one function can control multiple adapters.
+#
+# The return values for the preup and predown functions should be 0
+# (success) to indicate that configuration or deconfiguration of the
+# interface can continue.  If preup returns a non-zero value, then
+# interface configuration will be aborted.  If predown returns a
+# non-zero value, then the interface will not be allowed to continue
+# deconfiguration.
+#
+# The return values for the postup and postdown functions are ignored
+# since there's nothing to do if they indicate failure.
+
+#preup() {
+#	# This function could be used, for example, to configure a
+#	# wireless interface for Cisco LEAP authentication.
+#
+#	# Test for link on the interface prior to bringing it up.  This
+#	# only works on some network adapters and requires the ethtool
+#	# package to be installed.
+#	if ethtool $1 | grep -q 'Link detected: no'; then
+#		ewarn "No link on $1, aborting configuration"
+#		return 1
+#	fi
+#
+#	# Remember to return 0 on success
+#	return 0
+#}
+
+#predown() {
+#	# Test to make sure the root filesystem is not mounted via NFS.
+#	# Interface ($1) is ignored but could also be tested.
+#	#if grep -q ' / nfs ' /proc/mounts; then
+#	#	ewarn "Root is NFS mounted, aborting deconfiguration of $1"
+#	#	return 1
+#	#fi
+#
+#	# Remember to return 0 on success
+#	return 0
+#}
+
+#postup() {
+#	# This function could be used, for example, to register with a
+#	# dynamic DNS service.  Another possibility would be to
+#	# send/receive mail once the interface is brought up.
+#	return 0
+#}
+
+#postdown() {
+#	# This function is mostly here for completeness... I haven't
+#	# thought of anything nifty to do with it yet ;-)
+#	# Return 0 always
+#	return 0
+#}
+

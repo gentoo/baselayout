@@ -1,0 +1,100 @@
+# ADSL module for net-scripts
+# Copyright 2004 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# Contributed by Roy "UberLord" Marples <uberlord@rsm.demon.co.uk>
+# $Header$
+#
+# Based on code from Gentoo Linux /etc/init.d/net.eth0 version 1.45
+
+# char* adsl_provides(void)
+#
+# Returns a string to change module definition for starting up
+adsl_provides() {
+	echo "adsl"
+}
+
+# bool adsl_check_installed(void)
+#
+# Returns 1 if rp-pppoe is installed, otherwise 0
+adsl_check_installed() {
+	[[ -x /usr/sbin/adsl-start ]] && return 0
+	[[ ${1} == true ]] && eerror "For ADSL support, emerge net-misc/rp-pppoe"
+	return 1
+}
+
+# bool adsl_check_depends(void)
+#
+# Checks to see if we have the necessary package installed
+# and the handler supports the necessary functionality
+adsl_check_depends() {
+	# No depends
+	return 0
+}
+
+# char* adsl_local_vars(void)
+#
+# Returns a string  containing a command to localise vars
+adsl_local_vars() {
+	echo "local adsl_cfgfile_IFACE"
+}
+
+# bool adsl_setup_vars(char *iface)
+#
+# Checks to see if rp-pppoe is installed or not
+#
+# Returns 0 (true) when successful, non-zero otherwise
+adsl_setup_vars() {
+	local iface=${1}
+
+        # Decide which configuration to use.  Hopefully there is an
+        # interface-specific one
+        adsl_cfgfile_IFACE=/etc/ppp/pppoe-${iface}.conf
+        [[ -f ${adsl_cfgfile_IFACE} ]] || adsl_cfgfile_IFACE=/etc/ppp/pppoe.conf
+
+	if [[ ! -f ${adsl_cfgfile_IFACE} ]]; then
+		eerror "no pppoe.conf file found!"
+		eerror "Please run adsl-setup to create one"
+		return 1
+	fi
+
+	return 0
+}
+
+# bool adsl_start(char *iface)
+#
+# Start ADSL on an interface by calling adsl-start
+#
+# Returns 0 (true) when successful, non-zero otherwise
+adsl_start() {
+	local iface=${1}
+
+	# Start ADSL with the cfgfile, but override ETH and PIDFILE
+	einfo "    Starting ADSL for ${iface}"
+	/usr/sbin/adsl-start <(cat ${adsl_cfgfile_IFACE}; \
+		echo "ETH=${iface}"; echo "PIDFILE=/var/run/adsl-${iface}.pid") \
+		>${devnull}
+	eend $? || return $?
+}
+
+# bool adsl_stop(char *iface)
+#
+# Stop ADSL on an interface by calling adsl-stop
+#
+# Returns 0 (true) when there appears to be an ADSL interface to stop,
+# and we attempted to stop it.  This does not necessarily indicate
+# that adsl-stop was successful.  Returns non-zero when there was
+# nothing to stop.
+adsl_stop() {
+	local iface=${1}
+
+	adsl_check_installed || return 1
+	[[ ! -f /var/run/adsl-${iface}.pid ]] && return 1
+
+	einfo "  Stopping ADSL for ${iface}"
+	/usr/sbin/adsl-stop <(cat ${adsl_cfgfile_IFACE}; \
+		echo "ETH=${iface}"; echo "PIDFILE=/var/run/adsl-${iface}.pid") \
+		>${devnull}
+	eend $?
+
+	return 0  # we did *attempt* to stop adsl
+}
