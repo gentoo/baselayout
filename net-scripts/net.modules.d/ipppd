@@ -85,17 +85,15 @@ ipppd_stop() {
 	[[ ! -f ${pidfile} ]] && return 0
 
 	clean_pidfile ${pidfile} && return 0
-	local pid=$( cat ${pidfile} ) i
+	local pid=$( cat ${pidfile} ) r=0
 
 	einfo "Stopping ipppd for ${iface}"
-	kill ${pid}
-	for (( i=0; i<10; i++ )); do
-		clean_pidfile ${pidfile} && break
-	done
-	[[ ${i} == 10 ]] && kill -s KILL ${pid}
+	kill -s TERM ${pid}
+	if ! process_finished ${pid} ipppd 10 ; then
+		kill -s KILL ${pid}
+		process_finished ${pid} ipppd 10 || r=1
+	fi
 
-	clean_pidfile ${pidfile}
-	eend $? || return $?
-
-	return 0
+	eend ${r}
+	return ${r}
 }
