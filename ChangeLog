@@ -2,6 +2,10 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  22 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix the /dev/root entry in /etc/mtab, bug #24916.
+
 * rc-scripts 1.4.3.9 (17 Jul 2003)
 
   17 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:

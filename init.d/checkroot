@@ -61,8 +61,15 @@ start() {
 
 	if [ "${SOFTLEVEL}" = "boot" ]
 	then
+		#
 		# Create /etc/mtab
-		grep -v 'rootfs' /proc/mounts > /etc/mtab
+		#
+
+		> /etc/mtab
+		# Add the entry for / to mtab
+		mount -f /
+		# Make sure we do not have these in there
+		egrep -v '^(rootfs|/dev/root)' /proc/mounts >> /etc/mtab
 
 		# Remove stale backups
 		rm -f /etc/mtab~ /etc/mtab~~
