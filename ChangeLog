@@ -6,6 +6,7 @@
     wpa_supplicant forces ctrl_interface to /var/run/wpa_supplicant
     and removes stale directories
     clean_pidfile function no longer errors on empty pidfiles
+    net dependancies corrected in runscript.sh - fixes #77839
 
   12 Jan 2004; Roy Marples <uberlord@gentoo.org>:
 
