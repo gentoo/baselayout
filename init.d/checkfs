@@ -149,7 +149,7 @@ start() {
 	#       to /etc/modules.autoload if needed
 
 	if [[ -z ${CDBOOT} && -x /sbin/vgscan ]] && \
-	   [[ -d /proc/lvm || -n $(grep -qo device-mapper /proc/misc) ]]
+	   [[ -d /proc/lvm || -n $(grep -o device-mapper /proc/misc) ]]
 	then
 		ebegin "Setting up the Logical Volume Manager"
 		#still echo stderr for debugging

@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  31 Jan 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Fix the test for device-mapper in checkfs #80206.
+
 * rc-scripts 1.6.9 (30 Jan 2004)
 
   30 Jan 2004; Mike Frysinger <vapier@gentoo.org>:
