@@ -14,6 +14,8 @@
 
     Don't symlink /etc/filesystems since it is an user config file #74176.
 
+    Punt the 'guest' user #74737.
+
   27 Jan 2004; Roy Marples <uberlord@gentoo.org>:
 
     removed udhcpc-* and dhclient-* helper modules and replaced them with a
