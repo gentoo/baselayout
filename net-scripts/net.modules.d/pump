@@ -1,5 +1,5 @@
 # Pump module for net-scripts
-# Version 0.6.4
+# Version 1.0.0
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
@@ -109,7 +109,7 @@ pump_start() {
 	# Map some generic options to pump
 	eval peer=\"\$\{peer_dns_${interface}\}\"
 	[[ -z ${peer} ]] && eval peer=\"\$\{peer_dns\}\"
-	[[ ${peer} != no ]] && opts="--no-dns ${opts}"
+	[[ ${peer} == no ]] && opts="--no-dns ${opts}"
 
 	# We transmit the hostname by default	
 	hostname=$( hostname )

@@ -1,6 +1,6 @@
 #!/sbin/runscript
 # net-scripts main code
-# Version 0.6.4
+# Version 1.0.0
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
@@ -220,16 +220,17 @@ modules_load()
 		${changed_something} || break
 
 		# Make sure we aren't repeating a previous state
+		# First time through, k=1, k/2=0
 		sort_history[k]="${modnums[*]}"
 		if [[ ${sort_history[k]} == ${sort_history[k/2]} ]]; then
-			eerror "detected an infinite loop sorting modules; blundering ahead"
+			eerror "Detected an infinite loop sorting modules; blundering ahead"
 			break
 		fi
 	done
 
 	# Finally we sort our modules in number order
 	um=""
-	for ((i=0; i < ${#mods[@]}; i++)); do
+	for (( i=0; i < ${#mods[@]}; i++ )); do
 		um="${um}${modnums[i]} ${mods[i]}\n"
 	done
 	MODULES=( $( echo -e ${um} | sort -n | awk '{print $2}' ) )

@@ -1,5 +1,5 @@
 # DHCP (net-misc/dhcpcd) module for net-scripts
-# Version 0.6.4
+# Version 1.0.0
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
@@ -109,22 +109,22 @@ dhcpcd_start() {
 	# Map some generic options to dhcpcd
 	eval peer=\"\$\{peer_dns_${interface}\}\"
 	[[ -z ${peer} ]] && eval peer=\"\$\{peer_dns\}\"
-	[[ ${peer} != no ]] && opts="-R ${opts}"
+	[[ ${peer} == no ]] && opts="-R ${opts}"
 
 	eval peer=\"\$\{peer_nis_${interface}\}\"
 	[[ -z ${peer} ]] && eval peer=\"\$\{peer_nis\}\"
-	[[ ${peer} != no ]] && opts="-Y ${opts}"
+	[[ ${peer} == no ]] && opts="-Y ${opts}"
 
 	eval peer=\"\$\{peer_ntp_${interface}\}\"
 	[[ -z ${peer} ]] && eval peer=\"\$\{peer_ntp\}\"
-	[[ ${peer} != no ]] && opts="-N ${opts}"
+	[[ ${peer} == no ]] && opts="-N ${opts}"
 
 	# We transmit the hostname by default	
 	hostname=$( hostname )
 	[[ -n ${hostname} ]] && opts="-h ${hostname%%.*} ${opts}"
 
 	# Bring up DHCP for this interface (or alias)
-	dhcpcd ${opts} ${iface} 2>${devnull}
+	dhcpcd ${opts} ${iface}
 	eend $?
 	[[ 0 != $? ]] && return 1
 
