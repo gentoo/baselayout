@@ -124,6 +124,21 @@ setup_defaultlevels() {
 	return 0
 }
 
+# void get_libdir(void)
+#
+#    prints the current libdir {lib,lib32,lib64}
+#
+get_libdir()
+{
+	CONF_LIBDIR=""
+	if [ -n "${CONF_LIBDIR_OVERRIDE}" ]; then
+		CONF_LIBDIR="${CONF_LIBDIR_OVERRIDE}"
+	elif [ -x "/usr/bin/portageq" ]; then
+		CONF_LIBDIR="$(/usr/bin/portageq envvar CONF_LIBDIR)"
+	fi
+	echo ${CONF_LIBDIR:=lib}
+}
+
 # void esyslog(char* priority, char* tag, char* message)
 #
 #    use the system logger to log a message
