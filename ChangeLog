@@ -2,6 +2,16 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  04 Aug 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add /bin/rc-status and 'show' support to /sbin/rc-update (long overdue),
+    bug #4222, thanks to Sean E Russell <ser@germane-software.com>,
+    Michael Frysinger <vapier@gentoo.org> (/bin/rc-status) and for the 'show'
+    stuff to /sbin/rc-update, Max Kalika <max@gentoo.org>.
+
+    Fixed modules-update to only do the /etc/modprobe.conf generation if we
+    are actually running a 2.5+ kernel.
+
   29 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Tweak /etc/init.d/check{root,fs} to set retval after each fsck call,

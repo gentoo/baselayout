@@ -55,7 +55,7 @@ start() {
 		local KV_MINOR="`KV_minor "${KV}"`"
 
 		# New support for /etc/modules.autoload/kernel-$KV
-		if [ "$(get_KV)" -ge "$(KV_to_int '2.5.0')" ] && \
+		if [ "$(get_KV)" -ge "$(KV_to_int '2.5.48')" ] && \
 		   [ -f /etc/modules.autoload.d/kernel-"${KV_MAJOR}.${KV_MINOR}" ]
 		then
 			einfo "Using /etc/modules.autoload.d/kernel-${KV_MAJOR}.${KV_MINOR}:"
