@@ -4,7 +4,7 @@ export V="1.1.8"
 export DEST="${TMP}/rc-scripts-${V}"
 rm -rf ${DEST}
 install -d -m0755 ${DEST}
-for x in etc init.d sbin rc-lists
+for x in etc init.d sbin rc-lists man
 do
 	cp -ax $x ${DEST}
 done
