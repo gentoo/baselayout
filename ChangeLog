@@ -9,6 +9,9 @@
     Some bugfixes and speed improvements to /sbin/depscan.sh after
     last changes.
 
+    Replace some cat/grep's in /sbin/rc-envupdate.sh with awk's to
+    get some speed improvements.
+
   21 Jul 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix LVM support in /etc/init.d/checkfs again, thanks to help from

@@ -49,7 +49,8 @@ parse_envd() {
 		local value=""
 		if [ -f ${x} ] || ([ -L ${x} ] && [ -f $(/bin/readlink ${x}) ])
 		then
-			(/bin/grep -v "#" ${x} | /bin/sed -e "s:\=:\t:g") | while read -r variable value
+			(/bin/awk '!/^#|\t#/ { gsub ( /=/, "\t" ) ; print $0 }' ${x}) | \
+				while read -r variable value
 			do
 				if [ "$(eval echo \${VARLIST/${variable}/})" = "${VARLIST}" ] && \
 				   [ -n "${variable}" ] && [ -n "${value}" ]
@@ -80,7 +81,8 @@ parse_envd() {
 		VARLIST="$(/bin/cat ${svcdir}/varlist)"
 		if [ -f ${x} ] || ([ -L ${x} ] && [ -f $(/bin/readlink ${x}) ])
 		then
-			(/bin/grep -v "#" ${x} | /bin/sed -e "s:\=:\t:g") | while read -r variable value
+			(/bin/awk '!/^#|\t#/ { gsub ( /=/, "\t" ) ; print $0 }' ${x}) | \
+				while read -r variable value
 			do
 				if [ -n "${variable}" ] && [ -n "${value}" ]
 				then
