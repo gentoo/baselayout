@@ -4,6 +4,8 @@
 # $Header$
 
 function print_start() {
+	print "source /sbin/functions.sh" >> (DEPCACHE)
+	print "" >> (DEPCACHE)
 	print "need() {" >> (DEPCACHE)
 	print "	echo \"NEED $*\"; return 0" >> (DEPCACHE)
 	print "}" >> (DEPCACHE)
@@ -26,22 +28,38 @@ function print_start() {
 	print "" >> (DEPCACHE)
 }
 
-function print_header() {
+function print_header1() {
 	print "#*** " MYFILENAME " ***" >> (DEPCACHE)
 	print "" >> (DEPCACHE)
 	print "myservice=\"" MYFILENAME "\"" >> (DEPCACHE)
 	print "myservice=\"${myservice##*/}\"" >> (DEPCACHE)
 	print "echo \"RCSCRIPT ${myservice}\"" >> (DEPCACHE)
 	print "" >> (DEPCACHE)
-	print "depend() {" >> (DEPCACHE)
-	print " return 0" >> (DEPCACHE)
-	print "}" >> (DEPCACHE)
+}
+
+function print_header2() {
+	print "(" >> (DEPCACHE)
+	print "  # Get settings for rc-script ..." >> (DEPCACHE)
+	print "  [ -e /etc/conf.d/basic ]                 && source /etc/conf.d/basic" >> (DEPCACHE)
+	print "" >> (DEPCACHE)
+	print "  [ -e \"/etc/conf.d/${myservice}\" ]        && source \"/etc/conf.d/${myservice}\"" >> (DEPCACHE)
+	print "" >> (DEPCACHE)
+	print "  [ -e /etc/conf.d/net ]                   && \\" >> (DEPCACHE)
+	print "  [ \"${myservice%%.*}\" = \"net\" ]           && \\" >> (DEPCACHE)
+	print "  [ \"${myservice##*.}\" != \"${myservice}\" ] && source /etc/conf.d/net" >> (DEPCACHE)
+	print "" >> (DEPCACHE)
+	print "  [ -e /etc/rc.conf ]                      && source /etc/rc.conf" >> (DEPCACHE)
+	print "" >> (DEPCACHE)
+	print "  depend() {" >> (DEPCACHE)
+	print "    return 0" >> (DEPCACHE)
+	print "  }" >> (DEPCACHE)
 	print "" >> (DEPCACHE)
 }
 
 function print_end() {
 	print "" >> (DEPCACHE)
-	print "depend" >> (DEPCACHE)
+	print "  depend" >> (DEPCACHE)
+	print ")" >> (DEPCACHE)
 	print "" >> (DEPCACHE)
 }
 
@@ -94,7 +112,7 @@ BEGIN {
 				if ($0 == "#!/sbin/runscript") {
 				
 					ISRCSCRIPT = 1
-					print_header()
+					print_header1()
 				} else  {
 			
 					NEXTFILE = 1
@@ -103,11 +121,16 @@ BEGIN {
 			}
 
 			# Filter out comments and only process if its a rcscript
-			if (($0 !~ /^[[:space:]]*#/) && (ISRCSCRIPT == 1 )) {
+			if (($0 !~ /^[[:space:]]*#/) && (ISRCSCRIPT == 1)) {
 
 				# If line contain 'depend()', set GOTDEPEND to 1
-				if ($0 ~ /depend[[:space:]]*\(\)/)
+				if ($0 ~ /depend[[:space:]]*\(\)/) {
+				
 					GOTDEPEND = 1
+
+					print_header2()
+					print "  # Actual depend() function ..." >> (DEPCACHE)
+				}
 	
 				# We have the depend function...
 				if (GOTDEPEND == 1) {
@@ -122,19 +145,19 @@ BEGIN {
 					SBCOUNT += gsub(/{/, "{")
 		
 					# Print the depend() function
-					print >> (DEPCACHE)
+					print "  " $0 >> (DEPCACHE)
 		
 					# If COUNT=0, and SBCOUNT>0, it means we have read
 					# all matching '{' and '}' for depend(), so stop.
 					if ((SBCOUNT > 0) && (COUNT == 0)) {
 
 						GOTDEPEND = 0
-						ISRCSCRIPT = 0
 						COUNT = 0
 						SBCOUNT = 0
+						ISRCSCRIPT = 0
 
 						print_end()
-
+						
 						NEXTFILE = 1
 						continue
 					}
