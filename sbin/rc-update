@@ -87,7 +87,7 @@ then
 	else 
 		mylevels="$*"
 	fi
-	for x in $mylevels
+	for x in ${mylevels}
 	do
 		if [ -L /etc/runlevels/${x}/${myscript} ]
 		then

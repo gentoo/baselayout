@@ -2,6 +2,13 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  29 Sep 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix indentation in /etc/inputrc.  This should close
+    bug #8368.
+
+    Add extended status functionality.  Should close bug #2462.
+
   25 Sep 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix /etc/init.d/bootmisc not to kill pidfiles of running

@@ -36,8 +36,8 @@ parse_envd() {
 	for x in $(dolisting /etc/env.d/)
 	do
 		# Ignore backup files
-		if [ "$(echo ${x} | /bin/sed "s:\~$::")" = "${x}" ] && \
-		   [ "$(echo ${x} | /bin/sed "s:\.bak$::")" = "${x}" ]
+		if [ "$(echo ${x} | /bin/sed "s:\~$::")" = "${x}" -a \
+		     "$(echo ${x} | /bin/sed "s:\.bak$::")" = "${x}" ]
 		then
 			myenvd_files="${myenvd_files} ${x}"
 		else
@@ -47,13 +47,13 @@ parse_envd() {
 		VARLIST="$(/bin/cat ${svcdir}/varlist)"
 		local variable=""
 		local value=""
-		if [ -f ${x} ] || ([ -L ${x} ] && [ -f $(/bin/readlink ${x}) ])
+		if [ -f ${x} ] || ([ -L ${x} -a -f $(/bin/readlink ${x}) ])
 		then
 			(/bin/awk '!/^#|^\t+#/ { gsub ( /=/, "\t" ) ; print $0 }' ${x}) | \
 				while read -r variable value
 			do
-				if [ "$(eval echo \${VARLIST/${variable}/})" = "${VARLIST}" ] && \
-				   [ -n "${variable}" ] && [ -n "${value}" ]
+				if [ "$(eval echo \${VARLIST/${variable}/})" = "${VARLIST}" -a \
+				     -n "${variable}" -a -n "${value}" ]
 				then
 					if [ -n "${VARLIST}" ]
 					then
@@ -79,19 +79,19 @@ parse_envd() {
 	do
 		source ${svcdir}/vardata
 		VARLIST="$(/bin/cat ${svcdir}/varlist)"
-		if [ -f ${x} ] || ([ -L ${x} ] && [ -f $(/bin/readlink ${x}) ])
+		if [ -f ${x} ] || ([ -L ${x} -a -f $(/bin/readlink ${x}) ])
 		then
 			(/bin/awk '!/^#|^\t+#/ { gsub ( /=/, "\t" ) ; print $0 }' ${x}) | \
 				while read -r variable value
 			do
-				if [ -n "${variable}" ] && [ -n "${value}" ]
+				if [ -n "${variable}" -a -n "${value}" ]
 				then
 					if [ -n "$(eval echo \${$variable})" ]
 					then
 						# $KDEDIR and $QTDIR should be set only to the highest
 						# env.d files's value ....
-						if [ "${variable}" != "KDEDIR" ] && \
-						   [ "${variable}" != "QTDIR" ]
+						if [ "${variable}" != "KDEDIR" -a \
+						     "${variable}" != "QTDIR" ]
 						then
 							eval ${variable}\="\${$variable}:\${value}"
 						else
@@ -129,5 +129,6 @@ then
 else
 	parse_envd
 fi
+
 
 # vim:ts=4

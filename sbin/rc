@@ -16,9 +16,8 @@ try() {
 	local errstr
 	errstr="$((eval $*) 2>&1 >/dev/null)"
 	retval=$?
-	# next test should be two fold (reminder)
 	if [ "${retval}" -ne 0 ] || \
-	   [ -n "$(echo $* | grep mount)" -a -n "${errstr}" ]
+	   ([ -n "$(echo $* | grep mount)" -a -n "${errstr}" ])
 	then
 		echo -e "${ENDCOL}${NORMAL}[${BAD} oops ${NORMAL}]"
 		echo
@@ -122,7 +121,7 @@ then
 	
 	# should we use tmpfs or a ramdisk ?
 	if ! get_bootparam "notmpfs" && \
-	   [ "${svcfstype}" = "tmpfs" -o "${svcfstype}" != "ramfs" ]
+	   ([ "${svcfstype}" = "tmpfs" -o "${svcfstype}" != "ramfs" ])
 	then
 		ebegin "Mounting tmpfs at ${svcdir}"; \
 		try mount -n -t tmpfs tmpfs ${svcdir} \
@@ -140,6 +139,7 @@ then
 	then
 		# POSIX shared memory support
 		ebegin "Mounting POSIX shared memory"
+		mkdir -p /dev/shm
 		try mount -n -t tmpfs tmpfs /dev/shm
 		eend $?
 

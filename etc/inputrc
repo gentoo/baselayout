@@ -31,8 +31,8 @@ $endif
 "\e[4~":	end-of-line
 #"\e[5~":	previous-history
 #"\e[6~":	next-history
-"\e[5~":history-search-backward
-"\e[6~":history-search-forward
+"\e[5~":	history-search-backward
+"\e[6~":	history-search-forward
 "\e[C":		forward-char
 "\e[D":		backward-char
 "\e[A":		previous-history
@@ -78,18 +78,18 @@ $endif
 # Fix Home and End for German users
 #
 $if term=xterm
-"\e[7~": beginning-of-line
-"\e[8~": end-of-line
+"\e[7~":	beginning-of-line
+"\e[8~":	end-of-line
 $endif
 #
 # Application keypad and cursor of xterm
 #
 $if term=xterm
-"\eOD":         backward-char
-"\eOC":         forward-char
-"\eOA":         previous-history
-"\eOB":         next-history
-"\eOE":         re-read-init-file
+"\eOD":		backward-char
+"\eOC":		forward-char
+"\eOA":		previous-history
+"\eOB":		next-history
+"\eOE":		re-read-init-file
 # DEC keyboard KP_F1 - KP_F4
 "\eOP":		prefix-meta
 "\eOQ":		undo

@@ -125,7 +125,7 @@ einfon() {
 # void eend(int error, char *errstr)
 #
 eend() {
-	if [ "$#" -eq 0 ] || [ "${1}" -eq 0 ]
+	if [ "$#" -eq 0 -o "${1}" -eq 0 ]
 	then
 		if [ "${QUIET_STDOUT}" != "yes" ]
 		then
@@ -151,7 +151,7 @@ eend() {
 # void ewend(int error, char *errstr)
 #
 ewend() {
-	if [ "$#" -eq 0 ] || [ "${1}" -eq 0 ]
+	if [ "$#" -eq 0 -o "${1}" -eq 0 ]
 	then
 		if [ "${QUIET_STDOUT}" != "yes" ]
 		then
@@ -198,7 +198,7 @@ getpidfile() {
 	local count=0
 	local count2=0
 	
-	if [ "$#" -ne 1 ] || [ -z "${DAEMON}" ]
+	if [ "$#" -ne 1 -o -z "${DAEMON}" ]
 	then
 		return 1
 	else
@@ -216,7 +216,7 @@ getpidfile() {
 				
 				for y in ${PIDFILE}
 				do
-					if [ "${count}" -eq "${count2}" ] && [ -f ${y} ]
+					if [ "${count}" -eq "${count2}" -a -f ${y} ]
 					then
 						echo "${y}"
 						return 0
@@ -226,7 +226,7 @@ getpidfile() {
 				done
 				for y in ${PIDFILE}
 				do
-					if [ "$(eval echo \${y/${x}/})" != "${y}" ] && [ -f ${y} ]
+					if [ "$(eval echo \${y/${x}/})" != "${y}" -a -f ${y} ]
 					then
 						echo "${y}"
 						return 0
@@ -295,8 +295,8 @@ checkpid() {
 	local x=""
 	local count=0
 
-	if [ "$#" -ne 1 ] || [ -z "${1}" ] || [ -z "${DAEMON}" ] || \
-	   [ "$(eval echo \${DAEMON/${1}/})" == "${DAEMON}" ]
+	if [ "$#" -ne 1 -o -z "${1}" -o -z "${DAEMON}" -o \
+	     "$(eval echo \${DAEMON/${1}/})" = "${DAEMON}" ]
 	then
 		return 3
 	fi
@@ -311,16 +311,13 @@ checkpid() {
 			continue
 		fi
 
-		if [ -z "${PIDLIST[${count}]}" ] && \
-		   [ -n "${MASTERPID[${count}]}" ]
+		if [ -z "${PIDLIST[${count}]}" -a -n "${MASTERPID[${count}]}" ]
 		then
 			return 2
-		elif [ -z "${PIDLIST[${count}]}" ] && \
-		     [ -z "${MASTERPID[${count}]}" ]
+		elif [ -z "${PIDLIST[${count}]}" -a -z "${MASTERPID[${count}]}" ]
 		then
 			return 3
-		elif [ -n "${MASTERPID[${count}]}" ] && \
-		     [ ! -d /proc/${MASTERPID[${count}]} ]
+		elif [ -n "${MASTERPID[${count}]}" -a ! -d /proc/${MASTERPID[${count}]} ]
 		then
 			return 1
 		fi
@@ -372,7 +369,7 @@ stop-single-daemon() {
 		esac
 	done
 
-	if [ -z "${DAEMON}" ] || [ "$#" -lt 1 ] || [ -z "${daemon}" ]
+	if [ -z "${DAEMON}" -o "$#" -lt 1 -o -z "${daemon}" ]
 	then
 		return 1
 	else
@@ -395,13 +392,13 @@ stop-single-daemon() {
 			retval=$?
 		elif [ "${pidretval}" -eq 2 ]
 		then
-			if [ "${RCFAILONZOMBIE}" = "yes" ] || [ "${failonzombie}" = "yes" ]
+			if [ "${RCFAILONZOMBIE}" = "yes" -o "${failonzombie}" = "yes" ]
 			then
 				retval=1
 			fi
 		elif [ "${pidretval}" -eq 3 ]
 		then
-			if [ "${RCFAILONZOMBIE}" = "yes" ] || [ "${failonzombie}" = "yes" ]
+			if [ "${RCFAILONZOMBIE}" = "yes" -o "${failonzombie}" = "yes" ]
 			then
 				retval=1
 			fi
@@ -413,7 +410,7 @@ stop-single-daemon() {
 	then
 		checkpid ${daemon}
 		pidretval=$?
-		if [ "${pidretval}" -eq 2 ] || [ "${pidretval}" -eq 3 ]
+		if [ "${pidretval}" -eq 2 -o "${pidretval}" -eq 3 ]
 		then
 			rm -f $(getpidfile ${x})
 		fi
@@ -424,7 +421,7 @@ stop-single-daemon() {
 	then
 		checkpid ${daemon}
 		pidretval=$?
-		if [ "${pidretval}" -eq 0 ] || [ "${pidretval}" -eq 1 ]
+		if [ "${pidretval}" -eq 0 -o "${pidretval}" -eq 1 ]
 		then
 			retval=$((${retval} + 1))
 		fi
@@ -480,18 +477,17 @@ stop-daemon() {
 		esac
 	done
 
-	if [ "${retry}" = "yes" ] || [ "${RCRETRYKILL}" = "yes" ]
+	if [ "${retry}" = "yes" -o "${RCRETRYKILL}" = "yes" ]
 	then
 		for x in ${DAEMON}
 		do
 			count=0
 			pidretval=0
 		
-			while ([ "${pidretval}" -eq 0 ] || \
-			       [ "${pidretval}" -eq 1 ]) && \
+			while ([ "${pidretval}" -eq 0 -o "${pidretval}" -eq 1 ]) && \
 				  [ "${count}" -lt "${RCRETRYCOUNT}" ]
 			do
-				if [ "${count}" -ne 0 ] && [ -n "${RCRETRYTIMEOUT}" ]
+				if [ "${count}" -ne 0 -a -n "${RCRETRYTIMEOUT}" ]
 				then
 					sleep ${RCRETRYTIMEOUT}
 				fi
@@ -574,7 +570,7 @@ dolisting() {
 		then
 			continue
 		fi
-		if [ ! -d ${x} ] && ( [ -L ${x} ] || [ -f ${x} ] )
+		if [ ! -d ${x} ] && ( [ -L ${x} -o -f ${x} ] )
 		then
 			mylist="${mylist} $(ls ${x} 2>/dev/null)"
 		else

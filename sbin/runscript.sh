@@ -25,7 +25,7 @@ mylevel="$(cat ${svcdir}/softlevel)"
 #set $IFACE to the name of the network interface if it is a 'net.*' script
 IFACE=""
 NETSERVICE=""
-if [ "${myservice%%.*}" = "net" ] && [ "${myservice##*.}" != "${myservice}" ]
+if [ "${myservice%%.*}" = "net" -a "${myservice##*.}" != "${myservice}" ]
 then
 	IFACE="${myservice##*.}"
 	NETSERVICE="yes"
@@ -72,6 +72,11 @@ start() {
 restart() {
 	svc_restart || return $?
 }
+
+status() {
+	#dummy function
+	return 0
+}
 			
 svc_stop() {
 	local x=""
@@ -86,8 +91,7 @@ svc_stop() {
 	fi
 
 	# do not try to stop if it had already failed to do so on runlevel change
-	if [ -L ${svcdir}/failed/${myservice} ] && \
-	   [ -d ${svcdir}/softscripts.new ]
+	if [ -L ${svcdir}/failed/${myservice} -a -d ${svcdir}/softscripts.new ]
 	then
 		exit 1
 	fi
@@ -102,8 +106,8 @@ svc_stop() {
 	if [ "${NETSERVICE}" = "yes" ]
 	then
 		#net.* service
-		if [ -L /etc/runlevels/boot/${myservice} ] || \
-		   [ -L /etc/runlevels/${mylevel}/${myservice} ]
+		if [ -L /etc/runlevels/boot/${myservice} -o \
+		     -L /etc/runlevels/${mylevel}/${myservice} ]
 		then
 			mydeps="net ${myservice}"
 		else
@@ -120,7 +124,7 @@ svc_stop() {
 	do
 		#do not stop a service if it 'use' the current sevice
 		if [ -d ${svcdir}/need/${mydep} ] || \
-		   ([ -d ${svcdir}/softscripts.new ] && [ -d ${svcdir}/after/${mydep} ])
+		   ([ -d ${svcdir}/softscripts.new -a -d ${svcdir}/after/${mydep} ])
 		then
 			#on rc change, stop all services "after $myservice" first
 			if [ -d ${svcdir}/softscripts.new ]
@@ -141,8 +145,8 @@ svc_stop() {
 					#service not currently running, continue
 					continue
 				fi
-				if [ -L ${svcdir}/before/${x}/${mydep} ] && \
-				   [ -L ${svcdir}/softscripts.new/${x} ]
+				if [ -L ${svcdir}/before/${x}/${mydep} -a \
+				     -L ${svcdir}/softscripts.new/${x} ]
 				then
 					continue
 				fi
@@ -152,9 +156,9 @@ svc_stop() {
 					#if we are halting the system, try and get it down as
 					#clean as possible, else do not stop our service if
 					#a dependent service did not stop.
-					if [ "${SOFTLEVEL}" != "reboot" ] && \
-					   [ "${SOFTLEVEL}" != "shutdown" ] && \
-					   [ -L ${svcdir}/need/${mydep}/${x} ]
+					if [ "${SOFTLEVEL}" != "reboot" -a \
+					     "${SOFTLEVEL}" != "shutdown" -a \
+						 -L ${svcdir}/need/${mydep}/${x} ]
 					then
 						retval=1
 					fi
@@ -183,7 +187,7 @@ svc_stop() {
 			ln -sf /etc/init.d/${myservice} ${svcdir}/failed/${myservice}
 		fi
 		#if we are halting the system, do it as cleanly as possible
-		if [ "${SOFTLEVEL}" != "reboot" ] && [ "${SOFTLEVEL}" != "shutdown" ]
+		if [ "${SOFTLEVEL}" != "reboot" -a "${SOFTLEVEL}" != "shutdown" ]
 		then
 			ln -sf /etc/init.d/${myservice} ${svcdir}/started/${myservice}
 		fi
@@ -202,8 +206,7 @@ svc_start() {
 	if [ ! -L ${svcdir}/started/${myservice} ]
 	then
 		#do not try to start if i have done so already on runlevel change
-		if [ -L ${svcdir}/failed/${myservice} ] && \
-		   [ -d ${svcdir}/softscripts.old ]
+		if [ -L ${svcdir}/failed/${myservice} -a -d ${svcdir}/softscripts.old ]
 		then
 			exit 1
 		fi
@@ -238,8 +241,7 @@ svc_start() {
 						/etc/init.d/${myserv} start
 
 						#a 'need' dependancy is critical for startup
-						if [ "$?" -ne 0 ] && \
-						   [ -L ${svcdir}/need/${x}/${myservice} ]
+						if [ "$?" -ne 0 -a -L ${svcdir}/need/${x}/${myservice} ]
 						then
 							startfail="yes"
 						fi
@@ -251,7 +253,7 @@ svc_start() {
 					/etc/init.d/${x} start
 
 					#a 'need' dependacy is critical for startup
-					if [ "$?" -ne 0 ] && [ -L ${svcdir}/need/${x}/${myservice} ]
+					if [ "$?" -ne 0 -a -L ${svcdir}/need/${x}/${myservice} ]
 					then
 						startfail="yes"
 					fi
@@ -267,19 +269,19 @@ svc_start() {
 		fi
 		
 		#start service
-		if [ -d ${svcdir}/broken/${myservice} ] && [ "${retval}" -eq 0 ]
+		if [ -d ${svcdir}/broken/${myservice} -a "${retval}" -eq 0 ]
 		then
 			eerror "ERROR:  Some services needed are missing.  Run"
 			eerror "        './${myservice} broken' for a list of those"
 			eerror "        services.  \"${myservice}\" was not started."
 			retval=1
-		elif [ ! -d ${svcdir}/broken/${myservice} ] && [ "${retval}" -eq 0 ]
+		elif [ ! -d ${svcdir}/broken/${myservice} -a "${retval}" -eq 0 ]
 		then
 			start
 			retval=$?
 		fi
 
-		if [ "${retval}" -ne 0 ] && [ -d ${svcdir}/failed ]
+		if [ "${retval}" -ne 0 -a -d ${svcdir}/failed ]
 		then
 			ln -sf /etc/init.d/${myservice} ${svcdir}/failed/${myservice}
 		fi
@@ -287,7 +289,7 @@ svc_start() {
 		#remove link if service didn't start; but only if we're not booting
 		#if we're booting, we need to continue and do our best to get the
 		#system up.
-		if [ "${retval}" -ne 0 ] && [ "${SOFTLEVEL}" != "boot" ]
+		if [ "${retval}" -ne 0 -a "${SOFTLEVEL}" != "boot" ]
 		then
 			rm -f ${svcdir}/started/${myservice}
 		fi
@@ -302,6 +304,23 @@ svc_restart() {
 	svc_stop || return $?
 	sleep 1
 	svc_start || return $?
+}
+
+svc_status() {
+	# The basic idea here is to have some sort of consistant
+	# output in the status() function which scripts can use
+	# as an generic means to detect status.  Any other output
+	# should thus be formatted in the custom status() function
+	# to work with the printed " * status:  foo".
+
+	if [ -L ${svcdir}/started/${myservice} ]
+	then
+		einfo "status:  started"
+	else
+		eerror "status:  stopped"
+	fi
+
+	status
 }
 
 wrap_rcscript ${myscript} || {
@@ -322,8 +341,7 @@ fi
 
 # does $1 depend on $2 ?
 dependon() {
-	if [ -L ${svcdir}/need/${2}/${1} ] || \
-	   [ -L ${svcdir}/use/${2}/${1} ]
+	if [ -L ${svcdir}/need/${2}/${1} -o -L ${svcdir}/use/${2}/${1} ]
 	then
 		return 0
 	else
@@ -398,8 +416,7 @@ valid_iuse() {
 	local y=""
 	for x in $(iuse ${1})
 	do
-		if [ -e /etc/runlevels/boot/${x} ] || \
-		   [ -e /etc/runlevels/${mylevel}/${x} ]
+		if [ -e /etc/runlevels/boot/${x} -o -e /etc/runlevels/${mylevel}/${x} ]
 		then
 			z="${x%/*}"
 			echo "${z##*/}"
@@ -429,8 +446,7 @@ valid_iafter() {
 	local y=""
 	for x in $(iafter ${1})
 	do
-		if [ -e /etc/runlevels/boot/${x} ] || \
-		   [ -e /etc/runlevels/${mylevel}/${x} ]
+		if [ -e /etc/runlevels/boot/${x} -o -e /etc/runlevels/${mylevel}/${x} ]
 		then
 			z="${x%/*}"
 			echo "${z##*/}"
@@ -459,12 +475,12 @@ query() {
 	local deps=""
 	local x=""
 	install -d -m0755 ${svcdir}/depcheck/$$
-	if [ "${1}" = "ineed" ] && [ ! -L ${svcdir}/started/${myservice} ]
+	if [ "${1}" = "ineed" -a ! -L ${svcdir}/started/${myservice} ]
 	then
 		ewarn "WARNING:  \"${myservice}\" not running."
 		ewarn "          NEED info may not be accurate."
 	fi
-	if [ "${1}" = "iuse" ] && [ ! -L ${svcdir}/started/${myservice} ]
+	if [ "${1}" = "iuse" -a ! -L ${svcdir}/started/${myservice} ]
 	then
 		ewarn "WARNING:  \"${myservice}\" not running."
 		ewarn "          USE info may not be accurate."
@@ -551,12 +567,7 @@ do
 		query ${arg}
 		;;
 	status)
-		if [ -L ${svcdir}/started/${myservice} ]
-		then
-			einfo "status:  started"
-		else
-			eerror "status:  stopped"
-		fi
+		svc_status
 		;;
 	zap)
 		if [ -e ${svcdir}/started/${myservice} ]
@@ -574,10 +585,10 @@ do
 		
 		#simple way to try and detect if the service use svc_{start,stop}
 		#to restart if it have a custom restart() funtion.
-		if [ -n "$(grep 'restart()' /etc/init.d/${myservice})" ]
+		if [ -n "$(egrep 'restart()' /etc/init.d/${myservice})" ]
 		then
-			if [ -z "$(grep svc_stop /etc/init.d/${myservice})" ] || \
-			   [ -z "$(grep svc_start /etc/init.d/${myservice})" ]
+			if [ -z "$(egrep 'svc_stop' /etc/init.d/${myservice})" -o \
+			     -z "$(egrep 'svc_start' /etc/init.d/${myservice})" ]
 			then
 				echo
 				ewarn "Please use 'svc_stop; svc_start' and not 'start; stop' to"

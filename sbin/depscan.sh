@@ -47,9 +47,8 @@ depend_dbadd() {
 			#other type of interest is 'pretend' which *should* add
 			#invalid database entries (no virtual depend should ever
 			#actually have a matching rc-script).
-			if [ "${mytype}" = "need" ] && \
-			   [ ! -d ${svcdir}/provide/${x} ] && \
-			   [ "${x}" != "net" ]
+			if [ "${mytype}" = "need" -a "${x}" != "net" -a \
+			     ! -d ${svcdir}/provide/${x} ]
 			then
 				ewarn "NEED:  can't find service \"${x}\" needed by \"${myservice}\";"
 				ewarn "       continuing..."
@@ -64,9 +63,8 @@ depend_dbadd() {
 					touch ${svcdir}/broken/${myservice}/${x}
 				fi
 				continue
-			elif [ "${mytype}" != "provide" ] && \
-			     [ ! -d ${svcdir}/provide/${x} ] && \
-			     [ "${x}" != "net" ]
+			elif [ "${mytype}" != "provide" -a "${x}" != "net" -a \
+			       ! -d ${svcdir}/provide/${x} ]
 			then
 				continue
 			fi
@@ -77,7 +75,7 @@ depend_dbadd() {
 		if [ "${x}" = "${myservice}" ]
 		then
 			#dont work too well with the '*' use and need
-			if [ "${mytype}" != "before" ] && [ "${mytype}" != "after" ]
+			if [ "${mytype}" != "before" -a "${mytype}" != "after" ]
 			then
 				ewarn "DEPEND:  service \"${x}\" can't depend on itself;"
 				ewarn "         continuing..."
@@ -86,16 +84,11 @@ depend_dbadd() {
 		fi
 	
 		# NEED and USE override BEFORE and AFTER
-		if (([ "${mytype}" = "before" ] && \
-		    [ ! -L ${svcdir}/need/${x}/${myservice} ]) && \
-		   ([ "${mytype}" = "before" ] && \
-		    [ ! -L ${svcdir}/use/${x}/${myservice} ])) || \
-		   (([ "${mytype}" = "after" ] && \
-		    [ ! -L ${svcdir}/need/${myservice}/${x} ]) && \
-		   ([ "${mytype}" = "after" ] && \
-		    [ ! -L ${svcdir}/use/${myservice}/${x} ])) || \
-		   ([ "${mytype}" = "need" ] || [ "${mytype}" = "use" ] || \
-		    [ "${mytype}" = "provide" ])
+		if (([ "${mytype}" = "before" -a ! -L ${svcdir}/need/${x}/${myservice} ]) && \
+		    ([ "${mytype}" = "before" -a ! -L ${svcdir}/use/${x}/${myservice} ])) || \
+		   (([ "${mytype}" = "after" -a ! -L ${svcdir}/need/${myservice}/${x} ]) && \
+		    ([ "${mytype}" = "after" -a ! -L ${svcdir}/use/${myservice}/${x} ])) || \
+		   ([ "${mytype}" = "need" -o "${mytype}" = "use" -o "${mytype}" = "provide" ])
 		then
 			if [ ! -d ${svcdir}/${mytype}/${x} ]
 			then
@@ -121,7 +114,7 @@ check_rcscript() {
 	#print the first line of each script, filtering out spaces and tabs
 	(awk '/^#|^\t+#/ { gsub(/ /, "") ; gsub(/\t/, "") ; \
 		COUNT += 1 ; if (COUNT == 1) print $0 }' ${1}) | { read hash shell
-		if [ "${hash}" = "#" ] && [ "${shell}" = "/sbin/runscript" ]
+		if [ "${hash}" = "#" -a "${shell}" = "/sbin/runscript" ]
 		then
 			return 0
 		else
@@ -158,8 +151,8 @@ cache_depend() {
 				
 				echo "${myline}" >> ${svcdir}/cache/${1##*/}.depend
 			fi
-			if [ "${myline/\}/}" != "${myline}" ] && \
-			   [ "${dowrite}" -eq 0 ] && [ "${count}" -eq 0 ]
+			if [ "${myline/\}/}" != "${myline}" -a \
+			     "${dowrite}" -eq 0 -a "${count}" -eq 0 ]
 			then
 				dowrite=1
 				break
@@ -317,7 +310,7 @@ do
 	do
 		counter=$((counter + 1))
 	done
-	if [ "${counter}" -gt 1 ] && [ "${x##*/}" != "net" ]
+	if [ "${counter}" -gt 1 -a "${x##*/}" != "net" ]
 	then
 		dblprovide="yes"
 		errstr="${x##*/}"
