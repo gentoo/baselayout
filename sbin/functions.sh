@@ -658,7 +658,7 @@ fi
 # Network filesystems list for common use in rc-scripts.
 # This variable is used in is_net_fs and other places such as
 # localmount.
-NET_FS_LIST="cifs coda ncpfs nfs smbfs"
+NET_FS_LIST="cifs coda ncpfs nfs smbfs shfs"
 
 # bool is_net_fs(path)
 #

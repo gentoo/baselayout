@@ -2,6 +2,10 @@
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  18 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Add shfs to our list of net filesystems #61452.
+
   16 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
 
     Update the default fstab /dev/shm mount to include the nodev, nosuid, 
