@@ -7,9 +7,6 @@
 # and should be called as such. This means that our init scripts
 # should work as is with zero modification :)
 
-# We rely on the /proc filesystem a lot here to save shelling out
-# to userspace tools. This makes us quite fast but less portable I guess.
-
 RC_GOT_DAEMON="yes"
 
 [[ ${RC_GOT_FUNCTIONS} != "yes" ]] && source /sbin/functions.sh
@@ -62,73 +59,54 @@ setup_daemon_vars() {
 	ssdargs="${sargs[@]}"
 }
 
-# bool try_kill_pid(int pid, int sig)
+# bool try_kill_pid(int pid, char* signal, bool session)
 #
 # Repeatedly kill the pid with the given signal until it dies
+# If session is true then we use tread pid as session and send it
+# via pkill
 # Returns 0 if successfuly otherwise 1
 try_kill_pid() {
-	local pid=$1 sig=${2:-TERM} i s
+	local pid=$1 signal=${2:-TERM} session=${3:-false}  i s
 	
 	# We split RC_RETRY_TIMEOUT into tenths of seconds
-	# So we return as fast as possible
+	# so we return as fast as possible
 	(( s=${RC_RETRY_TIMEOUT}/10 ))
 	
 	for (( i=0; i<RC_RETRY_COUNT*10; i++ )); do
-		[[ ! -d /proc/${pid} ]] && return 0
-		kill -s ${sig} ${pid}
-		LC_ALL=C sleep ${s}
+		if ${session} ; then
+			# Gentoo places pkill in /usr/bin by default.
+			# As /usr may not be mounted all the time, we need
+			# to provide a working alternative with the tools
+			# outside of /usr
+			if [[ -x /usr/bin/pkill ]]; then
+				/usr/bin/pkill -${signal} -s ${pid} || return 0
+			else
+				local pids=$( /bin/ps -eo pid,sid | /bin/sed -n 's/'${pid}'$//p' )
+				[[ -z ${pids} ]] && return 0
+				/bin/kill -s ${signal} ${pids} 2>/dev/null
+			fi
+		else
+			/bin/kill -s ${signal} ${pid} 2>/dev/null || return 0
+		fi
+		LC_ALL=C /bin/sleep ${s}
 	done
 
 	return 1
 }
 
-# bool kill_pid(int pid, int ppid)
+# bool kill_pid(int pid, bool session)
 #
-# Kills the given pid
-# If a parent pid (ppid) is supplied, the pid has to be a child of ppid
+# Kills the given pid/session
 # Returns 1 if we fail to kill the pid (if it's valid) otherwise 0
 kill_pid() {
-	local pid=$1 ppid=$2 i
-	local a b c d e f g
+	local pid=$1 session=${2:-false}
 
-	# Check that our pid really exists
-	[[ ! -d /proc/${pid} ]] && return 0
+	try_kill_pid ${pid} TERM ${session} && return 0
 
-	# If supplied a ppid (parent pid) then check that it still a child
-	# of the pid still. If not, return 0 as we haven't failed to kill
-	# as it's not a valid child
-	if [[ -n ${ppid} ]]; then
-		read a b c d e f g < /proc/${pid}/stat
-		[[ ${ppid} != ${e} ]] && return 0
-	fi
-
-	# Now we kill the pid
-	try_kill_pid ${pid} TERM && return 0
-
-	# Naughty pid - it didn't die nicely.
-	# Should we just KILL it?
 	[[ ${RC_RETRY_KILL} == "yes" ]] \
-		&& try_kill_pid ${pid} KILL && return 0
-	
-	# We failed to kill the pid :(
-	# But do a quick test to see if it's alive or not
-	[[ ! -d /proc/${pid} ]]
-	return $?
-}
+		&& try_kill_pid ${pid} KILL ${session} && return 0
 
-# bool kill_children(int ppid)
-#
-# Stops all children of the given pid
-# Returns 1 if any fail to stop otherwise 0
-kill_children() {
-	local ppid=$1 pid retval=0
-	local children=$( pgrep -s ${ppid} )
-
-	for pid in "${children}"; do
-		kill_pid ${pid} ${ppid} || retval=1
-	done
-
-	return ${retval}
+	return 1 
 }
 
 # int start_daemon(void)
@@ -149,30 +127,32 @@ stop_daemon() {
 	local pids retval=0
 	
 	if [[ -s ${pidfile} ]]; then
-		pids=$( < ${pidfile} )
+		read pids < ${pidfile}
 	elif [[ -n ${exe} ]]; then
-		pids=$( pidof ${exe} )
+		pids=$( /bin/pidof ${exe} )
 	elif [[ -n ${name} ]]; then
-		pids=$( pidof ${name} )
+		pids=$( /bin/pidof ${name} )
 	else
-		# We are given nothing to stop, so fail
-		return 1
+		# If we're given nothing to kill, then return
+		# based on RC_FAIL_ON_ZOMBIE
+		[[ ${RC_FAIL_ON_ZOMBIE} != "yes" ]]
+		return $?
 	fi
 
 	for pid in "${pids}"; do
 		if [[ ${RC_FAIL_ON_ZOMBIE} == "yes" ]]; then
-			[[ ! -d /proc/${pid} ]] && return 1
+			/bin/ps -p ${pid} &>/dev/null || return 1
 		fi
 
-		if kill_pid ${pid} ; then
+		if kill_pid ${pid} false ; then
 			# Remove the pidfile if the process didn't
-			[[ -f ${pidfile} ]] && rm -f ${pidfile}
+			[[ -f ${pidfile} ]] && /bin/rm -f ${pidfile}
 		else
 			retval=1
 		fi
-	
+
 		if [[ ${RC_KILL_CHILDREN} == "yes" ]]; then
-			kill_children ${pid} || retval=1
+			kill_pid ${pid} true || retval=1
 		fi
 	done
 	
