@@ -2,6 +2,14 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  17 Oct 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Change deps on /etc/init.d/{clock,hostname,modules} not to
+    depend on localmount, but rather on checkroot, as all of them
+    just need / to be mounted.  This should fix race conditions
+    because of checkfs dependency on modules.  This should close
+    bug #9266.
+
 * rc-scripts 1.4.1 (13 Oct 2002)
 
   13 Oct 2002; Martin Schlemmer <azarah@gentoo.org>:

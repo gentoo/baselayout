@@ -5,7 +5,7 @@
 
 
 depend() {
-	need bootmisc localmount
+	need checkroot hostname
 	use logger
 }
 
