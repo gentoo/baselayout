@@ -2,6 +2,11 @@
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 # $Header$
 
+11 Mar 2005 Martin Schlemmer <azarah@gentoo.org>
+
+        * test-regex.c: Add a few strings and patterns.  Enable tests to
+        specify if they should fail or pass.
+
 10 Mar 2005 Martin Schlemmer <azarah@gentoo.org>
 
         * test-regex.c: New file

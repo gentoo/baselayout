@@ -1,21 +1,50 @@
+/*
+ * test-regex.c
+ *
+ * Test for the simple-regex module.
+ *
+ * Copyright (C) 2004,2005 Martin Schlemmer <azarah@nosferatu.za.org>
+ *
+ *
+ *      This program is free software; you can redistribute it and/or modify it
+ *      under the terms of the GNU General Public License as published by the
+ *      Free Software Foundation version 2 of the License.
+ *
+ *      This program is distributed in the hope that it will be useful, but
+ *      WITHOUT ANY WARRANTY; without even the implied warranty of
+ *      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *      General Public License for more details.
+ *
+ *      You should have received a copy of the GNU General Public License along
+ *      with this program; if not, write to the Free Software Foundation, Inc.,
+ *      675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ * $Header$
+ */
+
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
 #include "debug.h"
 #include "simple-regex.h"
 
 char *test_data[] = {
-	"ab", "a?[ab]b",
-	"abb", "a?[ab]b",
-	"aab", "a?[ab]b",
-	"a", "a?a?a?a",
-	"aa", "a?a?a?a",
-	"aa", "a?a?a?aa",
-	"aaa", "a?a?a?aa",
-	"ab", "[ab]*",
-	"abc", "[ab]*.",
-	"ab", "[ab]*b+",
-	"ab", "a?[ab]*b+",
+	/* string, pattern, match (1 = yes, 0 = no) */
+	"ab", "a?[ab]b", "1",
+	"abb", "a?[ab]b", "1",
+	"aab", "a?[ab]b", "1",
+	"a", "a?a?a?a", "1",
+	"aa", "a?a?a?a", "1",
+	"aa", "a?a?a?aa", "1",
+	"aaa", "a?a?a?aa", "1",
+	"ab", "[ab]*", "1",
+	"abc", "[ab]*.", "1",
+	"ab", "[ab]*b+", "1",
+	"ab", "a?[ab]*b+", "1",
+	"aaaaaaaaaaaaaaaaaaaaaaa", "a*b", "0",
+	"aaaaaaaaabaaabbaaaaaa", "a*b+a*b*ba+", "1",
 	NULL
 };
 
@@ -24,20 +53,26 @@ int main() {
 	char buf[256], string[100], regex[100];
 	int i;
 
-	for (i = 0; NULL != test_data[i]; i += 2) {
+	for (i = 0; NULL != test_data[i]; i += 3) {
 		snprintf(string, 99, "'%s'", test_data[i]);
 		snprintf(regex, 99, "'%s'", test_data[i + 1]);
-		snprintf(buf, 255, "string = %15s, regex = %15s", string, regex);
-		printf("%-70s", buf);
+		snprintf(buf, 255, "string = %s, pattern = %s", string, regex);
+		printf("%-60s", buf);
 		DO_REGEX(tmp_data, test_data[i], test_data[i + 1], error);
 		if (REGEX_MATCH(tmp_data) && (REGEX_FULL_MATCH == tmp_data.match)) {
-			printf("%s\n", "[ \033[32;01mOK\033[0m ]");
+			if (0 != strncmp(test_data[i + 2], "1", 1))
+				goto error;
 		} else {
-error:
-			printf("%s\n", "[ \033[31;01m!!\033[0m ]");
-			return 1;
+			if (0 != strncmp(test_data[i + 2], "0", 1))
+				goto error;
 		}
+			
+		printf("%s\n", "[ \033[32;01mOK\033[0m ]");
 	}
 
 	return 0;
+error:
+	printf("%s\n", "[ \033[31;01m!!\033[0m ]");
+
+	return 1;
 }
