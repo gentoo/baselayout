@@ -84,8 +84,8 @@ remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $1}' /proc/mou
 # This is needed to make sure we dont have a mounted filesystem
 # on a LVM volume when shutting LVM down ...
 ebegin "Unmounting filesystems"
-for x in `mount | awk '{ if (($5 !~ /(proc|sysfs|devfs|tmpfs)/) &&
-                             ($1 !~ /^rootfs|^\/dev\/root/) &&
+for x in `mount | awk '{ if (($5 !~ /^(proc|sysfs|devfs|tmpfs)$/) &&
+                             ($1 !~ /^(rootfs|\/dev\/root|none)$/) &&
                              ($3 != "/"))
                            print $3
                        }' | sort -r`
