@@ -251,6 +251,13 @@ do
 	needsme|ineed)
 		query $arg
 		;;
+	zap)
+		if [ -e ${svcdir}/started/${myservice} ]
+		then
+			einfo "Manually resetting ${myservice} to stopped state."
+			rm ${svcdir}/started/${myservice}
+		fi
+		;;
 	restart)
 		#add snapshot support here so any dependent services that
 		#are stopped are restarted after the svc_start

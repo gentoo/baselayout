@@ -1,0 +1,101 @@
+#!/bin/bash
+source /etc/init.d/functions.sh
+if [ `id -u` -ne 0 ]
+then
+	eerror "${0}: must be root."
+	exit 1
+fi
+
+usage() {
+cat << FOO
+usage: rc-update add script runlevel2 [runlevel2...]
+       rc-update del script [runlevel1...]
+
+note:
+       After rc-update executes, the script dependency cache is automatically
+       updated.
+
+examples:
+       rc-update add net.eth0 default
+       Adds the net.eth0 script (in /etc/init.d) to the "default" runlevel.
+
+       rc-update del sysklogd
+       Deletes the sysklogd script from all runlevels.  The original script
+       is not deleted, just any symlinks to the script in /etc/runlevels/*.
+
+       rc-update del net.eth2 default wumpus
+       Delete the net.eth2 script from the default and wumpus runlevels.
+       All other runlevels are unaffected.  Again, the net.eth2 script
+       residing in /etc/init.d is not deleted, just any symlinks in
+       /etc/runlevels/default and /etc/runlevels wumpus.
+	   
+FOO
+	exit 1
+}
+
+if [ $# -lt 1 ]
+then
+	usage
+fi
+if [ "$1" = "add" ]
+then
+	if [ $# -lt 3 ]
+	then
+		eerror "${0}: at least two arguments expected after \"add\"."
+		exit 1
+	fi
+	shift
+	myscript=$1
+	if [ ! -e /etc/init.d/${myscript} ]
+	then
+		eerror "${0}: /etc/init.d/${myscript} not found; aborting."
+		exit 1
+	fi
+	shift
+	for x in $*
+	do
+		if [ ! -e /etc/runlevels/${x} ]
+		then
+			ewarn "runlevel ${x} not found; skipping"
+			continue
+		fi
+		if [ -L /etc/runlevels/${x}/${myscript} ]
+		then
+			ewarn "${myscript} already installed in runlevel ${x}; skipping"
+			continue
+		fi
+		ln -sf /etc/init.d/${myscript} /etc/runlevels/${x}/${myscript}
+		ebegin "${myscript} added to runlevel ${x}"
+	done
+elif [ "$1" = "del" ]
+then
+	if [ $# -lt 2 ]
+	then
+		eerror "${0}: at least one argument expected after \"del\"."
+		exit 1
+	fi
+	shift
+	myscript=$1
+	shift
+	if [ $# -eq 0 ]
+	then
+		mylevels="`( cd /etc/runlevels; ls )`"
+	else 
+		mylevels="$*"
+	fi
+	for x in $mylevels
+	do
+		if [ -L /etc/runlevels/${x}/${myscript} ]
+		then
+			rm /etc/runlevels/${x}/${myscript}
+			ebegin "${myscript} removed from runlevel ${x}"
+		else
+			ewarn "${myscript} not found in runlevel ${x}; skipping"
+		fi
+	done
+else
+	usage
+	exit 1
+fi
+/etc/init.d/depscan.sh
+einfo "rc-update complete."
