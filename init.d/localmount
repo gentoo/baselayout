@@ -9,7 +9,11 @@ start() {
 	ebegin "Mounting local filesystems"
 	mount -at nonfs,noproc,noncpfs,nosmbfs,noshm  
 	eend $? 
-	if [ -e /proc/bus/usb ] && [ ! -e /proc/bus/usb/devices ] 
+	if [ -z "`grep usbdevfs /proc/filesystems`" ]
+	then
+		modprobe usbcore
+	fi
+	if [ -n "`grep usbdevfs /proc/filesystems`" ] && [ -e /proc/bus/usb ] && [ ! -e /proc/bus/usb/devices ] 
 	then
 		ebegin "Mounting USB device filesystem"
 		mount -t usbdevfs usbdevfs /proc/bus/usb
