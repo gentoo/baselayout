@@ -7,6 +7,9 @@
     Fix bug 25975: support adsl in net.eth0.  Thanks to Patrick McLean
     for the initial pass at the code.
 
+    Fix bug 34140: add --servicelist option to rc-status.  Thanks to
+    Eldad Zack for the patch.
+
 * rc-scripts 1.4.16 (06 Jun 2004)
 
   06 Jun 2004; Aron Griffis <agriffis@gentoo.org>:

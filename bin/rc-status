@@ -15,6 +15,7 @@
 #  -a can be used to display all runlevels                                     #
 #  -d can be used to display service dependancies                              #
 #  -u will display all unassigned services                                     #
+#  -s will display all services                                                #
 #  -h will display help                                                        #
 #  <runlevel> is used to choose the run level for which information is         #
 #             displayed                                                        #
@@ -51,12 +52,17 @@ do_opt() {
 			ls -1 ${runleveldir}
 			exit 0
 			;;
+		--servicelist|-s)
+			ALL=true
+			SERVICELIST=true
+			;;
 		--help|-h|-*)
-			echo "USAGE: $0 [--all | --list | --unused | <runlevel>]"
-			echo "  --all      -a  Show services at all run levels"
-			echo "  --list     -l  Show list of run levels"
-			echo "  --unused   -u  Show services not assigned to any run level"
-			echo "  <runlevel>     Show services assigned to <runlevel>"
+			echo "USAGE: $0 [--all | --list | --unused | --servicelist | <runlevel>]"
+			echo "  --all           -a  Show services at all run levels"
+			echo "  --list          -l  Show list of run levels"
+			echo "  --unused        -u  Show services not assigned to any run level"
+			echo "  --servicelist   -s  Show service list"
+			echo "  <runlevel>      Show services assigned to <runlevel>"
 			echo "If no arguments are supplied, shows services for current run level."
 			exit 0
 			;;
@@ -130,13 +136,16 @@ in_list() { #$1=list  $2=find
 }
 if [ -n "${ALL}" ] ; then
 	unassigned=
+	allservices=
 	for service in `ls -1 /etc/init.d | grep -v '\.sh$'` ; do
 		if [ $(in_list "${runlevels[*]}" "${service}") -eq 0 ] ; then
 			unassigned="${unassigned} ${service}"
 		fi
+		allservices="${allservices} ${service}"
 	done
 	runlevelidxs="${runlevelidxs} UNASSIGNED"
 	runlevels[${arridx}]="${unassigned}"
+	runlevels[${arridx}+1]="${allservices}"
 fi
 
 ################################################################################
@@ -162,7 +171,12 @@ print_msg() {
 # if --all wasnt specified, dont print everything
 [ -z "${ALL}" ] && runlevelidxs="${runlevel}"
 if [ -z "${UNUSED}" ] ; then
-	arridx=0
+	if [ -z "${SERVICELIST}" ] ; then
+		arridx=0
+	else
+		runlevelidxs="all"
+		let "arridx += 1"
+	fi
 else
 	runlevelidxs="unused"
 fi
