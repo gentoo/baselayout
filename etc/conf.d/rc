@@ -47,6 +47,10 @@ RC_FAIL_ON_ZOMBIE="no"
 
  
 # rc-scripts dep-cache directory
+#
+# NOTE:  Do not remove the next line, as its needed by the baselayout ebuild!
+#
+#  svcdir="/var/lib/init.d"
 
 svcdir="/var/lib/init.d"
 

@@ -16,7 +16,7 @@ fi
 SVCDIR="/var/lib/supervise"
 
 # Check /etc/conf.d/rc for a description of these ...
-svcdir="/var/state/init.d"
+svcdir="/var/lib/init.d"
 svcmount="no"
 svcfstype="tmpfs"
 svcsize=1024
@@ -329,6 +329,42 @@ init_node() {
 	eend 0
 }
 
+# char *KV_major(string)
+#
+#    Return the Major version part of given kernel version.
+#
+KV_major() {
+	[ -z "$1" ] && return 1
+
+	local KV="`echo $1 | \
+		awk '{ tmp = $0; gsub(/^[0-9\.]*/, "", tmp); sub(tmp, ""); print }'`"
+	echo "${KV}" | cut -d. -f1
+}
+
+# char *KV_minor(string)
+#
+#    Return the Minor version part of given kernel version.
+#
+KV_minor() {
+	[ -z "$1" ] && return 1
+
+	local KV="`echo $1 | \
+		awk '{ tmp = $0; gsub(/^[0-9\.]*/, "", tmp); sub(tmp, ""); print }'`"
+	echo "${KV}" | cut -d. -f2
+}
+
+# char *KV_micro(string)
+#
+#    Return the Micro version part of given kernel version.
+#
+KV_micro() {
+	[ -z "$1" ] && return 1
+
+	local KV="`echo $1 | \
+		awk '{ tmp = $0; gsub(/^[0-9\.]*/, "", tmp); sub(tmp, ""); print }'`"
+	echo "${KV}" | cut -d. -f3
+}
+
 # int KV_to_int(string)
 #
 #    Convert a string type kernel version (2.4.0) to an int (132096)
@@ -337,11 +373,9 @@ init_node() {
 KV_to_int() {
 	[ -z "$1" ] && return 1
     
-	local KV="`echo $1 | \
-		awk '{ tmp = $0; gsub(/^[0-9\.]*/, "", tmp); sub(tmp, ""); print }'`"
-	local KV_MAJOR="`echo "${KV}" | cut -d. -f1`"
-	local KV_MINOR="`echo "${KV}" | cut -d. -f2`"
-	local KV_MICRO="`echo "${KV}" | cut -d. -f3`"
+	local KV_MAJOR="`KV_major "$1"`"
+	local KV_MINOR="`KV_minor "$1"`"
+	local KV_MICRO="`KV_micro "$1"`"
 	local KV_int="$((KV_MAJOR * 65536 + KV_MINOR * 256 + KV_MICRO))"
     
 	# We make version 2.2.0 the minimum version we will handle as

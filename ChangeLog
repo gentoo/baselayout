@@ -2,6 +2,21 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  09 March 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix /etc/init.d/netmount not to unmount / on nfs/whatever, bug #16274.
+
+    Fix net.eth0 not to try and start an interface if already up.
+
+    Update MAKEDEV from Debian to support more archs.  This adds support
+    for 'arm', 'hppa' among others.  URL:
+
+      http://packages.debian.org/stable/base/makedev.html
+
+    Add support to /etc/init.d/modules to use /etc/modules.autoload/kernel-2.4
+    if we are using a 2.4 kernel, and /etc/modules.autoload/kernel-2.5 if we
+    are using a 2.5 kernel ... bug #17109.
+
   02 March 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Update /etc/init.d/hostname to only set the hostname to whatever is before

@@ -26,6 +26,7 @@ setup_env() {
 	dhcpcd_IFACE="$(eval echo \$\{dhcpcd_${IFACE}\})"
 	inet6_IFACE="$(eval echo \$\{inet6_${IFACE}\})"
 	alias_IFACE="$(eval echo \$\{alias_${IFACE}\})"
+	status_IFACE="$(ifconfig | gawk -v IFACE="${IFACE}" '/Link/ { if ($1 == IFACE) print "up" }')"
 }
 
 start() {
@@ -49,11 +50,15 @@ start() {
 			return ${retval}
 		}
 	else
-		/sbin/dhcpcd ${dhcpcd_IFACE} ${IFACE} >/dev/null || {
-			retval=$?
-			eend ${retval} "Failed to bring ${IFACE} up"
-			return ${retval}
-		}
+		# Check that eth0 was not brough up by the kernel ...
+		if [ "${status_IFACE}" != "up" ]
+		then
+			/sbin/dhcpcd ${dhcpcd_IFACE} ${IFACE} >/dev/null || {
+				retval=$?
+				eend ${retval} "Failed to bring ${IFACE} up"
+				return ${retval}
+			}
+		fi
 	fi
 	eend 0
 
