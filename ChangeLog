@@ -12,6 +12,7 @@
     Rewrote udhcpc helper scripts around udhcpc and wrapped dhclient to udhcpc
     scripts. This makes things much saner as udhcpc is much saner - also fixed
     essidnet and ipv6 local link for them.
+    removed iproute2 udhcpc reliance on the "bc" command
 
   17 Nov 2004; Roy Marples <uberlord@gentoo.org>:
     Fixed invalid variable handling in bonding and vlan - bug #71419
