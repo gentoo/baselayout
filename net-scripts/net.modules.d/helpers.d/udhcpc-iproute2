@@ -37,14 +37,16 @@ if [[ ${action} == bound ]]; then
 
 		# We need to translate 255.255.255.0 into 24
 		len=0
-		for x in ${subnet[i]//./}; do
+		for x in ${subnet[i]//./ }; do
 			binary=$( echo "obase=2; ${x}" | bc )
 			for (( j=0; j<${#binary}; j++)) do
 				[[ ${binary:${j}:1} -eq 1 ]] && (( len++ ))
 			done
 		done
 
-		/sbin/ip addr add dev ${interface} label ${l} ${ip[i]}/${len} broadcast ${broadcast[i]}
+		b=${broadcast[i]}
+		[[ -n ${b} ]] && b="brd ${b}"
+		/sbin/ip addr add dev ${interface} label ${l} ${ip[i]}/${len} ${b}
 	done
 
 	for r in ${router}; do

@@ -40,7 +40,11 @@ if [[ ${action} == bound ]]; then
 	broadcast=( ${broadcast} )
 	for (( i=0; i<${#ip[@]}; i++ )); do
 		[[ ${i} -eq 0 ]] && l=${interface} || l=${interface}:${i}
-		/sbin/ifconfig ${l} inet ${ip[i]} netmask ${subnet[i]} broadcast ${broadcast[i]}
+
+		b=${broadcast[i]}
+		[[ -n ${b} ]] && b="broadcast ${b}"
+
+		/sbin/ifconfig ${l} inet ${ip[i]} netmask ${subnet[i]} ${b}
 	done
 
 	for r in ${router}; do
