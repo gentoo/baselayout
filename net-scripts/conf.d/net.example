@@ -240,8 +240,8 @@
 
 # If you are using any of the slave interfaces, it is important that you remove
 # configurations for them and take them down first!
-#slaves_bond0="eth2"
-#ipaddr_bond0=( "172.16.2.1/23 brd 172.16.3.255" )
+#slaves_bond0="eth0 eth1 eth2"
+#ipaddr_bond0=( "null" ) # You may not want to assign an IP the the bond
 
 #-----------------------------------------------------------------------------
 # ADSL

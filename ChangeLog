@@ -4,6 +4,7 @@
   17 Nov 2004; Roy Marples <uberlord@gentoo.org>:
     Fixed invalid variable handling in bonding and vlan - bug #71419
     apipa now brings the interface up before testing if address exists
+    Updated bonding documentation - bug #71419
 
   16 Nov 2004; Roy Marples <uberlord@gentoo.org>:
 
