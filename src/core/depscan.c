@@ -44,10 +44,17 @@ char* svcdir_subdirs[] = {
 	NULL
 };
 
-int create_directory(char *name);
-int create_var_dirs(char *svcdir);
+char *svcdir_volatile_subdirs[] = {
+	"snapshot",
+	"broken",
+	NULL
+};
 
-int create_directory(char *name) {
+int create_directory(const char *name);
+int create_var_dirs(const char *svcdir);
+int delete_var_dirs(const char *svcdir);
+
+int create_directory(const char *name) {
 	if ((NULL == name) || (0 == strlen(name))) {
 		DBG_MSG("Invalid argument passed!\n");
 		errno = EINVAL;
@@ -73,7 +80,7 @@ int create_directory(char *name) {
 	return 0;
 }
 
-int create_var_dirs(char *svcdir) {
+int create_var_dirs(const char *svcdir) {
 	char *tmp_path = NULL;
 	int i = 0;
 	
@@ -95,11 +102,56 @@ int create_var_dirs(char *svcdir) {
 			DBG_MSG("Failed to allocate buffer!\n");
 			return -1;
 		}
+		
 		/* Check and create all the subdirs if needed */
 		if (-1 == create_directory(tmp_path)) {
 			DBG_MSG("Failed to create '%s'!\n", tmp_path);
+			free(tmp_path);
 			return -1;
 		}
+		
+		free(tmp_path);
+		i++;
+	}
+
+	return 0;
+}
+
+int delete_var_dirs(const char *svcdir) {
+	char *tmp_path = NULL;
+	int i = 0;
+	
+	if ((NULL == svcdir) || (0 == strlen(svcdir))) {
+		DBG_MSG("Invalid argument passed!\n");
+		errno = EINVAL;
+		return -1;
+	}
+
+	/* Just quit if svcdir do not exist */
+	if (!exists(svcdir)) {
+		DBG_MSG("'%s' does not exist!\n", svcdir);
+		return 0;
+	}
+
+	while (NULL != svcdir_volatile_subdirs[i]) {
+		tmp_path = strcatpaths(svcdir, svcdir_volatile_subdirs[i]);
+		if (NULL == tmp_path) {
+			DBG_MSG("Failed to allocate buffer!\n");
+			return -1;
+		}
+
+		/* Skip the directory if it does not exist */
+		if (!exists(tmp_path))
+			goto _continue;
+		
+		/* Check and delete all files and sub directories if needed */
+		if (-1 == rmtree(tmp_path)) {
+			DBG_MSG("Failed to delete '%s'!\n", tmp_path);
+			free(tmp_path);
+			return -1;
+		}
+		
+_continue:
 		free(tmp_path);
 		i++;
 	}
@@ -130,12 +182,21 @@ int main() {
 		exit(EXIT_FAILURE);
 	}
 
+	/* Delete (if needed) volatile directories in svcdir */
+	if (-1 == delete_var_dirs(svcdir)) {
+		/* XXX: Not 100% accurate below message ... */
+		EERROR("Failed to delete '%s', %s", svcdir,
+				"or one of its sub directories!\n");
+		exit(EXIT_FAILURE);
+	}
+
+	/* Create all needed directories in svcdir */
 	if (-1 == create_var_dirs(svcdir)) {
 		EERROR("Failed to create '%s', %s", svcdir,
 				"or one of its sub directories!\n");
 		exit(EXIT_FAILURE);
 	}
-	
+
 	cachefile = strcatpaths(svcdir, LEGACY_CACHE_FILE_NAME);
 	if (NULL == cachefile) {
 		DBG_MSG("Failed to allocate buffer!\n");

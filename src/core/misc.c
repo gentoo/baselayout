@@ -253,6 +253,66 @@ error:
 	return -1;
 }
 
+int rmtree(const char *pathname) {
+	char **dirlist = NULL;
+	int i = 0;
+	
+	if ((NULL == pathname) || (0 == strlen(pathname))) {
+		DBG_MSG("Invalid argument passed!\n");
+		errno = EINVAL;
+		return -1;
+	}
+
+	if (!exists(pathname)) {
+		DBG_MSG("'%s' does not exists!\n", pathname);
+		errno = ENOENT;
+		return -1;
+	}
+
+	dirlist = ls_dir(pathname, 1);
+	if ((NULL == dirlist) && (0 != errno)) {
+		/* If errno = ENOENT and the directory exists, then it means
+		 * it is empty, so we should not error out */
+		if (ENOENT != errno) {
+			DBG_MSG("Could not get listing for '%s'!\n", pathname);
+			return -1;
+		}
+	}
+
+	while ((NULL != dirlist) && (NULL != dirlist[i])) {
+		/* If it is a directory, call rmtree() again with
+		 * it as argument */
+		if (is_dir(dirlist[i], 0)) {
+			if (-1 == rmtree(dirlist[i])) {
+				DBG_MSG("Failed to delete sub directory!\n");
+				goto error;
+			}
+		}
+
+		/* Now actually remove it.  Note that if it was a directory,
+		 * it should already be removed by above rmtree() call */
+		if ((exists(dirlist[i]) && (-1 == remove(dirlist[i])))) {
+			DBG_MSG("Failed to remove '%s'!\n", dirlist[i]);
+			goto error;
+		}
+		i++;
+	}
+
+	STRING_LIST_FREE(dirlist);
+
+	/* Now remove the parent */
+	if (-1 == remove(pathname)) {
+		DBG_MSG("Failed to remove '%s'!\n", pathname);
+		goto error;
+	}
+
+	return 0;
+error:
+	STRING_LIST_FREE(dirlist);
+
+	return -1;
+}
+
 char **ls_dir(const char *pathname, int hidden) {
 	DIR *dirfd;
 	struct dirent *dir_entry;
@@ -286,6 +346,11 @@ char **ls_dir(const char *pathname, int hidden) {
 		{
 			char *d_name = dir_entry->d_name;
 			char *tmp_p;
+
+			/* Do not list current or parent entries */
+			if ((0 == strcmp(d_name, ".")) ||
+			    (0 == strcmp(d_name, "..")))
+				continue;
 			
 			tmp_p = strcatpaths(pathname, d_name);
 			if (NULL == tmp_p) {
@@ -298,8 +363,8 @@ char **ls_dir(const char *pathname, int hidden) {
 		}
 	} while (NULL != dir_entry);
 
-	if (NULL == dirlist[0]) {
-		DBG_MSG("Directory is empty.");
+	if ((NULL == dirlist) || (NULL == dirlist[0])) {
+		DBG_MSG("Directory is empty.\n");
 		errno = ENOENT;
 		goto error;
 	}

@@ -256,6 +256,7 @@ time_t get_mtime(const char *pathname, int follow_link);
 
 /* The following functions return 0 on success, or -1 with errno set on error. */
 int mktree(const char *pathname, mode_t mode);
+int rmtree(const char *pathname);
 
 /* The following return a pointer on success, or NULL with errno set on error.
  * If it returned NULL, but errno is not set, then there was no error, but

@@ -4,6 +4,15 @@
 
   16 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
 
+    depscan.c: Add delete_var_dirs() to delete volatile directories in svcdir.
+               Change 'char *' declarations for create_directory() and
+               create_var_dirs() to 'const char*'.
+    misc.h, misc.c: Add rmtree() function.  Fix ls_dir() not to include '.'
+                    and '..' in its listing.  Fix segfault in ls_dir() if the
+                    file list is empty.
+
+  16 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
+
     Add Header tags to all source files and Makefile.
 
   16 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
