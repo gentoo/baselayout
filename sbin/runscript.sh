@@ -116,7 +116,7 @@ svc_stop() {
 
 			# Only worry about net.* services if this is the last one running,
 			# or if RC_NET_STRICT_CHECKING is set ...
-			if [ "${netcount}" -le "1" -o "${RC_NET_STRICT_CHECKING}" = "yes" ]
+			if [ "${netcount}" -lt "1" -o "${RC_NET_STRICT_CHECKING}" = "yes" ]
 			then
 				mydeps="net"
 			fi

@@ -2,6 +2,8 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+* rc-scripts 1.4.2.8 (06 Jan 2003)
+
   02 Jan 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix src/awk/genenviron.awk to work with multiple 'need', 'use', etc
