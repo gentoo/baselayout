@@ -21,7 +21,8 @@
   12 Dec 2004; Mike Frysinger <vapier@gentoo.org>:
 
     Tweak get_mount_fstab to only print the first mount point found and then 
-    spit warning messages for extra matches.
+    spit warning messages for extra matches.  Also add support for RC_USE_FSTAB
+    so normal users don't have to worry about a broken /etc/fstab.
 
     Add an additional sanity check to the udev tarball usage.  Don't try to 
     unpack an empty or non-existant tarball.

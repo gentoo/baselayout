@@ -646,8 +646,8 @@ is_uml_sys() {
 #
 get_mount_fstab() {
 	awk '$1 ~ "^#" { next }
-		$2 == "'$*'" { if (found++ == 0) { print "-t "$3,"-o "$4,$1,$2 } }
-		END { if (found > 1) { print "More than one entry for '$*' found in /etc/fstab!" > "/dev/stderr" } }
+	     $2 == "'$*'" { if (found++ == 0) { print "-t "$3,"-o "$4,$1,$2 } }
+	     END { if (found > 1) { print "More than one entry for '$*' found in /etc/fstab!" > "/dev/stderr" } }
 	' /etc/fstab
 }
 
