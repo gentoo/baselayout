@@ -2,6 +2,13 @@
 # Global wireless config file for net.* rc-scripts
 
 ##############################################################################
+# IMPORTANT
+# linux-wlan-ng is not supported as they have their own configuration program
+# ensure that /etc/conf.d/net has the entry "!iwconfig" in it's modules line
+# Try and use an alternative driver
+##############################################################################
+
+##############################################################################
 # HINTS
 ##############################################################################
 # Remember to change eth0 to your wireless interface which may be

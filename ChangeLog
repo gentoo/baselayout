@@ -7,6 +7,7 @@
     net.lo now checks for duplicate static IPv4 addresses before assigning
     iwconfig now supports preassociate and postassociate user hooks
     net.example - changed $1 to ${IFACE} in examples
+    clarified lack of linux-wlan-ng support
 
   24 Nov 2004; Mike Frysinger <vapier@gentoo.org>:
 

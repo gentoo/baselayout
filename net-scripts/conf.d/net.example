@@ -110,7 +110,8 @@
 # usefull in the postup() function
 #
 # If you're using a supplicant or daemon to control wireless configuration
-# then you need to disable the iwconfig module like so
+# then you need to disable the iwconfig module like so. You also need todo
+# this if you're using linux-wlan-ng as they don't have full iwconfig support
 #modules=( "!iwconfig" )
 
 #-----------------------------------------------------------------------------
