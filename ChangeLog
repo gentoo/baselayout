@@ -2,6 +2,11 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  23 Jun 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Cleanups for bug #21438 from bug #22637, thanks to
+    Christian Strauf <christian.strauf@gmx.de> and Ian Abbott <ian@abbott.org>.
+
   22 Jun 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Really commit fix for bug #21438 to CVS.
