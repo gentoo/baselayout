@@ -451,7 +451,7 @@ for arg in $* ; do
 		svc_start
 		;;
 	needsme|ineed|usesme|iuse|broken)
-		list_depend_trace "${arg}"
+		trace_dependencies "-${arg}"
 		;;
 	status)
 		svc_status

@@ -844,7 +844,14 @@ valid_iafter() {
 trace_dependencies() {
 	local -a unsorted=( "$@" )
 	local -a sorted dependencies
-	local service dependency x
+	local service dependency x deptype
+
+	case "$1" in
+		-*)
+			deptype=${1/-}
+			unsorted=( "${myservice}" )
+			;;
+	esac
 	
 	while (( ${#unsorted[*]} > 0 )) ; do
 		# Get a service from the list and remove it
@@ -853,20 +860,25 @@ trace_dependencies() {
 		# Reindex the array
 		unsorted=( ${unsorted[@]} )
 	
-		# Services that should start before $service
-		if (is_runlevel_start || is_runlevel_stop) ; then
+		if [[ -n ${deptype} ]] ; then
 			dependencies=(
-				$(ineed "${service}")
-				$(valid_iuse "${service}")
-				$(valid_iafter "${service}")
+				$("${deptype}" "${service}")
 			)
 		else
-			dependencies=(
-				$(ineed "${service}")
-				$(valid_iuse "${service}")
-			)
+			# Services that should start before $service
+			if (is_runlevel_start || is_runlevel_stop) ; then
+				dependencies=(
+					$(ineed "${service}")
+					$(valid_iuse "${service}")
+					$(valid_iafter "${service}")
+				)
+			else
+				dependencies=(
+					$(ineed "${service}")
+					$(valid_iuse "${service}")
+				)
+			fi
 		fi
-	
 	
 		# Remove each one of those from the sorted list and add
 		# them all to the unsorted so we analyze them later
@@ -886,6 +898,15 @@ trace_dependencies() {
 	
 		sorted=( ${service} ${sorted[@]} )
 	done
+
+	# If deptype is set, we do not want the name of this service
+	if [[ -n ${deptype} ]] ; then
+		for (( x=0 ; x < ${#sorted[*]} ; x++ )) ; do
+			[[ ${sorted[x]} == "${myservice}" ]] && \
+				unset sorted[x]
+		done
+		sorted=( ${sorted[@]} )
+	fi
 	
 	echo ${sorted[@]}
 }
