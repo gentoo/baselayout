@@ -1,17 +1,17 @@
-.TH UPDATE-MODULES 8 "Gentoo Linux" "2001"
+.TH MODULES-UPDATE 8 "Gentoo Linux" "2001"
 .SH NAME
-update\-modules \- (re)generate /etc/modules.conf
+modules\-update \- (re)generate /etc/modules.conf
 .SH SYNOPSIS
-.B update\-modules
+.B modules\-update
 [force]
 .SH DESCRIPTION
-.B update\-modules
+.B modules\-update
 is a simple tool to manage
 .IR /etc/modules.conf
 The Linux module utilities use one configuration file for all their
 configuration. This makes it hard for packages to dynamically add
 information about their own modules. To fix this
-.B update\-modules
+.B modules\-update
 has been introduced.
 .PP
 .B modules-update
@@ -34,7 +34,7 @@ information. Error messages sent to stderr are not redirected.
 .SH OPTIONS
 .TP
 .I force
-.B update\-modules
+.B modules\-update
 will check if the current
 .I /etc/modules.conf
 is a generated file by checking for a special tag on the first line. If this
