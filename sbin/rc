@@ -6,6 +6,8 @@
 
 trap ":" INT QUIT TSTP
 source /sbin/functions.sh
+# Only source this when this is a livecd booting ... 
+[ -f /sbin/livecd-functions.sh ] && source /sbin/livecd-functions.sh
 umask 022
 
 try() {
@@ -162,6 +164,11 @@ then
 	ebegin "Mounting proc at /proc"
 	try try mount -n -t proc none /proc
 	eend $?
+
+	# Read off the kernel commandline to see if there's any special settings
+	# especially check to see if we need to set the  CDBOOT environment variable
+	# Note: /proc MUST be mounted
+	livecd_read_commandline
 
 	if [ -d /sys -a "$(get_KV)" -ge "$(KV_to_int '2.6.0')" ]
 	then
@@ -408,6 +415,15 @@ then
 	if get_bootparam "tmpfs" || get_bootparam "ramfs" || [ "${svcmount}" = "yes" ]
 	then
 		mount --bind "${tsvcdir}" "${svcdir}"
+	fi
+
+	# If booting off CD, we want to update inittab before setting the runlevel
+	if [ "${CDBOOT}" != "" ]
+	then
+		ebegin "Updating inittab"
+		livecd_fix_inittab
+		eend $?
+		/sbin/telinit q &>/dev/null
 	fi
 
 	# Clear $svcdir from stale entries
