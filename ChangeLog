@@ -16,7 +16,8 @@
     Rewrite the KV_* functions to use pure bash rather than awk #75836.
 
     Don't use 'none' when mounting virtual filesystems since `umount` can 
-    produce some pretty vague output #78684.  Fixed sbin/rc and etc/fstab.
+    produce some pretty vague output #78684.  Fixed sbin/rc and etc/fstab 
+    and etc/halt.sh to handle the new format.
 
     modules-update.8 touchups by Benno Schulenberg #77582.
 
