@@ -96,7 +96,7 @@ bonding_pre_stop() {
 	[[ -z ${slaves} ]] && return 0
 
 	# remove all slaves
-	einfo "Removing slaves from ${iface}"
+	ebegin "Removing slaves from ${iface}"
 	eindent
 	einfo "${slaves}"
 	eoutdent
@@ -108,5 +108,6 @@ bonding_pre_stop() {
 		interface_down ${s}
 	done
 
+	eend 0
 	return 0
 }

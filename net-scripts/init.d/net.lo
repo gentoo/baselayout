@@ -381,6 +381,14 @@ get_device() {
 	echo ${dev}
 }
 
+# char* get_type( *iface)
+#
+# Returns the base type of the interface
+# eth, ippp, etc
+get_type() {
+	echo ${1%%[0-9]*}
+}
+
 # bool interface_exists(char *interface)
 #
 # Returns 0 if the interface exists, otherwise 0
@@ -433,7 +441,7 @@ iface_start() {
 
 		# Null inet address
 		# We do this so we can have an inet6 only setup
-		[[ ${config_IFACE[i]} == "null" ]] && continue
+		[[ ${config_IFACE[i]} == "null" ]] && eend 0 && continue
 
 		${warn} && ewarn "Configuration not set for ${iface} - assuming dhcp"
 

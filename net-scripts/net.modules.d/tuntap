@@ -1,5 +1,5 @@
 # TUN/TAP (sys-apps/usermode-utilities) module for net-scripts
-# Version 1.0.1
+# Version 1.0.2
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -49,6 +49,28 @@ tuntap_get_vars() {
 	echo "tuntap_${1}"
 }
 
+# bool tuntap_pre_start(char *iface)
+#
+# Create the device, give it the right perms
+tuntap_pre_start() {
+	local iface=${1} opts itype=$( get_type ${1} )
+
+	# Check that we are a valid tun/tap interface
+	# NOTE - the name can be anything as we define it
+	# but for simplicity in the config we require either
+	# tun or tap
+	[[ ${itype} != "tun" && ${itype} != "tap" ]] && return 0
+
+	# Get our options
+	eval opts=\"\$\{tuntap_${iface}\}\"
+
+	ebegin "Creating Tun/Tap interface ${iface}"
+	tunctl ${opts} -t ${iface} &>${devnull}
+	eend $? || return 1
+
+	return 0
+}
+
 # bool tuntap_stop(char *iface)
 #
 # Removes the device
@@ -66,23 +88,4 @@ tuntap_stop() {
 	fi
 
 	return $?
-}
-
-# bool tuntap_start(char *iface)
-#
-# Create the device, give it the right perms
-tuntap_start() {
-	local iface=${1} opts
-
-	# We don't configure the interface directly
-	(( label_counter-- ))
-
-	# Get our options
-	eval opts=\"\$\{tuntap_${iface}\}\"
-
-	ebegin "Creating Tun/Tap interface ${iface}"
-	tunctl ${opts} -t ${iface} &>${devnull}
-	eend $? || return 1
-
-	return 0
 }

@@ -1,5 +1,5 @@
 # bridge (net-misc/bridge-utils) module for net-scripts
-# Version 1.0.0
+# Version 1.0.1
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -64,7 +64,7 @@ bridge_get_vars() {
 # The awk statement kinda makes sense - would be much easier if the
 # brctl program exported the bridge name on each line :/
 bridge_get_interfaces() {
-	brctl show | awk -v iface=tun0 -v got=0 \
+	brctl show | awk -v iface=${1} -v got=0 \
 		'$1 == iface || got == 1 { \
 			if ( got == 0 ) \
 				{ print $4; got=1; } \
@@ -73,6 +73,47 @@ bridge_get_interfaces() {
 			else \
 				{ got = 0; } }' \
 		| xargs
+}
+
+# bool bridge_start(char *iface)
+#
+# #set up bridge
+bridge_pre_start() {
+	local iface=${1} ifaces i e
+	eval ifaces=\"\$\{bridge_${iface}\}\"
+
+	[[ -z ${ifaces} ]] && return 0
+
+	# Destroy the bridge if it exists
+	bridge_stop ${iface}
+
+	ebegin "Creating bridge ${iface}"
+	e=$( brctl addbr ${iface} 2>&1 )
+	if [[ -n ${e} ]]; then
+		eend 1 "${e}"
+		return 1
+	fi
+
+	eindent
+	for i in ${ifaces}; do
+		if ! interface_exists ${i} ; then
+			ewarn "interface ${i} does not exist"
+			continue
+		fi
+
+		ebegin "Adding interface ${i}"
+		e=$( brctl addif ${iface} ${i} 2>&1 \
+			&& interface_del_addresses ${i} \
+			&& interface_set_flag ${i} promisc true )
+		if [[ -n ${e} ]]; then
+			eend 1 "${e}"
+			return 1
+		fi
+	done
+	eoutdent
+
+	eend 0
+	return 0
 }
 
 # bool bridge_stop(char *iface)
@@ -90,61 +131,15 @@ bridge_stop() {
 	
 	eindent
 	for i in ${ifaces}; do
-		veinfo "Removing interface ${i}"
+		ebegin "Removing interface ${i}"
 		interface_down ${iface}
 		interface_set_flag ${i} promisc false
 		brctl delif ${iface} ${i} &>${devnull}
+		eend $?
 	done
 	eoutdent
 	
 	brctl delbr ${iface} &>${devnull}
-
-	eend 0
-	return 0
-}
-
-# bool bridge_start(char *iface)
-#
-# #set up bridge
-bridge_start() {
-	local iface=${1} ifaces i e
-	eval ifaces=\"\$\{bridge_interfaces_${iface}\}\"
-
-	# We don't configure the interface directly
-	(( label_counter-- ))
-
-	if [[ -z ${ifaces} ]]; then
-		eerror "No bridge interfaces defined for ${iface}"
-		return 1
-	fi
-
-	# Destroy the bridge if it exists
-	bridge_stop ${iface}
-
-	ebegin "Creating Bridge ${iface}"
-	e=$( brctl addbr ${iface} 2>&1 )
-	if [[ -n ${e} ]]; then
-		eend 1 ${e}
-		return 1
-	fi
-
-	eindent
-	for i in ${ifaces}; do
-		if ! interface_exists ${i} ; then
-			ewarn "interface ${i} does not exist"
-			continue
-		fi
-
-		vebegin "Adding interface ${i}"
-		e=$( brctl addif ${iface} ${i} 2>&1 \
-			&& interface_del_addresses ${i} \
-			&& interface_set_flag ${i} promisc true )
-		if [[ -n ${e} ]]; then
-			eend 1 ${e}
-			return 1
-		fi
-	done
-	eoutdent
 
 	eend 0
 	return 0

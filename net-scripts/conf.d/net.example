@@ -241,10 +241,12 @@
 
 # Configure the interface to use ISDN with one of the following lines,
 # depending on whether you're using ifconfig (default) or iproute2.
-#ifconfig_eth0=( "isdn" "dhcp" )
+#ifconfig_ippp0=( "dhcp" )
 # It's important to specify dhcp if you need it!
-#ipaddr_eth0=( "isdn" "192.168.0.1/24" )
+#ipaddr_ippp0=( "192.168.0.1/24" )
 # Otherwise, you can use a static IP
+
+# NOTE: The interface name must be either ippp or isdn followed by a number
 
 # You may need this option to set the default route
 #ipppd_eth0="defaultroute"
@@ -276,8 +278,10 @@
 # The below two examples create an interface called tap0
 # ifconfig assigns it's address via dhcp
 # iproute2 assigns it's address manually
-#ifconfig_tap0=( "tuntap" "dhcp" )		# for ifconfig
-#ipaddr_tun0=( "tuntap" "192.168.0.1/24")	# for iproute2
+#ifconfig_tap0=( "dhcp" )		# for ifconfig
+#ipaddr_tap0=( "192.168.0.1/24")	# for iproute2
+
+# NOTE: The interface name must be either tun or tap followed by a number
 
 # For passing custom options to tunctl use something like the following.  This
 # example sets the owner to adm
@@ -286,13 +290,17 @@
 #-----------------------------------------------------------------------------
 # Bridging
 # For bridging support emerge net-misc/bridge-utils
-#
-# To create a bridge called br0
-#ifconfig_br=( "bridge" )
 
-# To add interfaces to br0
-#bridge_interfaces_br0="eth0 eth1"
+# To add interfaces to bridge br0
+#bridge_br0="eth0 eth1"
 
+# You NEED to configure the interface as well
+#ifconfig_br0=( "null" ) # This is needed so that dhcp is not started!
+#ifconfig_br0=( "dhcp" )
+#ifconfig_br0=( "192.168.0.1 netmask 255.255.255.0" )
+
+# NOTE: This creates an interface called br0 - you can give the interface
+# any name you like
 
 ##############################################################################
 # ADVANCED CONFIGURATION
