@@ -71,7 +71,25 @@ check_statedir() {
 	return 0
 }
 
+udev_version() {
+	local version=0
+
+	if [ -x "/sbin/udev" ]
+	then
+		version=$(/sbin/udev -V)
+		# We need it without a leading '0', else bash do the wrong thing
+		version="${version##0}"
+		# Older udev's will print nothing
+		[ -z "${version}" ] && version=0
+	fi
+
+	echo "${version}"
+}
+
 populate_udev() {
+	# Make sure we do not have udevd from initramfs running
+	killall -q udevd
+	# Now populate /dev
 	/sbin/udevstart
 
 	# Not provided by sysfs but needed
@@ -249,9 +267,13 @@ then
 			# Setup hotplugging (if possible)
 			if [ -e /proc/sys/kernel/hotplug ]
 			then
-				if [ -x /sbin/hotplug ]
+				if [ "$(udev_version)" -ge "48" ]
 				then
-					einfo "  Using /sbin/hotplug for udev management ..."
+					einfo "  Setting /sbin/udevsend as hotplug agent ..."
+					echo "/sbin/udevsend" > /proc/sys/kernel/hotplug
+				elif [ -x /sbin/hotplug ]
+				then
+					einfo "  Using /sbin/hotplug as hotplug agent ..."
 				else
 					einfo "  Setting /sbin/udev as hotplug agent ..."
 					echo "/sbin/udev" > /proc/sys/kernel/hotplug
