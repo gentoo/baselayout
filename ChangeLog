@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  22 Mar 2005; Roy Marples <uberlord@gentoo.org>:
+
+    revamped rc-services.sh for STYLE updates and code rationalisation.
+
   21 Mar 2005; Roy Marples <uberlord@gentoo.org>:
   
     udhcpc now checks for custom hostname correctly

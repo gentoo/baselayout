@@ -6,34 +6,26 @@
 
 RC_GOT_SERVICES="yes"
 
-[ "${RC_GOT_FUNCTIONS}" != "yes" ] && source /sbin/functions.sh
+[[ ${RC_GOT_FUNCTIONS} != "yes" ]] && source /sbin/functions.sh
 
-if [ "${RC_GOT_DEPTREE_INFO}" != "yes" ]
-then
-	if ! /sbin/depscan.sh -u
-	then
+if [[ ${RC_GOT_DEPTREE_INFO} != "yes" ]]; then
+	# Only try and update if we are root
+	if [[ ${EUID} == "0" ]] && ! /sbin/depscan.sh -u ; then
 		echo
 		eerror "Error running '/sbin/depscan.sh'!"
 		eerror "Please correct any problems above."
-
 		exit 1
 	fi
 
 	source "${svcdir}/deptree"
-
-	if [ "${RC_GOT_DEPTREE_INFO}" != "yes" ]
-	then
+	if [[ ${RC_GOT_DEPTREE_INFO} != "yes" ]]; then
 		echo
 		eerror "Dependency info is missing!  Please run"
-		echo
 		eerror "  # /sbin/depscan.sh"
-		echo
 		eerror "to fix this."
-
 		exit 1
 	fi
 fi
-
 
 #####################
 # Internal variables
@@ -58,61 +50,31 @@ rc_mtime=
 # Functions
 ############
 
-# boot check_mtime(service, mtime)
-#
-#   Return 0 if 'service's mtime is the same as 'mtime'
-#
-check_mtime() {
-	# This one have no 'mtime' ...
-	[ "$1" = "net" ] && return 0
-
-	[ -z "$1" -o -z "$2" ] && return 1
-
-	# Do not fail if there is no script, as virtuals
-	# will then not work ...
-	if [ -e "/etc/init.d/$1" -a -x "/bin/stat" ] && \
-	   [ "$(stat -c "%Y" "/etc/init.d/$1" 2>/dev/null)" -ne "$2" ]
-	then
-		return 1
-	fi
-
-	return 0
-}
-
 # bool get_service_index(service, index)
 #
 #   Print the index of 'service'.  'index' is the current index.
 #
 get_service_index() {
-	local x=1
-	local index="$2"
-	local myservice="$1"
-
-	if [ -z "$1" -o -z "$2" ]
-	then
+	if [[ -z $1 || -z $2 ]]; then
 		echo "0"
 		return 1
 	fi
+	
+	local x myservice="$1" index="$2"
 
 	# Do we already have the index?
-	if [ -n "${index}" ] && [ "${index}" -gt 0 -a \
-	     "${myservice}" = "${RC_DEPEND_TREE[${index}]}" ]
-	then
-		echo "${index}"
-		return 0
+	if [[ -n ${index} && ${index} -gt 0 \
+		&& ${myservice} == ${RC_DEPEND_TREE[${index}]} ]]; then
+			echo "${index}"
+			return 0
 	fi
 
-	while [ "${x}" -le "${RC_DEPEND_TREE[0]}" ]
-	do
-		index=$((${x} * ${rc_index_scale}))
-		
-		if [ "${myservice}" = "${RC_DEPEND_TREE[${index}]}" ]
-		then
+	for (( x=1; x<${RC_DEPEND_TREE[0]}; x++ )); do
+		index=$(( ${x} * ${rc_index_scale} ))
+		if [[ ${myservice} == ${RC_DEPEND_TREE[${index}]} ]]; then
 			echo "${index}"
 			return 0
 		fi
-
-		let "x += 1"
 	done
 
 	echo "0"
@@ -124,50 +86,18 @@ get_service_index() {
 #   Set the Dependency variables to contain data for 'service'
 #
 get_dep_info() {
+	[[ -z $1 ]] && return 1
+	
 	local myservice="$1"
 
-	[ -z "$1" ] && return 1
-
 	# We already have the right stuff ...
-	if [ "${myservice}" = "${rc_name}" -a -n "${rc_mtime}" ] && \
-		 check_mtime "${myservice}" "${rc_mtime}"
-	then
-	   return 0
-	fi
+	[[ ${myservice} == ${rc_name} && -n ${rc_mtime} ]] && return 0
 
 	rc_index="`get_service_index "${myservice}" "${rc_index}"`"
 	rc_mtime="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_mtime}))]}"
 
-	# Does the stored mtime match that of the current rc-script?
-	if ! check_mtime "${myservice}" "${rc_mtime}"
-	then
-		# Nope, check if we already ran depscan.sh
-		source "${svcdir}/deptree"
-		rc_index="`get_service_index "${myservice}" "${rc_index}"`"
-		rc_mtime="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_mtime}))]}"
-
-		# Do we have it now?
-		if ! check_mtime "${myservice}" "${rc_mtime}"
-		then
-			# Not?  So run depscan.sh ...
-			einfo "Re-caching dependency info (mtimes differ)..." &>/dev/stderr
-			if ! /sbin/depscan.sh &>/dev/null
-			then
-				return 1
-			else
-				# We want to check if we got the dep info later on ...
-				unset RC_GOT_DEPTREE_INFO
-				source "${svcdir}/deptree"
-				# Everything "OK" ?
-				[ "${RC_GOT_DEPTREE_INFO}" != "yes" ] && return 1
-			fi
-
-			rc_index="`get_service_index "${myservice}" "${rc_index}"`"
-		fi
-	fi
-	
 	# Verify that we have the correct index (rc_index) ...
-	[ "${rc_index}" -eq 0 ] && return 1
+	# [[ ${rc_index} == "0" ]] && return 1
 		
 	rc_name="${RC_DEPEND_TREE[${rc_index}]}"
 	rc_ineed="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_ineed}))]}"
@@ -179,7 +109,6 @@ get_dep_info() {
 	rc_broken="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_broken}))]}"
 	rc_parallel="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_parallel}))]}"
 	rc_mtime="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_mtime}))]}"
-		
 	return 0
 }
 
@@ -194,89 +123,65 @@ get_dep_info() {
 #   of 'service1'
 #
 check_dependency() {
-	local x=
-	local myservice=
-
-	[ -z "$1" -o -z "$2" ] && return 1
+	[[ -z $1 || -z $2 ]] && return 1
 	
-	# Set the dependency variables to relate to 'service1'
-	if [ "$2" = "-t" ]
-	then
-		[ -z "$3" -o -z "$4" ] && return 1
+	local x myservice deps
 
+	# Set the dependency variables to relate to 'service1'
+	if [[ $2 == "-t" ]]; then
+		[[ -z $3 || -z $4 ]] && return 1
 		myservice="$3"
 	else
 		myservice="$2"
 	fi
 
-	get_dep_info "${myservice}" >/dev/null || {
+	if ! get_dep_info "${myservice}" >/dev/null ; then
 		eerror "Could not get dependency info for \"${myservice}\"!" > /dev/stderr
 		eerror "Please run:" > /dev/stderr
-		echo > /dev/stderr
 		eerror "  # /sbin/depscan.sh" > /dev/stderr
-		echo > /dev/stderr
 		eerror "to try and fix this." > /dev/stderr
 		return 1
-	}
-
-	# Do we have valid info for 'deptype' ?
-	[ -z "$(eval echo \${rc_$1})" ] && return 1
-
-	if [ "$2" = "-t" -a -n "$4" ]
-	then
-		# Check if 'service1' have 'deptype' dependency on 'service2'
-		for x in $(eval echo \${rc_$1})
-		do
-			[ "${x}" = "$4" ] && return 0
-		done
-	else
-		# Just list all services that 'service1' have 'deptype' dependency on.
-		eval echo "\${rc_$1}"
-
-		return 0
 	fi
 
-	return 1
+	# Do we have valid info for 'deptype' ?
+	eval deps=\"\$\{rc_$1\}\"
+	[[ -z ${deps} ]] && return 1
+
+	if [[ $2 == "-t" && -n $4 ]]; then
+		# Check if 'service1' have 'deptype' dependency on 'service2'
+		for x in ${deps}; do
+			[[ ${x} == $4 ]] && return 0
+		done
+		return 1
+	else
+		# Just list all services that 'service1' have 'deptype' dependency on.
+		echo "${deps}"
+		return 0
+	fi
 }
 
 # Same as for check_dependency, except 'deptype' is set to
 # 'ineed'.  It will return all the services 'service1' NEED's.
 ineed() {
-	[ -z "$1" ] && return 1
-	
-	check_dependency ineed $*
-	
-	return $?
+	check_dependency ineed "$@" 
 }
 
 # Same as for check_dependency, except 'deptype' is set to
 # 'needsme'.  It will return all the services that NEED 'service1'.
 needsme() {
-	[ -z "$1" ] && return 1
-	
-	check_dependency needsme $*
-
-	return $?
+	check_dependency needsme "$@"
 }
 
 # Same as for check_dependency, except 'deptype' is set to
 # 'iuse'.  It will return all the services 'service1' USE's.
 iuse() {
-	[ -z "$1" ] && return 1
-	
-	check_dependency iuse $*
-
-	return $?
+	check_dependency iuse "$@"
 }
 
 # Same as for check_dependency, except 'deptype' is set to
 # 'usesme'.  It will return all the services that USE 'service1'.
 usesme() {
-	[ -z "$1" ] && return 1
-	
-	check_dependency usesme $*
-
-	return $?
+	check_dependency usesme "$@"
 }
 
 # Same as for check_dependency, except 'deptype' is set to
@@ -284,11 +189,7 @@ usesme() {
 # *after* 'service1' (iow, it will start 'service1' before the
 # list of services returned).
 ibefore() {
-	[ -z "$1" ] && return 1
-	
-	check_dependency ibefore $*
-
-	return $?
+	check_dependency ibefore "$@"
 }
 
 # Same as for check_dependency, except 'deptype' is set to
@@ -296,22 +197,14 @@ ibefore() {
 # *before* 'service1' (iow, it will start 'service1' after the
 # list of services returned).
 iafter() {
-	[ -z "$1" ] && return 1
-	
-	check_dependency iafter $*
-
-	return $?
+	check_dependency iafter "$@"
 }
 
 # Same as for check_dependency, except 'deptype' is set to
 # 'broken'.  It will return all the services that 'service1'
 # NEED, but are not present.
 broken() {
-	[ -z "$1" ] && return 1
-
-	check_dependency broken $*
-	
-	return $?
+	check_dependency broken "$@"
 }
 
 # bool iparallel(service)
@@ -319,14 +212,7 @@ broken() {
 #   Returns true if the service can be started in parallel.
 #
 iparallel() {
-	[ -z "$1" ] && return 1
-
-	if check_dependency parallel -t "$1" "no"
-	then
-		return 1
-	fi
-
-	return 0
+	! check_dependency parallel -t "$1" "no"
 }
 
 # bool is_fake_service(service, runlevel)
@@ -334,28 +220,18 @@ iparallel() {
 #   Returns ture if 'service' is a fake service in 'runlevel'.
 #
 is_fake_service() {
-	local x=
-	local fake_services=
+	local x fake_services
 
-	[ -z "$1" -o -z "$2" ] && return 1
+	[[ -z $1 || -z $2 ]] && return 1
 
-	if [ "$2" != "${BOOTLEVEL}" -a \
-	     -e "/etc/runlevels/${BOOTLEVEL}/.fake" ]
-	then
-		fake_services="$(< /etc/runlevels/${BOOTLEVEL}/.fake)"
-	fi
+	[[ $2 != ${BOOTLEVEL} && -e "/etc/runlevels/${BOOTLEVEL}/.fake" ]] \
+		&& fake_services="$( < /etc/runlevels/${BOOTLEVEL}/.fake )"
 
-	if [ -e "/etc/runlevels/$2/.fake" ]
-	then
-		fake_services="${fake_services} $(< /etc/runlevels/$2/.fake)"
-	fi
+	[[ -e "/etc/runlevels/$2/.fake" ]] \
+		&& fake_services="${fake_services} $( < /etc/runlevels/$2/.fake )"
 
-	for x in ${fake_services}
-	do
-		if [ "$1" = "${x##*/}" ]
-		then
-			return 0
-		fi
+	for x in ${fake_services}; do
+		[[ $1 == ${x##*/} ]] && return 0
 	done
 
 	return 1
@@ -366,9 +242,9 @@ is_fake_service() {
 #   Returns true if 'service' is in runlevel 'runlevel'.
 #
 in_runlevel() {
-	[ -z "$1" -o -z "$2" ] && return 1
+	[[ -z $1 || -z $2 ]] && return 1
 
-	[ -L "/etc/runlevels/$2/$1" ] && return 0
+	[[ -L "/etc/runlevels/$2/$1" ]] && return 0
 
 	return 1
 }
@@ -379,7 +255,7 @@ in_runlevel() {
 #   starting services.
 #
 is_runlevel_start() {
-	[ -d "${svcdir}/softscripts.old" ] && return 0
+	[[ -d "${svcdir}/softscripts.old" ]] && return 0
 
 	return 1
 }
@@ -390,7 +266,7 @@ is_runlevel_start() {
 #   stopping services.
 #
 is_runlevel_stop() {
-	[ -d "${svcdir}/softscripts.new" ] && return 0
+	[[ -d "${svcdir}/softscripts.new" ]] && return 0
 
 	return 1
 }
@@ -400,27 +276,21 @@ is_runlevel_stop() {
 #   Start 'service' if it is not already running.
 #
 start_service() {
-	local retval=0
-	
-	[ -z "$1" ] && return 1
-	
-	if service_stopped "$1"
-	then
-		splash "svc_start" "$1"
-			
-		if is_fake_service "$1" "${SOFTLEVEL}"
-		then
-			mark_service_started "$1"
-			splash "svc_started" "$1" "0"
-		else
-			(. /sbin/runscript.sh "/etc/init.d/$1" start)
-			retval="$?"
-			splash "svc_started" "$1" "${retval}"
-			return "${retval}"
-		fi
-	fi
+	[[ -z $1 ]] && return 1
+	! service_stopped "$1" && return 0
 
-	return 0
+	splash "svc_start" "$1"
+	
+	if is_fake_service "$1" "${SOFTLEVEL}" ; then
+		mark_service_started "$1"
+		splash "svc_started" "$1" "0"
+		return 0
+	fi
+	
+	(. /sbin/runscript.sh "/etc/init.d/$1" start)
+	local retval="$?"
+	splash "svc_started" "$1" "${retval}"
+	return "${retval}"
 }
 
 # int stop_service(service)
@@ -428,38 +298,25 @@ start_service() {
 #   Stop 'service' if it is not already running.
 #
 stop_service() {
-	local retval=0
+	[[ -z $1 ]] && return 1
+
+	! service_started "$1" && return 0
+
+	splash "svc_stop" "$1"
 	
-	[ -z "$1" ] && return 1
+	local level="${SOFTLEVEL}"
+	is_runlevel_stop && level="${OLDSOFTLEVEL}"
 
-	if service_started "$1"
-	then
-		splash "svc_stop" "$1"
-			
-		if is_runlevel_stop
-		then
-			if is_fake_service "$1" "${OLDSOFTLEVEL}"
-			then
-				mark_service_stopped "$1"
-				splash "svc_stopped" "$1" "0"
-				return 0
-			fi
-		else
-			if is_fake_service "$1" "${SOFTLEVEL}"
-			then
-				mark_service_stopped "$1"
-				splash "svc_stopped" "$1" "0"
-				return 0
-			fi
-		fi
-
-		(. /sbin/runscript.sh "/etc/init.d/$1" stop)
-		retval="$?"
-		splash "svc_stopped" "$1" "${retval}"
-		return "${retval}"
+	if is_fake_service "$1" "${level}" ; then
+		mark_service_stopped "$1"
+		splash "svc_stopped" "$1" "0"
+		return 0
 	fi
 
-	return 0
+	(. /sbin/runscript.sh "/etc/init.d/$1" stop)
+	local retval="$?"
+	splash "svc_stopped" "$1" "${retval}"
+	return "${retval}"
 }
 
 # bool mark_service_starting(service)
@@ -467,12 +324,14 @@ stop_service() {
 #   Mark 'service' as starting.
 #
 mark_service_starting() {
-	[ -z "$1" ] && return 1
+	[[ -z $1 ]] && return 1
 
 	ln -snf "/etc/init.d/$1" "${svcdir}/starting/$1"
-	[ -f "${svcdir}/inactive/$1" ] && rm -f "${svcdir}/inactive/$1"
-
-	return $?
+	local retval=$?
+	
+	[[ -f "${svcdir}/inactive/$1" ]] && rm -f "${svcdir}/inactive/$1"
+	
+	return "${retval}"
 }
 
 # bool mark_service_started(service)
@@ -480,14 +339,16 @@ mark_service_starting() {
 #   Mark 'service' as started.
 #
 mark_service_started() {
-	[ -z "$1" ] && return 1
+	[[ -z $1 ]] && return 1
 
 	ln -snf "/etc/init.d/$1" "${svcdir}/started/$1"
-	[ -f "${svcdir}/starting/$1" ] && rm -f "${svcdir}/starting/$1"
-	[ -f "${svcdir}/inactive/$1" ] && rm -f "${svcdir}/inactive/$1"
-	[ -f "${svcdir}/stopping/$1" ] && rm -f "${svcdir}/stopping/$1"
+	local retval="$?"
+	
+	[[ -f "${svcdir}/starting/$1" ]] && rm -f "${svcdir}/starting/$1"
+	[[ -f "${svcdir}/inactive/$1" ]] && rm -f "${svcdir}/inactive/$1"
+	[[ -f "${svcdir}/stopping/$1" ]] && rm -f "${svcdir}/stopping/$1"
 
-	return $?
+	return "${retval}"
 }
 
 # bool mark_service_inactive(service)
@@ -495,7 +356,7 @@ mark_service_started() {
 #   Mark service as inactive
 #
 mark_service_inactive() {
-	[ -z "$1" ] && return 1
+	[[ -z $1 ]] && return 1
 
 	ln -snf "/etc/init.d/$1" "${svcdir}/inactive/$1"
 
@@ -507,14 +368,16 @@ mark_service_inactive() {
 #   Mark 'service' as stopping.
 #
 mark_service_stopping() {
-	[ -z "$1" ] && return 1
+	[[ -z $1 ]] && return 1
 
 	ln -snf "/etc/init.d/$1" "${svcdir}/stopping/$1"
+	local retval="$?"
+	
 	[ -f "${svcdir}/starting/$1" ] && rm -f "${svcdir}/starting/$1"
 	[ -f "${svcdir}/started/$1" ] && rm -f "${svcdir}/started/$1"
 	[ -f "${svcdir}/inactive/$1" ] && rm -f "${svcdir}/inactive/$1"
 
-	return $?
+	return "${retval}"
 }
 
 # bool mark_service_stopped(service)
@@ -522,14 +385,33 @@ mark_service_stopping() {
 #   Mark 'service' as stopped.
 #
 mark_service_stopped() {
-	[ -z "$1" ] && return 1
+	[[ -z $1 ]] && return 1
 
-	[ -f "${svcdir}/starting/$1" ] && rm -f "${svcdir}/starting/$1"
-	[ -f "${svcdir}/started/$1" ] && rm -f "${svcdir}/started/$1"
-	[ -f "${svcdir}/inactive/$1" ] && rm -f "${svcdir}/inactive/$1"
-	[ -f "${svcdir}/stopping/$1" ] && rm -f "${svcdir}/stopping/$1"
+	[[ -f "${svcdir}/starting/$1" ]] && rm -f "${svcdir}/starting/$1"
+	[[ -f "${svcdir}/started/$1" ]] && rm -f "${svcdir}/started/$1"
+	[[ -f "${svcdir}/inactive/$1" ]] && rm -f "${svcdir}/inactive/$1"
+	[[ -f "${svcdir}/stopping/$1" ]] && rm -f "${svcdir}/stopping/$1"
 
 	return $?
+}
+
+# bool test_service_state(char *service, char *state)
+#
+#   Returns 0 if the service link exists and points to a file, otherwise 1
+#   If 1 then the link is erased if it exists
+test_service_state() {
+	[[ -z $1 || -z $2 ]] && return 1
+
+	local f="${svcdir}/$2/$1"
+	
+	[[ -L ${f} ]] || return 1
+	
+	if [[ ! -e ${f} ]]; then
+		rm -f "${f}"
+		return 1
+	fi
+	
+	return 0
 }
 
 # bool service_starting(service)
@@ -537,20 +419,7 @@ mark_service_stopped() {
 #   Returns true if 'service' is starting
 #
 service_starting() {
-	[ -z "$1" ] && return 1
-
-	if [ -L "${svcdir}/starting/$1" ]
-	then
-		if [ ! -e "${svcdir}/starting/$1" ]
-		then
-			rm -f "${svcdir}/starting/$1"
-			
-			return 1
-		fi
-		return 0
-	fi
-
-	return 1
+	test_service_state "$1" "starting"
 }
 
 # bool service_started(service)
@@ -558,20 +427,7 @@ service_starting() {
 #   Returns true if 'service' is started
 #
 service_started() {
-	[ -z "$1" ] && return 1
-
-	if [ -L "${svcdir}/started/$1" ]
-	then
-		if [ ! -e "${svcdir}/started/$1" ]
-		then
-			rm -f "${svcdir}/started/$1"
-			
-			return 1
-		fi
-		return 0
-	fi
-
-	return 1
+	test_service_state "$1" "started"
 }
 
 # bool service_inactive(service)
@@ -579,20 +435,7 @@ service_started() {
 #   Returns true if 'service' is inactive
 #
 service_inactive() {
-	[ -z "$1" ] && return 1
-
-	if [ -L "${svcdir}/inactive/$1" ]
-	then
-		if [ ! -e "${svcdir}/inactive/$1" ]
-		then
-			rm -f "${svcdir}/inactive/$1"
-			
-			return 1
-		fi
-		return 0
-	fi
-
-	return 1
+	test_service_state "$1" "inactive"
 }
 
 # bool service_stopping(service)
@@ -600,20 +443,7 @@ service_inactive() {
 #   Returns true if 'service' is stopping
 #
 service_stopping() {
-	[ -z "$1" ] && return 1
-
-	if [ -L "${svcdir}/stopping/$1" ]
-	then
-		if [ ! -e "${svcdir}/stopping/$1" ]
-		then
-			rm -f "${svcdir}/stopping/$1"
-			
-			return 1
-		fi
-		return 0
-	fi
-
-	return 1
+	test_service_state "$1" "stopping"
 }
 
 # bool service_stopped(service)
@@ -621,7 +451,7 @@ service_stopping() {
 #   Returns true if 'service' is stopped
 #
 service_stopped() {
-	[ -z "$1" ] && return 1
+	[[ -z $1 ]] && return 1
 
 	service_starting "$1" && return 1
 	service_started "$1" && return 1
@@ -636,15 +466,9 @@ service_stopped() {
 #   this is only valid on runlevel change ...
 #
 mark_service_failed() {
-	[ -z "$1" ] && return 1
+	[[ -z $1 || ! -d "${svcdir}/failed" ]] && return 1
 
-	if [ -d "${svcdir}/failed" ]
-	then
-		ln -snf "/etc/init.d/$1" "${svcdir}/failed/$1"
-		return $?
-	fi
-
-	return 1
+	ln -snf "/etc/init.d/$1" "${svcdir}/failed/$1"
 }
 
 # bool service_failed(service)
@@ -652,14 +476,7 @@ mark_service_failed() {
 #   Return true if 'service' have failed during this runlevel.
 #
 service_failed() {
-	[ -z "$1" ] && return 1
-	
-	if [ -L "${svcdir}/failed/$1" ]
-	then
-		return 0
-	fi
-
-	return 1
+	[[ -n $1 && -L "${svcdir}/failed/$1" ]]
 }
 
 # bool net_service(service)
@@ -667,14 +484,7 @@ service_failed() {
 #   Returns true if 'service' is a service controlling a network interface
 #
 net_service() {
-	[ -z "$1" ] && return 1
-
-	if [ "${1%%.*}" = "net" -a "${1##*.}" != "$1" ]
-	then
-		return 0
-	fi
-
-	return 1 
+	[[ -n $1 && ${1%%.*} == "net" && ${1##*.} != $1 ]]
 }
 
 # bool is_net_up()
@@ -719,63 +529,39 @@ is_net_up() {
 #   Schedule 'service' for startup, in parallel if possible.
 #
 schedule_service_startup() {
-	local count=0
-	local current_job=
+	if [[ ${RC_PARALLEL_STARTUP} != "yes" ]]; then
+		start_service "$1"
+		return 0
+	fi
 
-	if [ "${RC_PARALLEL_STARTUP}" = "yes" ]
+	local current_job= count="$( jobs | grep -c "Running" )"
+
+	set -m +b
+
+	if [[ ${count} -gt 0 ]]; then
+		# Wait until we have only one service running
+		while [[ ${count} -gt 1 ]]; do
+			count="$( jobs | grep -c "Running" )"
+		done
+
+		current_job="$(jobs | awk '/Running/ { print $4}')"
+
+		# Wait if we cannot start this service with the already running
+		# one (running one might start this one ...).
+		query_before "$1" "${current_job}" && wait
+	fi
+
+	if iparallel "$1"
 	then
-		set -m +b
-
-		if [ "$(jobs | grep -c "Running")" -gt 0 ]
-		then
-			if [ "$(jobs | grep -c "Running")" -eq 1 ]
-			then
-				if [ -n "$(jobs)" ]
-				then
-					current_job="$(jobs | awk '/Running/ { print $4}')"
-				fi
-				
-				# Wait if we cannot start this service with the already running
-				# one (running one might start this one ...).
-				query_before "$1" "${current_job}" && wait
-
-			elif [ "$(jobs | grep -c "Running")" -ge 2 ]
-			then
-				count="$(jobs | grep -c "Running")"
-
-				# Wait until we have only one service running
-				while [ "${count}" -gt 1 ]
-				do
-					count="$(jobs | grep -c "Running")"
-				done
-
-				if [ -n "$(jobs)" ]
-				then
-					current_job="$(jobs | awk '/Running/ { print $4}')"
-				fi
-
-				# Wait if we cannot start this service with the already running
-				# one (running one might start this one ...).
-				query_before "$1" "${current_job}" && wait
-			fi
-		fi
-
-		if iparallel "$1"
-		then
-			eval start_service "$1" \&
-		else
-			# Do not start with any service running if we cannot start
-			# this service in parallel ...
-#			wait
-			
-			start_service "$1"
-		fi
+		eval start_service "$1" \&
 	else
+		# Do not start with any service running if we cannot start
+		# this service in parallel ...
+#		wait
+		
 		start_service "$1"
 	fi
 
-	# We do not need to check the return value here, as svc_{start,stop}() do
-	# their own error handling ...
 	return 0
 }
 
@@ -784,14 +570,28 @@ schedule_service_startup() {
 #   Does service1 depend (NEED or USE) on service2 ?
 #
 dependon() {
-	[ -z "$1" -o -z "$2" ] && return 1
-	
-	if ineed -t "$1" "$2" || iuse -t "$1" "$2"
-	then
-		return 0
-	fi
+	ineed -t "$1" "$2" || iuse -t "$1" "$2"
+}
 
-	return 1
+# string validi(use/after, service)
+#
+#   This is the main code for valid_after and valid_iuse
+#   No point in writing it twice!
+valid_i() {
+	[[ $1 != "after" && $1 != "use" ]] && return 1
+
+	local x mylevel=$( < "${svcdir}/softlevel" )
+	# Cannot be SOFTLEVEL, as we need to know current runlevel
+
+	for x in $( i$1 "$2" )
+	do
+		[[ -e "/etc/runlevels/${BOOTLEVEL}/${x}" \
+			|| -e "/etc/runlevels/${mylevel}/${x}" \
+			|| ${x} == "net" ]] \
+				&& echo "${x}"
+	done
+
+	return 0
 }
 
 # string valid_iuse(service)
@@ -800,44 +600,16 @@ dependon() {
 #   (they must be in the boot or current runlevel)
 #
 valid_iuse() {
-	local x y
-	local mylevel=$(<"${svcdir}/softlevel")
-	# Cannot be SOFTLEVEL, as we need to know current runlevel
-
-	for x in $(iuse "$1")
-	do
-		if [ -e "/etc/runlevels/${BOOTLEVEL}/${x}" -o \
-		     -e "/etc/runlevels/${mylevel}/${x}" -o \
-			 ${x} = "net" ]
-		then
-			echo "${x}"
-		fi
-	done
-
-	return 0
+	valid_i "use" "$1"
 }
 
-# string valid_iafter(service)
+#string valid_iafter(service)
 #
 #   Valid services for current or boot rc level that should start
 #   before 'service'
 #
 valid_iafter() {
-	local x
-	local mylevel=$(<"${svcdir}/softlevel")
-	# Cannot be SOFTLEVEL, as we need to know current runlevel
-	
-	for x in $(iafter "$1")
-	do
-		if [ -e "/etc/runlevels/${BOOTLEVEL}/${x}" -o \
-		     -e "/etc/runlevels/${mylevel}/${x}" -o \
-			 ${x} = "net" ]
-		then
-			echo "${x}"
-		fi
-	done
-
-	return 0
+	valid_i "after" "$1"
 }
 
 # string trace_dependencies(service[s])
@@ -864,22 +636,12 @@ trace_dependencies() {
 		unsorted=( ${unsorted[@]} )
 	
 		if [[ -n ${deptype} ]] ; then
-			dependencies=(
-				$("${deptype}" "${service}")
-			)
+			dependencies=( $( "${deptype}" "${service}" ) )
 		else
 			# Services that should start before $service
-			if (is_runlevel_start || is_runlevel_stop) ; then
-				dependencies=(
-					$(ineed "${service}")
-					$(valid_iuse "${service}")
-					$(valid_iafter "${service}")
-				)
-			else
-				dependencies=(
-					$(ineed "${service}")
-					$(valid_iuse "${service}")
-				)
+			dependencies=( $(ineed "${service}") $(valid_iuse "service") )
+			if is_runlevel_start || is_runlevel_stop ; then
+				dependencies=( "${dependencies[@]}" $(valid_iafter "${service}") )
 			fi
 		fi
 	
@@ -925,7 +687,7 @@ query_before() {
 
 	[[ -z $1 || -z $2 ]] && return 1
 
-	list=$(trace_dependencies "$1")
+	list=$( trace_dependencies "$1" )
 
 	net_service "$2" && netservice="yes"
 	
@@ -938,6 +700,5 @@ query_before() {
 
 	return 1
 }
-
 
 # vim:ts=4
