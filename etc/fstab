@@ -4,21 +4,13 @@
 # needed; notail increases performance of ReiserFS (at the expense of storage
 # efficiency).  It's safe to drop the noatime options if you want and to 
 # switch between notail and tail freely.
-#
-# <fs>          <mountpoint>    <type>  	<opts>      		<dump/pass>
 
-/dev/#BOOT#	/mnt/boot		ext2		noauto,noatime,notail	1 1
-/dev/#ROOT#	/		reiserfs	notail,noatime		0 0
-/dev/#SWAP#	none            swap		sw			0 0
-/dev/#CD#	/mnt/cdrom	iso9660		noauto,ro		0 0
+# <fs>          	<mountpoint>    <type>  	<opts>      		<dump/pass>
 
-# /proc should always be enabled
-# /proc/bus/usb should be enabled if you need usb support
-# no /dev devfs line is needed; mounting /dev is done by our devfs initscript
+# NOTE: If your BOOT partition is ReiserFS, add the notail option to opts.
+/dev/BOOT		/mnt/boot	ext2		noauto,noatime		1 1
+/dev/ROOT		/		reiserfs	notail,noatime		0 0
+/dev/SWAP		none            swap		sw			0 0
+/dev/cdroms/cdrom0	/mnt/cdrom	iso9660		noauto,ro		0 0
+proc			/proc           proc		defaults		0 0
 
-proc		/proc           proc		defaults		0 0
-none		/proc/bus/usb	usbdevfs	defaults		0 0
-
-# The following are optional; /dev/pts isn't needed for devfs
-
-#none		/dev/pts	devpts		mode=620		0 0

@@ -2,6 +2,9 @@
 # Copyright 2001 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  25 Nov 2001; Updated the /etc/fstab; removed usbdevfs (explicitly mounted),
+  removed notail from the ext2 boot partition, other cleanups. 
+
   25 Nov 2001; Fixed init.d/clock script to work in UTC mode.
   
   17 Nov 2001; Donny Davies (woodchip@gentoo.org): Added /etc/shells file
