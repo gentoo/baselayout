@@ -473,13 +473,17 @@ size_t generate_stage2(char **data) {
 		struct sigaction act_new;
 		struct sigaction act_old;
 		struct timeval tv;
+#if defined(USE_WRITE_SELECT)
 		fd_set write_fds;
+#endif
 		fd_set read_fds;
 		char buf[PARSE_BUFFER_SIZE+1];
 		char *stage1_data = NULL;
 		size_t stage1_write_count = 0;
 		size_t stage1_written = 0;
+#if defined(USE_WRITE_SELECT)
 		int max_write_fds = child_pfds[WRITE_PIPE] + 1;
+#endif
 		int max_read_fds = parent_pfds[READ_PIPE] + 1;
 		int status = 0;
 		int read_count;
@@ -518,16 +522,22 @@ size_t generate_stage2(char **data) {
 		/* Do setup for select() */
 		tv.tv_sec = 0;		/* We do not want to wait for select() */
 		tv.tv_usec = 0;		/* Same thing here */
+#if defined(USE_WRITE_SELECT)
 		FD_ZERO(&write_fds);
 		FD_SET(child_pfds[WRITE_PIPE], &write_fds);
+#endif
 		FD_ZERO(&read_fds);
 		FD_SET(parent_pfds[READ_PIPE], &read_fds);
 
 		do {
+#if defined(USE_WRITE_SELECT)
 			fd_set wwrite_fds = write_fds;
+#endif
 			fd_set wread_fds = read_fds;
 			int tmp_count = 0;
+#if defined(USE_WRITE_SELECT)
 			int do_write = 0;
+#endif
 			int do_read = 0;
 		
 			/* Check if we can read from parent_pfds[READ_PIPE] */
@@ -536,6 +546,7 @@ size_t generate_stage2(char **data) {
 
 			/* While there is data to be written */
 			if (stage1_written < stage1_write_count) {
+#if defined(USE_WRITE_SELECT)
 				/* Check if we can write */
 				select(max_write_fds, NULL, &wwrite_fds,
 						NULL, &tv);
@@ -545,6 +556,9 @@ size_t generate_stage2(char **data) {
 				/* If we can write, or there is nothing to
 				 * read, keep feeding the write pipe */
 				if (do_write || !do_read) {
+#else
+				if (!do_read) {
+#endif
 					tmp_count = write(child_pfds[WRITE_PIPE],
 							&stage1_data[stage1_written],
 							strlen(&stage1_data[stage1_written]));

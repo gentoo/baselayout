@@ -4,6 +4,10 @@
 
   17 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
 
+    parse.c: Disable write select() for now, as it is not needed.
+
+  17 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
+
     depscan.c: Only print EINFO msg if we actually update the cache.
     parse.c: Rename write_output() macro to PRINT_TO_BUFFER().
 
