@@ -2,6 +2,11 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  11 Sep 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix small type-o from last changes to /etc/init.d/netmount.
+    Should resolve bug #7803.
+
 * rc-scripts 1.4.0 (7 Sep 2002)
 
   7 Sep 2002; Martin Schlemmer <azarah@gentoo.org>:
