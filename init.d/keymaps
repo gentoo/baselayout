@@ -26,6 +26,14 @@ start() {
 	fi
 	
 	ebegin "Loading key mappings"
+	
+	# Enable unicode ...
+	set -- ${KEYMAP}
+	if [ "$1" = "-u" ]
+	then
+		/usr/bin/kbd_mode -u
+	fi
+	
 	# New kbd support ...
 	if [ -x /bin/loadkeys ]
 	then
