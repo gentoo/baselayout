@@ -22,46 +22,46 @@ depend() {
 	use hotplug pcmcia usb bridge
 }
 
-interface() {
-	local -a p=( "$@" "xxx" )
-	local c
-	(( c = ${#p[@]} - 2 ))
-
-	${IFMODULE}_${p[0]} ${p[@]:1:${c}}
-}
-
-interface_provides() {
-	[[ function == $( type -t ${IFMODULE}_${1} ) ]] && return 0
-	return 1
-}
-
 # bool modules_load(char *iface, bool all)
 #
 # Loads the defined handler and modules for the interface
 # Returns 0 on success, otherwise 1
 modules_load() {
-	local iface=${1} all=${2} i j p um e
+	local iface=${1} all=${2} i j p um e before after diffs
 	local -a mods=( $( find /etc/net.modules.d/ -type f | sort ) ) umods
 
 	[[ lo != ${iface} ]] && ebegin "Loading networking scripts"
 
+	# Each of these sources into the global namespace, so it's
+	# important that module functions and variables are prefixed with
+	# the module name, for example iproute2_
+	before=$(typeset -f)
 	for ((i = 0; i < ${#mods[@]}; i++ )); do
 		source ${mods[i]} || {
 			eerror "${mods[i]##*/} failed a sanity check - aborting"
 			return 1
 		}
 		mods[i]=${mods[i]##*/}
-		unset e
-		[[ -z ${e} && function != $( type -t ${mods[i]}_check_installed ) ]] && e=${mods[i]}_check_intalled
-		[[ -z ${e} && function != $( type -t ${mods[i]}_provides ) ]] && e=${mods[i]}_provides
-		[[ -z ${e} && function != $( type -t ${mods[i]}_check_depends ) ]] && e=${mods[i]}_check_depends
-		if [[ -n ${e} ]]; then
-			eerror "${mods[i]} does not support the required function ${e}\n"
+		for e in check_installed provides check_depends; do
+			[[ function == $(type -t ${mods[i]}_${e}) ]] && continue
+			eerror "${mods[i]} does not support the required function ${e}"
 			return 1
+		done
+		# Double check that we've only *added* to the function list, not
+		# replaced.  This is as much protection for devs as for users ;-)
+		after=$(typeset -f)
+		if [[ ${#after} -lt ${#before} ]]; then
+			# Thought diffutils is in the profiles, don't depend that it will exist
+			diffs=$(diff <(echo "${before}") <(echo "${after}") 2>/dev/null | \
+				awk '$1=="<" && $3=="()" {print $2}' | xargs)
+			if [[ -n ${diffs} ]]; then
+				ewarn "Warning: ${mods[i]} modified functions: ${diffs}"
+			fi
 		fi
+		before="${after}"
 	done
 
-	# We need this to be in a seperate loop
+	# We need this to be in a separate loop
 	for ((i = 0; i < ${#mods[@]}; i++ )); do
 		${mods[i]}_check_installed || unset mods[i]
 	done
@@ -79,29 +79,31 @@ modules_load() {
 		# So if the user specifies pump then we don't use dhcpcd
 		for um in ${umods[@]}; do
 			[[ function != $( type -t ${um}_provides ) ]] && {
-				eerror "${um} is not a valid module"
+				eerror "${um} is not a valid module (missing provides)"
 				return 1
 			}
 			up=$( ${um}_provides )
 			for ((i = 0; i < ${#mods[@]}; i++ )); do
-				[[ function != $( type -t ${mods[i]}_provides ) ]] && continue
 				p=$( ${mods[i]}_provides )
 				if [[ ${up} == ${p} && ${um} != ${mods[i]} ]]; then
+					# Sanity check.  Make sure umods doesn't
+					# contain this module as well!  (Luser error)
+					if [[ " ${umods[*]} " == *" ${mods[i]} "* ]]; then
+						eerror "conflicting modules: ${um} and ${mods[i]}"
+						return 1
+					fi
 					unset mods[i]
-					# Squash the array
-					mods=( "${mods[@]}" )
-					break;
 				fi
 			done
+			# Squash the array
+			mods=( "${mods[@]}" )
 		done
 	fi
 
-	# Then we strip conflicting modules
+	# Then we strip conflicting modules, preferring those toward the front
 	for ((i = 0; i < ${#mods[@]} - 1; i++)); do
-		[[ function != $( type -t ${mods[i]}_provides ) ]] && continue
 		p=$( ${mods[i]}_provides )
-		for ((j = i + 1; j < ${#mods[@]}; j++ )); do
-			[[ function != $( type -t ${mods[j]}_provides ) ]] && continue
+		for ((j = i + 1; j < ${#mods[@]}; j++)); do
 			up=$( ${mods[j]}_provides )
 			[[ ${p} == ${up} ]] && unset mods[j]
 		done
@@ -109,20 +111,27 @@ modules_load() {
 	# Squash the array
 	mods=( "${mods[@]}" )
 
-	# Move interface to the front and reload it
+	# Setup class wrappers: interface_up -> iproute2_up, for example
+	for ((i = 0; i < ${#mods[@]}; i++)); do
+		p=$( ${mods[i]}_provides )
+		for j in $(typeset -f | awk -v m="${mods[i]}" '$0==m" ()"{print $1}'); do
+			eval "${p}_${j#${mods[i]}_}() { ${j} \"\$@\" }"
+		done
+	done
+
+	# Move interface module to the front (purely aesthetic)
 	for ((i = 0; i < ${#mods[@]}; i++)); do
 		[[ interface != $( ${mods[i]}_provides ) ]] && continue
-		IFMODULE=${mods[i]}
-		mods[i]=${mods[0]}
-		mods[0]=${IFMODULE}
+		mods=( "${mods[i]}" "${mods[@]}" )
+		unset mods[i+1]
 		break
 	done
 
 	MODULES=( "${mods[@]}" )
 	[[ lo != ${iface} ]] && einfo "  modules: ${MODULES[@]}"
 
-	# Ensure that our handler supports our modules
-	# And the handler has it's software installed
+	# Ensure that all modules have what they need
+	# from either other modules or the system.
 	for i in ${MODULES[@]}; do
 		${i}_check_depends || return 1
 		e=$( ${i}_provides )

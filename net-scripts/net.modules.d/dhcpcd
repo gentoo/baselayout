@@ -35,8 +35,8 @@ dhcpcd_check_installed() {
 dhcpcd_check_depends() {
 	local e
 
-	interface_provides get_status || e="get_status"
-	interface_provides get_address || e="get_addresss"
+	[[ function != $(typeset -f interface_get_status) ]] && e=interface_get_status
+	[[ function != $(typeset -f interface_get_address) ]] && e=interface_get_address
 	[[ -z ${e} ]] && return 0
 
 	eerror "dhcpcd: interface is missing the required function ${e}\n"
@@ -101,7 +101,7 @@ dhcpcd_stop() {
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 dhcpcd_start() {
 	local iface=${1}
-	local status=$( interface get_status ${iface} ) check=$( get_device ${iface} )
+	local status=$( interface_get_status ${iface} ) check=$( get_device ${iface} )
 
 	# Check that iface was not brought up by the kernel ...
 	if [[ ${status} == up && ${check} == ${iface} ]]; then
@@ -118,7 +118,7 @@ dhcpcd_start() {
 	[[ 0 != $? ]] && return 1
 
 	# DHCP succeeded, show address retrieved
-	local addr=$( interface get_address ${iface} )
+	local addr=$( interface_get_address ${iface} )
 	einfo "    ${iface} received address ${addr}"
 
 	return 0

@@ -36,7 +36,7 @@ macchanger_priority() {
 macchanger_check_depends() {
 	local e
 
-	interface_provides get_mac_address || e="get_mac_address"
+	[[ function != $(typeset -f interface_get_address) ]] && e=interface_get_address
 	[[ -z ${e} ]] && return 0
 
 	eerror "macchanger: interface is missing the required function ${e}\n"
@@ -81,7 +81,7 @@ macchanger_pre_start() {
 		return 1
 	fi
 
-	mac=$( interface get_mac_address ${iface} )
+	mac=$( interface_get_mac_address ${iface} )
 	einfo "  MAC address for ${iface} changed to ${mac}"
 
 	return 0 #important
