@@ -34,7 +34,7 @@ try() {
 		/sbin/sulogin ${CONSOLE}
 		einfo "Unmounting filesystems"
 		if [ -c /dev/null ]; then
-			/bin/mount -a -o remount,ro & >/dev/null
+			/bin/mount -a -o remount,ro &>/dev/null
 		else
 			/bin/mount -a -o remount,ro
 		fi
@@ -62,7 +62,7 @@ check_statedir() {
 			echo; echo
 			/sbin/sulogin ${CONSOLE}
 			einfo "Unmounting filesystems"
-			/bin/mount -a -o remount,ro & >/dev/null
+			/bin/mount -a -o remount,ro &>/dev/null
 			einfo "Rebooting"
 			/sbin/reboot -f
 		fi
@@ -82,8 +82,8 @@ populate_udev() {
 	ln -snf /proc/kcore /dev/core
 
 	# Create nodes that udev can't
-	[ -x /sbin/dmsetup ] && /sbin/dmsetup mknodes &> /dev/null
-	[ -x /sbin/lvm ] && /sbin/lvm vgscan -P --mknodes --ignorelockingfailure &> /dev/null
+	[ -x /sbin/dmsetup ] && /sbin/dmsetup mknodes &>/dev/null
+	[ -x /sbin/lvm ] && /sbin/lvm vgscan -P --mknodes --ignorelockingfailure &>/dev/null
 
 	# Create problematic directories
 	mkdir -p /dev/{pts,shm}
@@ -266,7 +266,7 @@ then
 					eend 0
 				fi
 				ebegin "Starting devfsd"
-				/sbin/devfsd /dev > /dev/null
+				/sbin/devfsd /dev >/dev/null
 				eend $? "Could not start /sbin/devfsd"
 			else
 				devfs="no"
@@ -337,7 +337,7 @@ then
 	# devfsd has been started, so that the fstab can be properly parsed
 	# and only if the server/Gentoo box is initialized ...
 	ebegin "Activating (possible) swap"
-	/sbin/swapon -a &> /dev/null
+	/sbin/swapon -a &>/dev/null
 	eend 0
 
 	# Set the console loglevel to 1 for a cleaner boot
@@ -386,7 +386,7 @@ then
 
 		if ! start_critical_service "${x}"
 		then
-			splash "critical" &> /dev/null &
+			splash "critical" &>/dev/null &
 			
 			echo
 			eerror "One of more critical startup scripts failed to start!"
@@ -484,7 +484,7 @@ then
 	# Setup login records ... this has to be done here because when 
 	# we exit this runlevel, init will write a boot record to utmp
 	# If /var/run is readonly, then print a warning, not errors
-	if touch /var/run/utmp 2> /dev/null
+	if touch /var/run/utmp 2>/dev/null
 	then
 		> /var/run/utmp
 		touch /var/log/wtmp
@@ -807,7 +807,7 @@ done
 [ "${RC_PARALLEL_STARTUP}" = "yes" ] && wait
 
 # Clean the old runlevel
-rm -rf "${svcdir}/softscripts.old" &> /dev/null
+rm -rf "${svcdir}/softscripts.old" &>/dev/null
 
 # Depends gets nuked, so update them
 # (this problem should be solved now, but i think it will be a good idea
@@ -818,16 +818,16 @@ rm -rf "${svcdir}/softscripts.old" &> /dev/null
 # We want devfsd running after a change of runlevel (this is mostly if we return
 # from runlevel 'single')
 if [ -z "`ps --no-heading -C 'devfsd'`" -a \
-     -n "`gawk '/\/dev devfs/ { print }' /proc/mounts 2> /dev/null`" ]
+     -n "`gawk '/\/dev devfs/ { print }' /proc/mounts 2>/dev/null`" ]
 then
 	if [ "${RC_DEVFSD_STARTUP}" != "no" ]
 	then
-		/sbin/devfsd /dev &> /dev/null
+		/sbin/devfsd /dev &>/dev/null
 	fi
 fi
 
 # Runlevel end, so clear stale fail list
-rm -rf "${svcdir}/failed" &> /dev/null
+rm -rf "${svcdir}/failed" &>/dev/null
 
 # If we were in the boot runlevel, it is done now ...
 [ -n "${BOOT}" ] && unset BOOT
