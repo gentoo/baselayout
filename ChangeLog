@@ -4,6 +4,7 @@
 
   15 Nov 2004; Roy Marples <uberlord@gentoo.org>:
 
+    Removed second warning in net.lo when configuration not set
     Documented APIPA module in net.example
     Added kernel checking for vlan - fixes #70829
     Added kernel checking for bonding, bridging and tuntap

@@ -466,6 +466,7 @@ iface_start() {
 		[[ ${config_IFACE[label_counter]} == "null" ]] && eend 0 && continue
 
 		${warn} && ewarn "Configuration not set for ${iface} - assuming dhcp"
+		warn=false
 
 		# We convert it to an array - this has the added
 		# bonus of trimming spaces!

@@ -77,14 +77,14 @@ apipa_start() {
 	interface_up ${iface}
 
 	while [[ ${i} -lt 64516 ]]; do
-		(( i1=${RANDOM}%254 ))
-		(( i2=${RANDOM}%254 ))
+		(( i1=${RANDOM}%255 ))
+		(( i2=${RANDOM}%255 ))
 
 		addr="169.254.${i1}.${i2}"
 		if ! address_exists ${iface} ${addr} ; then
 			case $( interface_module ) in
 				ifconfig)
-					config_IFACE[i]="${addr} broadcast 169.254.255 netmask 255.255.0.0"
+					config_IFACE[i]="${addr} broadcast 169.254.255.255 netmask 255.255.0.0"
 					;;
 				iproute2)
 					config_IFACE[i]="${addr}/16 brd 169.254.255.255"
