@@ -200,6 +200,7 @@ iwconfig_setup_specific() {
 		return 1
 	fi
 	dessid=${ESSID//\\\\/\\\\}
+	ESSIDVAR=${ESSID//[![:word:]]/_}
 
 	# We only change the mode if it's not the same
 	local cur_mode=$( iwconfig_get_mode ${iface} )

@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+  19 Dec 2004; Roy Marples <uberlord@gentoo.org>:
+
+    iwconfig now sets ESSIDVAR for master/ad-hoc modes - fixes #74802
+
   18 Dec 2004; Roy Marples <uberlord@gentoo.org>:
 
     macchanger now localalises ${opts} - fixes #74809
