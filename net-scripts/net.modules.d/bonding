@@ -46,7 +46,7 @@ bonding_check_depends() {
 # bool bonding_post_start(char *iface)
 #
 # Bonds the interface
-bonding_post_start() {
+bonding_pre_start() {
 	local iface=${1} slaves s
 
 	eval slaves=\"\$\{slaves_${iface}\}\"

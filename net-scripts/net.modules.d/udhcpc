@@ -114,7 +114,7 @@ udhcpc_stop() {
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 udhcpc_start() {
 	local iface=${1} opts hostname
-	local ifvar=$( get_interface_variable ${iface} )
+	local ifvar=$( interface_variable ${iface} )
 
 	! interface_exists ${iface} true && return 1
 

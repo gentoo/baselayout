@@ -32,7 +32,14 @@ ipppd_check_installed() {
 #
 # Checks to see if we have the needed functions
 ipppd_check_depends() {
-	# No depends
+	local f
+
+	for f in interface_exists interface_type; do
+		[[ $(type -t ${f}) == function ]] && continue
+		eerror "ipppd: missing required function ${f}\n"
+		return 1
+	done
+
 	return 0
 }
 
@@ -42,7 +49,7 @@ ipppd_check_depends() {
 #
 # Returns 0 (true) when successful, non-zero otherwise
 ipppd_pre_start() {
-	local iface=${1} opts itype=$( get_type ${1} )
+	local iface=${1} opts itype=$( interface_type ${1} )
 
 	# Check that we are a valid isdn interface
 	[[ ${itype} != "ippp" && ${itype} != "isdn" ]] && return 0

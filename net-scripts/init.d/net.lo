@@ -401,7 +401,7 @@ interface_device() {
 #
 # Returns the base type of the interface
 # eth, ippp, etc
-get_type() {
+interface_type() {
 	echo ${1%%[0-9]*}
 }
 
