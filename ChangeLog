@@ -6,7 +6,7 @@
 
     Fix bug 48629 (/sbin/rc fixups for udev) with patch from GregKH
 
-    Fix bug 29426 (gentoo should be able to boot with an empty /dev)
+    Fix bug 40987 (gentoo should be able to boot with an empty /dev)
     with patch from Spanky.  The patch avoids redirection to /dev/null
     when it doesn't exist; this was breaking /sbin/rc.
 
