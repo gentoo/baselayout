@@ -20,6 +20,8 @@ deptypes="need use"
 #different types of order deps
 ordtypes="before after"
 
+QUIET_STDOUT="no"
+
 getcols() {
 	echo "${2}"
 }
@@ -39,28 +41,34 @@ NORMAL=$'\e[0m'
 HILITE=$'\e[36;01m'
 
 ebegin() {
+	[ "${QUIET_STDOUT}" = "yes" ] && return
 	echo -e " ${GOOD}*${NORMAL} ${*}..."
 }
 
 ewarn() {
+	[ "${QUIET_STDOUT}" = "yes" ] && return
 	echo -e " ${WARN}*${NORMAL} ${*}"
 }
 
 eerror() {
+	[ "${QUIET_STDOUT}" = "yes" ] && return
 	echo -e " ${BAD}*${NORMAL} ${*}"
 }
 
 einfo() {
+	[ "${QUIET_STDOUT}" = "yes" ] && return
 	echo -e " ${GOOD}*${NORMAL} ${*}"
 }
 
 einfon() {
+	[ "${QUIET_STDOUT}" = "yes" ] && return
 	echo -ne " ${GOOD}*${NORMAL} ${*}"
 }
 
 # void eend(int error, char *errstr)
 #
 eend() {
+	[ "${QUIET_STDOUT}" = "yes" ] && return
 	if [ "$#" -eq 0 ] || [ "${1}" -eq 0 ]
 	then
 		echo -e "${ENDCOL}  \e[34;01m[ ${GOOD}ok \e[34;01m]${NORMAL}"
@@ -81,6 +89,7 @@ eend() {
 # void ewend(int error, char *errstr)
 #
 ewend() {
+	[ "${QUIET_STDOUT}" = "yes" ] && return
 	if [ "$#" -eq 0 ] || [ "${1}" -eq 0 ]
 	then
 		echo -e "${ENDCOL}  \e[34;01m[ ${GOOD}ok \e[34;01m]${NORMAL}"

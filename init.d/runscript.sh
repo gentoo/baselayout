@@ -549,6 +549,14 @@ fi
 for arg in ${*}
 do
 	case ${arg} in
+	--quiet)
+		QUIET_STDOUT="yes"
+		;;
+	esac
+done
+for arg in ${*}
+do
+	case ${arg} in
 	stop)
 		svc_stop
 		;;
@@ -609,6 +617,8 @@ do
 		svcpause="yes"
 		svc_stop
 		svcpause="no"
+		;;
+	--quiet)
 		;;
 	*)
 		# Allow for homegrown functions

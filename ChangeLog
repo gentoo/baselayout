@@ -2,6 +2,10 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  19 March 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add initial support for the --quiet flag that suppress output.
+
   18 March 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Remove the 'try' from 'try /etc/init.d/depscan.sh' in /sbin/rc
