@@ -31,7 +31,7 @@ start() {
 		if [ -x /sbin/env-update.sh ]
 		then
 			ebegin "Updating environment"
-			/sbin/env-update.sh >/dev/null
+			/sbin/env-update.sh -u >/dev/null
 			eend 0
 		fi
 

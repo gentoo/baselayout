@@ -6,6 +6,14 @@
 
     Add shfs to our list of net filesystems #61452.
 
+    Add a '-u' parameter to depscan.sh to allow for updates only when 
+    the config files have changed.  With /sbin/rc using this, we speed 
+    up bootup by only regenerating the cache when need be #67976.  Also 
+    add a '-u' parameter to env-update.sh for same reasons.
+
+    Don't run depscan.sh in rc-update anymore since the cache files don't 
+    depend on runlevels (which is all that rc-update modifies).
+
   16 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
 
     Update the default fstab /dev/shm mount to include the nodev, nosuid, 

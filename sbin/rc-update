@@ -183,7 +183,8 @@ esac
 
 if [ "${regen}" -eq 1 ]
 then
-	/sbin/depscan.sh
+	# depscan doesnt actually read runlevels so no point ...
+	#/sbin/depscan.sh
 	einfo "rc-update complete."
 fi
 

@@ -5,6 +5,23 @@
 
 source /etc/init.d/functions.sh
 
+# Only update if files have actually changed
+update=1
+if [ "$1" == "-u" ]
+then
+	update=0
+	for config in /etc/conf.d /etc/init.d /etc/rc.conf
+	do
+		if [ "${config}" -nt "${svcdir}/depcache" ]
+		then
+			update=1
+			break
+		fi
+	done
+	shift
+fi
+[ ${update} -eq 0 ] && exit 0
+
 ebegin "Caching service dependencies"
 
 if [ ! -d "${svcdir}" ]
@@ -27,7 +44,7 @@ do
 done
 
 # Clean out the non volitile directories ...
-rm -rf ${svcdir}/dep{cache,tree} ${svcdir}/{broken,snapshot}/*
+rm -rf "${svcdir}"/dep{cache,tree} "${svcdir}"/{broken,snapshot}/*
 
 retval=0
 SVCDIR="${svcdir}"
@@ -44,11 +61,12 @@ cd /etc/init.d
 	retval=1
 
 bash "${svcdir}/depcache" | \
-\
 /bin/gawk \
 	-f /lib/rcscripts/awk/functions.awk \
 	-f /lib/rcscripts/awk/gendepends.awk || \
 	retval=1
+
+touch -m "${svcdir}"/dep{cache,tree}
 
 eend ${retval} "Failed to cache service dependencies"
 

@@ -450,7 +450,7 @@ then
 	rm -rf "${svcdir}"/*
 
 	# Update the dependency cache
-	/sbin/depscan.sh
+	/sbin/depscan.sh -u
 
 	# Now that the dependency cache are up to date, make sure these
 	# are marked as started ...
