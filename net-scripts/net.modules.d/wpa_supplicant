@@ -92,11 +92,40 @@ wpa_supplicant_associated() {
 	return $?
 }
 
-# bool wpa_supplicant_pre_start(char *iface)
+# bool wpa_supplican_associate(char *interface)
+#
+# Returns 0 if wpa_supplicant associates and authenticates to an AP
+# otherwise, 1
+wpa_supplicant_associate() {
+	local iface=${1} ifvar=$( interface_variable ${1} ) timeout
+
+	eval timeout=\"\$\{wpa_timeout_${ifvar}:-60\}\"
+	for (( i=0; i<${timeout}; i++ )); do
+		wpa_supplicant_associated ${iface} && break
+		sleep 1
+	done
+	if [[ ${i} == ${timeout} ]]; then
+		if ! wpa_supplicant_associated ${iface}; then
+			[[ ${background} != yes ]] && eend 1 "timed out"
+
+			# We now need to kill the process
+			kill -s TERM $( ps --no-headers -fC wpa_supplicant 2>/dev/null | awk '/-i'${iface}'/ { print $2 }' ) 2>/dev/null
+
+			return 1
+		fi
+	fi
+}
+
+
+# bool wpa_supplicant_pre_start(char *interface)
 #
 # Start wpa_supplicant on an interface and wait for association
 # Returns 0 (true) when successful, non-zero otherwise
 wpa_supplicant_pre_start() {
+	# We don't configure wireless if we're being called from
+	# the background
+	${IN_BACKGROUND} && return 0
+
 	local iface=${1} opts ifvar i cfgfile=/etc/wpa_supplicant.conf timeout
 
 	# We only work on wirelesss interfaces
@@ -113,7 +142,7 @@ wpa_supplicant_pre_start() {
 		return 1
 	fi
 
-	ifvar=$( interface_variable ${1} )
+	ifvar=$( interface_variable ${iface} )
 	eval opts=\" \$\{wpa_supplicant_${ifvar}\}\"
 	[[ ${opts} != *' -D'* ]] && ewarn "wpa_supplicant_${ifvar} does not define a driver"
 	
@@ -123,27 +152,16 @@ wpa_supplicant_pre_start() {
 	fi
 
 	# Background wpa_supplication if required
-# wpa_supplicant won't support background until brix get's his start script on
-# action patch working
-#	[[ ${background} == yes ]] && go_background
+	if [[ ${background} == yes ]]; then
+		wpa_supplicant_associate ${iface} \
+		&& mark_service_inactive net.${iface} \
+		&& export IN_BACKGROUND=true \
+		&& /etc/init.d/net.${iface} start >/dev/null &
+		go_background
+	fi
 
 	eindent
 	veinfo "Waiting for association"
-	eval timeout=\"\$\{wpa_timeout_${ifvar}:-60\}\"
-	for (( i=0; i<${timeout}; i++ )); do
-		wpa_supplicant_associated ${iface} && break
-		sleep 1
-	done
-	if [[ ${i} == ${timeout} ]]; then
-		if ! wpa_supplicant_associated ${iface}; then
-			eend 1 "timed out"
-
-			# We now need to kill the process
-			kill -s TERM $( ps --no-headers -fC wpa_supplicant 2>/dev/null | awk '/-i'${iface}'/ { print $2 }' ) 2>/dev/null
-
-			return 1
-		fi
-	fi
 	eend 0
 
 	# Set ESSID for essidnet and report

@@ -855,7 +855,7 @@ iwconfig_configure() {
 iwconfig_pre_start() {
 	local iface=${1} r=0 local wasup=true
 
-	# We don't configure wireless if we're being called
+	# We don't configure wireless if we're being called from
 	# the background
 	${IN_BACKGROUND} && return 0
 
@@ -894,7 +894,7 @@ iwconfig_pre_start() {
 
 	if [[ ${background} == yes ]]; then
 		IN_BACKGROUND=true
-		iwconfig_configure ${iface} &>/dev/null &
+		iwconfig_configure ${iface} &>/dev/null || iwconfig_defaults ${iface} && interface_down ${iface} &
 		go_background
 	fi
 
