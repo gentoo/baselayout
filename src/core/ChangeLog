@@ -4,6 +4,10 @@
 
   17 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
 
+    parse.c: Fix write_legacy_stage3() to quote the mtime in its output.
+
+  17 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
+
     misc.c, parse.c: Change type of length from int to size_t to avoid warnings
                      when compiled for darwin.
 

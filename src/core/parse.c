@@ -636,7 +636,8 @@ int write_legacy_stage3(FILE *output) {
 		}
 		fprintf(output, "\n");
 
-		fprintf(output, "RC_DEPEND_TREE[%i+10]=%li\n\n", index*11, info->mtime);
+		fprintf(output, "RC_DEPEND_TREE[%i+10]=\"%li\"\n\n", index*11,
+				info->mtime);
 		index++;
 	}
 
