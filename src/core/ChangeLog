@@ -2,6 +2,13 @@
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 # $Header$
 
+10 Mar 2005 Martin Schlemmer <azarah@gentoo.org>
+
+        * Makefile
+        * depend.c
+        * simple-regex.c: Override the debug/warning CFLAGS.  Kill a few
+        warnings.
+
 23 Feb 2005 Martin Schlemmer <azarah@gentoo.org>
 
         * misc.c: Fix memory leak in mktree().
@@ -21,8 +28,10 @@
         * misc.c: Fix overrun in strndup(), thanks to report from
         Ned Ludd <solar@gentoo.org>.
 
-        * debug.h, misc.h, simple-regex.c: Print debug/errors to stderr, patch
-        from Ned Ludd <solar@gentoo.org>.
+        * debug.h
+        * misc.h
+        * simple-regex.c: Print debug/errors to stderr, patch from
+        Ned Ludd <solar@gentoo.org>.
 
         * debug.h: Replace invalid EXIT_FAILSTATUS with EXIT_FAILURE.
         
