@@ -8,6 +8,10 @@
     the next bootup might be done with some non-root nodes which cause
     some odd issues.
 
+    Add code to generate /dev from sysfs entries - not much it currently
+    support but block/tty devices, but it is a start for when we have
+    full sysfs support in all drivers.
+
   16 Nov 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix carrier detection - we need to do a 'ifconfig $IFACE up' else

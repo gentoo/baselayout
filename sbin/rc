@@ -67,6 +67,42 @@ check_statedir() {
 	return 0
 }
 
+# From initscript by Robert Love
+populate_udev() {
+	local x=
+	local j=
+	
+	# Propogate /udev from /sys - we only need this while we do not
+	# have initramfs and an early user-space with which to do early
+	# device bring up
+	export ACTION=add
+	# Add tty devices
+	for x in /sys/class/tty/*
+	do
+		export DEVPATH="/$(echo "${x}" | cut --delimiter='/' --fields=3-)"
+		/sbin/udev tty
+	done
+	# Add block devices and their partitions
+	for x in /sys/block/*
+	do
+		export DEVPATH="/$(echo "${x}" | cut --delimiter='/' --fields=3-)"
+		/sbin/udev block
+		for y in ${x}/*
+		do
+			if [ -f "${y}/dev" ]
+			then
+				export DEVPATH="/$(echo "${y}" | \
+					cut --delimiter='/' --fields=3-)"
+				/sbin/udev block
+			fi
+		done
+	done
+
+	unset ACTION DEVPATH
+
+	return 0
+}
+
 get_critical_services() {
 	local x=
 	CRITICAL_SERVICES=
@@ -158,6 +194,7 @@ then
 		ebegin "Configuring system to use udev"
 		einfo "  Populating /dev with device nodes..."
 		try tar -jxpf /lib/udev-state/devices.tar.bz2 -C /dev
+		populate_udev
 		if [ -e /proc/sys/kernel/hotplug -a -x /sbin/hotplug ]
 		then
 			einfo "  Using /sbin/hotplug for udev management..."
