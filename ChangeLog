@@ -2,6 +2,12 @@
 # Copyright 2001 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  29 Jan 2002: Martin Schlemmer (azarah@gentoo.org): hopefully the
+  last fix to /etc/init.d/netmount to umount cleanly.  This fix
+  implements a retry if not successful the first time, and will
+  kill processess using the mount.  Also small type-o fix to
+  /etc/init.d/halt.sh.
+
   27 Jan 2002: Donny Davies (woodchip@gentoo.org): security fix to
   /etc/pam.d/sshd,login,chsh: added pam_shells.so to the stack.
   Fixed /etc/passwd,group for user/group mysql.

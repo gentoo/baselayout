@@ -16,14 +16,40 @@ start() {
 }
 
 stop() {
-	ebegin "Unmounting network filesystems"
 	# umount -art $fstypes doesn't seem to work, so...
-	# NB: we have to check if any network filesystems is mounted, else mount complains
+	# NB: we have to check if any network filesystems is mounted,
+	#     else mount do not exit cleanly
 
-	local mymounts="`cat /proc/mounts | awk '{ print $3 " " $2 }' | grep -E ^'coda|nfs|ncpfs|smbfs' | awk 'BEGIN { ORS="	"} { print $2 }'`"
+	local sig retry
+	local remaining=`cat /proc/mounts | awk '{ print $3 " " $2 }' | \
+		grep -E ^'coda|nfs|ncpfs|smbfs' | awk '{ print $2 }' |sort -r`
 
-	if [ -n "$mymounts" ] ; then
-		umount ${mymounts}
+	# just keep things nice and uniform
+	if [ -z "$remaining" ] ; then
+		ebegin "Unmounting network filesystems"
+		eend $?
+	else
+	        sig=
+	        retry=3
+	        while [ -n "$remaining" -a "$retry" -gt 0 ]
+	        do
+	                if [ "$retry" -lt 3 ]; then
+	                        ebegin "Unmounting network filesystems (retry)"
+	                        umount $remaining > /dev/null 2>&1
+	                        eend $?
+	                else
+	                        ebegin "Unmounting network filesystems"
+	                        umount $remaining > /dev/null 2>&1
+	                        eend $?
+	                fi
+	                remaining=`cat /proc/mounts | awk '{ print $3 " " $2 }' | \
+				grep -E ^'coda|nfs|ncpfs|smbfs' | awk '{ print $2 }' |sort -r`
+	                [ -z "$remaining" ] && break
+	                /bin/fuser -k -m $sig $remaining >/dev/null
+	                sleep 5
+	                retry=$(($retry -1))
+	                sig=-9
+	        done
+		eend $?
 	fi
-	eend $?
 }

@@ -64,7 +64,7 @@ remaining=`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $1}' /proc/moun
 		done
 		remaining=`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts |sort -r`
 		[ -z "$remaining" ] && break
-		/sbin/fuser -k -m $sig $remaining >/dev/null
+		/bin/fuser -k -m $sig $remaining >/dev/null
 		sleep 5
 		retry=$(($retry -1))
 		sig=-9
