@@ -44,8 +44,14 @@ then
 		devfs="no"
 	fi
 	
+	#fix wierd bug where there is a /dev/.devfsd in a unmounted /dev
+	mymounts="`cat /proc/mounts`"
+	if [ -e /dev/.devfsd ] && [ "${mymounts/devfs//}" = "${mymounts}" ]
+	then
+		rm -f /dev/.devfsd
+	fi
+
 	#with the new way, /dev can be mounted by the kernel ...
-	
 	if [ "$devfs" = "yes" ] && [ ! -e /dev/.devfsd ]
 	then
 		mymounts="`cat /proc/filesystems`"

@@ -2,6 +2,10 @@
 # Copyright 2001 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  27 Feb 2002; Martin Schlemmer <azarah@gentoo.org>: in some wierd cases,
+  a redundent /dev/.devfsd on a unmounted /dev can cause problems.  Fixed
+  this in /sbin/rc.
+
   26 Feb 2002; Martin Schlemmer <azarah@gentoo.org>: fix my brain dead
     update of the 25th.  It really should keep "gentoo=nodevfs" in mind.
     Also added 'get_bootparam()' to help in retrieving kernel options.
