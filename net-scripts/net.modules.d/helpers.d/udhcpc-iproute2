@@ -35,44 +35,34 @@ ip addr flush dev ${interface} scope global &>/dev/null
 ip addr flush dev ${interface} scope host &>/dev/null
 ip link set up dev ${interface} &>/dev/null
 
-[[ ${action} == deconfig ]] && exit 0
-
 [[ -z ${MODULES_DIR} ]] && MODULES_DIR=/lib/rcscripts/net.modules.d
+source ${MODULES_DIR}/helpers.d/config-system
 
-if [[ ${action} == bound ]]; then
-	# Load some helpful stuff
-	source ${MODULES_DIR}/helpers.d/functions
-
-	ip=( ${ip} )
-	subnet=( ${subnet} )
-	broadcast=( ${broadcast} )
-	for (( i=0; i<${#ip[@]}; i++ )); do
-		cidr=$( netmask2cidr ${subnet[i]} )
-
-		b=${broadcast[i]}
-		[[ -n ${b} ]] && b="broadcast ${b}"
-
-		ip addr add dev ${interface} ${ip[i]}/${cidr} ${b}
-	done
-
-	for r in ${router}; do
-		x=$( ip route show | awk '{ if ($1 == "default") {print $1} }' )
-		if [[ -n ${x} ]]; then
-			x=$( ip route change default via ${r} dev ${interface} 2>&1 )
-		else
-			x=$( ip route add default via ${r} dev ${interface} 2>&1 )
-		fi
-		case "${x}" in
-			'RTNETLINK answers: File exists'|'') ;;
-			*) printf '%s\n' "${x}" >&2 ;;
-		esac
-	done
+if [[ ${action} == deconfig ]]; then
+	restore_configs
+	exit 0
 fi
+
+# Configure our IP address(es)
+ip=( ${ip} )
+subnet=( ${subnet} )
+broadcast=( ${broadcast} )
+for (( i=0; i<${#ip[@]}; i++ )); do
+	cidr=$( netmask2cidr ${subnet[i]} )
+		b=${broadcast[i]}
+	[[ -n ${b} ]] && b="broadcast ${b}"
+		ip addr add dev ${interface} ${ip[i]}/${cidr} ${b}
+done
+
+# Configure our routers
+for r in ${router}; do
+	# We can only have one default route!
+	ip route add default via ${r} dev ${interface} 2>/dev/null && break
+done
 
 # Set our module to udhcpc if it's not set
 [[ -z ${module} ]] && module=udhcpc
 
-source ${MODULES_DIR}/helpers.d/config-system
 config_system
 
 exit 0

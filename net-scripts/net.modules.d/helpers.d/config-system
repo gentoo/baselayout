@@ -5,11 +5,23 @@
 # Contributed by Roy Marples (uberlord@gentoo.org)
 
 source /etc/conf.d/net
-MODULES_DIR=/lib/rcscripts/net.modules.d
+[[ -z ${MODULES_DIR} ]] && MODULES_DIR=/lib/rcscripts/net.modules.d
 
 if [[ $( type -t interface_variable ) != function ]]; then
 	source ${MODULES_DIR}/helpers.d/functions
 fi
+
+need_hostname() {
+	local n=$( hostname )
+	[[ ${n} == "(none)" || ${n} == "localhost" ]]
+	return $?
+}
+
+restore_configs() {
+	[[ -f /etc/resolv.conf.sv ]] && mv /etc/resolv.conf.sv /etc/resolv.conf
+	[[ -f /etc/ntp.conf.sv ]] && mv /etc/ntp.conf.sv /etc/ntp.conf
+	[[ -f /etc/yp.conf.sv ]] && mv /etc/yp.conf.sv /etc/yp.conf
+}
 
 get_wireless_vars() {
 	# Check that wireless has not already been configured
@@ -49,28 +61,29 @@ get_wireless_vars() {
 config_system() {			
 	
 	# Load our wireless mapped vars
-	# For example peer_dns_ESSID becomes peer_dns_eth0
+	# For example dhcp_dns_ESSID becomes dhcp_dns_eth0
 	get_wireless_vars
 
-	local x=$( hostname ) peer
-	[[ -n ${hostname} && ${x} != ${hostname} ]] && hostname ${new_host_name} >/dev/null
-
-	local ifvar=$( interface_variable ${interface} )
+	local peer ifvar=$( interface_variable ${interface} )
+	if need_hostname ; then
+		[[ -n ${hostname} ]] && hostname ${hostname} >/dev/null
+	fi
 
 	eval peer=\"\$\{dhcp_dns_${ifvar}\}\"
 	[[ -z ${peer} ]] && eval peer=\"\$\{dhcp_dns\}\"
 	peer=${peer:-yes}
 
 	if [[ ${peer} != no ]] && [[ -n ${domain} || -n ${dns} ]]; then
-		[[ -f /etc/resolv.conf ]] && mv /etc/resolv.conf /etc/resolv.conf.sv
-
-		echo "# generated automatically by net-scripts" > /etc/resolv.conf
-		chmod 644 /etc/resolv.conf
-		[[ -n ${domain} ]] && echo "domain ${domain}" >> /etc/resolv.conf
+		echo "# generated automatically by net-scripts" > /etc/resolv.conf.new
+		chmod 644 /etc/resolv.conf.new
+		[[ -n ${domain} ]] && echo "domain ${domain}" >> /etc/resolv.conf.new
 
 		for x in ${dns}; do
-			echo "nameserver ${x}" >>/etc/resolv.conf
+			echo "nameserver ${x}" >>/etc/resolv.conf.new
 		done
+
+		[[ -f /etc/resolv.conf && ! -f /etc/resol.conf.sv ]] && mv /etc/resolv.conf /etc/resolv.conf.sv
+		mv /etc/resolv.conf.new /etc/resolv.conf
 	fi
 
 	eval peer=\"\$\{dhcp_ntp_${ifvar}\}\"
@@ -78,18 +91,20 @@ config_system() {
 	peer=${peer:-yes}
 
 	if [[ ${peer} != no && -n ${ntpsrv} ]]; then
-		[[ -f /etc/ntp.conf ]] && mv /etc/ntp.conf /etc/ntp.conf.sv
-		echo "# generated automatically by net-scripts" > /etc/ntp.conf
-		chmod 644 /etc/ntp.conf
+		echo "# generated automatically by net-scripts" > /etc/ntp.conf.new
+		chmod 644 /etc/ntp.conf.new
 
-		echo "restrict default noquery notrust nomodify" >> /etc/ntp.conf
-		echo "restrict 127.0.0.1" >> /etc/ntp.conf
-		echo "driftfile /var/lib/ntp/ntp.drift" >> /etc/ntp.conf
+		echo "restrict default noquery notrust nomodify" >> /etc/ntp.conf.new
+		echo "restrict 127.0.0.1" >> /etc/ntp.conf.new
+		echo "driftfile /var/lib/ntp/ntp.drift" >> /etc/ntp.conf.new
 
 		for x in ${ntpsrv}; do
-			echo "restrict ${x} nomodify notrap noquery" >> /etc/ntp.conf
-			echo "server ${x}" >> /etc/ntp.conf
+			echo "restrict ${x} nomodify notrap noquery" >> /etc/ntp.conf.new
+			echo "server ${x}" >> /etc/ntp.conf.new
 		done
+
+		[[ -f /etc/ntp.conf && ! -f /etc/ntp.conf.sv ]] && mv /etc/ntp.conf /etc/ntp.conf.sv
+		mv /etc/ntp.conf.new /etc/ntp.conf
 	fi
 
 	eval peer=\"\$\{dhcp_nis_${ifvar}\}\"
@@ -97,23 +112,25 @@ config_system() {
 	peer=${peer:-yes}
 
 	if [[ ${peer} != no ]] && [[ -n ${nisdomain} || -n ${nissrv} ]]; then
-		[[ -f /etc/yp.conf ]] && mv /etc/yp.conf /etc/yp.conf.sv
-		echo "# generated automatically by net-scripts" > /etc/yp.conf
-		chmod 644 /etc/yp.conf
+		echo "# generated automatically by net-scripts" > /etc/yp.conf.new
+		chmod 644 /etc/yp.conf.new
+
 		if [[ -n ${nisdomain} ]]; then
 			hostname -y ${nisdomain}
 			if [[ -n ${nissrv} ]]; then
 				for x in ${nissrv}; do
-					echo "domain ${nisdomain} server ${x}" >> /etc/yp.conf
+					echo "domain ${nisdomain} server ${x}" >> /etc/yp.conf.new
 				done
 			else
-				echo "domain ${nisdomain} broadcast" >> /etc/yp.conf
+				echo "domain ${nisdomain} broadcast" >> /etc/yp.conf.new
 			fi
 		else
 			for x in ${nissrv}; do
-				echo "ypserver ${x}" >> /etc/yp.conf
+				echo "ypserver ${x}" >> /etc/yp.conf.new
 			done
 		fi
-	fi
 
+		[[ -f /etc/yp.conf && ! -f /etc/yp.conf.sv ]] && mv /etc/yp.conf /etc/yp.conf.sv
+		mv /etc/yp.conf.new /etc/yp.conf
+	fi
 }

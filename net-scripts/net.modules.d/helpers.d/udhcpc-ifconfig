@@ -35,8 +35,7 @@ for i in $( ifconfig | grep -o "^${interface}:[0-9]*" | tac | xargs ); do
 	ifconfig ${i} down
 done
 
-# Remove all addresses - iproute2 does not need to create dummy interfaces for
-# aliased addresses
+# Remove all addresses
 while ifconfig ${interface} | grep -q -m1 -o 'inet addr:[^ ]*' ; do
 	ifconfig ${interface} 0
 done
@@ -48,32 +47,34 @@ done
 
 /sbin/ifconfig ${interface} up &>/dev/null
 
-[[ ${action} == deconfig ]] && exit 0
-
 [[ -z ${MODULES_DIR} ]] && MODULES_DIR=/lib/rcscripts/net.modules.d
+source ${MODULES_DIR}/helpers.d/config-system
 
-if [[ ${action} == bound ]]; then
-	ip=( ${ip} )
-	subnet=( ${subnet} )
-	broadcast=( ${broadcast} )
-	for (( i=0; i<${#ip[@]}; i++ )); do
-		[[ ${i} -eq 0 ]] && l=${interface} || l=${interface}:${i}
-
-		b=${broadcast[i]}
-		[[ -n ${b} ]] && b="broadcast ${b}"
-
-		ifconfig ${l} inet ${ip[i]} netmask ${subnet[i]} ${b}
-	done
-
-	for r in ${router}; do
-		/sbin/route add default gw ${r} dev ${interface}
-	done
+if [[ ${action} == deconfig ]]; then
+	restore_configs
+	exit 0
 fi
+
+# Configure our IP address(es)
+ip=( ${ip} )
+subnet=( ${subnet} )
+broadcast=( ${broadcast} )
+for (( i=0; i<${#ip[@]}; i++ )); do
+	[[ ${i} -eq 0 ]] && l=${interface} || l=${interface}:${i}
+		b=${broadcast[i]}
+	[[ -n ${b} ]] && b="broadcast ${b}"
+		ifconfig ${l} inet ${ip[i]} netmask ${subnet[i]} ${b}
+done
+
+# Configure our routers
+for r in ${router}; do
+	# We can only have one default route!
+	/sbin/route add default gw ${r} dev ${interface} && break
+done
 
 # Set our module to udhcpc if it's not set
 [[ -z ${module} ]] && module=udhcpc
 
-source ${MODULES_DIR}/helpers.d/config-system
 config_system
 
 exit 0
