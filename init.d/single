@@ -1,0 +1,9 @@
+#!/bin/sh
+#RCUPDATE:1:99:This line is required for script management
+
+if [ "$1" != "start" ]
+then
+	exit 0
+fi
+
+. /etc/rc.d/config/functions

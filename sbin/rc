@@ -1,0 +1,121 @@
+#!/bin/bash
+
+export SOFTLEVEL=$1
+svcdir=/dev/shm/.init.d
+echo $SOFTLEVEL > /dev/shm/.init.d/softlevel
+
+if [ "$SOFTLEVEL" = "reboot" ] || [ "$SOFTLEVEL" = "shutdown" ]
+then
+	myscripts=""
+elif [ ! -d /etc/runlevels/${1} ]
+then
+	echo "runlevel ${1} does not exist; exiting."
+	exit 1
+else
+	myscripts=""
+	if [ "$SOFTLEVEL" != "boot" ]
+	then
+		#normal runlevels *include* boot scripts
+		mylevels="/etc/runlevels/${1}/* /etc/runlevels/boot/*"
+	else
+		#non-normal runlevels don't include boot scripts as default
+		mylevels="/etc/runlevels/${1}/*"
+	fi
+	for x in $mylevels 
+	do
+		if [ -L $x ]
+		then
+			myscripts="$myscripts ${x##*/}"
+		fi
+	done
+fi
+
+#the softscripts dir contains all scripts that belong to the
+#runlevel specified in ${svcdir}/softlevel
+
+install -d -m0755 ${svcdir}/softscripts
+
+#clean out directory to remove traces of previous runlevel
+
+rm -f ${svcdir}/softscripts/*
+
+for x in $myscripts
+do
+	if [ ! -e /etc/init.d/${x} ]
+	then
+		echo "skipping, /etc/init.d/${x} missing"
+		continue
+	fi
+	#the -f eliminates a warning if the symlink already exists, 
+	#which can happen if a service is in both the boot level and
+	#the current "normal" runlevel
+	ln -sf /etc/init.d/${x} ${svcdir}/softscripts/${x}
+done
+
+#stop services
+for i in ${svcdir}/started/*
+do
+	[ ! -L ${i} ] && continue
+	if [ ! -e ${i} ]
+	then
+		#remove dud symlinks
+		rm ${i}
+		continue
+	fi
+	myservice=${i##*/}
+	
+	if [ ! -L ${svcdir}/softscripts/${myservice} ]
+	then
+		#candidate for zapping
+		
+		if [ ! -d ${svcdir}/need/${myservice} ]
+		then
+			#nothing depends on me
+			${i} stop
+		else
+			#something may depend on me
+			needsme=0
+			for dep in ${svcdir}/need/${myservice}
+			do
+				if [ -L /${svcdir}/softscripts/${dep##*/} ]
+				then
+					#this dep is valid
+					needsme=1
+					break
+				fi
+			done
+			if [ $needsme -eq 0 ]
+			then
+				${i} stop
+			fi
+		fi
+	fi
+done
+
+
+if [ "$SOFTLEVEL" = "reboot" ] || [ "$SOFTLEVEL" = "shutdown" ]
+then
+	source /etc/init.d/functions.sh
+	source /etc/init.d/halt.sh
+	if [ "$SOFTLEVEL" = "reboot" ]
+	then
+		source /etc/init.d/reboot.sh 
+	else
+		source /etc/init.d/shutdown.sh
+	fi
+fi
+
+#start scripts
+for i in ${svcdir}/softscripts/* 
+do
+	if [ ! -L $i ]
+	then
+		continue
+	fi
+	#only start a script if it isn't already running
+	if [ ! -L ${svcdir}/started/${i##*/} ]
+	then
+		$i start
+	fi
+done
+

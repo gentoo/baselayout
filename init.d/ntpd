@@ -1,0 +1,18 @@
+#!/sbin/runscript
+
+start() {
+	ebegin "Starting ntpd"
+	if [ -x /usr/bin/ntpd ] ; then
+		/usr/bin/ntpd -p /var/run/ntpd.pid
+	else
+		echo -n "Can't find /usr/bin/ntpd"
+		exit 1
+	fi
+	eend
+}
+
+stop() {
+	ebegin "Stopping ntpd"
+	kill `cat /var/run/ntpd.pid`
+	eend
+}

@@ -1,0 +1,35 @@
+#!/sbin/runscript
+
+SERVICE="sshd"
+
+gen_keys() {
+  	if [ ! -e /etc/ssh/ssh_host_key ] ; then
+  		einfo "Generating Hostkey..."
+		/usr/bin/ssh-keygen -b 1024 -f /etc/ssh/ssh_host_key -N ''
+	fi
+	if [ ! -e /etc/ssh/ssh_host_dsa_key ] ; then
+  		einfo "Generating DSA-Hostkey..."
+		/usr/bin/ssh-keygen -d -f /etc/ssh/ssh_host_dsa_key -N ''
+	fi
+}
+
+depend() {
+	need net
+}
+
+start() {
+	gen_keys
+	ebegin "Starting $SERVICE"
+	ln -sf ../services/${SERVICE} ${SVCDIR}/control/${SERVICE}
+	eend $?
+}
+
+stop() {
+	ebegin "Stopping $SERVICE"
+	if [ -e ${SVCDIR}/control/${SERVICE} ]
+	then
+		/usr/bin/svc -dx ${SVCDIR}/control/${SERVICE}
+		rm ${SVCDIR}/control/${SERVICE}
+	fi
+	eend $?
+}

@@ -1,0 +1,41 @@
+#
+# inittab	This file describes how the INIT process should set up
+#		the system in a certain run-level.
+#
+# Author:	Miquel van Smoorenburg, <miquels@cistron.nl>
+# Modified by:	Patrick J. Volkerding, <volkerdi@ftp.cdrom.com>
+# Modified by:	Daniel Robbins, <drobbins@gentoo.org>
+
+#
+# Default runlevel.
+
+id:3:initdefault:
+
+# System initialization (runs when system boots).
+#DE:S12345:respawn:/sbin/devfsd /dev -fg
+# Script to run when going single user (runlevel 1).
+~~:S:wait:/sbin/sulogin
+
+si:S:sysinit:/sbin/rc boot
+l0:0:wait:/sbin/rc shutdown 
+l1:1:wait:/sbin/rc single
+l2:2:wait:/sbin/rc nonetwork
+l3:3:wait:/sbin/rc default
+l4:4:wait:/sbin/rc default
+l5:5:wait:/sbin/rc default
+l6:6:wait:/sbin/rc reboot
+z6:6:respawn:/sbin/sulogin
+
+# TERMINALS
+c1:12345:respawn:/sbin/agetty 38400 tty1 linux
+c2:12345:respawn:/sbin/agetty 38400 tty2 linux
+c3:12345:respawn:/sbin/agetty 38400 tty3 linux
+c4:12345:respawn:/sbin/agetty 38400 tty4 linux
+c5:12345:respawn:/sbin/agetty 38400 tty5 linux
+c6:12345:respawn:/sbin/agetty 38400 tty6 linux
+
+# What to do at the "Three Finger Salute".
+ca:12345:ctrlaltdel:/sbin/shutdown -r now
+
+SV:S123456:respawn:env - PATH=/usr/local/bin:/usr/sbin:/usr/bin:/bin svscan /var/lib/supervise/control < /dev/null > /dev/console 2>/dev/console
+# End of /etc/inittab

@@ -1,0 +1,24 @@
+#!/sbin/runscript
+
+depend() {
+	need checkfs
+}
+
+start() {
+	# Mount local filesystems in /etc/fstab.
+	ebegin "Mounting local filesystems"
+	mount -at nonfs,noproc,noncpfs,nosmbfs,noshm  
+	eend $? 
+	if [ -e /proc/bus/usb ] && [ ! -e /proc/bus/usb/devices ] 
+	then
+		ebegin "Mounting USB device filesystem"
+		mount -t usbdevfs usbdevfs /proc/bus/usb
+		eend $?
+	fi
+	#swap on loopback devices, and other weirdnesses
+	ebegin "Activating (possibly) more swap"
+	/sbin/swapon -a >/dev/null 2>&1
+	eend	
+	return
+}
+

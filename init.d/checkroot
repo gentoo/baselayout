@@ -1,0 +1,35 @@
+#!/sbin/runscript
+
+start() {
+	ebegin "Remounting root filesystem read-only (if necessary)"
+	mount / -o remount,ro	
+	eend $?
+	echo mount -f / -o remount,ro >> /dev/shm/etc/mtab.sh
+	ebegin "Checking root filesystem"
+	fsck -a
+	if [ $? -eq 0 ]
+	then
+		eend 0
+	elif [ $? -eq 1 ]
+	then
+		eend 1 "Filesystem repaired"
+	else
+		eend 2 "Filesystem couldn't be fixed :("
+		/sbin/sulogin $CONSOLE
+		reboot -f
+	fi
+	
+	ebegin "Remounting root filesystem read/write"
+	mount / -o remount,rw
+	echo mount -f / -o remount,rw >> /dev/shm/etc/mtab.sh
+	eend $?
+	
+	ebegin "Setting up /etc/mtab"
+	rm -f /etc/mtab
+	touch /etc/mtab
+	chmod 0644 /etc/mtab
+	source /dev/shm/etc/mtab.sh
+	eend
+	return
+}
+

@@ -1,0 +1,119 @@
+#!/bin/bash
+trap ":" INT QUIT TSTP	
+source /etc/init.d/functions.sh
+#no /usr yet, very likely
+export PATH=/sbin:/bin:/usr/sbin:/usr/bin
+umask 022
+
+mountshm() {
+	ebegin "Mounting tmpfs at /dev/shm"
+	try mount -n -t tmpfs tmpfs /dev/shm -o rw,mode=0644,size=4m
+	eend
+	install -d -m0755 /dev/shm/etc
+	#set up mtab script
+	touch /dev/shm/etc/mtab.sh
+	chmod 0644 /dev/shm/etc/*
+	echo mount -f / >> /dev/shm/etc/mtab.sh
+	echo mount -f -t tmpfs tmpfs /dev/shm -o rw,mode=0644,size=4m >> /dev/shm/etc/mtab.sh
+	echo mount -f --bind /dev /dev-state >> /dev/shm/etc/mtab.sh
+#	local swaptot
+#	local tmpfsmax
+#	if [ ! -e /proc/meminfo ]
+#	then
+#		tmpfsmax=4
+#	else
+#		swaptot=`cat /proc/meminfo | sed -n -e '/^Mem:/{s/\(Mem:\)[[:space:]]*\([[:digit:]]*\) \(.*\)/\2/;p}'`
+#		swaptot=$(( $swaptot / 1024000 ))
+#		tmpfsmax=$(( $swaptot / 2 ))
+#		if [ $tmpfsmax -lt 4 ]
+#		then
+#			tmpfsmax=4
+#		fi
+#	fi
+#	echo ebegin "Limiting tmpfs size to ${tmpfsmax}Mb" >> /dev/shm/etc/mtab.sh
+#	#hopefully, this will avoid the "tmpfs not mounted" error
+#	echo mount -t tmpfs tmpfs /dev/shm -o remount,size=${tmpfsmax}m >> /dev/shm/etc/mtab.sh
+#	echo eend \$? >> /dev/shm/etc/mtab.sh	
+	echo mount -f /proc >> /dev/shm/etc/mtab.sh
+	echo mount -f -t devfs none /dev >> /dev/shm/etc/mtab.sh
+}
+
+if [ $$ -ne 1 ]
+then
+	exec /sbin/init.orig $*
+fi
+
+
+echo
+echo -e "${GOOD}Gentoo Linux${GENTOO_VERS}; \e[34;01mhttp://www.gentoo.org${NORMAL}\n Copyright 2001 Gentoo Technologies, Inc.; Distributed under the GPL"
+echo
+	
+ebegin "Mounting /proc"
+mount -n /proc
+eend $?
+devfs="yes"
+for copt in `cat /proc/cmdline`
+do
+	if [ "${copt%=*}" = "gentoo" ]
+	then
+		parms=${copt##*=}
+		#parse gentoo option
+		if [ "${parms/nodevfs//}" != "${parms}" ]
+		then
+			devfs="no"
+		fi
+	fi
+done
+	
+if [ -e /dev/.devfsd ] 
+then
+	clear
+	echo
+	einfo "The Gentoo Linux system initialization scripts have detected that /dev"
+	einfo "has been automatically mounted by the kernel.  This behavior will"
+	einfo "prevent devfs from automatically saving and restoring device"
+	einfo "permissions.  While not optimal, your system will still be able to boot,"
+	einfo "but any changes to permissions in /dev will not be persistent until you"
+	einfo "fix this problem."
+	echo
+	einfo "Fortunately, the fix for this problem is quite simple; all you need to"
+	einfo "do is pass the \"devfs=nomount\" boot option to the kernel (via GRUB"
+	einfo "or LILO) the next time you boot.  Then /dev will not be auto-mounted."
+	einfo "The next time you compile your kernel, be sure that you do not"
+	einfo "enable the \"Automatically mount filesystem at boot\" devfs kernel"
+	einfo "configuration option.  Then the \"devfs=nomount\" hack will no longer be"
+	einfo "needed."
+	echo
+	read -t 15 -p "(hit Enter to continue or wait 15 seconds...)" 
+else	
+	ebegin "Moving /dev to /dev-state"; try mount -n --bind /dev /dev-state; eend
+	ebegin "Mounting devfs at /dev"; try mount -n -t devfs none /dev; eend
+	if [ -d /dev-state/compat ]
+	then
+		ebegin "Copying devices from /dev-state/compat to /dev"
+		cp -ax /dev-state/compat/* /dev
+		eend
+	fi
+fi
+
+#mount shm and do dep scan	
+mountshm 
+/etc/init.d/depscan.sh
+
+if [ "$devfs" = "yes" ]
+then
+	ebegin "Starting devfsd"; /sbin/devfsd /dev >/dev/null 2>&1; eend $?
+fi
+
+#swap needs to be activated *after* devfs has been mounted and *after*
+#devfsd has been started, so that the fstab can be properly parsed
+
+ebegin "Activating swap"
+swapon -a
+eend
+
+#Now that swap has been activated, we can calculate a reasonable size limit
+#for /dev/shm so that it doesn't exhaust VM if filled.
+
+exec /sbin/init.orig $*
+#rename to init.system

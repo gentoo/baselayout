@@ -1,0 +1,15 @@
+#!/sbin/runscript
+	
+depend() {
+	need localmount
+}
+
+start() {
+	source /etc/rc.conf
+	LOADKEY=/usr/bin/loadkeys
+	ebegin "Loading key mappings..."
+	${LOADKEY} ${KEYMAP} windowkeys.inc 
+	eend $? "Error loading key mappings"
+	return
+}
+

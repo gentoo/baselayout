@@ -1,0 +1,36 @@
+#!/sbin/runscript
+
+IFACE=${1##*.}
+#IFACE should now be set to the name of the interface (grabbed from the name of
+#this script)
+
+#Configure the following settings:
+IPNUM=192.168.1.7
+BCAST=192.168.1.255
+NMASK=255.255.255.0
+NETWK=192.168.1.0
+GTWAY=192.168.1.1      
+
+#You can also add additional network commands to the two functions below, such as
+#firewall settings or additional routing commands.
+
+start() {
+	ebegin "Bringing ${IFACE} up"
+	/sbin/ifconfig $IFACE $IPNUM broadcast $BCAST netmask $NMASK
+	[ $GTWAY ] && /sbin/route add -net default gw $GTWAY netmask 0.0.0.0 metric 1
+
+	#enabling rp_filter causes wacky packets to be auto-dropped by 
+	#the kernel
+	
+	if [ -e /proc/sys/net/ipv4/conf/${IFACE}/rp_filter ]
+	then
+		echo 1 > /proc/sys/net/ipv4/conf/${IFACE}/rp_filter
+	fi
+	eend 
+}
+
+stop() {
+	ebegin "Bringing ${IFACE} down"
+	/sbin/ifconfig $IFACE down
+	eend 
+}

@@ -1,0 +1,25 @@
+#!/sbin/runscript
+
+PEER=MyPeer		# Define peer (aka ISP)
+DEBUG=NO		# Turn on debugging
+REDIAL=NO		# Redial after being dropped
+
+start() {
+	local CMD_LINE
+	ebegin
+	if [ "$DEBUG"="YES" ] then
+		CMD_LINE="-d"
+	fi
+
+	if [ "$REDIAL"="YES" ] then
+		CMD_LINE="$CMD_LINE -r"
+	fi
+	pon $CMD_LINE $PEER
+	eend
+}
+
+stop() {
+	ebegin
+	/usr/sbin/poff $PEER
+	eend
+}

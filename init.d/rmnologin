@@ -1,0 +1,13 @@
+#!/sbin/runscript
+	
+depend() {
+	need localmount
+}
+
+start() {
+	if [ -f /etc/nologin.boot ]
+	then
+		rm -f /etc/nologin /etc/nologin.boot
+	fi
+	return
+}

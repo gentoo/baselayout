@@ -1,0 +1,20 @@
+#!/sbin/runscript
+	
+depend() {
+	need net
+}
+
+fstypes="nfs,ncpfs,smbfs"
+
+start() {
+	ebegin "Mounting network filesystems"
+	mount -at $fstypes 
+	eend $? 
+}
+
+stop() {
+	ebegin "Unmounting network filesystems"
+	umount -at $fstypes
+	eend $?
+}
+

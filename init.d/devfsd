@@ -1,0 +1,24 @@
+#!/bin/sh
+#RCUPDATE:boot halt:04:This line is required for script management
+
+. /etc/rc.d/config/functions
+
+SERVICE="devfsd"
+opts="start stop"
+
+start() {
+	need pretty
+	if [ ! -e /dev/.devfsd ]
+	then
+		return
+	fi
+	#the "sleep" is to allow devfsd to start up and make compatibility
+	#devices ready to the fsck routines
+	ebegin "Starting devfsd"; /sbin/devfsd /dev; sleep 2; eend $?
+}
+
+stop() {
+	ebegin "Stopping devfsd"; killall devfsd; eend $?
+}
+
+doservice ${@}
