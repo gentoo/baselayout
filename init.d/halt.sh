@@ -139,14 +139,14 @@ then
 	# LiveCD: don't unmount the read-only livecd loopback filesystem
 	#         or all our commands will disappear
 	mount | cut -f1 -d" " | grep -v livecd | \
-		xargs umount -r -n -t  nodevfs,noproc,nosysfs,notmpfs &>/dev/null
+		xargs umount -r -n -t nodevfs,noproc,noramfs,nosysfs,notmpfs &>/dev/null
 else
-	umount -a -r -n -t nodevfs,noproc,nosysfs,notmpfs &>/dev/null
+	umount -a -r -n -t nodevfs,noproc,noramfs,nosysfs,notmpfs &>/dev/null
 fi
 if [ "$?" -ne 0 ]
 then
-	killall5 -9  &> /dev/null
-	umount -a -r -n -l -d -f -t nodevfs,noproc,nosysfs &>/dev/null
+	killall5 -9  &>/dev/null
+	umount -a -r -n -l -d -f -t nodevfs,noproc,noramfs,nosysfs &>/dev/null
 	if [ "$?" -ne 0 ]
 	then
 		eend 1
