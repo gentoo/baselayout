@@ -19,6 +19,8 @@
     Removed rp_filter setting - fixes first part of bug #71971
     Added sysctl.conf settings relating to rp_filter to sysctl.conf
     - fixes last part of bug #71971
+    Fixed pump exporing ntp servers
+    implemented MODULES_DIR so we can change directory we load from on the fly
     
   19 Nov 2004; Aron Grffis <agriffis@gentoo.org>:
 

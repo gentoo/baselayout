@@ -39,7 +39,7 @@ udhcpc_check_installed() {
 # Returns the filename of the script to run
 udhcpc_get_script() {
 	local module=$( interface_module )
-	echo "/lib/rcscripts/net.modules.d/helpers.d/udhcpc-${module}"
+	echo "${MODULES_DIR}/helpers.d/udhcpc-${module}"
 }
 
 # bool udhcpc_check_depends(void)

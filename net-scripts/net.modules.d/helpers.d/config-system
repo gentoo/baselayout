@@ -5,21 +5,23 @@
 # Contributed by Roy Marples (uberlord@gentoo.org)
 
 source /etc/conf.d/net
+[[ -z ${MODULES_DIR} ]] && MODULES_DIR=/lib/rcscripts/net.modules.d
+if [[ $( type -t interface_variable ) != function ]]; then
+	source ${MODULES_DIR}/helpers.d/functions
+fi
 
 get_wireless_vars() {
-	netdir=/lib/rcscripts/net.modules.d
-
 	# Check that wireless has not already been configured
 	[[ $(type -t wireless_check_extensions) == function ]] && return
 
 	# Check we can actually load the file
 	# and our calling dhcp module
-	[[ ! -f ${netdir}/iwconfig || ! -f ${netdir}/essidnet || ! -f ${netdir}/${module} ]] && return
+	[[ ! -f ${MODULES_DIR}/iwconfig || ! -f ${MODULES_DIR}/essidnet || ! -f ${MODULES_DIR}/${module} ]] && return
 
 	# Setup the devnull var as we probably aren't being called via net.lo
 	[[ -z ${devnull} ]] && local devnull=/dev/stderr
 
-	source ${netdir}/iwconfig
+	source ${MODULES_DIR}/iwconfig
 	local x
 	for x in $( typeset -f | grep -o ^iwconfig_'[^ ]*' ); do
 		eval "wireless${x#iwconfig}() { ${x} \"\$@\"; }"
@@ -35,8 +37,8 @@ get_wireless_vars() {
 	ESSID=$( wireless_get_essid ${interface} )
 
 	local -a MODULES=( "${module}" )
-	source ${netdir}/${module}
-	source ${netdir}/essidnet
+	source ${MODULES_DIR}/${module}
+	source ${MODULES_DIR}/essidnet
 
 	essidnet_pre_start ${interface}
 }

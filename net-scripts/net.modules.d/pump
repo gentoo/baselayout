@@ -130,8 +130,8 @@ pump_start() {
 	eval peer=\"\$\{peer_ntp_${iface}\}\"
 	[[ -z ${peer} ]] && eval peer=\"\$\{peer_ntp\}\"
 	if [[ ${peer} != no ]]; then
-		export new_ntp_servers=$( pump -i ${iface} --status 2>/dev/null | awk '/Ntpservers/ {print $2}' 2>/dev/null )
-		source /lib/rcscripts/net.modules.d/helpers.d/config-system
+		export ntpsrv=$( pump -i ${iface} --status 2>/dev/null | awk '/Ntpservers/ {print $2}' 2>/dev/null )
+		source ${MODULES_DIR}/helpers.d/config-system
 		config_system
 	fi
 

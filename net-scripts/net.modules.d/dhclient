@@ -39,7 +39,7 @@ dhclient_check_installed() {
 # Returns the filename of the script to run
 dhclient_get_script() {
 	local module=$( interface_module )
-	echo "/lib/rcscripts/net.modules.d/helpers.d/dhclient-${module}"
+	echo "${MODULES_DIR}/helpers.d/dhclient-${module}"
 }
 
 # bool dhclient_check_depends(void)

@@ -199,6 +199,8 @@ ifconfig_get_old_config() {
 
 	# Add inet6 addresses to our config if required
 	[[ -n ${inet6} ]] && config=( "${config[@]}" "${inet6[@]}" )
+
+	return 0
 }
 
 # bool ifconfig_iface_stop(char *interface)

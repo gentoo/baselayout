@@ -37,9 +37,12 @@ ip link set up dev ${interface} &>/dev/null
 
 [[ ${action} == deconfig ]] && exit 0
 
+MODULES_DIR=$( grep '^[^#]*MODULES_DIR=*' /etc/conf.d/net 2>/dev/null | awk -F= '{ print $2 }' )
+MODULES_DIR=${MODULES_DIR:-/lib/rcscripts/net.modules.d}
+
 if [[ ${action} == bound ]]; then
 	# Load some helpful stuff
-	source /lib/rcscripts/net.modules.d/helpers.d/functions
+	source ${MODULES_DIR}/helpers.d/functions
 
 	ip=( ${ip} )
 	subnet=( ${subnet} )
@@ -69,7 +72,8 @@ fi
 
 # Set our module to udhcpc if it's not set
 [[ -z ${module} ]] && module=udhcpc
-source /lib/rcscripts/net.modules.d/helpers.d/config-system
+
+source ${MODULES_DIR}/helpers.d/config-system
 config_system
 
 exit 0
