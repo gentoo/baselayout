@@ -474,10 +474,10 @@ modules_load()  {
 # VLAN interfaces (for example eth0.0, eth0.1).  VLAN setup is accomplished by
 # calling itself recursively.
 iface_start() {
-	local iface=${1} mod i label config_counter=-1 x conf warn=false inet6
+	local iface=${1} mod config_counter=-1 x warn=false config_worked
 	local RC_INDENTATION=${RC_INDENTATION}	# so it will reset after function
-	local -a config config_fallback
-	local ifvar=$( interface_variable ${iface} )
+	local -a config config_fallback conf
+	local ifvar=$( interface_variable ${iface} ) config_worked=false
 
 	# pre Start any modules with
 	for mod in ${MODULES[@]}; do
@@ -522,13 +522,14 @@ iface_start() {
 	einfo "Bringing up ${iface}"
 	eindent
 	for (( config_counter=0; config_counter<${#config[@]}; config_counter++ )); do
-		# Null inet address
-		# We do this so we can have an inet6 only setup
+		# Handle null and noop correctly
 		[[ ${config[config_counter]} == "null" \
 		|| ${config[config_counter]} == "noop" ]] && eend 0 && continue
 
-		${warn} && ewarn "Configuration not set for ${iface} - assuming dhcp"
-		warn=false
+		if ${warn}; then
+			ewarn "Configuration not set for ${iface} - assuming dhcp"
+			warn=false
+		fi
 
 		# We convert it to an array - this has the added
 		# bonus of trimming spaces!
@@ -553,7 +554,7 @@ iface_start() {
 				eindent
 				${conf[0]}_start ${iface} ; x=$?
 				eoutdent
-				[[ ${x} == 0 ]] && continue
+				[[ ${x} == 0 ]] && config_worked=true && continue
 			fi
 		# We need to test to see if it's an IP address or a function
 		# We do this by testing if the 1st character is a digit
@@ -566,7 +567,7 @@ iface_start() {
 #				fi
 #			fi
 			[[ ${x} == 0 ]] && interface_add_address ${iface} ${conf[@]} ; x=$?
-			eend ${x} && continue
+			eend ${x} && config_worked=true && continue
 		else
 			eerror "No loaded modules provide \"${conf[0]}\" (${conf[0]}_start)"
 		fi
@@ -574,15 +575,15 @@ iface_start() {
 		if [[ -n ${config_fallback[config_counter]} ]]; then
 			einfo "Trying fallback configuration"
 			config[config_counter]=${config_fallback[config_counter]}
-			config_fallback[label_counter]=''
+			config_fallback[config_counter]=''
 			(( config_counter-- )) # since the loop will increment it
 			continue
 		fi
-
-		# Only return failure if it was the first address for the interface
-		[[ ${config_counter} -eq 0 ]] && return 1
 	done
 	eoutdent
+
+	# We return failure if no configuration parameters worked
+	${config_worked} || return 1
 
 	# Start any modules with _post_start
 	for mod in ${MODULES[@]}; do
