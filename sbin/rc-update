@@ -3,7 +3,7 @@
 # Distributed under the terms of the GNU General Public License, v2 or later
 # $Header$
 
-source /etc/init.d/functions.sh
+source /sbin/functions.sh
 if [ `id -u` -ne 0 ]
 then
 	eerror "${0}: must be root."
@@ -101,5 +101,5 @@ else
 	usage
 	exit 1
 fi
-/etc/init.d/depscan.sh
+/sbin/depscan.sh
 einfo "rc-update complete."

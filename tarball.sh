@@ -1,6 +1,6 @@
 #!/bin/bash
 export TMP="/tmp"
-export V="1.3.2"
+export V="1.3.3"
 export DEST="${TMP}/rc-scripts-${V}"
 rm -rf ${DEST}
 install -d -m0755 ${DEST}

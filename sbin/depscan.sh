@@ -4,7 +4,7 @@
 # $Header$
 
 
-source /etc/init.d/functions.sh
+source /sbin/functions.sh
 
 if [ ! -d ${svcdir} ]
 then

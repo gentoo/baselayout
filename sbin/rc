@@ -5,7 +5,7 @@
 
 
 trap ":" INT QUIT TSTP
-source /etc/init.d/functions.sh
+source /sbin/functions.sh
 umask 022
 
 try() {
@@ -132,7 +132,7 @@ then
 		eend 0
 	fi
 	
-	/etc/init.d/depscan.sh
+	/sbin/depscan.sh
 
 	#swap needs to be activated *after* devfs has been mounted and *after*
 	#devfsd has been started, so that the fstab can be properly parsed
@@ -289,7 +289,7 @@ echo "${SOFTLEVEL}" > ${svcdir}/softlevel
 
 if [ "${SOFTLEVEL}" = "reboot" ] || [ "${SOFTLEVEL}" = "shutdown" ]
 then
-	source /etc/init.d/functions.sh
+	source /sbin/functions.sh
 	source /etc/init.d/halt.sh
 	if [ "${SOFTLEVEL}" = "reboot" ]
 	then
@@ -336,7 +336,7 @@ rm -rf ${svcdir}/softscripts.old &>/dev/null
 #(this problem should be solved now, but i think it will be a good idea
 # to recreate the deps after a change in runlevel)
 
-#/etc/init.d/depscan.sh &>/dev/null
+#/sbin/depscan.sh &>/dev/null
 
 #we want devfsd running after a change of runlevel (this is mostly if we return
 #from runlevel 'single')

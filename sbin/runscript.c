@@ -26,6 +26,6 @@ int main(int argc, char **argv) {
 		execv("/etc/init.d/rc-help.sh",myargs);
 		exit(1);
 	}
-	if (execv("/etc/init.d/runscript.sh",myargs) < 0) 
+	if (execv("/sbin/runscript.sh",myargs) < 0) 
 		exit(1);
 }
