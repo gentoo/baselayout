@@ -335,14 +335,12 @@ svc_homegrown() {
 }
 
 shift
-echo start
 if [ $# -lt 1 ]
 then
 	echo "not enough args."
 	usage $opts
 	exit 1
 fi
-echo end
 for arg in ${*}
 do
 	case $arg in

@@ -62,7 +62,7 @@ remaining=`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $1}' /proc/moun
 				eend $?
 			}
 		done
-		remaining=`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts`
+		remaining=`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts |sort -r`
 		[ -z "$remaining" ] && break
 		/sbin/fuser -k -m $sig $remaining >/dev/null
 		sleep 5
@@ -97,7 +97,7 @@ sleep 2
 umount -a -r -t noproc,notmpfs > /dev/null 2>/dev/null
 if [ "$?" -ne 0 ]
 then
-	umount -a -r -f > /dev/null 2>/dev/null
+	umount -a -r -l -d -f > /dev/null 2>/dev/null
 	if [ "$?" -ne 0 ]
 	then
 		eend 1
