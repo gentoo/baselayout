@@ -152,13 +152,17 @@ then
 		ebegin "Configuring system to use udev"
 		einfo "  Populating /dev with device nodes..."
 		try tar -jxpf /lib/udev-state/devices.tar.bz2 -C /dev
-#		if [ -f /proc/sys/kernel/hotplug ]
-#		then
-#			einfo "  Setting udev as hotplug agent..."
-#			echo "/sbin/udev" > /proc/sys/kernel/hotplug
-#		else
-#			ewarn "  Kernel was not compiled with hotplug support!"
-#		fi
+		if [ -e /proc/sys/kernel/hotplug -a -x /sbin/hotplug ]
+		then
+			einfo "  Using /sbin/hotplug for udev management..."
+			
+		elif [ -e /proc/sys/kernel/hotplug ]
+		then
+			einfo "  Setting /sbin/udev as hotplug agent..."
+			echo "/sbin/udev" > /proc/sys/kernel/hotplug
+		else
+			ewarn "  Kernel was not compiled with hotplug support!"
+		fi
 		eend 0
 		# Create problematic directories
 		mkdir -p /dev/{pts,shm}
