@@ -545,6 +545,20 @@ npmp-gui	611/tcp		dqs313_execd	# npmp-gui / DQS
 npmp-gui	611/udp		dqs313_execd
 hmmp-ind	612/tcp		dqs313_intercell# HMMP Indication / DQS
 hmmp-ind	612/udp		dqs313_intercell
+cryptoadmin	624/tcp				# Crypto Admin
+cryptoadmin	624/udp
+dec_dlm		625/tcp				# DEC DLM
+dec_dlm		625/udp
+asia		626/tcp
+asia		626/udp
+passgo-tivoli	627/tcp				# PassGo Tivoli
+passgo-tivoli	627/udp
+qmqp		628/tcp				# Qmail QMQP
+qmqp		628/udp
+3com-amp3	629/tcp
+3com-amp3	629/udp
+rda		630/tcp
+rda		630/udp
 ipp		631/tcp				# Internet Printing Protocol
 ipp		631/udp
 ldaps		636/tcp				# LDAP over SSL
@@ -683,8 +697,8 @@ x25-svc-port	1998/tcp			# cisco X.25 service (XOT)
 x25-svc-port	1998/udp
 tcp-id-port	1999/tcp			# cisco identification port
 tcp-id-port	1999/udp
-cisco-sccp	2000/tcp			# Cisco SCCP
-cisco-sccp	2000/udp
+cisco-sccp	2000/tcp	sieve		# Cisco SCCP
+cisco-sccp	2000/udp	sieve
 nfs		2049/tcp			# Network File System
 nfs		2049/udp
 rtcm-sc104	2101/tcp			# RTCM SC-104
