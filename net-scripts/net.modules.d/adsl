@@ -32,7 +32,14 @@ adsl_check_installed() {
 #
 # Checks to see if we have the needed functions
 adsl_check_depends() {
-	# No depends
+	local f
+
+	for f in interface_variable; do
+		[[ $( type -t ${f} ) == function ]] && continue
+		eerror "adsl: missing required function ${f}\n"
+		return 1
+	done
+
 	return 0
 }
 

@@ -34,7 +34,7 @@ macchanger_check_installed() {
 macchanger_check_depends() {
 	local f
 
-	for f in interface_get_mac_address; do
+	for f in interface_variable interface_get_mac_address; do
 		[[ $( type -t ${f} ) == function ]] && continue
 		eerror "macchanger: missing required function ${f}\n"
 		return 1

@@ -52,7 +52,7 @@ iproute2_module() {
 iproute2_check_depends() {
 	local f
 
-	for f in interface_device; do
+	for f in interface_device interface_variable; do
 		[[ $( type -t ${f} ) == function ]] && continue
 		eerror "iproute2: missing required function ${f}\n"
 		return 1

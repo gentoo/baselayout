@@ -34,8 +34,8 @@ bonding_depend() {
 bonding_check_depends() {
 	local f
 
-	for f in interface_exists interface_up interface_down interface_del_addresses; do
-		[[ $(type -t ${f}) == function ]] && continue
+	for f in interface_exists interface_variable interface_up interface_down interface_del_addresses; do
+		[[ $( type -t ${f} ) == function ]] && continue
 		eerror "bonding: missing required function ${f}\n"
 		return 1
 	done

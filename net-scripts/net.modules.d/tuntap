@@ -40,8 +40,8 @@ tuntap_check_installed() {
 tuntap_check_depends() {
 	local f
 
-	for f in interface_exists interface_type; do
-		[[ $(type -t ${f}) == function ]] && continue
+	for f in interface_exists interface_type interface_variable; do
+		[[ $( type -t ${f} ) == function ]] && continue
 		eerror "tuntap: missing required function ${f}\n"
 		return 1
 	done

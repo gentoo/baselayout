@@ -53,9 +53,9 @@ iwconfig_provides() {
 iwconfig_check_depends() {
 	local f
 
-	for f in interface_up interface_down interface_del_addresses interface_exists; do
-		[[ $(type -t ${f}) == function ]] && continue
-		eerror "wireless: missing required function ${f}\n"
+	for f in interface_variable interface_up interface_down interface_del_addresses interface_exists; do
+		[[ $( type -t ${f} ) == function ]] && continue
+		eerror "iwconfig: missing required function ${f}\n"
 		return 1
 	done
 
@@ -69,7 +69,7 @@ iwconfig_check_extensions() {
 	local iface=${1}
 
 	# Do we have wireless extensions enabled on the interface?
-	local ext=$(iwconfig ${iface} 2>/dev/null | awk -v iface=${iface} '{ if ($1 == iface) print "yes" }')
+	local ext=$( iwconfig ${iface} 2>/dev/null | awk -v iface=${iface} '{ if ($1 == iface) print "yes" }' )
 	[[ ${ext} == yes ]]
 	return $?
 }
@@ -175,10 +175,10 @@ iwconfig_get_wep_key() {
 #
 # Applies the user configuration to the interface
 iwconfig_user_config() {
-	local iface=${1} conf e
+	local iface=${1} conf e ifvar=$( interface_variable ${1} )
 
 	# Apply the user configuration
-	eval conf=\"\$\{iwconfig_${iface}\}\"
+	eval conf=\"\$\{iwconfig_${ifvar}\}\"
 	if [[ -n ${conf} ]]; then
 		e=$( iwconfig ${iface} ${conf} 2>&1 )
 		if [[ -n ${e} ]]; then
@@ -187,7 +187,7 @@ iwconfig_user_config() {
 		fi
 	fi
 
-	eval conf=\"\$\{iwpriv_${iface}\}\"
+	eval conf=\"\$\{iwpriv_${ifvar}\}\"
 	if [[ -n ${conf} ]]; then
 		e=$( iwpriv ${iface} ${conf} 2>&1 )
 		if [[ -n ${e} ]]; then
@@ -202,6 +202,7 @@ iwconfig_user_config() {
 # Sets up our wireless interface to operate in ad-hoc or master mode
 iwconfig_setup_specific() {
 	local iface=${1} mode=${2} channel key dessid e
+	local ifvar=$( interface_variable ${1} )
 
 	if [[ -z ${ESSID} ]]; then
 		eerror "${iface} requires an ESSID to be set to operate in ${mode} mode"
@@ -235,7 +236,7 @@ iwconfig_setup_specific() {
 	fi
 	iwconfig ${iface} nick "${ESSID}" 2>/dev/null
 
-	eval channel=\"\$\{channel_${iface}\}\"
+	eval channel=\"\$\{channel_${ifvar}\}\"
 	# We default the channel to 3
 	channel=${channel:-3}
 
@@ -280,11 +281,11 @@ iwconfig_associate_quality() {
 #
 # Returns true if the interface has associated with an Access Point
 iwconfig_test_associated() {
-	local iface=${1} test
+	local iface=${1} test ifvar=$( interface_variable ${1} )
 	# Some drivers don't set MAC to a bogus value when assocation is lost/fails
 	# whereas they do set link quality to 0
 
-	test=$( eval echo \$\{associate_test_${iface}\} | tr '[:upper:]' '[:lower:]' )
+	test=$( eval echo \$\{associate_test_${ifvar}\} | tr '[:upper:]' '[:lower:]' )
 	test=${test:-mac}
 	if [[ ${test} != mac && ${test} != quality && ${test} != all ]]; then
 		ewarn "  associate_test_${iface} is not set to mac, quality or all"
@@ -306,8 +307,8 @@ iwconfig_test_associated() {
 # Waits for a configured ammount of time until
 # we are assocaited with an Access Point
 iwconfig_wait_for_association() {
-	local iface=${1} i=0 wait
-	eval wait=\"\$\{sleep_associate_${iface}\}\"
+	local iface=${1} i=0 wait ifvar=$( interface_variable ${1} )
+	eval wait=\"\$\{sleep_associate_${ifvar}\}\"
 	wait=${wait:-10}
 
 	while (( i<wait )); do
@@ -377,17 +378,17 @@ iwconfig_associate() {
 #
 # Fills 3 arrays with information from a wireless scan
 iwconfig_scan() {
-	local iface=${1} e mode x
+	local iface=${1} e mode x ifvar=$( interface_variable ${1} )
 
 	# First, we may need to change mode to scan in
-	mode=$( eval echo \$\{scan_mode_${iface}\} | tr '[:upper:]' '[:lower:]' )
+	mode=$( eval echo \$\{scan_mode_${ifvar}\} | tr '[:upper:]' '[:lower:]' )
 	if [[ -n ${mode} ]]; then
 		e=$( iwconfig ${iface} mode ${mode} 2>&1 )
 		[[ -n ${e} ]] && ewarn "${iface} does not support setting the mode to \"${mode}\""
 	fi
 
 	# Next we set any private driver ioctls needed
-	eval x=\"\$\{iwpriv_scan_pre_${iface}\}\"
+	eval x=\"\$\{iwpriv_scan_pre_${ifvar}\}\"
 	if [[ -n ${x} ]]; then
 		e=$( iwpriv ${iface} ${x} 2>&1 )
 		if [[ -n ${e} ]]; then
@@ -399,13 +400,13 @@ iwconfig_scan() {
 	veinfo "Scanning for access points"
 
 	# Sleep if required
-	eval x=\"\$\{sleep_scan_${iface}\}\"
+	eval x=\"\$\{sleep_scan_${ifvar}\}\"
 	[[ -n ${x} ]] && sleep ${x}
 
 	local scan=$( iwlist ${iface} scanning 2>/dev/null )
 
 	# We may need to unset the previous private driver ioctls
-	eval x=\"\$\{iwpriv_scan_post_${iface}\}\"
+	eval x=\"\$\{iwpriv_scan_post_${ifvar}\}\"
 	if [[ -n ${x} ]]; then
 		e=$( iwpriv ${iface} ${x} 2>&1 )
 		if [[ -n ${e} ]]; then
@@ -419,7 +420,7 @@ iwconfig_scan() {
 
 	if [[ -z ${scan} ]]; then
 		ewarn "${iface} does not support scanning"
-		eval x=\"\$\{adhoc_essid_${iface}\}\"
+		eval x=\"\$\{adhoc_essid_${ifvar}\}\"
 		[[ -n ${x} ]] && return 0
 		if [[ -n ${preferred_aps} ]]; then
 			[[ ${associate_order} == forcepreferred \
@@ -715,7 +716,7 @@ iwconfig_strip_associated() {
 # Once we're connected we show a report and then configure any interface
 # variables for the ESSID
 iwconfig_configure() {
-	local iface=${1} test x e
+	local iface=${1} test x e ifvar=$( interface_variable ${1} )
 	local -a essid_APs mac_APs enc_APs
 
 	# We need to bring the interface up to apply stuff
@@ -734,10 +735,10 @@ iwconfig_configure() {
 	
 	iwconfig_defaults ${iface}
 
-	eval ESSID=\"\$\{essid_${iface}\}\"
+	eval ESSID=\"\$\{essid_${ifvar}\}\"
 
 	# Setup ad-hoc mode?
-	x=$( eval echo \$\{mode_${iface}\} | tr '[:upper:]' '[:lower:]' )
+	x=$( eval echo \$\{mode_${ifvar}\} | tr '[:upper:]' '[:lower:]' )
 	x=${x:-managed}
 	if [[ ${x} == ad-hoc || ${x} == master ]]; then
 		iwconfig_setup_specific ${iface} ${x}
@@ -768,7 +769,7 @@ iwconfig_configure() {
 		iwconfig_associate ${iface} && return 0
 		[[ ${ESSID} == any ]] && iwconfig_force_preferred ${iface} && return 0
 
-		eval ESSID=\"\$\{adhoc_essid_${iface}\}\"
+		eval ESSID=\"\$\{adhoc_essid_${ifvar}\}\"
 		if [[ -n ${ESSID} ]]; then
 			iwconfig_setup_specific ${iface} ad-hoc
 			return $?
@@ -777,15 +778,15 @@ iwconfig_configure() {
 	fi
 
 	# Do we have a preferred Access Point list specific to the interface?
-	eval x=( \"\$\{preferred_aps_${iface}\[@\]\}\" )
+	eval x=( \"\$\{preferred_aps_${ifvar}\[@\]\}\" )
 	[[ -n ${x} ]] && preferred_aps=( "${x[@]}" )
 
 	# Do we have a blacklist Access Point list specific to the interface?
-	eval x=( \"\$\{blacklist_aps_${iface}\[@\]\}\" )
+	eval x=( \"\$\{blacklist_aps_${ifvar}\[@\]\}\" )
 	[[ -n ${e} ]] && blacklist_aps=( "${x[@]}" )
 
 	# Are we forcing preferred only?
-	eval x=\"\$\{associate_order_${iface}\}\"
+	eval x=\"\$\{associate_order_${ifvar}\}\"
 	[[ -n ${x} ]] && associate_order=${x}
 	associate_order=$( echo ${associate_order:-any} | tr '[:upper:]' '[:lower:]' )
 
@@ -797,7 +798,7 @@ iwconfig_configure() {
 
 		# Strip AP's from the list that have already been associated with
 		# other wireless cards in the system if requested
-		eval x=\"\$\{unique_ap_${iface}\}\"
+		eval x=\"\$\{unique_ap_${ifvar}\}\"
 		[[ -n ${x} ]] && unique_ap=${x}
 		unique_ap=$( echo ${unique_ap:-no} | tr '[:upper:]' '[:lower:]' )
 		[[ ${unique_ap} != no ]] && iwconfig_strip_associated ${iface}
@@ -812,7 +813,7 @@ iwconfig_configure() {
 	[[ ${preferred_only} == force || ${preferred_aps} == forceonly ]] && e="force"
 	e="Couldn't ${e} any access points on ${iface}"
 	
-	eval ESSID=\"\$\{adhoc_essid_${iface}\}\"
+	eval ESSID=\"\$\{adhoc_essid_${ifvar}\}\"
 	if [[ -n ${ESSID} ]]; then
 		ewarn "${e}"
 		iwconfig_setup_specific ${iface} ad-hoc

@@ -50,6 +50,14 @@ ifconfig_module() {
 #
 # Checks to see if we have the needed functions
 ifconfig_check_depends() {
+	local f
+
+	for f in interface_variable; do
+		[[ $( type -t ${f} ) == function ]] && continue
+		eerror "ifconfig: missing required function ${f}\n"
+		return 1
+	done
+
 	return 0
 }
 
@@ -275,10 +283,9 @@ ifconfig_post_start() {
 	return 0
 }
 
-# bool ifconfig_configure(char *iface, char *options ...)
+# bool ifconfig_add_address(char *iface, char *options ...)
 #
-# Starts the interface with the given options
-# Returns the value of the ifconfig command
+# Adds the given address to the interface
 ifconfig_add_address() {
 	local iface=${1} i=0
 

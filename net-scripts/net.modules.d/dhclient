@@ -49,7 +49,7 @@ dhclient_check_depends() {
 	local f
 
 	for f in interface_variable interface_device interface_is_up interface_get_address interface_module; do
-		[[ $(type -t ${f}) == function ]] && continue
+		[[ $( type -t ${f} ) == function ]] && continue
 		eerror "dhclient: missing required function ${f}\n"
 		return 1
 	done
