@@ -337,16 +337,6 @@ then
 			break
 		fi
 	done
-	if [ "${svcmount}" == "no" ]
-	then
-		# Check to see if current svcdir is writable, and
-		# if it isn't (readonly filesystem?), mount on ramdisk
-		if ! touch -c "${svcdir}" 2> /dev/null
-		then
-			ewarn "Could not use '${svcdir}', mounting ramdisk (ro root?)"
-			svcmount="yes"
-		fi
-	fi
 	if [ "${svcmount}" == "yes" ]
 	then
 		check_statedir "${tsvcdir}"
