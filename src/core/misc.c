@@ -89,7 +89,7 @@ char *strndup(const char *str, size_t size) {
 	char *new_str = NULL;
 	size_t len;
 
-	if ((NULL == str) || (0 == strlen(str))) {
+	if (NULL == str) {
 		DBG_MSG("Invalid argument passed!\n");
 		errno = EINVAL;
 		return NULL;

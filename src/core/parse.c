@@ -709,6 +709,12 @@ int write_legacy_stage3(FILE *output) {
 	index = 1;
 
 	list_for_each_entry(info, &service_info_list, node) {
+#if 0
+		/* Make it easier to compare old depscan.sh output and this
+		 * output as it puts 'net' right in the middle */
+		if (0 == strcmp("net", info->name))
+			continue;
+#endif
 		fprintf(output, "RC_DEPEND_TREE[%i]=\"%s\"\n", index*11, info->name);
 		
 		for (i = 0;i <= BROKEN;i++) {

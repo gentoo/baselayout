@@ -42,8 +42,17 @@ HEADERS = \
 	misc.h \
 	debug.h
 
+
+# cc-option (from linux kernel sources)
+# Usage: cflags-y += $(call gcc-option, -march=winchip-c6, -march=i586)
+
+cc-option = $(shell if $(CC) $(1) -S -o /dev/null -xc /dev/null \
+              > /dev/null 2>&1; then echo "$(1)"; else echo "$(2)"; fi ;)
+
+
 ifeq ($(DEBUG),1)
   CFLAGS += -ggdb3
+  CFLAGS += $(call cc-option, -fbounds-checking, -pipe)
   EXTRA_CFLAGS += -DRC_DEBUG
 endif
 

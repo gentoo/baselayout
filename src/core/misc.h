@@ -203,24 +203,29 @@
  * is that it should be safe from having the item removed from under you. */
 #define STRING_LIST_FOR_EACH_SAFE(_string_list, _pos, _next, _counter) \
 		if ((NULL != _string_list) && (0 == (_counter = 0))) \
-			/* Just set both '_pos' and '_next', and make sure _pos
-			 * at least are not NULL */ \
-			while ((NULL != (_pos = _string_list[_counter])) && \
-			       (_pos != (_next = _string_list[_counter+1]))) \
-			        /* This is plain ugly.  The basic idea is to
-				 * first check for NULL, and that things have
-				 * not changed from under us */ \
-				while (((NULL != _string_list[_counter]) && \
-				        (_next == _string_list[++_counter])) || \
-				       /* If things have changed, once again verify
-					* the absence of NULL, and then see how many
-					* times we should shift back.  Not that safe,
-					* but we should at least be able to backup
-					* once, which should be more than enough with
-					* the code I use it in. */ \
-				       ((NULL != _next) && \
-				        (_next == _string_list[--_counter-1]) && \
-				        (-1 == (_counter--))))
+			       /* First part of the while checks if this is the
+				* first loop, and if so setup _pos and _next
+				* and increment _counter */ \
+			while ((((0 == _counter) && \
+			        (NULL != (_pos = _string_list[_counter])) && \
+			        (_pos != (_next = _string_list[++_counter]))) || \
+			       /* Second part is when it is not the first loop
+				* and _pos was not removed from under us.  We
+				* just increment _counter, and setup _pos and
+				* _next */ \
+			       ((0 != _counter) && \
+			        (_pos == _string_list[_counter-1]) && \
+			        (_next == _string_list[_counter]) && \
+			        (NULL != (_pos = _string_list[_counter])) && \
+			        (_pos != (_next = _string_list[++_counter]))) || \
+			       /* Last part is when _pos was removed from under
+				* us.  We basically just setup _pos and _next,
+				* but leave _counter alone */ \
+			       ((0 != _counter) && \
+				(_pos != _string_list[_counter-1]) && \
+			        (_next == _string_list[_counter-1]) && \
+			        (NULL != (_pos = _string_list[_counter-1])) && \
+				(_pos != (_next = _string_list[_counter])))))
 
 /* Just free the whole string list */
 #define STRING_LIST_FREE(_string_list) \

@@ -2,6 +2,13 @@
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 # $Header$
 
+  18 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Makefile: Add -fbounds-checking support when DEBUG=1.
+    misc.h: Scrap STRING_LIST_FOR_EACH_SAFE() and recode from scratch fixing
+            invalid pointer operations.
+    misc.c: Remove the last strlen() from strndup() that caused an overrun.
+
   17 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     misc.c: Fix overrun in strndup(), thanks to report from
