@@ -82,9 +82,9 @@ udhcpc_stop() {
 
 	# udhcp-0.9.8-r3 and earlier do not process signals correctly
 	# so we need to kill them off
-	if ps -p ${pid} &>/dev/null ; then
+	if [[ -d /proc/${pid} ]]; then
 		kill -s KILL ${pid} &>/dev/null
-		ps -p ${pid} &>/dev/null && e=false
+		[[ -d /proc/${pid} ]] && e=false
 	fi
 
 	${e}

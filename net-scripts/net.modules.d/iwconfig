@@ -728,6 +728,7 @@ iwconfig_configure() {
 	local -a essid_APs mac_APs enc_APs
 	
 	iwconfig_defaults ${iface}
+	iwconfig_user_config ${iface}
 
 	eval ESSID=\"\$\{essid_${ifvar}\}\"
 

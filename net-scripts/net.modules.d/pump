@@ -68,7 +68,7 @@ pump_stop() {
 
 	# We check for a pump process first as querying for status
 	# causes pump to spawn a process
-	ps -C pump &>/dev/null || return 0
+	pidof pump &>/dev/null || return 0
 
 	e=$( pump --status --interface ${iface} 2>${devnull} | grep ${iface} )
 	[[ -z ${e} ]] && return 1

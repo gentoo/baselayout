@@ -109,7 +109,7 @@ wpa_supplicant_associated() {
 # Kills any existing wpa_supplicant process on the interface
 wpa_supplicant_kill() {
 	local iface=$1 report=${2:-false}
-	local pid=$( ps --no-headers -o pid -C wpa_supplicant )
+	local pid=$( pidof /usr/sbin/wpa_supplicant )
 
 	if [[ -n ${pid} ]]; then
 		${report} && ebegin "Stopping wpa_supplicant on ${iface}"
