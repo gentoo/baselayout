@@ -10,6 +10,18 @@
     without trying to unmount any.  This fixes a few cases where reboot
     would halt due to unmounted /proc, etc.
 
+    This change set fixes two things:
+    1)  In exporting all functions/variables in functions.sh, rc-services.sh
+       and rc-daemon.sh, we created an overly large environment, and also
+       broke stuff like glftpd.  Do not do this, and hope whatever caused
+       the issues previously is fixed in the meantime.  This should close
+       bugs #25754 and #31794.
+    2)  gendepend.awk used to generate deptree with functions called
+       depinfo_<scriptname> which set appropriate variables when called.
+       This broke if the scriptname contained characters that is not valid
+       for bash variable names.  Changed things to use an array fixing this.
+       This closes bug #24092.
+
   19 Oct 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     More bootsplash fixes, bug #21019 (comment #21).

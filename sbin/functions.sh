@@ -3,19 +3,7 @@
 # $Header$
 
 
-set -a
-
 RC_GOT_FUNCTIONS="yes"
-
-umask 022
-
-if [ -z "${EBUILD}" ]
-then
-	# Setup a basic $PATH.  Just add system default to existing.
-	# This should solve both /sbin and /usr/sbin not present when
-	# doing 'su -c foo', or for something like:  PATH= rcscript start
-	PATH="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/sbin:${PATH}"
-fi
 
 # daemontools dir
 SVCDIR="/var/lib/supervise"
@@ -52,77 +40,6 @@ RC_USE_CONFIG_PROFILE="yes"
 
 # Override defaults with user settings ...
 [ -f /etc/conf.d/rc ] && source /etc/conf.d/rc
-
-
-getcols() {
-	echo "$2"
-}
-
-# Should we use colors ?
-if [ -n "${EBUILD}" ] && [ "${*/depend}" = "$*" ]
-then
-	# Check user pref in portage
-	RC_NOCOLOR="$(python -c 'import portage; print portage.settings["NOCOLOR"]' 2> /dev/null)"
-
-	[ "${RC_NOCOLOR}" = "true" ] && RC_NOCOLOR="yes"
-
-elif [ -n "${EBUILD}" ] && [ "${*/depend}" != "$*" ]
-then
-	# We do not want colors or stty to run during emerge depend
-	RC_NOCOLOR="yes"
-	
-elif [ "$(/sbin/consoletype 2> /dev/null)" = "serial" ]
-then
-	# We do not want colors on serial terminals
-	RC_NOCOLOR="yes"
-else
-	# Lastly check if the user disabled it with --nocolor argument
-	for arg in $*
-	do
-		case "${arg}" in
-			--nocolor)
-				RC_NOCOLOR="yes"
-				;;
-		esac
-	done
-fi
-
-if [ "${RC_NOCOLOR}" = "yes" ]
-then
-	COLS="25 80"
-	ENDCOL=
-
-	if [ -n "${EBUILD}" ] && [ "${*/depend}" = "$*" ]
-	then
-		stty cols 80 &>/dev/null
-		stty rows 25 &>/dev/null
-	fi
-else
-	COLS="`stty size 2> /dev/null`"
-	COLS="`getcols ${COLS}`"
-	COLS=$((${COLS} - 7))
-	ENDCOL=$'\e[A\e['${COLS}'G'    # Now, ${ENDCOL} will move us to the end of the
-	                               # column;  irregardless of character width
-fi
-
-if [ "${RC_NOCOLOR}" = "yes" ]
-then
-	GOOD=
-	WARN=
-	BAD=
-	NORMAL=
-
-	HILITE=
-	BRACKET=
-else
-	GOOD=$'\e[32;01m'
-	WARN=$'\e[33;01m'
-	BAD=$'\e[31;01m'
-	NORMAL=$'\e[0m'
-
-	HILITE=$'\e[36;01m'
-	BRACKET=$'\e[34;01m'
-fi
 
 
 # void get_bootconfig()
@@ -230,6 +147,7 @@ splash_init() {
 
 	export pb_init pb_count pb_scripts pb_rate
 }
+
 #
 # void splash_calc (void)
 #
@@ -289,6 +207,7 @@ splash_calc() {
 	echo "pb_count=${pb_count}" >> "${svcdir}/progress"
 	echo "pb_scripts=${pb_scripts}" >> "${svcdir}/progress"
 }
+
 #
 # void splash_update (char *fsstate, char *myscript, char *action)
 #
@@ -332,6 +251,7 @@ splash_update() {
 		echo "pb_execed=\"${pb_execed} ${myscript}\"" >> "${svcdir}/progress"
 	fi
 }
+
 #
 # void splash_debug (char *softlevel)
 #
@@ -400,8 +320,6 @@ update_splash_wrappers() {
 	export rc_splash rc_splash_init rc_splash_calc \
 		rc_splash_update rc_splash_debug
 }
-
-update_splash_wrappers
 
 # void esyslog(char* priority, char* tag, char* message)
 #
@@ -818,14 +736,83 @@ add_suffix() {
 	return 0
 }
 
-set +a
+getcols() {
+	echo "$2"
+}
 
 if [ -z "${EBUILD}" ]
 then
+	# Setup a basic $PATH.  Just add system default to existing.
+	# This should solve both /sbin and /usr/sbin not present when
+	# doing 'su -c foo', or for something like:  PATH= rcscript start
+	PATH="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/sbin:${PATH}"
+
+	if [ "$(/sbin/consoletype 2> /dev/null)" = "serial" ]
+	then
+		# We do not want colors on serial terminals
+		RC_NOCOLOR="yes"
+	fi
+	
+	for arg in $*
+	do
+		case "${arg}" in
+			# Lastly check if the user disabled it with --nocolor argument
+			--nocolor)
+				RC_NOCOLOR="yes"
+				;;
+		esac
+	done
+
 	if [ -e "/proc/cmdline" ]
 	then
 		setup_defaultlevels
 	fi
+
+	update_splash_wrappers
+else
+	# Should we use colors ?
+	if [ "${*/depend}" = "$*" ]
+	then
+		# Check user pref in portage
+		RC_NOCOLOR="$(portageq envvar NOCOLOR 2>/dev/null)"
+		
+		[ "${RC_NOCOLOR}" = "true" ] && RC_NOCOLOR="yes"
+	else
+		# We do not want colors or stty to run during emerge depend
+		RC_NOCOLOR="yes"
+	fi                                                                                                                       
+fi
+
+if [ "${RC_NOCOLOR}" = "yes" ]
+then
+	COLS="25 80"
+	ENDCOL=
+	
+	GOOD=
+	WARN=
+	BAD=
+	NORMAL=
+	HILITE=
+	BRACKET=
+	
+	if [ -n "${EBUILD}" ] && [ "${*/depend}" = "$*" ]
+	then
+		stty cols 80 &>/dev/null
+		stty rows 25 &>/dev/null
+	fi
+else
+	COLS="`stty size 2> /dev/null`"
+	COLS="`getcols ${COLS}`"
+	COLS=$((${COLS} - 7))
+	ENDCOL=$'\e[A\e['${COLS}'G'    # Now, ${ENDCOL} will move us to the end of the
+	                               # column;  irregardless of character width
+	
+	GOOD=$'\e[32;01m'
+	WARN=$'\e[33;01m'
+	BAD=$'\e[31;01m'
+	NORMAL=$'\e[0m'
+	HILITE=$'\e[36;01m'
+	BRACKET=$'\e[34;01m'
 fi
 
 

@@ -6,8 +6,6 @@
 # RC functions to work with daemons (very alpha for now, and not finished)
 
 
-set -a
-
 RC_GOT_DAEMON="yes"
 
 [ "${RC_GOT_FUNCTIONS}" != "yes" ] && source /sbin/functions.sh
@@ -395,8 +393,6 @@ stop-daemons() {
 
 	return ${retval}
 }
-
-set +a
 
 
 # vim:ts=4

@@ -1,4 +1,3 @@
-#!/bin/bash
 # Copyright 1999-2003 Gentoo Technologies, Inc.
 # Distributed under the terms of the GNU General Public License v2
 # Author: Martin Schlemmer <azarah@gentoo.org>
@@ -6,8 +5,6 @@
 
 # RC Dependency and misc service functions
 
-
-set -a
 
 RC_GOT_SERVICES="yes"
 
@@ -25,32 +22,62 @@ then
 fi
 
 
+#####################
+# Internal variables
+#####################
+
+# The name of the service whose dependency info we currently have
+rc_name=
+# The index of the service whose dependency info we currently have
+rc_index=
+# Our dependency types ...
+rc_ineed=
+rc_needsme=
+rc_iuse=
+rc_usesme=
+rc_ibefore=
+rc_iafter=
+rc_broken=
+rc_parallel=
+
+############
+# Functions
+############
+
 # bool get_dep_info(service)
 #
 #   Set the Dependency variables to contain data for 'service'
 #
 get_dep_info() {
+	local x=1
 	local myservice="$1"
-	
-	# net.* services cause declare -x to bork
-	myservice="${myservice//\./DOT}"
-	# foo-bar services cause declare -x to bork
-	myservice="${myservice//-/DASH}"
 	
 	[ -z "$1" ] && return 1
 
 	# We already have the right stuff ...
-	[ "${rc_name}" = "$1" ] && return 0
-	
-	# If no 'depinfo_$1' function exist, then we have problems.
-	if [ -z "$(declare -F "depinfo_${myservice}")" ]
-	then
-		return 1
-	fi
+	[ "$1" = "${rc_name}" ] && return 0
 
-	"depinfo_${myservice}"
+	while [ "${x}" -lt "${RC_DEPEND_TREE[0]}" ]
+	do
+		if [ "$1" = "${RC_DEPEND_TREE[$((${x} * ${rc_index_scale}))]}" ]
+		then
+			rc_index=$((${x} * ${rc_index_scale}))
+			rc_name="${RC_DEPEND_TREE[${rc_index}]}"
+			rc_ineed="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_ineed}))]}"
+			rc_needsme="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_needsme}))]}"
+			rc_iuse="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_iuse}))]}"
+			rc_usesme="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_usesme}))]}"
+			rc_ibefore="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_ibefore}))]}"
+			rc_iafter="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_iafter}))]}"
+			rc_broken="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_broken}))]}"
+			rc_parallel="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_parallel}))]}"
+			return 0
+		fi
 
-	return 0
+		let "x += 1"
+	done
+
+	return 1
 }
 
 # string check_dependency(deptype, service1)
@@ -268,24 +295,6 @@ is_runlevel_stop() {
 	[ -d "${svcdir}/softscripts.new" ] && return 0
 
 	return 1
-}
-
-# void filter_environ()
-#
-#   Tries to filter most of the dependency stuff from the environment
-#
-filter_environ() {
-	local x=
-
-	for x in $(declare -F)
-	do
-		if [ "${x/depinfo_}" != "${x}" ]
-		then
-			unset ${x/declare -f /}
-		fi
-	done
-
-	return 0
 }
 
 # int start_service(service)
@@ -682,8 +691,6 @@ query_after() {
 
 	return 1
 }
-
-set +a
 
 
 # vim:ts=4

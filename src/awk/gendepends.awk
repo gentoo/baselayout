@@ -298,6 +298,10 @@ function resolve_depend(type, service, deplist,    x, deparray)
 
 BEGIN {
 	NAME = 1
+	RC_NUMBER = 0
+	PROVIDE = 10
+
+	# Types ...
 	NEED = 2
 	NEEDME = 3
 	USE = 4
@@ -305,9 +309,9 @@ BEGIN {
 	BEFORE = 6
 	AFTER = 7
 	BROKEN = 8
-	PROVIDE = 9
-	PARALLEL = 10
-	RC_NUMBER = 0
+	PARALLEL = 9
+	TYPES_MIN = 2
+	TYPES_MAX = 9
 
 	TYPE_NAMES[NEED] = "ineed"
 	TYPE_NAMES[NEEDME] = "needsme"
@@ -411,22 +415,28 @@ END {
 			resolve_depend(AFTER, DEPTREE[x,NAME], DEPTREE[x,AFTER])
 	}
 
-	print "export RC_GOT_DEPTREE_INFO=\"yes\"" >> (CACHEDTREE)
+	for (x = TYPES_MIN; x <= TYPES_MAX; x++)
+		print "rc_type_" TYPE_NAMES[x] "=" x >> (CACHEDTREE)
+	print "rc_index_scale=" (TYPES_MAX + 1) >> (CACHEDTREE)
+	print "" >> (CACHEDTREE)
+	print "declare -a RC_DEPEND_TREE" >> (CACHEDTREE)
+	print "" >> (CACHEDTREE)
+	print "RC_DEPEND_TREE[0]=" RC_NUMBER >> (CACHEDTREE)
+	print "" >> (CACHEDTREE)
 
 	# Generate the resolved CACHEDTREE
+	#
+	# NOTE:  We used to use depinfo_<scriptname>() function to resolve our
+	#        rc_<type> variables, but that do not scale when the names of
+	#        the scripts include invalid bash variable characters (+,.,etc).
+	#
 	for (x = 1;x <= RC_NUMBER;x++) {
 
-		tmpname = DEPTREE[x,NAME]
+		print "RC_DEPEND_TREE[" (x * (TYPES_MAX + 1)) "]=\"" DEPTREE[x,NAME] "\"" >> (CACHEDTREE)
 
-		# net.* services is causing declare -x to bork
-		gsub(/\./, "DOT", tmpname)
-		# foo-bar services is causing declare -x to bork
-		gsub(/-/, "DASH", tmpname)
+		for (y = TYPES_MIN; y <= TYPES_MAX; y++) {
 
-		print "depinfo_" tmpname "() {" >> (CACHEDTREE)
-		print "    export rc_name=\"" DEPTREE[x,NAME] "\"" >> (CACHEDTREE)
-
-		for (y = 2; y <= 8; y++) {
+			tmpname = "RC_DEPEND_TREE[" (x * (TYPES_MAX + 1)) "+" y "]"
 
 			if ((x,y) in RESOLVED_DEPTREE) {
 			
@@ -437,26 +447,23 @@ END {
 				for (i = 2;i <= count;i++)
 					tmpstr = tmpstr " " tmparray2[i]
 				
-				print "    export rc_" TYPE_NAMES[y] "=\"" tmpstr "\"" >> (CACHEDTREE)
+				print tmpname "=\"" tmpstr "\"" >> (CACHEDTREE)
 			} else
-				print "    export rc_" TYPE_NAMES[y] "=" >> (CACHEDTREE)
+				print tmpname "=" >> (CACHEDTREE)
 		}
 
-		if ((x,PARALLEL) in RESOLVED_DEPTREE)
-			print "    export rc_" TYPE_NAMES[PARALLEL] "=\"" RESOLVED_DEPTREE[x,PARALLEL] "\"" >> (CACHEDTREE)
-		else
-			print "    export rc_" TYPE_NAMES[PARALLEL] "=" >> (CACHEDTREE)
-
-		print "}" >> (CACHEDTREE)
 		print "" >> (CACHEDTREE)
 	}
+
+	print "export RC_DEPEND_TREE" >> (CACHEDTREE)
+	print "export RC_GOT_DEPTREE_INFO=\"yes\"" >> (CACHEDTREE)
+	print "" >> (CACHEDTREE)
 
 	if (check_provide("logger"))
 		print "export LOGGER_SERVICE=\"" get_provide("logger") "\"" >> (CACHEDTREE)
 	else
 		print "export LOGGER_SERVICE=" >> (CACHEDTREE)
-					
-
+		
 	close(CACHEDTREE)
 }
 

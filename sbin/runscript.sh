@@ -198,7 +198,7 @@ svc_stop() {
 		eerror "        \"${myservice}\" is still up."
 	else
 		# Now that deps are stopped, stop our service
-		(filter_environ; stop)
+		stop
 		retval="$?"
 	fi
 	
@@ -315,7 +315,7 @@ svc_start() {
 			retval=1
 		elif [ "${retval}" -eq 0 ] && ! broken "${myservice}" &>/dev/null
 		then
-			(filter_environ; start)
+			start
 			retval="$?"
 		fi
 
@@ -409,7 +409,7 @@ svc_homegrown() {
 			if typeset -F "${x}" &>/dev/null
 			then
 				# Run the homegrown function
-				(filter_environ; "${x}")
+				"${x}"
 				
 				return $?
 			fi
