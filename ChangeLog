@@ -2,6 +2,12 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  26 Dec 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add /etc/init.d/crypto-loop and /etc/conf.d/crypto-loop, a cool
+    rc-script to setup encrypted loopback devices.  This was kindly
+    donated by Matthew Kennedy <mkennedy@gentoo.org> (bug #11471).
+
   25 Dec 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix src/awk/genenviron.awk stripping *all* '=', closing

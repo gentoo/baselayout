@@ -1,0 +1,14 @@
+# /etc/conf.d/crypto-loop:
+# $Header$
+
+# Configuration file for /etc/init.d/crypto-loop
+
+# More info can be found at:
+#
+#  http://cvs.gentoo.org/~mkennedy/loop.html
+
+# Specify loopback configurations here. The format of this file is
+# shown in the following commented-out example. One line per loopback
+# configuration.
+
+# loop=/dev/loop0 cipher=serpent keysize=256 device=/dev/system/test other=''
