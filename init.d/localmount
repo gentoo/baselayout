@@ -42,48 +42,85 @@ start() {
 	/sbin/swapon -a &>/dev/null
 	eend 0
 
-	# Run any post_mount commands for cryptfs
-
-	if [ -f /etc/conf.d/cryptfs ]
-	then
-		ebegin "Running post_mount commands for cryptfs"
-
-		/bin/egrep "^mount" /etc/conf.d/cryptfs | \
-		while read mountline
-		do
-			mount=
-			mount_point=
-			post_mount=
-
-			eval ${mountline}
-
-			target=${mount}
-
-			! /bin/cryptsetup status ${target}|egrep '\<active:' > /dev/null
-			configured=$?
-
-			if [ ${configured} -eq 1 ]
-			then
-				mount_point=`/bin/awk "/\/dev\/mapper\/${target}/ { print \\$2 }" /proc/mounts`
-				if [ -n "${mount_point}" ]
-				then
-					if [ -n "${post_mount}" ]
-					then
-						if ! eval "${post_mount}" > /dev/null
-						then
-							ewarn "Failed to run post_mount commands on: ${target}"
-						fi
-					fi
-				else
-					ewarn "Failed to find mount point to ${target}. Skipping"
-				fi
-			else
-				ewarn "Target ${target} wasn't mapped, skipping"
-			fi
-
-		done
-	fi
+	ebegin 'Running post_mount commands for dm-crypt'
+	dm-crypt-start
+	ewend $? 'Failed to run a post_mount command'
 }
 
+# Note: This function is exactly duplicated in localmount.  If you change it
+# here, make sure to change it there also!
+dm-crypt-start() {
+	local cryptfs_status=0 
+	local mountline mount swap options pre_mount post_mount source
+
+	if [ -f /etc/conf.d/cryptfs ]; then
+		while read mountline; do
+			# skip comments and blank lines
+			[[ ${mountline}\# == \#* ]] && continue
+
+			# check for the start of a new mount/swap
+			case ${mountline} in
+				mount=*|swap=*)
+					# If we have a mount queued up, then execute it
+					dm-crypt-execute
+
+					# Prepare for the next mount/swap by resetting variables
+					unset mount swap options pre_mount post_mount source
+					;;
+
+				options=*|pre_mount=*|post_mount=*|source=*)
+					if [[ -z ${mount} && -z ${swap} ]]; then
+						ewarn "Ignoring setting outside mount/swap section: ${mountline}"
+						continue
+					fi
+					;;
+
+				*)
+					ewarn "Skipping invalid line in /etc/conf.d/cryptfs: ${mountline}"
+					;;
+			esac
+
+			# Queue this setting for the next call to dm-crypt-execute
+			eval "${mountline}"
+		done < /etc/conf.d/cryptfs
+
+		# If we have a mount queued up, then execute it
+		dm-crypt-execute
+	fi
+
+	return ${cryptfs_status}
+}
+
+# Run any post_mount commands for an individual mount
+#
+# Note: This relies on variables localized in dm-crypt-start.  This function
+# is quite different from the function by the same name in checkfs...
+dm-crypt-execute() {
+	local mount_point target
+
+	if [[ -n ${mount} && -n ${post_mount} ]]; then
+		target=${mount}
+	else
+		return
+	fi
+
+	if ! /bin/cryptsetup status ${target} | egrep -q '\<active:'; then
+		ewarn "Skipping unmapped target ${target}"
+		cryptfs_status=1
+		return
+	fi
+
+	mount_point=$(grep "/dev/mapper/${target}" /proc/mounts | cut -d' ' -f2)
+	if [[ -z ${mount_point} ]]; then
+		ewarn "Failed to find mount point for ${target}, skipping"
+		cryptfs_status=1
+	fi
+
+	if [[ -n ${post_mount} ]]; then
+		ebegin "Running post_mount commands for target ${target}"
+		eval "${post_mount}" >/dev/null
+		eend $? || cryptfs_status=1
+	fi
+}
 
 # vim:ts=4

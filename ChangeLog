@@ -2,13 +2,20 @@
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
-* rc-scripts 1.6.0 (15 Sep 2004)
+* rc-scripts 1.6.1 (27 Sep 2004)
+
+  27 Sep 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Update dm-crypt to work with multi-line configuration files.
+    Also don't set status in a subshell; it was being lost before.
 
   23 Sep 2004; Mike Frysinger <vapier@gentoo.org>:
 
    Rework the logic behind the $COLS code.  It should not depend 
    on whether color is enabled.  Also add a check for negative 
    values (like when using a serial console).
+
+* rc-scripts 1.6.0 (15 Sep 2004)
 
   15 Sep 2004; Aron Griffis <agriffis@gentoo.org>:
 

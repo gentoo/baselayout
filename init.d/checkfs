@@ -179,69 +179,9 @@ start() {
 		eend $? "Failed to setup the LVM"
 	fi
 
-
 	ebegin 'Setting up dm-crypt mappings'
-
-	if [ -f /etc/conf.d/cryptfs ]
-	then
-		cryptfs_status=0
-
-		/bin/egrep '^(mount|swap)' /etc/conf.d/cryptfs | \
-		while read mountline
-		do
-			mount=
-			swap=
-			options=
-			pre_mount=
-
-			eval ${mountline}
-
-			if [ -n "${mount}" ]
-			then
-				target=${mount}
-				[ -z "${options}" ] && options='-c aes -h sha1'
-			elif [ -n "${swap}" ]
-			then
-				target=${swap}
-				[ -z "${options}" ] && options='-c aes -h sha1 -d /dev/urandom'
-			else
-				ewarn "Invalid line in /etc/conf.d/cryptomount: ${mountline}"
-			fi
-
-			! /bin/cryptsetup status ${target}|egrep '\<active:' > /dev/null
-			configured=$?
-
-			if [ ${configured} -eq 0 ]
-			then
-				einfo "dm-crypt map ${target}"
-				if ! /bin/cryptsetup ${options} create ${target} ${source} >/dev/console </dev/console
-				then
-					ewarn "Failure configuring ${target}"
-					cryptfs_status=1
-				else
-					if [ -n "${swap}" ]
-					then
-						[ -z "${pre_mount}" ] && pre_mount='mkswap ${dev}'
-					fi
-
-					if [ -n "${pre_mount}" ]
-					then
-						dev="/dev/mapper/${target}"
-						einfo "  Running pre_mount commands on: ${target}"
-						if ! eval "${pre_mount}" > /dev/null
-						then
-							ewarn "Failed to run pre_mount commands on: ${target}"
-							cryptfs_status=1
-						fi
-					fi
-				fi
-			else
-				ewarn "dm-crypt mapping ${target} is already configured"
-				cryptfs_status=1
-			fi
-		done
-	fi
-	ewend ${cryptfs_status} 'Failed to setup a mapping or swap device.'
+	dm-crypt-start
+	ewend $? 'Failed to setup a mapping or swap device'
 
 	if [ -f /fastboot -o -n "${CDBOOT}" ]
 	then
@@ -269,6 +209,88 @@ start() {
 		else
 			eend 2 "Fsck could not correct all errors, manual repair needed"
 			/sbin/sulogin ${CONSOLE}
+		fi
+	fi
+}
+
+# Note: This function is exactly duplicated in localmount.  If you change it
+# here, make sure to change it there also!
+dm-crypt-start() {
+	local cryptfs_status=0 
+	local mountline mount swap options pre_mount post_mount source
+
+	if [ -f /etc/conf.d/cryptfs ]; then
+		while read mountline; do
+			# skip comments and blank lines
+			[[ ${mountline}\# == \#* ]] && continue
+
+			# check for the start of a new mount/swap
+			case ${mountline} in
+				mount=*|swap=*)
+					# If we have a mount queued up, then execute it
+					dm-crypt-execute
+
+					# Prepare for the next mount/swap by resetting variables
+					unset mount swap options pre_mount post_mount source
+					;;
+
+				options=*|pre_mount=*|post_mount=*|source=*)
+					if [[ -z ${mount} && -z ${swap} ]]; then
+						ewarn "Ignoring setting outside mount/swap section: ${mountline}"
+						continue
+					fi
+					;;
+
+				*)
+					ewarn "Skipping invalid line in /etc/conf.d/cryptfs: ${mountline}"
+					;;
+			esac
+
+			# Queue this setting for the next call to dm-crypt-execute
+			eval "${mountline}"
+		done < /etc/conf.d/cryptfs
+
+		# If we have a mount queued up, then execute it
+		dm-crypt-execute
+	fi
+
+	return ${cryptfs_status}
+}
+
+# Setup mappings for an individual mount/swap
+#
+# Note: This relies on variables localized in dm-crypt-start.  This function
+# is quite different from the function by the same name in localmount...
+dm-crypt-execute() {
+	local dev target
+
+	if [[ -n ${mount} ]]; then
+		target=${mount}
+		: ${options:='-c aes -h sha1'}
+	elif [[ -n ${swap} ]]; then
+		target=${swap}
+		: ${options:='-c aes -h sha1 -d /dev/urandom'}
+		: ${pre_mount:='mkswap ${dev}'}
+	else
+		return
+	fi
+
+	if /bin/cryptsetup status ${target} | egrep -q '\<active:'; then
+		einfo "dm-crypt mapping ${target} is already configured"
+		return
+	fi
+
+	ebegin "dm-crypt map ${target}"
+	/bin/cryptsetup ${options} create ${target} ${source} >/dev/console </dev/console
+	eend $? "failure running cryptsetup"
+	if [[ $? != 0 ]]; then
+		cryptfs_status=1
+	else
+		if [[ -n ${pre_mount} ]]; then
+			dev="/dev/mapper/${target}"
+			ebegin "  Running pre_mount commands for ${target}"
+			eval "${pre_mount}" > /dev/null
+			ewend $? || cryptfs_status=1
 		fi
 	fi
 }
