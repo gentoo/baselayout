@@ -1,5 +1,5 @@
 #!/sbin/runscript
-# Copyright 1999-2004 Gentoo Foundation
+# Copyright 1999-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
 
@@ -28,7 +28,16 @@ start() {
 			if [ "${configured}" != "yes" ]
 			then
 				einfo "  Loop ${loop} on device ${device} (cipher ${cipher}, key size ${keysize}): "
-				if ! /sbin/losetup -e ${cipher} -k ${keysize} ${loop} ${device} ${other}
+
+				if [ -n "${hash}" ]
+				then
+					/usr/sbin/hashalot -n ${keysize} ${hash} </dev/tty|\
+					/sbin/losetup -p 0 -e ${cipher}-${keysize} ${loop} ${device} ${other}
+				else
+					/sbin/losetup -e ${cipher}-${keysize} ${loop} ${device} ${other}
+				fi
+
+				if [ $? -ne 0 ]
 				then
 					ewarn "Failure configuring ${loop}.  Skipping."
 					status=1
@@ -42,6 +51,22 @@ start() {
 
 	# We do not fail if some loop devices did not start ...
 	return 0
+}
+
+stop() {
+	local status="0"
+	for loop in $(echo /dev/loop[0-9]); do
+		losetup ${loop} &>/dev/null
+		if [[ $? == 0 ]]; then
+			umount ${loop} &>/dev/null
+			if ! /sbin/losetup -d ${loop} &>/dev/null
+			then
+				ewarn "Failure deconfiguring ${loop}."
+				status=1
+			fi
+		fi
+	done
+	ewend ${status}
 }
 
 

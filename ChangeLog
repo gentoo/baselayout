@@ -19,6 +19,8 @@
     Add support for loopback dm-crypt by Dylan Carlson #73598 and for gpg 
     dm-crypt by Lars Strojny #75659.
 
+    Update crypto-loop to newer util-linux #40874 by jochen / Jürgen Hötzel.
+
   27 Jan 2004; Roy Marples <uberlord@gentoo.org>:
 
     removed udhcpc-* and dhclient-* helper modules and replaced them with a
