@@ -673,13 +673,17 @@ start() {
 
 # bool stop(void)
 #
-# Brings down ${IFACE}.  Calls predown, iface_stop, then postdown.
-# Always succeeds and returns 0.
+# Brings down ${IFACE}.  If predown call returns non-zero, then
+# stop returns non-zero to indicate failure bringing down device.
+# In all other cases stop returns 0 to indicate success.
 stop() {
 	# Call user-defined predown function if it exists
 	if [[ $(type -t predown) == function ]]; then
 		einfo "Running predown function"
-		predown ${IFACE}
+		predown ${IFACE} || {
+			eerror "predown ${IFACE} failed"
+			return 1
+		}
 	fi
 
 	# Don't depend on setup_vars since configuration might have changed.

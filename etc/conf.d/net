@@ -1,20 +1,33 @@
 # /etc/conf.d/net: Global config file for net.* rc-scripts
 # $Header$
 
+##############################################################################
 #
-# PLEASE PICK ONE of the configuration methods listed below.  If you don't know
-# which to pick, use the top one, "NEW STYLE IFCONFIG"
+#                      READ THIS COMMENT FIRST
 #
-# If you have multiple sections (for example ifconfig and iproute2) the network
-# scripts will attempt to make reasonable assumptions about what to use, but
-# there is no guarantee on the results, so PLEASE just use one set of
-# configuration variables.
+# PLEASE PICK ONE of the configuration methods listed below.  If you
+# don't know which to pick, use the top one, NEW-STYLE IFCONFIG.
+# The other two possible options are OLD-STYLE IFACE and
+# IPROUTE2-STYLE.
 #
+# If you have multiple sections (for example IFCONFIG and IPROUTE2)
+# the network scripts will attempt to make reasonable assumptions
+# about what to use, but there is no guarantee on the results, so
+# PLEASE just use one set of configuration variables.
+#
+# At the bottom there is an ADVANCED CONFIGURATION section with some
+# additional configuration possibilities
+#
+##############################################################################
+
 
 ##############################################################################
-#	NEW-STYLE IFCONFIG config examples.                                      #
-#	NOTE: This uses /sbin/ifconfig and /sbin/route to set the network up     #
+#   NEW-STYLE IFCONFIG examples
+#   ---------------------------
+#   This uses /sbin/ifconfig and /sbin/route to set the network up.
+#   It is suitable for most home users.
 ##############################################################################
+
 # To use DHCP on eth0, simply uncomment the following line:
 #ifconfig_eth0=( "dhcp" )
 
@@ -40,10 +53,15 @@
 #	"default gw 192.168.0.1"
 #)
 
+
 ##############################################################################
-#	OLD-STYLE iface config examples (deprecated)                             #
-#	NOTE: This uses /sbin/ifconfig and /sbin/route to set the network up     #
+#   OLD-STYLE IFACE examples (deprecated)
+#   -------------------------------------
+#   This uses /sbin/ifconfig and /sbin/route to set the network up,
+#   but is not as flexible as the IFCONFIG method above or the
+#   IPROUTE2 method below.
 ##############################################################################
+
 # To use DHCP on eth0, simply uncomment the following line:
 #iface_eth0="dhcp"
 
@@ -70,14 +88,16 @@
 #broadcast_eth0="192.168.0.255 192.168.0.255"
 #netmask_eth0="255.255.255.0 255.255.255.0"
 
+
 ##############################################################################
-#	IPROUTE2-STYLE CONFIGURATION                                             #
-#   ----------------------------                                             #
-#	NOTE: This makes use of the /sbin/ip command to set routes and ip        #
-#	addresses.  This style is very useful if you are building an             #
-#	advanced linux router or using VRRP For more information on how to       #
-#	use the iproute2 command have a look at the ip(8) man page.              #
+#   IPROUTE2-STYLE CONFIGURATION
+#   ----------------------------
+#   This makes use of the /sbin/ip command to set routes and ip
+#   addresses.  This style is very useful if you are building an
+#   advanced linux router or using VRRP For more information on how to
+#   use the iproute2 command have a look at the ip(8) man page.
 ##############################################################################
+
 # To use DHCP on eth0, simply uncomment the following line:
 #ipaddr_eth0=( "dhcp" )
 
@@ -101,3 +121,64 @@
 #iproute_eth0=(
 #	"default via 192.168.0.1"
 #)
+
+
+##############################################################################
+#   ADVANCED CONFIGURATION
+#   ----------------------
+#   The items in this section can be combined with one of the sections
+#   above to create a complete network configuration.  None of the
+#   items in this section are necessary to configure for most users.
+##############################################################################
+
+# Four functions can be defined which will be called surrounding the
+# start/stop operations.  The functions are called with the interface
+# name first so that one function can control multiple adapters.
+#
+# The return values for the preup and predown functions should be 0
+# (success) to indicate that configuration or deconfiguration of the
+# interface can continue.  If preup returns a non-zero value, then
+# interface configuration will be aborted.  If predown returns a
+# non-zero value, then the interface will not be allowed to continue
+# deconfiguration.
+#
+# The return values for the postup and postdown functions are ignored
+# since there's nothing to do if they indicate failure.
+#
+#preup() {
+#	# Test for link on the interface prior to bringing it up.  This
+#	# only works on some network adapters and requires the ethtool
+#	# package to be installed.
+#	if ethtool $1 | grep -q 'Link detected: no'; then
+#		ewarn "No link on $1, aborting configuration"
+#		return 1
+#	fi
+#
+#	# Remember to return 0 on success
+#	return 0
+#}
+#
+#predown() {
+#	# Test to make sure the root filesystem is not mounted via NFS.
+#	# Interface ($1) is ignored but could also be tested.  I'm not
+#	# sure this is quite the right test, will be able to update when I
+#	# hear back from the submitter on bug 53104
+#	if grep -q ' / nfs ' /proc/mounts; then
+#		ewarn "Root is NFS mounted, aborting deconfiguration of $1"
+#		return 1
+#	fi
+#
+#	# Remember to return 0 on success
+#	return 0
+#}
+#
+#postup() {
+#	# This function could be used, for example, to register with a
+#	# dynamic DNS service.  Another possibility would be to
+#	# send/receive mail once the interface is brought up.
+#}
+#
+#postdown() {
+#	# This function is mostly here for completeness... I haven't
+#	# thought of anything nifty to do with it yet ;-)
+#}

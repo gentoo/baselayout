@@ -2,11 +2,17 @@
 # Copyright 2002-2004 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+* rc-scripts 1.5.0 (26 Jun 2004)
+
   26 Jun 2004; Aron Griffis <agriffis@gentoo.org>:
 
     Fix bug 47659: support iproute2-style configuration.  Thanks to
     Dean Bailey for some fantastic patches, including documentation
-    for conf.d/net
+    for conf.d/net.  This is a pretty huge re-write of net.eth0
+
+    Fix bug 34607: provide examples for in conf.d/net for preup,
+    postup, predown, postdown functions.  Also pay attention to return
+    value from predown function (previously ignored)
 
   15 Jun 2004; Aron Griffis <agriffis@gentoo.org>:
 
