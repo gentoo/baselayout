@@ -170,7 +170,7 @@ fi
 ################################################################################
 # Define a helper method for printing the status of a service; '[ xxx ]'
 print_msg() {
-	printf "%-$((COLS - 4 - ${#3}))s%s\n" "$1" "${BRACKET}[ $2$3 ${BRACKET}]${NORMAL}"
+	printf " %-$((COLS - 5 - ${#3}))s%s\n" "$1" "${BRACKET}[ $2$3 ${BRACKET}]${NORMAL}"
 }
 
 # if --all wasnt specified, dont print everything
