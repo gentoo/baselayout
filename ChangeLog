@@ -2,6 +2,11 @@
 # Copyright 2002-2004 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  05 May 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Fix bug 48595: Make sure $(id -u) is zero (root user) when running
+    init scripts to avoid a lot of error messages.
+
   03 May 2004; Aron Griffis <agriffis@gentoo.org>:
 
     Update to version 1.10.20 of Debian's start-stop-daemon (contained

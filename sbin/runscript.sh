@@ -10,6 +10,12 @@
 # Functions to control daemons
 [ "${RC_GOT_DAEMON}" != "yes" ] && source "${svclib}/sh/rc-daemon.sh"
 
+# Fix bug 48595
+if [[ $(id -u) != 0 ]]; then
+	eerror "ERROR: must be root to run init scripts"
+	exit 1
+fi
+
 # State variables
 svcpause="no"
 svcrestart="no"
@@ -426,7 +432,7 @@ svc_homegrown() {
 shift
 if [ "$#" -lt 1 ]
 then
-	eerror "ERROR:  not enough args."
+	eerror "ERROR: not enough args."
 	usage ${opts}
 	exit 1
 fi
