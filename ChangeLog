@@ -2,6 +2,11 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  30 Jun 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update /etc/skel/.bashrc to update the window title of X terminals
+    that supports it.  Closes bug #4232.
+
   26 Jun 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Add sshd user and group.  Updated /etc/passwd and /etc/group for this.
