@@ -11,7 +11,8 @@
     rc.conf and into its own conf.d/clock file.  Added support for the 
     weird Alpha consoles SRM/ARC since they need special config options.  
     Also made the syncing of system clock to hardware clock at shutdown 
-    optional (with the default being off) #15834.
+    optional (with the default being off) #15834.  Don't try to set the 
+    clock if running inside a coLinux environment #52870.
 
     Update default PATH ordering to try to follow default behavior in 
     other distro's and because it's logical that /usr/local should 

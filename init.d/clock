@@ -14,6 +14,10 @@ setupopts() {
 	then
 		TBLURB="UML"
 		return 0
+	elif grep -q ' cobd$' /proc/devices
+	then
+		TBLURB="coLinux"
+		return 0
 	elif [ "${CLOCK}" == "UTC" ]
 	then
 		myopts="--utc"
@@ -47,7 +51,7 @@ start() {
 	setupopts
 
 	ebegin "Setting system clock to hardware clock [${TBLURB}]"
-	if [ "${CLOCK}" == "UML" ]
+	if [ "${CLOCK}" == "UML" ] || [ "${CLOCK}" == "coLinux" ]
 	then
 		ret=0
 
