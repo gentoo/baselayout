@@ -16,17 +16,27 @@ depend() {
 }
 
 checkconfig() {
-	if [ ! -f /etc/hostname ] || [ -z "$(< /etc/hostname)" ]
+	if [ ! -f /etc/hostname ] || [ -z "$(</etc/hostname)" ]
 	then
-		eerror "You need to set /etc/hostname to a valid hostname"
-		return 1
+		if [ "${myhost}" == "localhost" ]
+		then
+			eerror "You need to set /etc/hostname to a valid hostname"
+			return 1
+		fi
 	fi
 }
 
 start() {
-	local myhost="localhost"
+	local myhost="$(/bin/hostname 2>/dev/null)"
 	local retval=0
-	
+
+	# If the hostname is already set via the kernel, and /etc/hostname 
+	# isn't setup, then we shouldn't go reseting the configuration #38172.
+	if [ -z "${myhost}" ] || [ "${myhost}" == "(none)" ]
+	then
+		myhost="localhost"
+	fi
+
 	# We use whatever is in /etc/hostname here.  That means:
 	#
 	# 1)  For doing it the proper way, you should NOT put a
@@ -41,14 +51,14 @@ start() {
 	#
 	if checkconfig
 	then
-		myhost="$(< /etc/hostname)"
+		myhost="$(</etc/hostname)"
 	fi
-	
+
 	ebegin "Setting hostname to ${myhost}"
 	/bin/hostname "${myhost}"
 	retval=$?
 	eend ${retval} "Failed to set the hostname"
-	
+
 	if [ "${retval}" -eq 0 ]
 	then
 		# setup $HOSTNAME
