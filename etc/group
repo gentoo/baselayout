@@ -1,3 +1,4 @@
+nogroup::-2:
 root::0:root
 bin::1:root,bin,daemon
 daemon::2:root,bin,daemon
@@ -31,9 +32,8 @@ named::40:named
 postgres::70:
 cdrw::80:
 users::100:games
-nogroup::-2:
-nobody::65534:
 nofiles:x:200:
 qmail:x:201:
 postfix:x:207:
 utmp:x:406:
+nobody::65534:
