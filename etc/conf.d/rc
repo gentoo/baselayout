@@ -29,6 +29,12 @@ RC_PARALLEL_STARTUP="no"
 
 RC_NET_STRICT_CHECKING="no"
 
+# RC_USE_FSTAB allows you to override the default mount options for the 
+# standard /proc, /sys, /dev, and /dev/pts mount points.  Note that this 
+# is the new way for selecting ramfs/tmpfs/etc... for udev mounting.
+
+RC_USE_FSTAB="no"
+
 # Use this variable to control the /dev management behavior.
 #  auto   - let the scripts figure out what's best at boot
 #  devfs  - use devfs (requires sys-fs/devfsd)

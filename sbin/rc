@@ -136,9 +136,13 @@ then
 	check_statedir /proc
 
 	ebegin "Mounting proc at /proc"
-	mntcmd=$( get_mount_fstab /proc )
-	mntcmd=${mntcmd:--t proc none /proc}
-	try mount -n ${mntcmd}
+	if [[ ${RC_USE_FSTAB} = "yes" ]]
+	then
+		mntcmd=$(get_mount_fstab /proc)
+	else
+		unset mntcmd
+	fi
+	try mount -n ${mntcmd:--t proc none /proc}
 	eend $?
 
 	# Read off the kernel commandline to see if there's any special settings
@@ -151,9 +155,13 @@ then
 		if [ -d /sys ]
 		then
 			ebegin "Mounting sysfs at /sys"
-			mntcmd=$( get_mount_fstab /sys )
-			mntcmd=${mntcmd:--t sysfs none /sys}
-			try mount -n ${mntcmd}
+			if [[ ${RC_USE_FSTAB} = "yes" ]]
+			then
+				mntcmd=$(get_mount_fstab /sys)
+			else
+				unset mntcmd
+			fi
+			try mount -n ${mntcmd:--t sysfs none /sys}
 			eend $?
 		else
 			ewarn "No /sys to mount sysfs needed in 2.6 and later kernels!"
@@ -224,8 +232,13 @@ then
 		then
 			# Setup temporary storage for /dev
 			ebegin "Mounting /dev for udev"
-			mntcmd=$( get_mount_fstab /dev )
-			if [ -n "${mntcmd}" ]
+			if [[ ${RC_USE_FSTAB} = "yes" ]]
+			then
+				mntcmd=$(get_mount_fstab /dev)
+			else
+				unset mntcmd
+			fi
+			if [[ -n ${mntcmd} ]]
 			then
 				try mount -n ${mntcmd}
 			else
@@ -330,9 +343,13 @@ then
 			if [ -d /dev/pts ]
 			then
 				ebegin "Mounting devpts at /dev/pts"
-				mntcmd=$( get_mount_fstab /dev/pts )
-				mntcmd=${mntcmd:--t devpts -o gid=5,mode=0620 none /dev/pts}
-				try mount -n ${mntcmd}
+				if [[ ${RC_USE_FSTAB} = "yes" ]]
+				then
+					mntcmd=$(get_mount_fstab /dev/pts)
+				else
+					unset mntcmd
+				fi
+				try mount -n ${mntcmd:--t devpts -o gid=5,mode=0620 none /dev/pts}
 				eend $?
 			fi
 		fi
