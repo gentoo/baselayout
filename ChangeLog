@@ -2,6 +2,10 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  26 April 2002; Donny Davies <woodchip@gentoo.org> passwd, group :
+
+    Added user/group apache with uid/gid 81.
+
   25 April 2002; Martin Schlemmer <azarah@gentoo.org>:
   
     Remove the "-net" from the line setting the default gateway
