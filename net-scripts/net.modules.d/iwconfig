@@ -692,7 +692,7 @@ iwconfig_defaults() {
 	iwconfig ${iface} frag off &>/dev/null
 	iwconfig ${iface} power off &>/dev/null
 	iwconfig ${iface} txpower auto &>/dev/null
-	iwconfig ${iface} key off [1] &>/dev/nul
+	iwconfig ${iface} key off [1] &>/dev/null
 
 	# We need to set the essid to any as some drivers won't
 	# scan correctly if they are already set to an ESSID
