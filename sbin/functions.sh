@@ -47,7 +47,15 @@ getcols() {
 }
 
 COLS="$(stty size 2>/dev/null)"
-COLS="$(getcols ${COLS})"
+if [ "$COLS" = "0 0" ]
+then
+	# Fix for serial tty (bug #11557)
+    COLS=80
+    stty cols 80 &>/dev/null
+    stty rows 24 &>/dev/null
+else
+    COLS="$(getcols ${COLS})"
+fi
 COLS=$((${COLS} -7))
 ENDCOL=$'\e[A\e['${COLS}'G'
 #now, ${ENDCOL} will move us to the end of the column;

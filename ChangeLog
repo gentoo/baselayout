@@ -4,6 +4,9 @@
 
   04 Dec 2002; Martin Schlemmer <azarah@gentoo.org>:
 
+    Setup colums, etc up properly for serial consoles in /sbin/functions.sh.
+    Closes bug #11557, thanks to Erik Scrafford <erik@scrafford.org>.
+
     Add headers similar to that of portage-2.0.45 and up to the
     generated profile files (/etc/{profile,csh}.env).  Updated
     src/awk/genenviron.awk for this.
