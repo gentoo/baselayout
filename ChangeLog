@@ -10,6 +10,9 @@
     Add a fix to /etc/init.d/keymaps for bug #32111 (we should not have
     '-u' in the call to loadkeys when using unicode).
 
+    We should not use '-' in variable names for bash, bug #31184, thanks
+    to Andreas Simon <yuipx@gmx.net>.  Updated /sbin/MAKEDEV.
+
   27 Oct 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix return code checking of fsck in /etc/init.d/checkfs, bug #31349.

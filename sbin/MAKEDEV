@@ -166,7 +166,7 @@ else
 			Character|Block|'')
 				;;
 			*)
-				eval "major_$device=$major"
+				eval "major_${device/-/_}=$major"
 				devices="$devices $device"
 				;;
 		esac
@@ -180,7 +180,7 @@ Major () {
 	then
 		echo -1	# don't care
 	else
-		eval echo \${major_$1:-\${device:?\"unknown major number for $1\"}}
+		eval echo \${major_${1/-/_}:-\${device:?\"unknown major number for $1\"}}
 	fi
 }
 
@@ -1859,7 +1859,7 @@ do
 			exec 3<DEVICES
 			while read device major <&3
 			do
-				eval now=\$major_$device
+				eval now=\$major_${device/-/_}
 				if [ "$now" = "" ]
 				then
 					delete="$delete `cvt $device`"
@@ -1880,7 +1880,7 @@ do
 		do
 			if [ "`cvt $device`" ]
 			then
-			    eval echo $device \$major_$device
+			    eval echo $device \$major_${device/-/_}
 			fi
 		done > DEVICES
 		;;
