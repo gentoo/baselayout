@@ -117,6 +117,9 @@ wpa_supplicant_pre_start() {
 	local pid=$( ps --no-headers -fC wpa_supplicant 2>/dev/null | awk '/-i'${iface}'/ { print $2 }' )
 	[[ -n ${pid} ]] && kill -s TERM ${pid}
 	
+	# Some drivers require the interface to be up
+	interface_up ${iface}
+
 	if ! wpa_supplicant ${opts} -B -c/etc/wpa_supplicant.conf -i${iface} ; then
 		eend 1
 		return 1
