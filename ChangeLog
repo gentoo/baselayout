@@ -2,6 +2,11 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  12 Aug 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update /etc/init.d/keymaps to first load the windowkeys.inc then
+    the user selected one, fixing bug #6295.
+
   11 Aug 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Change the 'cat' in check_rcscript() to a single 'awk' in

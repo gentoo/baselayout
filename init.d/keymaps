@@ -22,11 +22,11 @@ start() {
 	#new kbd support
 	if [ -x /bin/loadkeys ]
 	then
-		/bin/loadkeys -q ${KEYMAP} windowkeys >/dev/null
+		/bin/loadkeys -q windowkeys ${KEYMAP} >/dev/null
 	#old console-tools support
 	elif [ -x /usr/bin/loadkeys ]
 	then
-		/usr/bin/loadkeys -q ${KEYMAP} windowkeys.inc >/dev/null
+		/usr/bin/loadkeys -q windowkeys.inc ${KEYMAP} >/dev/null
 	else
 		eend 1 "loadkeys executable not found"
 		return 1
