@@ -2,6 +2,9 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
 
+# Try to unmount all tmpfs filesystems not in use, else a deadlock may
+# occure, bug #13599.
+umount -at tmpfs &> /dev/null
 
 if checkserver
 then
@@ -9,31 +12,30 @@ then
 	# to need devfsd running to work (this is not done
 	# on nodes).  TheTERM and KILL stuff will zap
 	# devfsd, so...
-
 	ebegin "Deactivating swap"
-	swapoff -a &>/dev/null
+	swapoff -a &> /dev/null
 	eend $?
 
 	# We need to properly terminate devfsd to save the permissions
 	if [ "`ps -A | grep 'devfsd'`" ]
 	then
 		ebegin "Stopping devfsd"
-		killall -15 devfsd &>/dev/null
+		killall -15 devfsd &> /dev/null
 		eend $?
 	fi
 fi
 
 ebegin "Sending all processes the TERM signal"
-killall5 -15 &>/dev/null
+killall5 -15 &> /dev/null
 eend $?
 sleep 5
 ebegin "Sending all processes the KILL signal"
-killall5 -9 &>/dev/null
+killall5 -9 &> /dev/null
 eend $?
 
 # Write a reboot record to /var/log/wtmp before unmounting
 
-halt -w &>/dev/null
+halt -w &> /dev/null
 
 # Unmounting should use /proc/mounts and work with/without devfsd running
 
@@ -54,24 +56,24 @@ remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $1}' /proc/mou
 		if [ "${retry}" -lt 3 ]
 		then
 			ebegin "Unmounting loopback filesystems (retry)"
-			umount ${remaining} &>/dev/null
+			umount ${remaining} &> /dev/null
 			eend $? "Failed to unmount filesystems this retry"
 		else
 			ebegin "Unmounting loopback filesystems"
-			umount ${remaining} &>/dev/null
+			umount ${remaining} &> /dev/null
 			eend $? "Failed to unmount filesystems"
 		fi
 		for dev in ${remaining}
 		do
-			losetup ${dev} &>/dev/null && {
+			losetup ${dev} &> /dev/null && {
 				ebegin "  Detaching loopback device ${dev}"
-				/sbin/losetup -d ${dev} &>/dev/null
+				/sbin/losetup -d ${dev} &> /dev/null
 				eend $? "Failed to detach device ${dev}"
 			}
 		done
 		remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts |sort -r`"
 		[ -z "${remaining}" ] && break
-		/bin/fuser -k -m ${sig} ${remaining} &>/dev/null
+		/bin/fuser -k -m ${sig} ${remaining} &> /dev/null
 		sleep 5
 		retry=$((${retry} -1))
 		sig=-9
@@ -86,7 +88,7 @@ ebegin "Unmounting filesystems"
 # moving it to /bin if problems arise)
 for x in $(awk '!/(^#|proc|devfs|tmpfs|^none|^\/dev\/root|[[:space:]]\/[[:space:]])/ {print $2}' /proc/mounts |sort -r)
 do
-	umount -f -r ${x} &>/dev/null
+	umount -f -r ${x} &> /dev/null
 done
 eend 0
 
@@ -94,7 +96,7 @@ eend 0
 if [ -x /sbin/vgchange -a -f /etc/lvmtab ] && [ -d /proc/lvm ]
 then
 	ebegin "Shutting down the Logical Volume Manager"
-	/sbin/vgchange -a n >/dev/null
+	/sbin/vgchange -a n > /dev/null
 	eend $? "Failed to shut LVM down"
 fi
 
@@ -107,8 +109,8 @@ sleep 1
 umount -a -r -n -t nodevfs,noproc,notmpfs &>/dev/null
 if [ "$?" -ne 0 ]
 then
-	killall5 -9  &>/dev/null
-	umount -a -r -n -l -d -f -t nodevfs,noproc &>/dev/null
+	killall5 -9  &> /dev/null
+	umount -a -r -n -l -d -f -t nodevfs,noproc &> /dev/null
 	if [ "$?" -ne 0 ]
 	then
 		eend 1

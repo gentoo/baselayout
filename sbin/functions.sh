@@ -4,14 +4,10 @@
 
 umask 022
 
-# Setup a basic $PATH
-[ -z "${PATH}" ] && \
-	PATH="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/sbin"
-
-# Make sure that /sbin and /usr/sbin are in $PATH
-[ -z "`echo ${PATH} | egrep '^/sbin:|:/sbin:' 2> /dev/null `" -o \
-  -z "`echo ${PATH} | egrep '^/usr/sbin:|:/usr/sbin:' 2> /dev/null `" ] && \
-	PATH="/sbin:/usr/sbin:${PATH}"
+# Setup a basic $PATH.  Just add system default to existing.
+# This should solve both /sbin and /usr/sbin not present when
+# doing 'su -c foo', or for something like:  PATH= rcscript start
+PATH="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/sbin:${PATH}"
 
 # daemontools dir
 SVCDIR="/var/lib/supervise"
@@ -52,25 +48,42 @@ COLS="`stty size 2> /dev/null`"
 if [ "${COLS}" = "0 0" ]
 then
 	# Fix for serial tty (bug #11557)
-    COLS=80
-    stty cols 80 &>/dev/null
-    stty rows 24 &>/dev/null
+	COLS=80
+	stty cols 80 &>/dev/null
+	stty rows 24 &>/dev/null
 else
-    COLS="`getcols ${COLS}`"
+	COLS="`getcols ${COLS}`"
 fi
 COLS=$((${COLS} -7))
 ENDCOL=$'\e[A\e['${COLS}'G'
 # Now, ${ENDCOL} will move us to the end of the column;
 # irregardless of character width
 
-NORMAL="\033[0m"
-GOOD=$'\e[32;01m'
-WARN=$'\e[33;01m'
-BAD=$'\e[31;01m'
-NORMAL=$'\e[0m'
+# Now setup colors for easy reading
+NOCOLOR="`python -c 'import portage; print portage.settings["NOCOLOR"]' &> /dev/null`"
+if [ "${NOCOLOR}" = "true" -a -n "${EBUILD}" ]
+then
+	GOOD=""
+	WARN=""
+	BAD=""
+	NORMAL=""
 
-HILITE=$'\e[36;01m'
+	HILITE=""
+	BRACKET=""
+else
+	GOOD=$'\e[32;01m'
+	WARN=$'\e[33;01m'
+	BAD=$'\e[31;01m'
+	NORMAL=$'\e[0m'
 
+	HILITE=$'\e[36;01m'
+	BRACKET=$'\e[34;01m'
+fi
+
+# void esyslog(char* priority, char* tag, char* message)
+#
+#    use the system logger to log a message
+#
 esyslog() {
 	if [ -x /usr/bin/logger ]
 	then
@@ -81,15 +94,36 @@ esyslog() {
 	fi
 }
 
-ebegin() {
+# void einfo(char* message)
+#
+#    show an informative message (with a newline)
+#
+einfo() {
 	if [ "${QUIET_STDOUT}" = "yes" ]
 	then
 		return
 	else
-		echo -e " ${GOOD}*${NORMAL} ${*}..."
+		echo -e " ${GOOD}*${NORMAL} ${*}"
 	fi
 }
 
+# void einfon(char* message)
+#
+#    show an informative message (without a newline)
+#
+einfon() {
+	if [ "${QUIET_STDOUT}" = "yes" ]
+	then
+		return
+	else
+		echo -ne " ${GOOD}*${NORMAL} ${*}"
+	fi
+}
+
+# void ewarn(char* message)
+#
+#    show a warning message + log it
+#
 ewarn() {
 	if [ "${QUIET_STDOUT}" = "yes" ]
 	then
@@ -102,6 +136,10 @@ ewarn() {
 	esyslog "daemon.warning" "rc-scripts" "${*}"
 }
 
+# void eerror(char* message)
+#
+#    show an error message + log it
+#
 eerror() {
 	if [ "${QUIET_STDOUT}" = "yes" ]
 	then
@@ -114,32 +152,30 @@ eerror() {
 	esyslog "daemon.err" "rc-scripts" "${*}"
 }
 
-einfo() {
+# void ebegin(char* message)
+#
+#    show a message indicating the start of a process
+#
+ebegin() {
 	if [ "${QUIET_STDOUT}" = "yes" ]
 	then
 		return
 	else
-		echo -e " ${GOOD}*${NORMAL} ${*}"
+		echo -e " ${GOOD}*${NORMAL} ${*}..."
 	fi
 }
 
-einfon() {
-	if [ "${QUIET_STDOUT}" = "yes" ]
-	then
-		return
-	else
-		echo -ne " ${GOOD}*${NORMAL} ${*}"
-	fi
-}
-
-# void eend(int error, char *errstr)
+# void eend(int error, char* errstr)
+#
+#    indicate the completion of process
+#    if error, show errstr via eerror
 #
 eend() {
 	if [ "$#" -eq 0 ] || ([ -n "$1" ] && [ "$1" -eq 0 ])
 	then
 		if [ "${QUIET_STDOUT}" != "yes" ]
 		then
-			echo -e "${ENDCOL}  \e[34;01m[ ${GOOD}ok \e[34;01m]${NORMAL}"
+			echo -e "${ENDCOL}  ${BRACKET}[ ${GOOD}ok${BRACKET} ]${NORMAL}"
 		fi
 	else
 		local returnme="$1"
@@ -150,22 +186,25 @@ eend() {
 		fi
 		if [ "${QUIET_STDOUT}" != "yes" ]
 		then
-			echo -e "${ENDCOL}  \e[34;01m[ ${BAD}!! \e[34;01m]${NORMAL}"
-			#extra spacing makes it easier to read
+			echo -e "${ENDCOL}  ${BRACKET}[ ${BAD}!!${BRACKET} ]${NORMAL}"
+			# extra spacing makes it easier to read
 			echo
 		fi
 		return ${returnme}
 	fi
 }
 
-# void ewend(int error, char *errstr)
+# void ewend(int error, char *warnstr)
+#
+#    indicate the completion of process
+#    if error, show warnstr via ewarn
 #
 ewend() {
 	if [ "$#" -eq 0 ] || ([ -n "$1" ] && [ "$1" -eq 0 ])
 	then
 		if [ "${QUIET_STDOUT}" != "yes" ]
 		then
-			echo -e "${ENDCOL}  \e[34;01m[ ${GOOD}ok \e[34;01m]${NORMAL}"
+			echo -e "${ENDCOL}  ${BRACKET}[ ${GOOD}ok${BRACKET} ]${NORMAL}"
 		fi
 	else
 		local returnme="$1"
@@ -176,8 +215,8 @@ ewend() {
 		fi
 		if [ "${QUIET_STDOUT}" != "yes" ]
 		then
-			echo -e "${ENDCOL}  \e[34;01m[ ${WARN}!! \e[34;01m]${NORMAL}"
-			#extra spacing makes it easier to read
+			echo -e "${ENDCOL}  ${BRACKET}[ ${WARN}!!${BRACKET} ]${NORMAL}"
+			# extra spacing makes it easier to read
 			echo
 		fi
 		return "${returnme}"
@@ -186,7 +225,9 @@ ewend() {
 
 # bool wrap_rcscript(full_path_and_name_of_rc-script)
 #
-#   return 0 if the script have no syntax errors in it
+#    check to see if a given rc-script has syntax errors
+#    zero == no errors
+#    nonzero == errors
 #
 wrap_rcscript() {
 	local retval=1
@@ -278,8 +319,8 @@ init_node() {
 
 # int KV_to_int(string)
 #
-#   Convert a string type kernel version (2.4.0) to an int (132096)
-#   for easy compairing or versions ...
+#    Convert a string type kernel version (2.4.0) to an int (132096)
+#    for easy compairing or versions ...
 #
 KV_to_int() {
 	[ -z "$1" ] && return 1
@@ -305,7 +346,7 @@ KV_to_int() {
 
 # int get_KV()
 #
-#   return the kernel version (major, minor and micro concated) as an integer
+#    return the kernel version (major, minor and micro concated) as an integer
 #   
 get_KV() {
 	local KV="`uname -r 2> /dev/null`"
@@ -356,10 +397,10 @@ get_bootparam() {
 #
 # char *dolisting(param)
 #
-#   print a list of the directory contents
+#    print a list of the directory contents
 #
-#   NOTE: quote the params if they contain globs.
-#         also, error checking is not that extensive ...
+#    NOTE: quote the params if they contain globs.
+#          also, error checking is not that extensive ...
 #
 dolisting() {
 	local x=""
@@ -399,7 +440,7 @@ dolisting() {
 
 # void save_options(char *option, char *optstring)
 #
-#   save the settings ("optstring") for "option"
+#    save the settings ("optstring") for "option"
 #
 save_options() {
 	local myopts="$1"
@@ -413,8 +454,8 @@ save_options() {
 
 # char *get_options(char *option)
 #
-#   get the "optstring" for "option" that was saved
-#   by calling the save_options function
+#    get the "optstring" for "option" that was saved
+#    by calling the save_options function
 #
 get_options() {
 	if [ -f ${svcdir}/options/${myservice}/$1 ]

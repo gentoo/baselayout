@@ -2,6 +2,20 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  19 Jan 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix deadlock durning shutdown if tmpfs filesystems larger than free
+    memory, and swap gets deactivated, bug #13599.  Updated /etc/init.d/halt.sh
+    for this.
+
+    Merge in some fixes from Vapier <vapier@gentoo.org> to /sbin/functions.sh.
+    This closes bug #13868.
+
+    Always add "/bin:/sbin:/usr/bin:/usr/sbin" to PATH, as it fixes both
+    'su -c foo' not finding start-stop-daemon (etc), and bug #14127.
+
+    Add route for lo interface to /etc/init.d/net.lo, closing bug #14055.
+
   15 Jan 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Clear $svcdir in /sbin/rc before we run depscan to make sure we do

@@ -6,7 +6,9 @@
 
 start() {
 	ebegin "Bringing ${IFACE} up"
-	/sbin/ifconfig lo 127.0.0.1 up &>/dev/null
+	/sbin/ifconfig lo 127.0.0.1 up 2>/dev/null
+	/sbin/route add -net 127.0.0.0 netmask 255.0.0.0 \
+		gw 127.0.0.1 dev lo 2> /dev/null
 	eend 0
 }
 
