@@ -1,0 +1,22 @@
+#!/sbin/runscript
+# Copyright 1999-2002 Gentoo Technologies, Inc.
+# Distributed under the terms of the GNU General Public License, v2 or later
+# $Header$
+
+
+start() {
+	ebegin "Enabling numlock on ttys"
+	for tty in /dev/tty[1-8] ; do
+		setleds -D +num < $tty
+	done
+	eend $?
+}
+
+stop() {
+	ebegin "Disabling numlock on ttys"
+	for tty in /dev/tty[1-8] ; do
+		setleds -D -num < $tty
+	done
+	eend $?
+}
+

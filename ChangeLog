@@ -2,6 +2,9 @@
 # Copyright 2001 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  2 Feb 2002: Martin Schlemmer (azarah@gentoo.org): added rc-script
+  /etc/init.d/numlock, for enabling numlock at boot.
+
   29 Jan 2002: Martin Schlemmer (azarah@gentoo.org): hopefully the
   last fix to /etc/init.d/netmount to umount cleanly.  This fix
   implements a retry if not successful the first time, and will
