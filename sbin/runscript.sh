@@ -387,7 +387,7 @@ svc_status() {
 }
 
 rcscript_errors=$(wrap_rcscript "${myscript}" 2>&1) || {
-	echo "${rcscript_errors}" >&2
+	[[ -n ${rcscript_errors} ]] && echo "${rcscript_errors}" >&2
 	eerror "ERROR:  \"${myscript}\" has syntax errors in it; not executing..."
 	exit 1
 }
