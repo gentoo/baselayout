@@ -4,6 +4,11 @@
 
   29 Apr 2003; Martin Schlemmer <azarah@gentoo.org>:
 
+    Change the root check back the way it was, else it breaks with non bash
+	shells;  modified /etc/profile.
+
+  29 Apr 2003; Martin Schlemmer <azarah@gentoo.org>:
+
     Change test in /etc/profile for root to '[ "$EUID" -eq 0 ]', bug #20140.
 
   27 Apr 2003; Martin Schlemmer <azarah@gentoo.org>:

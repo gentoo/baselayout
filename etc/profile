@@ -9,7 +9,7 @@ fi
 # 077 would be more secure, but 022 is generally quite realistic
 umask 022
 
-if [ "$EUID" -eq 0 ]
+if [ `/usr/bin/whoami` = 'root' ]
 then
 	# Do not set PS1 for dumb terminals
 	if [ "$TERM" != 'dumb'  ] && [ -n "$BASH" ]
