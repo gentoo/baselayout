@@ -69,6 +69,10 @@
 #	"default gw 192.168.0.1"
 #)
 
+# If a specified module fails (like dhcp - see below), you can specify a fallback like so
+#ifconfig_fallback_eth0=( "192.168.0.2 netmask 255.255.255.0" )
+
+
 #-----------------------------------------------------------------------------
 # IPROUTE2
 # For iproute2 support, emerge sys-apps/iproute2 and add "iproute2" to the
@@ -94,6 +98,9 @@
 #iproute_eth0=(
 #	"default via 192.168.0.1"
 #)
+
+# If a specified module fails (like dhcp - see below), you can specify a fallback like so
+#ipaddr_fallback_eth0=( "192.168.0.2 netmask 255.255.255.0" )
 
 
 ##############################################################################

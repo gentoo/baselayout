@@ -1,5 +1,5 @@
 # DHCP (net-misc/dhcpcd) module for net-scripts
-# Version 1.0.0
+# Version 1.0.1
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
@@ -54,7 +54,7 @@ dhcpcd_check_depends() {
 # Returns a string spaced with possible user set
 # configuration variables
 dhcpcd_get_vars() {
-	echo "dhcpcd_${1}"
+	echo "dhcpcd_${1} peer_dns_${1} peer_nis_${1} peer_ntp_${1}"
 }
 
 # bool dhcpcd_stop(char *iface)
@@ -107,15 +107,15 @@ dhcpcd_start() {
 	eval opts=\"\$\{dhcpcd_${iface}\}\"
 
 	# Map some generic options to dhcpcd
-	eval peer=\"\$\{peer_dns_${interface}\}\"
+	eval peer=\"\$\{peer_dns_${iface}\}\"
 	[[ -z ${peer} ]] && eval peer=\"\$\{peer_dns\}\"
 	[[ ${peer} == no ]] && opts="-R ${opts}"
 
-	eval peer=\"\$\{peer_nis_${interface}\}\"
+	eval peer=\"\$\{peer_nis_${iface}\}\"
 	[[ -z ${peer} ]] && eval peer=\"\$\{peer_nis\}\"
 	[[ ${peer} == no ]] && opts="-Y ${opts}"
 
-	eval peer=\"\$\{peer_ntp_${interface}\}\"
+	eval peer=\"\$\{peer_ntp_${iface}\}\"
 	[[ -z ${peer} ]] && eval peer=\"\$\{peer_ntp\}\"
 	[[ ${peer} == no ]] && opts="-N ${opts}"
 

@@ -1,5 +1,5 @@
 # udhcpc (net-misc/udhcp) module for net-scripts
-# Version 1.0.0
+# Version 1.0.1
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
@@ -62,7 +62,7 @@ udhcpc_check_depends() {
 # Returns a string spaced with possible user set
 # configuration variables
 udhcpc_get_vars() {
-	echo "udhcpc_${1}"
+	echo "udhcpc_${1} peer_dns_${1} peer_nis_${1} peer_ntp_${1}"
 }
 
 # bool udhcpc_stop(char *iface)
@@ -122,10 +122,11 @@ udhcpc_start() {
 		return 0
 	fi
 
-	# Bring up DHCP for this interface (or alias)
 	eval opts=\"\$\{udhcpc_${iface}\}\"
 	hostname=$( hostname )
 	[[ -n ${hostname} ]] && hostname="--hostname=${hostname%%.*}"
+
+	# Bring up DHCP for this interface (or alias)
 	local r=$( udhcpc ${hostname} ${opts} --script=${script} --now --interface=${iface} )
 	# We just check the last 5 letters
 	if [[ ${r:((${#r} - 5)):5} != BOUND ]]; then

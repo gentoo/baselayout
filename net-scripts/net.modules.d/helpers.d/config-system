@@ -1,15 +1,53 @@
-#!/bin/bash
 # config-system module for net-scripts
-# Version 1.0.0
+# Version 1.0.1
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
 
 source /etc/conf.d/net
 
+get_wireless_vars() {
+	# Check that wireless has not already been configured
+	[[ $(type -t wireless_check_extensions) == function ]] && return
+
+	# Check we can actually load the file
+	# and our calling dhcp module
+	[[ ! -f /etc/net.modules.d/wireless && ! -f /etc/net.modules.d/${module} ]] && return
+
+	# Setup the devnull var as we probably aren't being called via net.lo
+	[[ -z ${devnull} ]] && local devnull=/dev/stderr
+
+	source /etc/net.modules.d/wireless
+	source /etc/net.modules.d/${module}
+
+	# Check we are installed
+	wireless_check_installed || return
+
+	# Check we are a wireless interface
+	wireless_check_extensions ${interface} || return
+
+	# Wait until we get a valid ESSID
+	local i=0
+	while true ; do
+		ESSID=$( wireless_get_essid ${interface} )
+		[[ -n ${ESSID} ]] && break
+		sleep 1
+		(( i++ ))
+		[[ ${i} -eq 5 ]] && return
+	done
+
+	local -a MODULES=( "${module}" )
+	wireless_map_essid_vars ${interface}
+}
+
 # This routine configures the local host for non-ip and routing info
 # from a DHCP client
-config_system() {
+config_system() {			
+	
+	# Load our wireless mapped vars
+	# For example peer_dns_ESSID becomes peer_dns_eth0
+	get_wireless_vars
+
         local current_hostname=$( hostname ) peer
         if [[ -n ${new_host_name} ]] && [[ -z ${current_hostname} || ${current_hostname} != ${new_host_name} ]]; then
                 hostname ${new_host_name} >/dev/null

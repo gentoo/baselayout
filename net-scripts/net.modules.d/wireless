@@ -1,8 +1,10 @@
 # Wireless module for net-scripts
-# Version 1.0.0
+# Version 1.0.2
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
+# Many thanks to all the people in the Gentoo forums for their ideas and
+# motivation for me to make this and keep on improving it
 
 # Load our config if it exists
 [[ -f /etc/conf.d/wireless ]] && source /etc/conf.d/wireless
@@ -118,17 +120,16 @@ wireless_get_type() {
 # void wireless_report(char *interface)
 #
 # Output how our wireless interface has been configured
-# Sometimes iwgetid fails - or shows strange characters
-# I think this is more of a driver issue at this time
 wireless_report() {
-	local iface=${1} mac mode m="as"
-	local essid
+	local iface=${1} mac mode m="as" essid i=0
 
 	# We do this so that we get a 100% valid report
 	while true ; do
 		essid=$( wireless_get_essid ${iface} )
 		[[ -n ${essid} ]] && break
 		sleep 1
+		(( i++ ))
+		[[ ${i} -eq 5 ]] && break
 	done
 
 	local wep_status=$( wireless_wep_status ${iface} )
@@ -195,13 +196,13 @@ wireless_user_config() {
 	fi
 }
 
-# void wireless_setup_iface(char *iface)
+# void wireless_map_essid_vars(char *iface)
 #
 # All interfaces and module scripts expose modulename_get_vars
 # which returns a space seperated list of user configuration variables
 # We can override each variable here from a given ESSID or the MAC
 # of the AP connected to. MAC configuration takes precedence
-wireless_setup_iface() {
+wireless_map_essid_vars() {
 	local iface=${1}
 	local mod func evars evar vars x i mvars mac=$( wireless_get_ap_mac_address ${iface} )
 	local essid=$( wireless_get_essid_var )
@@ -295,7 +296,7 @@ wireless_setup_specific() {
 	fi
 
 	wireless_user_config ${iface}
-	wireless_setup_iface ${iface}
+	wireless_map_essid_vars ${iface}
 	wireless_report ${iface}
 
 	return 0
@@ -412,13 +413,13 @@ wireless_associate() {
 	eend 0
 
 	if [[ ${ESSID} == any ]]; then
-		ESSID=$( get_essid ${iface} )
+		ESSID=$( wireless_get_essid ${iface} )
 		wireless_associate ${iface}
 		return $?
 	fi
 
 	wireless_user_config ${iface}	
-	wireless_setup_iface ${iface}
+	wireless_map_essid_vars ${iface}
 	wireless_report ${iface}
 	return 0
 }
@@ -748,15 +749,19 @@ wireless_strip_associated() {
 # Once we're connected we show a report and then configure any interface
 # variables for the ESSID
 wireless_configure() {
-	local iface=${1} ESSID test e x
+	local iface=${1} test x e
 	local -a essid_APs mac_APs enc_APs
 
 	# We need to bring the interface up to apply stuff
 	interface_up ${iface}
 
 	# Are we a proper IEEE device?
-	e=$( wireless_get_type ${iface} )
-	if [[ ${e%% *} != IEEE ]]; then
+	# Most devices reutrn IEEE 802.11b/g - but intel cards return IEEE in lower case
+	# and RA cards return RAPCI or similar which really sucks :(
+	# For the time being, we will test prism54 not loading firmware which reports
+	# NOT READY!
+	x=$( wireless_get_type ${iface} )
+	if [[ ${x} == "NOT READY!" ]]; then
 		eerror "Looks like there was a probem loading the firmware for ${iface}"
 		return 1
 	fi
@@ -806,19 +811,19 @@ wireless_configure() {
 	fi
 
 	# Do we have a preferred Access Point list specific to the interface?
-	eval e=( \"\$\{preferred_aps_${iface}\[@\]\}\" )
-	[[ -n ${e} ]] && preferred_aps=( "${e[@]}" )
+	eval x=( \"\$\{preferred_aps_${iface}\[@\]\}\" )
+	[[ -n ${x} ]] && preferred_aps=( "${x[@]}" )
 
 	# Do we have a blacklist Access Point list specific to the interface?
-	eval e=( \"\$\{blacklist_aps_${iface}\[@\]\}\" )
-	[[ -n ${e} ]] && blacklist_aps=( "${e[@]}" )
+	eval x=( \"\$\{blacklist_aps_${iface}\[@\]\}\" )
+	[[ -n ${e} ]] && blacklist_aps=( "${x[@]}" )
 
 	# Are we forcing preferred only?
-	eval e=\"\$\{preferred_only_${iface}\}\"
-	[[ -n ${e} ]] && preferred_only=${e}
-	preferred_only=$( echo ${preferred_only:-no} | tr '[:upper:]' '[:lower:]' )
+	eval x=\"\$\{associate_order_${iface}\}\"
+	[[ -n ${x} ]] && associate_order=${x}
+	associate_order=$( echo ${associate_order:-any} | tr '[:upper:]' '[:lower:]' )
 
-	if [[ ${preferred_only} == force ]]; then
+	if [[ ${associate_order} == forcepreferredonly ]]; then
 		wireless_force_preferred ${iface} && return 0
 	else
 		wireless_scan ${iface} || return 1
@@ -826,19 +831,19 @@ wireless_configure() {
 
 		# Strip AP's from the list that have already been associated with
 		# other wireless cards in the system if requested
-		eval e=\"\$\{unique_ap_${iface}\}\"
-		[[ -n ${e} ]] && unique_ap=${e}
+		eval x=\"\$\{unique_ap_${iface}\}\"
+		[[ -n ${x} ]] && unique_ap=${x}
 		unique_ap=$( echo ${unique_ap:-no} | tr '[:upper:]' '[:lower:]' )
-		[[ no != ${unique_ap} ]] && wireless_strip_associated ${iface}
+		[[ ${unique_ap} != no ]] && wireless_strip_associated ${iface}
 
 		wireless_connect_preferred ${iface} && return 0
-		wireless_force_preferred ${iface} && return 0
-		[[ ${preferred_only} == no ]] && wireless_connect_not_preferred ${iface} && return 0
+		[[ ${associate_order} == forcepreferred ]] && wireless_force_preferred ${iface} && return 0
+		[[ ${associate_order} == any || ${associate_order} == forceany ]] && wireless_connect_not_preferred ${iface} && return 0
 	fi
 
 	e="associate with"
 	[[ -z ${mac_APs} ]] && e="find"
-	[[ ${preferred_only} == force ]] && e="force"
+	[[ ${preferred_only} == force || ${preferred_aps} == forceonly ]] && e="force"
 	e="  Couldn't ${e} any access points on ${iface}"
 	
 	eval ESSID=\"\$\{adhoc_essid_${iface}\}\"

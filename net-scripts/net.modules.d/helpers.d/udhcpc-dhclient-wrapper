@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/bin/sh
 # udhcpc dhclient wrapper for net-scripts
-# Version 1.0.0
+# Version 1.0.1
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
@@ -31,6 +31,7 @@ export new_domain_name=${domain}
 export new_domain_name_servers=${dns}
 export new_hostname=${hostname}
 export new_ntp_servers=${ntpsrv}
+export module=udhcpc
 
 # Execute the dhclient script and exit with it's code
 /etc/net.modules.d/helpers.d/dhclient-${iface_type}

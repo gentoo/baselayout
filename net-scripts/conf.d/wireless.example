@@ -182,12 +182,18 @@
 #preferred_aps_eth0=( "ESSID 3" "ESSID 4" )
 
 # You can also say whether we only connect to preferred APs or not
-# Values are "yes", "no" and "force"
-# "force" means it forceably connects to the APs in order and does not bother
+# Values are "any", "preferredonly", "forcepreferred", "forcepreferredonly" and "forceany"
+# "any" means it will connect to visible APs in the preferred list and then any
+# other available AP
+# "preferredonly" means it will only connect to visible APs in the preferred list
+# "forcepreferred" means it will forceably connect to APs in order if it does not find
+# them in a scan
+# "forcepreferredonly" means it forceably connects to the APs in order and does not bother
 # to scan
-# Default is "no"
-#preferred_only="no"
-#preferred_only_eth0="no"
+# "forceany" does the same as forcepreferred + connects to any other available AP
+# Default is "any"
+#associate_order="any"
+#associate_order_eth0="any"
 
 # You can define blacklisted Access Points in the same way
 #blacklist_aps=( "ESSID 1" "ESSID 2" )

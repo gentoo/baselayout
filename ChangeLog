@@ -2,6 +2,32 @@
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  06 Oct 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Update to net-scripts 1.0.2 from Roy
+    ------------------------------------
+    - wireless module: replaced preferred_only var with
+      associate_order this makes more sense now as we have changed the
+      possible values
+    - wireless module: added patch from Daniel Zappala we should call
+      wireless_get_essid everywhere now
+    - wireless module: don't declare ESSID local in
+      wireless_configure().  This allows ESSID to be tested in the
+      user defined postup() function
+    - wireless module: test type != "NOT READY!" instead of testing =
+      IEEE.  this resolves problems with intel and ra-tech drivers
+    - net.lo start() now errors when the interface does not exist
+    - dhcpcd, dhclient, udhcpc and pump now expose peer_* vars this
+      enables wireless to map them from peer_dns_ESSID
+    - config-system helper now loads wireless module to remap
+      variables from ESSID this allows udhcpc and dhclient to use
+      remapped wireless vars
+    - fixed dhcpcd and pump modules using peer_* vars
+    - wireless aborts after 5 seconds if it cannot report a valid
+      ESSID this fixes a potential infinite loop problem
+    - wireless_setup_iface() renamed to wireless_map_essid_vars() this
+      avoids confusion about what the function actually does
+
   06 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
 
     Change the default net.ipv4.conf.default.rp_filter setting to 1
