@@ -4,6 +4,7 @@
   31 Jan 2004; Roy Marples <uberlord@gentoo.org>:
 
     removed warning from ifconfig
+    dnsdomainname overriding works again - fixes #80174
 
   17 Jan 2004; Roy Marples <uberlord@gentoo.org>:
 

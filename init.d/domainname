@@ -47,7 +47,7 @@ start() {
 		ebegin "Setting DNS domainname to ${DNSDOMAIN}"
 		resolv=$(grep -v '^[[:space:]]*domain' /etc/resolv.conf)
 		[[ ${OVERRIDE} == "1" ]] \
-			&& resolv=${resolv}"$'\n'"domain ${DNSDOMAIN} \
+			&& resolv="${resolv}"$'\n'"domain ${DNSDOMAIN}" \
 			|| resolv="domain ${DNSDOMAIN}"$'\n'"${resolv}"
 		echo "${resolv}" > /etc/resolv.conf
 		retval2=$?
