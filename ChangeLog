@@ -2,6 +2,10 @@
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  12 Oct 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Fix ipaddr_fallback in net-scripts/conf.d/net.example
+
   09 Oct 2004; Aron Griffis <agriffis@gentoo.org>:
 
     Remove init.d/net.eth0 net.lo and net.ppp0.  The first two are
