@@ -5,14 +5,10 @@ depend() {
 }
 
 start() {
-	source /etc/rc.conf
-	if [ -n "$CONSOLEFONT" ]
-	then
-		if [ -e /usr/bin/consolechars ]
-		then
+	if [ -n "$CONSOLEFONT" ] ; then
+		if [ -e /usr/bin/consolechars ] ; then
 			/usr/bin/consolechars --font=${CONSOLEFONT}
 		fi
 	fi
 	return
 }
-
