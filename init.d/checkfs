@@ -254,12 +254,11 @@ dm-crypt-execute() {
 	if [[ -n ${mount} ]] ; then
 		target=${mount}
 		: ${options:='-c aes -h sha1'}
+		[[ -n ${key} ]] && : ${gpg_options:='-q -d'}
 	elif [[ -n ${swap} ]] ; then
 		target=${swap}
 		: ${options:='-c aes -h sha1 -d /dev/urandom'}
 		: ${pre_mount:='mkswap ${dev}'}
-	elif [[ -n ${key} ]] ; then
-		: ${gpg_options:='--quiet -d'}
 	else
 		return
 	fi
