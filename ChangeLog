@@ -3,8 +3,8 @@
 
   16 Dec 2004; Roy Marples <uberlord@gentoo.org>:
 
-    wpa_supplicant - fixed file location for wpa_cli as it changed to /usr/bin
-    in wpa_supplicant-0.3.1
+    wpa_supplicant - fixed file location for wpa_cli and association test
+    as it they changed in wpa_supplicant-0.3.x
 
   12 Dec 2004; Roy Marples <uberlord@gentoo.org>:
 
