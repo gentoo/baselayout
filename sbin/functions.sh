@@ -338,7 +338,7 @@ KV_major() {
 
 	local KV="`echo $1 | \
 		awk '{ tmp = $0; gsub(/^[0-9\.]*/, "", tmp); sub(tmp, ""); print }'`"
-	echo "${KV}" | cut -d. -f1
+	echo "${KV}" | awk -- 'BEGIN { FS = "." } { print $1 }'
 }
 
 # char *KV_minor(string)
@@ -350,7 +350,7 @@ KV_minor() {
 
 	local KV="`echo $1 | \
 		awk '{ tmp = $0; gsub(/^[0-9\.]*/, "", tmp); sub(tmp, ""); print }'`"
-	echo "${KV}" | cut -d. -f2
+	echo "${KV}" | awk -- 'BEGIN { FS = "." } { print $2 }'
 }
 
 # char *KV_micro(string)
@@ -362,7 +362,7 @@ KV_micro() {
 
 	local KV="`echo $1 | \
 		awk '{ tmp = $0; gsub(/^[0-9\.]*/, "", tmp); sub(tmp, ""); print }'`"
-	echo "${KV}" | cut -d. -f3
+	echo "${KV}" | awk -- 'BEGIN { FS = "." } { print $3 }'
 }
 
 # int KV_to_int(string)
