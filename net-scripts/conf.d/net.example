@@ -36,8 +36,8 @@
 #modules_eth0=( "udhcpc" )
 
 # You can also specify which modules not to use - for example you may be
-# using a supplicant which controls wireless configuration but you still
-# want to configure network settings per ESSID associated with.
+# using a supplicant or linux-wlan-ng to control wireless configuration but
+# you still want to configure network settings per ESSID associated with.
 #modules=( "!iwconfig" )
 
 

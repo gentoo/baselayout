@@ -24,7 +24,8 @@ bonding_provides() {
 #
 # Sets up the dependancies for the module
 bonding_depend() {
-	after interface vlan dhcp
+	after interface
+	before vlan dhcp
 	need interface
 }
 
