@@ -46,7 +46,8 @@ tuntap_check_depends() {
 		return 1
 	done
 
-	return 0}
+	return 0
+}
 
 # char* tuntap_get_vars(char *interface)
 #
