@@ -120,7 +120,7 @@ svc_stop() {
 			then
 				# Only worry about net.* services if this is the last one running,
 				# or if RC_NET_STRICT_CHECKING is set ...
-				if is_net_up ; then
+				if ! is_net_up ; then
 					mydeps="net"
 				fi
 			fi
@@ -231,7 +231,7 @@ svc_start() {
 
 		# Start dependencies, if any
 		for x in ${startupservices} ; do
-			if [[ ${x} = "net" && ${NETSERVICE} != "yes" ]] ; then
+			if [[ ${x} = "net" && ${NETSERVICE} != "yes" ]] && ! is_net_up ; then
 				local netservices="$(dolisting "/etc/runlevels/${BOOTLEVEL}/net.*") \
 					$(dolisting "/etc/runlevels/${mylevel}/net.*")"
 
