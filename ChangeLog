@@ -16,6 +16,8 @@
     If the hostname has already been set via the kernel/dhcp, don't 
     force it to 'localhost'.  Used in netboot/terminal setups #38172.
 
+    Add domainname to default boot runlevel list #47041.
+
   08 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
 
     Make sure that when we try to mount /sys, we do so with -n (tigger).
