@@ -9,7 +9,8 @@
 
     Update the fs_passno values in the default fstab to match the 
     settings suggested by the manpage #37314.  Make checkroot respect 
-    a fs_passno setting of 0 when dealing with / #39212.
+    a fs_passno setting of 0 when dealing with / #39212.  Change 
+    default / filesystem type to ext3 instead of xfs #42670.
 
     Don't pipe swapon in localmount to /dev/null and ignore return 
     codes anymore.  A swapon that works shows no output #39834.
