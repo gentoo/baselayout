@@ -9,10 +9,10 @@ depend() {
 
 start() {
 	local retval=0
-	
+
 	if [[ ! -f /fastboot && -z ${CDBOOT} ]] ; then
 		ebegin "Remounting root filesystem read-only (if necessary)"
-		mount -n -o remount,ro / &>/dev/null
+		mount -n -o remount,ro / &> /dev/null
 		eend $?
 
 		if [[ -f /forcefsck ]] || get_bootparam "forcefsck" ; then
@@ -59,7 +59,7 @@ start() {
 			eend 2 "Filesystem couldn't be fixed :("
 			/sbin/sulogin ${CONSOLE}
 			einfo "Unmounting filesystems"
-			/bin/mount -a -o remount,ro &>/dev/null
+			/bin/mount -a -o remount,ro &> /dev/null
 			einfo "Rebooting"
 			/sbin/reboot -f
 		fi
@@ -70,9 +70,8 @@ start() {
 	   awk '{ if ($6 ~ /rw/) exit 0; else exit 1; }'
 	then
 		ebegin "Remounting root filesystem read/write"
-		mount -n -o remount,rw / &>/dev/null
-		if [ "$?" -ne 0 ]
-		then
+		mount -n -o remount,rw / &> /dev/null
+		if [[ $? -ne 0 ]] ; then
 			eend 2 "Root filesystem could not be mounted read/write :("
 			/sbin/sulogin ${CONSOLE}
 		else
@@ -80,8 +79,7 @@ start() {
 		fi
 	fi
 
-	if [ "${BOOT}" = "yes" ]
-	then
+	if [[ ${BOOT} == "yes" ]] ; then
 		local x=
 		local y=
 
@@ -90,8 +88,7 @@ start() {
 		#
 
 		# Don't create mtab if /etc is readonly
-		if ! touch /etc/mtab 2> /dev/null
-		then
+		if ! touch /etc/mtab 2> /dev/null ; then
 			ewarn "Skipping /etc/mtab initialization (ro root?)"
 			return 0
 		fi
@@ -106,12 +103,9 @@ start() {
 		awk '$2 != "/" {print}' /proc/mounts >> /etc/mtab
 
 		# Now make sure /etc/mtab have additional info (gid, etc) in there
-		for x in $(awk '{ print $2 }' /proc/mounts | sort -u)
-		do
-			for y in $(awk '{ print $2 }' /etc/fstab)
-			do
-				if [ "${x}" = "${y}" ]
-				then
+		for x in $(awk '{ print $2 }' /proc/mounts | sort -u) ; do
+			for y in $(awk '{ print $2 }' /etc/fstab) ; do
+				if [[ ${x} == ${y} ]] ; then
 					mount -f -o remount $x
 					continue
 				fi
