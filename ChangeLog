@@ -1,6 +1,8 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+* rc-scripts 1.6.10 (10 Mar 2005)
+
   10 Feb 2005; Roy Marples <uberlord@gentoo.org>:
 
     net.lo now supports fallback_route - fixes #75676
@@ -1122,7 +1124,7 @@
 
     Fix bug 47218 (net.eth0 broken for vlans) with patch provided by
     Andy Dustman.  Fix bug 47250 (depscan.sh fails to create
-    /var/lib/init.d/* directories) with patch from Terje Bergström.
+    /var/lib/init.d/* directories) with patch from Terje BergstrÃ¶m.
 
 * rc-scripts 1.4.6 (08 Apr 2004)
 
@@ -2746,7 +2748,7 @@
   11 Apr 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Update /etc/skel/.bash_profile to make it tcsh compadible.
-    Thanks to Väinö Järvelä for this fix.
+    Thanks to VÃ¤inÃ¶ JÃ¤rvelÃ¤ for this fix.
 
     Update /etc/profile to also set the PS? variables if $SHELL
     is set to /bin/sh.  This should make prompt colours in
