@@ -119,6 +119,25 @@ cat <<EOHELP
       'use' dependancy.
 
 EOHELP
+echo -e "${CYAN}'net' Dependancy and 'net.*' Services:${OFF}"
+cat <<EOHELP
+    Example:
+
+    depend() {
+        need net
+    }
+
+    This is a special dependancy of type 'need'.  It represents a state where
+    a network interface or interfaces besides lo is up and active.  Any service
+    starting with 'net.' will be treated as a part of the 'net' dependancy, 
+    if:
+
+    1.  It is part of the 'boot' runlevel
+    2.  It is part of the current runlevel
+
+    A few examples is the /etc/init.d/net.eth0 and /etc/init.d/net.lo services.
+
+EOHELP
 echo -e "${CYAN}'logger' Dependancy:${OFF}"
 cat <<EOHELP
     Example:
