@@ -11,11 +11,8 @@ source /sbin/functions.sh
 umask 022
 
 try() {
-	local errstr=
+	local errstr
 	local retval=0
-	# This works fine in test, but real life booting, fails for mounting /proc
-	# if we only check $? for instance ...  We thus need to [ -n "${errstr}" ]
-	# as well.
 	
 	if [ -c /dev/null ]; then
 		errstr="$((eval $*) 2>&1 >/dev/null)"
@@ -23,8 +20,7 @@ try() {
 		errstr="$((eval $*) 2>&1)"
 	fi
 	retval=$?
-	if [ "${retval}" -ne 0 ] || \
-	   ([ "${*/mount/}" != "$*" -a -n "${errstr}" ])
+	if [ "${retval}" -ne 0 ]
 	then
 		# Progressbar begin
 		if [ -c /dev/null ]; then
@@ -148,7 +144,7 @@ then
 	check_statedir /proc
 
 	ebegin "Mounting proc at /proc"
-	try try mount -n -t proc none /proc
+	try mount -n -t proc none /proc
 	eend $?
 
 	# Read off the kernel commandline to see if there's any special settings
@@ -390,7 +386,7 @@ then
 			echo; echo
 			/sbin/sulogin ${CONSOLE}
 			einfo "Unmounting filesystems"
-			/bin/mount -a -o remount,ro & >/dev/null
+			/bin/mount -a -o remount,ro &>/dev/null
 			einfo "Rebooting"
 			/sbin/reboot -f
 		fi
