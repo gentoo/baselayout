@@ -4,7 +4,7 @@
 
 umask 022
 
-if [ -n "${EBUILD}" ]
+if [ -z "${EBUILD}" ]
 then
 	# Setup a basic $PATH.  Just add system default to existing.
 	# This should solve both /sbin and /usr/sbin not present when
@@ -47,7 +47,7 @@ getcols() {
 	echo "$2"
 }
 
-if [ -n "${EBUILD}" ]
+if [ -z "${EBUILD}" ]
 then
 	COLS="`stty size 2> /dev/null`"
 else
