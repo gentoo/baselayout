@@ -2,6 +2,11 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  12 Aug 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add missing 'local x' to filter_environ() (bug #26429), thanks to
+    Mark Wagner <mark@lanfear.net>.  Modified rc-services.sh for this.
+
   11 Aug 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Modify /etc/init.d/modules not to print the autoloading stuff if

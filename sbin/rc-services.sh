@@ -275,6 +275,8 @@ is_runlevel_stop() {
 #   Tries to filter most of the dependency stuff from the environment
 #
 filter_environ() {
+	local x=
+
 	for x in $(declare -F)
 	do
 		if [ "${x/depinfo_}" != "${x}" ]
