@@ -1,16 +1,18 @@
-#!/bin/sh
+#!/sbin/runscript
 #RCUPDATE:3 4:76:This line is required for script management
 
-. /etc/rc.d/config/functions
+. /etc/init.d/functions.sh
 
-SERVICE=samba
-opts="start stop"
 
 EXE0=/usr/sbin/nmbd
 EXE1=/usr/sbin/smbd
 
+depend() {
+	need net
+}
+
 start() {
-	ebegin "Starting $SERVICE"
+	ebegin "Starting samba"
 	start-stop-daemon --start --quiet --exec $EXE0 
 	result=$?
 	start-stop-daemon --start --quiet --exec $EXE1 
@@ -19,7 +21,7 @@ start() {
 }
 
 stop() {
-	ebegin "Starting $SERVICE"
+	ebegin "Stopping samba"
 	start-stop-daemon --stop --quiet --exec $EXE0 
 	result=$?
 	start-stop-daemon --stop --quiet --exec $EXE1 
@@ -27,7 +29,6 @@ stop() {
 	eend $result
 }
 
-doservice ${@}
 
 
 
