@@ -2,6 +2,9 @@
 # Copyright 2001 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  17 Nov 2001; Donny Davies (woodchip@gentoo.org): Added /etc/shells file
+  to rc-scripts.  Can remove it from sys-libs/shadow at the next release.
+
 * rc-scripts 1.1.8 (15 Nov 2001)
 
   16 Nov 2001; removed bogus "mountall.test" script.
