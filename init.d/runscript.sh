@@ -78,7 +78,7 @@ svc_stop() {
 	local mydep=""
 	local mydeps=""
 	local retval=0
-	local depservice=""
+	local ordservice=""
 	if [ ! -L ${svcdir}/started/${myservice} ]
 	then
 		eerror "ERROR:  \"${myservice}\" has not yet been started."
@@ -86,7 +86,7 @@ svc_stop() {
 	fi
 
 	# do not try to stop if it had already failed to do so on runlevel change
-	if [ -L ${svcdir}/fails/${myservice} ] && \
+	if [ -L ${svcdir}/failed/${myservice} ] && \
 	   [ -d ${svcdir}/softscripts.new ]
 	then
 		exit 1
@@ -95,29 +95,47 @@ svc_stop() {
 	#remove symlink to prevent recursion
 	rm -f ${svcdir}/started/${myservice}
 
-	#stop all services that should be before on runlevel change
-	for x in $(dolisting ${svcdir}/before/*/${myservice})
-	do
-		if [ ! -L ${x} ]
-		then
-			continue
-		fi
-		depservice="${x%/*}"
-		if [ -d ${svcdir}/softscripts.new ]
-		then
-			if [ ! -L ${svcdir}/softscripts.new/${depservice##*/} ] && \
-			   [ -L ${svcdir}/started/${depservice##*/} ] && \
-			   [ ! -L ${svcdir}/need/${depservice##*/}/${myservice} ] && \
-			   [ ! -L ${svcdir}/need/${myservice}/${depservice##*/} ] && \
-			   [ ! -L ${svcdir}/use/${depservice##*/}/${myservice} ] && \
-			   [ ! -L ${svcdir}/use/${myservice}/${depservice##*/} ] && \
-			   [ ! -L ${svcdir}/before/${myservice}/${depservice##*/} ] && \
-			   [ "${myservice}" != "${depservice}" ]
+	#stop all services that should be stopped before this service
+	#on runlevel change
+	if [ -d ${svcdir}/softscripts.new ]
+	then
+		for x in $(dolisting ${svcdir}/before/*/${myservice})
+		do
+			if [ ! -L ${x} ]
 			then
-				/etc/init.d/${depservice##*/} stop
+				continue
 			fi
-		fi
-	done
+			ordservice="${x%/*}"
+			ordservice="${ordservice##*/}"
+			if [ ! -L ${svcdir}/softscripts.new/${ordservice} ] && \
+			   [ -L ${svcdir}/started/${ordservice} ] && \
+			   [ ! -L ${svcdir}/failed/${ordservice} ] && \
+			   [ ! -L ${svcdir}/before/${myservice}/${ordservice} ] && \
+			   ! dependon ${myservice} ${ordservice} && \
+			   [ "${myservice}" != "${ordservice}" ]
+			then
+				local dep=""
+				local needsme=0
+				for dep in $(dolisting ${svcdir}/need/${ordservice}/)
+				do
+					if [ -L ${svcdir}/softscripts.new/${dep##*/} ] && \
+					   [ -e ${dep} ]
+					then
+						#this dep is valid
+						needsme=1
+						break
+					fi
+				done
+				if [ "${needsme}" -eq 0 ]
+				then
+					#there is still other services that should be stopped before
+					#this service, so fall though (they will stop this service)
+					ln -sf /etc/init.d/${myservice} ${svcdir}/started/${myservice}
+					return 0
+				fi
+			fi
+		done
+	fi
 	
 	if [ -L /etc/init.d/boot/${myservice} ]
 	then
@@ -143,38 +161,35 @@ svc_stop() {
 	for mydep in ${mydeps}
 	do
 		#do not stop a service if it 'use' the current sevice
-		for mytype in ${deptypes/use/}
-		do
-			if [ -d ${svcdir}/${mytype}/${mydep} ]
-			then
-				for x in $(dolisting ${svcdir}/${mytype}/${mydep}/)
-				do
-					if [ ! -L ${x} ]
+		if [ -d ${svcdir}/need/${mydep} ]
+		then
+			for x in $(dolisting ${svcdir}/need/${mydep}/)
+			do
+				if [ ! -L ${x} ]
+				then
+					continue
+				fi
+				if [ ! -L ${svcdir}/started/${x##*/} ]
+				then
+					#service not currently running, continue
+					continue
+				fi
+				${x} stop
+				if [ "$?" -ne 0 ]
+				then
+					#if we are halting the system, try and get it down as
+					#clean as possible, else do not start our service if
+					#a needed service did not start.
+					if [ "${SOFTLEVEL}" != "reboot" ] && \
+					   [ "${SOFTLEVEL}" != "shutdown" ] && \
+					   [ -L ${svcdir}/need/${mydep}/${x} ]
 					then
-						continue
+						retval=1
 					fi
-					if [ ! -L ${svcdir}/started/${x##*/} ]
-					then
-						#service not currently running, continue
-						continue
-					fi
-					${x} stop
-					if [ "$?" -ne 0 ]
-					then
-						#if we are halting the system, try and get it down as
-						#clean as possible, else do not start our service if
-						#a needed service did not start.
-						if [ "${SOFTLEVEL}" != "reboot" ] && \
-						   [ "${SOFTLEVEL}" != "shutdown" ] && \
-						   [ -L ${svcdir}/need/${mydep}/${x} ]
-						then
-							retval=1
-						fi
-						break
-					fi
-				done
-			fi
-		done
+					break
+				fi
+			done
+		fi
 	done
 
 	if [ "${retval}" -ne 0 ]
@@ -187,16 +202,53 @@ svc_stop() {
 		retval=$?
 	fi
 	
-#stopping services that should be stopped after this service on runlevel change,
-#cause first script to be run, to actually be run last, so a big no no.
+	#stop all services that should be stopped after this service
+	#on runlevel change
+	if [ -d ${svcdir}/softscripts.new ]
+	then
+		for x in $(dolisting ${svcdir}/after/*/${myservice})
+		do
+			if [ ! -L ${x} ]
+			then
+				continue
+			fi
+			ordservice="${x%/*}"
+			ordservice="${ordservice##*/}"
+			if [ ! -L ${svcdir}/softscripts.new/${ordservice} ] && \
+			   [ -L ${svcdir}/started/${ordservice} ] && \
+			   [ ! -L ${svcdir}/failed/${ordservice} ] && \
+			   [ ! -L ${svcdir}/after/${myservice}/${ordservice} ] && \
+			   ! dependon ${ordservice} ${myservice} && \
+			   [ "${myservice}" != "${ordservice}" ]
+			then
+				local dep=""
+				local needsme=0
+				for dep in $(dolisting ${svcdir}/need/${ordservice}/)
+				do
+					if [ -L ${svcdir}/softscripts.new/${dep##*/} ] && \
+					   [ -e ${dep} ]
+					then
+						#this dep is valid
+						needsme=1
+						break
+					fi
+				done
+				if [ "${needsme}" -eq 0 ]
+				then
+					#stop service
+					/etc/init.d/${ordservice} stop
+				fi
+			fi
+		done
+	fi
 
 	if [ "${retval}" -ne 0 ]
 	then
 		#did we fail to stop? create symlink to stop multible attempts at
 		#runlevel change
-		if [ -d ${svcdir}/fails ]
+		if [ -d ${svcdir}/failed ]
 		then
-			ln -sf /etc/init.d/${myservice} ${svcdir}/fails/${myservice}
+			ln -sf /etc/init.d/${myservice} ${svcdir}/failed/${myservice}
 		fi
 		#if we are halting the system, do it as cleanly as possible
 		if [ "${SOFTLEVEL}" != "reboot" ] && [ "${SOFTLEVEL}" != "shutdown" ]
@@ -204,6 +256,7 @@ svc_stop() {
 			ln -sf /etc/init.d/${myservice} ${svcdir}/started/${myservice}
 		fi
 	fi
+
 	return ${retval}
 }
 
@@ -213,11 +266,11 @@ svc_start() {
 	local x=""
 	local y=""
 	local myserv=""
-	local depservice=""
+	local ordservice=""
 	if [ ! -L ${svcdir}/started/${myservice} ]
 	then
 		#do not try to start if i have done so already on runlevel change
-		if [ -L ${svcdir}/fails/${myservice} ] && \
+		if [ -L ${svcdir}/failed/${myservice} ] && \
 		   [ -d ${svcdir}/softscripts.old ]
 		then
 			exit 1
@@ -225,31 +278,35 @@ svc_start() {
 	
 		#link first to prevent possible recursion
 		ln -sf /etc/init.d/${myservice} ${svcdir}/started/${myservice}
-	
-		#start anything that should be started before on runlevel change
-		for x in $(dolisting ${svcdir}/after/*/${myservice})
-		do
-			if [ ! -L ${x} ]
-			then
-				continue
-			fi
-			depservice="${x%/*}"
-			if [ -d ${svcdir}/softscripts.old ]
-			then
-				if [ ! -L ${svcdir}/softscripts.old/${depservice##*/} ] && \
-				   [ ! -L ${svcdir}/started/${depservice##*/} ] && \
-				   [ -L ${svcdir}/softscripts/${depservice##*/} ] && \
-				   [ ! -L ${svcdir}/need/${myservice}/${depservice##*/} ] && \
-				   [ ! -L ${svcdir}/need/${depservice##*/}/${myservice} ] && \
-				   [ ! -L ${svcdir}/use/${myservice}/${depservice##*/} ] && \
-				   [ ! -L ${svcdir}/use/${depservice##*/}/${myservice} ] && \
-				   [ ! -L ${svcdir}/after/${myservice}/${depservice##*/} ] && \
-				   [ "${myservice}" != "${depservice}" ]
+
+		#start anything that should be started before this service on
+		#runlevel change
+		if [ -d ${svcdir}/softscripts.old ]
+		then
+			local needstart=0
+			for x in $(dolisting ${svcdir}/after/*/${myservice})
+			do
+				if [ ! -L ${x} ]
 				then
-					/etc/init.d/${depservice##*/} start
+					continue
 				fi
-			fi
-		done
+				ordservice="${x%/*}"
+				ordservice="${ordservice##*/}"
+				if [ ! -L ${svcdir}/softscripts.old/${ordservice} ] && \
+				   [ ! -L ${svcdir}/started/${ordservice} ] && \
+				   [ -L ${svcdir}/softscripts/${ordservice} ] && \
+				   [ ! -L ${svcdir}/failed/${ordservice} ] && \
+				   [ ! -L ${svcdir}/after/${myservice}/${ordservice} ] && \
+				   ! dependon ${ordservice} ${myservice} && \
+				   [ "${myservice}" != "${ordservice}" ]
+				then
+					#there are still service left that should be started before
+					#this one, so just fall though (they will start this one)
+					rm -f ${svcdir}/started/${myservice}
+					return 0
+				fi
+			done
+		fi
 
 		#start dependencies, if any
 		for x in $(ineed ${myservice}) $(valid_iuse ${myservice})
@@ -320,38 +377,36 @@ svc_start() {
 			retval=$?
 		fi
 
-		if [ "${retval}" -ne 0 ]
+		if [ "${retval}" -ne 0 ] && [ -d ${svcdir}/failed ]
 		then
-			if [ -d ${svcdir}/fails ]
-			then
-				ln -sf /etc/init.d/${myservice} ${svcdir}/fails/${myservice}
-			fi
+			ln -sf /etc/init.d/${myservice} ${svcdir}/failed/${myservice}
 		fi
 
-		#start anything that should be started after on runlevel change
-		for x in $(dolisting ${svcdir}/before/*/${myservice})
-		do
-			if [ ! -L ${x} ]
-			then
-				continue
-			fi
-			depservice="${x%/*}"
-			if [ -d ${svcdir}/softscripts.old ]
-			then
-				if [ ! -L ${svcdir}/softscripts.old/${depservice##*/} ] && \
-				   [ ! -L ${svcdir}/started/${depservice##*/} ] && \
-				   [ -L ${svcdir}/softscripts/${depservice##*/} ] && \
-				   [ ! -L ${svcdir}/need/${depservice##*/}/${myservice} ] && \
-				   [ ! -L ${svcdir}/need/${myservice}/${depservice##*/} ] && \
-				   [ ! -L ${svcdir}/use/${depservice##*/}/${myservice} ] && \
-				   [ ! -L ${svcdir}/use/${myservice}/${depservice##*/} ] && \
-				   [ ! -L ${svcdir}/before/${myservice}/${depservice##*/} ] && \
-				   [ "${myservice}" != "${depservice}" ]
+		#start anything that should be started after this service
+		#on runlevel change
+		if [ -d ${svcdir}/softscripts.old ]
+		then
+			for x in $(dolisting ${svcdir}/before/*/${myservice})
+			do
+				if [ ! -L ${x} ]
 				then
-					/etc/init.d/${depservice##*/} start
+					continue
 				fi
-			fi
-		done
+				ordservice="${x%/*}"
+				ordservice="${ordservice##*/}"
+				if [ ! -L ${svcdir}/softscripts.old/${ordservice} ] && \
+				   [ ! -L ${svcdir}/started/${ordservice} ] && \
+				   [ -L ${svcdir}/softscripts/${ordservice} ] && \
+				   [ ! -L ${svcdir}/failed/${ordservice} ] && \
+				   [ ! -L ${svcdir}/before/${myservice}/${ordservice} ] && \
+				   ! dependon ${myservice} ${ordservice} && \
+				   [ "${myservice}" != "${ordservice}" ]
+				then
+					#start service
+					/etc/init.d/${ordservice} start
+				fi
+			done
+		fi
 
 		#remove link if service didn't start; but only if we're not booting
 		#if we're booting, we need to continue and do our best to get the
@@ -383,6 +438,17 @@ if [ -z "${opts}" ]
 then
 	opts="start stop restart"
 fi
+
+# does $1 depend on $2 ?
+dependon() {
+	if [ -L ${svcdir}/need/${2}/${1} ] || \
+	   [ -L ${svcdir}/use/${2}/${1} ]
+	then
+		return 0
+	else
+		return 1
+	fi
+}
 
 needsme() {
 	local x=""

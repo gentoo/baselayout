@@ -101,16 +101,6 @@ then
 		eend $?
 	fi
 
-	#mount either a ramdisk or tmpfs and do dep scan
-
-	#should we use tmpfs or a ramdisk ?
-	tmpfs="yes"
-	get_bootparam "notmpfs"
-	if [ "$?" -eq 0 ]
-	then
-		tmpfs="no"
-	fi
-
 	if [ ! -d ${svcdir} ]
 	then
 		echo
@@ -125,7 +115,10 @@ then
 		/sbin/reboot -f
 	fi
 	
-	if [ "${tmpfs}" = "yes" ]
+	#mount either a ramdisk or tmpfs and do dep scan
+	
+	#should we use tmpfs or a ramdisk ?
+	if ! get_bootparam "notmpfs"
 	then
 		ebegin "Mounting tmpfs at ${svcdir}"; \
 		try mount -n -t tmpfs tmpfs ${svcdir} \
@@ -163,7 +156,7 @@ fi #boot ends here
 
 if [ -z "${argv1}" ]
 then
-	if [ -e ${svcdir}/softlevel ]
+	if [ -f ${svcdir}/softlevel ]
 	then
 		export SOFTLEVEL="$(cat ${svcdir}/softlevel)"
 	else
@@ -173,12 +166,17 @@ else
 	export SOFTLEVEL="${argv1}"
 fi
 
-#for keeping a list of services that fails during boot/halt
-if [ ! -d ${svcdir}/fails ]
+if [ ! -f ${svcdir}/softlevel ]
 then
-	install -d -m0755 ${svcdir}/fails
+	echo "${SOFTLEVEL}" > ${svcdir}/softlevel
+fi
+
+#for keeping a list of services that fails during boot/halt
+if [ ! -d ${svcdir}/failed ]
+then
+	install -d -m0755 ${svcdir}/failed
 else
-	rm -rf ${svcdir}/fails/*
+	rm -rf ${svcdir}/failed/*
 fi
 
 if [ "${SOFTLEVEL}" = "reboot" ] || [ "${SOFTLEVEL}" = "shutdown" ]
@@ -257,18 +255,15 @@ dep_stop() {
 		else
 			#something may depend on me
 			needsme=0
-			for mytype in need
+			for dep in $(dolisting ${svcdir}/need/${myservice}/)
 			do
-				for dep in $(dolisting ${svcdir}/${mytype}/${myservice}/)
-				do
-					if [ -L ${svcdir}/softscripts.new/${dep##*/} ] && \
-					   [ -e ${dep} ]
-					then
-						#this dep is valid
-						needsme=1
-						break
-					fi
-				done
+				if [ -L ${svcdir}/softscripts.new/${dep##*/} ] && \
+				   [ -e ${dep} ]
+				then
+					#this dep is valid
+					needsme=1
+					break
+				fi
 			done
 			if [ "${needsme}" -eq 0 ]
 			then
@@ -352,7 +347,7 @@ then
 fi
 
 #runlevel end, so clear stale fail list
-rm -rf ${svcdir}/fails &>/dev/null
+rm -rf ${svcdir}/failed &>/dev/null
 
 #if we were in the boot runlevel, it is done now ...
 [ -n "${BOOT}" ] && unset BOOT

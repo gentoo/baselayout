@@ -2,6 +2,25 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  24 March 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Resolve bug #1274.  Updated /etc/init.d/hostname and /etc/init.d/bootmisc
+    for this.
+
+    With the "before" and "after" stuff, recursion levels was getting too high,
+    and with some cases, things just plain did not work as it should.  Reworked
+    things to to lower the levels of recursion and get the order right.  Updated
+    /etc/init.d/runscript.sh for this.
+
+    Fixed a problem in /sbin/rc and /etc/init.d/runscript.sh where
+    ${svcdir}/softlevel did not always exist, but runscript.sh tried to open it.
+
+    Enhance --quiet support.  Updated /etc/init.d/functions.sh for this.
+
+    Remove /etc/pwdb.conf, as pwdb already install a copy of this.
+
+    Remove /etc/pam.d/{rexec,rlogin,rsh} as pam already install this.
+
 * rc-scripts 1.3.1 (23 Mar 2002)
 
   23 March 2002; Daniel Robbins <drobbins@gentoo.org>: init.d/net.eth0: fix for

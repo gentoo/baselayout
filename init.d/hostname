@@ -18,6 +18,7 @@ checkconfig() {
 
 start() {
 	local myhost=""
+	retval=0
 	if ! checkconfig
 	then
 		myhost="localhost"
@@ -26,7 +27,16 @@ start() {
 	fi
 	ebegin "Setting hostname to ${myhost}"
 	/bin/hostname "${myhost}"
-	eend $? "Failed to set the hostname"
+	retval=$?
+	eend ${retval} "Failed to set the hostname"
+
+	if [ "${retval}" -eq 0 ]
+	then
+		#setup $HOSTNAME
+		echo "HOSTNAME=\"${myhost}\"" >/etc/env.d/01hostname
+	fi
+
+	return ${retval}
 }
 
 
