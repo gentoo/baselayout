@@ -1,0 +1,69 @@
+#!/sbin/runscript
+# Copyright 1999-2003 Gentoo Technologies, Inc.
+# Distributed under the terms of the GNU General Public License v2 
+# $Header$
+
+
+depend() {
+	need checkroot hostname
+}
+
+checkconfig_nis() {
+	if [ ! -f /etc/nisdomainname ] || [ -z "$(< /etc/nisdomainname)" ]
+	then
+#		eerror "You need to set /etc/nisdomainname to a valid NIS domainname"
+		return 1
+	fi
+	return 0
+}
+
+checkconfig_dns() {
+	if [ ! -f /etc/dnsdomainname ] || [ -z "$(< /etc/dnsdomainname)" ]
+	then
+#		eerror "You need to set /etc/dnsdomainname to a valid DNS domainname"
+		return 1
+	fi
+	return 0
+}
+
+start() {
+	local mynisdomain=
+	local mydnsdomain=
+	local retval=0
+	local retval2=2
+	
+	if checkconfig_nis
+	then
+		mynisdomain="$(< /etc/nisdomainname)"
+
+		ebegin "Setting NIS domainname to ${mynisdomain}"
+		/bin/domainname "${mynisdomain}"
+		retval=$?
+		eend ${retval} "Failed to set the NIS domainname"
+		
+	fi
+
+	if checkconfig_dns
+	then
+		mydnsdomain="$(< /etc/dnsdomainname)"
+
+		[ ! -f /etc/resolv.conf ] && touch /etc/resolv.conf
+		ebegin "Setting DNS domainname to ${mydnsdomain}"
+		gawk -v DOMAIN="${mydnsdomain}" \
+			'BEGIN { print "domain " DOMAIN }
+			 $0 !~ /^[[:space:]]*domain/ { print }' \
+			/etc/resolv.conf > /etc/resolv.conf.new
+		retval2=$?
+		[ "${retval2}" -eq 0 ] \
+			&& (mv -f /etc/resolv.conf.new /etc/resolv.conf) \
+			|| (rm -f /etc/resolv.conf.new)
+		eend ${retval2} "Failed to set the DNS domainname"
+	fi
+
+	retval=$((retval + retval2))
+	
+	return ${retval}
+}
+
+
+# vim:ts=4

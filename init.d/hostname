@@ -28,9 +28,21 @@ start() {
 	local myhost="localhost"
 	local retval=0
 	
+	# We use whatever is in /etc/hostname here.  That means:
+	#
+	# 1)  For doing it the proper way, you should NOT put a
+	#     FQDN in there, but:
+	#     a) Only have the hostname in there (no dns/nis domainname)
+	#     b) Set the dnsdomainname via /etc/resolv.conf
+	#     c) Set the nisdomainname via 'domainname'.
+	#
+	# 2)  If the user want a FQDN in there, it should be possible
+	#     without hacking things to pieces, but then he should
+	#     know what he is doing ...
+	#
 	if checkconfig
 	then
-		myhost="$(awk '{ sub(/\..*/, ""); print }' /etc/hostname)"
+		myhost="$(< /etc/hostname)"
 	fi
 	
 	ebegin "Setting hostname to ${myhost}"
@@ -41,7 +53,7 @@ start() {
 	if [ "${retval}" -eq 0 ]
 	then
 		# setup $HOSTNAME
-		echo "HOSTNAME=\"${myhost}\"" >/etc/env.d/01hostname
+		echo "HOSTNAME=\"${myhost}\"" > /etc/env.d/01hostname
 	fi
 
 	return ${retval}

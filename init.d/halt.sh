@@ -54,6 +54,7 @@ remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $1}' /proc/mou
 [ -n "${remaining}" ] && {
 	sig=
 	retry=3
+	
 	while [ -n "${remaining}" -a "${retry}" -gt 0 ]
 	do
 		if [ "${retry}" -lt 3 ]
@@ -74,8 +75,10 @@ remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $1}' /proc/mou
 				eend $? "Failed to detach device ${dev}"
 			}
 		done
+		
 		remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts | sort -r`"
 		[ -z "${remaining}" ] && break
+		
 		/bin/fuser -k -m ${sig} ${remaining} &> /dev/null
 		sleep 5
 		retry=$((${retry} - 1))
@@ -87,12 +90,12 @@ remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $1}' /proc/mou
 # This is needed to make sure we dont have a mounted filesystem
 # on a LVM volume when shutting LVM down ...
 ebegin "Unmounting filesystems"
-no_unmount="`mount | awk '{ if (($5 ~ /^(proc|sysfs|devfs|tmpfs)$/) ||
-                             ($1 ~ /^(rootfs|\/dev\/root|none)$/) ||
+no_unmount="`mount | awk '{ if (($5 ~ /^(proc|sysfs|devfs|tmpfs|usb(dev)?fs)$/) ||
+                             ($1 ~ /^(rootfs|\/dev\/root)$/) ||
                              ($3 = "/"))
                            print $3
-                       }' | uniq`"
-for x in `awk '{ print $2 }' < /proc/mounts | sort -r`
+                       }' | sort | uniq`"
+for x in `awk '{ print $2 }' /proc/mounts | sort -r | uniq`
 do
 	do_unmount="yes"
 	
@@ -102,7 +105,8 @@ do
 	done
 	
 	if [ "${do_unmount}" = "yes" ] && \
-	   [ "${x}" != "/" -a "${x}" != "/dev" -a "${x}" != "/proc" ]
+	   [ "${x}" != "/" -a "${x}" != "/dev" -a "${x}" != "/proc" -a \
+	     "${x}" != "/sys" ]
 	then
 		umount -f -r ${x} &> /dev/null
 	fi
@@ -110,7 +114,7 @@ done
 eend 0
 
 # Stop LVM
-if [ -x /sbin/vgchange -a -f /etc/lvmtab ] && [ -d /proc/lvm ]
+if [ -x /sbin/vgchange -a -f /etc/lvmtab -a -d /proc/lvm ]
 then
 	ebegin "Shutting down the Logical Volume Manager"
 	/sbin/vgchange -a n > /dev/null

@@ -2,6 +2,13 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  04 May 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Revert /etc/init.d/hostname the way it was, as it should be the user's
+    choice if he want to have a FQDN in there or not, bug #14946.
+
+    Add /etc/init.d/domainname for those that want to use it.
+
   29 Apr 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Change the root check back the way it was, else it breaks with non bash
