@@ -38,7 +38,7 @@
 # You can also specify which modules not to use - for example you may be
 # using a supplicant which controls wireless configuration but you still
 # want to configure network settings per ESSID associated with.
-#modules=( "!wireless" )
+#modules=( "!iwconfig" )
 
 
 ##############################################################################
@@ -412,13 +412,14 @@
 
 # Then we have to strip out the conflicting modules based on user preference
 # and default configuration and sort them into the correct order.
+# Finally we check the end result for dependancies.
 
 # This, of course, takes valuable CPU time so we provide module forcing as a
-# means to speed things up. It is essential that you force modules in the
-# correct order and supply all the modules you need. When forcing modules,
-# you cannot provide a generic name (ie you cannot use dhcp - you need to
-# specify dhcpcd or pump for example). You must always supply an interface of
-# currently ifconfig or iproute2
+# means to speed things up. We still do *some* checking but not much.
+
+# It is essential that you force modules in the correct order and supply all
+# the modules you need. You must always supply an interface module - we
+# supply ifconfig or iproute2.
 
 # The Big Fat Warning :- If you use module forcing do not complain to us or
 # file bugs about it not working!
@@ -431,4 +432,12 @@
 #modules_force_eth1=( "iproute2" )
 
 # The below will not work
-#modules_force=( "dhcpcd" )		# No interface (ifconfig/iproute2)
+#modules_force=( "dhcpcd" )
+# No interface (ifconfig/iproute2)
+#modules_force=( "ifconfig" "essidnet" "iwconfig" )
+# Although it will not crash, essidnet will not work as it has to come after
+# iwconfig
+#modules_force=( "iproute2" "ifconfig" )
+# Although it will not crash, the interface will be setup by ifconfig's rules
+# as it comes last in the list - although iproute2 will attempt to setup the
+# interface as well.

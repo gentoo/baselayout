@@ -85,11 +85,16 @@ module_class_wrap() {
 #
 # Does the minimum checking on a module - even when forcing
 module_load_minimum() {
-	local mod=${1##*/} f
+	local f=${1} mod=${1##*/}
 
-	if ! source ${1} ; then
-		eerror "${mod} failed a sanity check - will not load"
-		return 0 # We can continue working still
+	if [[ ! -f ${f} ]]; then
+		eerror "${f} does not exist"
+		return 1
+	fi
+
+	if ! source ${f} ; then
+		eerror "${mod} failed a sanity check"
+		return 1
 	fi
 
 	for f in check_installed provides check_depends depend; do
@@ -101,10 +106,10 @@ module_load_minimum() {
 	return 0
 }
 
-# bool modules_load_auto(void)
+# bool modules_load_list(bool checkmodify)
 #
-# Load and check each module in /lib/rcscripts/net.modules.d/
-# for sanity, installation
+# Load and check each module for sanity
+# If the module is not installed, the functions are to be removed
 modules_load_auto() {
 	local e f i j before after beforefuncs diffs unload
 
@@ -114,7 +119,8 @@ modules_load_auto() {
 	# Each of these sources into the global namespace, so it's
 	# important that module functions and variables are prefixed with
 	# the module name, for example iproute2_
-	before=$( typeset -f )
+
+	${checkmodify} && before=$( typeset -f )
 	j=${#MODULES[@]}
 	loaded_interface=false
 	for (( i=0; i<j; i++ )); do
@@ -139,7 +145,7 @@ modules_load_auto() {
 
 		# Wrap our before/after/need/use functions
 		${MODULES[i]}_depend
-
+		
 		# Double check that we've only *added* to the function list, not
 		# replaced.  This is as much protection for devs as for users ;-)
 		after="$( typeset -f )"
@@ -176,7 +182,6 @@ modules_load_auto() {
 			eerror "${MODULES[i]} modified functions: ${diffs}"
 			return 1
 		fi
-
 		before="${after}"
 	done
 	MODULES=( "${MODULES[@]}" )
@@ -195,11 +200,10 @@ modules_load_auto() {
 # may be using a daemon to configure wireless instead of our
 # iwconfig module
 modules_check_use() {
-	local i mod missingdeps interface=false
+	local i mod missingdeps
 
 	for (( i=0; i < ${#MODULES[@]}; i++ )); do
 		mod=${MODULES[i]}
-		[[ $( ${mod}_provides ) == interface ]] && interface=true
 		if [[ $( type -t ${mod}_use ) == function ]]; then
 			for j in $( ${mod}_use ); do
 				missingdeps=true
@@ -215,11 +219,6 @@ modules_check_use() {
 	done
 
 	MODULES=( "${MODULES[@]}" )
-
-	if ! ${interface} ; then
-		eerror "no interface module has been loaded"
-		return 1
-	fi
 }
 
 # bool modules_check_user(void)
@@ -386,7 +385,7 @@ modules_sort() {
 
 # bool modules_check_depends(bool showprovides)
 modules_check_depends() {
-	local mod i j missingdeps p showprovides=${1:-false}
+	local mod i j missingdeps p showprovides=${1:-false} interface=false
 
 	for mod in ${MODULES[@]}; do
 		if [[ $( type -t ${mod}_need ) == function ]]; then
@@ -406,12 +405,18 @@ modules_check_depends() {
 		fi
 
 		${mod}_check_depends || return 1
+		[[ $( ${mod}_provides ) == interface ]] && interface=true
 
 		if ${showprovides} ; then
 			p=$( ${mod}_provides )
 			[[ ${p} != ${mod} ]] && veinfo "${mod} provides ${p}"
 		fi
 	done
+
+	if ! ${interface} ; then
+		eerror "no interface module has been loaded"
+		return 1
+	fi
 
 	return 0
 }
@@ -421,7 +426,7 @@ modules_check_depends() {
 # Loads the defined handler and modules for the interface
 # Returns 0 on success, otherwise 1
 modules_load()  {
-	local iface=${1} starting=${2:-true} mod p=false i
+	local iface=${1} starting=${2:-true} mod p=false i j
 	local -a x
 	local RC_INDENTATION=${RC_INDENTATION}	# so it will reset after function
 
@@ -446,19 +451,15 @@ modules_load()  {
 		if [[ ${iface} != lo ]]; then
 			ewarn "WARNING: You are forcing modules!"
 			ewarn "Do not complain or file bugs if things start breaking"
+			report=true
 		fi
-		MODULES=( "${modules_force[@]}" )
-		for (( i=0; i<${#modules_force[@]}; i++ )); do
-			module_load_minimum /lib/rcscripts/net.modules.d/${MODULES[i]} || return 1
-			
-			if [[ ${iface} == lo ]]; then
-				${MODULES[i]}_check_installed false || unset MODULES[i]
-			else
-				${MODULES[i]}_check_installed true || return 1
-			fi
+		j=${#modules_force[@]}
+		for (( i=0; i<j; i++ )); do
+			module_load_minimum "/lib/rcscripts/net.modules.d/${modules_force[i]}" || return 1
+			${modules_force[i]}_check_installed || unset modules_force[i]
 		done
-		MODULES=( "${MODULES[@]}" )
-	fi		
+		MODULES=( "${modules_force[@]}" )
+	fi
 
 	[[ ${iface} != lo ]] && veinfo "modules: ${MODULES[@]}"
 	eindent
