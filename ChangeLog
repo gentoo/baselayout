@@ -2,6 +2,10 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  26 Jun 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add sshd user and group.  Updated /etc/passwd and /etc/group for this.
+
   20 Jun 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Add /opt/bin to $PATH and $ROOTPATH, closing bug #3603.  Modified

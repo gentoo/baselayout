@@ -32,6 +32,7 @@ mysql:x:60:
 postgres::70:
 cdrw::80:
 apache::81:
+sshd::90:
 users::100:games
 nofiles:x:200:
 qmail:x:201:
