@@ -13,7 +13,7 @@ start() {
 	[ -f /proc/modules ] || return
 	[ -x /sbin/depmod ] || return
 	ebegin "Calculating module dependencies"
-	/usr/sbin/update-modules &>/dev/null
+	/sbin/update-modules &>/dev/null
 	eend $? "Failed to calculate dependencies"
 
 	# Loop over every line in /etc/modules.autoload.
