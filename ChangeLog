@@ -2,6 +2,19 @@
 # Copyright 2002-2004 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+* rc-scripts 1.5.2 (02 Aug 2004)
+
+  02 Aug 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Related to bug 38955, don't set INPUTRC.  Instead patch bash so
+    that it looks for /etc/inputrc automatically if ~/.inputrc is
+    missing.  This is better than using INPUTRC since that will
+    override even after the user creates ~/.inputrc.
+
+    Fix bug 54275: Don't set INFODIR.  The correct variable used by
+    texinfo is INFOPATH, which is already set in 00basic.  Setting
+    INFODIR is useless, and breaks a NetBSD cross compile from Gentoo
+
   01 Aug 2004; Aron Griffis <agriffis@gentoo.org>:
 
     Fix bug 58805: net.eth0 should use bridge so that bridge
@@ -18,15 +31,6 @@
 
     Fix bug 46680: Add cifs support to localmount and netmount.
     Thanks to Ronald Moesbergen for the patches
-
-    Related to bug 38955, don't set INPUTRC.  Instead patch bash so
-    that it looks for /etc/inputrc automatically if ~/.inputrc is
-    missing.  This is better than using INPUTRC since that will
-    override even after the user creates ~/.inputrc.
-
-    Fix bug 54275: Don't set INFODIR.  The correct variable used by
-    texinfo is INFOPATH, which is already set in 00basic.  Setting
-    INFODIR is useless, and breaks a NetBSD cross compile from Gentoo
 
   21 Jul 2004; Aron Griffis <agriffis@gentoo.org>:
 
