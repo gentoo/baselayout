@@ -1,4 +1,13 @@
-	*init.d/modules
+rc-scripts 1.1.7, released 18 Oct 2001
+======================================
+
+	*lots of scripts; woodchip
+	removed old rc5 scripts from cvs
+
+	*init.d/runscript.sh; agriffis
+	Added support for rc.conf and home-grown functions
+	
+	*init.d/modules;
 	Now correctly looks at /etc/modules.autoload
 
 rc-scripts-1.1.6, released 15 Sep 2001
