@@ -4,35 +4,31 @@
 
 # Check to see if this is a livecd, if it is read the commandline
 # this mainly makes sure $CDBOOT is defined if it's a livecd
-[ -f "/sbin/livecd-functions.sh" ] && \
+[[ -f /sbin/livecd-functions.sh ]] && \
 	source /sbin/livecd-functions.sh && \
 	livecd_read_commandline
 
 # Reset pam_console permissions if we are actually using it
 if [[ -x /sbin/pam_console_apply && ! -c /dev/.devfsd && \
-      -n $(grep -v -e '^[[:space:]]*#' /etc/pam.d/* | grep 'pam_console') ]]
-then
+      -n $(grep -v -e '^[[:space:]]*#' /etc/pam.d/* | grep 'pam_console') ]]; then
 	/sbin/pam_console_apply -r
 fi
 
 # We need to properly terminate devfsd to save the permissions
-if [ -n "$(ps --no-heading -C 'devfsd')" ]
-then
+if [[ -n $(ps --no-heading -C 'devfsd') ]]; then
 	ebegin "Stopping devfsd"
 	killall -15 devfsd &>/dev/null
 	eend $?
-elif [ ! -e /dev/.devfsd -a -e /dev/.udev \
-       -a "${RC_DEVICE_TARBALL}" = "yes" -a -z "${CDBOOT}" ]
-then
+elif [[ ! -e /dev/.devfsd && -e /dev/.udev && -z ${CDBOOT} && \
+        ${RC_DEVICE_TARBALL} == "yes" ]]; then
 	ebegin "Saving device nodes"
 	# Handle our temp files
-	devices_udev="$(mktemp /tmp/devices.udev.XXXXXX)"
-	devices_real="$(mktemp /tmp/devices.real.XXXXXX)"
-	device_tarball="$(mktemp /tmp/devices-XXXXXX)"
+	devices_udev=$(mktemp /tmp/devices.udev.XXXXXX)
+	devices_real=$(mktemp /tmp/devices.real.XXXXXX)
+	device_tarball=$(mktemp /tmp/devices-XXXXXX)
 	
-	if [ -z "${devices_udev}" -o -z "${devices_real}" -o \
-	     -z "${device_tarball}" ]
-	then
+	if [[ -z ${devices_udev} || -z ${devices_real} || \
+	      -z ${device_tarball} ]]; then
 		eend 1 "Could not create temporary files!"
 	else
 		cd /dev
@@ -41,13 +37,12 @@ then
 			"${devices_real}"
 		# Figure out what udev created
 		eval $(grep '^[[:space:]]*udev_db=' /etc/udev/udev.conf)
-		if [ -d "${udev_db}" ]
-		then
+		if [[ -d ${udev_db} ]]; then
 			# New udev_db is clear text ...
-			udevinfo="$(cat "${udev_db}"/*)"
+			udevinfo=$(cat "${udev_db}"/*)
 		else
 			# Old one is not ...
-			udevinfo="$(udevinfo -d)"
+			udevinfo=$(udevinfo -d)
 		fi
 		# This basically strips 'S:' and 'N:' from the db output, and then
 		# print all the nodes/symlinks udev created ...
@@ -59,14 +54,12 @@ then
 					print nodes[x]
 			}' > "${devices_udev}"
 		# These ones we also do not want in there
-		for x in MAKEDEV core fd initctl pts shm stderr stdin stdout
-		do
+		for x in MAKEDEV core fd initctl pts shm stderr stdin stdout; do
 			echo "${x}" >> "${devices_udev}"
 		done
 		tarball_devices="$(fgrep -x -v -f "${devices_udev}" < "${devices_real}")"
 		# Now only tarball those not created by udev if we have any
-		if [ -n "${tarball_devices}" ]
-		then
+		if [[ -n ${tarball_devices} ]]; then
 			try tar -jclpf "${device_tarball}" ${tarball_devices}
 			try mv -f "${device_tarball}" /lib/udev-state/devices.tar.bz2
 			try rm -f "${devices_udev}" "${devices_real}"
@@ -81,8 +74,7 @@ fi
 # occure, bug #13599.
 umount -at tmpfs &>/dev/null
 
-if [ -n "$(swapon -s 2>/dev/null)" ]
-then
+if [[ -n $(swapon -s 2>/dev/null) ]]; then
 	ebegin "Deactivating swap"
 	swapoff -a &>/dev/null
 	eend $?
@@ -106,16 +98,14 @@ halt -w &>/dev/null
 
 # Remove loopback devices started by dm-crypt
 
-remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts | \
-            sort -r | grep -v '/newroot' | grep -v '/mnt/livecd'`"
-[ -n "${remaining}" ] && {
+remaining=$(awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts | \
+            sort -r | grep -v '/newroot' | grep -v '/mnt/livecd')
+[[ -n ${remaining} ]] && {
 	sig=
 	retry=3
 
-	while [ -n "${remaining}" -a "${retry}" -gt 0 ]
-	do
-		if [ "${retry}" -lt 3 ]
-		then
+	while [[ -n ${remaining} && ${retry} -gt 0 ]]; do
+		if [[ ${retry} -lt 3 ]]; then
 			ebegin "Unmounting loopback filesystems (retry)"
 			umount -d ${remaining} &>/dev/null
 			eend $? "Failed to unmount filesystems this retry"
@@ -125,9 +115,9 @@ remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mou
 			eend $? "Failed to unmount filesystems"
 		fi
 
-		remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts | \
-		            sort -r | grep -v '/newroot' | grep -v '/mnt/livecd'`"
-		[ -z "${remaining}" ] && break
+		remaining=$(awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts | \
+		            sort -r | grep -v '/newroot' | grep -v '/mnt/livecd')
+		[[ -z ${remaining} ]] && break
 		
 		/bin/fuser -k -m ${sig} ${remaining} &>/dev/null
 		sleep 5
@@ -140,25 +130,22 @@ remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mou
 # This is needed to make sure we dont have a mounted filesystem 
 # on a LVM volume when shutting LVM down ...
 ebegin "Unmounting filesystems"
-unmounts="$( \
+unmounts=$( \
 	awk '{ \
 	    if (($3 !~ /^(proc|devpts|sysfs|devfs|tmpfs|usb(dev)?fs)$/) && \
 	        ($1 != "none") && \
 	        ($1 !~ /^(rootfs|\/dev\/root)$/) && \
 	        ($2 != "/")) \
-	      print $2 }' /proc/mounts | sort -ur)"
-for x in $unmounts
-do
+	      print $2 }' /proc/mounts | sort -ur)
+for x in ${unmounts}; do
 	# Do not umount these if we are booting off a livecd
-	if [ -n "${CDBOOT}" ] && \
-	   [ "${x}" = "/mnt/cdrom" -o "${x}" = "/mnt/livecd" ]
-	then
+	if [[ -n ${CDBOOT} && \
+	      ( ${x} == "/mnt/cdrom" || ${x} = "/mnt/livecd" ) ]]; then
 		continue
 	fi
 
-	x="${x//\\040/ }"
-	if ! umount "${x}" &>/dev/null
-	then
+	x=${x//\\040/ }
+	if ! umount "${x}" &>/dev/null; then
 		# Kill processes still using this mount
 		/bin/fuser -k -m -9 "${x}" &>/dev/null
 		sleep 2
@@ -177,16 +164,16 @@ stop_volumes
 # This is a function because its used twice below
 ups_kill_power() {
 	local UPS_CTL UPS_POWERDOWN
-	if [[ -f /etc/killpower ]] ; then
+	if [[ -f /etc/killpower ]]; then
 		UPS_CTL=/sbin/upsdrvctl
 		UPS_POWERDOWN="${UPS_CTL} shutdown"
-	elif [[ -f /etc/apcupsd/powerfail ]] ; then
+	elif [[ -f /etc/apcupsd/powerfail ]]; then
 		UPS_CTL=/etc/apcupsd/apccontrol
 		UPS_POWERDOWN="${UPS_CTL} killpower"
 	else
 		return 0
 	fi
-	if [[ -x ${UPS_CTL} ]] ; then
+	if [[ -x ${UPS_CTL} ]]; then
 		ewarn "Signalling ups driver(s) to kill the load!"
 		${UPS_POWERDOWN}
 		ewarn "Halt system and wait for the UPS to kill our power"
@@ -198,24 +185,22 @@ ups_kill_power() {
 mount_readonly() {
 	local x=
 	local retval=0
-	local cmd="$1"
+	local cmd=$1
 
 	# Get better results with a sync and sleep
 	sync; sync
 	sleep 1
 
-	for x in $(awk '$1 != "none" { print $2 }' /proc/mounts | sort -r)
-	do
-		x="${x//\\040/ }"
-		if [ "${cmd}" = "u" ]
-		then
+	for x in $(awk '$1 != "none" { print $2 }' /proc/mounts | sort -r); do
+		x=${x//\\040/ }
+		if [[ ${cmd} == "u" ]]; then
 			umount -r -r "${x}"
 		else
 			mount -n -o remount,ro "${x}" &>/dev/null
 		fi
 		retval=$((${retval} + $?))
 	done
-	[ ${retval} -ne 0 ] && killall5 -9 &>/dev/null
+	[[ ${retval} -ne 0 ]] && killall5 -9 &>/dev/null
 
 	return ${retval}
 }
@@ -225,32 +210,26 @@ mount_readonly() {
 cp /proc/mounts /etc/mtab &>/dev/null
 ebegin "Remounting remaining filesystems readonly"
 mount_worked=0
-if ! mount_readonly
-then
-	if ! mount_readonly
-	then
+if ! mount_readonly; then
+	if ! mount_readonly; then
 		# If these things really don't want to remount ro, then 
 		# let's try to force them to unmount
-		if ! mount_readonly u
-		then
+		if ! mount_readonly u; then
 			mount_worked=1
 		fi
 	fi
 fi
 eend ${mount_worked}
-if [ ${mount_worked} -eq 1 ]
-then
+if [[ ${mount_worked} -eq 1 ]]; then
 	ups_kill_power
 	/sbin/sulogin -t 10 /dev/console
 fi
 
 # Inform if there is a forced or skipped fsck
-if [ -f /fastboot ]
-then
+if [[ -f /fastboot ]]; then
 	echo
 	ewarn "Fsck will be skipped on next startup"
-elif [ -f /forcefsck ]
-then
+elif [[ -f /forcefsck ]]; then
 	echo
 	ewarn "A full fsck will be forced on next startup"
 fi
