@@ -406,6 +406,8 @@ then
 		(
 		local retval=
 		local service=$1
+		# Needed for some addons like dm-crypt that starts in critical services
+		local myservice=$1
 
 		source "/etc/init.d/${service}" || eerror "Failed to source /etc/init.d/${service}"
 		retval=$?
