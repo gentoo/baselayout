@@ -53,7 +53,7 @@ pump_check_depends() {
 # Returns a string spaced with possible user set
 # configuration variables
 pump_get_vars() {
-	echo "pump_${1} dhcp_${1}"
+	echo "pump_$1 dhcp_$1"
 }
 
 # bool pump_stop(char *iface)
@@ -62,7 +62,7 @@ pump_get_vars() {
 #
 # Always returns 0
 pump_stop() {
-	local iface=${1} count e
+	local iface=$1 count e
 	
 	pump_check_installed || return 0
 
@@ -70,7 +70,7 @@ pump_stop() {
 	# causes pump to spawn a process
 	ps -C pump &>/dev/null || return 0
 
-	e=$( pump --status --interface ${iface} 2>${devnull} | grep ${iface})
+	e=$( pump --status --interface ${iface} 2>${devnull} | grep ${iface} )
 	[[ -z ${e} ]] && return 1
 	
 	ebegin "Stopping pump on ${iface}"
@@ -92,7 +92,7 @@ pump_stop() {
 # Returns 0 (true) when a dhcp address is obtained, otherwise
 # the return value from pump
 pump_start() {
-	local iface=${1} opts hostname dhcp
+	local iface=$1 opts hostname dhcp
 	local ifvar=$( interface_variable ${iface} )
 
 	interface_exists ${iface} true || return 1
@@ -122,7 +122,7 @@ pump_start() {
 	eval peer=\"\$\{dhcp_ntp_${iface}\}\"
 	[[ -z ${peer} ]] && eval peer=\"\$\{dhcp_ntp\}\"
 	if [[ ${peer} != no ]]; then
-		export ntpsrv=$( pump -i ${iface} --status 2>/dev/null | awk '/Ntpservers/ {print $2}' 2>/dev/null )
+		export ntpsrv=$( pump -i ${iface} --status 2>/dev/null | sed -ne 's/^.*Ntpservers: //p' )
 		source ${MODULES_DIR}/helpers.d/config-system
 		config_system
 	fi

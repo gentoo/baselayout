@@ -65,9 +65,9 @@ ifconfig_check_depends() {
 #
 # Returns 1 if the interface exists, otherwise 0
 ifconfig_exists() {
-	local e=$( ifconfig -a | grep -o "^${1}" ) report=${2:-false}
+	local e=$( ifconfig -a | grep -o "^$1" ) report=${2:-false}
 	[[ -n ${e} ]] && return 0
-	${report} && eerror "${1} does not exist"
+	${report} && eerror "$1 does not exist"
 	return 1
 }
 
@@ -75,14 +75,14 @@ ifconfig_exists() {
 #
 # provides a generic interface for bringing interfaces up
 ifconfig_up() {
-	ifconfig ${1} up &>${devnull}
+	ifconfig $1 up &>${devnull}
 }
 
 # void ifconfig_down(char *iface)
 #
 # provides a generic interface for bringing interfaces down
 ifconfig_down() {
-	ifconfig ${1} down &>${devnull}
+	ifconfig $1 down &>${devnull}
 }
 
 # bool ifconfig_is_up(char *iface, bool withaddress)
@@ -92,8 +92,8 @@ ifconfig_down() {
 # assigned as well
 ifconfig_is_up() {
 	local check="\<UP\>" addr=${2:-false}
-	${addr} && check="\<addr:.*${check}"
-	ifconfig ${1} 2>${devnull} | grep -v Scope | xargs | grep -Eq "${check}" && return 0
+	${addr} && check="\<inet addr:.*${check}"
+	ifconfig $1 2>${devnull} | grep -Eq "${check}" && return 0
 	return 1
 }
 
@@ -120,21 +120,21 @@ ifconfig_loopback_create() {
 # Fetch the address retrieved by DHCP.  If successful, echoes the
 # address on stdout, otherwise echoes nothing.
 ifconfig_get_address() {
-	ifconfig ${1} | grep -m1 -o 'inet addr:[^ ]*' | cut -d: -f2
+	ifconfig $1 | sed -ne 's/.*inet addr:\([^ ]*\).*/\1/p'
 }
 
 # void ifconfig_get_mac_address(char *interface)
 #
 # Fetch the mac address assingned to the network card
 ifconfig_get_mac_address() {
-	ifconfig ${1} | grep -m1 -o 'HWaddr [^ ]*' | cut -d" " -f2
+	ifconfig $1 | sed -ne 's/^HWaddr .*\<\(..:..:..:..:..:..\)\>.*/\U\1/p'
 }
 
 # void ifconfig_set_mac_address(char *interface, char *mac)
 #
 # Assigned the mac address to the network card
 ifconfig_set_mac_address() {
-	ifconfig ${1} hw ether ${2}
+	ifconfig $1 hw ether $2
 }
 
 # void ifconfig_get_aliases_rev(char *interface)
@@ -143,7 +143,7 @@ ifconfig_set_mac_address() {
 # Outputs a space-separated list on stdout, in reverse order, for
 # example "eth0:2 eth0:1"
 ifconfig_get_aliases_rev() {
-	ifconfig | grep -o "^${1}:[0-9]*" | tac | xargs
+	ifconfig | grep -o "^$1:[0-9]* " | tac
 }
 
 # bool ifconfig_interface_del_addresses(char *interface)
@@ -152,7 +152,7 @@ ifconfig_get_aliases_rev() {
 # were addresses to remove (whether successful or not).  Returns 1
 # (false) if there were no addresses to remove.
 ifconfig_del_addresses() {
-	local iface=${1} i
+	local iface=$1 i
 
 	# We don't remove addresses from aliases
 	[[ ${iface} == *:* ]] && return 0
@@ -166,7 +166,7 @@ ifconfig_del_addresses() {
 	done
 	
 	# Remove IPv6 addresses
-	for i in "$(ifconfig ${iface} | awk '$1=="inet6" && $4!="Scope:Link" {print $3}')"; do
+	for i in $( ifconfig ${iface} | sed -ne 's/^.*inet6 addr: \([^ ]*\) Scope:[^L].*/\1/p' ) ; do
 		/sbin/ifconfig ${interface} inet6 del ${i} &>/dev/null
 	done
 
@@ -178,7 +178,7 @@ ifconfig_del_addresses() {
 # Returns a string spaced with possible user set
 # configuration variables
 ifconfig_get_vars() {
-        echo "config_${1} routes_${1} fallback_${1}  ifconfig_${1} ifconfig_fallback_${1} routes_${1} inet6_${1} iface_${1} alias_${1} broadcast_${1} netmask_${1}"
+        echo "config_$1 routes_$1 fallback_$1  ifconfig_$1 ifconfig_fallback_$1 routes_$1 inet6_$1 iface_$1 alias_$1 broadcast_$1 netmask_$1"
 	# The depreciated gateway var has to be handled by
 	# each module if needed
 }
@@ -232,13 +232,13 @@ ifconfig_iface_stop() {
 	# fails.  Do some double-checking before returning error
 	# status
 	ifconfig_is_up $1 || return 0
-	ifconfig_down ${1} && return 0
+	ifconfig_down $1 && return 0
 
 	# It is sometimes impossible to transition an alias from the
 	# UP state... particularly if the alias has no address.  So
 	# ignore the failure, which should be okay since the entire
 	# interface will be shut down eventually.
-	[[ ${1} == *:* ]] && return 0
+	[[ $1 == *:* ]] && return 0
 	return 1
 }
 
@@ -251,7 +251,7 @@ ifconfig_iface_stop() {
 # fail, the routine should still return success to indicate that
 # net.eth0 was successful
 ifconfig_post_start() {
-	local iface=${1} ifvar=$( interface_variable ${1} ) routes x
+	local iface=$1 ifvar=$( interface_variable $1 ) routes x
 
 	# Make sure interface is marked UP
 	ifconfig_up ${iface}
@@ -311,9 +311,9 @@ ifconfig_add_address() {
 	else
 		# IPv4 is tricky - ifconfig requires an aliased device
 		# for multiple addresses
-		if ifconfig ${iface} | grep -v Scope | xargs | grep -Eq "\<addr:.*" ; then
+		if ifconfig ${iface} | grep -Eq "\<inet addr:.*" ; then
 			# Get the last alias made for the interface and add 1 to it
-			i=$( ifconfig | tac | grep -m 1 -o "^${iface}:[0-9]*" | awk -F: '{ print $2 }' )
+			i=$( ifconfig | tac | grep -m 1 -o "^${iface}:[0-9]*" | sed -ne 's/'${iface}'://p' )
 			i=${i:-0}
 			(( i++ ))
 			iface=${iface}:${i}

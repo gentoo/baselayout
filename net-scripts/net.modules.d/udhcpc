@@ -61,7 +61,7 @@ udhcpc_check_depends() {
 # Returns a string spaced with possible user set
 # configuration variables
 udhcpc_get_vars() {
-	echo "udhcpc_${1} dhcp_${1}"
+	echo "udhcpc_$1 dhcp_$1"
 }
 
 # bool udhcpc_stop(char *iface)
@@ -69,7 +69,7 @@ udhcpc_get_vars() {
 # Stops udhcpc running on an interface
 # Always returns 0
 udhcpc_stop() {
-	local iface=${1} count release pidfile="/var/run/udhcpc-${1}.pid" dhcp
+	local iface=$1 count release pidfile="/var/run/udhcpc-${1}.pid" dhcp
 	
 	udhcpc_check_installed || return 0
 	[[ ! -f ${pidfile} ]] && return 0
@@ -105,7 +105,7 @@ udhcpc_stop() {
 #
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 udhcpc_start() {
-	local iface=${1} opts hostname pidfile="/var/run/udhcpc-${1}.pid"
+	local iface=$1 opts hostname pidfile="/var/run/udhcpc-${1}.pid"
 	local cachefile="/var/cache/udhcpc-${1}.cache" x
 
 	interface_exists ${iface} true || return 1

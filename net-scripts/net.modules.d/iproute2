@@ -65,9 +65,9 @@ iproute2_check_depends() {
 #
 # Returns 1 if the interface exists, otherwise 0
 iproute2_exists() {
-	local e=$( ip addr show label ${1} ) report=${2:-false}
+	local e=$( ip addr show label $1 ) report=${2:-false}
 	[[ -n ${e} ]] && return 0
-	${report} && eerror "${1} does not exist"
+	${report} && eerror "$1 does not exist"
 	return 1
 }
 
@@ -75,14 +75,14 @@ iproute2_exists() {
 #
 # provides a generic interface for bringing interfaces up
 iproute2_up() {
-	ip link set up dev ${1} &>${devnull}
+	ip link set up dev $1 &>${devnull}
 }
 
 # void iproute2_down(char *interface)
 #
 # provides a generic interface for bringing interfaces up
 iproute2_down() {
-	ip link set down dev ${1} &>${devnull}
+	ip link set down dev $1 &>${devnull}
 }
 
 # bool ifproute2_is_up(char *iface, bool withaddress)
@@ -91,20 +91,19 @@ iproute2_down() {
 # If withaddress is true then the interface has to have an IPv4 address
 # assigned as well
 iproute2_is_up() {
-	local iface=${1} addr=${2:-false}
-
-	ip link show ${iface} 2>${devnull} | grep -Eq "\<UP\>" || return 1
-	! ${addr} && return 0
-	ip addr show ${iface} 2>${devnull} | grep -v link | grep -q 'inet ' || return 1
+	local check="\<UP\>" addr=${2:-false}
+	${addr} && check="${check}.*inet "
+	ip addr show $1 2>${devnull} | grep -Eq "${check}" && return 0
+	return 1
 }
 
 # void iproute2_set_flag(char *iface, char *flag, bool enabled)
 #
 # Sets or disables the interface flag 
 iproute2_set_flag() {
-	local iface=${1} flag=${2} enable=${3} opt="on"
+	local enable=$3 opt="on"
 	${enable} || opt="off"
-	ip link set ${iface} ${flag} ${opt} &>${devnull}
+	ip link set $1 $2 ${opt} &>${devnull}
 }
 
 # void loopback_create(void)
@@ -121,21 +120,21 @@ iproute2_loopback_create() {
 # Fetch the address retrieved by DHCP.  If successful, echoes the
 # address on stdout, otherwise echoes nothing.
 iproute2_get_address() {
-	ip -family inet addr show ${1} 2>${devnull} | awk '/inet/ {print $2}' | cut -d/ -f1
+	ip -family inet addr show $1 2>${devnull} | sed -ne 's/.*inet \([^ ]*\)\/.*/\1/p'
 }
 
 # void iproute2_get_mac_address(char *interface)
 #
 # Fetch the mac address assingned to the network card
 iproute2_get_mac_address() {
-	ip link show ${1} 2>${devnull} | awk '/link/ {print $2}' | cut -d/ -f1
+	ip link show $1 2>${devnull} | sed -ne 's/^.*\<\(..:..:..:..:..:..\)\>.*/\U\1/p'
 }
 
 # void iproute2_set_mac_address(char *interface, char *mac)
 #
 # Assigned the mac address to the network card
 iproute2_set_mac_address() {
-	ip link set address ${2} dev ${1}
+	ip link set address $2 dev $1
 }
 
 # void iproute2_get_aliases_rev(char *interface)
@@ -145,19 +144,15 @@ iproute2_set_mac_address() {
 # example "eth0:2 eth0:1"
 iproute2_get_aliases_rev() {
 	local iface=$( interface_device ${1} )
-	ip addr show dev ${iface} 2>${devnull} | awk -v re="^${1}:" \
-		'$NF~re {print $NF}' | tac | xargs
+	ip addr show dev ${iface} | grep -o "${iface}:[0-9].*" | tac
 }
 
 # bool iproute2_del_addresses(char *interface, bool report)
 #
 # Remove addresses from interface.
 iproute2_del_addresses() {
-	local iface=${1}
-
-	ip addr flush label ${iface} scope global &>/dev/null
-	ip addr flush label ${iface} scope host &>/dev/null
-
+	ip addr flush label $1 scope global &>/dev/null
+	ip addr flush label $1 scope host &>/dev/null
 	return 0
 }
 
@@ -166,14 +161,14 @@ iproute2_del_addresses() {
 # Returns a string spaced with possible user set
 # configuration variables
 iproute2_get_vars() {
-	echo "config_${1} routes_${1} fallback_${1} ipaddr_${1} ipaddr_fallback_${1} iproute_${1} inet6_${1}"
+	echo "config_$1 routes_$1 fallback_$1 ipaddr_$1 ipaddr_fallback_$1 iproute_$1 inet6_$1"
 }
 
 # bool iproute2_get_old_config(char *iface)
 #
 # Returns config and config_fallback for the given interface
 iproute2_get_old_config() {
-	local ifvar=$( interface_variable ${1} ) inet6
+	local ifvar=$( interface_variable $1 ) inet6
 
 	# iproute2-style config vars
 	eval config=( \"\$\{ipaddr_${ifvar}\[@\]\}\" )
@@ -195,7 +190,7 @@ iproute2_get_old_config() {
 #
 # Returns 0 (true) when successful, non-zero (false) on failure
 iproute2_iface_stop() {
-	local label=${1} iface=$( interface_device ${1} )
+	local label=$1 iface=$( interface_device $1 )
 
 	# Shut down the link if this isn't an alias or vlan
 	if [[ ${label} == ${iface} ]]; then
@@ -210,7 +205,7 @@ iproute2_iface_stop() {
 # Adds an the specified address to the interface
 # returns 0 on success and non-zero on failure
 iproute2_add_address() {
-	local iface=${1} x
+	local iface=$1 x
 
 	iproute2_exists ${iface} true || return 1
 
@@ -255,7 +250,7 @@ iproute2_add_address() {
 # Runs any post_start stuff on our interface and adds routes
 # Always returns 0
 iproute2_post_start() {
-	local iface=${1} ifvar=$( interface_variable ${1} ) routes e r
+	local iface=$1 ifvar=$( interface_variable $1 ) routes e r
 
 	# Make sure interface is marked UP
 	iproute2_up ${iface}

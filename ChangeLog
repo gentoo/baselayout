@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+  24 Jan 2004; Roy Marples <uberlord@gentoo.org>:
+
+    replaced awk commands with sed equivalents in net-scripts to make us
+    more portable
+
   17 Jan 2004; Roy Marples <uberlord@gentoo.org>:
 
     net.lo changed logic to read "only fail if no configuration parameters

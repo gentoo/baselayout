@@ -63,12 +63,7 @@ iwconfig_check_depends() {
 #
 # Checks to see if wireless extensions are enabled on the interface
 iwconfig_check_extensions() {
-	local iface=$1
-
-	# Do we have wireless extensions enabled on the interface?
-	local ext=$( iwconfig ${iface} 2>/dev/null | awk -v iface=${iface} '{ if ($1 == iface) print "yes" }' )
-	[[ ${ext} == yes ]]
-	return $?
+	grep -q "$1: " /proc/net/wireless
 }
 
 # char* iwconfig_get_wep_status(char *interface)
@@ -76,22 +71,22 @@ iwconfig_check_extensions() {
 # Echos a string showing whether WEP is enabled or disabled
 # for the given interface
 iwconfig_get_wep_status() {
-	local wep_status=$( iwconfig $1 | awk -F: '/Encryption key:/ {print $2}' | awk '{if ($1 != "off") print "enabled"}' ) mode
-	wep_status=${wep_status:-"disabled"}
+	local key=$( iwconfig $1 | grep -i -o "Encryption key:[0-9,A-F]" )
+	local mode status="disabled"
 
-	[[ ${wep_status} == enabled ]] && mode=" - $( iwconfig $1 | awk -F: '/Security mode:/ {print $3}' )"
+	if [[ -n ${key} ]]; then
+		status="enabled"
+		mode=" - $( iwconfig $1 | sed -ne 's/^.*Security mode:\(.*[^ ]\).*/\1/p' )"
+	fi
 	
-	echo "(WEP ${wep_status}${mode})"
+	echo "(WEP ${status}${mode})"
 }
 
 # char* iwconfig_get_essid(char *iface)
 #
 # Gets the current ESSID of the iface
 iwconfig_get_essid() {
-	# Too many users are having with iwgetid atm :/
-	# iwgetid -r
-
-	iwconfig $1 2>${devnull} | awk -F\" '/ESSID/ {print $2}'
+	iwgetid $1 2>${devnull} | sed -ne 's/^.*ESSID:"\(.*\)"$/\1/p'
 }
 
 # char* iwconfig_get_ap_mac_address(char *interface)
@@ -99,21 +94,21 @@ iwconfig_get_essid() {
 # Returns the MAC address of the Access Point
 # the interface is connected to
 iwconfig_get_ap_mac_address() {
-	iwgetid --ap $1 2>${devnull}| awk '{print $4}'
+	iwgetid --ap $1 2>${devnull} | sed -ne 's/^.*Cell: .*\<\(..:..:..:..:..:..\)\>.*/\U\1/p'
 }
 
 # char* iwconfig_get_mode(char *interface)
 #
 # Returns the wireless mode in lower case
 iwconfig_get_mode() {
-	iwgetid --mode $1 | awk -F: '{print $2}' | tr '[:upper:]' '[:lower:]'
+	iwgetid --mode $1 | sed -ne 's/^.*Mode://p'
 }
 
 # char* iwconfig_get_type(char *interface)
 #
 # Returns the type of interface - the IEEE part
 iwconfig_get_type() {
-	iwconfig $1 2>/dev/null | awk '{print $2,$3}'
+	iwconfig $1 | sed -ne 's/^'$1' *\([^ ]* [^ ]*\).*/\1/p'
 }
 
 # void iwconfig_report(char *interface)
@@ -132,7 +127,7 @@ iwconfig_report() {
 	done
 
 	local wep_status=$( iwconfig_get_wep_status ${iface} )
-	local channel=$( iwgetid --channel 2>${devnull} | awk '{print $3}' )
+	local channel=$( iwgetid --channel 2>${devnull} | cut -d: -f2 )
 	[[ -n ${channel} ]] && channel="on channel ${channel} "
 
 	essid=${essid//\\\\/\\\\}
@@ -141,7 +136,7 @@ iwconfig_report() {
 	[[ -n ${mac} ]] && mac=" at ${mac}"
 	
 	eindent
-	einfo "${iface} connected to \"${essid}\"${mac}"
+	einfo "${iface} sconnected to \"${essid}\"${mac}"
 	einfo "in ${mode} mode ${channel}${wep_status}"
 	eoutdent
 }
@@ -267,9 +262,9 @@ iwconfig_associate_mac() {
 #
 # Returns true if the link quality is not 0 or 0.
 iwconfig_associate_quality() {
-	local quality=$( cat /proc/net/wireless | awk -v IFACE=$1: '{ if ($1 == IFACE) print $3 }' )
-	[[ ${quality} != 0 && ${quality} != 0. ]] && return 0
-	return 1
+	local quality=$( sed -ne 's/^.*'$1': *[0-9]* *\([0-9]*\).*/\1/p' )
+	[[ ${quality} != 0 ]]
+	return $?
 }
 
 # bool iwconfig_test_associated(char *iface)
@@ -432,24 +427,33 @@ iwconfig_scan() {
 	eval x=\"\$\{sleep_scan_${ifvar}\}\"
 	[[ -n ${x} ]] && sleep ${x}
 
-	local scan=$( iwlist ${iface} scanning 2>/dev/null )
+	local error=true i=-1 line
+	local -a mac essid enc qual
 
-	# We may need to unset the previous private driver ioctls
-	eval x=\"\$\{iwpriv_scan_post_${ifvar}\}\"
-	if [[ -n ${x} ]]; then
-		e=$( iwpriv ${iface} ${x} 2>&1 )
-		if [[ -n ${e} ]]; then
-			ewarn "${iface} does not support the following private ioctls" \
-			ewarn "  \"${x}\""
-		fi
-	fi
+	while read line; do
+		error=false
+		case ${line} in
+			*Address:*)
+				(( i++ ))
+				mac[i]=$( echo ${line#*: } | tr '[:lower:]' '[:upper:]' )
+				;;
+			*ESSID:*)
+				essid[i]=${line#*\"}
+				essid[i]=${essid[i]%*\"}
+				;;
+			*'Encryption key:'*)
+				enc[i]=${line#*:}
+				;;
+			*Quality*)
+				qual[i]=${line#*:}
+				qual[i]=${qual[i]%/*}
+				qual[i]=${qual[i]//[![:digit:]]/}
+				qual[i]=${qual[i]:-0}
+				;;
+		esac
+	done < <( iwlist ${iface} scanning 2>/dev/null )
 
-	# Change back mode if needed
-	x=$( eval echo \$\{mode_${ifvar}\} | tr '[:upper:]' '[:lower:]' )
-	x=${x:-auto}
-	[[ ${mode} != ${x} ]] && iwconfig ${iface} mode ${x} &>/dev/null
-
-	if [[ -z ${scan} ]]; then
+	if ${error}; then
 		ewarn "${iface} does not support scanning"
 		eval x=\"\$\{adhoc_essid_${ifvar}\}\"
 		[[ -n ${x} ]] && return 0
@@ -470,67 +474,32 @@ iwconfig_scan() {
 		return 1
 	fi
 
-	local val i=-1 IFS=$'\n' j last
-	local -a qual
-
-	# OK - we need ESSID, MAC address and encryption from just one call to iwlist $iface scan
-	# It has to be one call for speed reasons as some cards take ages to get a list from
-	# It's clumsy (imo) but it works
-	for val in ${scan}; do
-		local t=$( echo ${val} | awk -F: '/ESSID/ {print $2}' )
-		if [[ ${#t} -gt 2 ]]; then
-			t=${t#*\"}
-			essid_APs[i]=${t%*\"}
-		else
-			t=$( echo ${val} | awk '/Address/ {print}' | sed 's/^.*\<\(..:..:..:..:..:..\)\>.*$/\1/g' )
-			if [[ ${#t} -gt 0 ]]; then
-				((i++))
-				mac_APs[i]=${t}
-				essid_APs[i]=""
-				enc_APs[i]=no
-				qual[i]=0
-			else
-				t=$( echo ${val} | awk -F: '/Encryption key/ {print $2}' )
-				if [[ ${#t} -gt 0 ]]; then
-					if [[ ${t} == off ]]; then
-						enc_APs[i]=no
-					else
-						enc_APs[i]=yes
-					fi
-				else
-					t=$( echo ${val} | awk -F: '/Quality/ {print $2}' )
-					if [[ ${#t} -gt 0 ]]; then
-						# Not all drivers report the same way, so we take the below measure
-						# to ensure we don't error on the sort below
-						t=${t# *}
-						t=${t%/*}
-						t=${t//[![:digit:]]/}
-						qual[i]=${t:-0}
-					fi
-				fi
-			fi
+	# We may need to unset the previous private driver ioctls
+	eval x=\"\$\{iwpriv_scan_post_${ifvar}\}\"
+	if [[ -n ${x} ]]; then
+		e=$( iwpriv ${iface} ${x} 2>&1 )
+		if [[ -n ${e} ]]; then
+			ewarn "${iface} does not support the following private ioctls" \
+			ewarn "  \"${x}\""
 		fi
+	fi
+
+	# Change back mode if needed
+	x=$( eval echo \$\{mode_${ifvar}\} | tr '[:upper:]' '[:lower:]' )
+	x=${x:-auto}
+	[[ ${mode} != ${x} ]] && iwconfig ${iface} mode ${x} &>/dev/null
+
+	for (( i=0; i<${#mac[@]}; i++ )); do
+		sortline="${sortline}${qual[i]} ${i}\n"
 	done
 
-	# Now sort the AP's by quality
-	for ((last=${#mac_APs[@]}-1; last>0; last--)); do
-		for ((i=0; i<${last}; i++)); do
-			(( j = i + 1 ))
-			if [[ ${qual[i]} -lt ${qual[j]} ]]; then
-				t=${mac_APs[i]}
-				mac_APs[i]=${mac_APs[j]}
-				mac_APs[j]=${t}
-				t=${essid_APs[i]}
-				essid_APs[i]=${essid_APs[j]}
-				essid_APs[j]=${t}
-				t=${enc_APs[i]}
-				enc_APs[i]=${enc_APs[j]}
-				enc_APs[j]=${t}
-				t=${qual[i]}
-				qual[i]=${qual[j]}
-				qual[j]=${t}
-			fi
-		done
+	sortline=( $( echo -e ${sortline} | sort -nr ) )
+
+	for (( i=0; i<${#mac[@]}; i++ )); do
+		(( x=(i * 2) + 1 ))
+		mac_APs[i]=${mac[${sortline[${x}]}]}
+		essid_APs[i]=${essid[${sortline[${x}]}]}
+		enc_APs[i]=${enc[${sortline[${x}]}]}
 	done
 
 	return 0
@@ -707,13 +676,14 @@ iwconfig_defaults() {
 # We also remove from the preferred list
 iwconfig_strip_associated() {
 	local iface=$1 e a j
-	local essid=$( iwconfig ${iface} | awk -F\" '/ESSID/ {print $2}' )
-	local -a ifaces=( $( iwconfig 2>/dev/null | awk '/ESSID/ {print $1}' | awk -v IFACE=${iface} '$1!=IFACE {print}' ) )
+	local essid=$( iwconfig_get_essid ${iface} )
+	local -a ifaces=( $( iwconfig 2>/dev/null | grep -o "^\w*" ) )
 
 	for i in "${ifaces[@]}"; do
+		[[ ${i} == ${iface} ]] && continue
 		interface_is_up ${i} || continue
 		iwconfig_test_associated ${i} || continue
-		e=$( iwconfig ${i} | awk -F\" '/ESSID/ {print $2}' )
+		e=$( iwconfig_get_essid ${i} )
 		u=()
 		for ((j=0; j<${#mac_APs[@]}; j++)); do
 			if [[ ${essid_APs[j]} == ${e} ]]; then

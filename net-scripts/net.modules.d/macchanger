@@ -48,14 +48,12 @@ macchanger_pre_start() {
 	# We don't change MAC addresses from background
 	${IN_BACKGROUND} && return 0
 
-	local iface=${1} mac opts
-
-	interface_exists ${iface} true || return 1
-
-	local ifvar=$( interface_variable ${1} )
+	local iface=$1 mac opts ifvar=$( interface_variable $1 )
 
 	eval mac=\"\$\{mac_${ifvar}\}\"
 	[[ -z ${mac} ]] && return 0
+
+	interface_exists ${iface} true || return 1
 
 	ebegin "Changing MAC address of ${iface}"
 
@@ -103,12 +101,12 @@ macchanger_pre_start() {
 	# The interface needs to be up for macchanger to work most of the time
 	interface_down ${iface}
 
-	mac=$( /sbin/macchanger ${opts} ${iface}  | awk '/Faked MAC:/ { print toupper($3) }' )
+	mac=$( /sbin/macchanger ${opts} ${iface} | sed -ne 's/^Faked MAC:.*\<\(..:..:..:..:..:..\)\>.*/\U\1/p' )
 
 	# Sometimes the interface needs to be up ....
 	if [[ -z ${mac} ]]; then
 		interface_up ${iface}
-		mac=$( /sbin/macchanger ${opts} ${iface}  | awk '/Faked MAC:/ { print toupper($3) }' )
+		mac=$( /sbin/macchanger ${opts} ${iface} | sed -ne 's/^Faked MAC:.*\<\(..:..:..:..:..:..\)\>.*/\U\1/p' )
 	fi
 
 	if [[ -z ${mac} ]]; then

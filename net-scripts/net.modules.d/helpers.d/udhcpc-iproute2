@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # udhcpc iproute2 module for net-scripts
 # Version 1.0.0
 # Copyright (c) 2004 Gentoo Foundation
@@ -58,11 +58,10 @@ if [[ $? == 1 ]] ; then
 	ip addr flush dev ${interface} scope global &>/dev/null
 	ip addr flush dev ${interface} scope host &>/dev/null
 	ip addr add dev ${interface} ${ip}/${cidr} ${broadcast}
-	echo "flushed" > /tmp/action
 fi
 
 # Configure our default route
-x=$(ip route show | awk '{ if ($1 == "default") {print $3} }')
+x=$( ip route show |  grep -q "^default" )
 for r in ${router}; do
 	# ip route doesn't pad 0's, so we strip any padding if we have any
 	r=${r//000/0}

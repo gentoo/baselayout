@@ -164,7 +164,7 @@ modules_load_auto() {
 		if ${unload} ; then
 			unset MODULES[i]
 			unsetfuncs="${unsetfuncs} $( diff -U0 <( echo "${beforefuncs}" ) <( echo "${afterfuncs}" ) 2>/dev/null \
-				| awk 'BEGIN { ORS = " "; } /+declare -f/ { print $3; }' )"
+				| sed -ne 's/^+declare -f //p' )"
 		fi
 		beforefuncs="${afterfuncs}"
 
@@ -360,7 +360,7 @@ modules_sort() {
 		um="${um}${modnums[i]} ${MODULES[i]} ${PROVIDES[i]}\n"
 	done
 
-	p=( $( echo -e "${um}" | sort -n | awk '{print $2,$3}' ) )
+	p=( $( echo -e "${um}" | sort -n | cut -d' ' -f2,3 ) )
 	MODULES=()
 	PROVIDES=()
 	j=0
@@ -676,9 +676,9 @@ iface_stop() {
 # We cannot check that the device exists ourselves as modules like
 # tuntap make create it.
 run_start() {
-	local iface=$1 ifvar x
+	local iface=$1 IFVAR x
 
-	if [[ ${iface} == lo ]]; then
+	if [[ ${iface} == "lo" ]]; then
 		ebegin "Bringing up ${iface}"
 		interface_loopback_create
 		eend $?
@@ -699,34 +699,30 @@ run_start() {
 	fi
 
 	# Setup variables for pre/post to use
-	ifvar=$( interface_variable ${iface} )
-	local IFACE=${iface} IFVAR=${ifvar}
+	IFVAR=$( interface_variable ${iface} )
 
 	# Call user-defined preup function if it exists
 	if [[ $( type -t preup ) == function ]]; then
 		einfo "Running preup function"
 		eindent
-		preup ${iface} ; x=$?
+		x=$( preup ${iface} ; echo $? )
 		eoutdent
-		if [[ ${x} != 0 ]]; then
+		if [[ ${x:-0} != 0 ]]; then
 			eerror "preup ${iface} failed"
 			return 1
 		fi
 	fi
 
-	# Don't let preup modify us
-	iface=${1}
-	local IFACE=${iface} IFVAR=${ifvar} config
-
 	# If config is set to noop and the interface is up with an address
 	# then we don't start it
-	eval config=( \"\$\{config_${ifvar}\[@\]\}\" )
+	local config
+	eval config=( \"\$\{config_${IFVAR}\[@\]\}\" )
 	if [[ ${config[0]} == "noop" ]] && interface_is_up ${iface} true ; then
 		einfo "Keeping current configuration for ${iface}"
 		eend 0
 	else
 		# Remove noop from the config var
-		[[ ${config[0]} == "noop" ]] && eval "config_${ifvar}=( "\"\$\{config\[@\]:1\}\"" )"
+		[[ ${config[0]} == "noop" ]] && eval "config_${IFVAR}=( "\"\$\{config\[@\]:1\}\"" )"
 
 		# There may be existing ip address info - so we strip it
 		interface_del_addresses ${iface}
@@ -739,12 +735,11 @@ run_start() {
 		fi
 	fi
 
-
 	# Call user-defined postup function if it exists
 	if [[ $( type -t postup ) == function ]]; then
 		einfo "Running postup function"
 		eindent
-		postup ${iface}
+		$( postup ${iface} )
 		eoutdent
 	fi
 
@@ -757,10 +752,10 @@ run_start() {
 # stop returns non-zero to indicate failure bringing down device.
 # In all other cases stop returns 0 to indicate success.
 run_stop() {
-	local iface=$1 ifvar x
+	local iface=$1 IFVAR x
 
 	# Don't run any special shutdown functions for lo
-	if [[ ${iface} == lo ]]; then
+	if [[ ${iface} == "lo" ]]; then
 		ebegin "Shutting down ${iface}"
 		interface_iface_stop ${iface}
 		eend $?
@@ -768,16 +763,15 @@ run_stop() {
 	fi
 
 	# Setup variables for pre/post to use
-	ifvar=$( interface_variable ${iface} )
-	local IFACE=${iface} IFVAR=${ifvar}
+	IFVAR=$( interface_variable ${iface} )
 
 	# Call user-defined predown function if it exists
 	if [[ $( type -t predown ) == function ]]; then
 		einfo "Running predown function"
 		eindent
-		predown ${iface} ; x=$?
+		x=$( predown ${iface} ; echo $? )
 		eoutdent
-		if [[ ${x} != 0 ]]; then
+		if [[ ${x:-0} != 0 ]]; then
 			eend 1 "predown ${iface} failed"
 			return 1
 		fi
@@ -786,17 +780,13 @@ run_stop() {
 		return 1
 	fi
 
-	# Don't let predown modify us
-	iface=$1
-	local IFACE=${iface} IFVAR=${ifvar}
-
 	iface_stop ${iface} || return 1  # always succeeds, btw
 
 	# Call user-defined postdown function if it exists
 	if [[ $( type -t postdown ) == function ]]; then
 		einfo "Running postdown function"
 		eindent
-		postdown ${iface}
+		$( postdown ${iface} )
 		eoutdent
 	fi
 
@@ -837,7 +827,7 @@ run() {
 	# scripts may be launching afterwards
 	${unset_functions} && \
 	unset $( diff -U0 <( echo "${before}" ) <( echo "$( typeset -F )" ) 2>/dev/null \
-		| awk 'BEGIN { ORS = " "; } /+declare -f/ { print $3; }' ) 2>/dev/null
+		| sed -ne 's/^+declare -f //p' ) 2>/dev/null
 
 	return ${r}
 }
