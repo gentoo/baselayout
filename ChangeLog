@@ -2,6 +2,19 @@
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  26 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Don't use -A with fsck to respect the fs_passno since it'll try 
+    to fsck all filesystems, not just the ones specified.  Instead, 
+    awk /etc/fstab to review the passno field in checkroot #68822.
+
+    Add support for 'gentoo=forcefsck' boot option in checkroot.
+
+    Make sure we run devfsd in /sbin/rc even when /dev has been 
+    automounted by the kernel #68795.
+
+    Don't enerate the device tarball in halt.sh with livecds #68469.
+
   25 Oct 2004; Aron Griffis <agriffis@gentoo.org>:
 
     net-scripts/net.modules.d/ifconfig:

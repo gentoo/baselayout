@@ -163,10 +163,16 @@ then
 	check_statedir /dev
 
 	# Fix weird bug where there is a /dev/.devfsd in a unmounted /dev
-	mymounts="$(awk '($3 == "devfs") { print "yes"; exit 0 }' /proc/mounts)"
-	if [ -e "/dev/.devfsd" -a "${mymounts}" != "yes" ]
+	devfs_automounted="no"
+	if [ -e "/dev/.devfsd" ]
 	then
-		rm -f /dev/.devfsd
+		mymounts="$(awk '($3 == "devfs") { print "yes"; exit 0 }' /proc/mounts)"
+		if [ "${mymounts}" != "yes" ]
+		then
+			rm -f /dev/.devfsd
+		else
+			devfs_automounted="yes"
+		fi
 	fi
 
 	# Try to figure out how the user wants /dev handled
@@ -244,15 +250,21 @@ then
 			eend 0
 
 		# With devfs, /dev can be mounted by the kernel ...
-		elif [ "${devfs}" = "yes" -a ! -e "/dev/.devfsd" ]
+		elif [ "${devfs}" = "yes" ]
 		then
 			mymounts="$(awk '($2 == "devfs") { print "yes"; exit 0 }' /proc/filesystems)"
 			# Is devfs support compiled in?
 			if [ "${mymounts}" = "yes" ]
 			then
-				ebegin "Mounting devfs at /dev"
-				try mount -n -t devfs none /dev
-				eend $?
+				if [ "${devfs_automounted}" = "no" ]
+				then
+					ebegin "Mounting devfs at /dev"
+					try mount -n -t devfs none /dev
+					eend $?
+				else
+					ebegin "Kernel automatically mounted devfs at /dev"
+					eend 0
+				fi
 				ebegin "Starting devfsd"
 				/sbin/devfsd /dev > /dev/null
 				eend $? "Could not start /sbin/devfsd"

@@ -16,10 +16,9 @@ start() {
 		mount -n -o remount,ro / &>/dev/null
 		eend $?
 
-		ebegin "Checking root filesystem"
-		if [ -f /forcefsck ]
+		if [ -f /forcefsck ] || get_bootparam "forcefsck"
 		then
-			ewarn "A full fsck has been forced"
+			ebegin "Checking root filesystem (full fsck forced)"
 			fsck -C -a -f /
 			# /forcefsck isn't deleted because checkfs needs it.
 			# it'll be deleted in that script.
@@ -27,10 +26,26 @@ start() {
 		else
 			if ! is_net_fs /
 			then
-				fsck -A -C -T -a /
+				# Obey the fs_passno setting for / (see fstab(5))
+				# - find the / entry
+				# - make sure we have 6 fields
+				# - see if fs_passno is something other than 0
+				if [ -n "$(awk '($1 ~ /^\// && $2 == "/" \
+				                && NF == 6 && $6 != 0) { print }' /etc/fstab)" ]
+				then
+					ebegin "Checking root filesystem"
+					fsck -C -T -a /
+					retval=$?
+				else
+					ebegin "Skipping root filesystem check (fstab's passno == 0)"
+					retval=0
+				fi
+			else
+				ebegin "Skipping root filesystem check (networked)"
+				retval=0
 			fi
-			retval=$?
 		fi
+
 		if [ "${retval}" -eq 0 ]
 		then
 			eend 0

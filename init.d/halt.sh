@@ -22,7 +22,8 @@ then
 	ebegin "Stopping devfsd"
 	killall -15 devfsd &>/dev/null
 	eend $?
-elif [ ! -e /dev/.devfsd -a -e /dev/.udev -a "${RC_DEVICE_TARBALL}" = "yes" ]
+elif [ ! -e /dev/.devfsd -a -e /dev/.udev \
+       -a "${RC_DEVICE_TARBALL}" = "yes" -a -z "${CDBOOT}" ]
 then
 	ebegin "Saving device nodes"
 	cd /dev
