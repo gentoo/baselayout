@@ -26,3 +26,6 @@ chmod 0755 ${DEST}/init.d/*
 cd $TMP
 tar cjvf ${TMP}/rc-scripts-${V}.tar.bz2 rc-scripts-${V}
 rm -rf rc-scripts-${V}
+
+echo
+ls -l ${TMP}/rc-scripts-${V}.tar.bz2
