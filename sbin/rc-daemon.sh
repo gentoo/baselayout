@@ -69,15 +69,11 @@ try_kill_pid() {
 	local pid=$1 signal=${2:-TERM} session=${3:-false}  i s
 	
 	# We split RC_RETRY_TIMEOUT into tenths of seconds
-	# so we return as fast as possible
+	# So we return as fast as possible
 	(( s=${RC_RETRY_TIMEOUT}/10 ))
 	
 	for (( i=0; i<RC_RETRY_COUNT*10; i++ )); do
 		if ${session} ; then
-			# Gentoo places pkill in /usr/bin by default.
-			# As /usr may not be mounted all the time, we need
-			# to provide a working alternative with the tools
-			# outside of /usr
 			if [[ -x /usr/bin/pkill ]]; then
 				/usr/bin/pkill -${signal} -s ${pid} || return 0
 			else
@@ -114,7 +110,7 @@ kill_pid() {
 # We don't do anyting fancy - just pass the given options
 # to start-stop-daemon and return the value
 start_daemon() {
-	/sbin/start-stop-daemon ${args}
+	eval /sbin/start-stop-daemon "${args}"
 	return $?
 }
 
@@ -165,13 +161,21 @@ stop_daemon() {
 # Return the result of start_daemon or stop_daemon depending on
 # how we are called
 start-stop-daemon() {
-	local args=" $* " ssdargs exeargs
+	local args ssdargs exeargs x
 	local exe name pidfile pid stopping nothing=false
+
+	# Ensure that we capture how we are called exactly
+	# Parameters may have spaces in them and we may
+	# have been called by eval
+	for x in "$@"; do
+		args="${args}'"${x}"' "
+	done
+
 	setup_daemon_vars
 
 	# We pass --oknodo and --test directly to start-stop-daemon and return
 	if ${nothing}; then
-		/sbin/start-stop-daemon ${args}
+		eval /sbin/start-stop-daemon "${args}"
 		return $?
 	fi
 
