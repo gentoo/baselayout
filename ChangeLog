@@ -6,6 +6,8 @@
 
     Make sure that when we try to mount /sys, we do so with -n (tigger).
 
+    Add some examples for nfs to sysctl.conf #66575.
+
   06 Oct 2004; Aron Griffis <agriffis@gentoo.org>:
 
     Update to net-scripts 1.0.2 from Roy
