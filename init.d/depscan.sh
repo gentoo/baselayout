@@ -12,13 +12,12 @@
 [ "$SYSLOGGER" = "" ] && SYSLOGGER="sysklogd metalog syslog-ng"
 
 source /etc/init.d/functions.sh
-svcdir=/dev/shm/.init.d
 
 if [ ! -d $svcdir ]
 then
 	install -d -m0755 $svcdir
 fi
-for x in softscripts snapshot started need use
+for x in softscripts snapshot started ${deptypes}
 do
 	if [ ! -d ${svcdir}/${x} ]
 	then

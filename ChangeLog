@@ -2,6 +2,52 @@
 # Copyright 2001 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  25 Dec 2001; Martin Schlemmer (azarah@gentoo.org); Update
+  /etc/init.d/shutdown.sh and /etc/init.d/reboot.sh not to force the
+  halt and reboot.  This fixes a problem where / was not unmounted
+  properly in some cases.
+
+  24 Dec 2001; Martin Schlemmer (azarah@gentoo.org): Move $svcdir to
+    to /etc/init.d/functions.sh, and update /etc/init.d/runscript.sh and
+    /etc/init.d/depscan.sh for this
+
+    Modified /etc/init.d/runscript.sh to also restart the services that
+    depend on a service if that service is restarted.  Enhanced the
+    restart function to be able to have custom restart() functions in
+    rc-scripts.  The custom restart() have to use svc_stop() and
+    svc_start() to restart the service.
+
+    Add a pause function to /etc/init.d/runscript.sh.  It will basically
+    stop a service without stopping the services that depends on that
+    service.
+
+* rc-scripts 1.2.3 (18 Dec 2001)
+
+  16 Dec 2001; Martin Schlemmer (azarah@gentoo.org): Moved the stuff from 
+    /sbin/init (old) to /sbin/rc (basically drop the init wrapper we used).
+
+    Some cleanups:  take out the shm resize comment;
+
+                    remove the $wrongmount;
+
+                    remove the mountshm() function and insert it directly
+                    where needed;
+
+                    remove the setting of $PATH as /sbin/init already do 
+                    this for us.
+
+    Added the if statement to detect if it is the first time the 'boot'
+    runlevel is executed (if [ "$RUNLEVEL" = "S" ] && [ "$argv1" = "boot" ]).
+    $RUNLEVEL is a env var set by /sbin/init.
+
+    Also added functionality to detect if the kernel have DEVFS support
+    compiled in; seems new users thinks devfs is unstable and as they do
+    not always read the docs, it does not get compiled in ;/  Should
+    make live for us a bit easier.
+    
+  14 Dec 2001; Martin Schlemmer (azarah@gentoo.org): Fixed /sbin/rc to kill
+  a cosmetic bug in the part that stops all the unneeded services.  
+
 * rc-scripts 1.2.2 (8 Dec 2001)
 
   10 Dec 2001; Added a localhost entry in /etc/hosts.
@@ -27,15 +73,11 @@
 
     Updated /etc/init.d/bootmisc with additional lock files to clean.
 
-    Updated /etc/init.d/hdparm to check if devfs is uddsed.
-
   27 Nov 2001; Martin Schlemmer (azarah@gentoo.org): Updated
   /etc/init.d/depscan.sh for a virtual 'use' depend, called 'logger'
   that can be used for services that needs to have a logger started
   before they are started.  Updated /etc/conf.d/basic with $SYSLOGGER
   that is used to define what loggers the 'logger' depend represent.
-  Also updated /etc/init.d/hdparm and /etc/init.d/modules to use
-  this new depend.
 
   26 Nov 2001; Martin Schlemmer (azarah@gentoo.org): Updated
   /etc/passwd and /etc/group with minor fixes to pass pwck and grpck.
@@ -43,32 +85,15 @@
   25 Nov 2001; Martin Schlemmer (azarah@gentoo.org): Changed umask in
     /etc/profile for the user to 077 for security.
 
-    Added a localhost line to /etc/hosts after yet another post to gentoo-user.
-    I cant see any problem with this, and since nobody else wants to take the
-    plunge ....
-
     Added a stop() function to /etc/init.d/clock.  Also removed uneeded
     'source /etc/rc.conf' line.
 
     Updated /etc/init.d/hostname to set the hostname to 'localhost' if
     /etc/hostname is invalid.
 
-    Updated /etc/init.d/hdparm to display a [ok] for each drive it optimizes.
-
     Updated /sbin/init to move the entries in /lib/dev-state to /dev before
     running devfsd, as it did still not save settings properly.  Also removed
     old /dev-state/compat stuff.
-
-    Removed a stupid bug out of /sbin/init ... /lib/dev-state/* was moved
-    to /dev *before* /dev was mounted.
-
-    Seems the .keep files in /lib/dev-state/pts and /lib/dev-state/shm 
-    caused /sbin/init to lock while moving /lib/dev-state/* to /dev. Added
-    the needed fixes to the baselayout ebuild.
-
-    On second thoughts, removed the 'try' out of the code that moves
-    /lib/dev-state/* to /dev, since this is not a critical task, and
-    booting will still continue on failure.
 
   25 Nov 2001; ncsd, the name service cache daemon script, has been removed
   from the default "default" runlevel.  It still exists in the archive so that
@@ -83,13 +108,6 @@
     and updated /sbin/init to use a new scheme for saving /dev permissions.
     Also moved /dev-state to /lib/dev-state which is a more standard location.
 
-    Added /etc/conf.d and moved rc.conf there as /etc/conf.d/basic.  Created
-    /etc/rc.conf again as a blank file .. the website should be updated to
-    say that the user should look in /etc/conf.d/* for stuff to configure.
-
-    Added /etc/init.d/hdparm and /etc/conf.d/hdparm; a script and config
-    file for setting generic optimizations for the disk drives.
-
     Fixed a ugly bug in /etc/init.d/depscan.sh.  If a service depended on
     itself, calling depscan.sh or changing runlevels cause a tempory effect
     similar to a 'mini fork bomb'.  Afterwards the depends was broken, and
@@ -98,15 +116,6 @@
     Updated /etc/init.d/halt.sh to terminate and display message for devfsd.
     More cosmetic than anything else, but cant hurt with the new dev-state
     scheme.
-
-    Removed config stuff from /etc/init.d/net.eth0, and moved it to 
-    /etc/conf.d/net.eth0.  Also added a comment to this effect.
-
-    Removed config stuff from /etc/init.d/net.eth0-dhcp, and moved it to
-    /etc/conf.d/net.eth0-dhcp.  Also added a comment to this effect.
-
-    Updated gentoo-src/rc-scripts/rc-lists/default to add /etc/init.d/hdparm
-    to the default runlevel.
 
     Updated /sbin/init to set the console log level to 1, so that bootup
     can be much cleaner.  Also updated /etc/init.d/modules not to have
@@ -125,9 +134,9 @@
     /usr/lib/ppp/chat-default as part of my new pppd scripts.  Also
     updated tarball.sh to handle ppp/chat-default.
 
-    Added /etc/skel/.bash* to make things cleaner and set $INPUTRC.
+    Added /etc/skel/.bash* to make things cleaner.
 
-    Minor changes I forgot about.
+    Other minor changes.
 
   17 Nov 2001; Donny Davies (woodchip@gentoo.org): Added /etc/shells file
   to rc-scripts.  Can remove it from sys-libs/shadow at the next release.

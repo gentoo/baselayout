@@ -5,7 +5,8 @@
 
 
 source /etc/init.d/functions.sh
-svcdir=/dev/shm/.init.d
+
+svcpause="no"
 
 myscript=${1}
 if [ -L $1 ]
@@ -46,6 +47,10 @@ start() {
 	return 1
 }
 
+restart() {
+	svc_restart || return 1
+}
+			
 svc_stop() {
 	local x
 	local stopfail="no"
@@ -72,9 +77,13 @@ svc_stop() {
 	else
 		mydeps=$myservice
 	fi
+	if [ "$svcpause" = "yes" ]
+	then
+		mydeps=""
+	fi
 	for mydep in $mydeps
 	do
-		for mytype in need use
+		for mytype in ${deptypes}
 		do
 			if [ -d ${svcdir}/${mytype}/${mydep} ]
 			then
@@ -113,6 +122,7 @@ svc_stop() {
 			fi
 		done
 	done
+	
 	#now that deps are stopped, stop our service
 	stop
 	if [ $? -eq 0 ]
@@ -172,6 +182,12 @@ svc_start() {
 		einfo "${myservice} has already been started."
 		return 1
 	fi
+}
+
+svc_restart() {
+	svc_stop || return 1
+	sleep 1
+	svc_start || return 1
 }
 
 source ${myscript}
@@ -300,8 +316,8 @@ svc_homegrown() {
 		if [ $x = "$arg" ]; then
 			if typeset -F $x &>/dev/null; then
 				# Run the homegrown function
-		$x
-		return $?
+				$x
+				return $?
 			else
 				# This is a weak error message
 				echo "Function $x doesn't exist."
@@ -319,12 +335,14 @@ svc_homegrown() {
 }
 
 shift
+echo start
 if [ $# -lt 1 ]
 then
 	echo "not enough args."
 	usage $opts
 	exit 1
 fi
+echo end
 for arg in ${*}
 do
 	case $arg in
@@ -345,15 +363,50 @@ do
 		fi
 		;;
 	restart)
-		#add snapshot support here so any dependent services that
-		#are stopped are restarted after the svc_start
-		if [ -e ${svcdir}/started/${myservice} ]
+		#create a snapshot of started services
+		rm -rf ${svcdir}/snapshot/*
+		cp ${svcdir}/started/* ${svcdir}/snapshot/
+		#simple way to try and detect if the service use svc_{start,stop} to restart
+		#if it have a custom restart() funtion.
+		if [ "`grep 'restart()' /etc/init.d/${myservice}`" ]
 		then
-			svc_stop
-			#sleep may not be available (it's in /usr) when runscript.sh runs
-			#sleep 1
+			if [ -z "`grep svc_stop /etc/init.d/${myservice}`" ] || [ -z "`grep svc_start /etc/init.d/${myservice}`" ]
+			then
+#				echo
+#				einfo "Please use 'svc_stop; svc_start' and not 'start; stop' to restart the service"
+#				einfo "in the custom 'restart()' function.  Run ${myservice} without arguments for"
+#				einfo "more info."
+#				echo
+				svc_restart
+			else
+				restart
+			fi
+		else
+			restart
 		fi
-		svc_start
+			
+		#restart dependancies as well
+		if [ -L ${svcdir}/started/${myservice} ]
+		then
+			for mytype in ${deptypes}
+			do
+				if [ -d ${svcdir}/${mytype}/${myservice} ]
+				then
+					for x in ${svcdir}/snapshot/*
+					do
+						if [ -L ${svcdir}/${mytype}/${myservice}/${x##*/} ] && [ ! -L ${svcdir}/started/${x##*/} ]
+						then
+							${svcdir}/${mytype}/${myservice}/${x##*/} start
+						fi
+					done
+				fi
+			done
+		fi
+		;;
+	pause)
+		svcpause="yes"
+		svc_stop
+		svcpause="no"
 		;;
 	*)
 		# Allow for homegrown functions

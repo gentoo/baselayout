@@ -3,7 +3,12 @@
 # $Header$
 
 
+#daemontools dir
 SVCDIR=/var/lib/supervise
+#rc-scripts dir
+svcdir=/dev/shm/.init.d
+#different types of dependancies
+deptypes="need use"
 
 getcols() {
 	echo $2

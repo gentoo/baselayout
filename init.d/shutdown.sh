@@ -3,4 +3,4 @@
 # $Header$
 
 
-/sbin/halt -nfip
+/sbin/halt -idp

@@ -3,4 +3,4 @@
 # $Header$
 
 
-/sbin/reboot -nfi
+/sbin/reboot -idp
