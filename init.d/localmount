@@ -23,32 +23,21 @@ start() {
 	# Check what USB fs the kernel support.  Currently
 	# 2.5+ kernels, and later 2.4 kernels have 'usbfs',
 	# while older kernels have 'usbdevfs'.
-	local usbfs="$(awk '
-	  {
-	    # Since 'usbfs' is the newer one, always try to use it
-	    if ($2 == "usbfs")
-	      USBFS = "usbfs"
-	    # With my 2.4.20 kernel, 'usbdevfs' gets listed before 'usbfs',
-	    # but this might change, so only change USBFS if it was not already
-	    # set (and thus to 'usbfs').
-	    if (($2 == "usbdevfs") && (USBFS == ""))
-	      USBFS = "usbdevfs"
-	  }
-	
-	  END {
-	    if (USBFS != "")
-	      print USBFS
-	  }' /proc/filesystems)"
+	local usbfs="$(grep -Fow usbfs /proc/filesystems || 
+		grep -Fow usbdevfs /proc/filesystems)"
 
 	if [ -n "${usbfs}" ] && \
 	   [ -e /proc/bus/usb -a ! -e /proc/bus/usb/devices ]
 	then
 		ebegin "Mounting USB device filesystem (${usbfs})"
-		mount -t ${usbfs} none /proc/bus/usb &>/dev/null
+		# Fetch usb gid from /etc/group; fixes bug 35860
+		usbgid=$(awk -F: '/^usb:/{print $3; exit}' /etc/group)
+		mount -t ${usbfs} ${usbgid:+-o devmode=0664,devgid=$usbgid} \
+			none /proc/bus/usb &>/dev/null
 		eend $? "Failed to mount USB device filesystem"
 	fi
 
-	#swap on loopback devices, and other weirdnesses
+	# Swap on loopback devices, and other weirdnesses
 	ebegin "Activating (possibly) more swap"
 	/sbin/swapon -a &>/dev/null
 	eend 0
