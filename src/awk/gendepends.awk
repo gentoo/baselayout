@@ -299,7 +299,6 @@ function resolve_depend(type, service, deplist,    x, deparray)
 BEGIN {
 	NAME = 1
 	RC_NUMBER = 0
-	PROVIDE = 10
 
 	# Types ...
 	NEED = 2
@@ -310,8 +309,10 @@ BEGIN {
 	AFTER = 7
 	BROKEN = 8
 	PARALLEL = 9
+	MTIME = 10
+	PROVIDE = 11	# Not part of Types as when finally printed ...
 	TYPES_MIN = 2
-	TYPES_MAX = 9
+	TYPES_MAX = 10
 
 	TYPE_NAMES[NEED] = "ineed"
 	TYPE_NAMES[NEEDME] = "needsme"
@@ -322,6 +323,7 @@ BEGIN {
 	TYPE_NAMES[BROKEN] = "broken"
 	TYPE_NAMES[PROVIDE] = "provide"
 	TYPE_NAMES[PARALLEL] = "parallel"
+	TYPE_NAMES[MTIME] = "mtime"
 
 	# Get our environment variables
 	SVCDIR = ENVIRON["SVCDIR"]
@@ -390,6 +392,15 @@ BEGIN {
 
 		if ($0 != "")
 			add_deptree_item(RC_NUMBER, PARALLEL, $0)
+	}
+
+	if ($1 == "MTIME") {
+		sub(/MTIME[[:space:]]*/, "")
+
+		if ($0 != "") {
+			# We add this directly to RESOLVED_DEPTREE
+			add_db_entry(DEPTREE[RC_NUMBER,NAME], MTIME, $0)
+		}
 	}
 }
 

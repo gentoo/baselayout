@@ -5,17 +5,17 @@
 
 function einfo(string)
 {
-	system("echo -e \" \\e[32;01m*\\e[0m " string "\"")
+	printf(" %s %s%s", "\033[32;01m*\033[0m", string, "\n")
 }
 
 function ewarn(string)
 {
-	system("echo -e \" \\e[33;01m*\\e[0m " string "\"")
+	printf(" %s %s%s" , "\033[33;01m*\033[0m", string, "\n")
 }
 
 function eerror(string)
 {
-	system("echo -e \" \\e[31;01m*\\e[0m " string "\"")
+	printf(" %s %s%s" , "\033[31;01m*\033[0m", string, "\n")
 }
 
 function isfile(pathname,   x, ret, data)

@@ -14,11 +14,28 @@ RC_GOT_SERVICES="yes"
 
 if [ "${RC_GOT_DEPTREE_INFO}" != "yes" ]
 then
-	eerror "Dependency info is missing!  Please run"
-	echo
-	eerror "  # /sbin/depscan.sh"
-	echo
-	eerror "to fix this."
+	if ! /sbin/depscan.sh
+	then
+		echo
+		eerror "Error running '/sbin/depscan.sh'!"
+		eerror "Please correct any problems above."
+
+		exit 1
+	fi
+
+	source "${svcdir}/deptree"
+
+	if [ "${RC_GOT_DEPTREE_INFO}" != "yes" ]
+	then
+		echo
+		eerror "Dependency info is missing!  Please run"
+		echo
+		eerror "  # /sbin/depscan.sh"
+		echo
+		eerror "to fix this."
+
+		exit 1
+	fi
 fi
 
 
@@ -29,7 +46,7 @@ fi
 # The name of the service whose dependency info we currently have
 rc_name=
 # The index of the service whose dependency info we currently have
-rc_index=
+rc_index=0
 # Our dependency types ...
 rc_ineed=
 rc_needsme=
@@ -39,45 +56,132 @@ rc_ibefore=
 rc_iafter=
 rc_broken=
 rc_parallel=
+rc_mtime=
 
 ############
 # Functions
 ############
 
-# bool get_dep_info(service)
+# boot check_mtime(service, mtime)
 #
-#   Set the Dependency variables to contain data for 'service'
+#   Return 0 if 'service's mtime is the same as 'mtime'
 #
-get_dep_info() {
-	local x=1
-	local myservice="$1"
-	
-	[ -z "$1" ] && return 1
+check_mtime() {
+	[ -z "$1" -o -z "$2" ] && return 1
 
-	# We already have the right stuff ...
-	[ "$1" = "${rc_name}" ] && return 0
+	# Do not fail if there is no script, as virtuals (such as 'net')
+	# will then not work ...
+	if [ -f "/etc/init.d/$1" -a -x "/bin/stat" ] && \
+	   [ "$(stat -c "%Y" "/etc/init.d/$1" 2>/dev/null)" -ne "$2" ]
+	then
+		return 1
+	fi
+
+	return 0
+}
+
+# bool get_service_index(service, index)
+#
+#   Print the index of 'service'.  'index' is the current index.
+#
+get_service_index() {
+	local x=1
+	local index="$2"
+	local myservice="$1"
+
+	if [ -z "$1" -o -z "$2" ]
+	then
+		echo "0"
+		return 1
+	fi
+
+	# Do we already have the index?
+	if [ -n "${index}" ] && [ "${index}" -gt 0 -a \
+	     "${myservice}" = "${RC_DEPEND_TREE[${index}]}" ]
+	then
+		echo "${index}"
+		return 0
+	fi
 
 	while [ "${x}" -le "${RC_DEPEND_TREE[0]}" ]
 	do
-		if [ "$1" = "${RC_DEPEND_TREE[$((${x} * ${rc_index_scale}))]}" ]
+		index=$((${x} * ${rc_index_scale}))
+		
+		if [ "${myservice}" = "${RC_DEPEND_TREE[${index}]}" ]
 		then
-			rc_index=$((${x} * ${rc_index_scale}))
-			rc_name="${RC_DEPEND_TREE[${rc_index}]}"
-			rc_ineed="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_ineed}))]}"
-			rc_needsme="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_needsme}))]}"
-			rc_iuse="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_iuse}))]}"
-			rc_usesme="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_usesme}))]}"
-			rc_ibefore="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_ibefore}))]}"
-			rc_iafter="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_iafter}))]}"
-			rc_broken="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_broken}))]}"
-			rc_parallel="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_parallel}))]}"
+			echo "${index}"
 			return 0
 		fi
 
 		let "x += 1"
 	done
 
+	echo "0"
 	return 1
+}
+
+# bool get_dep_info(service)
+#
+#   Set the Dependency variables to contain data for 'service'
+#
+get_dep_info() {
+	local myservice="$1"
+
+	[ -z "$1" ] && return 1
+
+	# We already have the right stuff ...
+	if [ "${myservice}" = "${rc_name}" -a -n "${rc_mtime}" ] && \
+		 check_mtime "${myservice}" "${rc_mtime}"
+	then
+	   return 0
+	fi
+
+	rc_index="`get_service_index "${myservice}" "${rc_index}"`"
+	rc_mtime="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_mtime}))]}"
+
+	# Does the stored mtime match that of the current rc-script?
+	if ! check_mtime "${myservice}" "${rc_mtime}"
+	then
+		# Nope, check if we already ran depscan.sh
+		source "${svcdir}/deptree"
+		rc_index="`get_service_index "${myservice}" "${rc_index}"`"
+		rc_mtime="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_mtime}))]}"
+
+		# Do we have it now?
+		if ! check_mtime "${myservice}" "${rc_mtime}"
+		then
+			# Not?  So run depscan.sh ...
+			einfo "Re-caching dependency info (mtimes differ)..." &>/dev/stderr
+			if ! /sbin/depscan.sh &>/dev/null
+			then
+				return 1
+			else
+				# We want to check if we got the dep info later on ...
+				unset RC_GOT_DEPTREE_INFO
+				source "${svcdir}/deptree"
+				# Everything "OK" ?
+				[ "${RC_GOT_DEPTREE_INFO}" != "yes" ] && return 1
+			fi
+
+			rc_index="`get_service_index "${myservice}" "${rc_index}"`"
+		fi
+	fi
+	
+	# Verify that we have the correct index (rc_index) ...
+	[ "${rc_index}" -eq 0 ] && return 1
+		
+	rc_name="${RC_DEPEND_TREE[${rc_index}]}"
+	rc_ineed="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_ineed}))]}"
+	rc_needsme="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_needsme}))]}"
+	rc_iuse="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_iuse}))]}"
+	rc_usesme="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_usesme}))]}"
+	rc_ibefore="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_ibefore}))]}"
+	rc_iafter="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_iafter}))]}"
+	rc_broken="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_broken}))]}"
+	rc_parallel="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_parallel}))]}"
+	rc_mtime="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_mtime}))]}"
+		
+	return 0
 }
 
 # string check_dependency(deptype, service1)
@@ -92,6 +196,7 @@ get_dep_info() {
 #
 check_dependency() {
 	local x=
+	local myservice=
 
 	[ -z "$1" -o -z "$2" ] && return 1
 	
@@ -100,26 +205,20 @@ check_dependency() {
 	then
 		[ -z "$3" -o -z "$4" ] && return 1
 
-		get_dep_info "$3" &>/dev/null || {
-			eerror "Could not get dependency info for \"$3\"!" > /dev/stderr
-			eerror "Please run:" > /dev/stderr
-			echo > /dev/stderr
-			eerror "  # /sbin/depscan.sh" > /dev/stderr
-			echo > /dev/stderr
-			eerror "to try and fix this." > /dev/stderr
-			return 1
-		}
+		myservice="$3"
 	else
-		get_dep_info "$2" &>/dev/null || {
-			eerror "Could not get dependency info for \"$2\"!" > /dev/stderr
-			eerror "Please run:" > /dev/stderr
-			echo > /dev/stderr
-			eerror "  # /sbin/depscan.sh" > /dev/stderr
-			echo > /dev/stderr
-			eerror "to fix this." > /dev/stderr
-			return 1
-		}
+		myservice="$2"
 	fi
+
+	get_dep_info "${myservice}" >/dev/null || {
+		eerror "Could not get dependency info for \"${myservice}\"!" > /dev/stderr
+		eerror "Please run:" > /dev/stderr
+		echo > /dev/stderr
+		eerror "  # /sbin/depscan.sh" > /dev/stderr
+		echo > /dev/stderr
+		eerror "to try and fix this." > /dev/stderr
+		return 1
+	}
 
 	# Do we have valid info for 'deptype' ?
 	[ -z "$(eval echo \${rc_$1})" ] && return 1

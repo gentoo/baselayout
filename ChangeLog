@@ -2,6 +2,12 @@
 # Copyright 2002-2004 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  25 Feb 2004; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update to enable checking of mtimes on rc-scripts, and auto running
+    depscan.sh if needed.  Also try to run depscan.sh when RC_GOT_DEPTREE_INFO
+    is not set instead of just erroring.
+
   19 Feb 2004; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix irda type-o in /sbin/MAKEDEV, thanks to Tobias Sager <moixa@gmx.ch>.

@@ -32,16 +32,18 @@ function print_start() {
 	print "" >> (SVCDIR "/depcache")
 }
 
-function print_header1() {
+function print_header1(mtime) {
 	print "#*** " MYFILENAME " ***" >> (SVCDIR "/depcache")
 	print "" >> (SVCDIR "/depcache")
 	print "myservice=\"" MYFILENAME "\"" >> (SVCDIR "/depcache")
 	print "myservice=\"${myservice##*/}\"" >> (SVCDIR "/depcache")
 	print "echo \"RCSCRIPT ${myservice}\"" >> (SVCDIR "/depcache")
 	print "" >> (SVCDIR "/depcache")
+	print "echo \"MTIME " mtime "\"" >> (SVCDIR "/depcache")
+	print "" >> (SVCDIR "/depcache")
 }
 
-function print_header2() {
+function print_header2(mtime) {
 	print "(" >> (SVCDIR "/depcache")
 	print "  # Get settings for rc-script ..." >> (SVCDIR "/depcache")
 	print "  [ -e /etc/conf.d/basic ]                 && source /etc/conf.d/basic" >> (SVCDIR "/depcache")
@@ -107,6 +109,7 @@ BEGIN {
 		
 		MYFNR = 1
 		MYFILENAME = RCSCRIPTS[count]
+		STAT_DATA[1] = 1
 
 		while (((getline < (RCSCRIPTS[count])) > 0) && (!NEXTFILE)) {
 
@@ -124,9 +127,12 @@ BEGIN {
 						NEXTFILE = 1
 						continue
 					}
+
+					if (stat(MYFILENAME, STAT_DATA) != 0)
+						ewarn("Could not stat \"" MYFILENAME "\"")
 				
 					ISRCSCRIPT = 1
-					print_header1()
+					print_header1(STAT_DATA["mtime"])
 				} else  {
 			
 					NEXTFILE = 1

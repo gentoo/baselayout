@@ -374,16 +374,18 @@ then
 	export BOOT="yes"
 	
 	start_critical_service() {
-		local retval=
+		(
+			local retval=
+		
+			source "/etc/init.d/${x}" || eerror "Failed to source /etc/init.d/${x}"
+			retval=$?
+			[ "${retval}" -ne 0 ] && return "${retval}"
 			
-		source "/etc/init.d/${x}" || eerror "Failed to source /etc/init.d/${x}"
-		retval=$?
-		[ "${retval}" -ne 0 ] && return "${retval}"
-			
-		start || eerror "Failed to start /etc/init.d/${x}"
-		retval=$?
+			start || eerror "Failed to start /etc/init.d/${x}"
+			retval=$?
 
-		return "${retval}"
+			return "${retval}"
+		)
 	}
 
 	# We first try to find a locally defined list of critical services 

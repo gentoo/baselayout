@@ -147,8 +147,8 @@ svc_stop() {
 	do
 		# If some service 'need' $mydep, stop it first; or if it is a runlevel change,
 		# first stop all services that is started 'after' $mydep.
-		if needsme "${mydep}" &>/dev/null || \
-		   (is_runlevel_stop && ibefore "${mydep}" &>/dev/null)
+		if needsme "${mydep}" >/dev/null || \
+		   (is_runlevel_stop && ibefore "${mydep}" >/dev/null)
 		then
 			local servicelist="$(needsme "${mydep}")"
 
@@ -166,7 +166,8 @@ svc_stop() {
 				# Service not currently running, continue
 				service_started "${x}" || continue
 				
-				if ibefore -t "${mydep}" "${x}" && [ -L "${svcdir}/softscripts.new/${x}" ]
+				if ibefore -t "${mydep}" "${x}" >/dev/null && \
+				   [ -L "${svcdir}/softscripts.new/${x}" ]
 				then
 					# Service do not 'need' $mydep, and is still present in
 					# new runlevel ...
@@ -180,7 +181,7 @@ svc_stop() {
 					# If we are halting the system, try and get it down as
 					# clean as possible, else do not stop our service if
 					# a dependent service did not stop.
-					if needsme -t "${mydep}" "${x}" && \
+					if needsme -t "${mydep}" "${x}" >/dev/null && \
 					   [ "${SOFTLEVEL}" != "reboot" -a "${SOFTLEVEL}" != "shutdown" ]
 					then
 						retval=1
@@ -268,7 +269,7 @@ svc_start() {
 						start_service "${mynetservice}"
 
 						# A 'need' dependency is critical for startup
-						if [ "$?" -ne 0 ] && ineed -t "${myservice}" "${x}"
+						if [ "$?" -ne 0 ] && ineed -t "${myservice}" "${x}" >/dev/null
 						then
 							local netcount="$(ls -1 ${svcdir}/started/net.* 2> /dev/null | \
 								grep -v 'net\.lo' | egrep -c "\/net\.[[:alnum:]]+$")"
@@ -291,7 +292,7 @@ svc_start() {
 					start_service "${x}"
 
 					# A 'need' dependacy is critical for startup
-					if [ "$?" -ne 0 ] && ineed -t "${myservice}" "${x}"
+					if [ "$?" -ne 0 ] && ineed -t "${myservice}" "${x}" >/dev/null
 					then
 						startfail="yes"
 					fi
@@ -307,13 +308,13 @@ svc_start() {
 		fi
 		
 		# Start service
-		if [ "${retval}" -eq 0 ] && broken "${myservice}" &>/dev/null
+		if [ "${retval}" -eq 0 ] && broken "${myservice}"
 		then
 			eerror "ERROR:  Some services needed are missing.  Run"
 			eerror "        './${myservice} broken' for a list of those"
 			eerror "        services.  \"${myservice}\" was not started."
 			retval=1
-		elif [ "${retval}" -eq 0 ] && ! broken "${myservice}" &>/dev/null
+		elif [ "${retval}" -eq 0 ] && ! broken "${myservice}"
 		then
 			start
 			retval="$?"
