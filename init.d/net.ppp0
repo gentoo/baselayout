@@ -12,6 +12,7 @@
 # Misc internal variables
 CMD_LINE=""
 FUNCT="${2}"
+TEMPLATEDIR="/etc/ppp"
 
 checkconfig() {
 
@@ -54,7 +55,7 @@ start() {
 		fi
 
 		/usr/sbin/pppd ${CMD_LINE} ${MODEMPORT} ${LINESPEED} \
-			ipparam ${IFACE} linkname ${DEVICE} call ${PEER} \
+			ipparam ${IFACE} linkname ${IFACE} call ${PEER} \
 			noauth ${PPPOPTIONS}
         fi
         eend
@@ -73,7 +74,7 @@ stop() {
 		fi
 		
 #		/sbin/ifconfig ${IFACE} down
-		kill "`cat /var/run/ppp-${IFACE}.pid |grep -v ${DEVICE}`"
+		kill "`cat /var/run/ppp-${IFACE}.pid |grep -v ${IFACE}`"
 	fi
 	eend
 }

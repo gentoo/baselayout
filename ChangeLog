@@ -2,6 +2,11 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  23 Sep 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix my last screwup with /etc/init.d/net.ppp0.  Basically
+    forgot to change a few DEVICE's to IFACE ...
+
   22 Sep 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     NGPT support.
