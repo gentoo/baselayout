@@ -1,0 +1,15 @@
+* Introduction
+==============
+
+This is still fairly alpha code, although I have tried to regression test it
+fairly extensively.  After many requests, I have added it to CVS, so please
+do understand that it still is work in progress, although it should duplicate
+depscan.sh in functionality.
+
+To all those that might dabble with this, please send comments or fixes my
+way, and if I can ask very nicely, please do not commit before checking with
+me first, as I do have some large changes and additions still in the pipeline.
+
+
+Martin Schlemmer
+<azarah@gentoo.org>

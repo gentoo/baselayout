@@ -4,6 +4,10 @@
 
   16 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
 
+    Add README.
+
+  16 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
+
     depscan.c: Add delete_var_dirs() to delete volatile directories in svcdir.
                Change 'char *' declarations for create_directory() and
                create_var_dirs() to 'const char*'.
