@@ -10,6 +10,10 @@
 
     Updated /etc/init.d/consolefont to work without devfs as well.
 
+    When rebooting or shutting down, a service should not fail to stop
+    if a service it depends on, fails.  Updated /etc/init.d/runscript.sh
+    for this.
+
   25 Feb 2002; Martin Schlemmer <azarah@gentoo.org>: added a check if
   /dev is mounted when creating entries for /etc/mtab.  This should solve a
   invalid entry or /dev being mounted even with 'gentoo=nodevfs' option.

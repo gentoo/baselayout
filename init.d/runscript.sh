@@ -143,7 +143,12 @@ svc_stop() {
 					${x} stop
 					if [ $? -ne 0 ]
 					then
-						stopfail="yes"
+						#if we are halting the system, try and get it down as
+						#clean as possible
+						if [ "$SOFTLEVEL" != "reboot" ] && [ "$SOFTLEVEL" != "shutdown" ]
+						then
+							stopfail="yes"
+						fi
 						break
 					fi
 				done
@@ -160,7 +165,9 @@ svc_stop() {
 	#now that deps are stopped, stop our service
 	stop
 	retval=$?
-
+	
+# This cause first script to be run, to actually be run last, so a big no no.
+#
 #	#stop all services that should be after on runlevel change
 #	for x in ${svcdir}/after/*/${myservice}
 #	do
