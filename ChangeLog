@@ -4,6 +4,8 @@
   09 Dec 2004; Roy Marples <uberlord@gentoo.org>:
 
     fixed net.lo getting vlan config
+    rc doesn't stop hotplugged devices when system is booting - fixes #61594
+    thanks to Andreas Sundebo for the fix
 
   08 Dec 2004; Roy Marples <uberlord@gentoo.org>:
 
