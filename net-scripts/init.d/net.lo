@@ -569,6 +569,15 @@ start() {
 		return $?
 	fi
 
+	# We may not have a loaded module for ${IFACE}
+	# Some users may have "alias natsemi eth0" in /etc/modules.d/foo
+	# so we can work with this
+	# However, if they do the same with eth1 and try to start it
+	# but eth0 has not been loaded then the module gets loaded as
+	# eth0.
+	# Not much we can do about this :(
+	! interface_exists ${IFACE} && /sbin/modprobe ${IFACE} &>/dev/null
+
 	# Call user-defined preup function if it exists
 	if [[ $( type -t preup ) == function ]]; then
 		einfo "Running preup function"

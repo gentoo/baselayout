@@ -4,8 +4,11 @@
 
   02 Nov 2004; Roy Marples <uberlord@gentoo.org>:
 
-    net-scripts/init.d/net.example
+    net-scripts/conf.d/net.example
     - added bridging and tuntap examples
+
+    net-scripts/init.d/net.lo
+    - modprobe ${IFACE} when ${IFACE} does not exist
 
     net-scripts/net.modules.d/ifconfig
     - fixed interface existance check
