@@ -22,8 +22,6 @@
  * $Header$
  */
 
-#define _GNU_SOURCE
-
 #include <errno.h>
 #include <string.h>
 #include <stdio.h>
@@ -83,6 +81,27 @@ char *strcatpaths(const char *pathname1, const char *pathname2) {
 	strncat(new_path, pathname2, lenght - strlen(new_path));
 
 	return new_path;
+}
+
+char *strndup(const char *str, size_t size)
+{
+	char *new_str = NULL;
+	size_t len = strlen(str);
+
+	/* We only want to cp max size chars */
+	if (len > size)
+		len = size;
+	
+	new_str = malloc(len + 1);
+	if (NULL == new_str) {
+		DBG_MSG("Failed to allocate buffer!\n");
+		return NULL;
+	}
+
+	/* Make sure our string is NULL terminated */
+	new_str[len] = '\0';
+	
+	return (char *)memcpy(new_str, str, len);
 }
 
 int exists(const char *pathname) {

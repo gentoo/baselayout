@@ -63,14 +63,13 @@
  *
  */
 
-#define _GNU_SOURCE
-
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "debug.h"
+#include "misc.h"
 #include "simple-regex.h"
 
 /* Macro to check if a regex_data_t pointer is valid */
