@@ -447,8 +447,10 @@ iwconfig_scan() {
 		fi
 	fi
 
-	# Change back to the managed mode if needed
-	[[ ${mode} != managed ]] && iwconfig ${iface} mode managed 2>${devnull}
+	# Change back mode if needed
+	x=$( eval echo \$\{mode_${ifvar}\} | tr '[:upper:]' '[:lower:]' )
+	x=${x:-auto}
+	[[ ${mode} != ${x} ]] && iwconfig ${iface} mode ${x} 2>${devnull}
 
 	if [[ -z ${scan} ]]; then
 		ewarn "${iface} does not support scanning"
