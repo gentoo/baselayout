@@ -523,8 +523,12 @@ iface_start() {
 	eindent
 	for (( config_counter=0; config_counter<${#config[@]}; config_counter++ )); do
 		# Handle null and noop correctly
-		[[ ${config[config_counter]} == "null" \
-		|| ${config[config_counter]} == "noop" ]] && eend 0 && continue
+		if [[ ${config[config_counter]} == "null" \
+		|| ${config[config_counter]} == "noop" ]]; then
+			eend 0
+			config_worked=true
+			continue
+		fi
 
 		if ${warn}; then
 			ewarn "Configuration not set for ${iface} - assuming dhcp"
