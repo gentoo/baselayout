@@ -1,5 +1,5 @@
 # bridge (net-misc/bridge-utils) module for net-scripts
-# Version 1.0.1
+# Version 1.0.2
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -121,7 +121,8 @@ bridge_pre_start() {
 		ebegin "Adding port ${i}"
 		e=$( brctl addif ${iface} ${i} 2>&1 \
 			&& interface_del_addresses ${i} \
-			&& interface_set_flag ${i} promisc true )
+			&& interface_set_flag ${i} promisc true \
+			&& interface_up ${i} )
 		if [[ -n ${e} ]]; then
 			eend 1 "${e}"
 			return 1

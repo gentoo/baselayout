@@ -132,6 +132,10 @@
 #key_ESSID="s:foobar enc open"
 #key_ESSID="s:foobar enc restricted"
 
+# If you have whitespace in your key, here's how to set it and use other
+# commands like using open encryption.
+#key_ESSID="s:'foo bar' enc open"
+
 # WEP key for the AP with MAC address 001122334455
 #mac_key_001122334455="s:foobar"
 

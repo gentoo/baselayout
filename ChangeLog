@@ -1,6 +1,13 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+  04 Jan 2005; Roy Marples <uberlord@gentoo.org>:
+
+    bridge now marks interfaces as UP - fixes #75354
+    net.lo tests the return value of modprobe - fixes #76385
+    iwconfig now sets enc keys through an eval statement - fixes #76601
+    updated wireless.example for whitespace in keys
+
   19 Dec 2004; Roy Marples <uberlord@gentoo.org>:
 
     iwconfig now sets ESSIDVAR for master/ad-hoc modes - fixes #74802
