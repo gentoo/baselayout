@@ -27,20 +27,6 @@ checkconfig() {
 		eerror "ppp0 is already up"
 		return 1
 	fi
-
-	if [ ! -e "/var/run/ppp-${IFACE}.pid" -a "${FUNCT}" = "stop" ]
-	then
-		eerror "ppp0 not up"
-		
-		# Do our own cleanup
-		if [ -L ${svcdir}/started/net.${IFACE} ]
-		then
-			rm -f ${svcdir}/started/net.${IFACE}
-		fi
-
-		return 1
-	fi
-						
 }
 
 start() {
@@ -77,7 +63,9 @@ stop() {
 		if [ -z "$(/sbin/ifconfig | egrep "${IFACE}")" ]
 		then
 			eerror "Interface seems to be down already"
-			return 1
+			# We should return 0 here, else svc_stop() will not remove
+			# the 'started' symlink ...
+			return 0
 		fi
 		
 #		/sbin/ifconfig ${IFACE} down

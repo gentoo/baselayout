@@ -2,6 +2,15 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  27 Apr 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add a 'save' function /etc/init.d/clock, bug #19685.
+
+  24 Apr 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix /etc/init.d/net.ppp0 to do the right thing if stopped was called,
+    but the ppp link was already down, bug #15333.
+
   12 Apr 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix type-o in /etc/init.d/consolefont (line 38 should be 'retval=$?').

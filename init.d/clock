@@ -4,6 +4,8 @@
 # $Header$
 
 
+opts="${opts} save"
+
 depend() {
 	need localmount
 }
@@ -72,6 +74,10 @@ stop() {
 	else
 		eend 1 "hwclock executable not found"
 	fi
+}
+
+save() {
+	stop
 }
 
 
