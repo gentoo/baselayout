@@ -1,3 +1,11 @@
+rc-scripts-1.1.6, released 15 Sep 2001
+======================================
+
+	*init.d/runscript.sh, others
+	Handling of "net" dependencies resolve to all net devices in
+	/etc/runlevels/boot and /etc/runlevels/[curr-runlevel].  INTERFACES
+	variable in /etc/rc.conf has been removed.
+	
 	*init.d/runscript.sh
 	New "zap" option for manually resetting the state of an initscript
 	to stopped.
