@@ -78,8 +78,13 @@ udhcpc_stop() {
 	ebegin "Stopping udhcpc on ${iface}"
 	local pid=$( cat ${pidfile} ) e=true
 
+	# Release the lease if told to
 	eval dhcp=\" \$\{dhcp_${ifvar}\} \"
-	[[ ${dhcp} == *' release '* ]] && kill -s USR2 ${pid} &>/dev/null
+	if [[ ${dhcp} == *' release '* ]]; then
+		kill -s USR2 ${pid} &>/dev/null
+		rm /var/cache/udhcpc-${iface}.cache
+	fi
+
 	kill -s TERM ${pid} &>/dev/null
 
 	# udhcp-0.9.8-r3 and earlier do not process signals correctly
@@ -102,6 +107,7 @@ udhcpc_stop() {
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 udhcpc_start() {
 	local iface=${1} opts hostname pidfile="/var/run/udhcpc-${1}.pid"
+	local cachefile="/var/cache/udhcpc-${1}.cache" x
 
 	interface_exists ${iface} true || return 1
 
@@ -130,13 +136,24 @@ udhcpc_start() {
 		return 0
 	fi
 
-	local r=$( udhcpc ${hostname} ${opts} --script=${script} --now --pidfile=${pidfile} --interface=${iface} )
+	# Try and load the cache if it exists
+	if [[ -f ${cachefile} ]]; then
+		x=$( cat ${cachefile} )
+		[[ -n ${x} ]] && opts="${opts} --request=${x}"
+	fi
+
+	x=$( udhcpc ${hostname} ${opts} --script=${script} --now --pidfile=${pidfile} --interface=${iface} )
 	# We just check the last 5 letters
-	[[ ${r:((${#r} - 5)):5} == bound ]]
+	[[ ${x:((${#x} - 5)):5} == bound ]]
 	eend $? || return 1
 
 	# DHCP succeeded, show address retrieved
 	local addr=$( interface_get_address ${iface} )
 	einfo "${iface} received address ${addr}"
+
+	# Store the address in a cache for future usage
+	echo ${addr} > ${cachefile}
+	chmod 600 ${cachefile}
+
 	return 0
 }

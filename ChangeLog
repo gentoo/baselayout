@@ -7,6 +7,8 @@
     udhcpc and dhclient now restore saved configs when stopping and work
     with non-infinite leases
     Moved generic dhcp options into a space seperated string
+    udhcpc now caches it's IP address and requests it the next time it starts
+    if the address is not released
 
   02 Dec 2004; Mike Frysinger <vapier@gentoo.org>:
 
