@@ -38,7 +38,7 @@ start() {
 			eend 2 "Filesystem couldn't be fixed :("
 			/sbin/sulogin ${CONSOLE}
 			einfo "Unmounting filesystems"
-			/bin/mount -a -o remount,ro & >/dev/null
+			/bin/mount -a -o remount,ro &>/dev/null
 			einfo "Rebooting"
 			/sbin/reboot -f
 		fi

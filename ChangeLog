@@ -2,6 +2,22 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  10 March 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add sysfs support for 2.5 kernels (mounted to /sys).  Updated /sbin/rc
+    and /etc/init.d/halt.sh for this.
+
+    Update /etc/fstab to correctly mount /proc with:
+    
+      mount -t proc none /proc
+
+    Do the same for /dev/shm:
+
+      mount -t tmpfs none /dev/shm
+
+    Fix a typeo in /etc/init.d/checkroot that caused 'umount -a' to output
+    noise if we exited a recovery console.
+
 * rc-scripts 1.4.3.3 (09 March 2003)
 
   09 March 2003; Martin Schlemmer <azarah@gentoo.org>:

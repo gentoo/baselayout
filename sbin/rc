@@ -77,6 +77,13 @@ then
 	try mount -n /proc; \
 	eend $?
 
+	if [ "$(get_KV)" -ge "$(KV_to_int '2.5.0')" -a -d /sys ]
+	then
+		ebegin "Mounting /sys"
+		mount -t sysfs none /sys
+		eend $?
+	fi
+
 	# Check if the user disabled devfs
 	devfs="yes"
 	get_bootparam "nodevfs"
