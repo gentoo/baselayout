@@ -2,6 +2,15 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  4 Nov 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Change /etc/init.d/clock to depend on localmount again, fixing
+    bug #10048.
+
+    Get deps on logger sane again.  I wanted to get the logger started
+    as early as possible, but clock for one breaks if /usr is mounted
+    on seperate partition.
+
   29 Oct 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix return in /etc/init.d/modules to return 0 if /proc/modules

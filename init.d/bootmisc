@@ -6,6 +6,7 @@
 
 depend() {
 	need clock localmount hostname
+	before logger
 }
 
 start() {

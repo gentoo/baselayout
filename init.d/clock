@@ -5,7 +5,7 @@
 
 
 depend() {
-	need checkroot
+	need localmount
 }
 
 start() {
