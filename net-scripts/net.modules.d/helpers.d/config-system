@@ -46,9 +46,6 @@ get_wireless_vars() {
 	# Check we are a wireless interface
 	wireless_check_extensions ${interface} || return
 
-	# Wait until we get a valid ESSID
-	ESSID=$( wireless_get_essid ${interface} )
-
 	local -a MODULES=( "${module}" )
 	source ${MODULES_DIR}/${module}
 	source ${MODULES_DIR}/essidnet

@@ -1,6 +1,15 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+  04 Dec 2004; Roy Marples <uberlord@gentoo.org>:
+
+    fixed dhclient-ifconfig to look for dhclient-udhcpc-wrapper in the correct
+    place and changed hardcoded eth1 to ${interface} in udhcpc-ifconfig.
+    Fixes #73327 - thanks to Benoit Boissinot
+
+    essidnet gets the essid itself instead of relying on ${ESSID}
+    
+
 * rc-scripts 1.6.7 (03 Dec 2004)
 
   03 Dec 2004; Mike Frysinger <vapier@gentoo.org>:
