@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+  18 Dec 2004; Roy Marples <uberlord@gentoo.org>:
+
+    macchanger now localalises ${opts} - fixes #74809
+
   17 Dec 2004; Roy Marples <uberlord@gentoo.org>:
 
     wpa_supplicant now brings the interface up before launching - fixes #74637

@@ -46,7 +46,7 @@ macchanger_check_depends() {
 #
 # Configures the MAC address for iface 
 macchanger_pre_start() {
-	local iface=${1} mac
+	local iface=${1} mac opts
 	local ifvar=$( interface_variable ${1} )
 
 	eval mac=\"\$\{mac_${ifvar}\}\"
