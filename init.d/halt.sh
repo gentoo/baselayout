@@ -92,8 +92,8 @@ no_unmounts="`mount | awk '{ if (($5 ~ /^(proc|sysfs|devfs|tmpfs|usb(dev)?fs)$/)
                                 ($1 ~ /^(rootfs|\/dev\/root)$/) ||
                                 ($3 == "/"))
                            print $3
-                       }' | sort | uniq`"
-for x in `awk '{ print $2 }' /proc/mounts | sort -r | uniq`
+                       }' | sort -u`"
+for x in `awk '{ print $2 }' /proc/mounts | sort -ru`
 do
 	do_unmount="yes"
 

@@ -29,6 +29,9 @@
     Flesh out the default sysctl.conf with comments and more examples 
     since our previous one was pretty sparse #59993.
 
+    Change calls to `uniq` to `sort -u` in checkroot/halt.sh.  This way 
+    we only require sort in / and not both #36453.
+
   04 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
 
     More (I mean a LOT more) services.  This takes care of #44458, 

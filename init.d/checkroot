@@ -91,7 +91,7 @@ start() {
 		awk '$2 != "/" {print}' /proc/mounts >> /etc/mtab
 
 		# Now make sure /etc/mtab have additional info (gid, etc) in there
-		for x in $(awk '{ print $2 }' /proc/mounts | uniq)
+		for x in $(awk '{ print $2 }' /proc/mounts | sort -u)
 		do
 			for y in $(awk '{ print $2 }' /etc/fstab)
 			do
