@@ -11,30 +11,30 @@
 # service starting beside net.lo is NOT enouth to consider
 # the 'net' dependency up and running.
 
-RC_NET_FAIL_CRITICAL="no"
+RC_NET_STRICT_CHECKING="no"
 
 # Set to "yes" if stop-daemon() should always retry killing the
 # service if it fails the first time.
 
-RCRETRYKILL="yes"
+RC_RETRY_KILL="yes"
 
 
 # Set the amount of seconds stop-daemon() should wait between
-# retries.  $RCRETRYKILL should be set to "yes".
+# retries.  $RC_RETRY_KILL should be set to "yes".
 
-RCRETRYTIMEOUT=1
+RC_RETRY_TIMEOUT=1
 
 
 # Set the amount of times stop-daemon() should try to kill
-# a service before giving up.  $RCRETRYKILL should be set to "yes".
+# a service before giving up.  $RC_RETRY_KILL should be set to "yes".
 
-RCRETRYCOUNT=5
+RC_RETRY_COUNT=5
 
 
 # Set to "yes" if stop-daemon() should fail if the service
 # is marked as started, but not actually running on stop.
 
-RCFAILONZOMBIE="no"
+RC_FAIL_ON_ZOMBIE="no"
 
 
 

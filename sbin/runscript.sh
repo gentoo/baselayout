@@ -4,7 +4,7 @@
 # $Header$
 
 
-source /sbin/functions.sh
+source /sbin/rc-daemon.sh
 
 #state variables
 svcpause="no"
@@ -112,7 +112,7 @@ svc_stop() {
 			local netcount="$(ls -1 ${svcdir}/started/net.* \
 				2> /dev/null | egrep -c "\/net\..*[[:digit:]]+$")"
 
-			if [ "${netcount}" -lt 1 -o "${RC_NET_FAIL_CRITICAL}" = "yes" ]
+			if [ "${netcount}" -lt 1 -o "${RC_NET_STRICT_CHECKING}" = "yes" ]
 			then
 				mydeps="net"
 			fi
@@ -252,7 +252,7 @@ svc_start() {
 							local netcount="$(ls -1 ${svcdir}/started/net.* \
 								2> /dev/null | egrep -c "\/net\..*[[:digit:]]+$")"
 							
-							if [ "${netcount}" -lt 1 -o "${RC_NET_FAIL_CRITICAL}" = "yes" ]
+							if [ "${netcount}" -lt 1 -o "${RC_NET_STRICT_CHECKING}" = "yes" ]
 							then
 								startfail="yes"
 							fi
