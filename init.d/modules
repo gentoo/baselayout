@@ -117,6 +117,9 @@ start() {
 	# /lib/modules/boot for boot time modules we will load these modules
 	#
 	[[ -n $(modprobe -l -t boot) ]] && modprobe -a -t boot \*  &>/dev/null
+	
+	# Above test clobbers the return
+	return 0
 }
 
 
