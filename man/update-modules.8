@@ -1,0 +1,83 @@
+.TH UPDATE-MODULES 8 "Debian GNU/Linux tools" "DEBIAN"
+.SH NAME
+update\-modules \- (re)generate /etc/modules.conf and /etc/chandev.conf
+.SH SYNOPSIS
+.B update\-modules
+[force]
+.SH DESCRIPTION
+.B update\-modules
+is a simple tool to manage
+.IR /etc/modules.conf
+and
+.IR /etc/chandev.conf
+for the s390 architecture.
+The Linux module utilities use one configuration file for all their
+configuration. This makes it hard for packages to dynamically add
+information about their own modules. To fix this
+.B update\-modules
+has been introduced.
+.PP
+.B update-modules
+attempts to fix this by generating the configuration file from seperate
+files which are located in
+.IR /etc/modutils .
+All files in that directory are assembled together to form
+.IR /etc/modules.conf 
+and
+.IR /etc/chandev.conf .
+There is also a special subdirectory
+.RI ( /etc/modutils/arch )
+which contains information for special architectures. 
+.B update-modules
+determines the architecture and selects which file it must use.
+.PP
+After generation a backup of the old file is put in
+.IR /etc/modules.conf.old 
+or
+.IR /etc/chandev.conf.old .
+.SH "FILES"
+There are two types of file you can put in
+.IR /etc/modutils :
+normal files and exectuable files. Normal files contain standard modules
+configuration information, as described in
+.BR modules.conf (5).
+Files with the suffix .chandev contain the module options, as described in
+.BR chandev (8).
+The special file 0chandev.chandev contains the channel device layer specific
+options.
+Executable files are executed and their output is used as extra configuration
+information. Error messages sent to stderr are not redirected.
+.PP
+.B update\-modules
+will ignore files that match the following regular expression:
+.RS
+.B *\e(\e.dpkg\-[a\-z]*\e|~\e)$
+.RE
+(ie files with the extension
+.IR .dpkg\-new ,
+.IR .dpkg\-orig ,
+.IR .dpkg\-dist ,
+.IR .dpkg\-old ,
+or whose filename end with a 
+.IR ~ ).
+.SH OPTIONS
+.TP
+.I force
+.B update\-modules
+check if the current
+.I /etc/modules.conf and
+.I /etc/chandev.conf
+are generated files by checking for a special tag on the first line. If this
+tag is not found generation is aborted. By supplying
+.I force
+as parameter only a warning is printed.
+.SH "SEE ALSO"
+.BR depmod (1)
+.BR modules.conf (5)
+.BR modprobe (8)
+.BR chandev (8),
+.SH BUGS
+None of course! :)
+.SH AUTHOR
+This manual page was written by Wichert Akkerman <wakkerma@debian.org>
+for the Debian GNU/Linux system.
