@@ -684,6 +684,7 @@ net_service() {
 #    Return true if service 'net' is considered up, else false.
 #
 #    Notes for RC_NET_STRICT_CHECKING values:
+#      none  net is up without checking anything - usefull for vservers
 #      lo    Interface 'lo' is counted and if only it is up, net is up.
 #      no    Interface 'lo' is not counted, and net is down even with it up,
 #            so there have to be at least one other interface up.
@@ -692,6 +693,9 @@ is_net_up() {
 	local netcount=0
 
 	case "${RC_NET_STRICT_CHECKING}" in
+		none)
+			return 0
+			;;
 		lo)
 			netcount="$(ls -1 "${svcdir}"/started/net.* 2> /dev/null | \
 			            egrep -c "\/net\..*$")"

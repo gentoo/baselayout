@@ -1,6 +1,19 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  10 Feb 2005; Roy Marples <uberlord@gentoo.org>:
+
+    net.lo now supports fallback_route - fixes #75676
+    due to bash limitations, only one fallback route is supported
+
+    cleaned up dhcp helper
+    
+    iproute now appends routes instead of adding them - this allows multiple
+    default routes
+
+    RC_STRICT_NET_CHECKING now supports the none "option" which means
+    that the net service is always up
+    
   31 Jan 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Punt the PROTOCOL variable from rc.conf since nothing uses it.

@@ -324,15 +324,15 @@ ifconfig_add_address() {
 	return $?
 }
 
-# void ifconfig_default_route(char* gateway_ip)
+# void ifconfig_default_route(char* interface, char* gateway_ip)
 #
 # Force default route to the specified gateway
 ifconfig_default_route() {
 	# Delete any existing default routes
 	while true ; do
-		route del default metric 0 2>/dev/null || break
+		route del default metric 0 dev $1 2>/dev/null || break
 	done
 
 	# Then we add our route
-	route add default gw $1 metric 0
+	route add default gw $2 metric 0 dev $1
 }

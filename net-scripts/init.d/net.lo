@@ -488,7 +488,7 @@ modules_load()  {
 iface_start() {
 	local iface=$1 mod config_counter=-1 x warn=false config_worked=false
 	local RC_INDENTATION=${RC_INDENTATION}	# so it will reset after function
-	local -a config config_fallback conf
+	local -a config fallback fallback_route conf
 	local ifvar=${1//[![:word:]]/_}
 
 	# pre Start any modules with
@@ -500,7 +500,8 @@ iface_start() {
 
 	# New style config - one variable fits all
 	eval config=( \"\$\{config_${ifvar}\[@\]\}\" )
-	eval config_fallback=( \"\$\{fallback_${ifvar}\[@\]\}\" )
+	eval fallback=( \"\$\{fallback_${ifvar}\[@\]\}\" )
+	eval fallback_route=( \"\$\{fallback_route_${ifvar}\[@\]\}\" )
 
 	# We must support old configs
 	if [[ -z ${config} ]]; then
@@ -574,10 +575,17 @@ iface_start() {
 			eerror "No loaded modules provide \"${conf[0]}\" (${conf[0]}_start)"
 		fi
 
-		if [[ -n ${config_fallback[config_counter]} ]]; then
+		if [[ -n ${fallback[config_counter]} ]]; then
 			einfo "Trying fallback configuration"
-			config[config_counter]=${config_fallback[config_counter]}
-			config_fallback[config_counter]=''
+			config[config_counter]=${fallback[config_counter]}
+			fallback[config_counter]=''
+
+			# Do we have a fallback route?
+			if [[ -n ${fallback_route[config_counter]} ]]; then
+				eval "routes_${ifvar}=( "\"\$\{fallback_route\[${config_counter}\]\[@\]\}\"" )"
+				fallback_route[config_counter]=''
+			fi
+
 			(( config_counter-- )) # since the loop will increment it
 			continue
 		fi

@@ -96,10 +96,13 @@
 #	"default via 4321:0:1:2:3:4:567:89ab"
 #)
 
-# If a specified module fails (like dhcp - see below), you can specify a fallback like so
+# If a specified module fails (like dhcp - see below), you can specify a
+# fallback like so
 #fallback_eth0=( "192.168.0.2 netmask 255.255.255.0" )
-# NOTE: fallback entry must match the entry in config_eth0
+#fallback_route_eth0=( "default via 192.168.0.1" )
 
+# NOTE: fallback entry must match the entry location in config_eth0
+# As such you can only have one fallback route.
 
 ##############################################################################
 # OPTIONAL MODULES
