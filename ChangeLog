@@ -4,6 +4,8 @@
 
 * rc-scripts 1.2.2 (8 Dec 2001)
 
+  10 Dec 2001; Added a localhost entry in /etc/hosts.
+
   8  Dec 2001; Donny Davies (woodchip@gentoo.org): Added start-stop-daemon.c
   to rc-scripts/sbin source.  Moved rc-scripts/init.d/runscript.c to
   rc-scripts/sbin/runscript.c.  Added manpage for start-stop-daemon.
@@ -25,7 +27,7 @@
 
     Updated /etc/init.d/bootmisc with additional lock files to clean.
 
-    Updated /etc/init.d/hdparm to check if devfs is used.
+    Updated /etc/init.d/hdparm to check if devfs is uddsed.
 
   27 Nov 2001; Martin Schlemmer (azarah@gentoo.org): Updated
   /etc/init.d/depscan.sh for a virtual 'use' depend, called 'logger'

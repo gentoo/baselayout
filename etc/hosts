@@ -6,3 +6,5 @@
 #		"named" name server.  Just add the names, addresses
 #		and any aliases to this file...
 #
+
+127.0.0.1	localhost
