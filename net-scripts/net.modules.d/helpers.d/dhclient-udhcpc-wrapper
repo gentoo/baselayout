@@ -11,19 +11,19 @@
 iface_type=${1}
 
 case "${reason}" in
-	BOUND) action=bound ;;
+	BOUND|REBOOT) action=bound ;;
 	RENEW) action=renew ;;
 	RELEASE|PREINIT) action=deconfig ;;
 esac
 
 if [[ -z ${action} ]]; then
-	echo "dhclient sent an unknown action ${reason}!"
+	echo "dhclient sent an unknown action ${reason}!" >&2
 	exit 1
 fi
 
-export ip=${new_ip_address} ${alias_ip_address}
-export subnet=${new_subnet_mask} ${alias_subnet_mask}
-export broadcast=${new_broadcast_address} ${alias_broadcast_address}
+export ip=${new_ip_address}
+export subnet=${new_subnet_mask} 
+export broadcast=${new_broadcast_address}
 routers=( ${new_routers} )
 export router=${routers[0]}
 export new_routers=${router}

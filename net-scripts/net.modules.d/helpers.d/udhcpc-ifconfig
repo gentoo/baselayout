@@ -17,7 +17,7 @@ case "${action}" in
 		exit 0
 		;;
 	*)
-		echo "We don't handle that action"
+		echo "We don't handle that action" >&2
 		exit 1
 		;;
 esac

@@ -17,7 +17,7 @@ case "${action}" in
 		exit 0
 		;;
 	*)
-		echo "We don't handle that action"
+		echo "We don't handle that action" >&2
 		exit 1
 		;;
 esac
@@ -50,12 +50,13 @@ cidr=$( netmask2cidr ${subnet} )
 broadcast=${broadcast// }
 [[ -n ${broadcast} ]] && broadcast="broadcast ${broadcast}"
 
-# If we have other addresses then we flush it and then add our new one
-ip -family inet addr show scope global dev ${interface} | grep inet | grep -qv "${ip}/${cidr}"
+# If we don't have our address then we flush it and then add our new one
+ip -family inet addr show scope global dev ${interface} | grep inet | grep -q "${ip}/${cidr}"
 if [[ $? == 1 ]] ; then
 	ip addr flush dev ${interface} scope global &>/dev/null
 	ip addr flush dev ${interface} scope host &>/dev/null
 	ip addr add dev ${interface} ${ip}/${cidr} ${broadcast}
+	echo "flushed" > /tmp/action
 fi
 
 # Configure our default route
