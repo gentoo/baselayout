@@ -8,8 +8,9 @@
 	source /sbin/livecd-functions.sh && \
 	livecd_read_commandline
 
-# Reset pam_console permissions
-if [ -x /sbin/pam_console_apply ] && [ ! -c /dev/.devfsd ]
+# Reset pam_console permissions if we are actually using it
+if [[ -x /sbin/pam_console_apply && ! -c /dev/.devfsd && \
+      -n $(grep -v -e '^[[:space:]]*#' /etc/pam.d/* | grep 'pam_console') ]]
 then
 	/sbin/pam_console_apply -r
 fi
