@@ -296,7 +296,7 @@ zip		6/ddp				# Zone Information Protocol
 #
 # Services added for the Debian GNU/Linux distribution
 #
-linuxconf       98/tcp                          # LinuxConf
+linuxconf	98/tcp                          # LinuxConf
 poppassd	106/tcp				# Eudora
 poppassd	106/udp				# Eudora
 ssmtp		465/tcp				# SMTP over SSL
@@ -306,7 +306,7 @@ moira_ureg	779/udp				# Moira user registration.
 omirr		808/tcp		omirrd		# online mirror
 omirr		808/udp		omirrd		# online mirror
 swat		901/tcp				# Samba configuration tool
-skkserv         1178/tcp                        # skk jisho server port
+skkserv		1178/tcp                        # skk jisho server port
 rmtcfg		1236/tcp			# Gracilis Packeten remote config server
 xtel		1313/tcp			# french minitel
 support		1529/tcp			# GNATS
@@ -323,7 +323,7 @@ hostmon		5355/tcp			# hostmon uses TCP (nocol)
 hostmon		5355/udp			# hostmon uses TCP (nocol)
 postgres	5432/tcp			# POSTGRES
 postgres	5432/udp			# POSTGRES
-canna           5680/tcp			# cannaserver
+canna		5680/tcp			# cannaserver
 saned		6566/tcp			# SANE network scanner daemon
 ircd		6667/tcp			# Internet Relay Chat
 ircd		6667/udp			# Internet Relay Chat
@@ -349,6 +349,14 @@ tfido		60177/tcp			# Ifmail
 tfido		60177/udp			# Ifmail
 fido		60179/tcp			# Ifmail
 fido		60179/udp			# Ifmail
+#
+# Services added for cyrus-imapd
+#
+imsp		406/tcp				# Interactive Mail Support Protocol
+acap		674/tcp				# Application Configuration Access Protocol
+sieve		2000/tcp			# Sieve mail filter daemon
+lmtp		2003/tcp			# Local Mail Transfer Protocol
+fud		4201/udp			# finger support
 
 # Local services
 

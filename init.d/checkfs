@@ -12,11 +12,11 @@ start() {
 	# LVM support for /usr, /home, /opt ....
 	# This should be done *before* checking local
 	# volumes, or they never get checked.
-	if [ -x /sbin/vgchange -a -f /etc/lvmtab ]
+	if [ -x /sbin/vgchange -a -f /etc/lvmtab ] && ! [ -d /proc/lvm ]
 	then
 		ebegin "Setting up the Logical Volume Manager"
 		#still echo stderr for debugging
-		/sbin/vgscan && /sbin/vgchange -a y >/dev/null
+		/sbin/vgscan >/dev/null && /sbin/vgchange -a y >/dev/null
 		eend $? "Failed to setup the LVM"
 	fi
 
