@@ -1,5 +1,6 @@
 auth       requisite  pam_securetty.so
 auth       required   pam_pwdb.so
+auth       required   pam_shells.so
 auth       optional   pam_group.so
 account    requisite  pam_time.so
 account    required   pam_pwdb.so

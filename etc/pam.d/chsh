@@ -1,3 +1,4 @@
+auth       required   pam_shells.so
 auth       required   pam_pwdb.so
 account    required   pam_pwdb.so
 password   required   pam_cracklib.so retry=3
