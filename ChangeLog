@@ -23,6 +23,9 @@
     ones found in default bash IFS).  It also adds a few sanity/error
     checks, bug #26432.
 
+    Change /etc/inputrc to have PageUp/PageDown search through bash
+    history again, bug #26036.
+
   14 Sep 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Change update-modules to modules-update in manpage, bug #28101.
