@@ -20,6 +20,8 @@
 
     Move devfs stuff out of baselayout and into the devfsd package.
 
+    Don't run /sbin/pam_console_apply -r if using udev on /dev #50315.
+
   14 Oct 2004; Aron Griffis <agriffis@gentoo.org>:
 
     Fix rc-status to work with new COLS code.

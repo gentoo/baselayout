@@ -9,8 +9,12 @@
 	livecd_read_commandline
 
 # Reset pam_console permissions
-[ -x /sbin/pam_console_apply -a ! -c /dev/.devfsd ] && \
+if [ -x /sbin/pam_console_apply ] \
+   && [ ! -c /dev/.devfsd ] \
+   && [ ! -c /dev/.udev ]
+then
 	/sbin/pam_console_apply -r
+fi
 
 # We need to properly terminate devfsd to save the permissions
 if [ -n "`ps --no-heading -C 'devfsd'`" ]
