@@ -28,7 +28,12 @@ fi
 #   Set the Dependency variables to contain data for 'service'
 #
 get_dep_info() {
-	local myservice="${1/\./}"
+	local myservice=
+	
+	# net.* services cause declare -x to bork
+	myservice="${1//\./}"
+	# foo-bar services cause declare -x to bork
+	myservice="${1//-/_}"
 	
 	[ -z "$1" ] && return 1
 
@@ -355,8 +360,6 @@ schedule_service_startup() {
 				if [ -n "$(jobs)" ]
 				then
 					current_job="$(jobs | awk '/Running/ { print $4}')"
-				else
-					current_job=
 				fi
 				
 				# Wait if we cannot start this service with the already running
@@ -376,8 +379,6 @@ schedule_service_startup() {
 				if [ -n "$(jobs)" ]
 				then
 					current_job="$(jobs | awk '/Running/ { print $4}')"
-				else
-					current_job=
 				fi
 
 				# Wait if we cannot start this service with the already running

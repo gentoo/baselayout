@@ -417,7 +417,11 @@ END {
 	for (x = 1;x <= RC_NUMBER;x++) {
 
 		tmpname = DEPTREE[x,NAME]
+
+		# net.* services is causing declare -x to bork
 		gsub(/\./, "", tmpname)
+		# foo_bar services is causing declare -x to bork
+		gsub(/-/, "_", tmpname)
 
 		print "depinfo_" tmpname "() {" >> (CACHEDTREE)
 		print "    export rc_name=\"" DEPTREE[x,NAME] "\"" >> (CACHEDTREE)

@@ -2,48 +2,59 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+* rc-scripts 1.4.3.8 (20 May 2003)
+
+  20 May 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    A '-' in a bash variable is not valid as well.  Fix gendepend.awk and
+    rc-service.sh to handle this, thanks to YAMAKURA Makoto
+    <makoto@dsb.club.ne.jp>.
+
+    Move /etc/issue to /etc/issue.logo, and have /etc/issue only print info
+    about the host it is running on.
+
   18 May 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Do not let devfsd handle /dev/log's permission management, as it breaks
-	selinux.  Modified /etc/devfsd.conf, changes submited by Chris PeBenito
-	<pebenito@gentoo.org>.
+    selinux.  Modified /etc/devfsd.conf, changes submited by Chris PeBenito
+    <pebenito@gentoo.org>.
 
-	Fix type-o in /etc/init.d/net.ppp0, and add local ip-up/ip-down support.
+    Fix type-o in /etc/init.d/net.ppp0, and add local ip-up/ip-down support.
 
   14 May 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     We should not export the RC_GOT_* variables, as it breaks on some systems,
-	thanks to J?rg Gollnick <gentoo-bugs@wurzelbenutzer.de>, bug #20851.
+    thanks to J?rg Gollnick <gentoo-bugs@wurzelbenutzer.de>, bug #20851.
 
-	From C. Brewer <killian@gentoo.org>:
-	- Add hide-password to the connect cmd-line of /etc/init.d/net.ppp0, which is
-	  suppose to be default, but why take chances?
-	- Also, echoing chmod 640 in the resolv.conf two-step at the end to solve the
-	  kppp complaint.
+    From C. Brewer <killian@gentoo.org>:
+    - Add hide-password to the connect cmd-line of /etc/init.d/net.ppp0, which is
+      suppose to be default, but why take chances?
+    - Also, echoing chmod 640 in the resolv.conf two-step at the end to solve the
+      kppp complaint.
 
   13 May 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     For the network functions, the dependency code tried to create a funcion
-	with a '.' in the name, causing the network rc-scripts to not have any
-	dependencies.  This should fix bug #20849 's order issue, thanks to
-	YAMAKURA Makoto <makoto@dsb.club.ne.jp> for noticing.
+    with a '.' in the name, causing the network rc-scripts to not have any
+    dependencies.  This should fix bug #20849 's order issue, thanks to
+    YAMAKURA Makoto <makoto@dsb.club.ne.jp> for noticing.
 
-	Fix query_{before,after} to also check 'net' if 'service2' is a network
-	service.
+    Fix query_{before,after} to also check 'net' if 'service2' is a network
+    service.
 
   12 May 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     More cleanups:
-	- Move the broken stuff from symlinks to a DB entry in ${svcdir}/deptree.
-	  Updated /sbin/runscript.sh, /sbin/rc-services.sh and gendepend.awk for
-	  this.
-	- Add functions for more common tasks in /sbin/runscript.sh to
-	  /sbin/rc-services.sh.
-	- Move 'consoletype' to /sbin.
-	- Rename /sbin/rc-envupdate.sh to /sbin/env-update.sh; updated
-	  /etc/init.d/bootmisc for this.
-	- Move rc-services.sh, rc-daemon.sh and rc-help.sh to /lib/rcscripts/sh.
-	- Improve detection of circular depends ... modified gendepend.awk for this.
+    - Move the broken stuff from symlinks to a DB entry in ${svcdir}/deptree.
+      Updated /sbin/runscript.sh, /sbin/rc-services.sh and gendepend.awk for
+      this.
+    - Add functions for more common tasks in /sbin/runscript.sh to
+      /sbin/rc-services.sh.
+    - Move 'consoletype' to /sbin.
+    - Rename /sbin/rc-envupdate.sh to /sbin/env-update.sh; updated
+      /etc/init.d/bootmisc for this.
+    - Move rc-services.sh, rc-daemon.sh and rc-help.sh to /lib/rcscripts/sh.
+    - Improve detection of circular depends ... modified gendepend.awk for this.
 
 * rc-scripts 1.4.3.7 (11 May 2003)
 
