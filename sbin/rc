@@ -17,13 +17,21 @@ try() {
 	# if we only check $? for instance ...  We thus need to [ -n "${errstr}" ]
 	# as well.
 	
-	errstr="$((eval $*) 2>&1 >/dev/null)"
+	if [ -c /dev/null ]; then
+		errstr="$((eval $*) 2>&1 >/dev/null)"
+	else
+		errstr="$((eval $*) 2>&1)"
+	fi
 	retval=$?
 	if [ "${retval}" -ne 0 ] || \
 	   ([ "${*/mount/}" != "$*" -a -n "${errstr}" ])
 	then
 		# Progressbar begin
-		rc_splash "stop" &> /dev/null &
+		if [ -c /dev/null ]; then
+			rc_splash "stop" &>/dev/null &
+		else
+			rc_splash "stop" &
+		fi
 		# Progressbar end
 
 		echo -e "${ENDCOL}${NORMAL}[${BAD} oops ${NORMAL}]"
@@ -36,7 +44,11 @@ try() {
 		echo
 		/sbin/sulogin ${CONSOLE}
 		einfo "Unmounting filesystems"
-		/bin/mount -a -o remount,ro & >/dev/null
+		if [ -c /dev/null ]; then
+			/bin/mount -a -o remount,ro & >/dev/null
+		else
+			/bin/mount -a -o remount,ro
+		fi
 		einfo "Rebooting"
 		/sbin/reboot -f
 	fi
@@ -161,6 +173,11 @@ if [ "${RUNLEVEL}" = "S" -a "${argv1}" = "sysinit" ]
 then
 	# Setup initial $PATH just in case
 	PATH="/bin:/sbin:/usr/bin:/usr/sbin:${PATH}"
+
+	if [ ! -c /dev/null ] ; then
+		echo -e "${BAD}Your root filesystem is missing /dev/null${NORMAL}"
+		echo -e "${BAD}You should really get this sorted out.${NORMAL}"
+	fi
 
 	echo
 	echo -e "${GOOD}Gentoo Linux${GENTOO_VERS}; ${BRACKET}http://www.gentoo.org/${NORMAL}"

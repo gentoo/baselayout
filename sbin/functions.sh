@@ -440,7 +440,11 @@ eend() {
 	else
 		retval="$1"
 		
-		rc_splash "stop" &>/dev/null &
+		if [ -c /dev/null ] ; then
+			rc_splash "stop" &>/dev/null &
+		else
+			rc_splash "stop" &
+		fi
 		
 		if [ "$#" -ge 2 ]
 		then
