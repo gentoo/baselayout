@@ -92,7 +92,7 @@ do
 	
 	if [ "${do_unmount}" = "yes" ] && \
 	   [ "${x}" != "/" -a "${x}" != "/dev" -a "${x}" != "/proc" -a \
-	     "${x}" != "/sys" ]
+	     "${x}" != "/sys" -a "${x}" != "/mnt/livecd" ]
 	then
 		umount -f ${x} &>/dev/null || {
 		
@@ -134,7 +134,7 @@ mount_readonly() {
 	
 	for x in `awk '{ print $2 }' /proc/mounts`
 	do
-		mount -n -o remount,ro ${x}
+		mount -n -f -o remount,ro ${x} &>/dev/null
 		retval=$((${retval} + $?))
 	done
 
