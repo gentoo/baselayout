@@ -6,6 +6,8 @@
 
     Fix irda type-o in /sbin/MAKEDEV, thanks to Tobias Sager <moixa@gmx.ch>.
 
+    Fix type-o in /etc/initrc, bug #41666 (Tom Vergote <bugzilla@tomvergote.be>).
+
   15 Feb 2004; Martin Schlemmer <azarah@gentoo.org>:
 
     Add RC_TTY_NUMBER to /etc/conf.d/rc to configure how many tty devices

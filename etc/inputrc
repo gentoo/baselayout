@@ -30,7 +30,7 @@ $if mode=emacs
 # for rxvt
 "\e[8~": end-of-line
 
-# for non RH/Debian xterm, can't hurt for RH/DEbian xterm
+# for non RH/Debian xterm, can't hurt for RH/Debian xterm
 "\eOH": beginning-of-line
 "\eOF": end-of-line
 
