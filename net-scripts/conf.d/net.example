@@ -234,6 +234,22 @@
 #adsl_user_eth0="my-adsl-username"
 
 #-----------------------------------------------------------------------------
+# ISDN
+# For ISDN support, emerge net-dialup/isdn4k-utils
+# You should make the following settings and also put your
+# username/password information in /etc/ppp/pap-secrets
+
+# Configure the interface to use ISDN with one of the following lines,
+# depending on whether you're using ifconfig (default) or iproute2.
+#ifconfig_eth0=( "isdn" "dhcp" )
+# It's important to specify dhcp if you need it!
+#ipaddr_eth0=( "isdn" "192.168.0.1/24" )
+# Otherwise, you can use a static IP
+
+# You may need this option to set the default route
+#ipppd_eth0="defaultroute"
+
+#-----------------------------------------------------------------------------
 # MAC changer
 # For changing MAC addresses emerge net-analyzer/macchanger
 

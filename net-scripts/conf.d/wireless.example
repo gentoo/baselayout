@@ -84,8 +84,13 @@
 # the iwpriv $iface
 #iwpriv_eth0=""
 
-# We can define various timeouts here.
+# Seconds to wait before scanning
+# Some drivers need to wait until they have finished "loading"
+# before they can scan - otherwise they error and claim that they cannot scan
+# or resource is unavailable. The default is to wait zero seconds
 #sleep_scan_eth0="1"
+
+# Seconds to wait until associated. The default is to wait 10 seconds
 #sleep_associate_eth0="5"
 
 # By default a successful association in Managed mode sets the MAC

@@ -432,6 +432,7 @@ iface_start() {
 		[[ ${label_counter} -eq 0 ]] && label=${iface} || label=${iface}:${label_counter}
 
 		# Null inet address
+		# We do this so we can have an inet6 only setup
 		[[ ${config_IFACE[i]} == "null" ]] && continue
 
 		${warn} && ewarn "Configuration not set for ${iface} - assuming dhcp"
@@ -634,7 +635,12 @@ stop() {
 	einfo "Stopping ${IFACE}"
 	eindent
 
+	# We make a list of all functions added by our modules
+	# as we need to remove them if we're restarting
+	local before=$( typeset -F )
 	modules_load ${IFACE} true || { eend 1; return 1; }
+	local after=$( typeset -F )
+	added_functions=$( diff -U0 -p <( echo "${before}" ) <( echo "${after}" ) 2>/dev/null | awk 'BEGIN { ORS = " "; } /+declare -f/ { print $3; }' )
 
 	# Reverse the module list for stopping
 	mods=( "${MODULES[@]}" )
@@ -687,6 +693,13 @@ stop() {
 	fi
 
 	return 0
+}
+
+restart() {
+	local added_functions
+	svc_stop
+	unset ${added_functions}
+	svc_start
 }
 
 # vim:ts=4

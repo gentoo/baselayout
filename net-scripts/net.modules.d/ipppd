@@ -1,0 +1,78 @@
+# ISDN (net-dialup/isdn4k-utils) module for net-scripts
+# Version 1.0.0
+# Copyright (c) 2004 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License V2
+# Contributed by Roy Marples (uberlord@gentoo.org)
+
+# char* ipppd_provides(void)
+#
+# Returns a string to change module definition for starting up
+ipppd_provides() {
+	echo "isdn"
+}
+
+# void ipppd_depend(void)
+#
+# Sets up the dependancies for the module
+ipppd_depend() {
+	after macchanger
+	before interface
+}
+
+# bool ipppd_check_installed(void)
+#
+# Returns 1 if isnd4k-utils is installed, otherwise 0
+ipppd_check_installed() {
+	[[ -x /sbin/ipppd ]] && return 0
+	[[ ${1} == true ]] && eerror "For ISDN (ipppd) support, emerge net-dialup/isdn4k-utils"
+	return 1
+}
+
+# bool ipppd_check_depends(void)
+#
+# Checks to see if we have the needed functions
+ipppd_check_depends() {
+	# No depends
+	return 0
+}
+
+# bool ipppd_start(char *iface)
+#
+# Start isdn on an interface
+#
+# Returns 0 (true) when successful, non-zero otherwise
+ipppd_start() {
+	local iface=${1} opts
+
+	# Might or might not be set in conf.d/net
+	eval opts=\"\$\{ipppd_${iface}\}\"
+
+	einfo "Starting ipppd for ${iface}"
+	/sbin/ipppd ${opts} pidfile /var/run/ipppd-${iface}.pid file /etc/ppp/options.${iface} >${devnull}
+	eend $? || return $?
+
+	# We need to configure the interface still
+	(( label_counter-- ))
+	return 0
+}
+
+# bool ipppd_stop(char *iface)
+#
+# Stop isdn on an interface
+# Returns 0 (true) when successful, non-zero otherwise
+ipppd_stop() {
+	local iface=${1} pidfile="/var/run/ipppd-${1}.pid"
+
+	ipppd_check_installed || return 1
+	[[ ! -f ${pidfile} ]] && return 1
+
+	einfo "Stopping ipppd for ${iface}"
+	test -s "${pidfile}" && kill $( cat ${pidfile} )
+	sleep 1
+	test -s "${pidfile}" && sleep 2 && test -s "${pidfile}" && einfo "Killing ipppd" && kill -KILL $( cat ${pidfile} )
+
+	test -s "${pidfile}" && false
+	eend $? || return $?
+
+	return 0
+}

@@ -2,6 +2,23 @@
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  04 Nov 2004; Roy Marples <uberlord@gentoo.org>:
+
+    net-scripts/init.d/net.lo
+    - we remove all added functions when restarting an interface
+      this relies on the diff command being available
+
+    added isdn support via the new ipppd module
+
+    net-scripts/conf.d/net.example
+    - added sample isdn setup
+
+    net-scripts/conf.d/wireless.example
+    - added better descriptions to the _sleep variables
+
+    Fixed boolean logic error when testing is_net_up in /sbin/runscript.sh
+    - fixed bug #70022
+
   03 Nov 2004; Mike Frysinger <vapier@gentoo.org>:
 
     When launching critical services in /sbin/rc, make sure we source 

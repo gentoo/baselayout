@@ -276,7 +276,7 @@ svc_start() {
 							# Only worry about a net.* service if we do not have one
 							# up and running already, or if RC_NET_STRICT_CHECKING
 							# is set ....
-							if is_net_up
+							if ! is_net_up
 							then
 								startfail="yes"
 							fi
