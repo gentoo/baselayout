@@ -1,11 +1,16 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+  15 Dec 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    start_critical_service in /sbin/rc should rely on $1 instead of 
+    the external variable $x for the service name.  #74425
+
   15 Dec 2004; Roy Marples <uberlord@gentoo.org>:
 
-     rc-status now reports stopping status
-     Updated documentation to point non-usb linux-wlan-ng users to use
-     hostap-driver instead
+    rc-status now reports stopping status
+    Updated documentation to point non-usb linux-wlan-ng users to use
+    hostap-driver instead
 
   13 Dec 2004; Martin Schlemmer <azarah@gentoo.org>:
 
