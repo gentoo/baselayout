@@ -498,7 +498,7 @@ END {
 	close(CACHEDTREE)
 
 	assert(dosystem("rm -f "ORIGCACHEDTREE), "system(rm -f "ORIGCACHEDTREE")")
-	assert(system("mv "CACHEDTREE" "ORIGCACHEDTREE), "system(mv "CACHEDTREE" "ORIGCACHEDTREE")")
+	assert(dosystem("mv "CACHEDTREE" "ORIGCACHEDTREE), "system(mv "CACHEDTREE" "ORIGCACHEDTREE")")
 }
 
 

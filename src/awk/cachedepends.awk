@@ -106,7 +106,7 @@ BEGIN {
 
 	if (RCCOUNT == 0) {
 		eerror("No scripts to process!")
-		system("rm -f "TMPCACHE)
+		dosystem("rm -f "TMPCACHE)
 		exit 1
 	}
 
@@ -206,8 +206,8 @@ BEGIN {
 	}
 
 	
-	assert(system("rm -f "SVCDIR"/depcache"), "system(rm -f "SVCDIR"/depcache)")
-	assert(system("mv "TMPCACHE" "SVCDIR"/depcache"), "system(mv "TMPCACHE" "SVCDIR"/depcache)")
+	assert(dosystem("rm -f "SVCDIR"/depcache"), "system(rm -f "SVCDIR"/depcache)")
+	assert(dosystem("mv "TMPCACHE" "SVCDIR"/depcache"), "system(mv "TMPCACHE" "SVCDIR"/depcache)")
 }
 
 
