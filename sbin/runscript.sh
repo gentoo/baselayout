@@ -16,7 +16,7 @@ svcpause="no"
 svcrestart="no"
 
 myscript="$1"
-if [ -L "$1" -a "${1%/*}" != "/etc/init.d" ]
+if [ -L "$1" -a ! -L "/etc/init.d/${1##*/}" ]
 then
 	myservice="$(readlink "$1")"
 else
@@ -46,15 +46,15 @@ fi
 #     configuration, if the system administrator chose to put it
 #     there (if it exists).
 
-[ -e /etc/conf.d/basic ]                  && source /etc/conf.d/basic
+[ -e "/etc/conf.d/basic" ]                && source /etc/conf.d/basic
 
 [ -e "/etc/conf.d/${myservice}" ]         && source "/etc/conf.d/${myservice}"
 
-[ -e /etc/conf.d/net ]                    && \
+[ -e "/etc/conf.d/net" ]                  && \
 [ "${myservice%%.*}" = "net" ]            && \
 [ "${myservice##*.}" != "${myservice}" ]  && source /etc/conf.d/net
 
-[ -e /etc/rc.conf ]                       && source /etc/rc.conf
+[ -e "/etc/rc.conf" ]                     && source /etc/rc.conf
 
 
 usage() {
@@ -112,7 +112,7 @@ svc_stop() {
 	# Remove symlink to prevent recursion
 	mark_service_stopped "${myservice}"
 
-	if in_runlevel "${myservice}" "boot" && \
+	if in_runlevel "${myservice}" "${BOOTLEVEL}" && \
 	   [ "${SOFTLEVEL}" != "reboot" -a "${SOFTLEVEL}" != "shutdown" -a \
 	     "${SOFTLEVEL}" != "single" ]
 	then
@@ -124,7 +124,7 @@ svc_stop() {
 		if [ "${NETSERVICE}" = "yes" ]
 		then
 			# A net.* service
-			if in_runlevel "${myservice}" "boot" || \
+			if in_runlevel "${myservice}" "${BOOTLEVEL}" || \
 			   in_runlevel "${myservice}" "${mylevel}"
 			then
 				local netcount="$(ls -1 "${svcdir}"/started/net.* 2> /dev/null | \
@@ -257,7 +257,7 @@ svc_start() {
 		do
 			if [ "${x}" = "net" -a "${NETSERVICE}" != "yes" ]
 			then
-				local netservices="$(dolisting "/etc/runlevels/boot/net.*") \
+				local netservices="$(dolisting "/etc/runlevels/${BOOTLEVEL}/net.*") \
 					$(dolisting "/etc/runlevels/${mylevel}/net.*")"
 					
 				for y in ${netservices}
@@ -328,7 +328,7 @@ svc_start() {
 		# Remove link if service didn't start; but only if we're not booting
 		# if we're booting, we need to continue and do our best to get the
 		# system up.
-		if [ "${retval}" -ne 0 -a "${SOFTLEVEL}" != "boot" ]
+		if [ "${retval}" -ne 0 -a "${SOFTLEVEL}" != "${BOOTLEVEL}" ]
 		then
 			mark_service_stopped "${myservice}"
 		fi

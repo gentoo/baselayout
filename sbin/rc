@@ -84,7 +84,7 @@ then
 		ebegin "Mounting sysfs at /sys"
 		mount -t sysfs none /sys
 		eend $?
-	
+
 	elif [ "$(get_KV)" -ge "$(KV_to_int '2.5.0')" ]
 	then
 		ewarn "No /sys to mount sysfs needed in 2.5+ kernels!"
@@ -166,6 +166,13 @@ then
 		eend $?
 	fi
 
+	if [ -x /sbin/irqbalance -a "$(get_KV)" -ge "$(KV_to_int '2.5.0')" ]
+	then
+		ebegin "Starting irqbalance"
+		/sbin/irqbalance
+		eend $?
+	fi
+
 	# Mount either a ramdisk or tmpfs if requested.
 	# we do this to temp mount, until we can get /var mounted ...
 	tsvcdir="/mnt/.init.d"
@@ -195,50 +202,30 @@ then
 		eend 0
 	fi
 
-	if get_bootparam "adelie"
-	then
-		einfo "Server/Node low-level initialisation..."
-		
-		# Saving the kernel attributed hostname to a file for future
-		# initialisation selection: see /etc/init.d/switch.
-		echo "$(< /proc/sys/kernel/hostname)" > "${svcdir}/hostname"
-
-		if checkserver
-		then
-			# For server we do pretty much a standard boot ...
-			einfo "Server detected."
-		else
-			#
-			# Low-level Node Initialisation
-			#
-			einfo "Node detected."
-
-			init_node
-		fi
-	fi
-
-	# If a Adelie server, or normal Gentoo box, init swap ...
-	if checkserver
-	then
-		# Swap needs to be activated *after* devfs has been mounted and *after*
-		# devfsd has been started, so that the fstab can be properly parsed
-		# and only if the server/Gentoo box is initialized ...
-		ebegin "Activating (possible) swap"
-		/sbin/swapon -a &> /dev/null
-		eend 0
-	fi
+	# Swap needs to be activated *after* devfs has been mounted and *after*
+	# devfsd has been started, so that the fstab can be properly parsed
+	# and only if the server/Gentoo box is initialized ...
+	ebegin "Activating (possible) swap"
+	/sbin/swapon -a &> /dev/null
+	eend 0
 
 	# Set the console loglevel to 1 for a cleaner boot
 	# the logger should anyhow dump the ring-0 buffer at start to the
 	# logs, and that with dmesg can be used to check for problems
 	/bin/dmesg -n 1
 
+	# We set the forced softlevel from the kernel command line
+	# It needs to be run right after proc is mounted for the
+	# boot runlevel
+	get_bootconfig
+
 	# $BOOT can be used by rc-scripts to test if it is the first time
 	# the 'boot' runlevel is executed.  Now also needed by some stuff in
 	# the 'sysinit' runlevel ...
 	export BOOT="yes"
-	# I want to get rid of $BOOT, as SOFTLEVEL *should* be used instead ..
-	export SOFTLEVEL="boot"
+	
+	# Set SOFTLEVEL in case something needs it ...
+	export SOFTLEVEL="${BOOTLEVEL}"
 
 	start_critical_service() {
 		local retval=
@@ -253,9 +240,20 @@ then
 		return "${retval}"
 	}
 	
+
+	# We first try to find a locally defined list of critical services 
+	# for a particular runlevel.  If we cannot find it, we use the 
+	# defaults.
+	if [ -f /etc/runlevels/${BOOTLEVEL}/critical ]
+	then
+		CRITICAL_SERVICES="$(< /etc/runlevels/${BOOTLEVEL}/critical)"
+	else
+		CRITICAL_SERVICES="checkroot hostname modules checkfs localmount"
+	fi
+
 	# We do not want to break compadibility, so we do not fully integrate
 	# these into /sbin/rc, but rather start them by hand ...
-	for x in checkroot hostname modules checkfs localmount
+	for x in ${CRITICAL_SERVICES}
 	do
 		if ! start_critical_service "${x}"
 		then
@@ -288,25 +286,40 @@ then
 
 	# Now that the dependency cache are up to date, make sure these
 	# are marked as started ...
-	for x in checkroot hostname modules checkfs localmount
+	for x in ${CRITICAL_SERVICES}
 	do
 		ln -snf "/etc/init.d/${x}" "${svcdir}/started/${x}"
 	done
-	
 fi # Sysinit ends here
 
-if [ "${RUNLEVEL}" = "S" -a "${argv1}" = "boot" ]
+if [ "${RUNLEVEL}" = "S" -a "${argv1}" = "sysinit" ]
 then
+	exit 0
+
+elif [ "${RUNLEVEL}" = "S" -a "${argv1}" = "boot" ]
+then
+	get_bootconfig
+
+	if [ -n "${SOFTLEVEL}" ]
+	then
+		echo "${SOFTLEVEL}" > "${svcdir}/ksoftlevel"
+	fi
+	
 	# $BOOT can be used by rc-scripts to test if it is the first time
 	# the 'boot' runlevel is executed
 	export BOOT="yes"
-	# I want to get rid of $BOOT, as SOFTLEVEL *should* be used instead ..
-	export SOFTLEVEL="boot"
-fi
+	
+	# Set SOFTLEVEL so long as something may need it ...
+	export SOFTLEVEL="${BOOTLEVEL}"
 
-if [ "${argv1}" = "sysinit" ]
+	# We reset argv1 to the bootlevel given on the kernel command line
+	# if there is one 
+	argv1="${BOOTLEVEL}"
+	
+elif [ "${RUNLEVEL}" != "S" -a -e "${svcdir}/ksoftlevel" ]
 then
-	exit 0
+	argv1="$(< ${svcdir}/ksoftlevel)"
+	rm -f "${svcdir}/ksoftlevel"
 fi
 
 
@@ -327,7 +340,7 @@ then
 	then
 		export SOFTLEVEL="$(< ${svcdir}/softlevel)"
 	else
-		export SOFTLEVEL="boot"
+		export SOFTLEVEL="${BOOTLEVEL}"
 	fi
 else
 	export SOFTLEVEL="${argv1}"
@@ -360,17 +373,17 @@ then
 	exit 1
 else
 	myscripts=
-	if [ "${SOFTLEVEL}" != "boot" ]
+	if [ "${SOFTLEVEL}" != "${BOOTLEVEL}" ]
 	then
 		# Normal runlevels *include* boot scripts
 		mylevels="$(dolisting "/etc/runlevels/${SOFTLEVEL}/")"
-		mylevels="${mylevels} $(dolisting /etc/runlevels/boot/)"
+		mylevels="${mylevels} $(dolisting /etc/runlevels/${BOOTLEVEL}/)"
 	else
 		# Non-normal runlevels don't include boot scripts as default
 		mylevels="$(dolisting "/etc/runlevels/${SOFTLEVEL}/")"
 	fi
 	
-	[ "${OLDSOFTLEVEL}" = "boot" -o "${OLDSOFTLEVEL}" = "single" ] \
+	[ "${OLDSOFTLEVEL}" = "${BOOTLEVEL}" -o "${OLDSOFTLEVEL}" = "single" ] \
 		&& /bin/dmesg -n 1
 	
 	for x in ${mylevels}

@@ -2,6 +2,29 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  23 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    From Jean-Francois Richard <jean-francois@richard.name> and
+    Olivier Crete <tester@gentoo.org> from the Adelie project:
+
+      The last four patches are the "adaptation" of our previous patches to
+      the new "no-tmpfs" init system in Gentoo.  Since we were using quite
+      different scripts for the boot runlevel (no "checkroot" for example) and
+      that the new system hardcodes some of the boot services, we had to find
+      a simple yet elegant solution.
+
+      We chose to make init scripts read "/etc/runlevels/LEVEL/critical" to
+      know what are the boot runlevel services.  If this file is not present,
+      it uses the Gentoo hardcoded defaults.
+
+    This touches /sbin/rc, /sbin/functions.sh, /sbin/runscript.sh and
+    /etc/init.d/halt.sh.
+
+	I just changed the behaviour of 'softlevel' kernel command line argument
+	to not only add a suffix and some other cleanups.
+
+	Add support for irqbalance.
+
   22 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix the /dev/root entry in /etc/mtab, bug #24916.

@@ -6,26 +6,23 @@
 # occure, bug #13599.
 umount -at tmpfs &> /dev/null
 
-if checkserver
+if [ -n "`swapon -s 2> /dev/null`" ]
 then
-	if [ -n "`swapon -s 2> /dev/null`" ]
-	then
-		# We try to deactivate swap first because it seems
-		# to need devfsd running to work (this is not done
-		# on nodes).  TheTERM and KILL stuff will zap
-		# devfsd, so...
-		ebegin "Deactivating swap"
-		swapoff -a &> /dev/null
-		eend $?
-	fi
+	# We try to deactivate swap first because it seems
+	# to need devfsd running to work (this is not done
+	# on nodes).  The TERM and KILL stuff will zap
+	# devfsd, so...
+	ebegin "Deactivating swap"
+	swapoff -a &> /dev/null
+	eend $?
+fi
 
-	# We need to properly terminate devfsd to save the permissions
-	if [ -n "`ps --no-heading -C 'devfsd'`" ]
-	then
-		ebegin "Stopping devfsd"
-		killall -15 devfsd &> /dev/null
-		eend $?
-	fi
+# We need to properly terminate devfsd to save the permissions
+if [ -n "`ps --no-heading -C 'devfsd'`" ]
+then
+	ebegin "Stopping devfsd"
+	killall -15 devfsd &> /dev/null
+	eend $?
 fi
 
 ebegin "Sending all processes the TERM signal"
@@ -150,7 +147,7 @@ then
 		eend 1
 		sync; sync
 		[ -f /etc/killpower ] && ups_kill_power
-		checkserver && /sbin/sulogin -t 10 /dev/console
+		/sbin/sulogin -t 10 /dev/console
 	else
 		eend 0
 	fi

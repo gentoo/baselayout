@@ -59,7 +59,7 @@ start() {
 		fi
 	fi
 
-	if [ "${SOFTLEVEL}" = "boot" ]
+	if [ "${BOOT}" = "yes" ]
 	then
 		#
 		# Create /etc/mtab

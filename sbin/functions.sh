@@ -26,7 +26,6 @@ svclib="/lib/rcscripts"
 svcmount="no"
 svcfstype="tmpfs"
 svcsize=1024
-shmdir="/mnt/.shm"
 
 # Different types of dependencies
 deptypes="need use"
@@ -42,6 +41,7 @@ RC_QUIET_STDOUT="no"
 
 # Should we use color?
 RC_NOCOLOR="no"
+
 
 #
 # Default values for rc system
@@ -121,6 +121,50 @@ else
 
 	HILITE=$'\e[36;01m'
 	BRACKET=$'\e[34;01m'
+fi
+
+
+# void get_bootconfig()
+#
+#    Get the BOOTLEVEL and SOFTLEVEL by setting
+#    'bootlevel' and 'softlevel' via kernel
+#    parameters.
+#
+get_bootconfig() {
+	local copt=
+	BOOTLEVEL=
+	SOFTLEVEL=
+	
+	for copt in $(cat /proc/cmdline)
+	do
+		case "${copt%=*}" in
+			bootlevel)
+				BOOTLEVEL="${copt##*=}"
+				;;
+			softlevel)
+				SOFTLEVEL="${copt##*=}"
+				;;
+		esac
+	done
+
+	if [ -z "${BOOTLEVEL}" -o ! -d "/etc/runlevels/${BOOTLEVEL}" ]
+	then
+		if [ -n "${BOOTLEVEL}" ] && [ -L "/etc/runlevels/${BOOTLEVEL}" ]
+		then
+			continue
+		else
+			BOOTLEVEL="boot"
+		fi
+	fi
+
+	export BOOTLEVEL SOFTLEVEL
+
+	return 0
+}
+
+if [ -z "${EBUILD}" -a -e "/proc/cmdline" ]
+then 
+	get_bootconfig
 fi
 
 # void esyslog(char* priority, char* tag, char* message)
@@ -312,87 +356,6 @@ wrap_rcscript() {
 	rm -f "${svcdir}/${myservice}-$$"
 	
 	return "${retval}"
-}
-
-# int checkserver(void)
-#
-#    Return 0 (no error) if this script is executed 
-#    onto the server, one otherwise.
-#    See the boot section of /sbin/rc for more details.
-# 
-checkserver() {
-	# Only do check if 'gentoo=adelie' is given as kernel param
-	if get_bootparam "adelie"
-	then
-		[ "$(< "${svcdir}/hostname")" = "(none)" ] || return 1
-	fi
-	
-	return 0
-}
-
-# void init_node(void)
-#
-#   Initialize an Adelie node.
-#
-init_node() {
-	local DIR=
-	local SUBDIR=
-	local EMPTYDIR=
-	
-	ebegin "Importing local userspace on node"
-
-	try mount -t tmpfs none "${shmdir}"
-
-	for DIR in /etc /var /root
-	do
-
-		if grep -q -v "^${DIR}[[:space:]]" /etc/exports
-		then
-			mount -o nolock -n server:"${DIR}" "${DIR}"
-		fi
-
-		if [ -e "/etc/conf.d/exclude/${DIR}" ]
-		then
-			find "${DIR}/" -type d | grep -v -f "/etc/conf.d/exclude/${DIR}" \
-				> "${shmdir}/${DIR}.lst"
-		else
-			find "${DIR}/" -type d > "${shmdir}/${DIR}.lst"
-		fi
-
-		for SUBDIR in $(< "${shmdir}/${DIR}.lst")
-		do
-			mkdir -p "${shmdir}/${SUBDIR}"
-			chmod --reference="${SUBDIR}" "${shmdir}/${SUBDIR}"
-			cp -dp "${SUBDIR}"/* "${shmdir}/${SUBDIR}" &> /dev/null
-		done
-
-		if [ -e "/etc/conf.d/exclude/${DIR}" ]
-		then
-			for EMPTYDIR in $(< "/etc/conf.d/exclude/${DIR}")
-			do
-				mkdir -p "${shmdir}/${EMPTYDIR}"
-				chmod --reference="${SUBDIR}" "${shmdir}/${SUBDIR}"
-			done
-		fi
-
-		umount -n "${DIR}" > /dev/null
-		mount -n -o bind "${shmdir}/${DIR}" "${DIR}"
-	done
-
-	mkdir -p "${shmdir}/tmp"
-	chmod 0777 "${shmdir}/tmp"
-	mount -n -o bind "${shmdir}/tmp" /tmp
-
-	cat /proc/mounts > /etc/mtab
-
-	cp -f /etc/inittab.node /etc/inittab
-	[ -e /etc/fstab.node ] && cp -f /etc/fstab.node /etc/fstab
-	
-	killall -1 init
-
-	eend 0
-
-	return 0
 }
 
 # char *KV_major(string)
