@@ -25,7 +25,6 @@ else
 	export PATH="/bin:/usr/bin:${PATH}"
 fi
 unset ROOTPATH
-export EDITOR="/usr/bin/nano"
 
 if [ -z "$INPUTRC" -a ! -f "$HOME/.inputrc" ]; then
 	export INPUTRC="/etc/inputrc"

@@ -2,6 +2,10 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  19 May 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Move $EDITOR from /etc/profile to /etc/env.d/00basic.
+
   13 May 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Change the homes of user "at" and "cron" in /etc/passwd, as
