@@ -75,7 +75,7 @@ remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $1}' /proc/mou
 		[ -z "${remaining}" ] && break
 		/bin/fuser -k -m ${sig} ${remaining} &> /dev/null
 		sleep 5
-		retry=$((${retry} -1))
+		retry=$((${retry} - 1))
 		sig=-9
 	done
 }
@@ -84,13 +84,25 @@ remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $1}' /proc/mou
 # This is needed to make sure we dont have a mounted filesystem
 # on a LVM volume when shutting LVM down ...
 ebegin "Unmounting filesystems"
-for x in `mount | awk '{ if (($5 !~ /^(proc|sysfs|devfs|tmpfs)$/) &&
-                             ($1 !~ /^(rootfs|\/dev\/root|none)$/) &&
-                             ($3 != "/"))
+no_unmount="`mount | awk '{ if (($5 ~ /^(proc|sysfs|devfs|tmpfs)$/) ||
+                             ($1 ~ /^(rootfs|\/dev\/root|none)$/) ||
+                             ($3 = "/"))
                            print $3
-                       }' | sort -r`
+                       }' | uniq`"
+for x in `awk '{ print $2 }' < /proc/mounts | sort -r`
 do
-	umount -f -r ${x} &> /dev/null
+	do_unmount="yes"
+	
+	for y in ${no_unmount}
+	do
+		[ "${x}" = "${y}" ] && do_unmount="no"
+	done
+	
+	if [ "${do_unmount}" = "yes" ] && \
+	   [ "${x}" != "/" -a "${x}" != "/dev" -a "${x}" != "/proc" ]
+	then
+		umount -f -r ${x} &> /dev/null
+	fi
 done
 eend 0
 
@@ -125,7 +137,7 @@ umount -a -r -n -t nodevfs,noproc,nosysfs,notmpfs &>/dev/null
 if [ "$?" -ne 0 ]
 then
 	killall5 -9  &> /dev/null
-	umount -a -r -n -l -d -f -t nodevfs,noproc &> /dev/null
+	umount -a -r -n -l -d -f -t nodevfs,noproc,nosysfs &> /dev/null
 	if [ "$?" -ne 0 ]
 	then
 		eend 1

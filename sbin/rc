@@ -126,6 +126,31 @@ then
 		fi
 	fi
 
+	# From linux-2.5.68 we need to mount /dev/pts again ...
+	if [ "$(get_KV)" -ge "$(KV_to_int '2.5.68')" ]
+	then
+		have_devpts="`awk '($2 == "devpts") { print "yes"; exit 0 }' /proc/filesystems`"
+		mymounts="`awk '($3 == "devfs") { print "yes"; exit 0 }' /proc/mounts`"
+
+		if [ "${have_devpts}" = "yes" ]
+		then
+			# Only try to create /dev/pts if we have /dev mounted as devfs,
+			# else it might fail as / might be still mounted readonly.
+			if [ -e "/dev/.devfsd" -a "${mymounts}" = "yes" -a ! -d /dev/pts ]
+			then
+				# Make sure we have /dev/pts
+				mkdir -p /dev/pts
+			fi
+
+			if [ -d /dev/pts ]
+			then
+				ebegin "Mounting /dev/pts"; \
+				try mount -n -t devpts none /dev/pts; \
+				eend $?
+			fi
+		fi
+	fi
+
 	# Need devfsd running now so that /dev/ram0 exists if we need it
 	mymounts="`awk '($3 == "devfs") { print "yes"; exit 0 }' /proc/mounts`"
 	if [ "${devfs}" = "yes" -a -e "/dev/.devfsd" -a \

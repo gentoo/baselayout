@@ -35,7 +35,7 @@ start() {
 				then
 					/usr/bin/consolechars -f ${CONSOLEFONT} ${param} \
 						--tty=/dev/vc/${x} &>/dev/null
-					retval=$
+					retval=$?
 				else
 					/usr/bin/consolechars -f ${CONSOLEFONT} ${param} \
 						--tty=/dev/tty${x} &>/dev/null

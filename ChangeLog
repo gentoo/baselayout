@@ -2,6 +2,18 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  12 Apr 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix type-o in /etc/init.d/consolefont (line 38 should be 'retval=$?').
+    Thanks to  Matt Taylor <liverbugg@juno.com> (comment #6, bug #18344).
+
+    From linux-2.5.68, we need to mount devpts on /dev/pts again ...
+    updated /sbin/rc for this.
+
+  11 Apr 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix errors on sourcing /etc/profile if EDITOR is not set, bug #18995.
+
   10 Apr 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Make checking in unmount more strict, fixing bug #19007.
