@@ -293,6 +293,9 @@ fi
 if [ "${SOFTLEVEL}" = "reboot" -o "${SOFTLEVEL}" = "shutdown" ]
 then
 	myscripts=""
+
+	export HALT="${SOFTLEVEL}"
+	
 elif [ ! -d "/etc/runlevels/${SOFTLEVEL}" ]
 then
 	eerror "ERROR:  runlevel ${SOFTLEVEL} does not exist; exiting..."

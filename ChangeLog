@@ -2,7 +2,9 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
-  06 April 2003; Martin Schlemmer <azarah@gentoo.org>:
+* rc-scripts 1.4.3.5 (06 Apr 2003)
+
+  06 Apr 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Hopefully get the serial support sane again.  Added /bin/consoletype
 	from Redhat to check for serial console.  This should resolve bug
@@ -23,11 +25,14 @@
 	Optimize $EDITOR extraction in /etc/profile closing bug #18614, thanks to
 	Aron Griffis <agriffis@gentoo.org>.
 
-  30 March 2003; Martin Schlemmer <azarah@gentoo.org>:
+	Set HALT to 'shutdown' or 'reboot' depending on if we are shutting down
+	or rebooting.
+
+  30 Mar 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix bug #18329 ... $COLS was not setup properly for serial console.
 
-  24 March 2003; Martin Schlemmer <azarah@gentoo.org>:
+  24 Mar 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Optimize USB fs stuff in /etc/init.d/localmount to use less cats etc.
     Fix a problem where it might not have mounted the USB fs when usbcore
@@ -38,13 +43,13 @@
 
     Optimize RAID stuff in /etc/init.d/checkfs a bit.
 
-  16 March 2003; Martin Schlemmer <azarah@gentoo.org>:
+  16 Mar 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Update sbin/rc-envupdate.sh.bash for bug #17549.
 
-* rc-scripts 1.4.3.4 (16 March 2003)
+* rc-scripts 1.4.3.4 (16 Mar 2003)
 
-  16 March 2003; Martin Schlemmer <azarah@gentoo.org>:
+  16 Mar 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Add /etc/issue done by a Polish ascii-artists, v|rus with some slight
     modifications (purple and display hostname, etc).  Closes bug #16806.
@@ -55,12 +60,12 @@
     Add update from Wout Mertens <wmertens@gentoo.org> to speedup shutdown
     of dhcp interfaces, closing bug #17378.  This modified /etc/init.d/net.eth0.
 
-  11 March 2003; Martin Schlemmer <azarah@gentoo.org>:
+  11 Mar 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix usage of /usr/bin/cut in /sbin/functions.sh, thanks Brandon Low
     <lostlogic@gentoo.org>!
 
-  10 March 2003; Martin Schlemmer <azarah@gentoo.org>:
+  10 Mar 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Add sysfs support for 2.5 kernels (mounted to /sys).  Updated /sbin/rc
     and /etc/init.d/halt.sh for this.
@@ -88,9 +93,9 @@
     it fails for module-init-tools if the module is already loaded.  This
     closes bug #17163, thanks to nth <y.lesaint@free.fr>.
 
-* rc-scripts 1.4.3.3 (09 March 2003)
+* rc-scripts 1.4.3.3 (09 Mar 2003)
 
-  09 March 2003; Martin Schlemmer <azarah@gentoo.org>:
+  09 Mar 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix /etc/init.d/netmount not to unmount / on nfs/whatever, bug #16274.
 
@@ -105,7 +110,7 @@
     if we are using a 2.4 kernel, and /etc/modules.autoload/kernel-2.5 if we
     are using a 2.5 kernel ... bug #17109.
 
-  02 March 2003; Martin Schlemmer <azarah@gentoo.org>:
+  02 Mar 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Update /etc/init.d/hostname to only set the hostname to whatever is before
     the first '.', and then set the domainname to the rest, closing bug #14946.
@@ -779,37 +784,37 @@
     Add /etc/DIR_COLORS as it is no longer shipped with fileutils,
     and is needed for some fixes.
 
-  28 April 2002; Martin Schlemmer <azarah@gentoo.org>:
+  28 Apr 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Update /etc/rc.conf to be more clear and state that you should
     remove consolefont from startup if you do not use it.  Should
     resolve bug #2174.
 
-  26 April 2002; Donny Davies <woodchip@gentoo.org> passwd, group :
+  26 Apr 2002; Donny Davies <woodchip@gentoo.org> passwd, group :
 
     Added user/group apache with uid/gid 81.
 
-  25 April 2002; Martin Schlemmer <azarah@gentoo.org>:
+  25 Apr 2002; Martin Schlemmer <azarah@gentoo.org>:
   
     Remove the "-net" from the line setting the default gateway
     in /etc/init.d/net.eth0.  Thanks to Peter W. Michaleas for
     noting this.
 
-  24 April 2002; Donny Davies <woodchip@gentoo.org> rc.conf :
+  24 Apr 2002; Donny Davies <woodchip@gentoo.org> rc.conf :
 
     Remove NFSSERVER from rc.conf since it's now covered in /etc/conf.d/nfs
     which is installed with the nfs-utils package.  Also tidied up some
     really old, leftover junk like the non-supported stuff from rc5.
     Closes #1754.
 
-  23 April 2002; Martin Schlemmer <azarah@gentoo.org>:
+  23 Apr 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Remove creation of /var/run/utmpx from bootmisc again.  Seems
     other people have wierd problems.
 
-* rc-scripts 1.3.4 (21 April 2002)
+* rc-scripts 1.3.4 (21 Apr 2002)
 
-  21 April 2002; Martin Schlemmer <azarah@gentoo.org>:
+  21 Apr 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Add /sbin/rc-envupdate.sh to speedup updating of /etc/profile.env,
     and /etc/csh.env.  Update /etc/init.d/bootmisc to use this.
@@ -820,12 +825,12 @@
     Fix /sbin/depscan.sh to honour NEED and USE overriding BEFORE
     and AFTER.
 
-  12 April 2002; Martin Schlemmer <azarah@gentoo.org>:
+  12 Apr 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Update /etc/init.d/bootmisc to create /var/run/utmpx. This
     is needed, else /usr/bin/newgrp segfault.
 
-  11 April 2002; Martin Schlemmer <azarah@gentoo.org>:
+  11 Apr 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Update /etc/skel/.bash_profile to make it tcsh compadible.
     Thanks to Väinö Järvelä for this fix.
@@ -837,14 +842,14 @@
     Move LVM stuff to checkfs to ensure that they get fscked.
     This resolves bug #1552.
 
-* rc-scripts 1.3.3 (5 April 2002)
+* rc-scripts 1.3.3 (5 Apr 2002)
 
-  5 April 2002; Martin Schlemmer <azarah@gentoo.org>:
+  5 Apr 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Move /etc/init.d/{depscan.sh,runscript.sh,functions.sh} to /sbin.
     This is done to try and ensure system integrity.
 
-  1 April 2002; Martin Schlemmer <azarah@gentoo.org>:
+  1 Apr 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Add quotes to the "export INPUTRC=/etc/inputrc" line to resolve bug #1391.
 
@@ -854,7 +859,7 @@
 
 * rc-scripts 1.3.2 (24 Mar 2002)
 
-  24 March 2002; Martin Schlemmer <azarah@gentoo.org>:
+  24 Mar 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Resolve bug #1274.  Updated /etc/init.d/hostname and /etc/init.d/bootmisc
     for this.
@@ -878,35 +883,35 @@
 
 * rc-scripts 1.3.1 (23 Mar 2002)
 
-  23 March 2002; Daniel Robbins <drobbins@gentoo.org>: init.d/net.eth0: fix for
+  23 Mar 2002; Daniel Robbins <drobbins@gentoo.org>: init.d/net.eth0: fix for
   DHCP lease release from Jim Nutt.
   
-  23 March 2002; Daniel Robbins <drobbins@gentoo.org>: rolling a new release
+  23 Mar 2002; Daniel Robbins <drobbins@gentoo.org>: rolling a new release
   since there are a lot of important bug fixes in here that are needed.
 
-  23 March 2002; Martin Schlemmer <azarah@gentoo.org>:
+  23 Mar 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Resolve bug #1292.
 
     Remove the extra 'depmod -a' in /etc/init.d/modules, thanks to
     Spidler.
 
-  21 March 2002; Martin Schlemmer <azarah@gentoo.org>:
+  21 Mar 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Update /sbin/rc to fix a 'cat mounts' instead of the correct
     version, 'cat /proc/mounts'.
 
-  19 March 2002; Martin Schlemmer <azarah@gentoo.org>:
+  19 Mar 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Add initial support for the --quiet flag that suppress output.
 
-  18 March 2002; Martin Schlemmer <azarah@gentoo.org>:
+  18 Mar 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Remove the 'try' from 'try /etc/init.d/depscan.sh' in /sbin/rc
     as not all errors by depscan.sh is critical.  It should be
     reworked to do better error handeling.
 
-  14 March 2002; Martin Schlemmer <azarah@gentoo.org>:
+  14 Mar 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix the GID and UID of nobody and nogroup in /etc/passwd and
     /etc/group to match those of Debian, FBSD and others.  Thanks
@@ -916,7 +921,7 @@
     Update /etc/init.d/net.eth0 to properly down DHCP interfaces.
     This resolves bug #1150, thanks to Paul Fleischer.
 
-  11 March 2002; Martin Schlemmer <azarah@gentoo.org>:
+  11 Mar 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Updated /etc/init.d/functions.sh not to use /usr/bin/basename,
     as some users have /usr on seperate partition which is not
@@ -927,9 +932,9 @@
     be working now, and this also fix a problem that when there is no
     service providing a virtual, counter was used uninitialized.
 
-* rc-scripts 1.3.0 (10 March 2002)
+* rc-scripts 1.3.0 (10 Mar 2002)
 
-  10 March 2002; Martin Schlemmer <azarah@gentoo.org>:
+  10 Mar 2002; Martin Schlemmer <azarah@gentoo.org>:
   
     Resolved bug #1021; updated /etc/init.d/consolefont for this.
 
@@ -958,9 +963,9 @@
     to detect a error when mounting /proc (remember to thank Grant for
     his UserMode ebuilds, and Guide).
 
-* rc-scripts 1.2.9 (6 March 2002)
+* rc-scripts 1.2.9 (6 Mar 2002)
 
-  6 March 2002; Martin Schlemmer <azarah@gentoo.org>:
+  6 Mar 2002; Martin Schlemmer <azarah@gentoo.org>:
   
     General form updates and some piping fixes.
 
@@ -968,9 +973,9 @@
     to fix a problem where startDM.sh would be respawned repeatedly
     if xdm was not in the default runlevel.
 
-* rc-scripts 1.2.8 (4 March 2002)
+* rc-scripts 1.2.8 (4 Mar 2002)
 
-  4 March 2002; Martin Schlemmer <azarah@gentoo.org>:
+  4 Mar 2002; Martin Schlemmer <azarah@gentoo.org>:
   
     Add /etc/init.d/xdm, /etc/X11/startDM.sh and updated /etc/inittab
     to fix the "dead key" problem we had with xdm/gdm/kdm.  We should
@@ -984,9 +989,9 @@
     Updated /etc/init.d/keymap and /etc/init.d/consolefont to work with
     the new sys-apps/kbd package.
 
-* rc-scripts 1.2.7 (3 March 2002)
+* rc-scripts 1.2.7 (3 Mar 2002)
 
-  3 March 2002; Martin Schlemmer <azarah@gentoo.org>:
+  3 Mar 2002; Martin Schlemmer <azarah@gentoo.org>:
   
     Fixed the problem of rc-scripts trying to start/stop a service multiple
     times if it fails to do so.  Updated /etc/init.d/runscript.sh and /sbin/rc
@@ -1005,7 +1010,7 @@
 
     Update /etc/fstab to mention /dev/shm since we dont mount it anymore.
 
-  1 March 2002; Martin Schlemmer <azarah@gentoo.org>:
+  1 Mar 2002; Martin Schlemmer <azarah@gentoo.org>:
   
     Added a wrapper for sourcing the rc-scripts to eliminate syntax errors.
     Thanks to Karl Trygve Kalleberg (aka karltk) for the idea.  Updated
