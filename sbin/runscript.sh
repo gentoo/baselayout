@@ -166,7 +166,7 @@ svc_stop() {
 					# clean as possible, else do not stop our service if
 					# a dependent service did not stop.
 					if needsme -t "${mydep}" "${x}" >/dev/null && \
-					   [ "${SOFTLEVEL}" != "reboot" -a "${SOFTLEVEL}" != "shutdown" ]
+					   [[ ${SOFTLEVEL} != "reboot" && ${SOFTLEVEL} != "shutdown" ]]
 					then
 						retval=1
 					fi
@@ -186,7 +186,7 @@ svc_stop() {
 		retval="$?"
 	fi
 	
-	if [ ${retval} -ne 0 ] ; then
+	if [[ ${retval} -ne 0 ]] ; then
 		# Did we fail to stop? create symlink to stop multible attempts at
 		# runlevel change.  Note this is only used at runlevel change ...
 		if is_runlevel_stop ; then
