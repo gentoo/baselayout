@@ -81,53 +81,8 @@ check_statedir() {
 	return 0
 }
 
-# From initscript by Robert Love
 populate_udev() {
-	local x=
-	local y=
-	local CLASS=
-	
-	# Propogate /dev from /sys - we only need this while we do not
-	# have initramfs and an early user-space with which to do early
-	# device bring up
-	export ACTION=add
-	# Hack to get udev not to sleep - its not needed, as here all
-	# /sys entries are already present.
-	export UDEV_NO_SLEEP=1
-	
-	# Add block devices and their partitions
-	for x in /sys/block/*
-	do
-		# Add each drive
-		export DEVPATH="${x#/sys}"
-		/sbin/udev block
-		
-		# Add each partition, on each device
-		for y in ${x}/*
-		do
-			if [ -f "${y}/dev" ]
-			then
-				export DEVPATH="${y#/sys}"
-				/sbin/udev block
-			fi
-		done
-	done
-	
-	# All other device classes
-	for x in /sys/class/*
-	do
-		for y in ${x}/*
-		do
-			if [ -f "${y}/dev" ]
-			then
-				CLASS="$(echo "${x#/sys}" | cut --delimiter='/' --fields=3-)"
-				export DEVPATH="${y#/sys}"
-				/sbin/udev ${CLASS}
-			fi
-		done
-	done
-
-	unset ACTION DEVPATH UDEV_NO_SLEEP
+	/sbin/udevstart
 
 	# Not provided by sysfs but needed
 	ln -snf /proc/self/fd /dev/fd
@@ -136,6 +91,12 @@ populate_udev() {
 	ln -snf fd/2 /dev/stderr
 	ln -snf /proc/kcore /dev/core
 	ln -snf /proc/asound/oss/sndstat /dev/sndstat
+
+	# Create problematic directories
+	mkdir -p /dev/{pts,shm}
+
+	# Same thing as /dev/.devfsd
+	touch /dev/.udev
 
 	return 0
 }
@@ -256,16 +217,7 @@ then
 		else
 			ewarn "  Kernel was not compiled with hotplug support!"
 		fi
-		if [ -x /sbin/udevd -a -e /proc/sys/kernel/hotplug ]
-		then
-			einfo "  Starting udevd..."
-			/sbin/udevd &
-		fi
 		eend 0
-		# Create problematic directories
-		mkdir -p /dev/{pts,shm}
-		# Same thing as /dev/.devfsd
-		touch /dev/.udev
 
 	# With the new way, /dev can be mounted by the kernel ...
 	elif [ "${devfs}" = "yes" -a ! -e "/dev/.devfsd" ]
