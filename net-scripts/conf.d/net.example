@@ -399,3 +399,36 @@
 #	return 0
 #}
 
+##############################################################################
+# FORCING MODULES
+# The Big Fat Warning :- If you use module forcing do not complain to us or
+# file bugs about it not working!
+#
+# Loading modules is a slow afair - we have to check each one for the following
+# 1) Code sanity
+# 2) Has the required package been emerged?
+# 3) Has it modified anything?
+# 4) Have all the dependant modules been loaded?
+
+# Then we have to strip out the conflicting modules based on user preference
+# and default configuration and sort them into the correct order.
+
+# This, of course, takes valuable CPU time so we provide module forcing as a
+# means to speed things up. It is essential that you force modules in the
+# correct order and supply all the modules you need. When forcing modules,
+# you cannot provide a generic name (ie you cannot use dhcp - you need to
+# specify dhcpcd or pump for example). You must always supply an interface of
+# currently ifconfig or iproute2
+
+# The Big Fat Warning :- If you use module forcing do not complain to us or
+# file bugs about it not working!
+
+# Now that we've warned you twice, here's how to do it
+#modules_force=( "ifconfig" )
+#modules_force=( "iproute2" "dhcpcd" )
+
+# We can also apply this to a specific interface
+#modules_force_eth1=( "iproute2" )
+
+# The below will not work
+#modules_force=( "dhcpcd" )		# No interface (ifconfig/iproute2)

@@ -151,10 +151,12 @@ ifconfig_del_addresses() {
 	[[ -z ${inet6} ]] && return 0
 
 	${report} && einfo "Removing inet6 addresses"
+	eindent
 	for x in ${inet6}; do
 		${report} && einfo "${x}"
 		ifconfig ${iface} inet6 del ${x}
 	done
+	eoutdent
 
 	return 0
 }

@@ -21,6 +21,9 @@
 
   15 Nov 2004; Roy Marples <uberlord@gentoo.org>:
 
+    Split modules_load into smaller more managable functions in net.lo
+    Added modules_force option to net.lo with a big phat warning in
+      net.example about it potentially breaking networking
     Added searchdomains_ESSID option to essidnet
     Stopped the domain setting from putting the same entry in search
       in config-system and essidnet
