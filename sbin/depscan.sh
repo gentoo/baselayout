@@ -9,8 +9,8 @@ source /etc/init.d/functions.sh
 ebegin "Caching service dependencies"
 
 /bin/gawk -v SVCDIR="${svcdir}" \
-	-f /lib/rcscripts/awk/cachedepends.awk \
-	$(find /etc/init.d/ -type f -maxdepth 1)
+	-f /lib/rcscripts/awk/functions.awk \
+	-f /lib/rcscripts/awk/cachedepends.awk
 
 cd /etc/init.d
 
@@ -21,5 +21,7 @@ bash ${svcdir}/depcache | \
 		-f /lib/rcscripts/awk/functions.awk \
 		-f /lib/rcscripts/awk/gendepends.awk
 
-eend 0
+eend $?
 
+
+# vim:ts=4

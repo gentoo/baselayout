@@ -141,3 +141,5 @@ function assert(condition, string)
 	}
 }
 
+
+# vim:ts=4

@@ -2,6 +2,14 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+* rc-scripts 1.4.2.1 (18 Nov 2002)
+
+  18 Nov 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update src/awk/cachedepends.awk to find its own rc-scripts,
+    fixing the need for find which broke systems with /usr on
+    a different partition.
+
   17 Nov 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Add some extra checks to src/awk/cachedepends.awk and
