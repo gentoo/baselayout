@@ -16,6 +16,9 @@
     Modified /sbin/rc, /lib/rcscripts/sh/rc-services.sh and gendepends.awk
     for this.
 
+	Fix .../boot/... paths hardcoded in /lib/rcscripts/sh/rc-services.sh,
+	thanks to Jean-Francois Richard <jean-francois@richard.name>.
+
   23 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     From Jean-Francois Richard <jean-francois@richard.name> and
