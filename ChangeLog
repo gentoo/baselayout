@@ -11,6 +11,15 @@
     Add software RAID support to /etc/init.d/checkfs, thanks to
     Daniel Ahlberg <aliz@gentoo.org>.
 
+    Update the cache_rcscript() funtion in /sbin/depscan.sh not to
+    quit on any "}", but only on the one matching the first "{". This
+    requires wc in /bin, so baselayout should depend on
+    >=sys-apps/textutils-2.0.19-r2
+
+    Update /etc/init.d/netmount to try and detect nfs mounts that should be
+    mounted automatically on boot.  This requires awk in /bin, so baselayout
+    should depend on >=sys-apps/gawk-3.1.0-r3.
+
 * rc-scripts 1.3.6 (17 Jul 2002)
 
   17 Jul 2002; Martin Schlemmer <azarah@gentoo.org>:

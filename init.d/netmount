@@ -5,8 +5,22 @@
 
 
 depend() {
-	need net
-	use portmap
+
+	local mydeps="net"
+	
+	#
+	# Only have Portmap as a dependency if there is a nfs mount in fstab.
+	#
+	local nfsmounts="$(grep -v "^#" /etc/fstab | \
+		awk '{ print $3 >/dev/null } /nfs/ { print }' | \
+		awk '{ print $4 >/dev/null } ! /noauto/ { print }')"
+	
+	if [ -n "${nfsmounts}" ]
+	then
+		local mydeps="${mydeps} portmap"
+	fi
+
+	need ${mydeps}
 }
 
 start() {
