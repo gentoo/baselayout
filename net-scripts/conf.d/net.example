@@ -1,16 +1,33 @@
 ##############################################################################
+# QUICK-START
 #
-#                      READ THIS COMMENT FIRST
+# The quickest start is if you want to use DHCP.  In that case,
+# everything should work out of the box, no configuration necessary,
+# though the startup script will warn you that you haven't specified
+# anything.
+#
+# If you want to use a static address or use DHCP explicitly, jump
+# down to the section labelled IFCONFIG.
+#
+# If you want to do anything more fancy, you should take the time to
+# read through the rest of this file.
+
+
+##############################################################################
+# MODULES
 #
 # We now support modular networking scripts which means we can easily
-# add support for new interface types  and modules whilst keeping
-# compatability with existing ones
-
-# Modules only load by default if the package they need is installed
-# If you specify a module here that doesn't have it's package installed then
-# you get an error stating which package you need to install
-# Ideally, you only use the modules setting when you have one or more packages
-# installed that supply the same service
+# add support for new interface types and modules while keeping
+# compatability with existing ones.
+# 
+# Modules load by default if the package they need is installed.  If
+# you specify a module here that doesn't have it's package installed
+# then you get an error stating which package you need to install.
+# Ideally, you only use the modules setting when you have two or more
+# packages installed that supply the same service.
+#
+# In other words, you probably don't need to configure anything
+# here...
 
 # Prefer iproute2 over ifconfig
 #modules=( "iproute2" )
@@ -19,23 +36,29 @@
 # In this case we prefer pump over dhcpcd
 #modules_eth0=( "pump" )
 
-# NOTE - If you do not specify a configuration, and a DHCP module is available
-# then DHCP will be selected by default
-# This means that you may not have to configure *anything* to get a working
-# network.
 
 ##############################################################################
 # INTERFACE HANDLERS
+# 
+# We provide two interface handlers presently: ifconfig and iproute2.
+# You need one of these to do any kind of network configuration.
 
-##############################################################################
+#-----------------------------------------------------------------------------
 # IFCONFIG
 # For ifconfig support, emerge sys-apps/net-tools
-# For a static configuration, use something like this.  This sets the primary
-# eth0 address to 192.168.0.2 and adds two aliases, eth0:1 and eth0:2
+
+# For a static configuration, use something like this
 #ifconfig_eth0=(
-#	"192.168.0.2 broadcast 192.168.0.255 netmask 255.255.255.0"
-#	"192.168.0.3 broadcast 192.168.0.255 netmask 255.255.255.0"
-#	"192.168.0.4 broadcast 192.168.0.255 netmask 255.255.255.0"
+#	"192.168.0.2 netmask 255.255.255.0"
+#)
+
+# If you need aliases, use something like this instead.  This sets the
+# primary eth0 address to 192.168.0.2 and adds two aliases, eth0:1 and
+# eth0:2
+#ifconfig_eth0=(
+#	"192.168.0.2 netmask 255.255.255.0"
+#	"192.168.0.3 netmask 255.255.255.0"
+#	"192.168.0.4 netmask 255.255.255.0"
 #)
 
 # This is just like setting the gateway config option in the old-style iface
@@ -46,19 +69,24 @@
 #	"default gw 192.168.0.1"
 #)
 
-##############################################################################
+#-----------------------------------------------------------------------------
 # IPROUTE2
 # For iproute2 support, emerge sys-apps/iproute2 and add "iproute2" to the
 # modules array above like so
 #modules=( "iproute2" )
 
-# For a static configuration, use something like this.  This sets the primary
-# eth0 address to 192.168.0.2 and adds two aliases, eth0:1 and eth0:2.
-# You may also pass advanced ip addr commands via this option.
+# For a static configuration, use something like this
 #ipaddr_eth0=(
-#	"192.168.0.2/24 brd 192.168.0.255"
-#	"192.168.0.3/24 brd 192.168.0.255"
-#	"192.168.0.4/24 brd 192.168.0.255"
+#	"192.168.0.2/24"
+#)
+
+# If you need aliases, use something like this instead.  This sets the
+# primary eth0 address to 192.168.0.2 and adds two aliases, eth0:1 and
+# eth0:2
+#ipaddr_eth0=(
+#	"192.168.0.2/24"
+#	"192.168.0.3/24"
+#	"192.168.0.4/24"
 #)
 
 # The following will set up the default gateway. You can also pass advanced
@@ -67,10 +95,11 @@
 #	"default via 192.168.0.1"
 #)
 
-##############################################################################
-# INTERFACE MODULES
 
 ##############################################################################
+# OPTIONAL MODULES
+
+#-----------------------------------------------------------------------------
 # WIRELESS (802.11 support)
 # For wireless support, emerge net-wireless/wireless-tools
 #
@@ -83,34 +112,29 @@
 # pre/post user functions below - although it's probably only really
 # usefull in the postup() function
 
-##############################################################################
+#-----------------------------------------------------------------------------
 # DHCP
 # DHCP can be provided by dhcpcd (default), dhclient, udhcpc or pump
-# For dhcpcd support, emerge net-misc/dhcpcd
-# For dhclient support, emerge net-misc/dhcp and add "dhclient" to the modules
-# array above like so
-#modules=( "dhclient" )
-# For udhcp support, emerge net-misc/udhcp and add "udhcpc" to the modules
-# array above like so
-#modules=( "udhcpc" )
-# For pump support, emerge net-misc/pump and add "pump" to the modules
-# array above like so
-#modules=( "pump" )
+#
+# dhcpcd:   emerge net-misc/dhcpcd
+# dhclient: emerge net-misc/dhcp   and modules=( "dhclient" ) above
+# udhcp:    emerge net-misc/udhcp  and modules=( "udhcp" ) above
+# pump:     emerge net-misc/pump   and modules=( "pump" ) above
+#
+# Notes:
+# - all clients except for dhclient send the current hostname to the DHCP
+#   server by default
+# - pump does not support NIS
 
-# Note - all clients except for dhclient send the current hostname to the DHCP
-# server by default
-# Note - pump does not support NIS
-
-#This is how to configure eth0 for dhcp (regardless of using dhcpcd, dhclient,
-# udhcpc or pump)
-# for iproute2
-#ipaddr=( "dhcp" )
-# and ifconfig
-#ifconfig=( "dhcp" )
+# Regardless of which DHCP client you prefer, you configure them the
+# same way using one of following depending on which interface modules
+# you're using.
+#ipaddr_eth0=( "dhcp" )		# for iproute2
+#ifconfig_eth0=( "dhcp" )	# for ifconfig
 
 # For passing custom options to dhcpcd use something like the following.  This
 # example reduces the timeout for retrieving an address from 60 seconds (the
-# default) to 10 seconds and broadcasts the current hostname. 
+# default) to 10 seconds.
 #dhcpcd_eth0="-t 10"
 
 # dhclient, udhcpc and pump don't have many runtime options
@@ -123,7 +147,7 @@
 # See the dhclient man page for details
 
 # GENERIC DHCP OPTIONS
-# These can be set globally or per interface
+# These can be set globally (setting=...) or per interface (setting_eth0=...)
 
 # To stop DHCP from overwritting DNS (/etc/resolv.conf) use the below settings
 # peer_dns="no"
@@ -137,7 +161,7 @@
 # peer_ntp="no"
 # peer_ntp_eth0="no"
 
-##############################################################################
+#-----------------------------------------------------------------------------
 # VLAN (802.1q support)
 # For VLAN support, emerge net-misc/vconfig
 
@@ -151,7 +175,7 @@
 #ipaddr_eth0_2=( "172.16.2.1/23 brd 172.16.3.255" )
 # This configures eth0_1 to use DHCP and eth0_2 for a static address
 
-##############################################################################
+#-----------------------------------------------------------------------------
 # Bonding (802.1q support)
 # For link bonding/trunking emerge net-misc/ifenslave
 
@@ -160,7 +184,7 @@
 #slaves_bond0="eth2"
 #ipaddr_bond0=( "172.16.2.1/23 brd 172.16.3.255" )
 
-##############################################################################
+#-----------------------------------------------------------------------------
 # MAC changer
 # For changing MAC addresses emerge net-analyzer/macchanger
 
@@ -182,13 +206,8 @@
 
 
 ##############################################################################
-#   ADVANCED CONFIGURATION
-#   ----------------------
-#   The items in this section can be combined with one of the sections
-#   above to create a complete network configuration.  None of the
-#   items in this section are necessary to configure for most users.
-##############################################################################
-
+# ADVANCED CONFIGURATION
+# 
 # Four functions can be defined which will be called surrounding the
 # start/stop operations.  The functions are called with the interface
 # name first so that one function can control multiple adapters.
