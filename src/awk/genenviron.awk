@@ -7,23 +7,32 @@ BEGIN {
 
 	extension("/lib/rcscripts/filefuncs.so", "dlload")
 
-	pipe = "ls /etc/env.d/*"
+	pipe = "ls -1 /etc/env.d/."
 	while ((pipe | getline tmpstring) > 0)
-		scripts = scripts " " tmpstring
+		scripts = scripts " /etc/env.d/" tmpstring
 	close(pipe)
 
 	split(scripts, TMPENVFILES)
 
 	# Make sure that its a file we are working with,
 	# and do not process scripts, source or backup files.
-	for (x in TMPENVFILES)
-		if ((isfile(TMPENVFILES[x])) &&
-		    (TMPENVFILES[x] !~ /((\.(sh|c|bak))|\~)$/)) {
+	# NOTE:  do not use 'for (x in TMPENVFILES)', as gawk
+	#        have this notion that it should mess with the
+	#        order it list things then ....
+	for (x = 1;;x++) {
+	
+		if (x in TMPENVFILES) {
+		
+			if ((isfile(TMPENVFILES[x])) &&
+			    (TMPENVFILES[x] !~ /((\.(sh|c|bak))|\~)$/)) {
 
-			ENVCOUNT++
+				ENVCOUNT++
 
-			ENVFILES[ENVCOUNT] = TMPENVFILES[x]
-		}
+				ENVFILES[ENVCOUNT] = TMPENVFILES[x]
+			}
+		} else
+			break
+	}
 
 	if (ENVCOUNT == 0) {
 
@@ -34,6 +43,12 @@ BEGIN {
 	ENVCACHE = SVCDIR "/envcache"
 	SHPROFILE = "/etc/profile.env"
 	CSHPROFILE = "/etc/csh.env"
+
+	# SPECIALS are treated differently.  For each env.d file, the variables are
+	# appended seperated with a ':'.  If not in specials, for each env.d file,
+	# the variable are just set to the new value.
+	tmpspecials="KDEDIRS:PATH:CLASSPATH:LDPATH:MANPATH:INFODIR:INFOPATH:ROOTPATH:CONFIG_PROTECT:CONFIG_PROTECT_MASK:PRELINK_PATH:PRELINK_PATH_MASK"
+	split(tmpspecials, SPECIALS, ":")
 
 	unlink(ENVCACHE)
 
@@ -62,10 +77,18 @@ BEGIN {
 				gsub(/\"/, "")
 				gsub(/\'/, "")
 
-				# KDEDIR and QTDIR should be handled specially
-				if ((envnode[1] in ENVTREE) &&
-				    ((envnode[1] != "KDEDIR") && (envnode[1] != "QTDIR"))) {
+				if (envnode[1] in ENVTREE) {
 
+					DOSPECIAL = 0
+
+					for (x in SPECIALS) {
+
+						# Is this a special variable ?
+						if (envnode[1] == SPECIALS[x])
+							DOSPECIAL = 1
+					}
+
+					if (DOSPECIAL) {
 						split(ENVTREE[envnode[1]], tmpstr, ":")
 
 						# Check that we do not add dups ...
@@ -76,8 +99,9 @@ BEGIN {
 						
 						if (NODUPS)
 							ENVTREE[envnode[1]] = ENVTREE[envnode[1]] ":" $0
-					}
-				else
+					} else
+						ENVTREE[envnode[1]] = $0
+				} else
 					ENVTREE[envnode[1]] = $0
 			}
 		}

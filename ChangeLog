@@ -2,6 +2,14 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  22 Dec 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add INFOPATH to /etc/env.d/00basic.
+
+    Fix src/awk/genenviron.awk to get the order of the env.d files
+    correct.  Also fix it to handle *all* the SPECIALS correctly.
+    This closes bug #12411.
+
 * rc-scripts 1.4.2.6 (18 Dec 2002)
 
   18 Dec 2002; Martin Schlemmer <azarah@gentoo.org>:
