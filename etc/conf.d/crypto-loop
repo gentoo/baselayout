@@ -1,4 +1,4 @@
-# /etc/conf.d/crypto-loop:
+# /etc/conf.d/crypto-loop
 # $Header$
 
 # Configuration file for /etc/init.d/crypto-loop

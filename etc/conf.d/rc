@@ -1,9 +1,5 @@
-# /etc/conf.d/rc:
+# /etc/conf.d/rc: Global config file for the Gentoo RC System
 # $Header$
-
-#
-# Global config file for the Gentoo RC System
-#
 
 # This is the number of tty's used in most of the rc-scripts (like
 # consolefont, numlock, etc ...)
