@@ -31,18 +31,73 @@ start() {
 	fi
 
 	# Start software raid.
-	# Sadly this is based on Mandrake's startup scripts, as nobody seems
-	# to want to fix our old one, and I do not use (or able to at present) raid ....
-	# NOTE:  You need a properly setup /etc/raidtab, and until sombody come up
-	#        with a *working* one, that is tested to work for all setups!
-	if [ -f /proc/mdstat -a -f /etc/raidtab ]
+	# You need a properly configured /etc/raidtab for raidtools usage or a
+	# properly configured /etc/mdadm.conf for mdadm usage. Devices in
+	# /etc/mdadm.conf are initialized first, so any duplicate devices in
+	# /etc/raidtab will not get initialized.
+	if [ -f /proc/mdstat ]
 	then
+		local mdadm_devices=
+		local raidtools_devices=
+		# If /etc/mdadm.conf exists, grab all the RAID devices from it
+		if [ -f /etc/mdadm.conf ]
+		then
+			mdadm_devices=$(awk '/^[[:space:]]*ARRAY/ { print $2 }' /etc/mdadm.conf)
+		fi
+		# If /etc/raidtab exists, grab all the RAID devices from it
+		if [ -f /etc/raidtab ]
+		then
+			raidtools_devices=$(awk '/^[[:space:]]*raiddev/ { print $2 }' /etc/raidtab)
+		fi
 		ebegin "Starting up RAID devices: " 
 
 		local rc=0
 		local retval=0
+
+		for i in ${mdadm_devices}
+		do
+			local raiddev="${i##*/}"
+			local raidstat="$(egrep "^${raiddev} : active" /proc/mdstat)"
+			
+			if [ -z "${raidstat}" ]
+			then
+				# First scan the /etc/fstab for the "noauto"-flag
+				# for this device. If found, skip the initialization
+				# for it to avoid dropping to a shell on errors.
+				# If not, try raidstart...if that fails then
+				# fall back to raidadd, raidrun.  If that
+				# also fails, then we drop to a shell
+				local retval=1
+				local noauto="$(egrep "^${i}" /etc/fstab | grep -c 'noauto')"
+
+				einfon "  Trying ${raiddev}..."
+
+				raiddev=""
+				
+				if [ "${noauto}" -gt 0 ]
+				then
+					retval=0
+					raiddev=" (skipped)"
+				fi
+				if [ "${retval}" -gt 0 -a -x /sbin/mdadm ]
+				then
+					/sbin/mdadm -As "${i}" &>/dev/null
+					retval=$?
+				fi
+
+				echo "${raiddev}"
+				
+				if [ "${retval}" -gt 0 ]
+				then
+					rc=1
+					eend ${retval}
+				else
+					ewend ${retval}
+				fi
+			fi
+		done
         
-		for i in $(awk '/^[[:space:]]*raiddev/ { print $2 }' /etc/raidtab)
+		for i in ${raidtools_devices}
 		do
 			local raiddev="${i##*/}"
 			local raidstat="$(egrep "^${raiddev} : active" /proc/mdstat)"

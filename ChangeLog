@@ -9,6 +9,9 @@
 
     Add 'TERM=Eterm' to /etc/DIR_COLORS, bug #23423.
 
+    Add mdadm support to /etc/init.d/checkfs, bug #23437, many thanks
+	to Rex Walters <rw@pobox.com>.
+
   16 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Add aliases for add/del to /sbin/rc-update closing bug #24317, thanks
