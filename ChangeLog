@@ -13,6 +13,10 @@
     Changed behavior of the domainname init.d script.  It will now 
     override any settings obtained via dhcp/whatever.  See #48277.
 
+    Updated bootmisc to dump the output of `dmesg` to /var/log/dmesg.  
+    This way users have an 'after-boot' log of their dmesg saved 
+    somewhere useful #55421.
+
   04 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
 
     More (I mean a LOT more) services.  This takes care of #44458, 

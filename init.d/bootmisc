@@ -11,8 +11,10 @@ depend() {
 start() {
 	if [ "${BOOT}" = "yes" ]
 	then
+		#
 		# Put a nologin file in /etc to prevent people from logging in before
 		# system startup is complete.
+		#
 		if [ "${DELAYLOGIN}" = "yes" ]
 		then
 			echo "System bootup in progress - please wait" > /etc/nologin
@@ -33,7 +35,9 @@ start() {
 			eend 0
 		fi
 
+		#
 		# Reset pam_console permissions
+		#
 		rm -rf /var/run/console.lock /var/run/console/*
 		if [ -z "${CDBOOT}" ]
 		then
@@ -60,7 +64,10 @@ start() {
 				fi
 			done
 		fi
+
+		#
 		# Setup login records
+		#
 		> /var/run/utmp
 		touch /var/log/wtmp
 		chgrp utmp /var/run/utmp /var/log/wtmp
@@ -88,6 +95,13 @@ start() {
 			chmod 1777 /tmp/.{ICE,X11}-unix &>/dev/null
 			eend 0
 		fi
+
+		#
+		# Create an 'after-boot' dmesg log
+		#
+		touch /var/log/dmesg
+		chmod 640 /var/log/dmesg
+		dmesg > /var/log/dmesg
 	fi
 
 	#
