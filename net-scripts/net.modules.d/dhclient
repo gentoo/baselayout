@@ -1,5 +1,5 @@
 # DHCP (net-misc/dhcp) module for net-scripts
-# Version 1.0.2
+# Version 1.0.3
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -48,7 +48,7 @@ dhclient_get_script() {
 dhclient_check_depends() {
 	local f
 
-	for f in get_device interface_is_up interface_get_address interface_module; do
+	for f in interface_variable interface_device interface_is_up interface_get_address interface_module; do
 		[[ $(type -t ${f}) == function ]] && continue
 		eerror "dhclient: missing required function ${f}\n"
 		return 1
@@ -102,11 +102,12 @@ dhclient_stop() {
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 dhclient_start() {
 	local iface=${1} opts
+	local ifvar=$( get_interface_variable ${iface} )
 
 	! interface_exists ${iface} true && return 1
 
 	# Check that iface was not brought up by the kernel ...
-	local check=$( get_device ${iface} )
+	local check=$( interface_device ${iface} )
 	if [[ ${check} == ${iface} ]] && interface_is_up ${iface} true ; then
 		einfo "Keeping kernel configuration for ${iface}"
 		return 0
@@ -116,7 +117,7 @@ dhclient_start() {
 
 	# Bring up DHCP for this interface (or alias)
 	ebegin "Running dhclient"
-	eval opts=\"\$\{dhclient_${iface}\}\"
+	eval opts=\"\$\{dhclient_${ifvar}\}\"
 	local r=$( dhclient ${opts} -sf ${script} -q ${iface} )
 	# We just check the last 5 letters
 	[[ ${r:${#r} - 5:5} == BOUND ]]

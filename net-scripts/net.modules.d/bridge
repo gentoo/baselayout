@@ -98,7 +98,7 @@ bridge_pre_start() {
 	eval opts=( \"\$\{brctl_${iface}\[@\]\}\" )
 	for (( i=0; i<${#opts[@]}; i++ )); do
 		x=${opts[i]/ / ${iface} }
-		[[ ${x} == ${i} ]] && x="${x} ${iface}"
+		[[ ${x} == ${opts[i]} ]] && x="${x} ${iface}"
 		e=$( brctl ${x} 2>&1 1>/dev/null )
 		[[ -n ${e} ]] && ewarn "${e}"
 	done

@@ -2,6 +2,15 @@
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  12 Nov 2004; Roy Marples <uberlord@gentoo.org>:
+
+    Fixed iface variable in dhcp modules for vlans
+    Changed get_device to interface_device
+    Changed get_type to interface_type
+    Added vlan configuration options and documented them in net.example
+    Fixed bridge configuration handling
+    Removed _get_vlans from iproute2 and ifconfig as vlan now does it itself
+
   11 Nov 2004; Roy Marples <uberlord@gentoo.org>:
 
     Fixed category of rp-pppoe to net-dialup error when requesting ADSL

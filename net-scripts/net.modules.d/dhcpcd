@@ -1,5 +1,5 @@
 # DHCP (net-misc/dhcpcd) module for net-scripts
-# Version 1.0.3
+# Version 1.0.4
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -40,7 +40,7 @@ dhcpcd_check_installed() {
 dhcpcd_check_depends() {
 	local f
 
-	for f in get_device interface_is_up interface_get_address; do
+	for f in interface_variable interface_device interface_is_up interface_get_address; do
 		[[ $(type -t ${f}) == function ]] && continue
 		eerror "dhcpcd: missing required function ${f}\n"
 		return 1
@@ -92,10 +92,11 @@ dhcpcd_stop() {
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 dhcpcd_start() {
 	local iface=${1} opts hostname
+	local ifvar=$( interface_variable ${iface} )
 
 	! interface_exists ${iface} true && return 1
 
-	local check=$( get_device ${iface} )
+	local check=$( interface_device ${iface} )
 
 	# Check that iface was not brought up by the kernel ...
 	if [[ ${check} == ${iface} ]] && interface_is_up ${iface} true ; then
@@ -107,18 +108,18 @@ dhcpcd_start() {
 	[[ -f /var/run/dhcpcd-${iface}.pid ]] && rm -f /var/run/dhcpcd-${iface}.pid
 
 	# Get our options
-	eval opts=\"\$\{dhcpcd_${iface}\}\"
+	eval opts=\"\$\{dhcpcd_${ifvar}\}\"
 
 	# Map some generic options to dhcpcd
-	eval peer=\"\$\{peer_dns_${iface}\}\"
+	eval peer=\"\$\{peer_dns_${ifvar}\}\"
 	[[ -z ${peer} ]] && eval peer=\"\$\{peer_dns\}\"
 	[[ ${peer} == no ]] && opts="-R ${opts}"
 
-	eval peer=\"\$\{peer_nis_${iface}\}\"
+	eval peer=\"\$\{peer_nis_${ifvar}\}\"
 	[[ -z ${peer} ]] && eval peer=\"\$\{peer_nis\}\"
 	[[ ${peer} == no ]] && opts="-Y ${opts}"
 
-	eval peer=\"\$\{peer_ntp_${iface}\}\"
+	eval peer=\"\$\{peer_ntp_${ifvar}\}\"
 	[[ -z ${peer} ]] && eval peer=\"\$\{peer_ntp\}\"
 	[[ ${peer} == no ]] && opts="-N ${opts}"
 

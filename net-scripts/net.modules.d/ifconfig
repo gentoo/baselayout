@@ -122,14 +122,6 @@ ifconfig_get_mac_address() {
 	ifconfig ${1} | grep -m1 -o 'HWaddr [^ ]*' | cut -d" " -f2
 }
 
-# void ifconfig_get_vlans(char *interface)
-#
-# Fetch the configured vlans for an interface.  Outputs a space
-# separated list on stdout.  For example "eth0.1 eth0.2 eth0.3"
-ifconfig_get_vlans() {
-	ifconfig | grep -o "^${1}[.][^ ]*" | xargs
-}
-
 # void ifconfig_get_aliases_rev(char *interface)
 #
 # Fetch the list of aliases for an interface.  
@@ -197,12 +189,12 @@ ifconfig_local_vars() {
 # Returns 0 (true) if variables are set successfully, non-zero
 # otherwise
 ifconfig_setup_vars() {
-	local iface="${1//./_}" i
+	local iface=${1} ifvar=$( interface_variable ${1} ) i
 
-	eval config_IFACE=( \"\$\{ifconfig_$iface\[@\]\}\" )
-	eval config_fallback_IFACE=( \"\$\{ifconfig_fallback_$iface\[@\]\}\" )
-	eval routes_IFACE=( \"\$\{routes_$iface\[@\]\}\" )
-	eval inet6_IFACE=( \"\$\{inet6_$iface\[@\]\}\" )
+	eval config_IFACE=( \"\$\{ifconfig_${ifvar}\[@\]\}\" )
+	eval config_fallback_IFACE=( \"\$\{ifconfig_fallback_${ifvar}\[@\]\}\" )
+	eval routes_IFACE=( \"\$\{routes_${ifvar}\[@\]\}\" )
+	eval inet6_IFACE=( \"\$\{inet6_${ifvar}\[@\]\}\" )
 
 	# BACKWARD COMPATIBILITY: set the default gateway
 	if [[ ${gateway} == ${iface}/* ]]; then
@@ -219,7 +211,7 @@ ifconfig_setup_vars() {
 
 	# BACKWARD COMPATIBILITY: populate the config_IFACE array
 	# if iface_IFACE is set (fex. iface_eth0 instead of ifconfig_eth0)
-	eval local iface_IFACE=\"\$\{iface_$iface\}\"
+	eval local iface_IFACE=\"\$\{iface_$ifvar\}\"
 	if [[ -n ${iface_IFACE} && -z ${config_IFACE} ]]; then
 		# Make sure these get evaluated as arrays
 		local -a aliases broadcasts netmasks
@@ -228,9 +220,9 @@ ifconfig_setup_vars() {
 		config_IFACE=( "${iface_IFACE}" )
 
 		# ..then add aliases
-		eval aliases=( \$\{alias_$iface\} )
-		eval broadcasts=( \$\{broadcast_$iface\} )
-		eval netmasks=( \$\{netmask_$iface\} )
+		eval aliases=( \$\{alias_${ifvar}\} )
+		eval broadcasts=( \$\{broadcast_${ifvar}\} )
+		eval netmasks=( \$\{netmask_${ifvar}\} )
 		for ((i = 0; i < ${#aliases[@]}; i = i + 1)); do
 			config_IFACE[i+1]="${aliases[i]} ${broadcasts[i]:+broadcast ${broadcasts[i]}} ${netmasks[i]:+netmask ${netmasks[i]}}"
 		done
@@ -309,7 +301,7 @@ ifconfig_post_start() {
 # Starts the interface with the given options
 # Returns the value of the ifconfig command
 ifconfig_configure() {
-	local iface=$( get_device ${1} )
+	local iface=$( interface_device ${1} )
 	! ifconfig_exists ${iface} true && return 1
 
 	ifconfig $@ &>${devnull}

@@ -210,6 +210,13 @@
 #ifconfig_eth0_2=( "172.16.2.1 netmask 255.255.254.0" )
 # This configures eth0_1 to use DHCP and eth0_2 for a static address
 
+# You can also configure the vlan - see for vconfig man page for more details
+#vlans_eth0="1 2"
+#vconfig_eth0=( "set_name_type VLAN_PLUS_VID_NO_PAD" )
+#ifconfig_vlan1=( "dhcp" )
+#vconfig_vlan1=( "set_flag 1" "set_egress_map 2 6" )
+#ifconfig_vlan2=( "172.16.2.1 netmask 255.255.254.0" )
+
 #-----------------------------------------------------------------------------
 # Bonding
 # For link bonding/trunking emerge net-misc/ifenslave

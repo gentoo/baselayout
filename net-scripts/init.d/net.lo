@@ -385,24 +385,32 @@ modules_load()  {
 	done
 }
 
-# char* get_device(char *iface)
+# char* interface_device(char *iface)
 #
 # Gets the base device of the interface
 # Can handle eth0:1 and eth0.1
 # Which returns eth0 in this case
-get_device() {
+interface_device() {
 	local iface=${1}
 	local dev=${iface%%.*}
 	[[ ${dev} == ${iface} ]] && dev=${iface%%:*}
 	echo ${dev}
 }
 
-# char* get_type( *iface)
+# char* interface_type(char* iface)
 #
 # Returns the base type of the interface
 # eth, ippp, etc
 get_type() {
 	echo ${1%%[0-9]*}
+}
+
+# char* interface_variable(char *iface)
+#
+# Returns a bash variable name based on the interface
+interface_variable() {
+	local n=${1//:/_}
+	echo ${n//./_}
 }
 
 # bool iface_start(char *interface)

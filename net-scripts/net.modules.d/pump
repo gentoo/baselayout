@@ -1,5 +1,5 @@
 # Pump module for net-scripts
-# Version 1.0.2
+# Version 1.0.3
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -40,7 +40,7 @@ pump_check_installed() {
 pump_check_depends() {
 	local f
 
-	for f in get_device interface_is_up interface_get_address; do
+	for f in interface_variable interface_device interface_is_up interface_get_address; do
 		[[ $(type -t ${f}) == function ]] && continue
 		eerror "pump: missing required function ${f}\n"
 		return 1
@@ -96,20 +96,21 @@ pump_stop() {
 # the return value from pump
 pump_start() {
 	local iface=${1} opts hostname
+	local ifvar=$( interface_variable ${iface} )
 
 	! interface_exists ${iface} true && return 1
 
 	# Check that iface was not brought up by the kernel ...
-	local check=$( get_device ${iface} )
+	local check=$( interface_device ${iface} )
 	if [[ ${check} == ${iface} ]] && interface_is_up ${iface} true ; then
 		einfo "Keeping kernel configuration for ${iface}"
 		return 0
 	fi
 
-	eval opts=\"\$\{pump_${iface}\}\"
+	eval opts=\"\$\{pump_${ifvar}\}\"
 
 	# Map some generic options to pump
-	eval peer=\"\$\{peer_dns_${iface}\}\"
+	eval peer=\"\$\{peer_dns_${ifvar}\}\"
 	[[ -z ${peer} ]] && eval peer=\"\$\{peer_dns\}\"
 	[[ ${peer} == no ]] && opts="--no-dns ${opts}"
 

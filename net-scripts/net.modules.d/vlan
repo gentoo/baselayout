@@ -1,8 +1,14 @@
 # VLAN module for net-scripts
-# Version 1.0.1
+# Version 1.0.2
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
+
+# Fix any potential localisation problems
+# Note that LC_ALL trumps LC_anything_else according to locale(7)
+vconfig() {
+	LC_ALL=C /sbin/vconfig "$@"
+}
 
 # bool vlan_check_installed(void)
 #
@@ -36,7 +42,7 @@ vlan_depend() {
 vlan_check_depends() {
 	local f
 
-	for f in get_device interface_get_vlans iface_start iface_stop; do
+	for f in iface_start iface_stop; do
 		[[ $(type -t ${f}) == function ]] && continue
 		eerror "vlan: missing required function ${f}\n"
 		return 1
@@ -53,13 +59,49 @@ vlan_get_vars() {
 	echo "vlans_${1} iface_${1}_vlans"
 }
 
+# char* vlan_get_vlans(char *interface)
+#
+# Fetch the configured vlans for an interface.  Outputs a space
+# separated list on stdout.  For example "eth0.1 eth0.2 eth0.3"
+vlan_get_vlans() {
+	cat /proc/net/vlan/config \
+		| awk -v iface=${1} 'BEGIN { ORS = " "; } $5==iface { print $1 }'
+}
+
+#bool vlan_pre_start(char *iface)
+#
+# Setup vconfig
+vlan_pre_start() {
+	local iface=${1} opts i x e
+	local ifvar=$( interface_variable ${iface} )
+
+	eval opts=( \"\$\{vconfig_${ifvar}\[@\]\}\" )
+	[[ -z ${opts} ]] && return 0
+
+	for (( i=0; i<${#opts[@]}; i++ )); do
+		if [[ ${opts[i]} == set_name_type* ]]; then
+			x=${opts[i]}
+		else
+			x=${opts[i]/ / ${iface} }
+			[[ ${x} == ${opts[i]} ]] && x="${x} ${iface}"
+		fi
+		e=$( vconfig ${x} 2>&1 1>/dev/null )
+		[[ -z ${e} ]] && continue
+		eerror "vconfig ${x}"
+		eerror "${e}"
+		return 1
+	done
+
+	return 0
+}
+
 # bool vlan_post_start(char *iface)
 #
 # Starts VLANs for a given interface
 #
 # Always returns 0 (true) 
 vlan_post_start() {
-	local iface="${1//./_}" vlan vlans vlans_old
+	local iface=${1} vlan vlans vlans_old e ifname
 
 	eval vlans=\"\$\{vlans_${iface}\}\"
 
@@ -70,8 +112,17 @@ vlan_post_start() {
 	# Start vlans for this interface
 	for vlan in ${vlans}; do
 		einfo "Adding VLAN ${vlan} to ${iface}"
-		/sbin/vconfig add ${iface} ${vlan} >${devnull}
-		eend $? && iface_start ${iface}.${vlan}
+		e=$( vconfig add ${iface} ${vlan} 2>&1 1>/dev/null )
+		if [[ -n ${e} ]] ; then
+			eend 1 ${e}
+			continue
+		fi
+		eend 0
+
+		# We need to work out the interface name of our new vlan id
+		ifname=$( cat /proc/net/vlan/config \
+			| awk -v iface=${iface} -v id=${vlan} '$5==iface && $3==id { print $1 }' )
+		iface_start ${ifname}
 	done
 
 	return 0
@@ -87,10 +138,10 @@ vlan_pre_stop() {
 
 	vlan_check_installed || return 0
 
-	for vlan in $( interface_get_vlans ${iface} ); do
+	for vlan in $( vlan_get_vlans ${iface} ); do
 		einfo "Removing VLAN ${vlan##*.} from ${iface}"
 		iface_stop ${vlan}
-		/sbin/vconfig rem ${vlan} >${devnull}
+		vconfig rem ${vlan} >${devnull}
 	done
 
 	return 0

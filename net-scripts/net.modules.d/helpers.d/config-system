@@ -1,5 +1,5 @@
 # config-system module for net-scripts
-# Version 1.0.1
+# Version 1.0.2
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -53,7 +53,10 @@ config_system() {
                 hostname ${new_host_name} >/dev/null
 	fi
 
-	eval peer=\"\$\{peer_dns_${interface}\}\"
+	local ifvar=${interface//:/_}
+	ifvar=${ifvar//./_}
+
+	eval peer=\"\$\{peer_dns_${ifvar}\}\"
 	[[ -z ${peer} ]] && eval peer=\"\$\{peer_dns\}\"
 	peer=${peer:-yes}
 
@@ -72,7 +75,7 @@ config_system() {
 		done
 	fi
 
-	eval peer=\"\$\{peer_nis_${interface}\}\"
+	eval peer=\"\$\{peer_nis_${ifvar}\}\"
 	[[ -z ${peer} ]] && eval peer=\"\$\{peer_nis\}\"
 	peer=${peer:-yes}
 
@@ -96,7 +99,7 @@ config_system() {
 		fi
 	fi
 
-	eval peer=\"\$\{peer_ntp_${interface}\}\"
+	eval peer=\"\$\{peer_ntp_${ifvar}\}\"
 	[[ -z ${peer} ]] && eval peer=\"\$\{peer_ntp\}\"
 	peer=${peer:-yes}
 
