@@ -16,6 +16,9 @@
     Fix bug 51351: Quote parsed output of /proc/filesystems to handle
     octal sequences in mountpoint such as encoded spaces (\040)
 
+    Fix bug 46680: Add cifs support to localmount and netmount.
+    Thanks to Ronald Moesbergen for the patches
+
   21 Jul 2004; Aron Griffis <agriffis@gentoo.org>:
 
     Fix bug 26952: Use /etc/bash/bashrc to setup PS1, testing $- to

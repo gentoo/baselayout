@@ -31,9 +31,9 @@ start() {
 	# add portmap to the default runlevel.
 	if [ -L ${svcdir}/started/portmap ]
 	then
-		rcfilesystems="coda,nfs,ncpfs,smbfs"
+		rcfilesystems="coda,nfs,ncpfs,smbfs,cifs"
 	else
-		rcfilesystems="coda,ncpfs,smbfs"
+		rcfilesystems="coda,ncpfs,smbfs,cifs"
 	fi
 
 	ebegin "Mounting network filesystems"
@@ -55,7 +55,7 @@ stop() {
 	#     else mount do not exit cleanly
 
 	local sig retry
-	local remaining="$(awk '$3 ~ /coda|nfs|ncpfs|smbfs/ { if ($2 != "/") print $2 }' /proc/mounts | sort -r)"
+	local remaining="$(awk '$3 ~ /coda|nfs|ncpfs|smbfs|cifs/ { if ($2 != "/") print $2 }' /proc/mounts | sort -r)"
 
 	# just keep things nice and uniform
 	if [ -z "${remaining}" ]
@@ -77,7 +77,7 @@ stop() {
 	                        umount ${remaining} &>/dev/null
 	                        eend $? "Failed to unmount filesystems"
 	                fi
-	                remaining="$(awk '$3 ~ /coda|nfs|ncpfs|smbfs/ { if ($2 != "/") print $2 }' /proc/mounts | sort -r)"
+	                remaining="$(awk '$3 ~ /coda|nfs|ncpfs|smbfs|cifs/ { if ($2 != "/") print $2 }' /proc/mounts | sort -r)"
 	                [ -z "${remaining}" ] && break
 	                /bin/fuser -k -m ${sig} ${remaining} &>/dev/null
 	                sleep 5
