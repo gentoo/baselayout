@@ -120,9 +120,9 @@ then
 	fi
 
 	# Need devfsd running now so that /dev/ram0 exists if we need it
-	mymounts="`cat /proc/mounts`"
+	mymounts="`awk '($3 == "devfs") { print "yes"; exit 0 }' /proc/mounts`"
 	if [ "${devfs}" = "yes" -a -e "/dev/.devfsd" -a \
-	     "${mymounts/devfs}" != "${mymounts}" ]
+	     "${mymounts}" = "yes" ]
 	then
 		ebegin "Starting devfsd"
 		/sbin/devfsd /dev > /dev/null
@@ -201,15 +201,6 @@ then
 	# the 'sysinit' runlevel ...
 	export BOOT="yes"
 
-	# Check that $svcdir exists ...
-	check_statedir
-
-	# Since we are using tmpfs or ramfs, just bin to $tsvcdir to $svcdir
-	if get_bootparam "tmpfs" || get_bootparam "ramfs" || [ "${svcmount}" = "yes" ]
-	then
-		mount --bind "${tsvcdir}" "${svcdir}"
-	fi
-
 	# We do not want to break compadibility, so we do not fully integrate
 	# these into /sbin/rc, but rather start them by hand ...
 	for x in checkroot hostname modules checkfs localmount
@@ -230,6 +221,15 @@ then
 			/sbin/reboot -f
 		fi
 	done
+
+	# Check that $svcdir exists ...
+	check_statedir
+
+	# Since we are using tmpfs or ramfs, just bin to $tsvcdir to $svcdir
+	if get_bootparam "tmpfs" || get_bootparam "ramfs" || [ "${svcmount}" = "yes" ]
+	then
+		mount --bind "${tsvcdir}" "${svcdir}"
+	fi
 
 	# Update the dependency cache
 	/sbin/depscan.sh
