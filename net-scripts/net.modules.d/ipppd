@@ -50,6 +50,7 @@ ipppd_check_depends() {
 # Returns 0 (true) when successful, non-zero otherwise
 ipppd_pre_start() {
 	local iface=${1} opts itype=$( interface_type ${1} )
+	local ifvar=$( interface_variable ${1} )
 
 	# Check that we are a valid isdn interface
 	[[ ${itype} != "ippp" && ${itype} != "isdn" ]] && return 0
@@ -58,7 +59,7 @@ ipppd_pre_start() {
 	! interface_exists ${iface} true && return 1
 
 	# Might or might not be set in conf.d/net
-	eval opts=\"\$\{ipppd_${iface}\}\"
+	eval opts=\"\$\{ipppd_${ifvar}\}\"
 
 	einfo "Starting ipppd for ${iface}"
 	/sbin/ipppd ${opts} pidfile /var/run/ipppd-${iface}.pid file /etc/ppp/options.${iface} >${devnull}

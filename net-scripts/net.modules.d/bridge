@@ -79,13 +79,12 @@ bridge_get_ports() {
 #
 # #set up bridge
 bridge_pre_start() {
-	local iface=${1} ports i e x
+	local iface=${1} ports i e x ifvar=$( interface_variable ${1} )
 	local -a opts
-	eval ports=\"\$\{bridge_${iface}\}\"
+	eval ports=\"\$\{bridge_${ifvar}\}\"
 
 	[[ -z ${ports} ]] && return 0
 
-	einfo "hi"
 	# Destroy the bridge if it exists
 	bridge_stop ${iface}
 
@@ -100,7 +99,7 @@ bridge_pre_start() {
 		return 1
 	fi
 
-	eval opts=( \"\$\{brctl_${iface}\[@\]\}\" )
+	eval opts=( \"\$\{brctl_${ifvar}\[@\]\}\" )
 	for (( i=0; i<${#opts[@]}; i++ )); do
 		x=${opts[i]/ / ${iface} }
 		[[ ${x} == ${opts[i]} ]] && x="${x} ${iface}"

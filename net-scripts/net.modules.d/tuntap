@@ -74,6 +74,7 @@ tuntap_get_vars() {
 # Create the device, give it the right perms
 tuntap_pre_start() {
 	local iface=${1} opts itype=$( interface_type ${1} )
+	local ifvar=$( interface_variable ${1} )
 
 	# Check that we are a valid tun/tap interface
 	# NOTE - the name can be anything as we define it
@@ -84,7 +85,7 @@ tuntap_pre_start() {
 	tuntap_check_kernel || return 1
 
 	# Get our options
-	eval opts=\"\$\{tunctl_${iface}\}\"
+	eval opts=\"\$\{tunctl_${ifvar}\}\"
 
 	ebegin "Creating Tun/Tap interface ${iface}"
 	tunctl ${opts} -t ${iface} &>${devnull}

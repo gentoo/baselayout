@@ -47,12 +47,12 @@ bonding_check_depends() {
 #
 # Bonds the interface
 bonding_pre_start() {
-	local iface=${1} slaves s
+	local iface=${1} slaves s ifvar=$( interface_variable ${1} )
 
-	eval slaves=\"\$\{slaves_${iface}\}\"
+	eval slaves=\"\$\{slaves_${ifvar}\}\"
 	[[ -z ${slaves} ]] && return 0
 
-	! interface_exists ${iface} true && return 1
+	interface_exists ${iface} true || return 1
 
 	if [[ ! -f /proc/net/bonding/${iface} ]]; then
 		eerror "${iface} is not capable of bonding"
@@ -109,7 +109,7 @@ bonding_pre_stop() {
 	eindent
 	einfo "${slaves}"
 	eoutdent
-	/sbin/ifenslave -d ${IFACE} ${slaves_IFACE} &>${devnull}
+	/sbin/ifenslave -d ${iface} ${slaves} &>${devnull}
 
 	# reset all slaves
 	for s in ${slaves}; do

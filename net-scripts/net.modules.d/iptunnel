@@ -54,9 +54,10 @@ iptunnel_get_vars() {
 # Create the device, give it the right perms
 iptunnel_pre_start() {
 	local iface=${1} opts itype=$( interface_type ${1} )
+	local ifvar=$( interface_variable ${iface} )
 
 	# Get our options
-	eval opts=\"\$\{iptunnel_${iface}\}\"
+	eval opts=\"\$\{iptunnel_${ifvar}\}\"
 	[[ -z ${opts} ]] && return 0
 
 	ebegin "Creating tunnel ${iface}"

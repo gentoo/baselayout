@@ -21,6 +21,7 @@
     - fixes last part of bug #71971
     Fixed pump exporing ntp servers
     implemented MODULES_DIR so we can change directory we load from on the fly
+    fixed variables for vlans in most modules
     
   19 Nov 2004; Aron Grffis <agriffis@gentoo.org>:
 
