@@ -83,13 +83,16 @@ interface_variable() {
 # Removes the given pidfile if the process is not running
 # Returns 1 if the process is still running otherwise 0
 clean_pidfile() {
-	local pidfile=${1} cmd
+	local pidfile=${1}
 
 	[[ ! -f ${pidfile} ]] && return 0
+	local pid=$( cat ${pidfile} )
 
-	cmd=${pidfile##*/}
-	cmd=${cmd%%-*}
-	ps -p $( cat ${pidfile} 2>/dev/null ) | grep -q ${cmd} && return 1
+	if [[ -n ${pid} ]]; then
+		local cmd=${pidfile##*/}
+		cmd=${cmd%%-*}
+		ps -p ${pid} 2>/dev/null | grep -q ${cmd} && return 1
+	fi
 
 	rm -f ${pidfile}
 	return 0

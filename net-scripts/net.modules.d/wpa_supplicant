@@ -1,4 +1,4 @@
-# wpa_supplicant (net-analyzer/wpa_supplicant) module for net-scripts
+# wpa_supplicant (net-wireless/wpa_supplicant) module for net-scripts
 # Version 1.0.0
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
@@ -92,12 +92,29 @@ wpa_supplicant_associated() {
 	return $?
 }
 
-# bool wpa_supplican_associate(char *interface)
+# void wpa_supplicant_kill(char *interface, bool report)
+#
+# Kills any existing wpa_supplicant process on the interface
+wpa_supplicant_kill() {
+	local iface=$1 report=${2:-false}
+	local pid=$( ps --no-headers -fC wpa_supplicant 2>/dev/null | awk '/-i'${iface}'/ { print $2 }' )
+
+	if [[ -n ${pid} ]]; then
+		${report} && ebegin "Stopping wpa_supplicant on ${iface}"
+		kill -s TERM ${pid}
+		${report} && eend 0
+	fi
+
+	# If wpa_supplicant exits uncleanly, we need to remove the stale dir
+	[[ -d /var/run/wpa_supplicant/${iface} ]] && rm -f /var/run/wpa_supplicant/${iface}
+}
+
+# bool wpa_supplicant_associate(char *interface)
 #
 # Returns 0 if wpa_supplicant associates and authenticates to an AP
 # otherwise, 1
 wpa_supplicant_associate() {
-	local iface=${1} ifvar=$( interface_variable ${1} ) timeout
+	local iface=${1} ifvar=$( interface_variable ${1} ) timeout i
 
 	eval timeout=\"\$\{wpa_timeout_${ifvar}:-60\}\"
 	for (( i=0; i<${timeout}; i++ )); do
@@ -109,13 +126,12 @@ wpa_supplicant_associate() {
 			[[ ${background} != yes ]] && eend 1 "timed out"
 
 			# We now need to kill the process
-			kill -s TERM $( ps --no-headers -fC wpa_supplicant 2>/dev/null | awk '/-i'${iface}'/ { print $2 }' ) 2>/dev/null
+			wpa_supplicant_kill ${iface}
 
 			return 1
 		fi
 	fi
 }
-
 
 # bool wpa_supplicant_pre_start(char *interface)
 #
@@ -126,19 +142,29 @@ wpa_supplicant_pre_start() {
 	# the background
 	${IN_BACKGROUND} && return 0
 
-	local iface=${1} opts ifvar i cfgfile=/etc/wpa_supplicant.conf timeout
+	local iface=$1 opts ifvar cfgfile=/etc/wpa_supplicant.conf timeout
 
 	# We only work on wirelesss interfaces
 	wpa_supplicant_check_extensions ${iface} || return 0
 
 	# Kill off any existing wpa_supplicant on this interface
-	# This is so we can re-read the configuration file
-	wpa_supplicant_post_stop ${iface}
+	# This is so we can re-read the configuration file and clean any stale
+	# directories
+	wpa_supplicant_kill ${iface} true
 
 	ebegin "Starting wpa_supplicant on ${iface}"
 
 	if [[ ! -f ${cfgfile} ]]; then
 		eend 1 "configuration file ${cfgfile} not found!"
+		return 1
+	fi
+
+	local ctrl_dir=$( awk -F# '/^ctrl_interface=/ { print $1 }' ${cfgfile} )
+	ctrl_dir=${ctrl_dir/ctrl_interface=/}
+	if [[ ${ctrl_dir} != "/var/run/wpa_supplicant" ]]; then
+		eerror "${cfgfile} must set"
+		eerror "  ctrl_interface=/var/run/wpa_supplicant"
+		eend 1
 		return 1
 	fi
 
@@ -151,6 +177,11 @@ wpa_supplicant_pre_start() {
 
 	if ! wpa_supplicant ${opts} -B -c/etc/wpa_supplicant.conf -i${iface} ; then
 		eend 1
+		return 1
+	fi
+
+	if ! wpa_cli -i${iface} status &>/dev/null ; then
+		eend 1 "wpa_supplicant has exited unexpectedly"
 		return 1
 	fi
 
@@ -194,15 +225,6 @@ wpa_supplicant_pre_start() {
 # Stops wpa_supplicant on an interface
 # Returns 0 (true) when successful, non-zero otherwise
 wpa_supplicant_post_stop() {
-	local iface=${1}
-
-	# wpa_supplicant does not write to a pid file ...
-	local pid=$( ps --no-headers -fC wpa_supplicant 2>/dev/null | awk '/-i'${iface}'/ { print $2 }' )
-	[[ -z ${pid} ]] && return 0
-
-	ebegin "Stopping wpa_supplicant on ${iface}"
-	kill -s TERM ${pid}
-	eend 0
-
+	wpa_supplicant_kill $1 true
 	return 0
 }
