@@ -41,6 +41,9 @@ if [ $# -lt 1 ]
 then
 	usage
 fi
+
+regen=0
+
 if [ "$1" = "add" ]
 then
 	if [ $# -lt 3 ]
@@ -73,13 +76,14 @@ then
 			ewarn "${myscript} not executable; skipping"
 			continue
 		fi
-		ln -sf /etc/init.d/${myscript} /etc/runlevels/${x}/${myscript}
+		ln -snf /etc/init.d/${myscript} /etc/runlevels/${x}/${myscript}
 		if [ "$?" -ne 0 ]
 		then
 			eerror "$0: failed to add $1 to ${x}."
 			exit 1
 		fi
-		ebegin "${myscript} added to runlevel ${x}"
+		regen=1
+		einfo "${myscript} added to runlevel ${x}"
 	done
 elif [ "$1" = "del" ]
 then
@@ -97,22 +101,32 @@ then
 	else 
 		mylevels="$*"
 	fi
+	remlevels=""
 	for x in ${mylevels}
 	do
 		if [ -L "/etc/runlevels/${x}/${myscript}" ]
 		then
+			regen=1
 			rm -f /etc/runlevels/${x}/${myscript}
-			ebegin "${myscript} removed from runlevel ${x}"
-		else
-			ewarn "${myscript} not found in runlevel ${x}; skipping"
-		fi
-	done
+			remlevels="${remlevels} ${x}"
+ 		fi
+ 	done
+	if [ "${remlevels}" = "" ]
+	then
+		einfo "${myscript} not found in any of the specified runlevels."
+	else
+		einfo "${myscript} removed from the following runlevels:${remlevels}"
+	fi
 else
 	usage
 	exit 1
 fi
-/sbin/depscan.sh
-einfo "rc-update complete."
+
+if [ "${regen}" -eq 1 ]
+then
+	/sbin/depscan.sh
+	einfo "rc-update complete."
+fi
 
 
 # vim:ts=4

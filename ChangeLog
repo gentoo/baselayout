@@ -6,6 +6,9 @@
 
     Truely fix bootup on seperate /var.
 
+    Add some fixes and optimizations to /sbin/rc-update, thanks to
+    Daniel Robbins <drobbins@gentoo.org>.
+
 * rc-scripts 1.4.3.1 (15 Jan 2003)
 
   15 Jan 2003; Martin Schlemmer <azarah@gentoo.org>:
