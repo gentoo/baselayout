@@ -44,7 +44,7 @@ then
 
 	echo
 	echo -e "${GOOD}Gentoo Linux${GENTOO_VERS}; \e[34;01mhttp://www.gentoo.org${NORMAL}"
-	echo -e " Copyright 2001 Gentoo Technologies, Inc.; Distributed under the GPL"
+	echo -e " Copyright 2001-2002 Gentoo Technologies, Inc.; Distributed under the GPL"
 	echo
 
 	ebegin "Mounting /proc"; \
