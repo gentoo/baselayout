@@ -102,6 +102,7 @@ svcmount="no"
 svcfstype="tmpfs"
 
 
-# Size of $svcdir in KB
+# Size of $svcdir in KB.  Note that ramfs doesn't support this 
+# due to kernel limitations.
 
 svcsize=2048

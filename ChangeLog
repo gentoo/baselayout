@@ -2,6 +2,15 @@
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  24 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Mount tmpfs instead of ramfs on /dev when using udev systems.  
+    The problem with ramfs is that it has no size limitations so 
+    one could easily take down their machine by accident.  Perhaps 
+    this could be made into a configuration option (type is ramfs, 
+    tmpfs, or ramdisk and size is xxxx), but for now we'll just 
+    force tmpfs unless someone cares ;) #68653.
+
 * rc-scripts 1.6.3 (23 Oct 2004)
 
   22 Oct 2004; Aron Griffis <agriffis@gentoo.org>:

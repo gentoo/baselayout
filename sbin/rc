@@ -217,8 +217,8 @@ then
 		if [ "${udev}" == "yes" ]
 		then
 			# Setup temporary storage for /dev
-			ebegin "Mounting ramfs at /dev"
-			try mount -n -t ramfs none /dev
+			ebegin "Mounting tmpfs at /dev"
+			try mount -n -t tmpfs none /dev
 			eend $?
 
 			# Actually get udev rolling
