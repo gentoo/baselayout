@@ -359,17 +359,49 @@ splash_debug() {
 	fi
 }
 
-if [ -x /sbin/splash ] && \
-   [ -e /proc/version -a -e /proc/splash ]
-then
-	rc_splash() {
-		/sbin/splash $*
-	}
-else
-	rc_splash() {
-		return 0
-	}
-fi
+update_splash_wrappers() {
+	if [ -x /sbin/splash ] && \
+	   ([ ! -e /proc/version ] || \
+	    [ -e /proc/version -a -e /proc/splash ])
+	then
+		rc_splash() {
+			/sbin/splash $*
+		}
+		rc_splash_init() {
+			splash_init $*
+		}
+		rc_splash_calc() {
+			splash_calc $*
+		}
+		rc_splash_update() {
+			splash_update $*
+		}
+		rc_splash_debug() {
+			splash_debug $*
+		}
+	else
+		rc_splash() {
+			return 0
+		}
+		rc_splash_init() {
+			return 0
+		}
+		rc_splash_calc() {
+			return 0
+		}
+		rc_splash_update() {
+			return 0
+		}
+		rc_splash_debug() {
+			return 0
+		}
+	fi
+
+	export rc_splash rc_splash_init rc_splash_calc \
+		rc_splash_update rc_splash_debug
+}
+
+update_splash_wrappers
 
 # void esyslog(char* priority, char* tag, char* message)
 #

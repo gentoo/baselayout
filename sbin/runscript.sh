@@ -447,11 +447,11 @@ do
 	case "${arg}" in
 	stop)
 		svc_stop
-		splash_update "live" "${myservice}" "stop"
+		rc_splash_update "live" "${myservice}" "stop"
 		;;
 	start)
 		svc_start
-		splash_update "live" "${myservice}" "start"
+		rc_splash_update "live" "${myservice}" "start"
 		;;
 	needsme|ineed|usesme|iuse|broken)
 		list_depend_trace "${arg}"

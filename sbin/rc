@@ -20,6 +20,10 @@ try() {
 	if [ "${retval}" -ne 0 ] || \
 	   ([ "${*/mount/}" != "$*" -a -n "${errstr}" ])
 	then
+		# Progressbar begin
+		rc_splash "stop" &> /dev/null &
+		# Progressbar end
+
 		echo -e "${ENDCOL}${NORMAL}[${BAD} oops ${NORMAL}]"
 		echo
 		eerror "The \"${1}\" command failed with error:"
@@ -84,7 +88,7 @@ get_critical_services() {
 argv1="$1"
 
 # Progressbar begin
-splash_init
+rc_splash_init
 # Progressbar end
 
 # First time boot stuff goes here.  Note that 'sysinit' is an internal runlevel
@@ -226,6 +230,8 @@ then
 		fi
 	fi
 
+	# Update splash wrappers.
+	update_splash_wrappers
 	# Progressbar begin
 	rc_splash "text"
 	# Progressbar end
@@ -311,7 +317,7 @@ then
 	for x in ${CRITICAL_SERVICES}
 	do
 		# Progressbar begin
-		splash_update "inline" "${x}" "start"
+		rc_splash_update "inline" "${x}" "start"
 		# Progressbar end
 
 		if ! start_critical_service "${x}"
@@ -359,10 +365,13 @@ then
 	)
 fi # Sysinit ends here
 
+# Update splash wrappers.
+update_splash_wrappers
+
 if [ "${RUNLEVEL}" = "S" -a "${argv1}" = "sysinit" ]
 then
 	# Progressbar begin
-	splash_debug "${argv1}"
+	rc_splash_debug "${argv1}"
 	# Progressbar end
 	exit 0
 
@@ -421,7 +430,7 @@ then
 fi
 
 # Progressbar begin
-splash_calc
+rc_splash_calc
 # Progressbar end
 
 # For keeping a list of services that fails during boot/halt
@@ -616,7 +625,7 @@ then
 	source /sbin/functions.sh
 	
 	# Progressbar begin
-	splash_debug "${SOFTLEVEL}"
+	rc_splash_debug "${SOFTLEVEL}"
 	# Progressbar end
 
 	# Make sure that our $svcdir are clean for next reboot ...
@@ -705,7 +714,7 @@ rm -rf "${svcdir}/failed" &> /dev/null
 [ -n "${BOOT}" ] && unset BOOT
 
 # Progressbar begin
-splash_debug "${SOFTLEVEL}"
+rc_splash_debug "${SOFTLEVEL}"
 # Progressbar end
 
 
