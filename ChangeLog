@@ -2,6 +2,11 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  13 Oct 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Create and fix permissions on /tmp/.{ICE,X11}-unix/.  This
+    is additional measures for bug #8281.
+
   12 Oct 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Update /etc/init.d/net.eth0 to fix bug #8626.
