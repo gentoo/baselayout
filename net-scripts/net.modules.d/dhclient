@@ -1,5 +1,5 @@
 # DHCP (net-misc/dhcp) module for net-scripts
-# Version 1.0.4
+# Version 1.0.5
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -70,20 +70,23 @@ dhclient_get_vars() {
 # Stop dhclient on an interface
 # Always returns 0
 dhclient_stop() {
-	local iface=${1} count
+	local iface=${1} count opts release pidfile="/var/run/dhclient-${1}.pid"
 	
 	dhclient_check_installed || return 0
+	[[ ! -f ${pidfile} ]] && return 0
 
 	# We check for a dhclient process first as if we attempt to release
 	# an interface for which dhclient has obtained an IP in the past
 	# it causes a "RELEASE" event anyway.
-	local r=$( ps -fC dhclient | awk "/-q ${iface}/ {print 1}")
-	[[ -z ${r} ]] && return 0
-
+	local pid=$( cat ${pidfile} )
 	local script=$( dhclient_get_script )
 
-	ebegin "Releasing DHCP lease for ${iface}"
-	r=$( dhclient -sf ${script} -r ${iface} -q )
+	eval release=\"\$\{dhcp_release_${ifvar}\}\"
+	[[ -z ${release} ]] && eval release=\"\$\{dhcp_release\}\"
+	[[ ${release} != no ]] && opts="-r"
+
+	ebegin "Stopping dhclient on ${iface}"
+	local r=$( dhclient -q ${opts} -sf ${script} -pf ${pidfile} ${iface} )
 	[[ ${r} == deconfig ]]
 	eend $? "dhclient returned a ${r}"
 	return 0
@@ -95,7 +98,7 @@ dhclient_stop() {
 #
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 dhclient_start() {
-	local iface=${1} opts
+	local iface=${1} opts pidfile="/var/run/dhclient-${1}.pid"
 	local ifvar=$( interface_variable ${iface} )
 
 	interface_exists ${iface} true || return 1
@@ -111,8 +114,15 @@ dhclient_start() {
 
 	# Bring up DHCP for this interface (or alias)
 	ebegin "Running dhclient"
+
+	if ! clean_pidfile ${pidfile} ; then
+		ewarn "dhclient is already running on ${iface}"
+		eend 0
+		return 0
+	fi
+
 	eval opts=\"\$\{dhclient_${ifvar}\}\"
-	local r=$( dhclient ${opts} -sf ${script} -q ${iface} )
+	local r=$( dhclient ${opts} -sf ${script} -pf ${pidfile} -q ${iface} )
 	# We just check the last 5 letters
 	[[ ${r:${#r} - 5:5} == bound ]]
 	eend $? || return 1

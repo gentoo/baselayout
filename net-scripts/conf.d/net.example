@@ -131,7 +131,6 @@
 # - dhcpcd, udhcpc and pump send the current hostname
 #   to the DHCP server by default
 # - dhcpcd does not daemonize when the lease time is infinite
-# - dhcpcd can take a long time to get leases sometimes
 # - udhcp-0.9.3-r3 and earlier does not support getting NTP servers 
 # - dhclient does not support getting NTP servers 
 # - pump does not support getting NIS servers
@@ -160,17 +159,21 @@
 # GENERIC DHCP OPTIONS
 # These can be set globally (setting=...) or per interface (setting_eth0=...)
 
+# To release the DHCP lease when we stop the interface
+# dhcp_release="yes"
+# dhcp_release_eth0="yes"
+
 # To stop DHCP from overwritting DNS (/etc/resolv.conf) use the below settings
-# peer_dns="no"
-# peer_dns_eth0="no"
+# dhcp_dns="no"
+# dhcp_dns_eth0="no"
 
 # To stop DHCP from overwritting NIS (/etc/yp.conf) use the below settings
-# peer_nis="no"
-# peer_nis_eth0="no"
+# dhcp_nis="no"
+# dhcp_nis_eth0="no"
 
 # To stop DHCP from overwritting NTP /etc/ntp.conf use the below settings
-# peer_ntp="no"
-# peer_ntp_eth0="no"
+# dhcp_ntp="no"
+# dhcp_ntp_eth0="no"
 
 #-----------------------------------------------------------------------------
 # Automatic Private IP Addressing (APIPA)

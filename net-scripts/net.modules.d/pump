@@ -1,5 +1,5 @@
 # Pump module for net-scripts
-# Version 1.0.4
+# Version 1.0.5
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -74,7 +74,7 @@ pump_stop() {
 	e=$( pump --status --interface ${iface} 2>${devnull} | grep ${iface})
 	[[ -z ${e} ]] && return 1
 	
-	ebegin "Releasing DHCP lease for ${iface}"
+	ebegin "Stopping pump on ${iface}"
 	for ((count = 0; count < 9; count = count + 1)); do
 		e=$( pump --release --interface ${iface} 2>${devnull} )
 		[[ -z ${e} ]] && break
@@ -108,8 +108,8 @@ pump_start() {
 	eval opts=\"\$\{pump_${ifvar}\}\"
 
 	# Map some generic options to pump
-	eval peer=\"\$\{peer_dns_${ifvar}\}\"
-	[[ -z ${peer} ]] && eval peer=\"\$\{peer_dns\}\"
+	eval peer=\"\$\{dhcp_dns_${ifvar}\}\"
+	[[ -z ${peer} ]] && eval peer=\"\$\{dhcp_dns\}\"
 	[[ ${peer} == no ]] && opts="--no-dns ${opts}"
 
 	# We transmit the hostname by default
@@ -127,8 +127,8 @@ pump_start() {
 	local addr=$( interface_get_address ${iface} )
 	einfo "${iface} received address ${addr}"
 
-	eval peer=\"\$\{peer_ntp_${iface}\}\"
-	[[ -z ${peer} ]] && eval peer=\"\$\{peer_ntp\}\"
+	eval peer=\"\$\{dhcp_ntp_${iface}\}\"
+	[[ -z ${peer} ]] && eval peer=\"\$\{dhcp_ntp\}\"
 	if [[ ${peer} != no ]]; then
 		export ntpsrv=$( pump -i ${iface} --status 2>/dev/null | awk '/Ntpservers/ {print $2}' 2>/dev/null )
 		source ${MODULES_DIR}/helpers.d/config-system

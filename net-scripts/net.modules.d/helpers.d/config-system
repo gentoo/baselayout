@@ -57,8 +57,8 @@ config_system() {
 
 	local ifvar=$( interface_variable ${interface} )
 
-	eval peer=\"\$\{peer_dns_${ifvar}\}\"
-	[[ -z ${peer} ]] && eval peer=\"\$\{peer_dns\}\"
+	eval peer=\"\$\{dhcp_dns_${ifvar}\}\"
+	[[ -z ${peer} ]] && eval peer=\"\$\{dhcp_dns\}\"
 	peer=${peer:-yes}
 
 	if [[ ${peer} != no ]] && [[ -n ${domain} || -n ${dns} ]]; then
@@ -73,8 +73,8 @@ config_system() {
 		done
 	fi
 
-	eval peer=\"\$\{peer_ntp_${ifvar}\}\"
-	[[ -z ${peer} ]] && eval peer=\"\$\{peer_ntp\}\"
+	eval peer=\"\$\{dhcp_ntp_${ifvar}\}\"
+	[[ -z ${peer} ]] && eval peer=\"\$\{dhcp_ntp\}\"
 	peer=${peer:-yes}
 
 	if [[ ${peer} != no && -n ${ntpsrv} ]]; then
@@ -92,8 +92,8 @@ config_system() {
 		done
 	fi
 
-	eval peer=\"\$\{peer_nis_${ifvar}\}\"
-	[[ -z ${peer} ]] && eval peer=\"\$\{peer_nis\}\"
+	eval peer=\"\$\{dhcp_nis_${ifvar}\}\"
+	[[ -z ${peer} ]] && eval peer=\"\$\{dhcp_nis\}\"
 	peer=${peer:-yes}
 
 	if [[ ${peer} != no ]] && [[ -n ${nisdomain} || -n ${nissrv} ]]; then

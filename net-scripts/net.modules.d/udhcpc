@@ -1,5 +1,5 @@
 # udhcpc (net-misc/udhcp) module for net-scripts
-# Version 1.0.4
+# Version 1.0.5
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -70,28 +70,26 @@ udhcpc_get_vars() {
 # Stops udhcpc running on an interface
 # Always returns 0
 udhcpc_stop() {
-	local iface=${1} count
+	local iface=${1} count release pidfile="/var/run/udhcpc-${1}.pid"
 	
 	udhcpc_check_installed || return 0
+	[[ ! -f ${pidfile} ]] && return 0
 
-	# We check for a udhcpc process first as if we attempt to release
-	# an interface for which udhcpc has obtained an IP in the past
-	# it causes a "RELEASE" event anyway.
-	local r=$( ps --no-heading -fC udhcpc | awk "/--interface=${iface}/" | awk '{print $2}' )
-	[[ -z ${r} ]] && return 1
+	ebegin "Stopping udhcpc on ${iface}"
+	local pid=$( cat ${pidfile} ) e=true
 
-	ebegin "Releasing DHCP lease for ${iface}"
-	local pid e=true
-	for pid in ${r}; do
-		kill -s USR2 ${pid} &>/dev/null
-		kill -s TERM ${pid} &>/dev/null
+	eval release=\"\$\{dhcp_release_${ifvar}\}\"
+	[[ -z ${release} ]] && eval release=\"\$\{dhcp_release\}\"
 
-		# udhcp-0.9.8-r3 and earlier do not process signals correctly
-		# so we need to kill them off
-		ps -p ${pid} &>/dev/null || continue
+	[[ ${release} != no ]] && kill -s USR2 ${pid} &>/dev/null
+	kill -s TERM ${pid} &>/dev/null
+
+	# udhcp-0.9.8-r3 and earlier do not process signals correctly
+	# so we need to kill them off
+	if ps -p ${pid} &>/dev/null ; then
 		kill -s KILL ${pid} &>/dev/null
 		ps -p ${pid} &>/dev/null && e=false
-	done
+	fi
 
 	${e}
 	eend $?
@@ -105,7 +103,7 @@ udhcpc_stop() {
 #
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 udhcpc_start() {
-	local iface=${1} opts hostname
+	local iface=${1} opts hostname pidfile="/var/run/udhcpc-${1}.pid"
 
 	interface_exists ${iface} true || return 1
 
@@ -127,7 +125,14 @@ udhcpc_start() {
 
 	# Bring up DHCP for this interface (or alias)
 	ebegin "Running udhcpc"
-	local r=$( udhcpc ${hostname} ${opts} --script=${script} --now --interface=${iface} )
+
+	if ! clean_pidfile ${pidfile} ; then
+		ewarn "udhcpc is already running on ${iface}"
+		eend 0
+		return 0
+	fi
+
+	local r=$( udhcpc ${hostname} ${opts} --script=${script} --now --pidfile=${pidfile} --interface=${iface} )
 	# We just check the last 5 letters
 	[[ ${r:((${#r} - 5)):5} == bound ]]
 	eend $? || return 1

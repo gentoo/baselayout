@@ -1,5 +1,5 @@
 # DHCP (net-misc/dhcpcd) module for net-scripts
-# Version 1.0.4
+# Version 1.0.5
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -64,23 +64,25 @@ dhcpcd_get_vars() {
 # Returns 0 (true) when a DHCP address dropped
 # otherwise return 1
 dhcpcd_stop() {
-	local iface=${1} count
+	local iface=${1} count signal pidfile="/var/run/dhcpcd-${1}.pid"
 	
 	dhcpcd_check_installed || return 0
-	dhcpcd -z ${iface} &>${devnull} || return 0
 
-	ebegin "Releasing DHCP lease for ${iface}"
-	for ((count = 0; count < 9; count = count + 1)); do
-		dhcpcd -z ${iface} &>${devnull} || break
-		sleep 1
-	done
-	[[ ${count} -lt 9 ]]
+	[[ ! -f ${pidfile} ]] && return 0
+
+	ebegin "Stopping dhcpcd on ${iface}"
+	local ifvar=$( interface_variable ${1} )
+	local pid=$( cat ${pidfile} )
+
+	eval release=\"\$\{dhcp_release_${ifvar}\}\"
+	[[ -z ${release} ]] && eval release=\"\$\{dhcp_release\}\"
+	[[ ${release} == yes ]] && signal="HUP"
+	signal="TERM"
+
+	kill -s ${signal} ${pid} &>${devnull}
+	process_finished ${pid} dhcpcd
 	eend $? "timed out"
-
-	# Remove stale PID file
-	[[ -f /var/run/dhcpcd-${iface}.pid ]] && rm -f /var/run/dhcpcd-${iface}.pid
-
-	return 0
+	return $?
 }
 
 # bool dhcpcd_start(char *iface)
@@ -89,7 +91,7 @@ dhcpcd_stop() {
 #
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 dhcpcd_start() {
-	local iface=${1} opts hostname
+	local iface=${1} opts hostname pidfile="/var/run/dhcpcd-${1}.pid"
 	local ifvar=$( interface_variable ${iface} )
 
 	interface_exists ${iface} true || return 1
@@ -100,25 +102,22 @@ dhcpcd_start() {
 	if [[ ${check} == ${iface} ]] && interface_is_up ${iface} true ; then
 		einfo "Keeping kernel configuration for ${iface}"
 		return 0
-	fi
-
-	# Remove stale PID file
-	[[ -f /var/run/dhcpcd-${iface}.pid ]] && rm -f /var/run/dhcpcd-${iface}.pid
+	fi		
 
 	# Get our options
 	eval opts=\"\$\{dhcpcd_${ifvar}\}\"
 
 	# Map some generic options to dhcpcd
-	eval peer=\"\$\{peer_dns_${ifvar}\}\"
-	[[ -z ${peer} ]] && eval peer=\"\$\{peer_dns\}\"
+	eval peer=\"\$\{dhcp_dns_${ifvar}\}\"
+	[[ -z ${peer} ]] && eval peer=\"\$\{dhcp_dns\}\"
 	[[ ${peer} == no ]] && opts="-R ${opts}"
 
-	eval peer=\"\$\{peer_nis_${ifvar}\}\"
-	[[ -z ${peer} ]] && eval peer=\"\$\{peer_nis\}\"
+	eval peer=\"\$\{dhcp_nis_${ifvar}\}\"
+	[[ -z ${peer} ]] && eval peer=\"\$\{dhcp_nis\}\"
 	[[ ${peer} == no ]] && opts="-Y ${opts}"
 
-	eval peer=\"\$\{peer_ntp_${ifvar}\}\"
-	[[ -z ${peer} ]] && eval peer=\"\$\{peer_ntp\}\"
+	eval peer=\"\$\{dhcp_ntp_${ifvar}\}\"
+	[[ -z ${peer} ]] && eval peer=\"\$\{dhcp_ntp\}\"
 	[[ ${peer} == no ]] && opts="-N ${opts}"
 
 	# We transmit the hostname by default
@@ -129,6 +128,13 @@ dhcpcd_start() {
 
 	# Bring up DHCP for this interface (or alias)
 	ebegin "Running dhcpcd"
+
+	if ! clean_pidfile ${pidfile} ; then
+		ewarn "dhcpcd is already running on ${iface}"
+		eend 0
+		return 0
+	fi
+
 	dhcpcd ${opts} ${iface}
 	eend $? || return 1
 

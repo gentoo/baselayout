@@ -1,6 +1,13 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+  02 Dec 2004; Roy Marples <uberlord@gentoo.org>:
+
+    Added option dhcp_release to specify if we release the DHCP lease or not
+    defaults to no
+    Changed variables peer_* to dhcp_*
+    dhclient and udhcpc now specify a pidfile
+
   01 Dec 2004; Mike Frysinger <vapier@gentoo.org>:
 
     Refix and clean up the netmount script to kill processes #64034.

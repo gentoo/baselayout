@@ -77,3 +77,35 @@ interface_type() {
 interface_variable() {
 	echo ${1//[![:word:]]/_}
 }
+
+# bool clean_pidfile(char *file)
+#
+# Removes the given pidfile if the process is not running
+# Returns 1 if the process is still running otherwise 0
+clean_pidfile() {
+	local pidfile=${1} cmd
+
+	[[ ! -f ${pidfile} ]] && return 0
+
+	cmd=${pidfile##*/}
+	cmd=${cmd%%-*}
+	ps -p $( cat ${pidfile} 2>/dev/null ) | grep -q ${cmd} && return 1
+
+	rm -f ${pidfile}
+	return 0
+}
+
+# bool process_finished(int pid, char* cmd)
+#
+# We wait for 10 seconds until the command ${cmd}
+# stops running on the process ${pid}
+process_finished() {
+	local i pid=${1} cmd=${2} secs=${3:-9}
+
+	for (( i=0; i<secs; i++ )); do
+		ps -p ${pid} | grep -q ${cmd} || return 0
+		sleep 1
+	done
+
+	return 1
+}
