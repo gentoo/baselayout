@@ -2,6 +2,8 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+* rc-scripts 1.4.3.9 (17 Jul 2003)
+
   17 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Add vlan support to /etc/init.d/net.eth0, bug #15588, thanks to
@@ -16,6 +18,10 @@
     This closes bug #23923, modified /etc/init.d/modules.
 
 	Fix a type-o in /etc/fstab, bug #23308.
+
+    Add support for the new 'O' agetty option to display the DNS domainname
+	in the issue file thanks to Marius Mauch <genone@genone.de>, bug #22275.
+	Updated /etc/issue and /etc/issue.logo for this.
 
   16 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:
 
