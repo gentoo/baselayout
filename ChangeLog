@@ -2,6 +2,15 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  26 Dec 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update code to generate /dev from /sys.  Add UDEV_NO_SLEEP=1 for
+    hack to not make udev sleep - its not needed as these entries
+    are already present, and not a hotplug event.
+
+    Update /etc/init.d/{consolefont,numlock} to work with udev managed
+    /dev that have devfs layout.
+
   14 Dec 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix type-o in /sbin/rc, bug #34837.

@@ -33,7 +33,8 @@ start() {
 				for x in 1 2 3 4 5 6 7 8 9 10
 				do
 					# Using DEVFS ?
-					if [ -e /dev/.devfsd ]
+					if [ -e /dev/.devfsd ] || \
+					   [ -e /dev/.udev -a -d /dev/vc ]
 					then
 						/bin/setfont ${CONSOLEFONT} ${param} \
 							--tty=/dev/vc/${x} >/dev/null
@@ -59,7 +60,8 @@ start() {
 			for x in 1 2 3 4 5 6 7 8 9 10
 			do
 				# Using DEVFS ?
-				if [ -e /dev/.devfsd ]
+				if [ -e /dev/.devfsd ] || \
+				   [ -e /dev/.udev -a -d /dev/vc ]
 				then
 					echo -ne "\033(K" >/dev/vc/${x}
 				else

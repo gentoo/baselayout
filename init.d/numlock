@@ -12,7 +12,13 @@ start() {
 	ebegin "Enabling numlock on ttys"
 	for tty in $(seq 1 11)
 	do
-		setleds -D +num < /dev/tty${tty} &>/dev/null
+		if [ -e /dev/.devfsd ] || \
+		   [ -e /dev/.udev -a -d /dev/vc ]
+		then
+			setleds -D +num < /dev/vc/${tty} &>/dev/null
+		else
+			setleds -D +num < /dev/tty${tty} &>/dev/null
+		fi
 	done
 	eend $? "Failed to enable numlock"
 }
@@ -21,7 +27,13 @@ stop() {
 	ebegin "Disabling numlock on ttys"
 	for tty in $(seq 1 11)
 	do
-		setleds -D -num < /dev/tty${tty} &>/dev/null
+		if [ -e /dev/.devfsd ] || \
+		   [ -e /dev/.udev -a -d /dev/vc ]
+		then
+			setleds -D -num < /dev/vc/${tty} &>/dev/null
+		else
+			setleds -D -num < /dev/tty${tty} &>/dev/null
+		fi
 	done
 	eend $? "Failed to disable numlock"
 }
