@@ -450,7 +450,7 @@ iwconfig_scan() {
 	# Change back mode if needed
 	x=$( eval echo \$\{mode_${ifvar}\} | tr '[:upper:]' '[:lower:]' )
 	x=${x:-auto}
-	[[ ${mode} != ${x} ]] && iwconfig ${iface} mode ${x} 2>${devnull}
+	[[ ${mode} != ${x} ]] && iwconfig ${iface} mode ${x} &>/dev/null
 
 	if [[ -z ${scan} ]]; then
 		ewarn "${iface} does not support scanning"
@@ -775,7 +775,7 @@ iwconfig_configure() {
 	local cur_mode=$( iwconfig_get_mode ${iface} )
 	if [[ ${cur_mode} != ${x} ]]; then
 		e=$( iwconfig ${iface} mode ${x} 2>&1 )
-		if [[ -n ${e} ]]; then
+		if [[ -n ${e} && ${x} != auto ]]; then
 			eerror "${iface} does not support setting the mode to \"${x}\""
 			return 1
 		fi
