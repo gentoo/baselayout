@@ -1,7 +1,11 @@
 #!/sbin/runscript
-# Copyright 1999-2004 Gentoo Technologies, Inc.
+# Copyright 1999-2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
+
+depend() {
+	need localmount
+}
 
 moduleinserted() {
 	local res="$(grep 'serial' /proc/modules | cut -f1 -d" ")"
@@ -14,9 +18,7 @@ moduleinserted() {
 	fi
 }
 
-setport() {
-	# arguments: device, irq, port, args
-
+setports() {
 	#if serial module exists, and it's not inserted, insert it permanently
 	if [ -f /lib/modules/$(uname -r)/misc/serial.o ]
 	then
@@ -27,37 +29,30 @@ setport() {
 		fi
 	fi
 
-	ebegin "Setting /dev/$1"
-	${SETSERIAL} -b /dev/$1 irq $2 port $3 $4 1>&2
-	if [ "$?" -gt 0 ]
+	if [ -e /etc/serial.conf ]
 	then
-		eend 1 "Error setting serial port $1 to irq $2 port $3 (args: $4)"
-		no_errs=0
-	else
-		eend 0
-		done="${done} /dev/$1"
+		grep -v "^#\|^ \|^$" /etc/serial.conf | while read device args
+			do
+				ebegin "Setting $device to $args"
+				${SETSERIAL} -b $device $args 1>&2
+				if [ "$?" -gt 0 ]
+				then
+					eend 1 "Error setting serial port $device $args"
+					no_errs=0
+				else
+					eend 0
+					done="${done} /dev/$1"
+				fi
+			done
 	fi
-}
-
-depend() {
-	need localmount
 }
 
 start() {
-	if [ -e /etc/rc.d/config/serial ]
-	then
-		source /etc/rc.d/config/serial
-	else
-		return
-	fi
-
-	SETSERIAL="/sbin/setserial"
-
+	SETSERIAL="/bin/setserial"
 	no_errs=1
 	done=""
 	setports
 	return
 }
-
 
 # vim:ts=4
