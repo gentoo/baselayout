@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+  12 Jan 2004; Roy Marples <uberlord@gentoo.org>:
+
+    net.lo now ignores dot files when loading modules
+
   11 Jan 2004; Roy Marples <uberlord@gentoo.org>:
 
     added "noop" config parameter which means take no action if the interface
