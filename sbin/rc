@@ -275,7 +275,7 @@ then
 			if [ -d /dev/pts ]
 			then
 				ebegin "Mounting devpts at /dev/pts"
-				try mount -n -t devpts none /dev/pts
+				try mount -n -t devpts -o gid=5,mode=0620 none /dev/pts
 				eend $?
 			fi
 		fi

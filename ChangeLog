@@ -2,6 +2,10 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  28 Dec 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix /sbin/rc to mount /dev/pts with gid=5 and mode=0620, bug #36088.
+
 * rc-scripts 1.4.3.12p2 (27 Dec 2003)
 
   26 Dec 2003; Martin Schlemmer <azarah@gentoo.org>:
