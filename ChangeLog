@@ -9,6 +9,8 @@
 
     Fix error in functions.sh [ -z "$@" ] -> [[ -z "$@" ]] #69789.
 
+    Don't create /dev/sndstat link anymore in populate_udev per #69635.
+
   01 Nov 2004; Roy Marples <uberlord@gentoo.org>:
 
     net-scripts/init.d/net.lo:

@@ -80,7 +80,6 @@ populate_udev() {
 	ln -snf fd/1 /dev/stdout
 	ln -snf fd/2 /dev/stderr
 	ln -snf /proc/kcore /dev/core
-	ln -snf /proc/asound/oss/sndstat /dev/sndstat
 
 	# Create nodes that udev can't
 	[ -x /sbin/dmsetup ] && /sbin/dmsetup mknodes &> /dev/null
