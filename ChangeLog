@@ -1,6 +1,12 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+  02 Dec 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Merge time checking function (is_older_than) to help simplify config 
+    file update checking.  Used for now in env-update.sh #71285.  Function 
+    written by Paul Pacheco #55329.
+
   02 Dec 2004; Roy Marples <uberlord@gentoo.org>:
 
     Added option dhcp_release to specify if we release the DHCP lease or not

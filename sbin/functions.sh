@@ -646,6 +646,30 @@ is_in_fstab() {
 	[ -n "$(awk '($2 ~ /^'${*//\//\\/}'$/) { print }' /etc/fstab)" ]
 }
 
+# bool is_older_than(reference, files/dirs to check)
+#
+#   return 0 if any of the files/dirs are newer than 
+#   the reference file
+#
+#   EXAMPLE: if is_older_than a.out *.o ; then ...
+is_older_than() {
+	local x=
+	local ref="$1"
+	shift
+
+	for x in "$@"
+	do
+		[[ ${x} -nt ${ref} ]] && return 0
+
+		if [[ -d ${x} ]]
+		then
+			is_older_than "${ref}" "${x}"/* && return 0
+		fi
+	done
+
+	return 1
+}
+
 
 ##############################################################################
 #                                                                            #
