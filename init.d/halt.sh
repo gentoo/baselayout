@@ -78,7 +78,7 @@ ebegin "Unmounting filesystems"
 #awk should still be availible (allthough we should consider moving it to /bin if problems arise)
 for x in `awk '!/(^#|proc|devfs|tmpfs|^none|^\/dev\/root| \/ )/ {print $2}' /proc/mounts |sort -r`
 do
-	umount -f ${x} > /dev/null 2>/dev/null
+	umount -f -r ${x} > /dev/null 2>/dev/null
 done
 eend 0
 
@@ -94,11 +94,11 @@ ebegin "Remounting remaining filesystems readonly"
 #get better results with a sync and sleep
 sync;sync
 sleep 2
-umount -a -r -t noproc,notmpfs > /dev/null 2>/dev/null
+umount -a -r -n -t nodevfs,noproc,notmpfs > /dev/null 2>/dev/null
 if [ "$?" -ne 0 ]
 then
 	killall5 -9
-	umount -a -r -l -d -f > /dev/null 2>/dev/null
+	umount -a -r -n -l -d -f > /dev/null 2>/dev/null
 	if [ "$?" -ne 0 ]
 	then
 		eend 1
