@@ -15,6 +15,9 @@
 
     Add entry for floppy in /etc/fstab, bug #30574.
 
+    Remove changing group of /tmp/.{X,ICE}-unix, as it it not needed,
+    bug #28861.
+
   14 Sep 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Change update-modules to modules-update in manpage, bug #28101.

@@ -81,7 +81,7 @@ start() {
 		rm -rf /tmp/.esd* /tmp/orbit-* /tmp/ssh-* /tmp/ksocket-* /tmp/.*-unix &>/dev/null
 		# Make sure our X11 stuff have the correct permissions
 		mkdir -p /tmp/.{ICE,X11}-unix &>/dev/null
-		chown root.root /tmp/.{ICE,X11}-unix &>/dev/null
+#		chown root.root /tmp/.{ICE,X11}-unix &>/dev/null
 		chmod 1777 /tmp/.{ICE,X11}-unix &>/dev/null
 		eend 0
 	fi
