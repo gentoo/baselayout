@@ -10,7 +10,7 @@ depend() {
 start() {
 	[[ -c /dev/urandom ]] || return
 	if [[ -f /var/run/random-seed ]] ; then
-	    cat /var/run/random-seed > /dev/urandom
+		cat /var/run/random-seed > /dev/urandom
 	fi
 	if ! rm -f /var/run/random-seed &> /dev/null ; then
 		ewarn "Skipping /var/run/random-seed initialization (ro root?)"
