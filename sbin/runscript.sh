@@ -16,11 +16,6 @@ if [[ ${EUID} != 0 ]] ; then
 	exit 1
 fi
 
-if [[ "${0##*/}" = "runscript.sh" ]] ; then
-	eerror "$0: Do not run this directly"
-	exit 1
-fi
-
 # State variables
 svcpause="no"
 svcrestart="no"
