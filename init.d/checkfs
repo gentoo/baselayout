@@ -198,7 +198,7 @@ start() {
 		if [ "${retval}" -eq 0 ]
 		then
 			eend 0
-		elif [ "${retval}" -gt 1 -a "${retval}" -lt 4 ]
+		elif [ "${retval}" -ge 1 -a "${retval}" -le 3 ]
 		then
 			ewend 1 "Filesystem errors corrected."
 			# Everything should be ok, so return a pass
