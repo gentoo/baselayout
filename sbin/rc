@@ -458,8 +458,10 @@ then
 		/sbin/telinit q &>/dev/null
 	fi
 
-	# Clear $svcdir from stale entries
-	rm -rf "${svcdir}"/*
+	# Clear $svcdir from stale entries, but leave the caches around, as it
+	# should help speed things up a bit
+	rm -rf $(ls -d1 "${svcdir}/"* 2>/dev/null | \
+	         grep -ve '\(depcache\|deptree\|envcache\)')
 
 	# Update the dependency cache
 	/sbin/depscan.sh -u
@@ -754,8 +756,10 @@ if [ "${SOFTLEVEL}" = "reboot" -o "${SOFTLEVEL}" = "shutdown" ]
 then
 	source /sbin/functions.sh
 	
-	# Make sure that our $svcdir are clean for next reboot ...
-	rm -rf "${svcdir}"/*
+	# Clear $svcdir from stale entries, but leave the caches around, as it
+	# should help speed things up a bit
+	rm -rf $(ls -d1 "${svcdir}/"* 2>/dev/null | \
+	         grep -ve '\(depcache\|deptree\|envcache\)')
 	
 	source /etc/init.d/halt.sh
 	

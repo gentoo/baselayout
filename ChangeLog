@@ -2,6 +2,14 @@
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  31 Oct 2004; Martin Schlemmer <azarah@gentoo.org>:
+
+    Do not delete depscan and envupdate caches on reboot, as this should
+    improve bootup times - works nicely with the '-u' parameters of both.
+    Also move the '-u' parameter test of depscan.sh after the directory
+    exist test, else ${svcdir}/started/, etc do not exist.  Modified both
+    /sbin/rc and /sbin/depscan.sh for this.
+
   28 Oct 2004; Martin Schlemmer <azarah@gentoo.org>:
 
     Only add files not managed by udev to device tarball, bug #57110.
