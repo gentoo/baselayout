@@ -10,15 +10,6 @@ vconfig() {
 	LC_ALL=C /sbin/vconfig "$@"
 }
 
-# bool vlan_check_installed(void)
-#
-# Returns 1 if vconfig is installed, otherwise 0
-vlan_check_installed() {
-	[[ -x /sbin/vconfig ]] && return 0
-	${1:-false} && eerror "For VLAN (802.1q) support, emerge net-misc/vconfig"
-	return 1
-}
-
 # char* vlan_provides(void)
 #
 # Returns a string to change module definition for starting up
@@ -32,7 +23,15 @@ vlan_provides() {
 vlan_depend() {
 	after interface
 	before dhcp
-	need interface
+}
+
+# bool vlan_check_installed(void)
+#
+# Returns 1 if vconfig is installed, otherwise 0
+vlan_check_installed() {
+	[[ -x /sbin/vconfig ]] && return 0
+	${1:-false} && eerror "For VLAN (802.1q) support, emerge net-misc/vconfig"
+	return 1
 }
 
 # bool vlan_check_depends(void)

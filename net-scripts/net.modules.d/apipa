@@ -1,20 +1,8 @@
 # Automatic Private IP Addressing (APIPA) module for net-scripts
-# Version 1.0.0
+# Version 1.0.1
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
-
-# bool apipa_check_installed(void)
-#
-# Returns 1 if ifenslave is installed, otherwise 0
-apipa_check_installed() {
-	[[ -x /sbin/arping || -x /usr/sbin/arping2 ]] && return 0
-	if ${1:-false}; then
-		eerror "For Automatic Private IP Addressing (APIPA) support"
-		eerror "emerge net-misc/iputils or net-analyzer/arping"
-	fi
-	return 1
-}
 
 # char* apipa_provides(void)
 #
@@ -28,7 +16,18 @@ apipa_provides() {
 # Sets up the dependancies for the module
 apipa_depend() {
 	after dhcp
-	need interface
+}
+
+# bool apipa_check_installed(void)
+#
+# Returns 1 if ifenslave is installed, otherwise 0
+apipa_check_installed() {
+	[[ -x /sbin/arping || -x /usr/sbin/arping2 ]] && return 0
+	if ${1:-false}; then
+		eerror "For Automatic Private IP Addressing (APIPA) support"
+		eerror "emerge net-misc/iputils or net-analyzer/arping"
+	fi
+	return 1
 }
 
 # bool apipa_check_depends(void)

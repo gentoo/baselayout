@@ -1,6 +1,15 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+  06 Dec 2004; Roy Marples <uberlord@gentoo.org>:
+
+    macchanger defaults to setting the interface down, and then trying
+    with it up - fixes #71929
+    macchanger converts mac_${IFACE} to lowercase - fixes #73549
+    iproute2 now configures the interface up everytime we add an address
+    removed "need interface" from all modules depends as net.lo requires
+    interface anyway
+
   05 Dec 2004; Roy Marples <uberlord@gentoo.org>:
 
     dhclient now kill it's process if it failed to get a lease on startup

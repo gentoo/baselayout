@@ -22,7 +22,6 @@ pump_provides() {
 # Sets up the dependancies for the module
 pump_depend() {
 	after interface
-	need interface
 }
 
 # bool pump_check_installed(void)

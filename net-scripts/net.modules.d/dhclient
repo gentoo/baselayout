@@ -22,7 +22,6 @@ dhclient_provides() {
 # Sets up the dependancies for the module
 dhclient_depend() {
 	after interface
-	need interface
 }
 
 # bool dhclient_check_installed(void)

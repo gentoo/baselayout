@@ -22,7 +22,6 @@ udhcpc_provides() {
 # Sets up the dependancies for the module
 udhcpc_depend() {
 	after interface
-	need interface
 }
 
 # bool udhcpc_check_installed(void)

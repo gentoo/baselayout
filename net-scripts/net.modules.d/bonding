@@ -1,17 +1,8 @@
 # Interface bonding module for net-scripts
-# Version 1.0.2
+# Version 1.0.3
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
-
-# bool bonding_check_installed(void)
-#
-# Returns 1 if ifenslave is installed, otherwise 0
-bonding_check_installed() {
-	[[ -x /sbin/ifenslave ]] && return 0
-	${1:-false} && eerror "For link aggregation (bonding) support, emerge net-misc/ifenslave"
-	return 1
-}
 
 # char* bonding_provides(void)
 #
@@ -26,7 +17,15 @@ bonding_provides() {
 bonding_depend() {
 	after interface
 	before vlan dhcp
-	need interface
+}
+
+# bool bonding_check_installed(void)
+#
+# Returns 1 if ifenslave is installed, otherwise 0
+bonding_check_installed() {
+	[[ -x /sbin/ifenslave ]] && return 0
+	${1:-false} && eerror "For link aggregation (bonding) support, emerge net-misc/ifenslave"
+	return 1
 }
 
 # bool bonding_check_depends(void)

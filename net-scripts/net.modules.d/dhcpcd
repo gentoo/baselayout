@@ -22,7 +22,6 @@ dhcpcd_provides() {
 # Sets up the dependancies for the module
 dhcpcd_depend() {
 	after interface
-	need interface
 }
 
 # bool dhcpcd_check_installed(void)

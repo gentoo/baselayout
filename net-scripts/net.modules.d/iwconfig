@@ -26,7 +26,6 @@ iwpriv() {
 # Sets up the dependancies for the module
 iwconfig_depend() {
 	before interface
-	need interface
 }
 
 # bool iwconfig_check_installed(void)
