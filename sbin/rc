@@ -150,7 +150,7 @@ then
 	if [ -d /sys -a "$(get_KV)" -ge "$(KV_to_int '2.6.0')" ]
 	then
 		ebegin "Mounting sysfs at /sys"
-		mount -t sysfs none /sys
+		mount -n -t sysfs none /sys
 		eend $?
 
 	elif [ "$(get_KV)" -ge "$(KV_to_int '2.6.0')" ]
@@ -252,7 +252,6 @@ then
 				# Make sure we have /dev/pts
 				mkdir -p /dev/pts &>/dev/null || \
 					ewarn "Could not create /dev/pts!"
-				
 			fi
 
 			if [ -d /dev/pts ]
