@@ -4,6 +4,10 @@
 # $Header$
 
 
+depend() {
+	need localmount
+}
+
 start() {
 	ebegin "Enabling numlock on ttys"
 	for tty in /dev/tty[1-8] ; do
