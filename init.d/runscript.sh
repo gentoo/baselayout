@@ -71,6 +71,7 @@ svc_stop() {
 	local stopfail="no"
 	local mydeps
 	local mydep
+	local retval
 	local depservice
 	if [ ! -L ${svcdir}/started/${myservice} ]
 	then
@@ -78,8 +79,11 @@ svc_stop() {
 		return 1
 	fi
 
+	#remove symlink to prevent recursion
+	rm -f ${svcdir}/started/${myservice}
+
 	#stop all services that should be before on runlevel change
-	for x in ${svcdir}/after/*/${myservice}
+	for x in ${svcdir}/before/*/${myservice}
 	do
 		if [ ! -L ${x} ]
 		then
@@ -89,7 +93,10 @@ svc_stop() {
 		if [ -d ${svcdir}/softscripts.new ]
 		then
 			if [ ! -L ${svcdir}/softscripts.new/${depservice##*/} ] && \
-			   [ -L ${svcdir}/started/${depservice##*/} ]
+			   [ -L ${svcdir}/started/${depservice##*/} ] && \
+			   [ ! -L ${svcdir}/need/${depservice##*/}/${myservice} ] && \
+			   [ ! -L ${svcdir}/use/${depservice##*/}/${myservice} ] && \
+			   [ ! -L ${svcdir}/before/${myservice}/${depservice##*/} ]
 			then
 				/etc/init.d/${depservice##*/} stop
 			fi
@@ -143,20 +150,43 @@ svc_stop() {
 				if [ "$stopfail" = "yes" ] && [ -L ${svcdir}/need/${mydep}/${x} ]
 				then
 					eerror "Problems stopping dependent services.  \"${myservice}\" still up."
+					ln -sf /etc/init.d/${myservice} ${svcdir}/started/${myservice}
 					exit 1
 				fi
 			fi
 		done
 	done
-	
+
 	#now that deps are stopped, stop our service
 	stop
-	if [ $? -eq 0 ]
+	retval=$?
+
+#	#stop all services that should be after on runlevel change
+#	for x in ${svcdir}/after/*/${myservice}
+#	do
+#		if [ ! -L ${x} ]
+#		then
+#			continue
+#		fi
+#		depservice=${x%/*}
+#		if [ -d ${svcdir}/softscripts.new ]
+#		then
+#			if [ ! -L ${svcdir}/softscripts.new/${depservice##*/} ] && \
+#			   [ -L ${svcdir}/started/${depservice##*/} ] && \
+#			   [ ! -L ${svcdir}/need/${myservice}/${depservice##*/} ] && \
+#			   [ ! -L ${svcdir}/use/${myservice}/${depservice##*/} ] && \
+#			   [ ! -L ${svcdir}/after/${myservice}/${depservice##*/} ]
+#			then
+#				/etc/init.d/${depservice##*/} stop
+#			fi
+#		fi
+#	done
+
+	if [ $retval -ne 0 ]
 	then
-		rm ${svcdir}/started/${myservice}
-	else
-		return $?
+		ln -sf /etc/init.d/${myservice} ${svcdir}/started/${myservice}
 	fi
+	return $retval
 }
 
 svc_start() {
@@ -168,8 +198,11 @@ svc_start() {
 	local depservice
 	if [ ! -L ${svcdir}/started/${myservice} ]
 	then
+		#link first to prevent possible recursion
+		ln -sf /etc/init.d/${myservice} ${svcdir}/started/${myservice}
+	
 		#start anything that should be started before on runlevel change
-		for x in ${svcdir}/before/*/${myservice}
+		for x in ${svcdir}/after/*/${myservice}
 		do
 			if [ ! -L ${x} ]
 			then
@@ -179,15 +212,16 @@ svc_start() {
 			if [ -d ${svcdir}/softscripts.old ]
 			then
 				if [ ! -L ${svcdir}/softscripts.old/${depservice##*/} ] && \
-				   [ ! -L ${svcdir}/started/${depservice##*/} ]
+				   [ ! -L ${svcdir}/started/${depservice##*/} ] && \
+				   [ -L ${svcdir}/softscripts/${depservice##*/} ] && \
+				   [ ! -L ${svcdir}/need/${myservice}/${depservice##*/} ] && \
+				   [ ! -L ${svcdir}/use/${myservice}/${depservice##*/} ] && \
+				   [ ! -L ${svcdir}/after/${myservice}/${depservice##*/} ]
 				then
 					/etc/init.d/${depservice##*/} start
 				fi
 			fi
 		done
-
-		#link first to prevent possible recursion		
-		ln -s /etc/init.d/${myservice} ${svcdir}/started/${myservice}
 
 		#start dependencies, if any
 		for x in `ineed ${myservice}` `valid_iuse ${myservice}`
@@ -239,6 +273,28 @@ svc_start() {
 			start
 			retval=$?
 		fi
+
+		#start anything that should be started after on runlevel change
+		for x in ${svcdir}/before/*/${myservice}
+		do
+			if [ ! -L ${x} ]
+			then
+				continue
+			fi
+			depservice=${x%/*}
+			if [ -d ${svcdir}/softscripts.old ]
+			then
+				if [ ! -L ${svcdir}/softscripts.old/${depservice##*/} ] && \
+				   [ ! -L ${svcdir}/started/${depservice##*/} ] && \
+				   [ -L ${svcdir}/softscripts/${depservice##*/} ] && \
+				   [ ! -L ${svcdir}/need/${depservice##*/}/${myservice} ] && \
+				   [ ! -L ${svcdir}/use/${depservice##*/}/${myservice} ] && \
+				   [ ! -L ${svcdir}/before/${myservice}/${depservice##*/} ]
+				then
+					/etc/init.d/${depservice##*/} start
+				fi
+			fi
+		done
 
 		#remove link if service didn't start; but only if we're not booting
 		#if we're booting, we need to continue and do our best to get the

@@ -125,7 +125,8 @@ cat <<EOHELP
       startup order.  In core, 'before' and 'after' do not denote dependancy,
       but should be used for order changes that should only be honoured during
       a change of runlevel.  All services listed will get started *after* the
-      current service.
+      current service, in other words, this service will get started *before*
+      all listed services.
             
 EOHELP
 echo -e "    ${GREEN}after${OFF}"
