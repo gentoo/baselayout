@@ -9,6 +9,9 @@
     iproute2 now allows appends routes instead of adding them
     this allows many default routes
 
+    RC_STRICT_NET_CHECKING now supports the none "option" which means
+    that the net service is always up
+
   07 Feb 2005; Roy Marples <uberlord@gentoo.org>:
 
     netmask2cidr now works correctly - fixes #81119
