@@ -52,14 +52,14 @@ parse_envd() {
 			(/bin/awk '!/^#|^\t+#/ { gsub ( /=/, "\t" ) ; print $0 }' ${x}) | \
 				while read -r variable value
 			do
-				if [ "$(eval echo \${VARLIST/${variable}/})" = "${VARLIST}" -a \
+				if [ "$(eval echo \${VARLIST/ ${variable} /})" = "$(eval echo \${VARLIST/# /})" -a \
 				     -n "${variable}" -a -n "${value}" ]
 				then
 					if [ -n "${VARLIST}" ]
 					then
-						VARLIST="${VARLIST} ${variable}"
+						VARLIST="${VARLIST} ${variable} "
 					else
-						VARLIST="${variable}"
+						VARLIST=" ${variable} "
 					fi
 					echo "${VARLIST}" >${svcdir}/varlist
 				fi
