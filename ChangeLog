@@ -2,6 +2,9 @@
 # Copyright 2001 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  20 Jan 2002: Martin Schlemmer (azarah@gentoo.org): updated
+  /etc/init.d/net.eth0 to 'use' pcmcia.
+
   8  Jan 2002: Martin Schlemmer (azarah@gentoo.org): added '--sh' to
   the dircolors command in /etc/skel/.bash_profile to handle cases
   where bash do not export $SHELL.
