@@ -150,7 +150,7 @@ bridge_stop() {
 	eindent
 	for i in ${ports}; do
 		ebegin "Removing port ${i}"
-		interface_down ${iface}
+		interface_down ${i}
 		interface_set_flag ${i} promisc false
 		brctl delif ${iface} ${i} &>${devnull}
 		eend $?
