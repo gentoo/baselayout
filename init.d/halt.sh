@@ -44,7 +44,8 @@ halt -w &> /dev/null
 #
 # Unmount file systems, killing processes if we have to.
 # Unmount loopback stuff first
-remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $1}' /proc/mounts | sort -r`"
+# Use `umount -d` to detach the loopback device
+remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts | sort -r`"
 [ -n "${remaining}" ] && {
 	sig=
 	retry=3
@@ -54,21 +55,13 @@ remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $1}' /proc/mou
 		if [ "${retry}" -lt 3 ]
 		then
 			ebegin "Unmounting loopback filesystems (retry)"
-			umount ${remaining} &> /dev/null
+			umount -d ${remaining} &> /dev/null
 			eend $? "Failed to unmount filesystems this retry"
 		else
 			ebegin "Unmounting loopback filesystems"
-			umount ${remaining} &> /dev/null
+			umount -d ${remaining} &> /dev/null
 			eend $? "Failed to unmount filesystems"
 		fi
-		for dev in ${remaining}
-		do
-			losetup ${dev} &> /dev/null && {
-				ebegin "  Detaching loopback device ${dev}"
-				/sbin/losetup -d ${dev} &> /dev/null
-				eend $? "Failed to detach device ${dev}"
-			}
-		done
 		
 		remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts | sort -r`"
 		[ -z "${remaining}" ] && break

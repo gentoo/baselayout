@@ -8,6 +8,10 @@
     request of Luke-Jr <luke-jr@gentoo.org>.  It should be ok now, as the
     whole way of devfs handling changed long ago already.
 
+    Fix /etc/init.d/halt.sh to unmount the mount point and not the device.
+    Also change it to 'mount -d' to detach the loop device.  Patch by
+    Kalin KOZHUHAROV <kalin@ThinRope.net>, bug #26256.
+
 * rc-scripts 1.4.3.10 (04 Aug 2003)
 
   04 Aug 2003; Martin Schlemmer <azarah@gentoo.org>:
