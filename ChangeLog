@@ -6,6 +6,9 @@
 
     Add the cyrus user to /etc/passwd.  Resolves bug #4100.
 
+    Some bugfixes and speed improvements to /sbin/depscan.sh after
+    last changes.
+
   21 Jul 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix LVM support in /etc/init.d/checkfs again, thanks to help from

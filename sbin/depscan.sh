@@ -137,9 +137,9 @@ cache_depend() {
 	local myline=""
 	local dowrite=1
 	local mycount=0
-	local bcount=0
-	local ecount=0
-	(cat ${1}) | { while read myline
+	local count=0
+	#we do not want comments in our cache
+	(cat ${1} | awk '!/^#|\t#/ { print $0 }') | { while read myline
 		do
 			if [ "${myline/depend*()/}" != "${myline}" ]
 			then
@@ -147,16 +147,17 @@ cache_depend() {
 			fi
 			if [ "${dowrite}" -eq 0 ]
 			then
-				local mycount="$(echo ${myline} | grep --mmap -oe '{' | wc -l)"
-				bcount=$(( $bcount + $mycount ))
+				#to grab the whole depend() function, starting and ending braces
+				#should be equal
+				local mycount="$(echo ${myline} | \
+					awk '{ BNUM += gsub(/{/, "{") ; BNUM -= gsub(/}/, "}") } \
+					END { print BNUM }')"
+				count=$(( $count + $mycount ))
 				
 				echo "${myline}" >> ${svcdir}/cache/${1##*/}.depend
-				
-				local mycount="$(echo ${myline} | grep --mmap -oe '}' | wc -l)"
-				ecount=$(( $ecount + $mycount ))
 			fi
 			if [ "${myline/\}/}" != "${myline}" ] && \
-			   [ "${dowrite}" -eq 0 ] && [ "${bcount}" -eq "${ecount}" ]
+			   [ "${dowrite}" -eq 0 ] && [ "${count}" -eq 0 ]
 			then
 				dowrite=1
 				break
@@ -273,7 +274,7 @@ do
 		return 0
 	}
 	#we already warn about the error in the provide loop
-	wrap_rcscript "${svcdir}/cache/${myservice}.depend" || continue
+	source ${svcdir}/cache/${myservice}.depend
 	depend
 	if [ -n "${BEFORE}" ]
 	then
