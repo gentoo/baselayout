@@ -28,7 +28,7 @@ start() {
 			if mount -vf -o remount / | \
 				awk '{ if ($5 !~ /coda|nfs|ncpfs|smbfs|cifs/) exit 0; else exit 1; }'
 			then
-				fsck -C -T -a /
+				fsck -A -C -T -a /
 			fi
 			retval=$?
 		fi

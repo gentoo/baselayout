@@ -6,8 +6,10 @@
 
     Add support for NFSv4 from #25106 to the netmount script.  Don't 
     try to fsck / if the root is a remote filesystem (like NFS) #36624.
+
     Update the fs_passno values in the default fstab to match the 
-    settings suggested by the manpage #37314.
+    settings suggested by the manpage #37314.  Make checkroot respect 
+    a fs_passno setting of 0 when dealing with / #39212.
 
   02 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
 
