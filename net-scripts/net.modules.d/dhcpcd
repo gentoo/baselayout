@@ -71,7 +71,7 @@ dhcpcd_stop() {
 	[[ ! -f ${pidfile} ]] && return 0
 
 	ebegin "Stopping dhcpcd on ${iface}"
-	local pid=$( cat ${pidfile} )
+	local pid=$( < ${pidfile} )
 
 	eval dhcp=\" \$\{dhcp_${ifvar}\} \"
 	if [[ ${dhcp} == *' release '* ]]; then

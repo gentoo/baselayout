@@ -26,8 +26,8 @@ RC_WAIT_ON_START="0.1"
 # Setup our vars based on the start-stop-daemon command
 setup_daemon_vars() {
 	local name
-	local -a sargs=( "${args%% -- *}" )
-	exeargs="-- ${args##* -- }"
+	local -a sargs=( "${args%% \'--\' *}" )
+	local -a eargs=( "-- ${args##* \'--\' }" )
 
 	local i j=${#sargs[@]}
 	for (( i=0; i<j; i++ )); do
@@ -61,8 +61,21 @@ setup_daemon_vars() {
 		esac
 	done
 
-	ssdargs="${sargs[@]}"
 	[[ -z ${cmd} ]] && cmd=${name}
+
+	# The env command launches daemons in a special environment
+	# so we need to cater for this
+	if [[ ${cmd} == "/usr/bin/env" ]]; then
+		j=${#eargs[@]}
+		for (( i=0; i<j; i++ )); do
+			if [[ ${eargs[i]:0:1} != "-" ]]; then
+				cmd=${eargs[i]}
+				break
+			fi
+		done
+	fi
+
+	return 0
 }
 
 # bool try_kill_pid(int pid, char* signal, bool session)
@@ -136,7 +149,7 @@ is_daemon_running() {
 # to start-stop-daemon and return the value
 start_daemon() {
 	local retval
-	
+
 	eval /sbin/start-stop-daemon "${args}"
 	retval=$?
 
@@ -212,7 +225,7 @@ stop_daemon() {
 # Return the result of start_daemon or stop_daemon depending on
 # how we are called
 start-stop-daemon() {
-	local args=$( requote "$@" ) ssdargs exeargs x
+	local args=$( requote "$@" )
 	local cmd pidfile pid stopping nothing=false signal=TERM
 
 	setup_daemon_vars

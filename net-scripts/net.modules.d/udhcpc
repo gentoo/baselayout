@@ -68,7 +68,7 @@ udhcpc_stop() {
 	[[ ! -f ${pidfile} ]] && return 0
 
 	ebegin "Stopping udhcpc on ${iface}"
-	local pid=$( cat ${pidfile} ) e=true
+	local pid=$( < ${pidfile} ) e=true
 
 	# Release the lease if told to
 	eval dhcp=\" \$\{dhcp_${ifvar}\} \"
@@ -122,7 +122,7 @@ udhcpc_start() {
 
 	# Try and load the cache if it exists
 	if [[ -f ${cachefile} && ${opts} != *'--request='* && ${opts} != *'-r '* ]]; then
-		x=$( cat ${cachefile} )
+		x=$( < ${cachefile} )
 		[[ -n ${x} ]] && opts="${opts} --request=${x}"
 	fi
 

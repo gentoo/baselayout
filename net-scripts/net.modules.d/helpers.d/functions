@@ -83,7 +83,7 @@ clean_pidfile() {
 	local pidfile=${1}
 
 	[[ ! -f ${pidfile} ]] && return 0
-	local pid=$( cat ${pidfile} )
+	local pid=$( < ${pidfile} )
 
 	if [[ -n ${pid} ]]; then
 		local cmd=${pidfile##*/}

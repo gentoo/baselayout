@@ -85,7 +85,7 @@ ipppd_stop() {
 	[[ ! -f ${pidfile} ]] && return 0
 
 	clean_pidfile ${pidfile} && return 0
-	local pid=$( cat ${pidfile} ) r=0
+	local pid=$( < ${pidfile} ) r=0
 
 	einfo "Stopping ipppd for ${iface}"
 	kill -s TERM ${pid}

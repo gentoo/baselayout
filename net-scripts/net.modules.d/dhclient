@@ -70,7 +70,7 @@ dhclient_stop() {
 	# We check for a dhclient process first as if we attempt to release
 	# an interface for which dhclient has obtained an IP in the past
 	# it causes a "RELEASE" event anyway.
-	local pid=$( cat ${pidfile} )
+	local pid=$( < ${pidfile} )
 
 	eval dhcp=\" \$\{dhcp_${ifvar}\} \"
 
@@ -123,7 +123,7 @@ dhclient_start() {
 	[[ ${x:${#x} - 5:5} == "bound" ]]
 	if [[ $? != 0 ]]; then
 		# We need to kill the process if we fail
-		kill -s TERM $( cat ${pidfile} ) 2>/dev/null
+		kill -s TERM $( < ${pidfile} ) 2>/dev/null
 		eend 1
 		return 1
 	fi
