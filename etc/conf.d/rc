@@ -11,7 +11,7 @@ RC_TTY_NUMBER=11
 
 RC_PARALLEL_STARTUP="no"
 
-# RC_NET_STRICT_CHECKING allows some flexability with the 'net' service.
+# RC_NET_STRICT_CHECKING allows some flexibility with the 'net' service.
 # The following values are allowed:
 #  none  - The 'net' service is always considered up.
 #  no    - This basically means that at least one net.* service besides net.lo
