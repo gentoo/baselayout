@@ -30,7 +30,7 @@ RC_NET_STRICT_CHECKING="no"
 # for various volume managers (MD, EVMS2, LVM, DM, etc).  Note that the are
 # stopped in reverse order.
 
-RC_VOLUME_ORDER="raid evms lvm dm dm-crypt"
+RC_VOLUME_ORDER="raid evms lvm dm"
 
 # RC_USE_FSTAB allows you to override the default mount options for the 
 # standard /proc, /sys, /dev, and /dev/pts mount points.  Note that this 
