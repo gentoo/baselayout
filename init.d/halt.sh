@@ -3,6 +3,10 @@
 # $Header$
 
 
+# Reset pam_console permissions
+[ -x /sbin/pam_console_apply -a ! -c /dev/.devfsd ] && \
+	/sbin/pam_console_apply -r
+
 # We need to properly terminate devfsd to save the permissions
 if [ -n "`ps --no-heading -C 'devfsd'`" ]
 then
