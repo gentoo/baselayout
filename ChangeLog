@@ -18,6 +18,8 @@
     other distro's and because it's logical that /usr/local should 
     override /usr which should override /.  Fixes #12531.
 
+    Move devfs stuff out of baselayout and into the devfsd package.
+
   14 Oct 2004; Aron Griffis <agriffis@gentoo.org>:
 
     Fix rc-status to work with new COLS code.
