@@ -1,10 +1,8 @@
 # iproute2 module for net-scripts
-# Copyright 2004 Gentoo Foundation
-# Distributed under the terms of the GNU General Public License v2
-# Contributed by Roy "UberLord" Marples <uberlord@rsm.demon.co.uk>
-# $Header$
-#
-# Based on code from Gentoo Linux /etc/init.d/net.eth0 version 1.45
+# Version 0.6.2
+# Copyright (c) 2004 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License V2
+# Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
 
 # Fix any potential localisation problems
 # Note that LC_ALL trumps LC_anything_else according to locale(7)
@@ -12,12 +10,19 @@ ip() {
 	LC_ALL=C /sbin/ip "$@"
 }
 
+# void iproute2_depend(void)
+#
+# Sets up the dependancies for the module
+iproute2_depend() {
+	after macchanger wireless
+}
+
 # bool iproute2_check_installed(void)
 #
 # Returns 1 if iproute2 is installed, otherwise 0
 iproute2_check_installed() {
 	[[ -x /sbin/ip ]] && return 0
-	[[ ${1} == true ]] && eerror "For ifconfig support, emerge sys-apps/net-tools"
+	[[ ${1} == true ]] && eerror "For iproute2 support, emerge sys-apps/iproute2"
 	return 1
 }
 
@@ -28,9 +33,18 @@ iproute2_provides() {
 	echo "interface"
 }
 
+# char* iproute2_module(void)
+#
+# Returns the module name
+# This is needed by dhclient as we run different scripts
+# based on the interface
+iproute2_module() {
+        echo "iproute2"
+}
+
 # bool iproute2_check_depends(void)
 #
-# Checks to see if we have the necessary package installed
+# Checks to see if we have the needed functions
 iproute2_check_depends() {
 	local e
 

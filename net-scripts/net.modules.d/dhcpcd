@@ -1,10 +1,8 @@
-# DHCP module for net-scripts
-# Copyright 2004 Gentoo Foundation
-# Distributed under the terms of the GNU General Public License v2
-# Contributed by Roy "UberLord" Marples <uberlord@rsm.demon.co.uk>
-# $Header$
-#
-# Based on code from Gentoo Linux /etc/init.d/net.eth0 version 1.45
+# DHCP (net-misc/dhcpcd) module for net-scripts
+# Version 0.6.2
+# Copyright (c) 2004 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License V2
+# Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
 
 # Fix any potential localisation problems
 # Note that LC_ALL trumps LC_anything_else according to locale(7)
@@ -19,11 +17,12 @@ dhcpcd_provides() {
 	echo "dhcp"
 }
 
-# char* dhcpcd_after(void)
+# void dhcpcd_depend(void)
 #
-# Returns a space seperated array of modules this module should be loaded after
-dhcpcd_after() {
-	echo "interface"
+# Sets up the dependancies for the module
+dhcpcd_depend() {
+	after interface
+	need interface
 }
 
 # bool dhcpcd_check_installed(void)
@@ -37,15 +36,14 @@ dhcpcd_check_installed() {
 
 # bool dhcpcd_check_depends(void)
 #
-# Checks to see if we have the necessary package installed
-# and the handler supports the necessary functionality
+# Checks to see if we have the needed functions
 dhcpcd_check_depends() {
 	local e
 
 	if [[ function != $( type -t get_device ) ]]; then
 		eerror "dhcpcd: net.lo is missing the required function get_device\n"
 		return 1
-	fi		
+	fi
 
 	[[ -z ${e} && function != $( type -t interface_get_status ) ]] && e=interface_get_address
 	[[ -z ${e} && function != $( type -t interface_get_address ) ]] && e=interface_get_address
@@ -63,21 +61,6 @@ dhcpcd_get_vars() {
 	echo "dhcpcd_${1}"
 }
 
-# char* dhcpcd_local_vars(void)
-#
-# Returns a string  containing a command to localise vars
-dhcpcd_local_vars() {
-	echo "local dhcp_IFACE"
-}
-
-# bool dhcpcd_setup_vars(char* iface)
-#
-# Configures dhcp setup information for the interface
-# and checks to see if the dhcpcd program is installed
-dhcpcd_setup_vars() {
-	eval dhcp_IFACE=\"\$\{dhcpcd_${1}\}\"
-}
-
 # bool dhcpcd_stop(char *iface)
 #
 # Stop DHCP on an interface by calling dhcpcd -z $iface
@@ -92,13 +75,13 @@ dhcpcd_stop() {
 		return 1
 	fi
 
-	einfo "  Releasing DHCP lease for ${iface}"
+	ebegin "  Releasing DHCP lease for ${iface}"
 	for ((count = 0; count < 9; count = count + 1)); do
 		dhcpcd -z ${iface} &>${devnull} || break
 		sleep 1
 	done
 	[[ ${count} -lt 9 ]]
-	eend $? "Timed out"
+	eend $? "  timed out"
 
 	# Remove stale PID file
 	[[ -f /var/run/dhcpcd-${iface}.pid ]] && rm -f /var/run/dhcpcd-${iface}.pid
@@ -112,7 +95,7 @@ dhcpcd_stop() {
 #
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 dhcpcd_start() {
-	local iface=${1}
+	local iface=${1} opts
 	local status=$( interface_get_status ${iface} ) check=$( get_device ${iface} )
 
 	# Check that iface was not brought up by the kernel ...
@@ -125,7 +108,9 @@ dhcpcd_start() {
 	[[ -f /var/run/dhcpcd-${iface}.pid ]] && rm -f /var/run/dhcpcd-${iface}.pid
 
 	# Bring up DHCP for this interface (or alias)
-	dhcpcd ${iface} ${dhcp_IFACE} 2>${devnull}
+	eval opts=\"\$\{dhcpcd_${iface}\}\"
+	
+	dhcpcd ${opts} ${iface} 2>${devnull}
 	eend $?
 	[[ 0 != $? ]] && return 1
 

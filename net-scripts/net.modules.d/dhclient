@@ -1,0 +1,141 @@
+# DHCP (net-misc/dhcp) module for net-scripts
+# Version 0.6.2
+# Copyright (c) 2004 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License V2
+# Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
+
+# Fix any potential localisation problems
+# Note that LC_ALL trumps LC_anything_else according to locale(7)
+dhclient() {
+        LC_ALL=C /sbin/dhclient "$@"
+}
+
+# char* dhclient_provides(void)
+#
+# Returns a string to change module definition for starting up
+dhclient_provides() {
+	echo "dhcp"
+}
+
+# void dhclient_depend(void)
+#
+# Sets up the dependancies for the module
+dhclient_depend() {
+	after interface
+	need interface
+}
+
+# bool dhclient_check_installed(void)
+#
+# Returns 1 if dhclient is installed, otherwise 0
+dhclient_check_installed() {
+	[[ -x /sbin/dhclient ]] && return 0
+	[[ true == ${1} ]] && eerror "For DHCP (dhclient) support, emerge net-misc/dhcp"
+	return 1
+}
+
+# char* dhclient_get_script(void)
+#
+# Returns the filename of the script to run
+dhclient_get_script() {
+	local module=$( interface_module )
+	echo "/etc/net.modules.d/helpers.d/dhclient-${module}"
+}
+
+# bool dhclient_check_depends(void)
+#
+# Checks to see if we have the needed functions
+dhclient_check_depends() {
+	local e
+
+	if [[ function != $( type -t get_device ) ]]; then
+		eerror "dhclient: net.lo is missing the required function get_device\n"
+		return 1
+	fi
+
+	[[ -z ${e} && function != $( type -t interface_get_status ) ]] && e=interface_get_address
+	[[ -z ${e} && function != $( type -t interface_get_address ) ]] && e=interface_get_address
+	[[ -z ${e} && function != $( type -t interface_module ) ]] && e=interface_module
+	if [[ -n ${e} ]]; then
+		eerror "dhclient: interface is missing the required function ${e}\n"
+		return 1
+	fi
+
+	local script=$( dhclient_get_script )
+	if [[ ! -f ${script} ]]; then
+		eerror "The required file ${script} does not exist!"
+		return 1
+	fi
+
+	return 0
+}
+
+# char* dhclient_get_vars(char *interface)
+#
+# Returns a string spaced with possible user set
+# configuration variables
+dhclient_get_vars() {
+	echo "dhclient_${1}"
+}
+
+# bool dhclient_stop(char *iface)
+#
+# Stop DHCP on an interface by calling dhclient -z $iface
+#
+# Returns 0 (true) when a DHCP address dropped
+# otherwise return 1
+dhclient_stop() {
+	local iface=${1} count script=$( dhclient_get_script )
+	
+	dhclient_check_installed || return 1
+
+	# We check for a dhclient process first as if we attempt to release
+	# an interface for which dhclient has obtained an IP in the past
+	# it causes a "RELEASE" event anyway.
+	local r=$( ps -fC dhclient | awk "/-q ${iface}/ {print 1}")
+	[[ -z ${r} ]] && return 1
+
+	ebegin "  Releasing DHCP lease for ${iface}"
+	r=$( dhclient -sf ${script} -r ${iface} -q )
+	[[ -z ${r} ]] && return 1
+
+	if [[ RELEASE == ${r} ]]; then
+		eend 0
+	else
+		ewarn "  dhclient returned a ${r}"
+		eend 1
+	fi
+	return 0
+}
+
+# bool dhclient_start(char *iface)
+#
+# Start DHCP on an interface by calling dhclient $iface $options
+#
+# Returns 0 (true) when a DHCP address is obtained, otherwise 1
+dhclient_start() {
+	local iface=${1} opts script=$( dhclient_get_script )
+	local status=$( interface_get_status ${iface} ) check=$( get_device ${iface} )
+
+	# Check that iface was not brought up by the kernel ...
+	if [[ ${status} == up && ${check} == ${iface} ]]; then
+		einfo "    Keeping kernel configuration for ${iface}"
+		return 0
+	fi
+
+	# Bring up DHCP for this interface (or alias)
+	eval opts=\"\$\{dhclient_${iface}\}\"
+	local r=$( dhclient ${opts} -sf ${script} -q ${iface} )
+	# We just check the last 5 letters
+	if [[ BOUND != ${r:((${#r} - 5)):5} ]]; then
+		eend 1 "  dhclient returned a ${r}"
+		return 1
+	fi
+
+	eend 0
+	# DHCP succeeded, show address retrieved
+	local addr=$( interface_get_address ${iface} )
+	einfo "    ${iface} received address ${addr}"
+
+	return 0
+}

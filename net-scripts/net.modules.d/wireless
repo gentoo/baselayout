@@ -1,8 +1,8 @@
 # Wireless module for net-scripts
-# Copyright 2004 Gentoo Foundation
-# Distributed under the terms of the GNU General Public License v2
-# Contributed by Roy "UberLord" Marples <uberlord@rsm.demon.co.uk>
-# $Header$
+# Version 0.6.2
+# Copyright (c) 2004 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License V2
+# Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
 
 # Load our config if it exists
 [[ -f /etc/conf.d/wireless ]] && source /etc/conf.d/wireless
@@ -12,11 +12,22 @@
 iwconfig() {
 	LC_ALL=C /usr/sbin/iwconfig "$@"
 }
+iwgetid() {
+	LC_ALL=C /usr/sbin/iwgetid "$@"
+}
 iwlist() {
 	LC_ALL=C /usr/sbin/iwlist "$@"
 }
 iwpriv() {
 	LC_ALL=C /usr/sbin/iwpriv "$@"
+}
+
+# void wireless_depend(void)
+#
+# Sets up the dependancies for the module
+wireless_depend() {
+	before interface
+	need interface
 }
 
 # bool wireless_check_installed(void)
@@ -35,24 +46,9 @@ wireless_provides() {
 	echo "wireless"
 }
 
-# char* wireless_before(void)
-#
-# Returns a space seperated array of modules this module should be loaded before
-wireless_before() {
-	echo "interface"
-}
-
-# char* wireless_after(void)
-#
-# Returns a space seperated array of modules this module should be loaded before
-wireless_after() {
-	echo "macchanger"
-}
-
 # bool wireless_check_depends(void)
 #
-# Checks to see if we have the necessary package installed
-# and the handler supports the necessary functionality
+# Checks to see if we have the needed functions
 wireless_check_depends() {
 	local e
 
@@ -81,8 +77,7 @@ wireless_check_extensions() {
 # Echos a string showing whether WEP is enabled or disabled
 # for the given interface
 wireless_wep_status() {
-	local iface=${1}
-	local wep_status=$( iwconfig ${iface} 2>/dev/null | awk '/Encryption key/ {if ($2 != "key:off") print "enabled"}' )
+	local wep_status=$( iwconfig ${1} | awk -F: '/Encryption key:/ {print $2}' | awk '{if ($1 != "off") print "enabled"}' )
 	wep_status=${wep_status:-"disabled"}
 	echo "(WEP ${wep_status})"
 }
@@ -91,7 +86,7 @@ wireless_wep_status() {
 #
 # Gets the current ESSID of the iface
 wireless_get_essid() {
-	iwconfig ${1} 2>${devnull} | awk -F\" '/ESSID/ {print $2}'
+	iwgetid ${1} 2>${devnull} | awk -F\" '/ESSID/ {print $2}'
 }
 
 # char* wireless_get_ap_mac_address(char *interface)
@@ -99,9 +94,15 @@ wireless_get_essid() {
 # Returns the MAC address of the Access Point
 # the interface is connected to
 wireless_get_ap_mac_address() {
-	iwconfig ${1} 2>${devnull}| grep -m1 -o 'Access Point: [^ ]*' | cut -d" " -f3
+	iwgetid --ap ${1} 2>${devnull}| awk '{print $4}'
 }
 
+# char* wireless_get_mode(char *interface)
+#
+# Returns the wireless mode in lower case
+wireless_get_mode() {
+	iwgetid -m ${1} | awk -F: '{print $2}' | tr '[:upper:]' '[:lower:]'
+}
 
 # void wireless_report(char *interface)
 #
@@ -109,21 +110,29 @@ wireless_get_ap_mac_address() {
 # Sometimes iwgetid fails - or shows strange characters
 # I think this is more of a driver issue at this time
 wireless_report() {
-	local iface=${1}
+	local iface=${1} mac mode m="as"
+	local essid
+
+	# We do this so that we get a 100% valid report
+	while [[ -z ${essid} ]]; do
+		essid=$( wireless_get_essid ${iface} )
+	done
+
+	local wep_status=$( wireless_wep_status ${iface} )
 
 	# Displays some info about how we are connected
 	local channel=$( iwlist ${iface} channel 2>/dev/null | awk '/Current/' | sed 's/^.*hannel[ :]\(.*\)[0-9]*.*$/\1/g' )
 	channel=${channel//[![:digit:]]/}	
 
-	local wep_status=$( wireless_wep_status ${iface} )
-	local essid=$( wireless_get_essid ${iface} )
 	essid=${essid//\\\\/\\\\}
-	local mac=$( wireless_get_ap_mac_address ${iface} )
-	local mode=$( iwgetid -m ${iface} | awk -F: '{print $2}' | tr '[:upper:]' '[:lower:]' )
-	local m="as"
-	[[ managed == ${mode} ]] && m="to"
+	local mode=$( wireless_get_mode ${iface} )
+	if [[ managed == ${mode} ]]; then
+		m="to"
+		mac=$( wireless_get_ap_mac_address ${iface} )
+		mac=" at ${mac}"
+	fi
 	
-	einfo "    ${iface} connected ${m} \"${essid}\" at ${mac}"
+	einfo "    ${iface} connected ${m} \"${essid}\"${mac}"
 	einfo "    in ${mode} mode on channel ${channel} ${wep_status}"
 }
 
@@ -206,6 +215,7 @@ wireless_setup_iface() {
 		# Make a backup of the origional file if necessary
 		[[ -f /etc/resolv.conf ]] && mv /etc/resolv.conf /etc/resolv.conf.sv
 		echo "nameserver ${x}" > /etc/resolv.conf
+		chmod 644 /etc/resolv.conf
 		eval x=\"\$\{mac_domain_${mac}\}\"
 		[[ -z ${x} ]] && eval x=\"\$\{domain_${essid}\}\"
 		if [[ -n ${x} ]]; then
@@ -232,11 +242,15 @@ wireless_setup_specific() {
 	fi
 	dessid=${ESSID//\\\\/\\\\}
 
-	e=$( iwconfig ${iface} mode ${mode} 2>&1 )
-	if [[ -n ${e} ]]; then
-		ewarn "  ${iface} does not support setting the mode to \"${mode}\""
-		return 1
-	fi
+        # We only change the mode if it's not the same
+        local cur_mode=$( wireless_get_mode ${iface} )
+        if [[ ${cur_mode} != ${mode} ]]; then
+                e=$( iwconfig ${iface} mode ${mode} 2>&1 )
+                if [[ -n ${e} ]]; then
+                        eerror "${iface} does not support setting the mode to \"${mode}\""
+                        return 1
+                fi
+        fi
 
 	key=$( wireless_get_wep_key )
 	e=$( iwconfig ${iface} key ${key} 2>&1 )
@@ -248,9 +262,10 @@ wireless_setup_specific() {
 
 	e=$( iwconfig ${iface} essid "${ESSID}" 2>&1 )
 	if [[ -n ${e} ]]; then
-		error "  ${iface} does not support setting ESSID to \"${dessid}\""
+		eerror "  ${iface} does not support setting ESSID to \"${dessid}\""
 		return 1
 	fi
+	iwconfig ${iface} nick "${ESSID}" 2>/dev/null
 
 	eval channel=\"\$\{channel_${iface}\}\"
 	# We default the channel to 3
@@ -275,9 +290,14 @@ wireless_setup_specific() {
 # Returns true if the AP MAC address is valid or not
 wireless_associate_mac() {
 	# Checks if a MAC address has been assigned
-	local mac=$( wireless_get_ap_mac_address ${1} )
-	[[ -n ${mac} && FF:FF:FF:FF:FF:FF != ${mac} && 44:44:44:44:44:44 != ${mac} && 00:00:00:00:00:00 != ${mac} ]] && return 0
-	return 1
+	local mac=$( wireless_get_ap_mac_address ${1} ) i
+	local -a invalid_macs=( "00:00:00:00:00:00" "44:44:44:44:44:44" "FF:00:00:00:00:00" "FF:FF:FF:FF:FF:FF" )
+
+	[[ -z ${mac} ]] && return 1
+	for i in ${invalid_macs[@]}; do
+		[[ ${i} == ${mac} ]] && return 1
+	done
+	return 0
 }
 
 # bool wireless_associate_quality(char *iface)
@@ -367,6 +387,7 @@ wireless_associate() {
 	e=$( iwconfig ${iface} essid "${ESSID}" 2>&1 )
 	[[ -n ${e} && any != ${essid} ]] \
 		&& ewarn "  ${iface} does not support setting ESSID to \"${dessid}\""
+	iwconfig ${iface} nick "${ESSID}" 2>/dev/null
 
 	ebegin "  Connecting to \"${ESSID//\\\\//}\" ${w}"
 	wireless_wait_for_association ${iface} || {
@@ -432,19 +453,16 @@ wireless_scan() {
 	[[ managed != ${mode} ]] && iwconfig ${iface} mode managed 2>${devnull}
 
 	if [[ -z ${scan} ]]; then
+		ewarn "${iface} does not support scanning"
 		eval x=\"\$\{adhoc_essid_${iface}\}\"
-		if [[ -z ${preferred_aps} && -z ${x} ]]; then
-			eerror "${iface} does not support scanning!"
-			eerror "You need to configure an ESSID in /etc/conf.d/wireless"
-			eerror "    essid_${iface}=\"ESSID\""
-			eerror "    (set to \"any\" to pick the strongest available access point)"
-			eerror "or configure preferred_aps to force a list of access points"
-			eerror "or configure defaulting to Ad-Hoc when Managed fails"
-			return 1
-		else
-			ewarn "  ${iface} does not support scanning"
-			return 0
-		fi
+		[[ -n ${preferred_aps} || -n ${x} ]] && return 0
+		eerror "You either need to set a preferred_aps list in /etc/conf.d/wireless"
+		eerror "   preferred_aps=( \"ESSID1\" \"ESSID2\" )"
+		eerror "or configure defaulting to Ad-Hoc when Managed fails"
+		eerror "   adhoc_essid_${iface}=\"WLAN\""
+		eerror "or hardcode the ESSID against the interface (not recommended)"
+		eerror "    essid_${iface}=\"ESSID\""
+		return 1
 	fi
 
 	local val i=-1 IFS=$'\n' j last
@@ -731,10 +749,15 @@ wireless_configure() {
 		return 1
 	fi
 
-	e=$( iwconfig ${iface} mode ${x} 2>&1 )
-	if [[ -n ${e} ]]; then
-		error "${iface} does not support setting the mode to \"${x}\""
-		return 1
+	# We only change the mode if it's not the same as some drivers
+	# only do managed and throw an error changing to managed
+	local cur_mode=$( wireless_get_mode ${iface} )
+	if [[ ${cur_mode} != ${x} ]]; then
+		e=$( iwconfig ${iface} mode ${x} 2>&1 )
+		if [[ -n ${e} ]]; then
+			eerror "${iface} does not support setting the mode to \"${x}\""
+			return 1
+		fi
 	fi
 
 	# These arrays hold the results of our scan
@@ -743,18 +766,14 @@ wireless_configure() {
 	# Has an ESSID been forced?
 	if [[ -n ${ESSID} ]]; then
 		wireless_associate ${iface} && return 0
+		[[ any == ${ESSID} ]] && wireless_force_preferred ${iface} && return 0
 
-		# Do we drop into ad-hoc mode if association failed?
-		if [[ any != ${ESSID} ]]; then
-			eval ESSID=\"\$\{adhoc_essid_${iface}\}\"
-			if [[ -n ${ESSID} ]]; then
-				wireless_setup_adhoc ${iface}
-				return $?
-			fi
-			return 1
-		else
-			wireless_force_preferred ${iface} && return 0
+		eval ESSID=\"\$\{adhoc_essid_${iface}\}\"
+		if [[ -n ${ESSID} ]]; then
+			wireless_setup_specific ${iface} ad-hoc
+			return $?
 		fi
+		return 1
 	fi
 
 	# Do we have a preferred Access Point list specific to the interface?
@@ -822,18 +841,13 @@ wireless_pre_start() {
 	# Setup IFS incase parent script has modified it
 	local IFS=$' '$'\n'$'\t'
 
-	wireless_configure ${iface} || {
-		eerror "Failed to configure wireless for ${iface}"
-		wireless_defaults ${iface}
-		unset ESSID
-		r=1
-	}
+	wireless_configure ${iface} && return 0
 
-	# We take the interface back down even if we connect OK otherwise
-	# DHCP won't work
+	eerror "Failed to configure wireless for ${iface}"
+	wireless_defaults ${iface}
+	unset ESSID
 	interface_down ${iface}
-
-	return ${r}
+	return 1
 }
 
 # bool wireless_post_stop(char *iface)
@@ -854,3 +868,4 @@ wireless_post_stop() {
 
 	return 0
 }
+

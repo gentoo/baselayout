@@ -1,0 +1,155 @@
+# udhcpc (net-misc/udhcp) module for net-scripts
+# Version 0.6.2
+# Copyright (c) 2004 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License V2
+# Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
+
+# Fix any potential localisation problems
+# Note that LC_ALL trumps LC_anything_else according to locale(7)
+udhcpc() {
+        LC_ALL=C /sbin/udhcpc "$@"
+}
+
+# char* udhcpc_provides(void)
+#
+# Returns a string to change module definition for starting up
+udhcpc_provides() {
+	echo "dhcp"
+}
+
+# void udhcpc_depend(void)
+#
+# Sets up the dependancies for the module
+udhcpc_depend() {
+	after interface
+	need interface
+}
+
+# bool udhcpc_check_installed(void)
+#
+# Returns 1 if udhcpc is installed, otherwise 0
+udhcpc_check_installed() {
+	[[ -x /sbin/udhcpc ]] && return 0
+	[[ true == ${1} ]] && eerror "For DHCP (udhcpc) support, emerge net-misc/udhcp"
+	return 1
+}
+
+# char* udhcpc_get_script(void)
+#
+# Returns the filename of the script to run
+udhcpc_get_script() {
+	local module=$( interface_module )
+	echo "/etc/net.modules.d/helpers.d/udhcpc-${module}"
+}
+
+# bool udhcpc_check_depends(void)
+#
+# Checks to see if we have the needed functions
+udhcpc_check_depends() {
+	local e
+
+	if [[ function != $( type -t get_device ) ]]; then
+		eerror "udhcpc: net.lo is missing the required function get_device\n"
+		return 1
+	fi
+
+	[[ -z ${e} && function != $( type -t interface_get_status ) ]] && e=interface_get_address
+	[[ -z ${e} && function != $( type -t interface_get_address ) ]] && e=interface_get_address
+	[[ -z ${e} && function != $( type -t interface_module ) ]] && e=interface_module
+	if [[ -n ${e} ]]; then
+		eerror "udhcpc: interface is missing the required function ${e}\n"
+		return 1
+	fi
+
+	local script=$( udhcpc_get_script )
+	if [[ ! -f ${script} ]]; then
+		eerror "The required file ${script} does not exist!"
+		return 1
+	fi
+
+	return 0
+}
+
+# char* udhcpc_get_vars(char *interface)
+#
+# Returns a string spaced with possible user set
+# configuration variables
+udhcpc_get_vars() {
+	echo "udhcpc_${1}"
+}
+
+# bool udhcpc_stop(char *iface)
+#
+# Stop DHCP on an interface by calling udhcpc -z $iface
+#
+# Returns 0 (true) when a DHCP address dropped
+# otherwise return 1
+udhcpc_stop() {
+	local iface=${1} count script=$( udhcpc_get_script )
+	
+	udhcpc_check_installed || return 1
+
+	# We check for a udhcpc process first as if we attempt to release
+	# an interface for which udhcpc has obtained an IP in the past
+	# it causes a "RELEASE" event anyway.
+	local r=$( ps -fC udhcpc | awk "/--interface=${iface}/" | awk '{print $2}' )
+	[[ -z ${r} ]] && return 1
+
+	ebegin "  Releasing DHCP lease for ${iface}"
+	local pid addr i
+	for pid in ${r}; do
+		kill -s SIGUSR2 ${pid}
+# Current portage version does not process SIGUSR2 properly
+# so we don't use this code atm
+#		i=0
+#		while (( i < 30 )); do
+#			addr=$( interface_get_address ${iface} )
+#			[[ -z ${addr} ]] && break
+#			((i = i + 1))
+#			sleep 1
+#		done
+		# For some reason we have no mech of removing the process, so
+		# we have to kill it
+		kill -s KILL ${pid} &>/dev/null
+	done
+
+	r=$( ps -fC udhcpc | awk "/--interface=${iface}/ {print \$1}")
+	if [[ -z ${r} ]]; then
+		eend 0
+	else
+		eend 1
+	fi
+
+	return 0
+}
+
+# bool udhcpc_start(char *iface)
+#
+# Start DHCP on an interface by calling udhcpc $iface $options
+#
+# Returns 0 (true) when a DHCP address is obtained, otherwise 1
+udhcpc_start() {
+	local iface=${1} opts script=$( udhcpc_get_script )
+	local status=$( interface_get_status ${iface} ) check=$( get_device ${iface} )
+
+	# Check that iface was not brought up by the kernel ...
+	if [[ ${status} == up && ${check} == ${iface} ]]; then
+		einfo "    Keeping kernel configuration for ${iface}"
+		return 0
+	fi
+
+	# Bring up DHCP for this interface (or alias)
+	eval opts=\"\$\{udhcpc_${iface}\}\"
+	local r=$( udhcpc ${opts} --script=${script} --now --interface=${iface} )
+	# We just check the last 5 letters
+	if [[ BOUND != ${r:((${#r} - 5)):5} ]]; then
+		eend 1 "  udhcpc recieved a ${r}"
+		return 1
+	fi
+
+	eend 0
+	# DHCP succeeded, show address retrieved
+	local addr=$( interface_get_address ${iface} )
+	einfo "    ${iface} received address ${addr}"
+	return 0
+}

@@ -9,12 +9,15 @@
 # Modules only load by default if the package they need is installed
 # If you specify a module here that doesn't have it's package installed then
 # you get an error stating which package you need to install
+# Ideally, you only use the modules setting when you have one or more packages
+# installed that supply the same service
 
 # Prefer iproute2 over ifconfig
 #modules=( "iproute2" )
 
-# You can also specify modules for an interface
-#modules_eth1=( "pump" )
+# You can also specify other modules for an interface
+# In this case we prefer pump over dhcpcd
+#modules_eth0=( "pump" )
 
 # Setup the interface as before
 
@@ -22,8 +25,8 @@
 # INTERFACE HANDLERS
 
 ##############################################################################
-# IFCONFIG (net-tools)
-# For net-tools support, emerge sys-apps/net-tools
+# IFCONFIG
+# For ifconfig support, emerge sys-apps/net-tools
 # For a static configuration, use something like this.  This sets the primary
 # eth0 address to 192.168.0.2 and adds two aliases, eth0:1 and eth0:2
 #ifconfig_eth0=(
@@ -78,15 +81,19 @@
 
 ##############################################################################
 # DHCP
-# DHCP can be provided by dhcpcd (default) or pump
+# DHCP can be provided by dhcpcd (default), pump, dhclient or udhcpc
 # For dhcpcd support, emerge net-misc/dhcpcd
 # For pump support, emerge net-misc/pump and add "pump" to the modules array above like so
 #modules=( "pump" )
+# For dhclient support, emerge net-misc/dhcp and add "dhclient" to the modules array above like so
+#modules=( "dhclient" )
+# For udhcp support, emerge net-misc/udhcp and add "udhcpc" to the modules array above like so
+#modules=( "udhcpc" )
 
 #This is how to configure eth0 for dhcp (regardless of using dhcpcd or pump)
 # for iproute2
 #ipaddr=( "dhcp" )
-# and net-tools
+# and ifconfig
 #ifconfig=( "dhcp" )
 
 # For passing custom options to dhcpcd use something like the following.  This
@@ -95,9 +102,11 @@
 # so the default is encouraged unless you know what you're doing.
 #dhcpcd_eth0="-t 10"
 
-# pump doesn't have many runtime options, instead they are configured in /etc/pump.conf
-# You can pass options to pump in a similar manner to dhcpcd though
+# pump, dhclient and udhcpc don't have many runtime options
+# You can pass options to them in a similar manner to dhcpcd though
 #pump_eth0="--hostname=myhostname"
+#dhclient_eth0="..."
+#udhcpc_eth0="--hostname=myhostname"
 
 ##############################################################################
 # VLAN (802.1q support)

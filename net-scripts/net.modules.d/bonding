@@ -1,10 +1,8 @@
 # Interface bonding module for net-scripts
-# Copyright 2004 Gentoo Foundation
-# Distributed under the terms of the GNU General Public License v2
-# Contributed by Roy "UberLord" Marples <uberlord@rsm.demon.co.uk>
-# $Header$
-#
-# Based on code from Gentoo Linux /etc/init.d/net.eth0 version 1.45
+# Version 0.6.2
+# Copyright (c) 2004 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License V2
+# Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
 
 # bool bonding_check_installed(void)
 #
@@ -22,28 +20,32 @@ bonding_provides() {
 	echo "bonding"
 }
 
-# char* bonding_after(void)
+# void bonding_depend(void)
 #
-# Returns a space seperated array of modules this module should be loaded after
-bonding_after() {
-	echo "interface vlan"
+# Sets up the dependancies for the module
+bonding_depend() {
+	after interface vlan dhcp
+	need interface
 }
 
 # bool bonding_check_depends(void)
 #
-# Checks to see if we have the necessary package installed
-# and the handler supports the necessary functionality
+# Checks to see if we have the needed functions
 bonding_check_depends() {
 	local e
 
 	[[ -z ${e} && function != $( type -t interface_up ) ]] && e=interface_up
 	[[ -z ${e} && function != $( type -t interface_down ) ]] && e=interface_up
-	[[ -z ${e} && function != $( type -t interface_del_address ) ]] && e=interface_del_address
+	[[ -z ${e} && function != $( type -t interface_del_addresses ) ]] && e=interface_del_addresses
 	[[ -z ${e} ]] && return 0
 
 	eerror "bonding: interface is missing the required function ${e}\n"
 	return 1
 }
+
+# bool bonding_post_start(char *iface)
+#
+# Bonds the interface
 bonding_post_start() {
 	local iface=${1} slaves s
 
@@ -70,17 +72,21 @@ bonding_post_start() {
 	return 0 #important
 }
 
+# bool bonding_pre_stop(void)
+# Unbonds bonded interfaces
+#
+# Always returns 0 (true) 
 bonding_pre_stop() {
 	local iface=${1} slaves s
 
-	bonding_check_installed || return 1
+	bonding_check_installed || return 0
 
 	# return silently if this is not a bonding interface
-	[[ -n "${iface/bond*/}" ]] && return 1
+	[[ -n "${iface/bond*/}" ]] && return 0
 
 	# don't trust the config, get the active list instead
 	slaves=$(awk '/^Slave Interface:/ { printf $3" " }' /proc/net/bonding/${iface})
-	[[ -n ${slaves} ]] && return 1
+	[[ -n ${slaves} ]] && return 0
 
 	# remove all slaves
 	echo /sbin/ifenslave -d ${iface} ${slaves}

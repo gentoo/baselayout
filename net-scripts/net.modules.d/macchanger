@@ -1,10 +1,8 @@
 # macchanger module for net-scripts
-# Copyright 2004 Gentoo Foundation
-# Distributed under the terms of the GNU General Public License v2
-# Contributed by Roy "UberLord" Marples <uberlord@rsm.demon.co.uk>
-# $Header$
-#
-# Based on code from Gentoo Linux /etc/init.d/net.eth0 version 1.45
+# Version 0.6.2
+# Copyright (c) 2004 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License V2
+# Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
 
 # char* macchanger_provides(void)
 #
@@ -13,11 +11,12 @@ macchanger_provides() {
 	echo "macchanger"
 }
 
-# char* macchanger_before(void)
+# void macchanger_depend(void)
 #
-# Returns a space seperated array of modules this module should be loaded before
-macchanger_before() {
-	echo "interface"
+# Sets up the dependancies for the module
+macchanger_depend() {
+	before interface wireless
+	need interface
 }
 
 # bool macchanger_check_installed(void)
@@ -31,8 +30,7 @@ macchanger_check_installed() {
 
 # bool macchanger_check_depends(void)
 #
-# Checks to see if we have the necessary package installed
-# and the handler supports the necessary functionality
+# Checks to see if we have the needed functions
 macchanger_check_depends() {
 	local e
 

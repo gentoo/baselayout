@@ -1,0 +1,37 @@
+#!/bin/bash
+# udhcpc dhclient wrapper for net-scripts
+# Version 0.6.2
+# Copyright (c) 2004 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License V2
+# Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
+
+# Instead of writing new functions for udhcpc, we simply map their variables
+# over to dhclient style ones and call those scripts!
+
+iface_type=${1}
+
+case "${2}" in
+	'bound') reason=BOUND ;;
+	'renew') reason=RENEW ;;
+	'deconfig') reason=RELEASE ;;
+	'nak') reason=NAK ;;
+esac
+
+if [[ -z ${reason} ]]; then
+	echo "udhcpc sent an unknow reason ${2}!"
+	exit 1
+fi
+
+export reason
+export new_ip_address=${ip// /}
+export new_subnet_mask=${subnet// /}
+export new_broadcast_address=${broadcast// /}
+export new_routers=${router}
+export new_domain_name=${domain}
+export new_domain_servers=${dns}
+export new_hostname=${hostname}
+export new_ntp_servers=${ntpsrv}
+
+# Execute the dhclient script and exit with it's code
+/etc/net.modules.d/helpers.d/dhclient-${iface_type}
+exit $?

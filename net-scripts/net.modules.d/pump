@@ -1,8 +1,8 @@
 # Pump module for net-scripts
-# Copyright 2004 Gentoo Foundation
-# Distributed under the terms of the GNU General Public License v2
-# Contributed by Roy "UberLord" Marples <uberlord@rsm.demon.co.uk>
-# $Header$
+# Version 0.6.2
+# Copyright (c) 2004 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License V2
+# Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
 
 # Fix any potential localisation problems
 # Note that LC_ALL trumps LC_anything_else according to locale(7)
@@ -17,11 +17,12 @@ pump_provides() {
 	echo "dhcp"
 }
 
-# char* pump_after(void)
+# void pump_depend(void)
 #
-# Returns a space seperated array of modules this module should be loaded after
-pump_after() {
-	echo "interface"
+# Sets up the dependancies for the module
+pump_depend() {
+	after interface
+	need interface
 }
 
 # bool pump_check_installed(void)
@@ -35,8 +36,7 @@ pump_check_installed() {
 
 # bool pump_check_depends(void)
 #
-# Checks to see if we have the necessary package installed
-# and the handler supports the necessary functionality
+# Checks to see if we have the needed functions
 pump_check_depends() {
 	local e
 
@@ -61,21 +61,6 @@ pump_get_vars() {
 	echo "pump_${1}"
 }
 
-# char* pump_local_vars(void)
-#
-# Returns a string  containing a command to localise vars
-pump_local_vars() {
-	echo "local pump_IFACE"
-}
-
-# bool pump_setup_vars(char* iface)
-#
-# Configures pump setup information for the interface
-# and checks to see if the pumpcd program is installed
-pump_setup_vars() {
-	eval pump_IFACE=\"\$\{pump_${1}\}\"
-}
-
 # bool pump_stop(char *iface)
 #
 # Stop pump on an interface by calling pumpcd -z $iface
@@ -92,12 +77,12 @@ pump_stop() {
 	e=$( ps -C pump | grep pump )
 	[[ -z ${e} ]] && return 1
 
-	e=$( pump --status -i ${iface} 2>${devnull} | grep ${iface})
+	e=$( pump --status --interface ${iface} 2>${devnull} | grep ${iface})
 	[[ -z ${e} ]] && return 1
 	
-	einfo "  Releasing DHCP lease for ${iface}"
+	ebegin "  Releasing DHCP lease for ${iface}"
 	for ((count = 0; count < 9; count = count + 1)); do
-		e=$( pump --release -i ${iface} 2>${devnull} )
+		e=$( pump --release --interface ${iface} 2>${devnull} )
 		[[ -z ${e} ]] && break
 		sleep 1
 	done
@@ -114,8 +99,8 @@ pump_stop() {
 # Returns 0 (true) when a dhcp address is obtained, otherwise
 # the return value from pump
 pump_start() {
-	local iface=${1}
-	local status=$( interface get_status ${iface} ) check=$( get_device ${iface} )
+	local iface=${1} opts
+	local status=$( interface_get_status ${iface} ) check=$( get_device ${iface} )
 
 	# Check that iface was not brought up by the kernel ...
 	if [[ ${status} == up && ${check} == ${iface} ]]; then
@@ -124,12 +109,13 @@ pump_start() {
 	fi
 
 	# Bring up DHCP for this interface (or alias)
-	pump -i ${iface} ${pump_IFACE} 2>${devnull}
+	eval opts=\"\$\{pump_${iface}\}\"
+	pump ${opts} --win-client-ident --interface ${iface} 2>${devnull}
 	eend $?
 	[[ 0 != $? ]] && return $?
 
 	# pump succeeded, show address retrieved
-	local addr=$( interface get_address ${iface} )
+	local addr=$( interface_get_address ${iface} )
 	einfo "    ${iface} received address ${addr}"
 
 	return 0

@@ -1,10 +1,8 @@
 # ifconfig module for net-scripts
-# Copyright 2004 Gentoo Foundation
-# Distributed under the terms of the GNU General Public License v2
-# Contributed by Roy "UberLord" Marples <uberlord@rsm.demon.co.uk>
-# $Header$
-#
-# Based on code from Gentoo Linux /etc/init.d/net.eth0 version 1.45
+# Version 0.6.2
+# Copyright (c) 2004 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License V2
+# Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
 
 # Fix any potential localisation problems
 # Note that LC_ALL trumps LC_anything_else according to locale(7)
@@ -12,12 +10,19 @@ ifconfig() {
 	LC_ALL=C /sbin/ifconfig "$@"
 }
 
+# void ifconfig_depend(void)
+#
+# Sets up the dependancies for the module
+ifconfig_depend() {
+	after macchanger wireless
+}
+
 # bool ifconfig_check_installed(void)
 #
 # Returns 1 if ifconfig is installed, otherwise 0
 ifconfig_check_installed() {
 	[[ -x /sbin/ifconfig ]] && return 0
-	[[ ${1} == true ]] && eerror "For ifconfig support, emerge sys-apps/ifconfig"
+	[[ ${1} == true ]] && eerror "For ifconfig support, emerge sys-apps/net-tools"
 	return 1
 }
 
@@ -28,9 +33,18 @@ ifconfig_provides() {
 	echo "interface"
 }
 
+# char* ifconfig_module(void)
+#
+# Returns the module name
+# This is needed by dhclient as we run different scripts
+# based on the interface
+ifconfig_module() {
+	echo "ifconfig"
+}
+
 # bool ifconfig_check_depends(void)
 #
-# Checks to see if we have the necessary package installed
+# Checks to see if we have the needed functions
 ifconfig_check_depends() {
 	return 0
 }
@@ -107,7 +121,7 @@ ifconfig_get_aliases_rev() {
 ifconfig_del_addresses() {
 	local inet6 iface=${1} x
 
-	ifconfig ${iface} 0.0.0.0
+	ifconfig ${iface} 0
 
 	inet6="$(ifconfig ${iface} | awk '$1=="inet6" {print $3}')"
 	[[ -z ${inet6} ]] && return 1

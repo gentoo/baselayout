@@ -1,0 +1,84 @@
+#!/bin/bash
+# dhclient iproute2 module for net-scripts
+# Version 0.6.2
+# Copyright (c) 2004 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License V2
+# Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
+
+echo ${reason}
+
+# We don't handle these reasons
+[[ ${reason} == MEDIUM || ${reason} == ARPCHECK || ${reason} == ARPSEND ]] && exit 0
+
+[[ ${reason} == FAIL || ${reason} == TIMEOUT ]] && exit 1
+
+ip addr flush ${interface} &>/dev/null
+ip route flush ${interface} &>/dev/null
+ip link set up dev ${interface} &>/dev/null
+
+[[ ${reason} == EXPIRE || ${reason} == FAIL || ${reason} == RELEASE || ${reason} == STOP ]] && exit 0
+
+# Check that we can handle the reason
+[[ ${reason} != BOUND && ${reason} != RENEW && ${reason} != REBIND && ${reason} != REBOOT ]] && exit 0
+
+source /etc/net.modules.d/helpers.d/dhclient-systemconfig
+
+masks=${new_subnet_mask//./ }
+len=0
+for mask in ${masks}; do
+	binary=$( echo "obase=2; ${mask}" | bc )
+	for ((i = 0; i < ${#binary}; i++)) do
+		[[ 1 -eq ${binary:${i}:1} ]] && ((len = len + 1))
+	done
+done
+
+if [[ -z ${old_ip_address} || ${old_ip_address} != ${new_ip_address} || \
+	${reason} == BOUND || ${reason} == REBOOT ]]; then
+
+	ip addr add dev ${interface} ${new_ip_address}/${len} broadcast ${new_broadcast_address}
+
+	for router in ${new_routers}; do
+		x=$( ip route show | awk '{ if ($1 == "default") {print $1} } ' )
+		if [[ -n ${x} ]]; then
+			x=$( ip route change default via ${router} 2>&1 )
+		else
+			x=$( ip route add default via ${router} 2>&1 )
+		fi
+		case "${x}" in
+			'RTNETLINK answers: File exists'|'') ;;
+			*) printf '%s\n' "${x}" >&2 ;;
+		esac
+	done
+
+        if [[ -n ${new_static_routes} ]]; then
+                set -- ${new_static_routes}
+                while [[ $# -gt 1 ]]; do
+			x=$( ip route add dev ${interface} ${1} ${2} 2>&1 )
+			case "${x}" in
+				'RTNETLINK answers: File exists'|'') ;;
+				*) printf '%s\n' "${x}" >&2 ;;
+			esac
+			shift; shift
+                done
+        fi
+
+	ip route flush cache
+fi
+
+if [[ ${new_ip_address} != ${alias_ip_address} && -n ${alias_ip_address} ]]; then
+        x=$( ip addr add dev ${interface} label ${interface}:0 ${alias_ip_address}/${len} \
+		broadcast ${new_broadcast_address} )
+	case "${x}" in
+		'RTNETLINK answers: File exists'|'') ;;
+		*) printf '%s\n' "${x}" >&2 ;;
+	esac
+
+	x=$( ip route add dev ${interface} label ${interface}:0 +scope host ${alias_ip_address} )
+        case "${x}" in
+                'RTNETLINK answers: File exists'|'') ;;
+                *) printf '%s\n' "${x}" >&2 ;;
+        esac
+fi
+
+config_system
+exit 0
