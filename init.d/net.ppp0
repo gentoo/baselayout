@@ -7,19 +7,23 @@ REDIAL=NO		# Redial after being dropped
 start() {
 	local CMD_LINE
 	ebegin
-	if [ "$DEBUG"="YES" ] then
+	if [ "$DEBUG"="YES" ]; then
 		CMD_LINE="-d"
 	fi
 
-	if [ "$REDIAL"="YES" ] then
+	if [ "$REDIAL"="YES" ]; then
 		CMD_LINE="$CMD_LINE -r"
 	fi
-	pon $CMD_LINE $PEER
+	if [ -x "`which pon`" ]; then
+		pon $CMD_LINE $PEER
+	fi
 	eend
 }
 
 stop() {
 	ebegin
-	/usr/sbin/poff $PEER
+	if [ -x "`which poff`" ]; then
+		/usr/sbin/poff $PEER
+	fi
 	eend
 }
