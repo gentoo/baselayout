@@ -441,6 +441,7 @@ size_t generate_stage2(char **data) {
 		 ***/
 
 		FILE *write_pipe;
+		FILE *read_pipe;
 		int status;
 		int read_count;
 		char buf[PARSE_BUFFER_SIZE+1];
@@ -457,6 +458,12 @@ size_t generate_stage2(char **data) {
 			goto error_c_p_side;
 		}
 
+		read_pipe = fdopen(parent_pfds[READ_PIPE], "r");
+		if (NULL == read_pipe) {
+			DBG_MSG("Failed to open parent_pfds for writing!\n");
+			goto error_c_p_side;
+		}
+
 		/* Pipe parse_rcscripts() to bash */
 		if (-1 == generate_stage1(write_pipe)) {
 			DBG_MSG("Failed to generate stage1!\n");
@@ -466,8 +473,8 @@ size_t generate_stage2(char **data) {
 		fclose(write_pipe);
 
 		do {
-			read_count = read(parent_pfds[READ_PIPE], buf, PARSE_BUFFER_SIZE);
-			if (-1 == read_count) {
+			read_count = fread(buf, 1, PARSE_BUFFER_SIZE, read_pipe);
+			if (ferror(read_pipe)) {
 				DBG_MSG("Error reading parent_pfds[READ_PIPE]!\n");
 				/* Set old_errno to disable child exit code
 				 * checking below */
@@ -491,10 +498,11 @@ size_t generate_stage2(char **data) {
 				*data = tmp_p;				
 				write_count += read_count;
 			}
-		} while (read_count > 0);
+		} while ((read_count > 0) && (!feof(read_pipe)));
+
 
 failed:
-		close(parent_pfds[READ_PIPE]);
+		fclose(read_pipe);
 
 		/* Wait for bash to finish */
 		waitpid(child_pid, &status, 0);

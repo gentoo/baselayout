@@ -4,6 +4,11 @@
 
   17 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
 
+    misc.c: Fix gbasename() to compile under gcc-2.95.3.
+    parse.c: Switch to stdio based io for reading pipes in generate_stage2().
+
+  17 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
+
     misc.c, misc.h: Add gbasename() that is similar to GNU's basename().
     parse.c: Use gbasename() instead of POSIX version.
 

@@ -112,6 +112,8 @@ char *strndup(const char *str, size_t size) {
 }
 
 char *gbasename(const char *path) {
+	char *new_path = NULL;
+	
 	if ((NULL == path) || (0 == strlen(path))) {
 		DBG_MSG("Invalid argument passed!\n");
 		errno = EINVAL;
@@ -119,7 +121,7 @@ char *gbasename(const char *path) {
 	}
 
 	/* Copied from glibc */
-	char *new_path = strrchr (path, '/');
+	new_path = strrchr (path, '/');
 	return new_path ? new_path + 1 : (char *)path;
 }
 	
