@@ -2,6 +2,19 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+* rc-scripts 1.4.3.4 (16 March 2003)
+
+  16 March 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add /etc/issue done by a Polish ascii-artists, v|rus with some slight
+    modifications (purple and display hostname, etc).  Closes bug #16806.
+
+    Add 'use hotplug' to /etc/init.d/net.eth0, to get cardbus hardware to
+    work properly.  Closes bug #17348.
+
+    Add update from Wout Mertens <wmertens@gentoo.org> to speedup shutdown
+    of dhcp interfaces, closing bug #17378.  This modified /etc/init.d/net.eth0.
+
   11 March 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix usage of /usr/bin/cut in /sbin/functions.sh, thanks Brandon Low

@@ -9,7 +9,7 @@
 # For pcmcia users. note that pcmcia must be added to the same
 # runlevel as the net.* script that needs it.
 depend() {
-	use pcmcia
+	use hotplug pcmcia
 }
 
 checkconfig() {
@@ -135,6 +135,8 @@ stop() {
 	local myalias="$(get_options alias)"
 	local myinet6="$(get_options inet6)"
 
+	setup_env
+
 	ebegin "Bringing ${IFACE} down"
 
 	# Also down the inet6 interfaces
@@ -161,18 +163,17 @@ stop() {
 
 	if [ "${iface_IFACE}" = "dhcp" ]
 	then
-		/sbin/dhcpcd -k ${IFACE} &>/dev/null
-	
-		# Give dhcpcd time to properly shutdown
 		local count=0
-		einfon "  Waiting for dhcpcd to shutdown"
-		while [ "${count}" -lt 5 ]
+		while /sbin/dhcpcd -k ${IFACE} &>/dev/null && [ "${count}" -lt 9 ]
 		do
-			echo -n "."
+			# Give dhcpcd time to properly shutdown
 			sleep 1
 			count=$((count + 1))
 		done
-		echo "done"
+		if [ "${count}" -ge 9 ]
+		then
+			eerror "Timed out trying to stop dhcpcd"
+		fi
 	else
 		/sbin/ifconfig ${IFACE} down >/dev/null
 	fi
