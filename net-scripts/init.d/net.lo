@@ -402,15 +402,12 @@ modules_check_depends() {
 # Loads the defined handler and modules for the interface
 # Returns 0 on success, otherwise 1
 modules_load()  {
-	local iface=$1 starting=${2:-true} mod p=false i j unsetfuncs
+	local iface=$1 starting=${2:-true} mod p=false i j k unsetfuncs
 	local -a x
 	local RC_INDENTATION=${RC_INDENTATION}	# so it will reset after function
 	local -a PROVIDES
 
-	if [[ ${iface} == "lo" ]]; then
-		# We force lo to only use these modules for a major speed boost
-		modules_force=( "iproute2" "ifconfig" )
-	else
+	if [[ ${iface} != "lo" ]]; then
 		eval x=( \"\$\{modules_force_${iface}\[@\]\}\" )
 		[[ -n ${x} ]] && modules_force=( "${x[@]}" )
 		if [[ -n ${modules_force} ]]; then
@@ -418,8 +415,9 @@ modules_load()  {
 			ewarn "Do not complain or file bugs if things start breaking"
 			report=true
 		fi
-		veinfo "Loading networking modules for ${iface}"
 	fi
+
+	veinfo "Loading networking modules for ${iface}"
 	eindent
 
 	if [[ -z ${modules_force} ]]; then
@@ -430,6 +428,19 @@ modules_load()  {
 			module_load_minimum "${MODULES_DIR}/${modules_force[i]}" || return 1
 			${modules_force[i]}_check_installed || unset modules_force[i]
 		done
+		modules_force=( "${modules_force[@]}" )
+		
+		# Strip any duplicate modules providing the same thing
+		j=${#modules_force[@]}
+		for (( i=0; i<j-1; i++ )); do
+			[[ -z ${modules_force[i]} ]] && continue
+			for (( k=i+1; k<j; k++ )); do
+				[[ -z ${modules_force[k]} ]] && continue
+				[[ $( ${modules_force[i]}_provides ) == $( ${modules_force[i]}_provides ) ]] \
+					&& unset modules_force[k]
+			done
+		done
+
 		MODULES=( "${modules_force[@]}" )
 	fi
 
@@ -460,10 +471,10 @@ modules_load()  {
 
 	modules_check_installed || return 1
 
-	[[ ${iface} != "lo" ]] && veinfo "modules: ${MODULES[@]}"
+	veinfo "modules: ${MODULES[@]}"
 	eindent
 
-	[[ ${iface} != "lo" && ${starting} == "true" ]] && p=true
+	[[ ${starting} == "true" ]] && p=true
 	modules_check_depends ${p} || return 1
 	return 0
 }
@@ -652,11 +663,12 @@ iface_stop() {
 run_start() {
 	local iface=$1 IFVAR=${1//[![:word:]]/_} x
 
+	# We do this so users can specify additional addresses for lo if they
+	# need too - additional routes too
+	# However, no extra modules are loaded as they are just not needed
 	if [[ ${iface} == "lo" ]]; then
-		ebegin "Bringing up ${iface}"
-		interface_loopback_create
-		eend $?
-		return $?
+		config_lo=( "127.0.0.1/8 brd 127.255.255.255" "${config_lo[@]}" )
+		routes_lo=( "127.0.0.0/8" "${routes_lo[@]}" )
 	fi
 
 	# We may not have a loaded module for ${iface}
@@ -725,14 +737,6 @@ run_start() {
 run_stop() {
 	local iface=$1 IFVAR=${1//[![:word:]]/_} x
 
-	# Don't run any special shutdown functions for lo
-	if [[ ${iface} == "lo" ]]; then
-		ebegin "Shutting down ${iface}"
-		interface_iface_stop ${iface}
-		eend $?
-		return 0
-	fi
-
 	# Call user-defined predown function if it exists
 	if [[ $( type -t predown ) == "function" ]]; then
 		einfo "Running predown function"
@@ -777,6 +781,10 @@ run() {
 	unset_functions=${unset_functions:-false}
 	${unset_functions} && before=$( typeset -F )
 	[[ ${cmd} == "stop" ]] && starting=false
+
+	# We force lo to only use these modules for a major speed boost
+	[[ ${iface} == "lo" ]] && modules_force=( "iproute2" "ifconfig" )
+
 	if modules_load ${iface} ${starting} ; then
 		if [[ ${cmd} == "stop" ]]; then
 			# Reverse the module list for stopping

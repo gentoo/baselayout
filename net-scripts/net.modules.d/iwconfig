@@ -86,7 +86,18 @@ iwconfig_get_wep_status() {
 #
 # Gets the current ESSID of the iface
 iwconfig_get_essid() {
-	iwgetid $1 2>${devnull} | sed -ne 's/^.*ESSID:"\(.*\)"$/\1/p'
+	local i essid
+
+	for (( i=0; i<5; i++ )); do
+		essid=$( iwgetid $1 2>/dev/null | sed -ne 's/^.*ESSID:"\(.*\)"$/\1/p' )
+		if [[ -n ${essid} ]]; then
+			echo ${essid}
+			return 0
+		fi
+		sleep 1
+	done
+
+	return 1
 }
 
 # char* iwconfig_get_ap_mac_address(char *interface)
@@ -101,7 +112,7 @@ iwconfig_get_ap_mac_address() {
 #
 # Returns the wireless mode in lower case
 iwconfig_get_mode() {
-	iwgetid --mode $1 | sed -ne 's/^.*Mode://p'
+	iwgetid --mode $1 | sed -ne 's/^.*Mode:\(.*\)/\L\1/p'
 }
 
 # char* iwconfig_get_type(char *interface)
@@ -115,28 +126,25 @@ iwconfig_get_type() {
 #
 # Output how our wireless interface has been configured
 iwconfig_report() {
-	local iface=$1 essid i=0
+	local iface=${1} essid mac m="to"
 
-	# We do this so that we get a 100% valid report
-	while true ; do
-		essid=$( iwconfig_get_essid ${iface} )
-		[[ -n ${essid} ]] && break
-		sleep 1
-		(( i++ ))
-		[[ ${i} -eq 5 ]] && break
-	done
+	essid=$( iwconfig_get_essid ${iface} )
 
 	local wep_status=$( iwconfig_get_wep_status ${iface} )
-	local channel=$( iwgetid --channel 2>${devnull} | cut -d: -f2 )
+	local channel=$( iwgetid --channel 2>/dev/null | cut -d: -f2 )
 	[[ -n ${channel} ]] && channel="on channel ${channel} "
 
 	essid=${essid//\\\\/\\\\}
 	local mode=$( iwconfig_get_mode ${iface} )
-	local mac=$( iwconfig_get_ap_mac_address ${iface} )
-	[[ -n ${mac} ]] && mac=" at ${mac}"
+	if [[ ${mode} == "master" ]]; then
+		m="as"
+	else
+		mac=$( iwconfig_get_ap_mac_address ${iface} )
+		[[ -n ${mac} ]] && mac=" at ${mac}"
+	fi
 	
 	eindent
-	einfo "${iface} connected to \"${essid}\"${mac}"
+	einfo "${iface} connected ${m} \"${essid}\"${mac}"
 	einfo "in ${mode} mode ${channel}${wep_status}"
 	eoutdent
 }

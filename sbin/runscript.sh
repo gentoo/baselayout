@@ -254,12 +254,12 @@ svc_start() {
 
 	# On rc change, start all services "before $myservice" first
 	if is_runlevel_start ; then
-		startupservices=$(ineed "${myservice}") \
+		startupservices="$(ineed "${myservice}") \
 			$(valid_iuse "${myservice}") \
-			$(valid_iafter "${myservice}")
+			$(valid_iafter "${myservice}")"
 	else
-		startupservices=$(ineed "${myservice}") \
-			$(valid_iuse "${myservice}")
+		startupservices="$(ineed "${myservice}") \
+			$(valid_iuse "${myservice}")"
 	fi
 
 	# Start dependencies, if any

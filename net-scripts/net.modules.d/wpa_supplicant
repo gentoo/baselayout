@@ -64,7 +64,18 @@ wpa_supplicant_check_extensions() {
 #
 # Gets the current ESSID of iface
 wpa_supplicant_get_essid() {
-	wpa_cli -i$1 status 2>/dev/null | sed -ne 's/^ssid=//p'
+	local i essid
+
+	for (( i=0; i<5; i++ )); do
+		essid=$( wpa_cli -i$1 status 2>/dev/null | sed -ne 's/^ssid=//p' )
+		if [[ -n ${essid} ]]; then
+			echo ${essid}
+			return 0
+		fi
+		sleep 1
+	done
+
+	return 1
 }
 
 # char* wpa_supplicant_get_ap_mac_address(char *interface)

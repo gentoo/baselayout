@@ -106,15 +106,6 @@ iproute2_set_flag() {
 	ip link set $1 $2 ${opt} &>${devnull}
 }
 
-# void loopback_create(void)
-#
-# Creates our loopback interface
-iproute2_loopback_create() {
-	ip addr add 127.0.0.1/8 dev lo brd + scope host &>/dev/null
-	iproute2_up lo
-	ip route add 127.0.0.0/8 dev lo &>/dev/null
-}
-
 # void iproute2_get_address(char *interface)
 #
 # Fetch the address retrieved by DHCP.  If successful, echoes the
@@ -226,21 +217,16 @@ iproute2_add_address() {
 	done
 	config=( "${config[@]//pointtopoint/peer}" )
 
+	# Always scope lo addresses as host unless specified otherwise
+	[[ ${iface} == "lo" && " ${config[@]} " != *' scope '* ]] \
+		&& config=( "${config[@]}" "scope host" )
+
 	# Make sure interface is marked UP
 	# This is required for IPv6 addresses
 	iproute2_up ${iface}
 
-	# If the address already exists then the following command
-	# will fail.  Catch the failure and be graceful
-	x=$( ip addr add dev ${iface} ${config[@]} 2>&1 )
-	case "${x}" in
-		'RTNETLINK answers: File exists'|'')
-			return 0
-			;;
-		*)
-			printf '%s\n' "${x}" >&2
-			return 1
-	esac
+	ip addr add dev ${iface} ${config[@]}
+	return $?
 }
 
 # bool iproute2_post_start(char *interface)
@@ -266,20 +252,16 @@ iproute2_post_start() {
 	einfo "Adding routes"
 	eindent
 	for x in "${routes[@]}"; do
+		ebegin "${x}"
+
 		# Support net-tools routing too
 		x=${x//gw/via}
 		x=${x//-A inet6}
+		x=${x//-net}
+		[[ ${x} == *'-host'* ]] && x="${x//-host} scope host"
 
-		einfo "${x}"
-		e=$( ip route add dev ${iface} ${x} 2>&1 )
-		case "${e}" in
-			'RTNETLINK answers: File exists'|'')
-				eend 0
-				;;
-			*) printf '%s\n' "${e}" >&2
-				eend 1
-				;;
-		esac
+		ip route add ${x} dev ${iface}
+		eend $?
 	done
 	eoutdent
 
