@@ -6,6 +6,7 @@
 
 depend() {
 	need localmount
+	after hotplug
 }
 
 start() {

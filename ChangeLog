@@ -11,6 +11,8 @@
     Add patch from Kumba <kumba@gentoo.org> to MAKEDEV to not allow
     running while pwd is root (/).
 
+    Add 'after hotplug' to /etc/init.d/consolefont, bug #30856.
+
   14 Sep 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Change update-modules to modules-update in manpage, bug #28101.
