@@ -837,56 +837,57 @@ valid_iafter() {
 	return 0
 }
 
-# void trace_depend(deptype, service, deplist)
+# string trace_dependencies(service[s])
 #
-#   Trace the dependency tree of 'service' for type 'deptype', and
-#   modify 'deplist' with the info.
+#   Get and sort the dependencies of given service[s].
 #
-trace_depend() {
-	local x=
-	local y=
-	local add=
-
-	[ -z "$1" -o -z "$2" -o -z "$3" ] && return 1
-
-	# Build the list of services that 'deptype' on this one
-	for x in "$("$1" "$2")"
-	do
-		add="yes"
-		
-		for y in $(eval echo "\${$3}")
-		do
-			[ "${x}" = "${y}" ] && add="no"
-		done
-
-		[ "${add}" = "yes" ] && eval $(echo "$3=\"\${$3} ${x}\"")
-		
-		# Recurse to build a complete list ...
-		trace_depend "$1" "${x}" "$3"
-	done
-
-	return 0
-}
-
-# string list_depend_trace(deptype)
-#
-#   Return resulting list of services for a trace of
-#   type 'deptype' for $myservice
-#
-list_depend_trace() {
-	local x=
-	local list=
-
-	[ -z "$1" ] && return 1
+trace_dependencies() {
+	local -a unsorted=( "$@" )
+	local -a sorted dependencies
+	local service dependency x
 	
-	trace_depend "$1" "${myservice}" "list"
-
-	for x in ${list}
-	do
-		echo "${x}"
+	while (( ${#unsorted[*]} > 0 )) ; do
+		# Get a service from the list and remove it
+		service=${unsorted[0]}
+		unset unsorted[0]
+		# Reindex the array
+		unsorted=( ${unsorted[@]} )
+	
+		# Services that should start before $service
+		if (is_runlevel_start || is_runlevel_stop) ; then
+			dependencies=(
+				$(ineed "${service}")
+				$(valid_iuse "${service}")
+				$(valid_iafter "${service}")
+			)
+		else
+			dependencies=(
+				$(ineed "${service}")
+				$(valid_iuse "${service}")
+			)
+		fi
+	
+	
+		# Remove each one of those from the sorted list and add
+		# them all to the unsorted so we analyze them later
+		for dependency in ${dependencies[@]} ; do
+			for (( x=0 ; x < ${#sorted[*]} ; x++ )) ; do
+				[[ ${sorted[x]} == "${dependency}" ]] && \
+					unset sorted[x]
+			done
+			for (( x=0 ; x < ${#unsorted[*]} ; x++ )) ; do
+				[[ ${unsorted[x]} == "${dependency}" ]] && \
+					unset unsorted[x]
+			done
+			
+			sorted=( ${sorted[@]} )
+			unsorted=( ${unsorted[@]} ${dependency} )
+		done
+	
+		sorted=( ${service} ${sorted[@]} )
 	done
-
-	return 0
+	
+	echo ${sorted[@]}
 }
 
 # bool query_before(service1, service2)
@@ -895,69 +896,20 @@ list_depend_trace() {
 #   service1.
 #
 query_before() {
-	local x=
-	local list=
+	local x list
 	local netservice="no"
 
-	[ -z "$1" -o -z "$2" ] && return 1
+	[[ -z $1 || -z $2 ]] && return 1
 
-	trace_depend "ineed" "$1" "list"
-
-	for x in $1 ${list}
-	do
-		trace_depend "iuse" "${x}" "list"
-	done
-
-	for x in $1 ${list}
-	do
-		trace_depend "iafter" "${x}" "list"
-	done
+	list=$(trace_dependencies "$1")
 
 	net_service "$2" && netservice="yes"
 	
-	for x in ${list}
-	do
-		[ "${x}" = "$2" ] && return 0
+	for x in ${list} ; do
+		[[ ${x} == "$2" ]] && return 0
 
 		# Also match "net" if this is a network service ...
-		[ "${netservice}" = "yes" -a "${x}" = "net" ] && return 0
-	done
-
-	return 1
-}
-
-# bool query_after(service1, service2)
-#
-#   Return true if 'service2' should be started *after*
-#   service1.
-#
-query_after() {
-	local x=
-	local list=
-	local netservice="no"
-
-	[ -z "$1" -o -z "$2" ] && return 1
-
-	trace_depend "needsme" "$1" "list"
-
-	for x in $1 ${list}
-	do
-		trace_depend "usesme" "${x}" "list"
-	done
-
-	for x in $1 ${list}
-	do
-		trace_depend "ibefore" "${x}" "list"
-	done
-
-	net_service "$2" && netservice="yes"
-
-	for x in ${list}
-	do
-		[ "${x}" = "$2" ] && return 0
-
-		# Also match "net" if this is a network service ...
-		[ "${netservice}" = "yes" -a "${x}" = "net" ] && return 0
+		[[ ${netservice} == "yes" && ${x} == "net" ]] && return 0
 	done
 
 	return 1

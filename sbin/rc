@@ -655,10 +655,8 @@ fi
 
 mkdir -p -m 0755 "${svcdir}/softscripts.new"
 
-for x in ${myscripts}
-do
-	if [ ! -e "/etc/init.d/${x}" ]
-	then
+for x in ${myscripts} ; do
+	if [[ ! -e /etc/init.d/${x} ]] ; then
 		ewarn "WARNING:  /etc/init.d/${x} missing; skipping ..."
 		continue
 	fi
@@ -668,120 +666,93 @@ do
 	ln -snf "/etc/init.d/${x}" "${svcdir}/softscripts.new/${x}"
 done
 
+get_stop_services() {
+	local x list
+
+	for x in $(dolisting "${svcdir}/started/") ; do
+		list="${list} ${x##*/}"
+	done
+
+	reverse_list $(trace_dependencies ${list})
+}
+
 dep_stop() {
-	local x=
-	local dep=
-	local needsme=
-	local myservice="${1##*/}"
-	local depservice=
+	local x dep needsme depservice
+	local myservice=${1##*/}
 
-	if service_stopped "${myservice}"
-	then
-		return 0
-	fi
+	service_stopped "${myservice}" && return 0
 	
-	# Candidate for zapping
-	if [ ! -L "${svcdir}/softscripts.new/${myservice}" ]
-	then
-		# If this is a 'net' service, we do not want to stop it if it was
-		# not in the previous runlevel, and we are not shutting down,
-		# rebooting or going to single runlevel.  This is because the user
-		# might have started it (net.ppp?), or possibly hotplug ...
-		if net_service "${myservice}" && \
-		   [ "${SOFTLEVEL}" != "reboot" -a \
-		     "${SOFTLEVEL}" != "shutdown" -a \
-		     "${SOFTLEVEL}" != "single" ]
-		then
-			if [ -z "${OLDSOFTLEVEL}" ] || \
-			   ! in_runlevel "${myservice}" "${OLDSOFTLEVEL}"
-			then
-				# This service is not in the previous runlevel, so
-				# do not stop it ...
-				return 0
-			fi
-		fi
+	# Candidate for zapping ?
+	[[ ! -L ${svcdir}/softscripts.new/${myservice} ]] || \
+		return 0
 
-		# Should not work for 'use'
-		if [ -z "$(needsme "${myservice}")" ]
+	# If this is a 'net' service, we do not want to stop it if it was
+	# not in the previous runlevel, and we are not shutting down,
+	# rebooting or going to single runlevel.  This is because the user
+	# (or hotplut) might have started it (net.ppp?) ...
+	if net_service "${myservice}" && \
+	   [[ ${SOFTLEVEL} != "reboot" && \
+	      ${SOFTLEVEL} != "shutdown" && \
+	      ${SOFTLEVEL} != "single" ]] ; then
+		if [[ -z ${OLDSOFTLEVEL} ]] || \
+		   ! in_runlevel "${myservice}" "${OLDSOFTLEVEL}"
 		then
-			# Nothing depends on me
-			stop_service "${myservice}"
-		else
-			# Something may depend on me
-			needsme=0
-			
-			for dep in $(needsme "${myservice}")
-			do
-				if service_started "${dep}" && \
-				   [ -L "${svcdir}/softscripts.new/${dep}" ]
-				then
-					# This dep is valid
-					needsme=1
-					
-					break
-				fi
-			done
-			
-			if [ "${needsme}" -eq 0 ]
-			then
-				stop_service "${myservice}"
-			fi
+			# This service is not in the previous runlevel, so
+			# do not stop it ...
+			return 0
 		fi
+	fi
+
+	# Should not work for 'use'
+	if [[ -z $(needsme "${myservice}") ]] ; then
+		# Nothing depends on me
+		stop_service "${myservice}"
+	else
+		# Something may depend on me
+		needsme=0
+		
+		for dep in $(needsme "${myservice}") ; do
+			if service_started "${dep}" && \
+			   [[ -L "${svcdir}/softscripts.new/${dep}" ]] ; then
+				# This dep is valid
+				needsme=1
+				
+				break
+			fi
+		done
+		
+		[[ ${needsme} -eq 0 ]] && stop_service "${myservice}"
 	fi
 }
 
 # Stop services
-if [ "${SOFTLEVEL}" != "single" -a \
-     "${SOFTLEVEL}" != "reboot" -a \
-     "${SOFTLEVEL}" != "shutdown" ]
-then
-	for i in $(dolisting "${svcdir}/started/")
-	do
+if [[ ${SOFTLEVEL} != "single" && \
+      ${SOFTLEVEL} != "reboot" && \
+      ${SOFTLEVEL} != "shutdown" ]] ; then
+	for i in $(get_stop_services) ; do
 		dep_stop "${i}"
 	done
 else
 	get_critical_services
 
 	is_critical_service() {
-		local x=
-		local myservice="${1##*/}"
+		local x
+		local myservice=${1##*/}
 
-		for x in ${CRITICAL_SERVICES}
-		do
-			if [ "${myservice}" = "${x}" ]
-			then
-				return 0
-			fi
+		for x in ${CRITICAL_SERVICES} ${LOGGER_SERVICE} ; do
+			[[ ${myservice} == "${x}" ]] && return 0
 		done
 
 		return 1
 	}
 	
 	# First stop non critical services
-	for i in $(dolisting "${svcdir}/started/")
-	do
-		if [ -n "${LOGGER_SERVICE}" ]
-		then
-			# Only stop it if the logger do not depends on it
-			if ! query_before "${i##*/}" "${LOGGER_SERVICE}"
-			then
-				continue
-			fi
-		fi
-
-		# Do not stop critical services just yet
+	for i in $(get_stop_services) ; do
 		is_critical_service "${i}" || dep_stop "${i}"
 	done
 
-	# Now stop the logger if running
-	if [ -n "${LOGGER_SERVICE}" ]
-	then
-		dep_stop "${LOGGER_SERVICE}"
-	fi
-
 	# Now stop the rest
-	for i in $(dolisting "${svcdir}/started/")
-	do
+	for i in $(get_stop_services) ; do
 		dep_stop "${i}"
 	done
 fi
@@ -791,8 +762,7 @@ fi
 
 echo "${SOFTLEVEL}" > "${svcdir}/softlevel"
 
-if [ "${SOFTLEVEL}" = "reboot" -o "${SOFTLEVEL}" = "shutdown" ]
-then
+if [[ ${SOFTLEVEL} == "reboot" || ${SOFTLEVEL} == "shutdown" ]] ; then
 	source /sbin/functions.sh
 	
 	# Clear $svcdir from stale entries, but leave the caches around, as it
@@ -802,8 +772,7 @@ then
 	
 	source /etc/init.d/halt.sh
 	
-	if [ "${SOFTLEVEL}" = "reboot" ]
-	then
+	if [[ ${SOFTLEVEL} == "reboot" ]] ; then
 		source /etc/init.d/reboot.sh
 	else
 		source /etc/init.d/shutdown.sh
@@ -819,37 +788,35 @@ fi
 mv -f "${svcdir}/softscripts" "${svcdir}/softscripts.old"
 mv -f "${svcdir}/softscripts.new" "${svcdir}/softscripts"
 
+get_start_services() {
+	local x list
+
+	get_critical_services
+	list=${CRITICAL_SERVICES}
+
+	[[ -n ${LOGGER_SERVICE} && \
+	   -L ${svcdir}/softscripts/${LOGGER_SERVICE} ]] && \
+		list="${list} ${LOGGER_SERVICE}"
+
+	for x in $(dolisting "${svcdir}/softscripts/") ; do
+		list="${list} ${x##*/}"
+	done
+
+	trace_dependencies ${list}
+}
+
 dep_start() {
 	local myservice="${1##*/}"
 
-	[ ! -L "${svcdir}/softscripts/${myservice}" ] && continue
+	[[ ! -L ${svcdir}/softscripts/${myservice} ]] && continue
 
 	# Only start a script if it isn't already running
-	service_started "${myservice}" || schedule_service_startup "${myservice}"
+	service_started "${myservice}" || \
+		schedule_service_startup "${myservice}"
 }
 
-get_critical_services
-
-EXTRA_SOFTSCRIPTS="${CRITICAL_SERVICES}"
-
-if [ -n "${LOGGER_SERVICE}" -a -L "${svcdir}/softscripts/${LOGGER_SERVICE}" ]
-then
-	service_started "${LOGGER_SERVICE}" || \
-		EXTRA_SOFTSCRIPTS="${EXTRA_SOFTSCRIPTS} ${LOGGER_SERVICE}"
-fi
-
-if [ "${SOFTLEVEL}" != "${BOOTLEVEL}" ]
-then
-	for i in $(dolisting "/etc/runlevels/${BOOTLEVEL}/")
-	do
-		[ -L "${svcdir}/softscripts/${i##*/}" ] && \
-			EXTRA_SOFTSCRIPTS="${EXTRA_SOFTSCRIPTS} ${i##*/}"
-	done
-fi
-
 # Start scripts
-for i in ${EXTRA_SOFTSCRIPTS} $(dolisting "${svcdir}/softscripts/")
-do
+for i in $(get_start_services) ; do
 	dep_start "${i##*/}"
 done
 

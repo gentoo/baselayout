@@ -1,6 +1,12 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  20 Mar 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Take sort_services function from bug #70009, and fix the removing of a
+    service from a array properly by using unset.  Use this instead of the
+    trace_* stuff, and fixup shutdown order.
+
   19 Mar 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Make sure we mount svcdir with 0755 and not 0644 #85888.
