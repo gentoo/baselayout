@@ -4,8 +4,11 @@
 
   10 May 2002; Martin Schlemmer <azarah@gentoo.org>:
 
-  Resolve bug #2505 ... /sbin/rc-envupdate.sh should not use
-  backup files to generate /etc/profile.env.
+    Resolve bug #2505 ... /sbin/rc-envupdate.sh should not use
+    backup files to generate /etc/profile.env.
+
+	Resolve bug #2489 and #2175.  Modified /etc/init.d/net.eth0
+	for this.
 
   6 May 2002; Martin Schlemmer <azarah@gentoo.org>:
 

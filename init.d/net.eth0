@@ -46,11 +46,25 @@ start() {
 	then
 		local x=""
 		local num=0
+		local aliasbcast=""
+		local aliasnmask=""
+
+		if [ -n  "`eval echo \$\{broadcast_${IFACE}\}`" ]
+		then
+			aliasbcast="broadcast `eval echo \$\{broadcast_${IFACE}\}`"
+		fi
+
+		if [ -n  "`eval echo \$\{netmask_${IFACE}\}`" ]
+		then
+			aliasnmask="netmask `eval echo \$\{netmask_${IFACE}\}`"
+		fi
+		
 		ebegin "  Adding aliases"
 		for x in $(eval echo \$\{alias_${IFACE}\})
 		do
 			ebegin "    ${IFACE}:${num}"
-			/sbin/ifconfig ${IFACE}:${num} ${x} &>/dev/null
+			/sbin/ifconfig ${IFACE}:${num} ${x} \
+				${aliasbcast} ${aliasnmask} >/dev/null
 			num=$((num + 1))
 			eend 0
 		done
@@ -95,10 +109,22 @@ stop() {
 		done
 	fi
 
-	/sbin/ifconfig ${IFACE} down &>/dev/null
 	if [ "$(eval echo \$\{iface_${IFACE}\})" == "dhcp" ]
 	then
 		/sbin/dhcpcd -k ${IFACE} &>/dev/null
+	
+		# Give dhcpcd time to properly shutdown
+		local count=0
+		einfon "  Waiting for dhcpcd to shutdown"
+		while [ "${count}" -lt 5 ]
+		do
+			echo -n "."
+			sleep 1
+			count=$((count + 1))
+		done
+		echo "done"
+	else
+		/sbin/ifconfig ${IFACE} down &>/dev/null
 	fi
 	eend 0
 }

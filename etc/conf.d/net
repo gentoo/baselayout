@@ -15,6 +15,15 @@ iface_eth0="192.168.0.2 broadcast 192.168.0.255 netmask 255.255.255.0"
 #
 #alias_eth0="192.168.0.3 192.168.0.4"
 
+# NB:  The next is only used for aliases.
+#
+# To add a custom netmask/broadcast address to created aliases,
+# uncomment and change accordingly.
+#
+#broadcast_eth0="192.168.0.255"
+#netmask_eth0="255.255.255.0"
+
+
 # For setting the default gateway
 #
 #gateway="eth0/192.168.0.1"
