@@ -25,6 +25,7 @@
     beside net.lo start successfully, the 'net' dependency is
     considered up.  Server admin can set RC_NET_STRICT_CHECKING="yes"
     in /etc/conf.d/rc to change this back to the old default.
+    This is the start to address bug #2706.
 
 * rc-scripts 1.4.2.4 (26 Nov 2002)
 
