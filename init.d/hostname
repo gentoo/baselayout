@@ -9,7 +9,7 @@ depend() {
 }
 
 checkconfig() {
-	if [ ! -f /etc/hostname ] || [ -z "$(cat /etc/hostname)" ]
+	if [ ! -f /etc/hostname ] || [ -z "$(< /etc/hostname)" ]
 	then
 		eerror "You need to set /etc/hostname to a valid hostname"
 		return 1

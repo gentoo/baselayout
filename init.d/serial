@@ -5,7 +5,7 @@
 
 
 moduleinserted() {
-	local res="$(cat /proc/modules | egrep 'serial' | cut -f1 -d" ")"
+	local res="$(grep 'serial' /proc/modules | cut -f1 -d" ")"
 	if [ "${res}" ]
 	then
 		if [ "${res}" = "serial" ]
