@@ -636,14 +636,16 @@ is_uml_sys() {
 	return $?
 }
 
-# bool is_in_fstab(path)
+# bool get_mount_fstab(path)
 #
-#   return 0 if path is listed in /etc/fstab
+#   return the parameters to pass to the mount command generated from fstab
 #
-#   EXAMPLE:  if is_in_fstab /proc ; then ...
+#   EXAMPLE: cmd=$( get_mount_fstab /proc )
+#            cmd=${cmd:--t proc none /proc}
+#            mount -n ${cmd}
 #
-is_in_fstab() {
-	[ -n "$(awk '($2 ~ /^'${*//\//\\/}'$/) { print }' /etc/fstab)" ]
+get_mount_fstab() {
+	awk '$1 ~ "^#" { next } $2 == "'$*'" { print "-t "$3,"-o "$4,$1,$2 }' /etc/fstab
 }
 
 # bool is_older_than(reference, files/dirs to check)
