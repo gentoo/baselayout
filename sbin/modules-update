@@ -44,7 +44,14 @@ depdir() {
 	echo "${dep}"
 }
 
-for x in "${CFGFILE}" "${CFGFILE2}" "${CFGFILE4}"
+CFGFILES="${CFGFILE}"
+
+if [ "${KERNEL_2_5}" = "yes" ]
+then
+	CFGFILES="${CFGFILES} ${CFGFILE2} ${CFGFILE4}"
+fi
+
+for x in ${CFGFILES}
 do
 	if [ -f "${x}" ]
 	then
@@ -73,13 +80,16 @@ if [ -e "${CFGFILE}" ]
 then
 	cp -f "${CFGFILE}" "${CFGFILE}".old
 fi
-if [ -e "${CFGFILE2}" ]
+if [ "${KERNEL_2_5}" = "yes" ]
 then
-	cp -f "${CFGFILE2}" "${CFGFILE2}".old
-fi
-if [ -e "${CFGFILE4}" ]
-then
-	cp -f "${CFGFILE4}" "${CFGFILE4}".old
+	if [ -e "${CFGFILE2}" ]
+	then
+		cp -f "${CFGFILE2}" "${CFGFILE2}".old
+	fi
+	if [ -e "${CFGFILE4}" ]
+	then
+		cp -f "${CFGFILE4}" "${CFGFILE4}".old
+	fi
 fi
 
 
