@@ -130,6 +130,12 @@ dhcpcd_start() {
 		return 0
 	fi
 
+	if [[ ${background} == yes ]]; then
+		dhcpcd ${opts} -c /lib/rcscripts/net.modules.d/helpers.d/dhcpcd-backgrounder ${iface} & >/dev/null
+		eend 0
+		go_background
+	fi
+
 	dhcpcd ${opts} ${iface}
 	eend $? || return 1
 

@@ -126,8 +126,16 @@ dhclient_start() {
 	fi
 
 	eval opts=\"\$\{dhclient_${ifvar}\}\"
+
+	if [[ ${background} == yes ]]; then
+		dhclient ${opts} -sf ${script} -pf ${pidfile} -q ${iface} &>/dev/null &
+		eend 0
+		go_background
+	fi
+
 	local x=$( dhclient ${opts} -1 -sf ${script} -pf ${pidfile} -q ${iface} )
 	# We just check the last 5 letters
+	echo ${x}
 	[[ ${x:${#x} - 5:5} == bound ]]
 	if [[ $? != 0 ]]; then
 		# We need to kill the process if we fail

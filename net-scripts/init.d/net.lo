@@ -25,6 +25,9 @@ depend() {
 # Define where our modules are
 MODULES_DIR=/lib/rcscripts/net.modules.d
 
+# Default to turn off backgrounding
+background=${background:-no}
+
 # Load some functions shared between ourselves and our dhcp helpers
 source ${MODULES_DIR}/helpers.d/functions
 
@@ -74,6 +77,16 @@ net_start() {
 	fi
 	/etc/init.d/net.${iface} start
 	return $?
+}
+
+# void go_background(void)
+#
+# Setup for backgrounding network script
+go_background() {
+	einfo "Backgrounding ..."
+	mark_service_started net.${iface}
+	mark_service_inactive net.${iface}
+	exit 0
 }
 
 # void module_class_wrap(char *module, char *provides)

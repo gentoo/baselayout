@@ -464,6 +464,19 @@ stop_service() {
 	return 0
 }
 
+# bool mark_service_starting(service)
+#
+#   Mark 'service' as starting.
+#
+mark_service_starting() {
+	[ -z "$1" ] && return 1
+
+	ln -snf "/etc/init.d/$1" "${svcdir}/starting/$1"
+	[ -f "${svcdir}/inactive/$1" ] && rm -f "${svcdir}/inactive/$1"
+
+	return $?
+}
+
 # bool mark_service_started(service)
 #
 #   Mark 'service' as started.
@@ -472,6 +485,8 @@ mark_service_started() {
 	[ -z "$1" ] && return 1
 
 	ln -snf "/etc/init.d/$1" "${svcdir}/started/$1"
+	[ -f "${svcdir}/starting/$1" ] && rm -f "${svcdir}/starting/$1"
+	[ -f "${svcdir}/inactive/$1" ] && rm -f "${svcdir}/inactive/$1"
 
 	return $?
 }
@@ -483,9 +498,32 @@ mark_service_started() {
 mark_service_stopped() {
 	[ -z "$1" ] && return 1
 
-	rm -f "${svcdir}/started/$1"
+	[ -f "${svcdir}/starting/$1" ] && rm -f "${svcdir}/starting/$1"
+	[ -f "${svcdir}/started/$1" ] && rm -f "${svcdir}/started/$1"
+	[ -f "${svcdir}/inactive/$1" ] && rm -f "${svcdir}/inactive/$1"
 
 	return $?
+}
+
+# bool service_starting(service)
+#
+#   Returns true if 'service' is starting
+#
+service_starting() {
+	[ -z "$1" ] && return 1
+
+	if [ -L "${svcdir}/starting/$1" ]
+	then
+		if [ ! -e "${svcdir}/starting/$1" ]
+		then
+			rm -f "${svcdir}/starting/$1"
+			
+			return 1
+		fi
+		return 0
+	fi
+
+	return 1
 }
 
 # bool service_started(service)
@@ -507,6 +545,39 @@ service_started() {
 	fi
 
 	return 1
+}
+
+# bool service_inactive(service)
+#
+#   Returns true if 'service' is inactive
+#
+service_inactive() {
+	[ -z "$1" ] && return 1
+
+	if [ -L "${svcdir}/inactive/$1" ]
+	then
+		if [ ! -e "${svcdir}/inactive/$1" ]
+		then
+			rm -f "${svcdir}/inactive/$1"
+			
+			return 1
+		fi
+		return 0
+	fi
+
+	return 1
+}
+
+# bool mark_service_inactive(service)
+#
+#   Mark service as inactive
+#
+mark_service_inactive() {
+	[ -z "$1" ] && return 1
+
+	ln -snf "/etc/init.d/$1" "${svcdir}/inactive/$1"
+
+	return $?
 }
 
 # bool mark_service_failed(service)

@@ -7,6 +7,30 @@
 source /etc/conf.d/net
 [[ -z ${MODULES_DIR} ]] && MODULES_DIR=/lib/rcscripts/net.modules.d
 
+# Sourcing rc-scripts stuff causes errors - so we copy some functions
+svcdir=/var/lib/init.d
+mark_service_inactive() {
+	[[ -z ${1} ]] && return 1
+	ln -snf /etc/init.d/${1} ${svcdir}/inactive/${1}
+	return $?
+}
+mark_service_stopped() {
+	[[ -z ${1} ]] && return 1
+
+	[[ -f ${svcdir}/starting/${1} ]] && rm -f ${svcdir}/starting/${1}
+	[[ -f ${svcdir}/started/${1} ]] && rm -f ${svcdir}/started/${1}
+	[[ -f ${svcdir}/inactive/${1} ]] && rm -f ${svcdir}/inactive/${1}
+
+	return $?
+}
+mark_service_started() {
+	[[ -z ${1} ]] && return 1
+	ln -snf /etc/init.d/${1} ${svcdir}/started/${1}
+	[[ -f ${svcdir}/starting/${1} ]] && rm -f ${svcdir}/starting/${1}
+	[[ -f ${svcdir}/inactive/${1} ]] && rm -f ${svcdir}/inactive/${1}
+	return $?
+}
+
 if [[ $( type -t interface_variable ) != function ]]; then
 	source ${MODULES_DIR}/helpers.d/functions
 fi

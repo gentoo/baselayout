@@ -141,7 +141,13 @@ udhcpc_start() {
 		[[ -n ${x} ]] && opts="${opts} --request=${x}"
 	fi
 
-	x=$( udhcpc ${hostname} ${opts} --script=${script} --now --pidfile=${pidfile} --interface=${iface} )
+	if [[ ${background} == yes ]]; then
+		udhcpc ${hostname} ${opts} --script=${script} --pidfile=${pidfile} --interface=${iface} &>/dev/null &
+		eend 0
+		go_background
+	fi
+
+	x=$( udhcpc ${hostname} ${opts} --now --script=${script} --pidfile=${pidfile} --interface=${iface} )
 	# We just check the last 5 letters
 	[[ ${x:((${#x} - 5)):5} == bound ]]
 	eend $? || return 1

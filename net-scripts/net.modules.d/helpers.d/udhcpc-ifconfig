@@ -8,12 +8,16 @@
 action=${1}
 echo ${action}
 
+[[ -z ${MODULES_DIR} ]] && MODULES_DIR=/lib/rcscripts/net.modules.d
+source ${MODULES_DIR}/helpers.d/config-system
+
 case "${action}" in
 	bound|renew|deconfig)
 		# We handle these actions
 		;;
 	nak|leasefail)
 		# These are valid actions, but we don't handle them
+		[[ ${action} == leasefail ]] && mark_service_inactive net.${interface}
 		exit 0
 		;;
 	*)
@@ -61,11 +65,9 @@ fi
 
 /sbin/ifconfig ${interface} up
 
-[[ -z ${MODULES_DIR} ]] && MODULES_DIR=/lib/rcscripts/net.modules.d
-source ${MODULES_DIR}/helpers.d/config-system
-
 if [[ ${action} == deconfig ]]; then
 	restore_configs
+	mark_service_inactive net.${interface}
 	exit 0
 fi
 
@@ -86,5 +88,6 @@ done
 [[ -z ${module} ]] && module=udhcpc
 
 config_system
+mark_service_started net.${interface}
 
 exit 0

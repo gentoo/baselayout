@@ -122,6 +122,11 @@ wpa_supplicant_pre_start() {
 		return 1
 	fi
 
+	# Background wpa_supplication if required
+# wpa_supplicant won't support background until brix get's his start script on
+# action patch working
+#	[[ ${background} == yes ]] && go_background
+
 	eindent
 	veinfo "Waiting for association"
 	eval timeout=\"\$\{wpa_timeout_${ifvar}:-60\}\"

@@ -92,8 +92,9 @@ svc_stop() {
 	local mydeps=
 	local retval=0
 	local ordservice=
+	local was_inactive=false
 	
-	if ! service_started "${myservice}"
+	if ! service_started "${myservice}" && ! service_inactive "${myservice}"
 	then
 		if [ "${RC_QUIET_STDOUT}" != "yes" ]
 		then
@@ -109,6 +110,8 @@ svc_stop() {
 	then
 		exit 1
 	fi
+
+	service_inactive "${myservice}" && was_inactive=true
 
 	# Remove symlink to prevent recursion
 	mark_service_stopped "${myservice}"
@@ -215,6 +218,7 @@ svc_stop() {
 		if [ "${SOFTLEVEL}" != "reboot" -a "${SOFTLEVEL}" != "shutdown" ]
 		then
 			mark_service_started "${myservice}"
+			was_inactive && mark_service_inactive "${myservice}"
 		fi
 	fi
 
@@ -229,115 +233,121 @@ svc_start() {
 	local myserv=
 	local ordservice=
 
-	if ! service_started "${myservice}"
+	if service_started "${myservice}" || service_starting "${myservice}"
 	then
-		# Do not try to start if i have done so already on runlevel change
-		if is_runlevel_start && service_failed "${myservice}"
+		if ! service_inactive "${myservice}"
 		then
-			exit 1
-		fi
-	
-		# Link first to prevent possible recursion
-		mark_service_started "${myservice}"
-
-		# On rc change, start all services "before $myservice" first
-		if is_runlevel_start
-		then
-			startupservices="$(ineed "${myservice}") \
-				$(valid_iuse "${myservice}") \
-				$(valid_iafter "${myservice}")"
-		else
-			startupservices="$(ineed "${myservice}") \
-				$(valid_iuse "${myservice}")"
-		fi
-
-		# Start dependencies, if any
-		for x in ${startupservices}
-		do
-			if [ "${x}" = "net" -a "${NETSERVICE}" != "yes" ]
+			if [ "${RC_QUIET_STDOUT}" != "yes" ]
 			then
-				local netservices="$(dolisting "/etc/runlevels/${BOOTLEVEL}/net.*") \
-					$(dolisting "/etc/runlevels/${mylevel}/net.*")"
-					
-				for y in ${netservices}
-				do
-					mynetservice="${y##*/}"
-					
-					if ! service_started "${mynetservice}"
-					then
-						start_service "${mynetservice}"
+				ewarn "WARNING:  \"${myservice}\" has already been started."
+			fi
+		
+			return 0
+		fi
+	fi
 
-						# A 'need' dependency is critical for startup
-						if [ "$?" -ne 0 ] && ineed -t "${myservice}" "${x}" >/dev/null
-						then
-							# Only worry about a net.* service if we do not have one
-							# up and running already, or if RC_NET_STRICT_CHECKING
-							# is set ....
-							if ! is_net_up
-							then
-								startfail="yes"
-							fi
-						fi
-					fi
-				done
+	# Do not try to start if i have done so already on runlevel change
+	if is_runlevel_start && service_failed "${myservice}"
+	then
+		exit 1
+	fi
+
+	# Link first to prevent possible recursion
+	mark_service_starting "${myservice}"
+
+	# On rc change, start all services "before $myservice" first
+	if is_runlevel_start
+	then
+		startupservices="$(ineed "${myservice}") \
+			$(valid_iuse "${myservice}") \
+			$(valid_iafter "${myservice}")"
+	else
+		startupservices="$(ineed "${myservice}") \
+			$(valid_iuse "${myservice}")"
+	fi
+
+	# Start dependencies, if any
+	for x in ${startupservices}
+	do
+		if [ "${x}" = "net" -a "${NETSERVICE}" != "yes" ]
+		then
+			local netservices="$(dolisting "/etc/runlevels/${BOOTLEVEL}/net.*") \
+				$(dolisting "/etc/runlevels/${mylevel}/net.*")"
 				
-			elif [ "${x}" != "net" ]
-			then
-				if ! service_started "${x}"
+			for y in ${netservices}
+			do
+				mynetservice="${y##*/}"
+				
+				if ! service_started "${mynetservice}"
 				then
-					start_service "${x}"
+					start_service "${mynetservice}"
 
-					# A 'need' dependacy is critical for startup
+					# A 'need' dependency is critical for startup
 					if [ "$?" -ne 0 ] && ineed -t "${myservice}" "${x}" >/dev/null
 					then
-						startfail="yes"
+						# Only worry about a net.* service if we do not have one
+						# up and running already, or if RC_NET_STRICT_CHECKING
+						# is set ....
+						if ! is_net_up
+						then
+							startfail="yes"
+						fi
 					fi
 				fi
+			done
+			
+		elif [ "${x}" != "net" ]
+		then
+			if ! service_started "${x}"
+			then
+				start_service "${x}"
+
+				# A 'need' dependacy is critical for startup
+				if [ "$?" -ne 0 ] && ineed -t "${myservice}" "${x}" >/dev/null
+				then
+					startfail="yes"
+				fi
 			fi
-		done
+		fi
+	done
 		
-		if [ "${startfail}" = "yes" ]
-		then
-			eerror "ERROR:  Problem starting needed services."
-			eerror "        \"${myservice}\" was not started."
-			retval=1
-		fi
-		
-		# Start service
-		if [ "${retval}" -eq 0 ] && broken "${myservice}"
-		then
-			eerror "ERROR:  Some services needed are missing.  Run"
-			eerror "        './${myservice} broken' for a list of those"
-			eerror "        services.  \"${myservice}\" was not started."
-			retval=1
-		elif [ "${retval}" -eq 0 ] && ! broken "${myservice}"
-		then
-			start
-			retval="$?"
-		fi
-
-		if [ "${retval}" -ne 0 ] && is_runlevel_start
-		then
-			mark_service_failed "${myservice}"
-		fi
-
-		# Remove link if service didn't start; but only if we're not booting
-		# if we're booting, we need to continue and do our best to get the
-		# system up.
-		if [ "${retval}" -ne 0 -a "${SOFTLEVEL}" != "${BOOTLEVEL}" ]
-		then
-			mark_service_stopped "${myservice}"
-		fi
-		
-		return "${retval}"
-	else
-		if [ "${RC_QUIET_STDOUT}" != "yes" ]
-		then
-			ewarn "WARNING:  \"${myservice}\" has already been started."
-		fi
-		
-		return 0
+	if [ "${startfail}" = "yes" ]
+	then
+		eerror "ERROR:  Problem starting needed services."
+		eerror "        \"${myservice}\" was not started."
+		retval=1
 	fi
+	
+	# Start service
+	if [ "${retval}" -eq 0 ] && broken "${myservice}"
+	then
+		eerror "ERROR:  Some services needed are missing.  Run"
+		eerror "        './${myservice} broken' for a list of those"
+		eerror "        services.  \"${myservice}\" was not started."
+		retval=1
+	elif [ "${retval}" -eq 0 ] && ! broken "${myservice}"
+	then
+		start
+		retval="$?"
+	fi
+
+	if [ "${retval}" -ne 0 ] && is_runlevel_start
+	then
+		mark_service_failed "${myservice}"
+	fi
+
+	# Remove link if service didn't start; but only if we're not booting
+	# if we're booting, we need to continue and do our best to get the
+	# system up.
+	if [ "${retval}" -ne 0 -a "${SOFTLEVEL}" != "${BOOTLEVEL}" ]
+	then
+		mark_service_stopped "${myservice}"
+	elif [ "${retval}" -eq 0 ]
+	then
+		mark_service_started "${myservice}"
+	fi
+		
+	return "${retval}"
 }
 
 svc_restart() {
@@ -357,7 +367,23 @@ svc_status() {
 	# should thus be formatted in the custom status() function
 	# to work with the printed " * status:  foo".
 
-	if service_started "${myservice}"
+	if service_starting "${myservice}"
+	then
+		if [ "${RC_QUIET_STDOUT}" != "yes" ]
+		then
+			einfo "status:  starting"
+		else
+			return 0
+		fi
+	elif service_inactive "${myservice}"
+	then
+		if [ "${RC_QUIET_STDOUT}" != "yes" ]
+		then
+			ewarn "status:  inactive"
+		else
+			return 0
+		fi
+	elif service_started "${myservice}"
 	then
 		if [ "${RC_QUIET_STDOUT}" != "yes" ]
 		then
@@ -459,7 +485,7 @@ do
 		svc_status
 		;;
 	zap)
-		if service_started "${myservice}"
+		if service_started "${myservice}" || service_starting "${myservice}"
 		then
 			einfo "Manually resetting ${myservice} to stopped state."
 			mark_service_stopped "${myservice}"

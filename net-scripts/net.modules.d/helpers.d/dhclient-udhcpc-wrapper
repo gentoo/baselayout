@@ -10,7 +10,6 @@
 
 iface_type=${1}
 
-echo ${reason}
 case "${reason}" in
 	BOUND|REBOOT|REBIND) action=bound ;;
 	RENEW) action=renew ;;

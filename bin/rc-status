@@ -158,6 +158,8 @@ fi
 #  they're started, broken, or failed.  Put all of this into arrays.           #
 ################################################################################
 # Read services from ${svcdir}/{started,failed,broken}
+[ -x ${svcdir}/starting ] && starting=`ls ${svcdir}/starting`
+[ -x ${svcdir}/inactive ] && inactive=`ls ${svcdir}/inactive`
 [ -x ${svcdir}/started ] && started=`ls ${svcdir}/started`
 [ -x ${svcdir}/failed  ] && failed=`ls ${svcdir}/failed`
 [ -x ${svcdir}/broken  ] && broken=`ls ${svcdir}/broken`
@@ -189,16 +191,18 @@ fi
 for level in ${runlevelidxs} ; do
 	echo "Runlevel: ${HILITE}${level}${NORMAL}"
 	for service in ${runlevels[${arridx}]} ; do
-		if [ $(in_list "${started}" "${service}") -eq 1 ] ; then
+		if [ -n "${inactive}" ] && [ $(in_list "${inactive}" "${service}") -eq 1 ] ; then
+			print_msg "${service}" "${WARN}" 'inactive'
+		elif [ $(in_list "${started}" "${service}") -eq 1 ] ; then
 			print_msg "${service}" "${GOOD}" 'started'
+		elif [ -n "${starting}" ] && [ $(in_list "${starting}" "${service}") -eq 1 ] ; then
+			print_msg "${service}" "${GOOD}" 'starting'
+		elif [ -n "${failed}" ] && [ $(in_list "${failed}" "${service}") -eq 1 ] ; then
+			print_msg "${service}" "${BAD}" 'failed'
+		elif [ -n "${broken}" ] && [ $(in_list "${broken}" "${service}") -eq 1 ] ; then
+			print_msg "${service}" "${BAD}" 'broken'
 		else
-			if [ -n "${failed}" ] && [ $(in_list "${failed}" "${service}") -eq 1 ] ; then
-				print_msg "${service}" "${BAD}" 'failed'
-			elif [ -n "${broken}" ] && [ $(in_list "${broken}" "${service}") -eq 1 ] ; then
-				print_msg "${service}" "${BAD}" 'broken'
-			else
-				print_msg "${service}" "${WARN}" '  off'
-			fi
+			print_msg "${service}" "${WARN}" '  off'
 		fi
 	done
 	let "arridx += 1"
