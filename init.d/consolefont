@@ -74,7 +74,8 @@ start() {
 		
 		eend $retval "Failed to set user font"
 	else
-		eerror "You need to setup \$CONSOLEFONT in /etc/rc.conf first."
+		ebegin "Using the default console font"
+		eend 0
 	fi
 	
 	return $retval

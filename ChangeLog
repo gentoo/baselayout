@@ -12,6 +12,9 @@
     Also change it to 'mount -d' to detach the loop device.  Patch by
     Kalin KOZHUHAROV <kalin@ThinRope.net>, bug #26256.
 
+    Fix /etc/init.d/consolefont to not error out if CONSOLEFONT in rc.conf
+    is not set, bug #26278 (noted by Michael Frysinger <vapier@gentoo.org>).
+
 * rc-scripts 1.4.3.10 (04 Aug 2003)
 
   04 Aug 2003; Martin Schlemmer <azarah@gentoo.org>:
