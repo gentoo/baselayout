@@ -41,7 +41,7 @@ setup_daemon_vars() {
 			-n|--name)
 				[[ ${i} -lt ${j} ]] && name=${sargs[i+1]}
 				;;
-			-x|--exec)
+			-x|--exec|-a|--startas)
 				[[ ${i} -lt ${j} ]] && exe=${sargs[i+1]}
 				;;
 			-p|--pidfile)
@@ -120,20 +120,36 @@ start_daemon() {
 # kill the process ourselves and any children left over
 # Returns 0 if everything was successful otherwise 1
 stop_daemon() {
-	local pids retval=0
+	local pid pids retval=0 cmd
 	
-	if [[ -s ${pidfile} ]]; then
-		read pids < ${pidfile}
-	elif [[ -n ${exe} ]]; then
-		pids=$( /bin/pidof ${exe} )
-	elif [[ -n ${name} ]]; then
-		pids=$( /bin/pidof ${name} )
+	[[ -s ${pidfile} ]] && read pid < ${pidfile}
+	
+	if [[ -n ${exe} ]]; then
+		cmd=${exe}
 	else
-		# If we're given nothing to kill, then return
-		# based on RC_FAIL_ON_ZOMBIE
+		cmd=${name}
+	fi
+	[[ -n ${cmd} ]] && pids=$( /bin/pidof ${exe} )
+
+	# If we're given nothing to kill, then return
+	# based on RC_FAIL_ON_ZOMBIE
+	if [[ -z ${pid} && -z ${pids} ]]; then
 		[[ ${RC_FAIL_ON_ZOMBIE} != "yes" ]]
 		return $?
 	fi
+
+	# If we're given an executable, then test to see if the given pid
+	# is of the executable running
+	if [[ -n ${pidfile} && -n ${cmd} ]]; then
+		if [[ -z ${pid} || -z ${pids} || " ${pids} " != *" ${pid} "* ]]; then
+			eerror "pid ${pid} does not match any runnings pid(s) for"
+			eerror "   ${cmd}"
+			return 1
+		fi
+	fi
+
+	# Only stop the pid we are given
+	[[ -n ${pid} ]] && pids=${pid}
 
 	for pid in "${pids}"; do
 		if [[ ${RC_FAIL_ON_ZOMBIE} == "yes" ]]; then
