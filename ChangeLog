@@ -2,6 +2,12 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  13 Feb 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Merge changes from Nick Jones <carpaski@gentoo.org> to not run stty if
+    used in portage.  Fix the NOCOLOR stuff.  Updated /sbin/functions.sh for
+    this.
+
   06 Feb 2003; Martin Schlemmer <azarah@gentoo.org>:
   
     Update src/awk/genenviron.awk to properly set the environment for each
