@@ -63,7 +63,7 @@ iwconfig_check_depends() {
 #
 # Checks to see if wireless extensions are enabled on the interface
 iwconfig_check_extensions() {
-	local iface=${1}
+	local iface=$1
 
 	# Do we have wireless extensions enabled on the interface?
 	local ext=$( iwconfig ${iface} 2>/dev/null | awk -v iface=${iface} '{ if ($1 == iface) print "yes" }' )
@@ -76,10 +76,10 @@ iwconfig_check_extensions() {
 # Echos a string showing whether WEP is enabled or disabled
 # for the given interface
 iwconfig_get_wep_status() {
-	local wep_status=$( iwconfig ${1} | awk -F: '/Encryption key:/ {print $2}' | awk '{if ($1 != "off") print "enabled"}' ) mode
+	local wep_status=$( iwconfig $1 | awk -F: '/Encryption key:/ {print $2}' | awk '{if ($1 != "off") print "enabled"}' ) mode
 	wep_status=${wep_status:-"disabled"}
 
-	[[ ${wep_status} == enabled ]] && mode=" - $( iwconfig ${1} | awk -F: '/Security mode:/ {print $3}' )"
+	[[ ${wep_status} == enabled ]] && mode=" - $( iwconfig $1 | awk -F: '/Security mode:/ {print $3}' )"
 	
 	echo "(WEP ${wep_status}${mode})"
 }
@@ -91,7 +91,7 @@ iwconfig_get_essid() {
 	# Too many users are having with iwgetid atm :/
 	# iwgetid -r
 
-	iwconfig ${1} 2>${devnull} | awk -F\" '/ESSID/ {print $2}'
+	iwconfig $1 2>${devnull} | awk -F\" '/ESSID/ {print $2}'
 }
 
 # char* iwconfig_get_ap_mac_address(char *interface)
@@ -99,28 +99,28 @@ iwconfig_get_essid() {
 # Returns the MAC address of the Access Point
 # the interface is connected to
 iwconfig_get_ap_mac_address() {
-	iwgetid --ap ${1} 2>${devnull}| awk '{print $4}'
+	iwgetid --ap $1 2>${devnull}| awk '{print $4}'
 }
 
 # char* iwconfig_get_mode(char *interface)
 #
 # Returns the wireless mode in lower case
 iwconfig_get_mode() {
-	iwgetid --mode ${1} | awk -F: '{print $2}' | tr '[:upper:]' '[:lower:]'
+	iwgetid --mode $1 | awk -F: '{print $2}' | tr '[:upper:]' '[:lower:]'
 }
 
 # char* iwconfig_get_type(char *interface)
 #
 # Returns the type of interface - the IEEE part
 iwconfig_get_type() {
-	iwconfig ${1} 2>/dev/null | awk '{print $2,$3}'
+	iwconfig $1 2>/dev/null | awk '{print $2,$3}'
 }
 
 # void iwconfig_report(char *interface)
 #
 # Output how our wireless interface has been configured
 iwconfig_report() {
-	local iface=${1} mac mode m="as" essid i=0
+	local iface=$1 mac mode m="as" essid i=0
 
 	# We do this so that we get a 100% valid report
 	while true ; do
@@ -154,7 +154,7 @@ iwconfig_report() {
 # Returns the configured WEP key for the given mac address
 # or the given ESSID. The mac address setting takes precendence
 iwconfig_get_wep_key() {
-	local mac=${1} key
+	local mac=$1 key
 	eval key=\"\${mac_key_${mac//:/}\}\"
 	[[ -z ${key} ]] && eval key=\"\${key_${ESSIDVAR}\}\"
 	key=${key:-off}
@@ -165,7 +165,7 @@ iwconfig_get_wep_key() {
 #
 # Applies the user configuration to the interface
 iwconfig_user_config() {
-	local iface=${1} conf e ifvar=$( interface_variable ${1} )
+	local iface=$1 conf e ifvar=$( interface_variable $1 )
 
 	# Apply the user configuration
 	eval conf=\"\$\{iwconfig_${ifvar}\}\"
@@ -191,8 +191,8 @@ iwconfig_user_config() {
 #
 # Sets up our wireless interface to operate in ad-hoc or master mode
 iwconfig_setup_specific() {
-	local iface=${1} mode=${2} channel key dessid e
-	local ifvar=$( interface_variable ${1} )
+	local iface=$1 mode=$2 channel key dessid e
+	local ifvar=$( interface_variable $1 )
 
 	if [[ -z ${ESSID} ]]; then
 		eerror "${iface} requires an ESSID to be set to operate in ${mode} mode"
@@ -213,7 +213,7 @@ iwconfig_setup_specific() {
 	fi
 
 	key=$( iwconfig_get_wep_key )
-	e=$( iwconfig ${iface} key ${key} 2>&1 )
+	e=$( eval "iwconfig ${iface} key ${key} 2>&1" )
 	if [[ -n ${e} && ${key} != off ]]; then
 		e=$( get_essid_var ${essid} )
 		ewarn "${iface} does not support setting keys"
@@ -256,7 +256,7 @@ iwconfig_setup_specific() {
 # Returns true if the AP MAC address is valid or not
 iwconfig_associate_mac() {
 	# Checks if a MAC address has been assigned
-	local mac=$( iwconfig_get_ap_mac_address ${1} ) i
+	local mac=$( iwconfig_get_ap_mac_address $1 ) i
 	local -a invalid_macs=( "00:00:00:00:00:00" "44:44:44:44:44:44" "FF:00:00:00:00:00" "FF:FF:FF:FF:FF:FF" )
 
 	[[ -z ${mac} ]] && return 1
@@ -270,7 +270,7 @@ iwconfig_associate_mac() {
 #
 # Returns true if the link quality is not 0 or 0.
 iwconfig_associate_quality() {
-	local quality=$( cat /proc/net/wireless | awk -v IFACE=${1}: '{ if ($1 == IFACE) print $3 }' )
+	local quality=$( cat /proc/net/wireless | awk -v IFACE=$1: '{ if ($1 == IFACE) print $3 }' )
 	[[ ${quality} != 0 && ${quality} != 0. ]] && return 0
 	return 1
 }
@@ -279,7 +279,7 @@ iwconfig_associate_quality() {
 #
 # Returns true if the interface has associated with an Access Point
 iwconfig_test_associated() {
-	local iface=${1} test ifvar=$( interface_variable ${1} )
+	local iface=$1 test ifvar=$( interface_variable $1 )
 	# Some drivers don't set MAC to a bogus value when assocation is lost/fails
 	# whereas they do set link quality to 0
 
@@ -305,7 +305,7 @@ iwconfig_test_associated() {
 # Waits for a configured ammount of time until
 # we are assocaited with an Access Point
 iwconfig_wait_for_association() {
-	local iface=${1} i=0 wait ifvar=$( interface_variable ${1} )
+	local iface=$1 i=0 wait ifvar=$( interface_variable $1 )
 	eval wait=\"\$\{sleep_associate_${ifvar}\}\"
 	wait=${wait:-10}
 
@@ -324,7 +324,7 @@ iwconfig_wait_for_association() {
 # and if we have a WEP key for the ESSID or not
 # so we can fail gracefully without even trying to connect
 iwconfig_associate() {
-	local iface=${1} mac=${2} wep_required=${3} w="(WEP Disabled)"
+	local iface=$1 mac=$2 wep_required=${3} w="(WEP Disabled)"
 	local dessid=${ESSID//\\\\/\\\\} key
 	wep_required=${wep_required:-"off"}
 
@@ -343,7 +343,7 @@ iwconfig_associate() {
 			key="off"
 			vewarn "\"${dessid}\" is not WEP enabled - ignoring setting"
 		fi
-		e=$( iwconfig ${iface} key ${key} 2>&1 )
+		e=$( eval "iwconfig ${iface} key ${key} 2>&1" )
 		if [[ -n ${e} && ${key} != off ]]; then
 			ewarn "${iface} does not support setting keys"
 			ewarn "or the parameter \"mac_key_${ESSIDVAR}\" or \"key_${ESSIDVAR}\" is incorrect"
@@ -410,7 +410,7 @@ iwconfig_associate() {
 #
 # Fills 3 arrays with information from a wireless scan
 iwconfig_scan() {
-	local iface=${1} e mode x ifvar=$( interface_variable ${1} )
+	local iface=$1 e mode x ifvar=$( interface_variable $1 )
 
 	# First, we may need to change mode to scan in
 	mode=$( eval echo \$\{scan_mode_${ifvar}\} | tr '[:upper:]' '[:lower:]' )
@@ -614,7 +614,7 @@ iwconfig_scan_report() {
 # Forces the preferred_aps list to associate in order
 # but only if they were not picked up by our scan
 iwconfig_force_preferred() {
-	local iface=${1} essid i
+	local iface=$1 essid i
 
 	[[ -z ${preferred_aps} ]] && return 1
 
@@ -642,7 +642,7 @@ iwconfig_force_preferred() {
 # Connects to preferred_aps in order if they were picked up
 # by our scan
 iwconfig_connect_preferred() {
-	local iface=${1} essid i
+	local iface=$1 essid i
 
 	for essid in "${preferred_aps[@]}"; do
 		for ((i=0; i<${#essid_APs[@]}; i++)); do
@@ -662,7 +662,7 @@ iwconfig_connect_preferred() {
 # Connects to any AP's found that are not in
 # our preferred list
 iwconfig_connect_not_preferred() {
-	local iface=${1} i ap has_preferred
+	local iface=$1 i ap has_preferred
 
 	for ((i=0; i<${#mac_APs[@]}; i++)); do
 		has_preferred=false
@@ -686,7 +686,7 @@ iwconfig_connect_not_preferred() {
 # Apply some sane defaults to the wireless interface
 # incase the user already applied some changes
 iwconfig_defaults() {
-	local iface=${1}
+	local iface=$1
 
 	# Set some defaults
 	iwconfig ${iface} rate auto &>/dev/null
@@ -707,7 +707,7 @@ iwconfig_defaults() {
 # given and remove those AP's from the scan list
 # We also remove from the preferred list
 iwconfig_strip_associated() {
-	local iface=${1} e a j
+	local iface=$1 e a j
 	local essid=$( iwconfig ${iface} | awk -F\" '/ESSID/ {print $2}' )
 	local -a ifaces=( $( iwconfig 2>/dev/null | awk '/ESSID/ {print $1}' | awk -v IFACE=${iface} '$1!=IFACE {print}' ) )
 
@@ -748,7 +748,7 @@ iwconfig_strip_associated() {
 # Once we're connected we show a report and then configure any interface
 # variables for the ESSID
 iwconfig_configure() {
-	local iface=${1} test x e ifvar=$( interface_variable ${1} )
+	local iface=$1 test x e ifvar=$( interface_variable $1 )
 	local -a essid_APs mac_APs enc_APs
 	
 	iwconfig_defaults ${iface}
@@ -854,7 +854,7 @@ iwconfig_configure() {
 # First we check if wireless extensions exist on the interface
 # If they are then we configue wireless
 iwconfig_pre_start() {
-	local iface=${1} r=0 local wasup=true
+	local iface=$1 r=0 local wasup=true
 
 	# We don't configure wireless if we're being called from
 	# the background
@@ -915,7 +915,7 @@ iwconfig_pre_start() {
 # Configures ESSID variable
 # Always returns 0
 iwconfig_pre_stop() {
-	ESSID=$( iwconfig_get_essid ${1} )
+	ESSID=$( iwconfig_get_essid $1 )
 	ESSIDVAR=${ESSID//[![:word:]]/_}
 	return 0
 }

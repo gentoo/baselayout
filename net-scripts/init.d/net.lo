@@ -66,7 +66,7 @@ sort() {
 # This is used by bridge and bond modules as the interfaces
 # they need may have to be created
 net_start() {
-	local iface=${1}
+	local iface=$1
 
 	interface_exists ${iface} && return 0
 	[[ -f ${svcdir}/started/net.${iface} ]] && return 0
@@ -92,7 +92,7 @@ go_background() {
 # void module_class_wrap(char *module, char *provides)
 # Setup class wrappers: interface_up -> iproute2_up, for example
 module_class_wrap() {
-	local module=${1} provides=${2} x 
+	local module=$1 provides=$2 x 
 
 	# Don't wrap functions if another module already has
 	[[ $( type -t ${provides}_provides ) == function ]] && return
@@ -106,7 +106,7 @@ module_class_wrap() {
 #
 # Does the minimum checking on a module - even when forcing
 module_load_minimum() {
-	local f=${1} MODULE=${1##*/}
+	local f=$1 MODULE=${1##*/}
 
 	if [[ ! -f ${f} ]]; then
 		eerror "${f} does not exist"
@@ -414,7 +414,7 @@ modules_check_depends() {
 # Loads the defined handler and modules for the interface
 # Returns 0 on success, otherwise 1
 modules_load()  {
-	local iface=${1} starting=${2:-true} mod p=false i j unsetfuncs
+	local iface=$1 starting=${2:-true} mod p=false i j unsetfuncs
 	local -a x
 	local RC_INDENTATION=${RC_INDENTATION}	# so it will reset after function
 	local -a PROVIDES
@@ -487,7 +487,7 @@ modules_load()  {
 # VLAN interfaces (for example eth0.0, eth0.1).  VLAN setup is accomplished by
 # calling itself recursively.
 iface_start() {
-	local iface=${1} mod i label config_counter=-1 x conf warn=false inet6
+	local iface=$1 mod i label config_counter=-1 x conf warn=false inet6
 	local RC_INDENTATION=${RC_INDENTATION}	# so it will reset after function
 	local -a config config_fallback
 	local ifvar=$( interface_variable ${iface} )
@@ -604,7 +604,7 @@ iface_start() {
 # However, we are currently reliant on handler and modules specified
 # in /etc/conf.d/net
 iface_stop() {
-	local iface=${1} i aliases need_begin=false mod
+	local iface=$1 i aliases need_begin=false mod
 	local RC_INDENTATION=${RC_INDENTATION}	# so it will reset after function
 
 	# pre Stop any modules
@@ -658,7 +658,7 @@ iface_stop() {
 # We cannot check that the device exists ourselves as modules like
 # tuntap make create it.
 run_start() {
-	local iface=${1} ifvar x
+	local iface=$1 ifvar x
 
 	if [[ ${iface} == lo ]]; then
 		ebegin "Bringing up ${iface}"
@@ -674,7 +674,12 @@ run_start() {
 	# but eth0 has not been loaded then the module gets loaded as
 	# eth0.
 	# Not much we can do about this :(
-	! interface_exists ${iface} && /sbin/modprobe ${iface} &>/dev/null
+	if ! interface_exists ${iface} ; then
+		if ! /sbin/modprobe ${iface} &>/dev/null ; then
+			eerror "${iface} does not exist"
+			return 1
+		fi
+	fi
 
 	# Setup variables for pre/post to use
 	ifvar=$( interface_variable ${iface} )
@@ -693,7 +698,7 @@ run_start() {
 	fi
 
 	# Don't let preup modify us
-	iface=${1}
+	iface=$1
 	local IFACE=${iface} IFVAR=${ifvar}
 
 	# Start the interface
@@ -721,7 +726,7 @@ run_start() {
 # stop returns non-zero to indicate failure bringing down device.
 # In all other cases stop returns 0 to indicate success.
 run_stop() {
-	local iface=${1} ifvar x
+	local iface=$1 ifvar x
 
 	# Don't run any special shutdown functions for lo
 	if [[ ${iface} == lo ]]; then
@@ -751,7 +756,7 @@ run_stop() {
 	fi
 
 	# Don't let predown modify us
-	iface=${1}
+	iface=$1
 	local IFACE=${iface} IFVAR=${ifvar}
 
 	iface_stop ${iface} || return 1  # always succeeds, btw
@@ -773,7 +778,7 @@ run_stop() {
 # We load modules here and remove any functions that they
 # added as we may be called inside the same shell scope for another interface
 run() {
-	local iface=${1} cmd=${2} r=1 RC_INDENTATION=${RC_INDENTATION}	# so it will reset after function
+	local iface=$1 cmd=$2 r=1 RC_INDENTATION=${RC_INDENTATION}	# so it will reset after function
 	local before starting=true
 	local -a MODULES mods
 	local IN_BACKGROUND=${IN_BACKGROUND:-false}
