@@ -1,8 +1,8 @@
 #!/sbin/runscript
-# net-scripts main code
-# Version 1.0.6
-# Copyright (c) 2004 Gentoo Foundation
-# Distributed under the terms of the GNU General Public License V2
+# Copyright (c) 2004-2005 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header$
+
 # Contributed by Roy Marples (uberlord@gentoo.org)
 # Many thanks to Aron Griffis (agriffis@gentoo.org)
 # for help, ideas and patches
