@@ -1,8 +1,8 @@
-# TUN/TAP (sys-apps/usermode-utilities) module for net-scripts
-# Copyright (c) 2004 Gentoo Foundation
-# Distributed under the terms of the GNU General Public License V2
+# Copyright (c) 2004-2005 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header$
+
 # Contributed by Roy Marples (uberlord@gentoo.org)
-# $Header:
 
 # Fix any potential localisation problems
 # Note that LC_ALL trumps LC_anything_else according to locale(7)

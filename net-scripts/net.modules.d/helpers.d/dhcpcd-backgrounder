@@ -1,9 +1,9 @@
 #!/bin/sh
-# dhcpcd-backgrounder for net-scripts
-# Copyright (c) 2004 Gentoo Foundation
-# Distributed under the terms of the GNU General Public License V2
+# Copyright (c) 2004-2005 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header$
+
 # Contributed by Roy Marples (uberlord@gentoo.org)
-# $Header:
 
 [[ -z ${MODULES_DIR} ]] && MODULES_DIR=/lib/rcscripts/net.modules.d
 source ${MODULES_DIR}/helpers.d/config-system
