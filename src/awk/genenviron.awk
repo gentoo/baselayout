@@ -53,7 +53,7 @@ BEGIN {
 	# SPECIALS are treated differently.  For each env.d file, the variables are
 	# appended seperated with a ':'.  If not in specials, for each env.d file,
 	# the variable are just set to the new value.
-	tmpspecials="KDEDIRS:PATH:CLASSPATH:LDPATH:MANPATH:INFODIR:INFOPATH:ROOTPATH:CONFIG_PROTECT:CONFIG_PROTECT_MASK:PRELINK_PATH:PRELINK_PATH_MASK"
+	tmpspecials="KDEDIRS:PATH:CLASSPATH:LDPATH:MANPATH:INFOPATH:ROOTPATH:CONFIG_PROTECT:CONFIG_PROTECT_MASK:PRELINK_PATH:PRELINK_PATH_MASK"
 	split(tmpspecials, SPECIALS, ":")
 
 	unlink(ENVCACHE)
