@@ -205,7 +205,9 @@ BEGIN {
 
 	}
 
-	system("mv "TMPCACHE" "SVCDIR"/depcache")
+	
+	assert(system("rm -f "SVCDIR"/depcache"), "system(rm -f "SVCDIR"/depcache)")
+	assert(system("mv "TMPCACHE" "SVCDIR"/depcache"), "system(mv "TMPCACHE" "SVCDIR"/depcache)")
 }
 
 

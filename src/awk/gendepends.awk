@@ -335,9 +335,19 @@ BEGIN {
 	DEPTYPES = ENVIRON["DEPTYPES"]
 	ORDTYPES = ENVIRON["ORDTYPES"]
 
-	CACHEDTREE = SVCDIR "/deptree"
+	#CACHEDTREE = SVCDIR "/deptree"
+	ORIGCACHEDTREE = SVCDIR "/deptree"
+	
+	# Since this could be called more than once simultaneously, use a
+	# temporary cache and rename when finished.  See bug 48303
+	("/bin/mktemp "SVCDIR"/treecache.XXXXXXX") | getline CACHEDTREE
+	if (CACHEDTREE == "") {
+		eerror("Failed to create temporary cache!")
+		exit 1
+	}
 
-	assert(dosystem("rm -f " CACHEDTREE ), "system(rm -f " CACHEDTREE ")")
+	# We remove it below now only before moving the temp one over.
+	#assert(dosystem("rm -f " CACHEDTREE ), "system(rm -f " CACHEDTREE ")")
 }
 
 {
@@ -486,6 +496,9 @@ END {
 		print "LOGGER_SERVICE=" >> (CACHEDTREE)
 		
 	close(CACHEDTREE)
+
+	assert(dosystem("rm -f "ORIGCACHEDTREE), "system(rm -f "ORIGCACHEDTREE")")
+	assert(system("mv "CACHEDTREE" "ORIGCACHEDTREE), "system(mv "CACHEDTREE" "ORIGCACHEDTREE")")
 }
 
 
