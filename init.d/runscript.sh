@@ -23,8 +23,8 @@ mylevel=`cat ${svcdir}/softlevel`
 
 
 #set $IFACE to the name of the network interface if it is a 'net.*' script
-IFACE=""
-NETSERVICE=""
+IFACE=[]
+NETSERVICE=[]
 if [ "${myservice%%.*}" = "net" ] && [ "${myservice##*.}" != "$myservice" ]
 then
 	IFACE="${myservice##*.}"
@@ -69,16 +69,22 @@ restart() {
 }
 			
 svc_stop() {
-	local x
+	local x=[]
 	local stopfail="no"
-	local mydep
-	local mydeps
-	local retval
-	local depservice
+	local mydep=[]
+	local mydeps=[]
+	local retval=0
+	local depservice=[]
 	if [ ! -L ${svcdir}/started/${myservice} ]
 	then
 		einfo "${myservice} has not yet been started."
 		return 1
+	fi
+
+	# do not try to stop if it had already failed to do so on runlevel change
+	if [ -L ${svcdir}/fails/${myservice} ] && [ -d ${svcdir}/softscripts.new ]
+	then
+		exit 1
 	fi
 
 	#remove symlink to prevent recursion
@@ -157,44 +163,37 @@ svc_stop() {
 				done
 				if [ "$stopfail" = "yes" ] && [ -L ${svcdir}/need/${mydep}/${x} ]
 				then
-					eerror "Problems stopping dependent services.  \"${myservice}\" still up."
-					ln -sf /etc/init.d/${myservice} ${svcdir}/started/${myservice}
-					exit 1
+					retval=1
 				fi
 			fi
 		done
 	done
 
-	#now that deps are stopped, stop our service
-	stop
-	retval=$?
+	if [ $retval -ne 0 ]
+	then
+		eerror "Problems stopping dependent services.  \"${myservice}\" still up."
+	else
+		#now that deps are stopped, stop our service
+		stop
+		retval=$?
+	fi
 	
-# This cause first script to be run, to actually be run last, so a big no no.
-#
-#	#stop all services that should be after on runlevel change
-#	for x in ${svcdir}/after/*/${myservice}
-#	do
-#		if [ ! -L ${x} ]
-#		then
-#			continue
-#		fi
-#		depservice=${x%/*}
-#		if [ -d ${svcdir}/softscripts.new ]
-#		then
-#			if [ ! -L ${svcdir}/softscripts.new/${depservice##*/} ] && \
-#			   [ -L ${svcdir}/started/${depservice##*/} ] && \
-#			   [ ! -L ${svcdir}/need/${myservice}/${depservice##*/} ] && \
-#			   [ ! -L ${svcdir}/use/${myservice}/${depservice##*/} ] && \
-#			   [ ! -L ${svcdir}/after/${myservice}/${depservice##*/} ]
-#			then
-#				/etc/init.d/${depservice##*/} stop
-#			fi
-#		fi
-#	done
+#stopping services that should be stopped after this service on runlevel change,
+#cause first script to be run, to actually be run last, so a big no no.
 
 	if [ $retval -ne 0 ]
 	then
-		ln -sf /etc/init.d/${myservice} ${svcdir}/started/${myservice}
+		#did we fail to stop? create symlink to stop multible attempts at
+		#runlevel change
+		if [ -d ${svcdir}/fails ]
+		then
+			ln -sf /etc/init.d/${myservice} ${svcdir}/fails/${myservice}
+		fi
+		#if we are halting the system, do it as cleanly as possible
+		if [ "$SOFTLEVEL" != "reboot" ] && [ "$SOFTLEVEL" != "shutdown" ]
+		then
+			ln -sf /etc/init.d/${myservice} ${svcdir}/started/${myservice}
+		fi
 	fi
 	return $retval
 }
@@ -202,12 +201,18 @@ svc_stop() {
 svc_start() {
 	local retval=0
 	local startfail="no"
-	local x
-	local y
-	local myserv
-	local depservice
+	local x=[]
+	local y=[]
+	local myserv=[]
+	local depservice=[]
 	if [ ! -L ${svcdir}/started/${myservice} ]
 	then
+		#do not try to start if i have done so already on runlevel change
+		if [ -L ${svcdir}/fails/${myservice} ] && [ -d ${svcdir}/softscripts.old ]
+		then
+			exit 1
+		fi
+	
 		#link first to prevent possible recursion
 		ln -sf /etc/init.d/${myservice} ${svcdir}/started/${myservice}
 	
@@ -284,6 +289,14 @@ svc_start() {
 			retval=$?
 		fi
 
+		if [ $retval -ne 0 ]
+		then
+			if [ -d ${svcdir}/fails ]
+			then
+				ln -sf /etc/init.d/${myservice} ${svcdir}/fails/${myservice}
+			fi
+		fi
+
 		#start anything that should be started after on runlevel change
 		for x in ${svcdir}/before/*/${myservice}
 		do
@@ -337,7 +350,7 @@ then
 fi
 
 needsme() {
-	local x
+	local x=[]
 	if [ -d ${svcdir}/need/${1} ]
 	then
 		for x in ${svcdir}/need/${1}/*
@@ -352,7 +365,7 @@ needsme() {
 }
 
 usesme() {
-	local x
+	local x=[]
 	if [ -d ${svcdir}/use/${1} ]
 	then
 		for x in ${svcdir}/use/${1}/*
@@ -367,8 +380,8 @@ usesme() {
 }
 
 ineed() {
-	local x
-	local z
+	local x=[]
+	local z=[]
 	for x in ${svcdir}/need/*/${1}
 	do
 		if [ ! -L ${x} ]
@@ -383,8 +396,8 @@ ineed() {
 #this will give all the use's of the service, even if not in current or boot
 #runlevels
 iuse() {
-    local x
-    local z
+    local x=[]
+    local z=[]
     for x in ${svcdir}/use/*/${1}
     do
 		if [ ! -L ${x} ]
@@ -399,8 +412,8 @@ iuse() {
 #this will only give the valid use's for the service (they must be in the boot
 #or current runlevel)
 valid_iuse() {
-	local x
-	local y
+	local x=[]
+	local y=[]
 	for x in `iuse ${1}`
 	do
 		if [ -e /etc/runlevels/boot/${x} ] || [ -e /etc/runlevels/${mylevel}/${x} ]
@@ -413,7 +426,7 @@ valid_iuse() {
 
 #list broken dependancies of type 'need'
 broken() {
-	local x
+	local x=[]
 	if [ -d ${svcdir}/broken/${1} ]
 	then
 		for x in ${svcdir}/broken/${1}/*
@@ -429,8 +442,8 @@ broken() {
 
 #call this with "needsme", "ineed", "usesme", "iuse" or "broken" as first arg
 query() {
-	local deps
-	local x
+	local deps=[]
+	local x=[]
 	install -d -m0755 ${svcdir}/depcheck/$$
 	if [ "$1" = "ineed" ] && [ ! -L ${svcdir}/started/${myservice} ]
 	then
@@ -465,7 +478,8 @@ query() {
 }
 
 svc_homegrown() {
-	local arg="$1" x
+	local arg="$1"
+	local x=[]
 	# Walk through the list of available options, looking for the
 	# requested one.
 	for x in $opts; do

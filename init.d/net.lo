@@ -4,8 +4,6 @@
 # $Header$
 
 
-IFACE=${1##*.}
-
 start() {
 	ebegin "Bringing ${IFACE} up"
 	/sbin/ifconfig lo 127.0.0.1 up

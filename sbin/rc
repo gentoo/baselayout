@@ -127,9 +127,22 @@ fi #boot ends here
 
 if [ -z "$argv1" ]
 then
-	export SOFTLEVEL="`cat ${svcdir}/softlevel`"
+	if [ -e ${svcdir}/softlevel ]
+	then
+		export SOFTLEVEL="`cat ${svcdir}/softlevel`"
+	else
+		export SOFTLEVEL="boot"
+	fi
 else
 	export SOFTLEVEL=$argv1
+fi
+
+#for keeping a list of services that fails during boot/halt
+if [ ! -d ${svcdir}/fails ]
+then
+	mkdir -p ${svcdir}/fails
+else
+	rm -rf ${svcdir}/fails/*
 fi
 
 if [ "$SOFTLEVEL" = "reboot" ] || [ "$SOFTLEVEL" = "shutdown" ]
@@ -295,6 +308,9 @@ if [ "`cat /proc/mounts | grep '/dev devfs'`" ] && [ ! "`ps -A |grep devfsd`" ]
 then
 	/sbin/devfsd /dev >/dev/null 2>&1
 fi
+
+#runlevel end, so clear stale fail list
+rm -rf ${svcdir}/fails
 
 #if we were in the boot runlevel, it is done now ...
 [ -n "$BOOT" ] && unset BOOT

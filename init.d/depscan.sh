@@ -10,7 +10,7 @@ if [ ! -d $svcdir ]
 then
 	install -d -m0755 $svcdir
 fi
-for x in softscripts snapshot options broken started provide ${deptypes} ${ordtypes}
+for x in softscripts cache snapshot options broken started provide ${deptypes} ${ordtypes}
 do
 	if [ ! -d ${svcdir}/${x} ]
 	then
@@ -26,9 +26,11 @@ depend_dbadd() {
 	shift 2
 	for x in $*
 	do
-		check_rcscript /etc/init.d/${x}
-		local retval=$?
-		if [ $retval -ne 0 ]
+		if [ ! -e ${svcdir}/cache/${myservice}.depend ]
+		then
+			continue
+		fi
+		if [ ! -e ${svcdir}/cache/${x}.depend ]
 		then
 			#handle 'need', as it is the only dependency type that
 			#should handle invalid database entries currently.  The only
@@ -103,6 +105,35 @@ check_rcscript() {
 	}
 }
 
+cache_depend() {
+	[ ! -e $1 ] && return 1
+
+	#the cached file should not be empty
+	echo '#!/bin/bash' > ${svcdir}/cache/${1##*/}.depend
+	echo 'echo foo >/dev/null 2>/dev/null' >> ${svcdir}/cache/${1##*/}.depend
+
+	local myline=[]
+	local dowrite=1
+	(cat ${1}) | { while read myline
+		do
+			if [ "${myline/depend*()/}" != "$myline" ]
+			then
+				dowrite=0
+			fi
+			if [ $dowrite -eq 0 ]
+			then
+				echo "$myline" >> ${svcdir}/cache/${1##*/}.depend
+			fi
+			if [ "${myline/\}/}" != "$myline" ] && [ $dowrite -eq 0 ]
+			then
+				dowrite=1
+				continue
+			fi
+		done
+	}
+	return 0
+}
+
 need() {
 	NEED="$*"
 }
@@ -138,12 +169,13 @@ rm -rf ${svcdir}/broken/*
 touch ${svcdir}/broken/dummy
 rm -rf ${svcdir}/provide/*
 touch ${svcdir}/provide/dummy
+rm -rf ${svcdir}/cache/*
 
 #for the '*' need and use types to work
 oldpwd=`pwd`
 cd /etc/init.d
 
-#first calculate all the provides
+#first cache the depend lines, and calculate all the provides
 for x in /etc/init.d/*
 do
 	check_rcscript $x || continue
@@ -156,7 +188,8 @@ do
 		PROVIDE=""
 		return
 	}
-	wrap_rcscript ${x} || {
+	cache_depend ${x}
+	wrap_rcscript ${svcdir}/cache/${myservice}.depend || {
 		echo
 		einfo "${x} has syntax errors in it, please fix this before trying"
 		einfo "to execute this script..."
@@ -173,7 +206,7 @@ done
 #now do the rest
 for x in /etc/init.d/*
 do
-	check_rcscript $x || continue
+	[ ! -e ${svcdir}/cache/${x##*/}.depend ] && continue
 
 	#set to "" else we get problems
 	NEED=""
@@ -190,7 +223,7 @@ do
 		return
 	}
 	#we already warn about the error in the provide loop
-	wrap_rcscript ${x} || continue
+	wrap_rcscript ${svcdir}/cache/${myservice}.depend || continue
 	depend
 	if [ -n "$NEED" ]
 	then

@@ -2,7 +2,20 @@
 # Copyright 2001 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
-  1 Feb 2002; Martin Schlemmer <azarah@gentoo.org>: added a wrapper for
+  3 March 2002; Martin Schlemmer <azarah@gentoo.org>: fixed the problem
+    of rc-scripts trying to start/stop a service multiple times if it
+    fails to do so.  Updated /etc/init.d/runscript.sh and /sbin/rc for
+    this.
+
+    Fixing some variable declarations in /etc/init.d/runscript.sh caused
+    /etc/init.d/net.lo to fail on stop ($IFACE was set invalid). Fixed
+    this.
+
+    Added caching of the "depend() { need foo; } " lines, and updated
+    /etc/init.d/depscan.sh to touch the actual files less.  This should
+    speedup dependancy caching a lot, especially on slow machines.
+
+  1 March 2002; Martin Schlemmer <azarah@gentoo.org>: added a wrapper for
     sourcing the rc-scripts to eliminate syntax errors.  Thanks to
     Karl Trygve Kalleberg (aka karltk) for the idea.  Updated
     /etc/init.d/depscan.sh, /etc/init.d/functions.sh and

@@ -104,6 +104,7 @@ wrap_rcscript() {
 		test_script
 		retval=0
 	fi
+	rm -f ${svcdir}/foo.sh
 	return $retval
 }
 
