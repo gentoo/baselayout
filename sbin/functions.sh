@@ -32,8 +32,8 @@ QUIET_STDOUT="no"
 #stuff for getpids() and co
 declare -ax MASTERPID=""
 declare -ax PIDLIST=""
-DAEMON=""
-PIDFILE=""
+DAEMONS=""
+PIDFILES=""
 RCRETRYKILL="no"
 RCRETRYTIMEOUT=1
 RCRETRYCOUNT=5
@@ -47,7 +47,7 @@ getcols() {
 }
 
 COLS="$(stty size 2>/dev/null)"
-COLS="$(getcols $COLS)"
+COLS="$(getcols ${COLS})"
 COLS=$((${COLS} -7))
 ENDCOL=$'\e[A\e['${COLS}'G'
 #now, ${ENDCOL} will move us to the end of the column;
@@ -198,11 +198,11 @@ getpidfile() {
 	local count=0
 	local count2=0
 	
-	if [ "$#" -ne 1 -o -z "${DAEMON}" ]
+	if [ "$#" -ne 1 -o -z "${DAEMONS}" ]
 	then
 		return 1
 	else
-		for x in ${DAEMON}
+		for x in ${DAEMONS}
 		do
 			if [ "${x}" != "$1" ]
 			then
@@ -210,11 +210,11 @@ getpidfile() {
 				continue
 			fi
 			
-			if [ -n "${PIDFILE}" ]
+			if [ -n "${PIDFILES}" ]
 			then
 				count2=0
 				
-				for y in ${PIDFILE}
+				for y in ${PIDFILES}
 				do
 					if [ "${count}" -eq "${count2}" -a -f ${y} ]
 					then
@@ -224,7 +224,7 @@ getpidfile() {
 					
 					count2=$((count2 + 1))
 				done
-				for y in ${PIDFILE}
+				for y in ${PIDFILES}
 				do
 					if [ "$(eval echo \${y/${x}/})" != "${y}" -a -f ${y} ]
 					then
@@ -252,7 +252,7 @@ getpidfile() {
 }
 
 #
-# Simple funtion to return the pids of all the daemons in $DAEMON
+# Simple funtion to return the pids of all the daemons in $DAEMONS
 # in the array $PIDLIST, with the master pids in $MASTERPID.
 #
 getpids() {
@@ -260,9 +260,9 @@ getpids() {
 	local count=0
 	local pidfile=""
 
-	if [ -n "${DAEMON}" ]
+	if [ -n "${DAEMONS}" ]
 	then
-		for x in ${DAEMON}
+		for x in ${DAEMONS}
 		do
 			MASTERPID[${count}]=""
 			PIDLIST[${count}]=""
@@ -295,15 +295,15 @@ checkpid() {
 	local x=""
 	local count=0
 
-	if [ "$#" -ne 1 -o -z "$1" -o -z "${DAEMON}" -o \
-	     "$(eval echo \${DAEMON/${1}/})" = "${DAEMON}" ]
+	if [ "$#" -ne 1 -o -z "$1" -o -z "${DAEMONS}" -o \
+	     "$(eval echo \${DAEMONS/$1/})" = "${DAEMONS}" ]
 	then
 		return 3
 	fi
 
 	getpids
 
-	for x in ${DAEMON}
+	for x in ${DAEMONS}
 	do
 		if [ "${x}" != "$1" ]
 		then
@@ -326,6 +326,55 @@ checkpid() {
 	done
 	
 	return 0
+}
+
+start-single-daemon() {
+	local retval=0
+	local pidfile=""
+	local pidretval=0
+	local daemon=""
+	local SSD="start-stop-daemon"
+
+	if [ "$(eval echo \${DAEMONS/$1/})" != "${DAEMONS}" ]
+	then
+		daemon="$1"
+		shift
+
+		# Just a stupid sanity check, need to improve here.
+		# Basically we "check" that the daemon name is in
+		# the args to SSD.
+		if [ "$(eval echo \${*/${daemon}/})" = "$*" ]
+		then
+			return 1
+		fi
+	else
+		return 1
+	fi
+
+	if [ -z "${DAEMONS}" -o "$#" -lt 1 -o -z "${daemon}" ]
+	then
+		return 1
+	else
+		${SSD} $*
+		retval=$?
+
+		if [ "${retval}" -ne 0 ]
+		then
+			return ${retval}
+		fi
+
+		checkpid ${daemon}
+		pidretval=$?
+		# Need to rethink checkpid return values, as we prob
+		# need a switch or something that its ok, or not if
+		# the master pid is dead, but some instances are running.
+		if [ "${pidretval}" -ne 0 -a "${pidretval}" -ne 1 ]
+		then
+			return 1
+		fi
+	fi
+
+	return ${retval}
 }
 
 #
@@ -356,7 +405,7 @@ stop-single-daemon() {
 				failonzombie="yes"
 				;;
 			*)
-				if [ "$(eval echo \${DAEMON/${x}/})" != "${DAEMON}" ]
+				if [ "$(eval echo \${DAEMONS/${x}/})" != "${DAEMONS}" ]
 				then
 					if [ -n "${daemon}" ]
 					then
@@ -369,7 +418,7 @@ stop-single-daemon() {
 		esac
 	done
 
-	if [ -z "${DAEMON}" -o "$#" -lt 1 -o -z "${daemon}" ]
+	if [ -z "${DAEMONS}" -o "$#" -lt 1 -o -z "${daemon}" ]
 	then
 		return 1
 	else
@@ -432,7 +481,7 @@ stop-single-daemon() {
 
 #
 # Should be used to stop daemons in rc-scripts.  It will
-# stop all the daemons in $DAEMON.  The following arguments
+# stop all the daemons in $DAEMONS.  The following arguments
 # are supported:
 #
 #    --kill-pidfile    Remove the pidfile if it exists (after
@@ -444,7 +493,7 @@ stop-single-daemon() {
 #    --retry           If not sucessfull, retry the number of times
 #                      as specified by $RCRETRYCOUNT
 #
-stop-daemon() {
+stop-daemons() {
 	local x=""
 	local count=0
 	local retval=0
@@ -453,7 +502,7 @@ stop-daemon() {
 	local retry="no"
 	local ssdargs=""
 
-	if [ -z "${DAEMON}" ]
+	if [ -z "${DAEMONS}" ]
 	then
 		return 0
 	fi
@@ -479,7 +528,7 @@ stop-daemon() {
 
 	if [ "${retry}" = "yes" -o "${RCRETRYKILL}" = "yes" ]
 	then
-		for x in ${DAEMON}
+		for x in ${DAEMONS}
 		do
 			count=0
 			pidretval=0
@@ -504,7 +553,7 @@ stop-daemon() {
 			retval=$((retval + tmpretval))
 		done
 	else
-		for x in ${DAEMON}
+		for x in ${DAEMONS}
 		do
 			stop-single-daemon ${ssdargs} ${x}
 			retval=$((retval + $?))
