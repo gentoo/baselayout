@@ -10,8 +10,18 @@ depend() {
 }
 
 start() {
-	[ -f /proc/modules ] || return
-	[ -x /sbin/depmod ] || return
+	# Should not fail if kernel do not have module
+	# support compiled in ...
+	[ -f /proc/modules ] || return 0
+	
+	# Here we should fail, as a modular kernel do need
+	# depmod command ...
+	if [ ! -x /sbin/depmod ]
+	then
+		eerror "ERROR:  system is missing /sbin/depmod !"
+		return 1
+	fi
+	
 	ebegin "Calculating module dependencies"
 	/sbin/update-modules &>/dev/null
 	eend $? "Failed to calculate dependencies"
