@@ -14,7 +14,7 @@ start() {
 	#
 	# EVMS2 summport for /usr, /var ....
 	#
-        if [ -f /sbin/evms_activate ]
+	if [ -f /sbin/evms_activate ]
 	then
 		ebegin "Activating EVMS2"
 		evms_activate
@@ -186,19 +186,20 @@ start() {
 		if [ -f /forcefsck ]
 		then
 			ewarn "A full fsck has been forced"
-			fsck -C -R -A -a -f
+			fsck -C -T -R -A -a -f
+			retval=$?
 			rm -f /forcefsck
 		else
-			fsck -C -R -A -a
+			fsck -C -T -R -A -a
+			retval=$?
 		fi
-		retval=$?
 		if [ "${retval}" -eq 0 ]
 		then
 			eend 0
-		elif [ "${retval}" -eq 1 ]
+		elif [ "${retval}" -gt 1 -a "${retval}" -lt 4 ]
 		then
 			ewend 1 "Filesystem errors corrected."
-			#everything should be ok, so return a pass
+			# Everything should be ok, so return a pass
 			return 0
 		else
 			eend 2 "Fsck could not correct all errors, manual repair needed"

@@ -2,6 +2,17 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  29 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Tweak /etc/init.d/check{root,fs} to set retval after each fsck call,
+    and not the whole block.  Tweak check checkroot to reboot if need be
+    (This is with sufficient warning and message).  Tweak checkfs to not
+    drop to a sulogin if return code 2 or 3 is given - as we did not
+    mount the filesystems yet, we should not need to reboot ...
+
+    Add '-T' option to fsck (/etc/init.d/check{root,fs} - requested by
+    Michael Frysinger <vapier@gentoo.org>.
+
   28 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Rework changes for the Adelie project to support boot config profiles
@@ -16,10 +27,10 @@
     Modified /sbin/rc, /lib/rcscripts/sh/rc-services.sh and gendepends.awk
     for this.
 
-	Fix .../boot/... paths hardcoded in /lib/rcscripts/sh/rc-services.sh,
-	thanks to Jean-Francois Richard <jean-francois@richard.name>.
+    Fix .../boot/... paths hardcoded in /lib/rcscripts/sh/rc-services.sh,
+    thanks to Jean-Francois Richard <jean-francois@richard.name>.
 
-	Replace the Suse /etc/inputrc with a non copyrighted one, bug #24918.
+    Replace the Suse /etc/inputrc with a non copyrighted one, bug #24918.
 
   23 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:
 
