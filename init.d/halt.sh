@@ -42,7 +42,7 @@ then
 		udevinfo -d | awk '/^N|S: ..*/ { i=1; while (i++<NF) { print $i}}' > \
 			"${devices_udev}"
 		# These ones we also do not want in there
-		for x in MAKEDEV core fd initctl pts shm sndstat stderr stdin stdout
+		for x in MAKEDEV core fd initctl pts shm stderr stdin stdout
 		do
 			echo "${x}" >> "${devices_udev}"
 		done
