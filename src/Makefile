@@ -15,17 +15,14 @@ TARGET = $(BIN_TARGETS) $(SBIN_TARGETS)
 
 all: $(TARGET)
 
-.o:
-	$(CC) $(CFLAGS) -c $^
-
 consoletype: consoletype.o
 	$(LD) -o $@ $^
 
 runscript: runscript.o
 	$(LD) -o $@ $^ -ldl
 
-start-stop-daemon: start-stop-daemon.o
-	$(LD) -o $@ $^
+start-stop-daemon: start-stop-daemon.c
+	$(CC) -o $@ $(CFLAGS) -DHAVE_ERROR_H -DHAVE_TIOCNOTTY -DHAVE_SETSID $^
 
 install: $(TARGET)
 	install -m 0755 -d $(DESTDIR)/bin
