@@ -32,23 +32,106 @@
 #include "misc.h"
 #include "parse.h"
 
+char* svcdir_subdirs[] = {
+	"softscripts",
+	"snapshot",
+	"options",
+	"started",
+	"starting",
+	"inactive",
+	"stopping",
+	NULL
+};
+
+int create_directory(char *name);
+int create_var_dirs(char *svcdir);
+
+int create_directory(char *name) {
+	if ((NULL == name) || (0 == strlen(name))) {
+		DBG_MSG("Invalid argument passed!\n");
+		errno = EINVAL;
+		return -1;
+	}
+
+	/* Check if directory exist, and is not a symlink */
+	if (!is_dir(name, 0)) {
+		if (exists(name)) {
+			/* Remove it if not a directory */
+			if (-1 == remove(name)) {
+				DBG_MSG("Failed to remove '%s'!\n", name);
+				return -1;
+			}
+		}
+		/* Now try to create the directory */
+		if (-1 == mktree(name, 0755)) {
+			DBG_MSG("Failed to create '%s'!\n", name);
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
+int create_var_dirs(char *svcdir) {
+	char *tmp_path = NULL;
+	int i = 0;
+	
+	if ((NULL == svcdir) || (0 == strlen(svcdir))) {
+		DBG_MSG("Invalid argument passed!\n");
+		errno = EINVAL;
+		return -1;
+	}
+
+	/* Check and create svcdir if needed */
+	if (-1 == create_directory(svcdir)) {
+		DBG_MSG("Failed to create '%s'!\n", svcdir);
+		return -1;
+	}
+
+	while (NULL != svcdir_subdirs[i]) {
+		tmp_path = strcatpaths(svcdir, svcdir_subdirs[i]);
+		if (NULL == tmp_path) {
+			DBG_MSG("Failed to allocate buffer!\n");
+			return -1;
+		}
+		/* Check and create all the subdirs if needed */
+		if (-1 == create_directory(tmp_path)) {
+			DBG_MSG("Failed to create '%s'!\n", tmp_path);
+			return -1;
+		}
+		free(tmp_path);
+		i++;
+	}
+
+	return 0;
+}
+
 #if defined(LEGACY_DEPSCAN)
 
 int main() {
 	FILE *cachefile_fd = NULL;
-	char *data;
+	char *data = NULL;
 	char *svcdir = NULL;
 	char *cachefile = NULL;
 	char *tmp_cachefile = NULL;
-	int tmp_cachefile_fd;
-	int datasize;
+	int tmp_cachefile_fd = 0;
+	int datasize = 0;
 
 	/* Make sure we do not run into locale issues */
 	setlocale (LC_ALL, "C");
+
+	EINFO("Caching service dependencies ...\n");
 	
 	svcdir = get_cnf_entry(RC_CONFD_FILE_NAME, SVCDIR_CONFIG_ENTRY);
 	if (NULL == svcdir) {
-		EERROR("Failed to get config entry '%s'!\n", SVCDIR_CONFIG_ENTRY);
+		EERROR("Failed to get config entry '%s'!\n",
+				SVCDIR_CONFIG_ENTRY);
+		exit(EXIT_FAILURE);
+	}
+
+	if (-1 == create_var_dirs(svcdir)) {
+		EERROR("Failed to create '%s', %s", svcdir,
+				"or one of its sub directories!\n");
 		exit(EXIT_FAILURE);
 	}
 	

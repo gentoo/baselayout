@@ -3,6 +3,14 @@
 
   16 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
 
+    debug.h: perror() set errno to ESPIPE for some reason - restore errno after
+             calling perror().
+    depscan.c: Add code to create svcdir and co if missing.
+    misc.c: Add missing '\n' to DBG_MSG in mktree().
+    misc.h: Add a comment about strcatpaths() allocating the memory needed.
+
+  16 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
+
     Initial checkin.  Still rough in some parts, but should be 100%
     similar in output to depscan.sh and co.
 

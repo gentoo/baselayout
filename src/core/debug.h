@@ -32,8 +32,11 @@
 				__FUNCTION__, __LINE__); \
 		printf("DEBUG(2): " _format, ## _arg); \
 		errno = old_errno; \
-		if (0 != errno) \
+		if (0 != errno) { \
 			perror("DEBUG(3)"); \
+			/* perror() for some reason sets errno to ESPIPE */ \
+			errno = old_errno; \
+		} \
 	} while (0)
 #else
 # define DBG_MSG(_format, _arg...) \
@@ -47,6 +50,8 @@
 			printf("DEBUG(2): " _format, ## _arg); \
 			errno = old_errno; \
 			perror("DEBUG(3)"); \
+			/* perror() for some reason sets errno to ESPIPE */ \
+			errno = old_errno; \
 		} \
 	} while (0)
 #endif
@@ -59,7 +64,7 @@
 		errno = old_errno; \
 		if (0 != errno) \
 		 	perror("ERROR"); \
-		exit(1); \
+		exit(EXIT_FAILSTATUS); \
 	} while (0)
 
 #define NEG_FATAL_ERROR(_x) \

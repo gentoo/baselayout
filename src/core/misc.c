@@ -227,7 +227,7 @@ int mktree(const char *pathname, mode_t mode) {
 		if (!exists(temp_name)) {
 			retval = mkdir(temp_name, mode);
 			if (-1 == retval) {
-				DBG_MSG("Failed to create directory!");
+				DBG_MSG("Failed to create directory!\n");
 				goto error;
 			}
 		/* Not a directory or symlink pointing to a directory */

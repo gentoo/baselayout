@@ -236,6 +236,8 @@
 /* String functions.  Return a string on success, or NULL on error
  * or no action taken.  On error errno will be set.*/
 char *memrepchr(char **str, char old, char _new, size_t size);
+/* Concat two paths adding '/' if needed.  Memory will be allocated
+ * with the malloc() call. */
 char *strcatpaths(const char *pathname1, const char *pathname2);
 
 /* The following functions do not care about errors - they only return
