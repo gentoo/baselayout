@@ -12,7 +12,12 @@
 
 # Fix bug 48595
 if [[ ${EUID} != 0 ]] ; then
-	eerror "ERROR: must be root to run init scripts"
+	eerror "$0: must be root to run init scripts"
+	exit 1
+fi
+
+if [[ "${0##*/}" = "runscript.sh" ]] ; then
+	eerror "$0: Do not run this directly"
 	exit 1
 fi
 
