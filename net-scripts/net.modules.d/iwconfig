@@ -344,9 +344,8 @@ iwconfig_associate() {
 		fi
 		e=$( iwconfig ${iface} key ${key} 2>&1 )
 		if [[ -n ${e} && ${key} != off ]]; then
-			e=$( iwconfig_get_essid_var ${essid} )
 			ewarn "${iface} does not support setting keys"
-			ewarn "or the parameter \"mac_key_${e}\" or \"key_${e}\" is incorrect"
+			ewarn "or the parameter \"mac_key_${ESSIDVAR}\" or \"key_${ESSIDVAR}\" is incorrect"
 			return 1
 		fi
 		[[ ${key} != off ]] && w=$( iwconfig_get_wep_status ${iface} )
@@ -396,7 +395,7 @@ iwconfig_associate() {
 	fi
 
 	if ${IN_BACKGROUND}; then
-		mark
+		mark_service_started net.${iface}
 		mark_service_inactive net.${iface}
 		export IN_BACKGROUND
 		/etc/init.d/net.${iface} start &
