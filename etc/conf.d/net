@@ -17,5 +17,5 @@ iface_eth0="192.168.0.2 broadcast 192.168.0.255 netmask 255.255.255.0"
 
 # For setting the default gateway
 #
-#gateway="192.168.0.1"
+#gateway="eth0/192.168.0.1"
 

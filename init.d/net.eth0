@@ -38,7 +38,17 @@ start() {
 		done
 	fi
 	
-	[ -n "$gateway" ] && /sbin/route add -net default gw $gateway netmask 0.0.0.0 metric 1
+	if [ -n "$gateway" ] && [ "${gateway%/*}" = "$IFACE" ]
+	then
+		/sbin/route add -net default gw ${gateway#*/} dev ${gateway%/*} \
+			netmask 0.0.0.0 metric 1 >/dev/null 2>/dev/null || {
+			
+			local error=$?
+			ifconfig ${IFACE} down
+			eend ${error}
+			return ${error}
+		}
+	fi
 
 	#enabling rp_filter causes wacky packets to be auto-dropped by
 	#the kernel

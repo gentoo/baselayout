@@ -2,6 +2,10 @@
 # Copyright 2001 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  2 Feb 2002: Martin Schlemmer (azarah@gentoo.org): updated /etc/net.eth0
+  to specify the gateway device via the $gateway variable (something like
+  gateway="eth0/192.168.0.1").
+
   2 Feb 2002: Martin Schlemmer (azarah@gentoo.org): added rc-script
   /etc/init.d/numlock, for enabling numlock at boot.
 
