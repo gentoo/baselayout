@@ -11,6 +11,8 @@
     supported when deciding if it should use 'usbdevfs' or 'usbfs', as
     later 2.4 kernels now also support the newer 'usbfs'.
 
+    Optimize RAID stuff in /etc/init.d/checkfs a bit.
+
   16 March 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Update sbin/rc-envupdate.sh.bash for bug #17549.
