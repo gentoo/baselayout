@@ -133,16 +133,19 @@ eend() {
 		fi
 	else
 		local returnme="${1}"
-		if [ "$#" -ge 2 ]
+		shift
+		if [ "$#" -ge 1 ]
 		then
-			shift
 			eerror "${*}"
 		fi
 		if [ "${QUIET_STDOUT}" != "yes" ]
 		then
 			echo -e "${ENDCOL}  \e[34;01m[ ${BAD}!! \e[34;01m]${NORMAL}"
 			#extra spacing makes it easier to read
-			echo
+			if [ "$#" -ge 1 ]
+			then
+				echo
+			fi
 		fi
 		return ${returnme}
 	fi
