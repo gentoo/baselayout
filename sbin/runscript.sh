@@ -93,6 +93,17 @@ svc_stop() {
 	local retval=0
 	local ordservice=
 	local was_inactive=false
+
+	if service_stopping "${myservice}"
+	then
+		if [ "${RC_QUIET_STDOUT}" != "yes" ]
+		then
+			eerror "ERROR:  \"${myservice}\" is already stopping."
+			return 1
+		else
+			return 0
+		fi
+	fi
 	
 	if ! service_started "${myservice}" && ! service_inactive "${myservice}"
 	then
@@ -114,7 +125,7 @@ svc_stop() {
 	service_inactive "${myservice}" && was_inactive=true
 
 	# Remove symlink to prevent recursion
-	mark_service_stopped "${myservice}"
+	mark_service_stopping "${myservice}"
 
 	if in_runlevel "${myservice}" "${BOOTLEVEL}" && \
 	   [ "${SOFTLEVEL}" != "reboot" -a "${SOFTLEVEL}" != "shutdown" -a \
@@ -220,6 +231,8 @@ svc_stop() {
 			mark_service_started "${myservice}"
 			was_inactive && mark_service_inactive "${myservice}"
 		fi
+	else
+		mark_service_stopped "${myservice}"
 	fi
 
 	return "${retval}"
@@ -240,6 +253,16 @@ svc_start() {
 			if [ "${RC_QUIET_STDOUT}" != "yes" ]
 			then
 				ewarn "WARNING:  \"${myservice}\" has already been started."
+			fi
+		
+			return 0
+		fi
+
+		if service_stopping "${myservice}"
+		then
+			if [ "${RC_QUIET_STDOUT}" != "yes" ]
+			then
+				ewarn "WARNING:  please wait for \"${myservice}\" to stop first."
 			fi
 		
 			return 0
@@ -388,6 +411,14 @@ svc_status() {
 		if [ "${RC_QUIET_STDOUT}" != "yes" ]
 		then
 			einfo "status:  started"
+		else
+			return 0
+		fi
+	elif service_stopping "${myservice}"
+	then
+		if [ "${RC_QUIET_STDOUT}" != "yes" ]
+		then
+			eerror "status:  stopping"
 		else
 			return 0
 		fi

@@ -487,6 +487,34 @@ mark_service_started() {
 	ln -snf "/etc/init.d/$1" "${svcdir}/started/$1"
 	[ -f "${svcdir}/starting/$1" ] && rm -f "${svcdir}/starting/$1"
 	[ -f "${svcdir}/inactive/$1" ] && rm -f "${svcdir}/inactive/$1"
+	[ -f "${svcdir}/stopping/$1" ] && rm -f "${svcdir}/stopping/$1"
+
+	return $?
+}
+
+# bool mark_service_inactive(service)
+#
+#   Mark service as inactive
+#
+mark_service_inactive() {
+	[ -z "$1" ] && return 1
+
+	ln -snf "/etc/init.d/$1" "${svcdir}/inactive/$1"
+
+	return $?
+}
+
+# bool mark_service_stopping(service)
+#
+#   Mark 'service' as stopping.
+#
+mark_service_stopping() {
+	[ -z "$1" ] && return 1
+
+	ln -snf "/etc/init.d/$1" "${svcdir}/stopping/$1"
+	[ -f "${svcdir}/starting/$1" ] && rm -f "${svcdir}/starting/$1"
+	[ -f "${svcdir}/started/$1" ] && rm -f "${svcdir}/started/$1"
+	[ -f "${svcdir}/inactive/$1" ] && rm -f "${svcdir}/inactive/$1"
 
 	return $?
 }
@@ -501,6 +529,7 @@ mark_service_stopped() {
 	[ -f "${svcdir}/starting/$1" ] && rm -f "${svcdir}/starting/$1"
 	[ -f "${svcdir}/started/$1" ] && rm -f "${svcdir}/started/$1"
 	[ -f "${svcdir}/inactive/$1" ] && rm -f "${svcdir}/inactive/$1"
+	[ -f "${svcdir}/stopping/$1" ] && rm -f "${svcdir}/stopping/$1"
 
 	return $?
 }
@@ -568,16 +597,25 @@ service_inactive() {
 	return 1
 }
 
-# bool mark_service_inactive(service)
+# bool service_stopping(service)
 #
-#   Mark service as inactive
+#   Returns true if 'service' is stopping
 #
-mark_service_inactive() {
+service_stopping() {
 	[ -z "$1" ] && return 1
 
-	ln -snf "/etc/init.d/$1" "${svcdir}/inactive/$1"
+	if [ -L "${svcdir}/stopping/$1" ]
+	then
+		if [ ! -e "${svcdir}/stopping/$1" ]
+		then
+			rm -f "${svcdir}/stopping/$1"
+			
+			return 1
+		fi
+		return 0
+	fi
 
-	return $?
+	return 1
 }
 
 # bool mark_service_failed(service)

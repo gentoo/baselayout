@@ -13,7 +13,7 @@ then
 	fi
 fi
 
-for x in softscripts snapshot options started
+for x in softscripts snapshot options started starting inactive stopping
 do
 	if [ ! -d "${svcdir}/${x}" ]
 	then

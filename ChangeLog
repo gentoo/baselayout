@@ -11,7 +11,7 @@
     interface anyway
     removed hardcoded ath0 in wpa_supplicant
 
-    added rc-script statuses "starting" and "inactive"
+    added rc-script statuses "starting", "stopping" and "inactive"
     dhcpcd, udhcpc and dhclient now support backgrounding - fixes #52975
 
   05 Dec 2004; Roy Marples <uberlord@gentoo.org>:
