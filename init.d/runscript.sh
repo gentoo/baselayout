@@ -13,6 +13,7 @@ else
 fi
 
 myservice=${myservice##*/}
+mylevel=`cat ${svcdir}/softlevel`
 
 
 usage() {
@@ -50,10 +51,8 @@ svc_stop() {
 	if [ "${myservice##*.}" != "$myservice" ]
 	then
 		#net.* service
-		if [ "${INTERFACES/${myservice}/}" != "${INTERFACES}" ]
+		if [ -L /etc/runlevels/boot/${myservice} ] || [ -L /etc/runlevels/${mylevel}/${myservice} ]
 		then
-			#part of INTERFACES var, stop all stuff depending on "net"
-			#as well as stuff depending on that specific interface
 			mydeps="net $myservice"
 		else
 			mydeps=$myservice
@@ -107,6 +106,7 @@ svc_start() {
 	local retval
 	local x
 	local y
+	local myserv
 	if [ ! -L ${svcdir}/started/${myservice} ]
 	then
 		#link first to prevent possible recursion
@@ -117,11 +117,12 @@ svc_start() {
 		do
 			if [ "$x" = "net" ]
 			then
-				for y in $INTERFACES
+				for y in /etc/runlevels/boot/net.* /etc/runlevels/${mylevel}/net.*
 				do
-					if [ ! -L ${svcdir}/started/${y} ]
+					myserv=${y##*/}
+					if [ ! -L ${svcdir}/started/${myserv} ]
 					then
-						/etc/init.d/${y} start
+						/etc/init.d/${myserv} start
 					fi
 				done
 			else	
