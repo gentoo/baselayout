@@ -393,19 +393,20 @@ then
 	# the 'boot' runlevel is executed.  Now also needed by some stuff in
 	# the 'sysinit' runlevel ...
 	export BOOT="yes"
-	
+
 	start_critical_service() {
 		(
-			local retval=
-		
-			source "/etc/init.d/${x}" || eerror "Failed to source /etc/init.d/${x}"
-			retval=$?
-			[ "${retval}" -ne 0 ] && return "${retval}"
-			
-			start || eerror "Failed to start /etc/init.d/${x}"
-			retval=$?
+		local retval=
 
-			return "${retval}"
+		source "/etc/init.d/${x}" || eerror "Failed to source /etc/init.d/${x}"
+		retval=$?
+		[ "${retval}" -ne 0 ] && return "${retval}"
+		[ -e "/etc/conf.d/${x}" ] && source "/etc/conf.d/${x}"
+
+		start || eerror "Failed to start /etc/init.d/${x}"
+		retval=$?
+
+		return "${retval}"
 		)
 	}
 

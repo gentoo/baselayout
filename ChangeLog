@@ -2,6 +2,11 @@
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  03 Nov 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    When launching critical services in /sbin/rc, make sure we source 
+    the conf.d file (if it exists).  Resolves #69956.
+
   03 Nov 2004; Roy Marples <uberlord@gentoo.org>:
 
     net-scripts/init.d/net.lo
