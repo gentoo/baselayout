@@ -1,5 +1,5 @@
 # wpa_supplicant (net-wireless/wpa_supplicant) module for net-scripts
-# Version 1.0.0
+# Version 1.0.1
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -106,7 +106,7 @@ wpa_supplicant_kill() {
 	fi
 
 	# If wpa_supplicant exits uncleanly, we need to remove the stale dir
-	[[ -d /var/run/wpa_supplicant/${iface} ]] && rm -f /var/run/wpa_supplicant/${iface}
+	[[ -S /var/run/wpa_supplicant/${iface} ]] && rm -f /var/run/wpa_supplicant/${iface}
 }
 
 # bool wpa_supplicant_associate(char *interface)
@@ -118,6 +118,10 @@ wpa_supplicant_associate() {
 
 	eval timeout=\"\$\{wpa_timeout_${ifvar}:-60\}\"
 	for (( i=0; i<${timeout}; i++ )); do
+		if ! wpa_cli -i${iface} status &>/dev/null ; then
+			eend 1 "wpa_supplicant has exited unexpectedly"
+			return 1
+		fi
 		wpa_supplicant_associated ${iface} && break
 		sleep 1
 	done
