@@ -58,7 +58,7 @@ start() {
 
 	# Should we mount root rw ?
 	if mount -vf -o remount / 2> /dev/null | \
-			awk '{ if ($6 ~ /rw/) exit 0; else exit 1; }'
+	   awk '{ if ($6 ~ /rw/) exit 0; else exit 1; }'
 	then
 		ebegin "Remounting root filesystem read/write"
 		mount -n -o remount,rw / &>/dev/null
@@ -75,10 +75,17 @@ start() {
 	then
 		local x=
 		local y=
-		
+
 		#
 		# Create /etc/mtab
 		#
+
+		# Don't create mtab if /etc is readonly
+		if ! touch /etc/mtab 2> /dev/null
+		then
+			ewarn "Skipping /etc/mtab initialization (ro root?)"
+			return 0
+		fi
 
 		# Clear the existing mtab
 		> /etc/mtab

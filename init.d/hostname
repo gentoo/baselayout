@@ -18,7 +18,7 @@ depend() {
 checkconfig() {
 	if [ ! -f /etc/hostname ] || [ -z "$(</etc/hostname)" ]
 	then
-		if [ "${myhost}" == "localhost" ]
+		if [ "${myhost}" = "localhost" ]
 		then
 			eerror "You need to set /etc/hostname to a valid hostname"
 			return 1
@@ -32,7 +32,7 @@ start() {
 
 	# If the hostname is already set via the kernel, and /etc/hostname 
 	# isn't setup, then we shouldn't go reseting the configuration #38172.
-	if [ -z "${myhost}" ] || [ "${myhost}" == "(none)" ]
+	if [ -z "${myhost}" ] || [ "${myhost}" = "(none)" ]
 	then
 		myhost="localhost"
 	fi
@@ -61,8 +61,8 @@ start() {
 
 	if [ "${retval}" -eq 0 ]
 	then
-		# setup $HOSTNAME
-		echo "HOSTNAME=\"${myhost}\"" > /etc/env.d/01hostname
+		# setup $HOSTNAME, ignore errors in case /etc is readonly
+		echo "HOSTNAME=\"${myhost}\"" 2> /dev/null > /etc/env.d/01hostname
 	fi
 
 	return ${retval}

@@ -23,6 +23,15 @@ checkconfig_dns() {
 #		eerror "You need to set /etc/dnsdomainname to a valid DNS domainname"
 		return 1
 	fi
+
+	mydnsdomain="$(< /etc/dnsdomainname)"
+
+	if ! touch /etc/dnsdomainname 2> /dev/null
+	then
+		ewarn "Unable to set domain in resolv.conf (ro root?)"
+		return 1
+	fi
+
 	return 0
 }
 
@@ -30,8 +39,8 @@ start() {
 	local mynisdomain=
 	local mydnsdomain=
 	local retval=0
-	local retval2=2
-	
+	local retval2=0
+
 	if checkconfig_nis
 	then
 		mynisdomain="$(< /etc/nisdomainname)"
@@ -45,8 +54,6 @@ start() {
 
 	if checkconfig_dns
 	then
-		mydnsdomain="$(< /etc/dnsdomainname)"
-
 		[ ! -f /etc/resolv.conf ] && touch /etc/resolv.conf
 		ebegin "Setting DNS domainname to ${mydnsdomain}"
 		gawk -v DOMAIN="${mydnsdomain}" \
@@ -60,9 +67,7 @@ start() {
 		eend ${retval2} "Failed to set the DNS domainname"
 	fi
 
-	retval=$((retval + retval2))
-	
-	return ${retval}
+	return $((retval + retval2))
 }
 
 

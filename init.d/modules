@@ -72,7 +72,7 @@ start() {
 	# Should not fail if kernel do not have module
 	# support compiled in ...
 	[ -f /proc/modules ] || return 0
-	
+
 	# Here we should fail, as a modular kernel do need
 	# depmod command ...
 	if [ ! -x /sbin/depmod ]
@@ -80,12 +80,12 @@ start() {
 		eerror "ERROR:  system is missing /sbin/depmod !"
 		return 1
 	fi
-	
-	if [ -z "${CDBOOT}" ]
+
+	if [ -z "${CDBOOT}" ] && touch /etc/modules.conf 2> /dev/null
 	then
 		ebegin "Calculating module dependencies"
 		/sbin/modules-update &>/dev/null
-		eend $? "Failed to calculate dependencies"
+		eend $? "Failed to calculate module dependencies"
 	fi
 
 	if [ -f /etc/modules.autoload -a ! -L /etc/modules.autoload ]

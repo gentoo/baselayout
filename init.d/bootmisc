@@ -28,6 +28,12 @@ start() {
 			eend 0
 		fi
 
+		if [ -z "${CDBOOT}" ] && ! touch /var/run/.keep 2> /dev/null
+		then
+			ewarn "Skipping /var and /tmp initialization (ro root?)"
+			return 0
+		fi
+
 		if [ -x /sbin/env-update.sh ]
 		then
 			ebegin "Updating environment"
@@ -101,13 +107,6 @@ start() {
 	# Check for /etc/resolv.conf, and create if missing
 	#
 	[ -f /etc/resolv.conf ] || touch /etc/resolv.conf &>/dev/null
-
-# This should be handled by devfsd ...
-#	if test -c /dev/ttyp0 &>/dev/null
-#	then
-#		chmod 666 /dev/tty[p-za-e][0-9a-f] &>/dev/null
-#		chown root:tty /dev/tty[p-za-e][0-9a-f] &>/dev/null
-#	fi
 }
 
 

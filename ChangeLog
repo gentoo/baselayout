@@ -31,6 +31,10 @@
 
     Add unicode support to keymaps/consolefont #32111 and UML support #29707.
 
+    Add checks to many filesystem operations in the eventuality that the 
+    filesystems are mounted read only.  Will automount a ramdisk even if 
+    svcmount=no under these conditions.
+
   16 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
 
     Update the default fstab /dev/shm mount to include the nodev, nosuid, 

@@ -18,7 +18,7 @@ setupopts() {
 	then
 		TBLURB="coLinux"
 		return 0
-	elif [ "${CLOCK}" == "UTC" ]
+	elif [ "${CLOCK}" = "UTC" ]
 	then
 		myopts="--utc"
 		TBLURB="UTC"
@@ -26,11 +26,19 @@ setupopts() {
 		myopts="--localtime"
 		TBLURB="Local Time"
 	fi
-	if [ "${SRM}" == "yes" ]
+
+	if [ "${readonly}" = "yes" ]
+	then
+		myopts="${myopts} --noadjfile"
+	else
+		myopts="${myopts} --adjust"
+	fi
+
+	if [ "${SRM}" = "yes" ]
 	then
 		myopts="${myopts} --srm"
 	fi
-	if [ "${ARC}" == "arc" ]
+	if [ "${ARC}" = "arc" ]
 	then
 		myopts="${myopts} --arc"
 	fi
@@ -41,9 +49,13 @@ start() {
 	local myopts=""
 	local TBLURB=""
 	local errstr=""
+	local readonly="no"
 	local ret=0
 
-	if [ ! -f /etc/adjtime ]
+	if ! touch /etc/adjtime 2> /dev/null
+	then
+		readonly="yes"
+	elif [ ! -s /etc/adjtime ]
 	then
 		echo "0.0 0 0.0" > /etc/adjtime
 	fi
@@ -51,14 +63,14 @@ start() {
 	setupopts
 
 	ebegin "Setting system clock to hardware clock [${TBLURB}]"
-	if [ "${CLOCK}" == "UML" ] || [ "${CLOCK}" == "coLinux" ]
+	if [ "${CLOCK}" = "UML" ] || [ "${CLOCK}" = "coLinux" ]
 	then
 		ret=0
 
 	elif [ -x /sbin/hwclock ]
 	then
 		# hwclock does not return a fail status; need to check out
-		errstr="$(/sbin/hwclock --adjust ${myopts} 2>&1 >/dev/null)"
+		errstr="$(/sbin/hwclock ${myopts} 2>&1 >/dev/null)"
 		errstr="${errstr}$(/sbin/hwclock --hctosys ${myopts} 2>&1 >/dev/null)"
 
 		if [ -n "${errstr}" ]
@@ -89,7 +101,7 @@ stop() {
 	setupopts
 
 	ebegin "Syncing system clock to hardware clock [${TBLURB}]"
-	if [ "${CLOCK}" == "UML" ]
+	if [ "${CLOCK}" = "UML" ]
 	then
 		ret=0
 		
