@@ -16,9 +16,9 @@ static void (*selinux_run_init) (void);
 
 int main(int argc, char **argv) {
 	char *myargs[32];
+	void *lib_handle;
 	int new = 1;
 	myargs[0] = "runscript";
-	void *lib_handle;
 	
 /*	if (argc < 3)
 		exit(1);
