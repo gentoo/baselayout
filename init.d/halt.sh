@@ -220,13 +220,21 @@ then
 	eend $? "Failed to shut LVM down"
 fi
 
-# This is a function because its used twice below this line as:
-#   [ -f /etc/killpower ] && ups_kill_power
+# This is a function because its used twice below
 ups_kill_power() {
-	if [ -x /sbin/upsdrvctl ]
-	then
+	local UPS_CTL UPS_POWERDOWN
+	if [[ -f /etc/killpower ]] ; then
+		UPS_CTL=/sbin/upsdrvctl
+		UPS_POWERDOWN="${UPS_CTL} shutdown"
+	elif [[ -f /etc/apcupsd/powerfail ]] ; then
+		UPS_CTL=/etc/apcupsd/apccontrol
+		UPS_POWERDOWN="${UPS_CTL} killpower"
+	else
+		return 0
+	fi
+	if [[ -x ${UPS_CTL} ]] ; then
 		ewarn "Signalling ups driver(s) to kill the load!"
-		/sbin/upsdrvctl shutdown
+		${UPS_POWERDOWN}
 		ewarn "Halt system and wait for the UPS to kill our power"
 		/sbin/halt -id
 		while [ 1 ]; do sleep 60; done
@@ -278,7 +286,7 @@ fi
 eend ${mount_worked}
 if [ ${mount_worked} -eq 1 ]
 then
-	[ -f /etc/killpower ] && ups_kill_power
+	ups_kill_power
 	/sbin/sulogin -t 10 /dev/console
 fi
 
@@ -293,7 +301,7 @@ then
 	ewarn "A full fsck will be forced on next startup"
 fi
 
-[ -f /etc/killpower ] && ups_kill_power
+ups_kill_power
 
 
 # vim:ts=4
