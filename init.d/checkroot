@@ -21,7 +21,7 @@ start() {
 		if [ -f /forcefsck ]
 		then
 			ewarn "A full fsck has been forced"
-			fsck -C -T -a -f /
+			fsck -C -a -f /
 			# /forcefsck isn't deleted because checkfs needs it.
 			# it'll be deleted in that script.
 			retval=$?

@@ -75,11 +75,21 @@ check_dependency() {
 
 		get_dep_info "$3" &>/dev/null || {
 			eerror "Could not get dependency info for \"$3\"!" > /dev/stderr
+			eerror "Please run:" > /dev/stderr
+			echo > /dev/stderr
+			eerror "  # /sbin/depscan.sh" > /dev/stderr
+			echo > /dev/stderr
+			eerror "to try and fix this." > /dev/stderr
 			return 1
 		}
 	else
 		get_dep_info "$2" &>/dev/null || {
 			eerror "Could not get dependency info for \"$2\"!" > /dev/stderr
+			eerror "Please run:" > /dev/stderr
+			echo > /dev/stderr
+			eerror "  # /sbin/depscan.sh" > /dev/stderr
+			echo > /dev/stderr
+			eerror "to fix this." > /dev/stderr
 			return 1
 		}
 	fi
