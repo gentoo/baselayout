@@ -3,6 +3,9 @@
 # Distributed under the terms of the GNU General Public License, v2 or later
 # $Header$
 
+#NB: Config is in /etc/conf.d/net
+
+
 #for pcmcia users. note that pcmcia must be added to the same
 #runlevel as the net.* script that needs it.
 depend() {
