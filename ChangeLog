@@ -2,22 +2,13 @@
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
-  05 Nov 2004; Roy Marples <uberlord@gentoo.org>:
-
-    net.lo - added get_type function to return the type of the interface
-    - eth, ippp, etc
-
-    ipppd, tuntap
-    - start() moved to pre_start() and we now test by type
-      this means you no longer need ifconfig_ippp0=( "isdn" "dhcp" )
-      as ippp0 is always an isdn device
-
-    bridge - fixed stop function and moved start() to pre_start()
-      and automatically start if the variable bridge_${iface} exists
-
-    net.example - fixed up documentation for changed behaviour above
-
   04 Nov 2004; Roy Marples <uberlord@gentoo.org>:
+
+    net-scripts/net.modules.d/pump
+    - fixed setting ntp servers
+
+    net-scripts/net.modules.d/dhcpcd
+    - fixed stopping function
 
     net-scripts/net.modules.d/bonding
     - fixed module to actually work with the interface
@@ -36,6 +27,19 @@
 
     Fixed boolean logic error when testing is_net_up in /sbin/runscript.sh
     - fixed bug #70022
+
+    net.lo - added get_type function to return the type of the interface
+    - eth, ippp, etc
+
+    ipppd, tuntap
+    - start() moved to pre_start() and we now test by type
+      this means you no longer need ifconfig_ippp0=( "isdn" "dhcp" )
+      as ippp0 is always an isdn device
+
+    bridge - fixed stop function and moved start() to pre_start()
+      and automatically start if the variable bridge_${iface} exists
+
+    net.example - fixed up documentation for changed behaviour above
 
   03 Nov 2004; Mike Frysinger <vapier@gentoo.org>:
 

@@ -1,5 +1,5 @@
 # DHCP (net-misc/dhcpcd) module for net-scripts
-# Version 1.0.2
+# Version 1.0.3
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -67,7 +67,6 @@ dhcpcd_stop() {
 	local iface=${1} count
 	
 	dhcpcd_check_installed || return 1
-	return 0
 	if ! dhcpcd -z ${iface} &>${devnull}; then
 		return 1
 	fi
