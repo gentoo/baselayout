@@ -70,7 +70,7 @@ udhcpc_get_vars() {
 # Stops udhcpc running on an interface
 # Always returns 0
 udhcpc_stop() {
-	local iface=${1} count release pidfile="/var/run/udhcpc-${1}.pid"
+	local iface=${1} count release pidfile="/var/run/udhcpc-${1}.pid" dhcp
 	
 	udhcpc_check_installed || return 0
 	[[ ! -f ${pidfile} ]] && return 0
@@ -78,10 +78,8 @@ udhcpc_stop() {
 	ebegin "Stopping udhcpc on ${iface}"
 	local pid=$( cat ${pidfile} ) e=true
 
-	eval release=\"\$\{dhcp_release_${ifvar}\}\"
-	[[ -z ${release} ]] && eval release=\"\$\{dhcp_release\}\"
-
-	[[ ${release} == yes ]] && kill -s USR2 ${pid} &>/dev/null
+	eval dhcp=\" \$\{dhcp_${ifvar}\} \"
+	[[ ${dhcp} == *' release '* ]] && kill -s USR2 ${pid} &>/dev/null
 	kill -s TERM ${pid} &>/dev/null
 
 	# udhcp-0.9.8-r3 and earlier do not process signals correctly

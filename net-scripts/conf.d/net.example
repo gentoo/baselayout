@@ -157,23 +157,12 @@
 # See the dhclient man page for details
 
 # GENERIC DHCP OPTIONS
-# These can be set globally (setting=...) or per interface (setting_eth0=...)
+# Set generic DHCP options like so
+#dhcp_eth0="release nodns nontp nonis"
 
-# To release the DHCP lease when we stop the interface
-# dhcp_release="yes"
-# dhcp_release_eth0="yes"
-
-# To stop DHCP from overwritting DNS (/etc/resolv.conf) use the below settings
-# dhcp_dns="no"
-# dhcp_dns_eth0="no"
-
-# To stop DHCP from overwritting NIS (/etc/yp.conf) use the below settings
-# dhcp_nis="no"
-# dhcp_nis_eth0="no"
-
-# To stop DHCP from overwritting NTP /etc/ntp.conf use the below settings
-# dhcp_ntp="no"
-# dhcp_ntp_eth0="no"
+# This tells the dhcp client to release it's lease when it stops and not to
+# overwrite dns, ntp and nis settings when it starts. You can use any
+# combination of the above options - the default is not to use any of them
 
 #-----------------------------------------------------------------------------
 # Automatic Private IP Addressing (APIPA)

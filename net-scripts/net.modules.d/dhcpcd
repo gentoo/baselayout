@@ -64,7 +64,7 @@ dhcpcd_get_vars() {
 # Returns 0 (true) when a DHCP address dropped
 # otherwise return 1
 dhcpcd_stop() {
-	local iface=${1} count signal pidfile="/var/run/dhcpcd-${1}.pid"
+	local iface=${1} count signal pidfile="/var/run/dhcpcd-${1}.pid" dhcp
 	
 	dhcpcd_check_installed || return 0
 
@@ -74,10 +74,12 @@ dhcpcd_stop() {
 	local ifvar=$( interface_variable ${1} )
 	local pid=$( cat ${pidfile} )
 
-	eval release=\"\$\{dhcp_release_${ifvar}\}\"
-	[[ -z ${release} ]] && eval release=\"\$\{dhcp_release\}\"
-	[[ ${release} == yes ]] && signal="HUP"
-	signal="TERM"
+	eval dhcp=\" \$\{dhcp_${ifvar}\} \"
+	if [[ ${dhcp} == *' release '* ]]; then
+		signal="HUP"
+	else
+		signal="TERM"
+	fi
 
 	kill -s ${signal} ${pid} &>${devnull}
 	process_finished ${pid} dhcpcd
@@ -91,7 +93,7 @@ dhcpcd_stop() {
 #
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 dhcpcd_start() {
-	local iface=${1} opts hostname pidfile="/var/run/dhcpcd-${1}.pid"
+	local iface=${1} opts hostname pidfile="/var/run/dhcpcd-${1}.pid" dhcp
 	local ifvar=$( interface_variable ${iface} )
 
 	interface_exists ${iface} true || return 1
@@ -108,22 +110,16 @@ dhcpcd_start() {
 	eval opts=\"\$\{dhcpcd_${ifvar}\}\"
 
 	# Map some generic options to dhcpcd
-	eval peer=\"\$\{dhcp_dns_${ifvar}\}\"
-	[[ -z ${peer} ]] && eval peer=\"\$\{dhcp_dns\}\"
-	[[ ${peer} == no ]] && opts="-R ${opts}"
-
-	eval peer=\"\$\{dhcp_nis_${ifvar}\}\"
-	[[ -z ${peer} ]] && eval peer=\"\$\{dhcp_nis\}\"
-	[[ ${peer} == no ]] && opts="-Y ${opts}"
-
-	eval peer=\"\$\{dhcp_ntp_${ifvar}\}\"
-	[[ -z ${peer} ]] && eval peer=\"\$\{dhcp_ntp\}\"
-	[[ ${peer} == no ]] && opts="-N ${opts}"
+	eval dhcp=\" \$\{dhcp_${ifvar}\} \"
+	[[ ${dhcp} == *' nodns '* ]] && opts="${opts} -R"
+	[[ ${dhcp} == *' nontp '* ]] && opts="${opts} -N"
+	[[ ${dhcp} == *' nonis '* ]] && opts="${opts} -Y"
 
 	# We transmit the hostname by default
 	if [[ ${opts} != *'-h '* ]]; then
 		hostname=$( hostname )
-		[[ -n ${hostname} && ${hostname} != "(none)" ]] && opts="-h ${hostname} ${opts}"
+		[[ -n ${hostname} && ${hostname} != "(none)" && ${hostname} != localhost ]] \
+			&& opts="-h ${hostname} ${opts}"
 	fi
 
 	# Bring up DHCP for this interface (or alias)

@@ -93,7 +93,7 @@ pump_stop() {
 # Returns 0 (true) when a dhcp address is obtained, otherwise
 # the return value from pump
 pump_start() {
-	local iface=${1} opts hostname
+	local iface=${1} opts hostname dhcp
 	local ifvar=$( interface_variable ${iface} )
 
 	interface_exists ${iface} true || return 1
@@ -108,14 +108,14 @@ pump_start() {
 	eval opts=\"\$\{pump_${ifvar}\}\"
 
 	# Map some generic options to pump
-	eval peer=\"\$\{dhcp_dns_${ifvar}\}\"
-	[[ -z ${peer} ]] && eval peer=\"\$\{dhcp_dns\}\"
-	[[ ${peer} == no ]] && opts="--no-dns ${opts}"
+	eval dhcp=\" \$\{dhcp_${ifvar}\} \"
+	[[ ${dhcp} == *' nodns '* ]] && opts="${opts} --no-dns"
 
 	# We transmit the hostname by default
 	if [[ ${opts} != *'-h '* && ${opts} != '*--hostname='* ]]; then
 		hostname=$( hostname )
-		[[ -n ${hostname} && ${hostname} != "(none)" ]] && opts="--hostname=${hostname} ${opts}"
+		[[ -n ${hostname} && ${hostname} != "(none)" && ${hostname} != localhost ]] \
+			&& opts="--hostname=${hostname} ${opts}"
 	fi
 
 	# Bring up DHCP for this interface (or alias)

@@ -6,6 +6,7 @@
     Fixed config-system for only changing hostname when needed
     udhcpc and dhclient now restore saved configs when stopping and work
     with non-infinite leases
+    Moved generic dhcp options into a space seperated string
 
   02 Dec 2004; Mike Frysinger <vapier@gentoo.org>:
 

@@ -59,21 +59,18 @@ get_wireless_vars() {
 # This routine configures the local host for non-ip and routing info
 # from a DHCP client
 config_system() {			
-	
 	# Load our wireless mapped vars
 	# For example dhcp_dns_ESSID becomes dhcp_dns_eth0
 	get_wireless_vars
 
-	local peer ifvar=$( interface_variable ${interface} )
+	local dhcp ifvar=$( interface_variable ${interface} )
 	if need_hostname ; then
 		[[ -n ${hostname} ]] && hostname ${hostname} >/dev/null
 	fi
 
-	eval peer=\"\$\{dhcp_dns_${ifvar}\}\"
-	[[ -z ${peer} ]] && eval peer=\"\$\{dhcp_dns\}\"
-	peer=${peer:-yes}
+	eval dhcp=\" \$\{dhcp_${ifvar}\} \"
 
-	if [[ ${peer} != no ]] && [[ -n ${domain} || -n ${dns} ]]; then
+	if [[ ${dhcp} != *' nodns'* ]] && [[ -n ${domain} || -n ${dns} ]]; then
 		echo "# generated automatically by net-scripts" > /etc/resolv.conf.new
 		chmod 644 /etc/resolv.conf.new
 		[[ -n ${domain} ]] && echo "domain ${domain}" >> /etc/resolv.conf.new
@@ -86,11 +83,7 @@ config_system() {
 		mv /etc/resolv.conf.new /etc/resolv.conf
 	fi
 
-	eval peer=\"\$\{dhcp_ntp_${ifvar}\}\"
-	[[ -z ${peer} ]] && eval peer=\"\$\{dhcp_ntp\}\"
-	peer=${peer:-yes}
-
-	if [[ ${peer} != no && -n ${ntpsrv} ]]; then
+	if [[ ${dhcp} != *' nontp '* ]] && [[ -n ${ntpsrv} ]]; then
 		echo "# generated automatically by net-scripts" > /etc/ntp.conf.new
 		chmod 644 /etc/ntp.conf.new
 
@@ -107,11 +100,7 @@ config_system() {
 		mv /etc/ntp.conf.new /etc/ntp.conf
 	fi
 
-	eval peer=\"\$\{dhcp_nis_${ifvar}\}\"
-	[[ -z ${peer} ]] && eval peer=\"\$\{dhcp_nis\}\"
-	peer=${peer:-yes}
-
-	if [[ ${peer} != no ]] && [[ -n ${nisdomain} || -n ${nissrv} ]]; then
+	if [[ ${dhcp} != *' nonis '* ]] && [[ -n ${nisdomain} || -n ${nissrv} ]]; then
 		echo "# generated automatically by net-scripts" > /etc/yp.conf.new
 		chmod 644 /etc/yp.conf.new
 
