@@ -38,10 +38,6 @@ alias cipher-15		dfc2
 alias cipher-16		rijndael
 alias cipher-17		rc5
 
-# Nvidia drivers support
-alias char-major-195 NVdriver
-alias /dev/nvidiactl char-major-195
-
 # Support for i2c and lm_sensors
 alias char-major-89    i2c-dev
 

@@ -42,7 +42,7 @@ BEGIN {
 		while ((getline < (ENVFILES[count])) > 0) {
 
 			# Filter out comments
-			if ($0 !~ /[[:space:]]*#/) {
+			if ($0 !~ /^[[:space:]]*#/) {
 
 				split($0, envnode, "=")
 
@@ -64,8 +64,19 @@ BEGIN {
 
 				# KDEDIR and QTDIR should be handled specially
 				if ((envnode[1] in ENVTREE) &&
-				    ((envnode[1] != "KDEDIR") && (envnode[1] != "QTDIR")))
-					ENVTREE[envnode[1]] = ENVTREE[envnode[1]] ":" $0
+				    ((envnode[1] != "KDEDIR") && (envnode[1] != "QTDIR"))) {
+
+						split(ENVTREE[envnode[1]], tmpstr, ":")
+
+						# Check that we do not add dups ...
+						NODUPS = 1
+						for (x in tmpstr)
+							if (tmpstr[x] == $0)
+								NODUPS = 0
+						
+						if (NODUPS)
+							ENVTREE[envnode[1]] = ENVTREE[envnode[1]] ":" $0
+					}
 				else
 					ENVTREE[envnode[1]] = $0
 			}

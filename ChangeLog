@@ -2,6 +2,11 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  11 Dec 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix src/awk/genenviron.awk not to add duplicate entries, closing
+    bug #8999.
+
 * rc-scripts 1.4.2.5 (09 Dec 2002)
 
   08 Dec 2002; Martin Schlemmer <azarah@gentoo.org>:
