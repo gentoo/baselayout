@@ -2,10 +2,6 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
-  27 Aug 2002; Maik Schreiber <blizzy@gentoo.org> sbin/functions.sh:
-  More intelligent output of extra blank line in eend() when errors
-  are to be printed.
-
   26 Aug 2002; Donny Davies <woodchip@gentoo.org>:
 
     Give root a 'root' GECOS in /etc/passwd, was NULL before.
