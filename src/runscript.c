@@ -11,7 +11,8 @@
 #include <wait.h>
 #include <dlfcn.h>
 
-static void (*selinux_run_init) (void);
+static void (*selinux_run_init_old) (void);
+static void (*selinux_run_init_new) (int argc, char **argv);
 
 int main(int argc, char **argv) {
 	char *myargs[32];
@@ -32,10 +33,21 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 	
-	lib_handle = dlopen("/lib/rcscripts/runscript_selinux.so", RTLD_LAZY | RTLD_GLOBAL);
+	lib_handle = dlopen("/lib/rcscripts/runscript_selinux.so", RTLD_NOW | RTLD_GLOBAL);
 	if( lib_handle != NULL ) {
-		selinux_run_init = dlsym(lib_handle, "selinux_runscript");
-		selinux_run_init();
+		selinux_run_init_old = dlsym(lib_handle, "selinux_runscript");
+		selinux_run_init_new = dlsym(lib_handle, "selinux_runscript2");
+
+		/* use new run_init if it exists, else fall back to old */
+		if( selinux_run_init_new != NULL )
+			selinux_run_init_new(argc,argv);
+		else if( selinux_run_init_old != NULL )
+			selinux_run_init_old();
+		else {
+			/* this shouldnt happen... probably corrupt lib */
+			fprintf(stderr,"Run_init is missing from runscript_selinux.so!\n");
+			exit(127);
+		}
 	}
 
 	if (execv("/sbin/runscript.sh",myargs) < 0)

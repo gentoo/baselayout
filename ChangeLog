@@ -20,6 +20,8 @@
     Added the 'eend' back to depscan.sh since the script starts with a 
     call to 'ebegin' #59694.
 
+    Add selinux update from Chris PeBenito for src/runscript.c #64019.
+
   04 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
 
     More (I mean a LOT more) services.  This takes care of #44458, 
