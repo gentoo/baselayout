@@ -7,6 +7,9 @@
     Fix wrong logic in /etc/init.d/halt.sh which did not umount all mounts
     _but_ /mnt/cdrom and /mnt/livecd.
 
+    Update /etc/init.d/consolefont to use newer kbd.  Should also close
+    bug #39864.
+
   06 Feb 2004; Martin Schlemmer <azarah@gentoo.org>:
 
    Tweak livecd support changes and add some more to hopefully sort out
