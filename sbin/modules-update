@@ -94,7 +94,7 @@ mv -f ${TMPFILE} ${CFGFILE}
 
 if [ -x /sbin/generate-modprobe.conf ]
 then
-	if /sbin/generate-modprobe.conf ${CFGFILE2} > ${TMPFILE2} 2> /dev/null
+	if /sbin/generate-modprobe.conf ${TMPFILE2} 2> /dev/null
 	then
 		mv -f ${TMPFILE2} ${CFGFILE2}
 	else
