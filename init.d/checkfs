@@ -33,7 +33,7 @@ start() {
 	then
 		ebegin "Starting software RAID"
 		ACTIVE_RAID="`grep -E "md[0-9]+[[:space:]]?: active raid" /proc/mdstat | awk -F ':' '{print $1}'`"
-		if [ -n ${ACTIVE_RAID} ]
+		if [ ! -z "${ACTIVE_RAID}" ]
 		then
 			for x in $(grep -E "raiddev /dev/md[0-9]+" /etc/raidtab | \
 			           awk '{print $2}' | grep -v "`echo ${ACTIVE_RAID} | sed s'/[[:space:]]//g'`")
