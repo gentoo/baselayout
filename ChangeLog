@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+  09 Dec 2004; Roy Marples <uberlord@gentoo.org>:
+
+    fixed net.lo getting vlan config
+
   07 Dec 2004; Roy Marples <uberlord@gentoo.org>:
 
     essidnet - fixed setting up search domains

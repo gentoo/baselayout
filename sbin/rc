@@ -653,7 +653,8 @@ dep_stop() {
 		     "${myservice##*.}" != "${myservice}" ] && \
 		   [ "${SOFTLEVEL}" != "reboot" -a \
 		     "${SOFTLEVEL}" != "shutdown" -a \
-		     "${SOFTLEVEL}" != "single" ]
+		     "${SOFTLEVEL}" != "single" -a \
+		     "${SOFTLEVEL}" != "boot" ]
 		then
 			if [ -n "${OLDSOFTLEVEL}" ] && \
 			   ! in_runlevel "${myservice}" "${OLDSOFTLEVEL}"

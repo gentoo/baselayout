@@ -477,6 +477,7 @@ iface_start() {
 	local iface=${1} mod i label config_counter=-1 x conf warn=false inet6
 	local RC_INDENTATION=${RC_INDENTATION}	# so it will reset after function
 	local -a config config_fallback
+	local ifvar=$( interface_variable ${iface} )
 
 	# pre Start any modules with
 	for mod in ${MODULES[@]}; do
@@ -486,8 +487,8 @@ iface_start() {
 	done
 
 	# New style config - one variable fits all
-	eval config=( \"\$\{config_${IFVAR}\[@\]\}\" )
-	eval config_fallback=( \"\$\{fallback_${IFVAR}\[@\]\}\" )
+	eval config=( \"\$\{config_${ifvar}\[@\]\}\" )
+	eval config_fallback=( \"\$\{fallback_${ifvar}\[@\]\}\" )
 
 	# We must support old configs
 	if [[ -z ${config} ]]; then
