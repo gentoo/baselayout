@@ -2,6 +2,11 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  01 Dec 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix typeo in /etc/devfsd.conf, closing bug #11424, thanks to the
+    sharp eye of Techie2000 <Linux@mochamail.com>.
+
   27 Nov 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Add more improvements to clustering code.  This is from
