@@ -1,10 +1,10 @@
 # essidnet module for net-scripts
-# Version 1.0.4
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
 # Many thanks to all the people in the Gentoo forums for their ideas and
 # motivation for me to make this and keep on improving it
+# $Header:
 
 # Load our config if it exists
 [[ -f /etc/conf.d/wireless ]] && source /etc/conf.d/wireless
@@ -38,8 +38,8 @@ essidnet_provides() {
 essidnet_check_depends() {
 	local f
 
-	for f in interface_variable wireless_check_extensions wireless_get_essid wireless_get_ap_mac_address; do
-		[[ $( type -t ${f} ) == function ]] && continue
+	for f in wireless_check_extensions wireless_get_essid wireless_get_ap_mac_address; do
+		[[ $( type -t ${f} ) == "function" ]] && continue
 		eerror "essidnet: missing required function ${f}\n"
 		return 1
 	done
@@ -55,7 +55,7 @@ essidnet_check_depends() {
 # of the AP connected to. MAC configuration takes precedence
 # Always returns 0
 essidnet_pre_start() {
-	local iface=${1} ifvar=$( interface_variable ${1} )
+	local iface=${1} ifvar=${1//[![:word:]]/_}
 
 	wireless_check_extensions ${iface} || return 0
 
@@ -68,7 +68,7 @@ essidnet_pre_start() {
 
 	for mod in ${MODULES[@]}; do
 		func="${mod}_get_vars"
-		if [[ $(type -t ${func}) == function ]]; then
+		if [[ $(type -t ${func}) == "function" ]]; then
 			evars=( $( ${func} ${essid} ) )
 			mvars=( $( ${func} ${mac} ) )
 			vars=( $( ${func} ${ifvar} ) )

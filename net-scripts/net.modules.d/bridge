@@ -1,8 +1,8 @@
 # bridge (net-misc/bridge-utils) module for net-scripts
-# Version 1.0.2
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
+# $Header:
 
 # Fix any potential localisation problems
 # Note that LC_ALL trumps LC_anything_else according to locale(7)
@@ -40,8 +40,8 @@ bridge_check_installed() {
 bridge_check_depends() {
 	local f
 
-	for f in interface_variable interface_down interface_del_addresses interface_set_flag; do
-		[[ $( type -t ${f} ) == function ]] && continue
+	for f in interface_down interface_del_addresses interface_set_flag; do
+		[[ $( type -t ${f} ) == "function" ]] && continue
 		eerror "bridge: missing required function ${f}\n"
 		return 1
 	done
@@ -68,7 +68,7 @@ bridge_get_ports() {
 #
 # #set up bridge
 bridge_pre_start() {
-	local iface=$1 ports i e x ifvar=$( interface_variable $1 )
+	local iface=$1 ports i e x ifvar=${1//[![:word:]]/_}
 	local -a opts
 	eval ports=\"\$\{bridge_${ifvar}\[@\]\}\"
 

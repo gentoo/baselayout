@@ -1,23 +1,23 @@
 #!/bin/bash
 # udhcpc iproute2 module for net-scripts
-# Version 1.0.0
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
+# $Header:
 
-action=${1}
-echo ${action}
+action=$1
+echo "${action}"
 
 [[ -z ${MODULES_DIR} ]] && MODULES_DIR=/lib/rcscripts/net.modules.d
 source ${MODULES_DIR}/helpers.d/config-system
 
 case "${action}" in
-	bound|renew|deconfig)
+	"bound"|"renew"|"deconfig")
 		# We handle these actions
 		;;
-	nak|leasefail)
+	"nak"|"leasefail")
 		# These are valid actions, but we don't handle them
-		[[ ${action} == leasefail ]] && mark_service_inactive net.${interface}
+		[[ ${action} == "leasefail" ]] && mark_service_inactive net.${interface}
 		exit 0
 		;;
 	*)
@@ -26,7 +26,7 @@ case "${action}" in
 		;;
 esac
 
-[[ ${action} == nak ]] && exit 0
+[[ ${action} == "nak" ]] && exit 0
 
 # Fix any potential localisation problems
 # Note that LC_ALL trumps LC_anything_else according to locale(7)
@@ -37,7 +37,7 @@ ip() {
 # We don't flush the link local address
 ip link set up dev ${interface} &>/dev/null
 
-if [[ ${action} == deconfig ]]; then
+if [[ ${action} == "deconfig" ]]; then
 	ip addr flush dev ${interface} scope global &>/dev/null
 	ip addr flush dev ${interface} scope host &>/dev/null
 	restore_configs
@@ -53,8 +53,8 @@ broadcast=${broadcast// }
 [[ -n ${broadcast} ]] && broadcast="broadcast ${broadcast}"
 
 # If we don't have our address then we flush it and then add our new one
-ip -family inet addr show scope global dev ${interface} | grep inet | grep -q "${ip}/${cidr}"
-if [[ $? == 1 ]] ; then
+curip=$( ip -family inet addr show scope global dev ${interface} | sed -ne 's/.*inet \([^ ]*\).*/\1/p' )
+if [[ ${curip} != "${ip}/${cidr}" ]] ; then
 	ip addr flush dev ${interface} scope global &>/dev/null
 	ip addr flush dev ${interface} scope host &>/dev/null
 	ip addr add dev ${interface} ${ip}/${cidr} ${broadcast}
@@ -76,7 +76,7 @@ for r in ${router}; do
 done
 
 # Set our module to udhcpc if it's not set
-[[ -z ${module} ]] && module=udhcpc
+[[ -z ${module} ]] && module="udhcpc"
 
 config_system
 mark_service_started net.${interface}

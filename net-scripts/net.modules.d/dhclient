@@ -1,8 +1,8 @@
 # DHCP (net-misc/dhcp) module for net-scripts
-# Version 1.0.6
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
+# $Header:
 
 # Fix any potential localisation problems
 # Note that LC_ALL trumps LC_anything_else according to locale(7)
@@ -47,8 +47,8 @@ dhclient_get_script() {
 dhclient_check_depends() {
 	local f
 
-	for f in interface_exists interface_variable interface_get_address interface_module; do
-		[[ $( type -t ${f} ) == function ]] && continue
+	for f in interface_exists interface_get_address interface_module; do
+		[[ $( type -t ${f} ) == "function" ]] && continue
 		eerror "dhclient: missing required function ${f}\n"
 		return 1
 	done
@@ -69,7 +69,8 @@ dhclient_get_vars() {
 # Stop dhclient on an interface
 # Always returns 0
 dhclient_stop() {
-	local iface=${1} dhcp release pidfile="/var/run/dhclient-${1}.pid"
+	local iface=${1} dhcp release ifvar=${1//[![:word:]]/_}
+	local pidfile="/var/run/dhclient-${1}.pid"
 	
 	dhclient_check_installed || return 0
 	[[ ! -f ${pidfile} ]] && return 0
@@ -85,7 +86,7 @@ dhclient_stop() {
 	ebegin "Stopping dhclient on ${iface}"
 	if [[ ${dhcp} == *' release '* ]]; then
 		local r=$( dhclient -q -r -sf ${script} -pf ${pidfile} ${iface} )
-		[[ ${r} == deconfig ]]
+		[[ ${r} == "deconfig" ]]
 		eend $? "dhclient returned a ${r}"
 	else
 		kill -s TERM ${pid} 2>/dev/null
@@ -102,8 +103,8 @@ dhclient_stop() {
 #
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 dhclient_start() {
-	local iface=${1} opts pidfile="/var/run/dhclient-${1}.pid"
-	local ifvar=$( interface_variable ${iface} )
+	local iface=$1 opts ifvar=${1//[![:word:]]/_}
+	local pidfile="/var/run/dhclient-$1.pid"
 
 	interface_exists ${iface} true || return 1
 
@@ -120,7 +121,7 @@ dhclient_start() {
 
 	eval opts=\"\$\{dhclient_${ifvar}\}\"
 
-	if [[ ${background} == yes ]]; then
+	if [[ ${background} == "yes" ]]; then
 		dhclient ${opts} -sf ${script} -pf ${pidfile} -q ${iface} &>/dev/null &
 		eend 0
 		go_background
@@ -129,7 +130,7 @@ dhclient_start() {
 	local x=$( dhclient ${opts} -1 -sf ${script} -pf ${pidfile} -q ${iface} )
 	# We just check the last 5 letters
 	echo ${x}
-	[[ ${x:${#x} - 5:5} == bound ]]
+	[[ ${x:${#x} - 5:5} == "bound" ]]
 	if [[ $? != 0 ]]; then
 		# We need to kill the process if we fail
 		kill -s TERM $( cat ${pidfile} ) 2>/dev/null

@@ -1,8 +1,8 @@
 # wpa_supplicant (net-wireless/wpa_supplicant) module for net-scripts
-# Version 1.0.1
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
+# $Header:
 
 # Fix any potential localisation problems
 # Note that LC_ALL trumps LC_anything_else according to locale(7)
@@ -44,8 +44,8 @@ wpa_supplicant_check_installed() {
 wpa_supplicant_check_depends() {
 	local f
 
-	for f in interface_exists interface_variable; do
-		[[ $( type -t ${f} ) == function ]] && continue
+	for f in interface_exists; do
+		[[ $( type -t ${f} ) == "function" ]] && continue
 		eerror "wpa_supplicant: missing required function ${f}\n"
 		return 1
 	done
@@ -72,7 +72,7 @@ wpa_supplicant_get_essid() {
 # Returns the MAC address of the Access Point
 # the interface is connected to
 wpa_supplicant_get_ap_mac_address() {
-	wpa_cli -i$1 status 2>/dev/null | sed -ne 's/^bssid=//p' | tr '[:lower:]' '[:upper:]'
+	wpa_cli -i$1 status 2>/dev/null | sed -ne 's/^bssid=\([^=]\+\).*/\U\1/p'
 }
 
 # bool wpa_supplicant_associated(char *interface)
@@ -81,7 +81,7 @@ wpa_supplicant_get_ap_mac_address() {
 # Note that just because we are associated does not mean we are using the
 # correct encryption keys
 wpa_supplicant_associated() {
-	local -a status=( "$( wpa_cli -i${1} status | sed -ne 's/^\(key_mgmt\|wpa_state\|EAP state\)=\([^=]\+\).*/\2/p' )" )
+	local -a status=( "$( wpa_cli -i$1 status | sed -ne 's/^\(key_mgmt\|wpa_state\|EAP state\)=\([^=]\+\).*/\U\2/p' )" )
 	
 
 	case ${status[0]} in
@@ -115,7 +115,7 @@ wpa_supplicant_kill() {
 # Returns 0 if wpa_supplicant associates and authenticates to an AP
 # otherwise, 1
 wpa_supplicant_associate() {
-	local iface=$1 ifvar=$( interface_variable $1 ) timeout i
+	local iface=$1 ifvar=${1//[![:word:]]/_} timeout i
 
 	eval timeout=\"\$\{wpa_timeout_${ifvar}:-60\}\"
 	for (( i=0; i<${timeout}; i++ )); do
@@ -147,7 +147,8 @@ wpa_supplicant_pre_start() {
 	# the background
 	${IN_BACKGROUND} && return 0
 
-	local iface=$1 opts ifvar cfgfile="/etc/wpa_supplicant.conf" timeout
+	local iface=$1 opts ifvar=${1//[![:word:]]/_} timeout
+	local cfgfile="/etc/wpa_supplicant.conf"
 
 	# We only work on wirelesss interfaces
 	wpa_supplicant_check_extensions ${iface} || return 0
@@ -172,7 +173,6 @@ wpa_supplicant_pre_start() {
 		return 1
 	fi
 
-	ifvar=$( interface_variable ${iface} )
 	eval opts=\" \$\{wpa_supplicant_${ifvar}\}\"
 	[[ ${opts} != *' -D'* ]] && ewarn "wpa_supplicant_${ifvar} does not define a driver"
 	
@@ -206,11 +206,11 @@ wpa_supplicant_pre_start() {
 
 	# Set ESSID for essidnet and report
 	ESSID=$( wpa_supplicant_get_essid ${iface} )
-	local -a status=( "$( wpa_cli -i${iface} status | sed -ne 's/^\(bssid\|pairwise_cipher\|key_mgmt\)=\([^=]\+\).*/\2/p' | tr '[:lower:]' '[:upper:]' )" )
+	local -a status=( "$( wpa_cli -i${iface} status | sed -ne 's/^\(bssid\|pairwise_cipher\|key_mgmt\)=\([^=]\+\).*/\U\2/p' | tr '[:lower:]' '[:upper:]' )" )
 	einfo "${iface} connected to \"${ESSID//\\\\/\\\\}\" at ${status[0]}"
 
-	if [[ ${status[2]} == NONE ]]; then
-		if [[ ${status[1]} == NONE ]]; then
+	if [[ ${status[2]} == "NONE" ]]; then
+		if [[ ${status[1]} == "NONE" ]]; then
 			ewarn "not using any encryption"
 		else
 			veinfo "using ${status[1]}"

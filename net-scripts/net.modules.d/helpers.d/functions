@@ -1,8 +1,8 @@
 # net-scripts helper functions
-# Version 1.0.0
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
+# $Header:
 
 # int netmask2cidr(char *netmask)
 #
@@ -71,13 +71,6 @@ interface_type() {
 	echo ${1%%[0-9]*}
 }
 
-# char* interface_variable(char *iface)
-#
-# Returns a bash variable name based on the interface
-interface_variable() {
-	echo ${1//[![:word:]]/_}
-}
-
 # bool clean_pidfile(char *file)
 #
 # Removes the given pidfile if the process is not running
@@ -103,7 +96,7 @@ clean_pidfile() {
 # We wait for 10 seconds until the command ${cmd}
 # stops running on the process ${pid}
 process_finished() {
-	local i pid=${1} cmd=${2} secs=${3:-9}
+	local i pid=$1 cmd=$2 secs=${3:-9}
 
 	for (( i=0; i<secs; i++ )); do
 		ps -p ${pid} | grep -q ${cmd} || return 0

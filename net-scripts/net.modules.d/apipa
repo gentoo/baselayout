@@ -1,8 +1,8 @@
 # Automatic Private IP Addressing (APIPA) module for net-scripts
-# Version 1.0.1
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
+# $Header:
 
 # char* apipa_provides(void)
 #
@@ -37,7 +37,7 @@ apipa_check_depends() {
 	local f
 
 	for f in interface_exists interface_up; do
-		[[ $( type -t ${f} ) == function ]] && continue
+		[[ $( type -t ${f} ) == "function" ]] && continue
 		eerror "apipa: missing required function ${f}\n"
 		return 1
 	done
@@ -52,7 +52,7 @@ apipa_check_depends() {
 # If neither arping (net-misc/iputils) or arping2 (net-analyzer/arping)
 # is installed then we return 1
 address_exists() {
-	local iface=${1} address=${2%%/*} i
+	local iface=$1 address=${2%%/*} i
 
 	# We only handle IPv4 addresses
 	[[ ${address} != *.*.*.* ]] && return 1
@@ -74,7 +74,7 @@ address_exists() {
 #
 # Tries to locate an address in the 169.254.0.0 netmask 169.254.255.255 range
 apipa_start() {
-	local iface=${1} i1 i2 addr i=0
+	local iface=$1 i1 i2 addr i=0
 
 	interface_exists ${iface} true || return 1
 

@@ -1,10 +1,10 @@
 # iwconfig module for net-scripts
-# Version 1.0.6
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
 # Many thanks to all the people in the Gentoo forums for their ideas and
 # motivation for me to make this and keep on improving it
+# $Header:
 
 # Fix any potential localisation problems
 # Note that LC_ALL trumps LC_anything_else according to locale(7)
@@ -50,8 +50,8 @@ iwconfig_provides() {
 iwconfig_check_depends() {
 	local f
 
-	for f in interface_variable interface_up interface_down interface_exists; do
-		[[ $( type -t ${f} ) == function ]] && continue
+	for f in interface_up interface_down interface_exists; do
+		[[ $( type -t ${f} ) == "function" ]] && continue
 		eerror "iwconfig: missing required function ${f}\n"
 		return 1
 	done
@@ -157,7 +157,7 @@ iwconfig_get_wep_key() {
 #
 # Applies the user configuration to the interface
 iwconfig_user_config() {
-	local iface=$1 conf e ifvar=$( interface_variable $1 )
+	local iface=$1 conf e ifvar=${1//[![:word:]]/_}
 
 	# Apply the user configuration
 	eval conf=\"\$\{iwconfig_${ifvar}\}\"
@@ -183,8 +183,7 @@ iwconfig_user_config() {
 #
 # Sets up our wireless interface to operate in ad-hoc or master mode
 iwconfig_setup_specific() {
-	local iface=$1 mode=$2 channel key dessid e
-	local ifvar=$( interface_variable $1 )
+	local iface=$1 mode=$2 channel key dessid e ifvar=${1//[![:word:]]/_}
 
 	if [[ -z ${ESSID} ]]; then
 		eerror "${iface} requires an ESSID to be set to operate in ${mode} mode"
@@ -271,7 +270,7 @@ iwconfig_associate_quality() {
 #
 # Returns true if the interface has associated with an Access Point
 iwconfig_test_associated() {
-	local iface=$1 test ifvar=$( interface_variable $1 )
+	local iface=$1 test ifvar=${1//[![:word:]]/_}
 	# Some drivers don't set MAC to a bogus value when assocation is lost/fails
 	# whereas they do set link quality to 0
 
@@ -297,7 +296,7 @@ iwconfig_test_associated() {
 # Waits for a configured ammount of time until
 # we are assocaited with an Access Point
 iwconfig_wait_for_association() {
-	local iface=$1 i=0 wait ifvar=$( interface_variable $1 )
+	local iface=$1 i=0 wait ifvar=${1//[![:word:]]/_}
 	eval wait=\"\$\{sleep_associate_${ifvar}\}\"
 	wait=${wait:-10}
 
@@ -402,7 +401,7 @@ iwconfig_associate() {
 #
 # Fills 3 arrays with information from a wireless scan
 iwconfig_scan() {
-	local iface=$1 e mode x ifvar=$( interface_variable $1 )
+	local iface=$1 e mode x ifvar=${1//[![:word:]]/_}
 
 	# First, we may need to change mode to scan in
 	mode=$( eval echo \$\{scan_mode_${ifvar}\} | tr '[:upper:]' '[:lower:]' )
@@ -717,7 +716,7 @@ iwconfig_strip_associated() {
 # Once we're connected we show a report and then configure any interface
 # variables for the ESSID
 iwconfig_configure() {
-	local iface=$1 test x e ifvar=$( interface_variable $1 )
+	local iface=$1 test x e ifvar=${1//[![:word:]]/_}
 	local -a essid_APs mac_APs enc_APs
 	
 	iwconfig_defaults ${iface}

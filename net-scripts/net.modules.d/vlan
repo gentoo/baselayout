@@ -1,8 +1,8 @@
 # VLAN module for net-scripts
-# Version 1.0.2
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
+# $Header:
 
 # Fix any potential localisation problems
 # Note that LC_ALL trumps LC_anything_else according to locale(7)
@@ -40,7 +40,7 @@ vlan_check_installed() {
 vlan_check_depends() {
 	local f
 
-	for f in iface_start iface_stop interface_variable; do
+	for f in iface_start iface_stop; do
 		[[ $( type -t ${f} ) == function ]] && continue
 		eerror "vlan: missing required function ${f}\n"
 		return 1
@@ -81,8 +81,7 @@ vlan_check_kernel() {
 #
 # Setup vconfig
 vlan_pre_start() {
-	local iface=$1 opts i x e
-	local ifvar=$( interface_variable ${iface} )
+	local iface=$1 opts i x e ifvar=${1//[![:word:]]/_}
 
 	eval opts=( \"\$\{vconfig_${ifvar}\[@\]\}\" )
 	[[ -z ${opts} ]] && return 0
@@ -90,7 +89,7 @@ vlan_pre_start() {
 	vlan_check_kernel || return 1
 
 	for (( i=0; i<${#opts[@]}; i++ )); do
-		if [[ ${opts[i]} == set_name_type* ]]; then
+		if [[ ${opts[i]} == 'set_name_type'* ]]; then
 			x=${opts[i]}
 		else
 			x=${opts[i]/ / ${iface} }
@@ -112,8 +111,7 @@ vlan_pre_start() {
 #
 # Always returns 0 (true) 
 vlan_post_start() {
-	local iface=$1 vlan vlans vlans_old e ifname
-	local ifvar=$( interface_variable $1 )
+	local iface=$1 vlan vlans vlans_old e ifname ifvar=${1//[![:word:]]/_}
 
 	eval vlans=\"\$\{vlans_${ifvar}\}\"
 
@@ -149,7 +147,7 @@ vlan_post_start() {
 #
 # Always returns 0 (true) 
 vlan_pre_stop() {
-	local iface=${1} vlan
+	local iface=$1 vlan
 
 	vlan_check_installed || return 0
 

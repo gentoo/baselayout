@@ -1,8 +1,8 @@
 # Pump module for net-scripts
-# Version 1.0.6
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
+# $Header:
 
 # Fix any potential localisation problems
 # Note that LC_ALL trumps LC_anything_else according to locale(7)
@@ -39,8 +39,8 @@ pump_check_installed() {
 pump_check_depends() {
 	local f
 
-	for f in interface_exists interface_variable interface_get_address; do
-		[[ $( type -t ${f} ) == function ]] && continue
+	for f in interface_exists interface_get_address; do
+		[[ $( type -t ${f} ) == "function" ]] && continue
 		eerror "pump: missing required function ${f}\n"
 		return 1
 	done
@@ -58,9 +58,9 @@ pump_get_vars() {
 
 # bool pump_stop(char *iface)
 #
-# Stop pump on an interface by calling pumpcd -z $iface
-#
-# Always returns 0
+# Stop pump on an interface
+# Return 0 if pump is not running or we stop it successfully
+# Otherwise 1
 pump_stop() {
 	local iface=$1 count e
 	
@@ -81,8 +81,7 @@ pump_stop() {
 	done
 	[[ ${count} -lt 9 ]]
 	eend $? "Timed out"
-
-	return 0  # we did *attempt* to stop pump
+	return $?
 }
 
 # bool pump_start(char *iface)
@@ -92,8 +91,7 @@ pump_stop() {
 # Returns 0 (true) when a dhcp address is obtained, otherwise
 # the return value from pump
 pump_start() {
-	local iface=$1 opts hostname dhcp
-	local ifvar=$( interface_variable ${iface} )
+	local iface=$1 opts hostname dhcp ifvar=${1//[![:word:]]/_}
 
 	interface_exists ${iface} true || return 1
 
@@ -121,7 +119,7 @@ pump_start() {
 
 	eval peer=\"\$\{dhcp_ntp_${iface}\}\"
 	[[ -z ${peer} ]] && eval peer=\"\$\{dhcp_ntp\}\"
-	if [[ ${peer} != no ]]; then
+	if [[ ${peer} != "no" ]]; then
 		export ntpsrv=$( pump -i ${iface} --status 2>/dev/null | sed -ne 's/^.*Ntpservers: //p' )
 		source ${MODULES_DIR}/helpers.d/config-system
 		config_system

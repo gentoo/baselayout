@@ -1,8 +1,8 @@
 # udhcpc (net-misc/udhcp) module for net-scripts
-# Version 1.0.6
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
+# $Header:
 
 # Fix any potential localisation problems
 # Note that LC_ALL trumps LC_anything_else according to locale(7)
@@ -47,8 +47,8 @@ udhcpc_get_script() {
 udhcpc_check_depends() {
 	local f
 
-	for f in interface_exists interface_variable interface_get_address interface_module; do
-		[[ $( type -t ${f} ) == function ]] && continue
+	for f in interface_exists interface_get_address interface_module; do
+		[[ $( type -t ${f} ) == "function" ]] && continue
 		eerror "udhcpc: missing required function ${f}\n"
 		return 1
 	done
@@ -67,10 +67,11 @@ udhcpc_get_vars() {
 # bool udhcpc_stop(char *iface)
 #
 # Stops udhcpc running on an interface
-# Always returns 0
+# Return 1 if we fail to stop udhcpc (if it's running) otherwise 0
 udhcpc_stop() {
-	local iface=$1 count release pidfile="/var/run/udhcpc-${1}.pid" dhcp
-	
+	local iface=$1 count release pidfile="/var/run/udhcpc-$1.pid" dhcp
+	local ifvar=${1//[![:word:]]/_}
+
 	udhcpc_check_installed || return 0
 	[[ ! -f ${pidfile} ]] && return 0
 
@@ -95,8 +96,7 @@ udhcpc_stop() {
 
 	${e}
 	eend $?
-
-	return 0
+	return $?
 }
 
 # bool udhcpc_start(char *iface)
@@ -105,12 +105,12 @@ udhcpc_stop() {
 #
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 udhcpc_start() {
-	local iface=$1 opts hostname pidfile="/var/run/udhcpc-${1}.pid"
+	local iface=$1 opts hostname pidfile="/var/run/udhcpc-$1.pid"
 	local cachefile="/var/cache/udhcpc-${1}.cache" x
 
 	interface_exists ${iface} true || return 1
 
-	local ifvar=$( interface_variable ${iface} )
+	local ifvar=${iface//[![:word:]]/_}
 	local script=$( udhcpc_get_script ) opts hostname=$( hostname )
 	eval opts=\"\$\{udhcpc_${ifvar}\}\"
 
@@ -134,7 +134,7 @@ udhcpc_start() {
 		[[ -n ${x} ]] && opts="${opts} --request=${x}"
 	fi
 
-	if [[ ${background} == yes ]]; then
+	if [[ ${background} == "yes" ]]; then
 		eval "udhcpc ${opts} --script=${script} --pidfile=${pidfile} --interface=${iface}" &>/dev/null &
 		eend 0
 		go_background
@@ -142,7 +142,7 @@ udhcpc_start() {
 
 	x=$( eval "udhcpc ${opts} --now --script=${script} --pidfile=${pidfile} --interface=${iface}" )
 	# We just check the last 5 letters
-	[[ ${x:((${#x} - 5)):5} == bound ]]
+	[[ ${x:((${#x} - 5)):5} == "bound" ]]
 	eend $? || return 1
 
 	# DHCP succeeded, show address retrieved

@@ -5,6 +5,8 @@
 
     replaced awk commands with sed equivalents in net-scripts to make us
     more portable
+    STYLE fixes to many net-scripts modules
+    Removed hardcoded Version and replaced with cvs $Header:
 
   17 Jan 2004; Roy Marples <uberlord@gentoo.org>:
 

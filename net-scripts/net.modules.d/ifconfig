@@ -50,14 +50,6 @@ ifconfig_module() {
 #
 # Checks to see if we have the needed functions
 ifconfig_check_depends() {
-	local f
-
-	for f in interface_variable; do
-		[[ $( type -t ${f} ) == function ]] && continue
-		eerror "ifconfig: missing required function ${f}\n"
-		return 1
-	done
-
 	return 0
 }
 
@@ -187,7 +179,7 @@ ifconfig_get_vars() {
 #
 # Returns config and config_fallback for the given interface
 ifconfig_get_old_config() {
-	local iface=${1} ifvar=$( interface_variable ${1} ) i inet6
+	local iface=$1 ifvar=${1//[![:word:]]/_} i inet6
 
 	eval config=( \"\$\{ifconfig_${ifvar}\[@\]\}\" )
 	eval config_fallback=( \"\$\{ifconfig_fallback_${ifvar}\[@\]\}\" )
@@ -251,7 +243,7 @@ ifconfig_iface_stop() {
 # fail, the routine should still return success to indicate that
 # net.eth0 was successful
 ifconfig_post_start() {
-	local iface=$1 ifvar=$( interface_variable $1 ) routes x
+	local iface=$1 ifvar=${1//[![:word:]]/_} routes x
 
 	# Make sure interface is marked UP
 	ifconfig_up ${iface}
@@ -297,7 +289,7 @@ ifconfig_post_start() {
 #
 # Adds the given address to the interface
 ifconfig_add_address() {
-	local iface=${1} i=0
+	local iface=$1 i=0
 
 	ifconfig_exists ${iface} true || return 1
 

@@ -1,8 +1,8 @@
 # config-system module for net-scripts
-# Version 1.0.3
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
+# $Header:
 
 source /etc/conf.d/net
 [[ -z ${MODULES_DIR} ]] && MODULES_DIR=/lib/rcscripts/net.modules.d
@@ -10,28 +10,28 @@ source /etc/conf.d/net
 # Sourcing rc-scripts stuff causes errors - so we copy some functions
 svcdir=/var/lib/init.d
 mark_service_inactive() {
-	[[ -z ${1} ]] && return 1
-	ln -snf /etc/init.d/${1} ${svcdir}/inactive/${1}
+	[[ -z $1 ]] && return 1
+	ln -snf /etc/init.d/$1 ${svcdir}/inactive/$1
 	return $?
 }
 mark_service_stopped() {
-	[[ -z ${1} ]] && return 1
+	[[ -z $1 ]] && return 1
 
-	[[ -f ${svcdir}/starting/${1} ]] && rm -f ${svcdir}/starting/${1}
-	[[ -f ${svcdir}/started/${1} ]] && rm -f ${svcdir}/started/${1}
-	[[ -f ${svcdir}/inactive/${1} ]] && rm -f ${svcdir}/inactive/${1}
+	[[ -f ${svcdir}/starting/$1 ]] && rm -f ${svcdir}/starting/$1
+	[[ -f ${svcdir}/started/$1 ]] && rm -f ${svcdir}/started/$1
+	[[ -f ${svcdir}/inactive/$1 ]] && rm -f ${svcdir}/inactive/$1
 
 	return $?
 }
 mark_service_started() {
-	[[ -z ${1} ]] && return 1
-	ln -snf /etc/init.d/${1} ${svcdir}/started/${1}
-	[[ -f ${svcdir}/starting/${1} ]] && rm -f ${svcdir}/starting/${1}
-	[[ -f ${svcdir}/inactive/${1} ]] && rm -f ${svcdir}/inactive/${1}
+	[[ -z $1 ]] && return 1
+	ln -snf /etc/init.d/${1} ${svcdir}/started/$1
+	[[ -f ${svcdir}/starting/$1 ]] && rm -f ${svcdir}/starting/$1
+	[[ -f ${svcdir}/inactive/$1 ]] && rm -f ${svcdir}/inactive/$1
 	return $?
 }
 
-if [[ $( type -t interface_variable ) != function ]]; then
+if [[ $( type -t interface_variable ) != "function" ]]; then
 	source ${MODULES_DIR}/helpers.d/functions
 fi
 
@@ -59,7 +59,7 @@ restore_configs() {
 # Configures variables depending on SSID connected to
 get_wireless_vars() {
 	# Check that wireless has not already been configured
-	[[ $(type -t wireless_check_extensions) == function ]] && return
+	[[ $(type -t wireless_check_extensions) == "function" ]] && return
 
 	# Check we can load up the basics
 	[[ ! -f ${MODULES_DIR}/essidnet || ! -f ${MODULES_DIR}/${module} ]] && return
@@ -68,12 +68,12 @@ get_wireless_vars() {
 	# Lets do this the easy way - iwconfig is what we need as it supports
 	# getting all the information we need regardless of how it was setup
 	if [[ -f /usr/sbin/iwconfig ]]; then
-		m=iwconfig
+		m="iwconfig"
 	else
 		# This is hairy. We need to know if a supplicant is installed
 		# and running on the interface
 		if [[ -f /usr/sbin/wpa_supplicant && -S /var/run/wpa_supplicant/${interface} ]]; then
-			m=wpa_supplicant
+			m="wpa_supplicant"
 		fi
 	fi
 	[[ -z ${m} ]] && return
@@ -103,7 +103,7 @@ config_system() {
 	# For example dhcp_dns_ESSID becomes dhcp_dns_eth0
 	get_wireless_vars
 
-	local dhcp ifvar=$( interface_variable ${interface} )
+	local dhcp ifvar=${interface//[![:word:]]/_}
 	if need_hostname ; then
 		[[ -n ${hostname} ]] && hostname ${hostname} >/dev/null
 	fi

@@ -1,8 +1,8 @@
 # macchanger module for net-scripts
-# Version 1.0.3
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
+# $Header:
 
 # char* macchanger_provides(void)
 #
@@ -32,8 +32,8 @@ macchanger_check_installed() {
 macchanger_check_depends() {
 	local f
 
-	for f in interface_variable interface_get_mac_address interface_set_mac_address; do
-		[[ $( type -t ${f} ) == function ]] && continue
+	for f in interface_get_mac_address interface_set_mac_address; do
+		[[ $( type -t ${f} ) == "function" ]] && continue
 		eerror "macchanger: missing required function ${f}\n"
 		return 1
 	done
@@ -48,7 +48,7 @@ macchanger_pre_start() {
 	# We don't change MAC addresses from background
 	${IN_BACKGROUND} && return 0
 
-	local iface=$1 mac opts ifvar=$( interface_variable $1 )
+	local iface=$1 mac opts ifvar=${1//[![:word:]]/_}
 
 	eval mac=\"\$\{mac_${ifvar}\}\"
 	[[ -z ${mac} ]] && return 0

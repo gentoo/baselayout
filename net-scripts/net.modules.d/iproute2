@@ -1,8 +1,8 @@
 # iproute2 module for net-scripts
-# Version 1.0.5
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
+# $Header:
 
 # Fix any potential localisation problems
 # Note that LC_ALL trumps LC_anything_else according to locale(7)
@@ -52,8 +52,8 @@ iproute2_module() {
 iproute2_check_depends() {
 	local f
 
-	for f in interface_device interface_variable; do
-		[[ $( type -t ${f} ) == function ]] && continue
+	for f in interface_device; do
+		[[ $( type -t ${f} ) == "function" ]] && continue
 		eerror "iproute2: missing required function ${f}\n"
 		return 1
 	done
@@ -143,7 +143,7 @@ iproute2_set_mac_address() {
 # Outputs a space-separated list on stdout, in reverse order, for
 # example "eth0:2 eth0:1"
 iproute2_get_aliases_rev() {
-	local iface=$( interface_device ${1} )
+	local iface=$( interface_device $1 )
 	ip addr show dev ${iface} | grep -o "${iface}:[0-9].*" | tac
 }
 
@@ -168,7 +168,7 @@ iproute2_get_vars() {
 #
 # Returns config and config_fallback for the given interface
 iproute2_get_old_config() {
-	local ifvar=$( interface_variable $1 ) inet6
+	local ifvar=${1//[![:word:]]/_} inet6
 
 	# iproute2-style config vars
 	eval config=( \"\$\{ipaddr_${ifvar}\[@\]\}\" )
@@ -250,7 +250,7 @@ iproute2_add_address() {
 # Runs any post_start stuff on our interface and adds routes
 # Always returns 0
 iproute2_post_start() {
-	local iface=$1 ifvar=$( interface_variable $1 ) routes e r
+	local iface=$1 ifvar=${1//[![:word:]]/_} routes e r
 
 	# Make sure interface is marked UP
 	iproute2_up ${iface}

@@ -1,14 +1,14 @@
 #!/bin/sh
 # dhclient udhcpc wrapper for net-scripts
-# Version 1.0.0
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
+# $Header:
 
 # Instead of writing new functions for dhclient, we simply map their variables
 # over to udhcpc style ones and call those scripts!
 
-iface_type=${1}
+iface_type=$1
 
 case "${reason}" in
 	BOUND|REBOOT|REBIND) action=bound ;;

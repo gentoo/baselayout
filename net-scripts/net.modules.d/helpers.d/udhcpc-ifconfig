@@ -1,23 +1,23 @@
 #!/bin/bash
 # udhcpc ifconfig module for net-scripts
-# Version 1.0.0
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
+# $Header:
 
-action=${1}
-echo ${action}
+action=$1
+echo "${action}"
 
 [[ -z ${MODULES_DIR} ]] && MODULES_DIR=/lib/rcscripts/net.modules.d
 source ${MODULES_DIR}/helpers.d/config-system
 
 case "${action}" in
-	bound|renew|deconfig)
+	"bound"|"renew"|"deconfig")
 		# We handle these actions
 		;;
-	nak|leasefail)
+	"nak"|"leasefail")
 		# These are valid actions, but we don't handle them
-		[[ ${action} == leasefail ]] && mark_service_inactive net.${interface}
+		[[ ${action} == "leasefail" ]] && mark_service_inactive net.${interface}
 		exit 0
 		;;
 	*)
@@ -26,7 +26,7 @@ case "${action}" in
 		;;
 esac
 
-[[ ${action} == nak ]] && exit 0
+[[ ${action} == "nak" ]] && exit 0
 
 # Fix any potential localisation problems
 # Note that LC_ALL trumps LC_anything_else according to locale(7)
@@ -46,9 +46,9 @@ broadcast=${broadcast// }
 # If the current address does not match or we are deconfiguring
 # then we take the all the addresses on the interface down
 cur=$( ifconfig ${interface} | sed -ne 's/.*inet addr:\([^ ]*\).*Mask:\([^ ]*\).*/\1 \2/p' )
-if [[ ${cur} != "${ip} ${subnet}" || ${action} == deconfig ]]; then
+if [[ ${cur} != "${ip} ${subnet}" || ${action} == "deconfig" ]]; then
 	# Remove all aliases
-	for i in $( ifconfig | grep -o "^${interface}:[0-9]*" | tac | xargs ); do
+	for i in $( ifconfig | grep -o "^${interface}:[0-9]*" | tac ); do
 		ifconfig ${i} down
 	done
 
@@ -58,14 +58,14 @@ if [[ ${cur} != "${ip} ${subnet}" || ${action} == deconfig ]]; then
 	done
 
 	# Remove IPv6 addresses
-	for i in $( ifconfig ${iface} | sed -ne 's/^.*inet6 addr: \([^ ]*\) Scope:[^L].*/\1/p' ) ; do
+	for i in $( ifconfig ${interface} | sed -ne 's/^.*inet6 addr: \([^ ]*\) Scope:[^L].*/\1/p' ) ; do
 		ifconfig ${interface} inet6 del ${i}
 	done
 fi
 
 /sbin/ifconfig ${interface} up
 
-if [[ ${action} == deconfig ]]; then
+if [[ ${action} == "deconfig" ]]; then
 	restore_configs
 	mark_service_inactive net.${interface}
 	exit 0
@@ -85,7 +85,7 @@ for r in ${router}; do
 done
 
 # Set our module to udhcpc if it's not set
-[[ -z ${module} ]] && module=udhcpc
+[[ -z ${module} ]] && module="udhcpc"
 
 config_system
 mark_service_started net.${interface}
