@@ -4,11 +4,11 @@
 # $Header$
 
 # Common functions
-[ "${RC_GOT_FUNCTIONS}" != "yes" ] && source /sbin/functions.sh
+[[ ${RC_GOT_FUNCTIONS} != "yes" ]] && source /sbin/functions.sh
 # Functions to handle dependencies and services
-[ "${RC_GOT_SERVICES}" != "yes" ] && source "${svclib}/sh/rc-services.sh"
+[[ ${RC_GOT_SERVICES} != "yes" ]] && source "${svclib}/sh/rc-services.sh"
 # Functions to control daemons
-[ "${RC_GOT_DAEMON}" != "yes" ] && source "${svclib}/sh/rc-daemon.sh"
+[[ ${RC_GOT_DAEMON} != "yes" ]] && source "${svclib}/sh/rc-daemon.sh"
 
 # Fix bug 48595
 if [[ ${EUID} != 0 ]] ; then
@@ -21,21 +21,19 @@ svcpause="no"
 svcrestart="no"
 
 myscript="$1"
-if [ -L "$1" -a ! -L "/etc/init.d/${1##*/}" ]
-then
-	myservice="$(readlink "$1")"
+if [[ -L $1 ]] && [[ ! -L /etc/init.d/${1##*/} ]] ; then
+	myservice=$(readlink "$1")
 else
-	myservice="$1"
+	myservice=$1
 fi
 
-myservice="${myservice##*/}"
-mylevel="$(<"${svcdir}/softlevel")"
+myservice=${myservice##*/}
+mylevel=$(<"${svcdir}/softlevel")
 
 
 # Set $IFACE to the name of the network interface if it is a 'net.*' script
-if [ "${myservice%%.*}" = "net" -a "${myservice##*.}" != "${myservice}" ]
-then
-	IFACE="${myservice##*.}"
+if [[ ${myservice%%.*} = "net" ]] && [[ ${myservice##*.} != ${myservice} ]] ; then
+	IFACE=${myservice##*.}
 	NETSERVICE="yes"
 else
 	IFACE=
@@ -50,12 +48,10 @@ fi
 #     configuration, if the system administrator chose to put it
 #     there (if it exists).
 
-[ -e "$(add_suffix /etc/conf.d/${myservice})" ] && source "$(add_suffix /etc/conf.d/${myservice})"
-
-[ -e "$(add_suffix /etc/conf.d/net)" ]          && \
-[ "${NETSERVICE}" = "yes" ]                     && source "$(add_suffix /etc/conf.d/net)"
-
-[ -e "$(add_suffix /etc/rc.conf)" ]             && source "$(add_suffix /etc/rc.conf)"
+[[ -e $(add_suffix /etc/conf.d/${myservice}) ]] && source "$(add_suffix /etc/conf.d/${myservice})"
+[[ -e $(add_suffix /etc/conf.d/net) ]]          && \
+[[ ${NETSERVICE} = "yes" ]]                     && source "$(add_suffix /etc/conf.d/net)"
+[[ -e $(add_suffix /etc/rc.conf) ]]             && source "$(add_suffix /etc/rc.conf)"
 
 
 usage() {
@@ -92,11 +88,9 @@ svc_stop() {
 	local mydeps=
 	local retval=0
 	local ordservice=
-	
-	if ! service_started "${myservice}"
-	then
-		if [ "${RC_QUIET_STDOUT}" != "yes" ]
-		then
+
+	if ! service_started "${myservice}" ; then
+		if [[ ${RC_QUIET_STDOUT} != "yes" ]] ; then
 			eerror "ERROR:  \"${myservice}\" has not yet been started."
 			return 1
 		else
@@ -105,8 +99,7 @@ svc_stop() {
 	fi
 
 	# Do not try to stop if it had already failed to do so on runlevel change
-	if is_runlevel_stop && service_failed "${myservice}"
-	then
+	if is_runlevel_stop && service_failed "${myservice}" ; then
 		exit 1
 	fi
 
@@ -114,24 +107,20 @@ svc_stop() {
 	mark_service_stopped "${myservice}"
 
 	if in_runlevel "${myservice}" "${BOOTLEVEL}" && \
-	   [ "${SOFTLEVEL}" != "reboot" -a "${SOFTLEVEL}" != "shutdown" -a \
-	     "${SOFTLEVEL}" != "single" ]
+	   [[ ${SOFTLEVEL} != "reboot" && ${SOFTLEVEL} != "shutdown" && ${SOFTLEVEL} != "single" ]]
 	then
 		ewarn "WARNING:  you are stopping a boot service."
 	fi
-	
-	if [ "${svcpause}" != "yes" ]
-	then
-		if [ "${NETSERVICE}" = "yes" ]
-		then
+
+	if [[ ${svcpause} != "yes" ]] ; then
+		if [[ ${NETSERVICE} = "yes" ]] ; then
 			# A net.* service
 			if in_runlevel "${myservice}" "${BOOTLEVEL}" || \
 			   in_runlevel "${myservice}" "${mylevel}"
 			then
 				# Only worry about net.* services if this is the last one running,
 				# or if RC_NET_STRICT_CHECKING is set ...
-				if is_net_up
-				then
+				if is_net_up ; then
 					mydeps="net"
 				fi
 			fi
@@ -142,8 +131,7 @@ svc_stop() {
 		fi
 	fi
 
-	for mydep in ${mydeps}
-	do
+	for mydep in ${mydeps} ; do
 		# If some service 'need' $mydep, stop it first; or if it is a runlevel change,
 		# first stop all services that is started 'after' $mydep.
 		if needsme "${mydep}" >/dev/null || \
@@ -154,29 +142,26 @@ svc_stop() {
 			# On runlevel change, stop all services "after $mydep" first ...
 			is_runlevel_stop && servicelist="${servicelist} $(ibefore "${mydep}")"
 
-			for x in ${servicelist}
-			do
+			for x in ${servicelist} ; do
 				# Make sure we have a relevant rc-script ...
-				if [ "${x}" != "net" -a ! -f "/etc/init.d/${x}" ]
-				then
+				if [[ ${x} != "net" && ! -f /etc/init.d/${x} ]] ; then
 					continue
 				fi
-				
+
 				# Service not currently running, continue
 				service_started "${x}" || continue
-				
+
 				if ibefore -t "${mydep}" "${x}" >/dev/null && \
-				   [ -L "${svcdir}/softscripts.new/${x}" ]
+				   [[ -L ${svcdir}/softscripts.new/${x} ]]
 				then
 					# Service do not 'need' $mydep, and is still present in
 					# new runlevel ...
 					continue
 				fi
-				
+
 				stop_service "${x}"
-				
-				if [ "$?" -ne 0 ]
-				then
+
+				if [[ $? -ne 0 ]] ; then
 					# If we are halting the system, try and get it down as
 					# clean as possible, else do not stop our service if
 					# a dependent service did not stop.
@@ -185,15 +170,14 @@ svc_stop() {
 					then
 						retval=1
 					fi
-					
+
 					break
 				fi
 			done
 		fi
 	done
 
-	if [ "${retval}" -ne 0 ]
-	then
+	if [[ ${retval} -ne 0 ]] ; then
 		eerror "ERROR:  problems stopping dependent services."
 		eerror "        \"${myservice}\" is still up."
 	else
@@ -202,18 +186,15 @@ svc_stop() {
 		retval="$?"
 	fi
 	
-	if [ "${retval}" -ne 0 ]
-	then
+	if [ ${retval} -ne 0 ] ; then
 		# Did we fail to stop? create symlink to stop multible attempts at
 		# runlevel change.  Note this is only used at runlevel change ...
-		if is_runlevel_stop
-		then
+		if is_runlevel_stop ; then
 			mark_service_failed "${myservice}"
 		fi
 		
 		# If we are halting the system, do it as cleanly as possible
-		if [ "${SOFTLEVEL}" != "reboot" -a "${SOFTLEVEL}" != "shutdown" ]
-		then
+		if [[ ${SOFTLEVEL} != "reboot" && ${SOFTLEVEL} != "shutdown" ]] ; then
 			mark_service_started "${myservice}"
 		fi
 	fi
@@ -229,11 +210,9 @@ svc_start() {
 	local myserv=
 	local ordservice=
 
-	if ! service_started "${myservice}"
-	then
+	if ! service_started "${myservice}" ; then
 		# Do not try to start if i have done so already on runlevel change
-		if is_runlevel_start && service_failed "${myservice}"
-		then
+		if is_runlevel_start && service_failed "${myservice}" ; then
 			exit 1
 		fi
 	
@@ -241,8 +220,7 @@ svc_start() {
 		mark_service_started "${myservice}"
 
 		# On rc change, start all services "before $myservice" first
-		if is_runlevel_start
-		then
+		if is_runlevel_start ; then
 			startupservices="$(ineed "${myservice}") \
 				$(valid_iuse "${myservice}") \
 				$(valid_iafter "${myservice}")"
@@ -252,97 +230,81 @@ svc_start() {
 		fi
 
 		# Start dependencies, if any
-		for x in ${startupservices}
-		do
-			if [ "${x}" = "net" -a "${NETSERVICE}" != "yes" ]
-			then
+		for x in ${startupservices} ; do
+			if [[ ${x} = "net" && ${NETSERVICE} != "yes" ]] ; then
 				local netservices="$(dolisting "/etc/runlevels/${BOOTLEVEL}/net.*") \
 					$(dolisting "/etc/runlevels/${mylevel}/net.*")"
-					
-				for y in ${netservices}
-				do
+
+				for y in ${netservices} ; do
 					mynetservice="${y##*/}"
-					
-					if ! service_started "${mynetservice}"
-					then
+
+					if ! service_started "${mynetservice}" ; then
 						start_service "${mynetservice}"
 
 						# A 'need' dependency is critical for startup
-						if [ "$?" -ne 0 ] && ineed -t "${myservice}" "${x}" >/dev/null
-						then
+						if [[ $? -ne 0 ]] && ineed -t "${myservice}" "${x}" >/dev/null ; then
 							# Only worry about a net.* service if we do not have one
 							# up and running already, or if RC_NET_STRICT_CHECKING
 							# is set ....
-							if ! is_net_up
-							then
+							if ! is_net_up ; then
 								startfail="yes"
 							fi
 						fi
 					fi
 				done
-				
-			elif [ "${x}" != "net" ]
-			then
-				if ! service_started "${x}"
-				then
+
+			elif [[ ${x} != "net" ]] ; then
+				if ! service_started "${x}" ; then
 					start_service "${x}"
 
 					# A 'need' dependacy is critical for startup
-					if [ "$?" -ne 0 ] && ineed -t "${myservice}" "${x}" >/dev/null
-					then
+					if [[ $? -ne 0 ]] && ineed -t "${myservice}" "${x}" >/dev/null ; then
 						startfail="yes"
 					fi
 				fi
 			fi
 		done
-		
-		if [ "${startfail}" = "yes" ]
-		then
+
+		if [[ ${startfail} = "yes" ]] ; then
 			eerror "ERROR:  Problem starting needed services."
 			eerror "        \"${myservice}\" was not started."
 			retval=1
 		fi
-		
+
 		# Start service
-		if [ "${retval}" -eq 0 ] && broken "${myservice}"
-		then
+		if [[ ${retval} -eq 0 ]] && broken "${myservice}" ; then
 			eerror "ERROR:  Some services needed are missing.  Run"
 			eerror "        './${myservice} broken' for a list of those"
 			eerror "        services.  \"${myservice}\" was not started."
 			retval=1
-		elif [ "${retval}" -eq 0 ] && ! broken "${myservice}"
-		then
+		elif [[ ${retval} -eq 0 ]] && ! broken "${myservice}" ; then
 			start
 			retval="$?"
 		fi
 
-		if [ "${retval}" -ne 0 ] && is_runlevel_start
-		then
+		if [[ ${retval} -ne 0 ]] && is_runlevel_start ; then
 			mark_service_failed "${myservice}"
 		fi
 
 		# Remove link if service didn't start; but only if we're not booting
 		# if we're booting, we need to continue and do our best to get the
 		# system up.
-		if [ "${retval}" -ne 0 -a "${SOFTLEVEL}" != "${BOOTLEVEL}" ]
-		then
+		if [[ ${retval} -ne 0 && ${SOFTLEVEL} != ${BOOTLEVEL} ]] ; then
 			mark_service_stopped "${myservice}"
 		fi
-		
+
 		return "${retval}"
 	else
-		if [ "${RC_QUIET_STDOUT}" != "yes" ]
-		then
+		if [[ ${RC_QUIET_STDOUT} != "yes" ]] ; then
 			ewarn "WARNING:  \"${myservice}\" has already been started."
 		fi
-		
+
 		return 0
 	fi
 }
 
 svc_restart() {
-	if service_started "${myservice}"
-	then
+	if service_started "${myservice}" ; then
 		svc_stop || return "$?"
 		sleep 1
 	fi
@@ -357,17 +319,14 @@ svc_status() {
 	# should thus be formatted in the custom status() function
 	# to work with the printed " * status:  foo".
 
-	if service_started "${myservice}"
-	then
-		if [ "${RC_QUIET_STDOUT}" != "yes" ]
-		then
+	if service_started "${myservice}" ; then
+		if [[ ${RC_QUIET_STDOUT} != "yes" ]] ; then
 			einfo "status:  started"
 		else
 			return 0
 		fi
 	else
-		if [ "${RC_QUIET_STDOUT}" != "yes" ]
-		then
+		if [[ ${RC_QUIET_STDOUT} != "yes" ]] ; then
 			eerror "status:  stopped"
 		else
 			return 1
@@ -384,36 +343,30 @@ rcscript_errors=$(wrap_rcscript "${myscript}" 2>&1) || {
 }
 
 # set *after* wrap_rcscript, else we get duplicates.
-opts="start stop restart"
+opts=""
 
 source "${myscript}"
 
 # make sure whe have valid $opts
-if [ -z "${opts}" ]
-then
-	opts="start stop restart"
-fi
+opts="start stop restart pause zap ${opts}"
 
 svc_homegrown() {
 	local arg="$1"
 	local x=
-	
+
 	# Walk through the list of available options, looking for the
 	# requested one.
-	for x in ${opts}
-	do
-		if [ "${x}" = "${arg}" ]
-		then
-			if typeset -F "${x}" &>/dev/null
-			then
+	for x in ${opts} ; do
+		if [[ ${x} = ${arg} ]] ; then
+			if typeset -F "${x}" &>/dev/null ; then
 				# Run the homegrown function
 				"${x}"
-				
+
 				return $?
 			fi
 		fi
 	done
-	
+
 	# If we're here, then the function wasn't in $opts.
 	eerror "ERROR:  wrong args. (  "${arg}" / $* )"
 	# Do not quote this either ...
@@ -422,14 +375,12 @@ svc_homegrown() {
 }
 
 shift
-if [ "$#" -lt 1 ]
-then
+if [[ $# -lt 1 ]] ; then
 	eerror "ERROR: not enough args."
 	usage ${opts}
 	exit 1
 fi
-for arg in $*
-do
+for arg in $* ; do
 	case "${arg}" in
 	--quiet)
 		RC_QUIET_STDOUT="yes"
@@ -443,8 +394,7 @@ do
 		;;
 	esac
 done
-for arg in $*
-do
+for arg in $* ; do
 	case "${arg}" in
 	stop)
 		svc_stop
@@ -459,26 +409,24 @@ do
 		svc_status
 		;;
 	zap)
-		if service_started "${myservice}"
-		then
+		if service_started "${myservice}" ; then
 			einfo "Manually resetting ${myservice} to stopped state."
 			mark_service_stopped "${myservice}"
 		fi
 		;;
 	restart)
 		svcrestart="yes"
-	
+
 		# Create a snapshot of started services
 		rm -rf "${svcdir}/snapshot/$$"
 		mkdir -p "${svcdir}/snapshot/$$"
 		cp -a "${svcdir}"/started/* "${svcdir}/snapshot/$$/"
-		
+
 		# Simple way to try and detect if the service use svc_{start,stop}
 		# to restart if it have a custom restart() funtion.
-		if [ -n "$(egrep '^[[:space:]]*restart[[:space:]]*()' "/etc/init.d/${myservice}")" ]
-		then
-			if [ -z "$(egrep 'svc_stop' "/etc/init.d/${myservice}")" -o \
-			     -z "$(egrep 'svc_start' "/etc/init.d/${myservice}")" ]
+		if [[ -n $(egrep '^[[:space:]]*restart[[:space:]]*()' "/etc/init.d/${myservice}") ]] ; then
+			if [[ -z $(egrep 'svc_stop' "/etc/init.d/${myservice}") || \
+			      -z $(egrep 'svc_start' "/etc/init.d/${myservice}") ]]
 			then
 				echo
 				ewarn "Please use 'svc_stop; svc_start' and not 'stop; start' to"
@@ -494,12 +442,9 @@ do
 		fi
 
 		# Restart dependencies as well
-		if service_started "${myservice}"
-		then
-			for x in $(dolisting "${svcdir}/snapshot/$$/")
-			do
-				if ! service_started "${x##*/}"
-				then
+		if service_started "${myservice}" ; then
+			for x in $(dolisting "${svcdir}/snapshot/$$/") ; do
+				if ! service_started "${x##*/}" ; then
 #					schedule_service_startup "${x##*/}"
 					start_service "${x##*/}"
 				fi
@@ -507,8 +452,8 @@ do
 		fi
 
 		# Wait for any services that may still be running ...
-#		[ "${RC_PARALLEL_STARTUP}" = "yes" ] && wait
-				
+#		[[ ${RC_PARALLEL_STARTUP} = "yes" ]] && wait
+
 		rm -rf "${svcdir}/snapshot/$$"
 		svcrestart="no"
 		;;
