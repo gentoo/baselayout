@@ -1,5 +1,7 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
-# Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
+# Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
+
+* rc-scripts 1.6.9 (30 Jan 2004)
 
   30 Jan 2004; Mike Frysinger <vapier@gentoo.org>:
 
