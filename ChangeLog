@@ -4,6 +4,14 @@
 
   06 May 2004; Aron Griffis <agriffis@gentoo.org>:
 
+    Fix bug 34827: net.eth0 breaks when localized because the ifconfig
+    output changes.  Wrap ifconfig in a function that overrides
+    LC_ALL=C
+
+    Fix bug 48305: Provide a new network configuration variable
+    ifconfig_fallback_eth0 which allows one to specify a fallback
+    configuration in case DHCP fails.
+
     Fix bug 50246: Give root an invalid password ("*" in /etc/shadow)
     in the default baselayout.  This prevents the first reboot after
     installation from having a blank password.

@@ -30,15 +30,24 @@ checkconfig() {
 	fi
 }
 
+# Fix bug 50039 (init.d/net.eth0 localization)
+# Some other commands in this script might need to be wrapped, but
+# we'll get them one-by-one.  Note that LC_ALL trumps LC_anything_else
+# according to locale(7)
+ifconfig() {
+	LC_ALL=C /sbin/ifconfig "$@"
+}
+
 # setup_vars: setup variables based on $1 and content of /etc/conf.d/net
 # The following variables are set, which should be declared local by
 # the calling routine.
-#	status_IFACE	(up or '')
-#	vlans_IFACE		(space-separated list)
-#	ifconfig_IFACE	(array of ifconfig lines, replaces iface_IFACE)
-#	dhcpcd_IFACE	(command-line args for dhcpcd)
-#	routes_IFACE	(array of route lines)
-#	inet6_IFACE		(array of inet6 lines)
+#	status_IFACE			(up or '')
+#	vlans_IFACE				(space-separated list)
+#	ifconfig_IFACE			(array of ifconfig lines, replaces iface_IFACE)
+#	dhcpcd_IFACE			(command-line args for dhcpcd)
+#	routes_IFACE			(array of route lines)
+#	inet6_IFACE				(array of inet6 lines)
+#	ifconfig_fallback_IFACE	(fallback ifconfig if dhcp fails)
 setup_vars() {
 	local i iface="${1//\./_}"
 
@@ -48,6 +57,7 @@ setup_vars() {
 	eval dhcpcd_IFACE=\"\$\{dhcpcd_$iface\}\"
 	eval routes_IFACE=( \"\$\{routes_$iface\[@\]\}\" )
 	eval inet6_IFACE=( \"\$\{inet6_$iface\[@\]\}\" )
+	eval ifconfig_fallback_IFACE=( \"\$\{ifconfig_fallback_$iface\[@\]\}\" )
 
 	# BACKWARD COMPATIBILITY: populate the ifconfig_IFACE array
 	# if iface_IFACE is set (fex. iface_eth0 instead of ifconfig_eth0)
@@ -75,7 +85,7 @@ setup_vars() {
 }
 
 iface_start() {
-	local IFACE=${1} i x
+	local IFACE=${1} i x retval
 	checkconfig || return 1
 
 	if [[ ${ifconfig_IFACE} != dhcp ]]; then
@@ -87,8 +97,8 @@ iface_start() {
 			ebegin "Bringing ${IFACE} up"
 		fi
 		# ifconfig does not always return failure ..
-		/sbin/ifconfig ${IFACE} ${ifconfig_IFACE} >${devnull} && \
-		/sbin/ifconfig ${IFACE} &>${devnull}
+		ifconfig ${IFACE} ${ifconfig_IFACE} >${devnull} && \
+		ifconfig ${IFACE} up &>${devnull}
 		eend $? || return $?
 	else
 		# Check that eth0 was not brought up by the kernel ...
@@ -97,18 +107,36 @@ iface_start() {
 		else
 			ebegin "Bringing ${IFACE} up via DHCP"
 			/sbin/dhcpcd ${dhcpcd_IFACE} ${IFACE}
-			eend $? || return $?
+			retval=$?
+			eend $retval
+			if [[ $retval == 0 ]]; then
+				# DHCP succeeded, show address retrieved
+				i=$(ifconfig ${IFACE} | grep -m1 -o 'inet addr:[^ ]*' | 
+					cut -d: -f2)
+				[[ -n ${i} ]] && einfo "  ${IFACE} received address ${i}"
+			elif [[ -n "${ifconfig_fallback_IFACE}" ]]; then
+				# DHCP failed, try fallback.
+				# Show the address, but catch if this interface will be inet6 only
+				i=${ifconfig_fallback_IFACE%% *}
+				if [[ ${i} == *.*.*.* ]]; then
+					ebegin "Using fallback configuration (${i}) for ${IFACE}"
+				else
+					ebegin "Using fallback configuration for ${IFACE}"
+				fi
+				ifconfig ${IFACE} ${ifconfig_fallback_IFACE} >${devnull} && \
+				ifconfig ${IFACE} up &>${devnull}
+				eend $? || return $?
+			else
+				return $retval
+			fi
 		fi
-		# Show address retrieved
-		i=$(ifconfig ${IFACE} | grep -m1 -o 'inet addr:[^ ]*' | cut -d: -f2)
-		[[ -n ${i} ]] && einfo "  ${IFACE} received address ${i}"
 	fi
 
 	if [[ ${#ifconfig_IFACE[@]} -gt 1 ]]; then
 		einfo "  Adding aliases"
 		for ((i = 1; i < ${#ifconfig_IFACE[@]}; i = i + 1)); do
 			ebegin "    ${IFACE}:${i} (${ifconfig_IFACE[i]%% *})"
-			/sbin/ifconfig ${IFACE}:${i} ${ifconfig_IFACE[i]}
+			ifconfig ${IFACE}:${i} ${ifconfig_IFACE[i]}
 			eend $?
 		done
 	fi
@@ -117,7 +145,7 @@ iface_start() {
 		einfo "  Adding inet6 addresses"
 		for ((i = 0; i < ${#inet6_IFACE[@]}; i = i + 1)); do
 			ebegin "    ${IFACE} inet6 add ${inet6_IFACE[i]}"
-			/sbin/ifconfig ${IFACE} inet6 add ${inet6_IFACE[i]} >${devnull}
+			ifconfig ${IFACE} inet6 add ${inet6_IFACE[i]} >${devnull}
 			eend $?
 		done
 	fi
@@ -180,11 +208,11 @@ iface_stop() {
 	local IFACE=${1} i x aliases inet6 count
 
 	# Try to do a simple down (no aliases, no inet6, no dhcp)
-	aliases="$(/sbin/ifconfig | grep -o "^$IFACE:[0-9]*" | tac)"
+	aliases="$(ifconfig | grep -o "^$IFACE:[0-9]*" | tac)"
 	inet6="$(ifconfig ${IFACE} | awk '$1 == "inet6" {print $2}')"
 	if [[ -z ${aliases} && -z ${inet6} && ! -e /var/run/dhcpcd-${IFACE}.pid ]]; then
 		ebegin "Bringing ${IFACE} down"
-		/sbin/ifconfig ${IFACE} down &>/dev/null
+		ifconfig ${IFACE} down &>/dev/null
 		eend 0
 		return 0
 	fi
@@ -203,7 +231,7 @@ iface_stop() {
 			einfo "  Removing inet6 addresses"
 			for x in ${inet6}; do 
 				ebegin "    ${IFACE} inet6 del ${x}"
-				/sbin/ifconfig ${i} inet6 del ${x}
+				ifconfig ${i} inet6 del ${x}
 				eend $?
 			done
 		fi
@@ -220,7 +248,7 @@ iface_stop() {
 			eend $? "Timed out"
 		fi
 		ebegin "  Stopping ${i}"
-		/sbin/ifconfig ${i} down &>${devnull}
+		ifconfig ${i} down &>${devnull}
 		eend 0
 	done
 
