@@ -20,18 +20,27 @@ depend() {
 	use hotplug pcmcia usb bridge
 }
 
-# Make some wrappers to fudge after/before/need/use depend flags
+# Make some wrappers to fudge after/before/need/use depend flags.
+# These are callbacks so mods[i] will be set.
 after() {
-	eval "${mods[i]}_after() { echo \"$@\"; }"
+	local x="$*"
+	[[ $# -gt 1 ]] && x=$(echo -e "${x// /\n}" | sort | xargs)
+	eval "${mods[i]}_after() { echo \"$x\"; }"
 }
 before() {
-	eval "${mods[i]}_before() { echo \"$@\"; }"
+	local x="$*"
+	[[ $# -gt 1 ]] && x=$(echo -e "${x// /\n}" | sort | xargs)
+	eval "${mods[i]}_before() { echo \"$x\"; }"
 }
 need() {
-	eval "${mods[i]}_need() { echo \"$@\"; }"
+	local x="$*"
+	[[ $# -gt 1 ]] && x=$(echo -e "${x// /\n}" | sort | xargs)
+	eval "${mods[i]}_need() { echo \"$x\"; }"
 }
 use() {
-	eval "${mods[i]}_user() { echo \"$@\"; }"
+	local x="$*"
+	[[ $# -gt 1 ]] && x=$(echo -e "${x// /\n}" | sort | xargs)
+	eval "${mods[i]}_use() { echo \"$x\"; }"
 }
 
 sort() {
@@ -42,11 +51,12 @@ sort() {
 #
 # Loads the defined handler and modules for the interface
 # Returns 0 on success, otherwise 1
-modules_load() {
-	local iface=${1} all=${2} i j k p um e before after diffs mod
+modules_load() 
+{
+	local iface=${1} all=${2:-false} i j k p e before after diffs mod
+	local loaded_interface changed_something tmp modnums missingdeps
 	local -a mods=( $( find /etc/net.modules.d/ -maxdepth 1 -type f | sort ) ) umods
 
-	all=${all:-false}
 	[[ lo != ${iface} ]] && ebegin "Loading networking scripts"
 
 	# Each of these sources into the global namespace, so it's
@@ -54,8 +64,8 @@ modules_load() {
 	# the module name, for example iproute2_
 	before=$( typeset -f )
 	j=${#mods[@]}
-	k=false
-	for ((i = 0; i < j; i++ )); do
+	loaded_interface=false
+	for ((i=0; i < j; i++ )); do
 		source ${mods[i]} || {
 			eerror "  ${mods[i]##*/} failed a sanity check - will not load"
 			unset mods[i]
@@ -73,7 +83,7 @@ modules_load() {
 			eerror "  ${mods[i]} does not support the required function ${p}\n"
 			e=true
 		done
-		[[ true == ${e} ]] && return 1
+		${e} && return 1
 
 		# Wrap our before/after/need/use functions
 		${mods[i]}_depend
@@ -96,41 +106,43 @@ modules_load() {
 			continue
 		fi
 
-		[[ -n ${mods[i]} && interface == $( ${mods[i]}_provides ) ]] && k=true
+		[[ -n ${mods[i]} && interface == $( ${mods[i]}_provides ) ]] && loaded_interface=true
 	done
 
-	if [[ false == k ]]; then
+	if ! ${loaded_interface}; then
 		eerror "  no interface module has been loaded"
 		return 1
 	fi
 
 	mods=( "${mods[@]}" )
 
-	if [[ true != ${all} ]]; then
+	if ! ${all}; then
 		# Has the interface got any specific modules?
 		eval umods=( \"\$\{modules_${iface}\[@\]\}\" )
 
 		# If not then has a global setting been made?
-		[[ -z ${umods} ]] && eval umods=( \"\$\{modules\[@\]\}\" )
+		[[ -z ${umods} ]] && umods=( "${modules[@]}" )
 
 		# We add our preferred modules here
 		umods=( "${umods[@]}" "ifconfig" "dhcpcd" )
 
 		# First we strip any modules that conflict from user settings
 		# So if the user specifies pump then we don't use dhcpcd
-		for ((i = 0; i < ${#umods[@]}; i++)); do
+		for ((i=0; i < ${#umods[@]}; i++)); do
 			if [[ function != $( type -t ${umods[i]}_provides ) ]]; then
 				eerror "${umods[i]} is not a valid module (missing provides)"
 				return 1
 			fi
 
-			#Ensure that the user specified module has it's package installed
-			if [[ ${e} -lt ${#umods[@]}-2 ]]; then
+			# Ensure that the user specified module has it's package installed.
+			# This is ${#umods[@]}-2 because we added two modules,
+			# ifconfig and dhcpcd, to the end of the list.
+			if [[ ${i} -lt ${#umods[@]}-2 ]]; then
 				${umods[i]}_check_installed true || return 1
 			fi
 
 			k=${#mods[@]}
-			for ((j = 0; j < k; j++)); do
+			for ((j=0; j < k; j++)); do
 				if [[ $( ${mods[j]}_provides ) == $( ${umods[i]}_provides ) && ${umods[i]} != ${mods[j]} ]]; then
 					# We don't have a match - now ensure that we still provide an alternative
 					# This is to handle our preferred modules
@@ -151,9 +163,9 @@ modules_load() {
 		# our own modules and the preferred list AND the user modules
 		# list doesn't specify a preferrence
 		k=${#mods[@]}
-		for ((i = 0; i < k - 1; i++)); do
+		for ((i=0; i < k - 1; i++)); do
 			[[ -z ${mods[i]} ]] && continue			
-			for ((j = i + 1; j < k; j++ )); do
+			for ((j=i + 1; j < k; j++ )); do
 				[[ -z ${mods[j]} ]] && continue
 				[[ $( ${mods[i]}_provides ) == $( ${mods[j]}_provides ) ]] && unset mods[j]
 			done
@@ -163,60 +175,60 @@ modules_load() {
 
 	# Sort our modules
 	# We do this by assigning numbers to each module
-	umods=()
+	modnums=()
 	for ((i=0; i < ${#mods[@]}; i++)); do
-		umods=( "${umods[@]}" "${i}" )
+		modnums[i]=${i}
 	done
 
 	# Then we swap numbers based on and after/before flags
 	# until we don't swap anymore. Yes, there's the potential for
 	# an infinite loop if module developers are clumsy
-	while [[ true ]]; do
-		um=false
+	while true; do
+		changed_something=false
 		for ((i=0; i < ${#mods[@]}; i++)); do
 			if [[ function == $( type -t ${mods[i]}_after ) ]]; then
-				for p in $( ${mods[i]}_after | sort ); do
+				for p in $( ${mods[i]}_after ); do
 					for ((j=0; j < ${#mods[@]}; j++)); do
 						[[ ${p} != ${mods[j]} && ${p} != $( ${mods[j]}_provides ) ]] && continue
-						if [[ ${umods[i]} -lt ${umods[j]} ]]; then
-							k=${umods[i]}
-							umods[i]=${umods[j]}
-							umods[j]=${k}
-							um=true
+						if [[ ${modnums[i]} -lt ${modnums[j]} ]]; then
+							tmp=${modnums[i]}
+							modnums[i]=${modnums[j]}
+							modnums[j]=${tmp}
+							changed_something=true
 						fi
 					done
 				done
 			fi
 			if [[ function == $( type -t ${mods[i]}_before ) ]]; then
-				for p in $( ${mods[i]}_before | sort ); do
+				for p in $( ${mods[i]}_before ); do
 					for ((j=0; j < ${#mods[@]}; j++)); do
 						[[ ${p} != ${mods[j]} && ${p} != $( ${mods[j]}_provides ) ]] && continue
-						if [[ ${umods[i]} -gt ${umods[j]} ]]; then
-							k=${umods[i]}
-							umods[i]=${umods[j]}
-							umods[j]=${k}
-							um=true;
+						if [[ ${modnums[i]} -gt ${modnums[j]} ]]; then
+							tmp=${modnums[i]}
+							modnums[i]=${modnums[j]}
+							modnums[j]=${tmp}
+							changed_something=true
 						fi
 					done
 				done
 			fi
 		done
-		[[ false == ${um} ]] && break
+		${changed_something} || break
 	done
 
 	# Finally we sort our modules in number order and volia :)
 	um=""
 	for ((i=0; i < ${#mods[@]}; i++)); do
-		um="${um}${umods[i]} ${mods[i]}\n"
+		um="${um}${modnums[i]} ${mods[i]}\n"
 	done
-	MODULES=( $( echo -e ${um} | sort | awk '{print $2}' ) )
+	MODULES=( $( echo -e ${um} | sort -n | awk '{print $2}' ) )
 
 	[[ lo != ${iface} ]] && einfo "  modules: ${MODULES[@]}"
 
 	# Setup class wrappers: interface_up -> iproute2_up, for example
 	for i in ${MODULES[@]}; do
 		p=$( ${i}_provides )
-		[[ ${p} == ${i} ]] && continue;
+		[[ ${p} == ${i} ]] && continue
 		for j in $(typeset -f | grep -o ^${i}_'[^ ]*' ); do
 			eval "${p}${j#${i}}() { ${j} \"\$@\"; }"
 		done
@@ -226,17 +238,17 @@ modules_load() {
 	# from either other modules or the system
 	for i in ${MODULES[@]}; do
 		if [[ function == $( type -t ${i}_need ) ]]; then
-			for m in $( ${i}_need ); do
-				um=false
-				for j in ${MODULES[@]}; do
-					p=$( ${j}_provides )
-					if [[ ${m} == ${j} || ${m} == $( ${j}_provides ) ]]; then
-						um=true;
-						break;
+			for j in $( ${i}_need ); do
+				missingdeps=true
+				for k in ${MODULES[@]}; do
+					p=$( ${k}_provides )
+					if [[ ${j} == ${k} || ${j} == $( ${k}_provides ) ]]; then
+						missingdeps=false
+						break
 					fi
 				done
-				if [[ false == ${um} ]]; then
-					eerror "${i} needs ${m} (dependency failure)"
+				if ${missingdeps}; then
+					eerror "${i} needs ${j} (dependency failure)"
 					return 1
 				fi
 			done
@@ -289,7 +301,7 @@ iface_start() {
 	fi
 
 	ebegin "Bringing ${iface} up"
-	for ((i = 0; i < ${#config_IFACE[@]}; i++)); do
+	for ((i=0; i < ${#config_IFACE[@]}; i++)); do
 		# Set a label for the alias if $i > 0
 		[[ ${i} -eq 0 ]] && label=${iface} || label=${iface}:${i}
 
