@@ -1,5 +1,4 @@
-#!/bin/sh
-#RCUPDATE:2 3 4:75:This line is required for script management
+#!/sbin/runscript
 
 PIDFILE=/var/run/sshd.pid
 EXE=/usr/sbin/sshd
@@ -18,6 +17,11 @@ gen_keys() {
 	then
 		einfo "Generating DSA-Hostkey..."
 		/usr/bin/ssh-keygen -d -f /etc/ssh/ssh_host_dsa_key -N ''
+	fi
+	if [ ! -e /etc/ssh/ssh_host_rsa_key ]
+	then
+		einfo "Generating RSA-Hostkey..."
+		/usr/bin/ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key -N ''
 	fi
 }
 
