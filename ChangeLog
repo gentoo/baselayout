@@ -5,7 +5,7 @@
   14 Sep 2004; Aron Griffis <agriffis@gentoo.org>:
 
     Commit dm-crypt enablement patch from Tigger (Rob Holland) in
-    bug 26953
+    bug 43146
 
 * rc-scripts 1.5.3 (18 Aug 2004)
 
