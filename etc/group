@@ -36,5 +36,6 @@ users::100:games
 nofiles:x:200:
 qmail:x:201:
 postfix:x:207:
+postdrop:x:208:
 utmp:x:406:
 nobody::65534:
