@@ -8,6 +8,13 @@
     Fixes #73327 - thanks to Benoit Boissinot
 
     essidnet gets the essid itself instead of relying on ${ESSID}
+    wpa_supplicant module added
+    config-system now creates files as .tmp instead of .new and loads
+    the wpa_supplicant module if needed
+    ifconfig now addes aliases to devices other than eth0
+    dhcpcd, dhclient, pump and udhcpc now expose the dhcp_${IFACE} variable
+    instead of the old peer_dns_${IFACE}, peer_ntp_${IFACE}, peer_nis_${IFACE}
+    ones
 
 * rc-scripts 1.6.7 (03 Dec 2004)
 

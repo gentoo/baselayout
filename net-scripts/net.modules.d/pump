@@ -1,5 +1,5 @@
 # Pump module for net-scripts
-# Version 1.0.5
+# Version 1.0.6
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -54,7 +54,7 @@ pump_check_depends() {
 # Returns a string spaced with possible user set
 # configuration variables
 pump_get_vars() {
-	echo "pump_${1} peer_dns_${1} peer_nis_${1} peer_ntp_${1}"
+	echo "pump_${1} dhcp_${1}"
 }
 
 # bool pump_stop(char *iface)

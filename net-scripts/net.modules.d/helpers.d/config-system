@@ -11,37 +11,56 @@ if [[ $( type -t interface_variable ) != function ]]; then
 	source ${MODULES_DIR}/helpers.d/functions
 fi
 
+# bool need_hostname(void)
+#
+# Returns a 0 if no hostname is already set
+# Otherwise 1
 need_hostname() {
 	local n=$( hostname )
 	[[ ${n} == "(none)" || ${n} == "localhost" ]]
 	return $?
 }
 
+# void restore_configs(void)
+#
+# Restores saved configuration when the DHCP client closes down
 restore_configs() {
 	[[ -f /etc/resolv.conf.sv ]] && mv /etc/resolv.conf.sv /etc/resolv.conf
 	[[ -f /etc/ntp.conf.sv ]] && mv /etc/ntp.conf.sv /etc/ntp.conf
 	[[ -f /etc/yp.conf.sv ]] && mv /etc/yp.conf.sv /etc/yp.conf
 }
 
+# void get_wireless_vars(void)
+#
+# Configures variables depending on SSID connected to
 get_wireless_vars() {
 	# Check that wireless has not already been configured
 	[[ $(type -t wireless_check_extensions) == function ]] && return
 
-	# Check we can actually load the file
-	# and our calling dhcp module
-	[[ ! -f ${MODULES_DIR}/iwconfig || ! -f ${MODULES_DIR}/essidnet || ! -f ${MODULES_DIR}/${module} ]] && return
+	# Check we can load up the basics
+	[[ ! -f ${MODULES_DIR}/essidnet || ! -f ${MODULES_DIR}/${module} ]] && return
 
-	# Setup the devnull var as we probably aren't being called via net.lo
-	[[ -z ${devnull} ]] && local devnull=/dev/stderr
+	local m x
+	# Lets do this the easy way - iwconfig is what we need as it supports
+	# getting all the information we need regardless of how it was setup
+	if [[ -f /usr/sbin/iwconfig ]]; then
+		m=iwconfig
+	else
+		# This is hairy. We need to know if a supplicant is installed
+		# and running on the interface
+		if [[ -f /usr/sbin/wpa_supplicant && -S /var/run/wpa_supplicant/${interface} ]]; then
+			m=wpa_supplicant
+		fi
+	fi
+	[[ -z ${m} ]] && return
 
-	source ${MODULES_DIR}/iwconfig
-	local x
-	for x in $( typeset -f | grep -o ^iwconfig_'[^ ]*' ); do
-		eval "wireless${x#iwconfig}() { ${x} \"\$@\"; }"
+	source ${MODULES_DIR}/${m}
+	for x in $( typeset -f | grep -o ^${m}_'[^ ]*' ); do
+		eval "wireless${x#${m}}() { ${x} \"\$@\"; }"
 	done
 
-	# Check we are installed
-	wireless_check_installed || return
+	# Setup the devnull var as we probably aren't being called via net.lo
+	[[ -z ${devnull} ]] && local devnull=/dev/null
 
 	# Check we are a wireless interface
 	wireless_check_extensions ${interface} || return
@@ -68,55 +87,55 @@ config_system() {
 	eval dhcp=\" \$\{dhcp_${ifvar}\} \"
 
 	if [[ ${dhcp} != *' nodns'* ]] && [[ -n ${domain} || -n ${dns} ]]; then
-		echo "# generated automatically by net-scripts" > /etc/resolv.conf.new
-		chmod 644 /etc/resolv.conf.new
-		[[ -n ${domain} ]] && echo "domain ${domain}" >> /etc/resolv.conf.new
+		echo "# generated automatically by net-scripts" > /etc/resolv.conf.tmp
+		chmod 644 /etc/resolv.conf.tmp
+		[[ -n ${domain} ]] && echo "domain ${domain}" >> /etc/resolv.conf.tmp
 
 		for x in ${dns}; do
-			echo "nameserver ${x}" >>/etc/resolv.conf.new
+			echo "nameserver ${x}" >>/etc/resolv.conf.tmp
 		done
 
 		[[ -f /etc/resolv.conf && ! -f /etc/resol.conf.sv ]] && mv /etc/resolv.conf /etc/resolv.conf.sv
-		mv /etc/resolv.conf.new /etc/resolv.conf
+		mv /etc/resolv.conf.tmp /etc/resolv.conf
 	fi
 
 	if [[ ${dhcp} != *' nontp '* ]] && [[ -n ${ntpsrv} ]]; then
-		echo "# generated automatically by net-scripts" > /etc/ntp.conf.new
-		chmod 644 /etc/ntp.conf.new
+		echo "# generated automatically by net-scripts" > /etc/ntp.conf.tmp
+		chmod 644 /etc/ntp.conf.tmp
 
-		echo "restrict default noquery notrust nomodify" >> /etc/ntp.conf.new
-		echo "restrict 127.0.0.1" >> /etc/ntp.conf.new
-		echo "driftfile /var/lib/ntp/ntp.drift" >> /etc/ntp.conf.new
+		echo "restrict default noquery notrust nomodify" >> /etc/ntp.conf.tmp
+		echo "restrict 127.0.0.1" >> /etc/ntp.conf.tmp
+		echo "driftfile /var/lib/ntp/ntp.drift" >> /etc/ntp.conf.tmp
 
 		for x in ${ntpsrv}; do
-			echo "restrict ${x} nomodify notrap noquery" >> /etc/ntp.conf.new
-			echo "server ${x}" >> /etc/ntp.conf.new
+			echo "restrict ${x} nomodify notrap noquery" >> /etc/ntp.conf.tmp
+			echo "server ${x}" >> /etc/ntp.conf.tmp
 		done
 
 		[[ -f /etc/ntp.conf && ! -f /etc/ntp.conf.sv ]] && mv /etc/ntp.conf /etc/ntp.conf.sv
-		mv /etc/ntp.conf.new /etc/ntp.conf
+		mv /etc/ntp.conf.tmp /etc/ntp.conf
 	fi
 
 	if [[ ${dhcp} != *' nonis '* ]] && [[ -n ${nisdomain} || -n ${nissrv} ]]; then
-		echo "# generated automatically by net-scripts" > /etc/yp.conf.new
-		chmod 644 /etc/yp.conf.new
+		echo "# generated automatically by net-scripts" > /etc/yp.conf.tmp
+		chmod 644 /etc/yp.conf.tmp
 
 		if [[ -n ${nisdomain} ]]; then
 			hostname -y ${nisdomain}
 			if [[ -n ${nissrv} ]]; then
 				for x in ${nissrv}; do
-					echo "domain ${nisdomain} server ${x}" >> /etc/yp.conf.new
+					echo "domain ${nisdomain} server ${x}" >> /etc/yp.conf.tmp
 				done
 			else
-				echo "domain ${nisdomain} broadcast" >> /etc/yp.conf.new
+				echo "domain ${nisdomain} broadcast" >> /etc/yp.conf.tmp
 			fi
 		else
 			for x in ${nissrv}; do
-				echo "ypserver ${x}" >> /etc/yp.conf.new
+				echo "ypserver ${x}" >> /etc/yp.conf.tmp
 			done
 		fi
 
 		[[ -f /etc/yp.conf && ! -f /etc/yp.conf.sv ]] && mv /etc/yp.conf /etc/yp.conf.sv
-		mv /etc/yp.conf.new /etc/yp.conf
+		mv /etc/yp.conf.tmp /etc/yp.conf
 	fi
 }
