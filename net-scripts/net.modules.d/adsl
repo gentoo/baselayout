@@ -1,8 +1,8 @@
 # ADSL module for net-scripts
-# Version 1.0.0
+# Version 1.0.1
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
-# Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
+# Contributed by Roy Marples (uberlord@gentoo.org)
 
 # char* adsl_provides(void)
 #
@@ -74,7 +74,7 @@ adsl_start() {
 	local iface=${1} user
 
 	# Might or might not be set in conf.d/net
-	eval user=\"\$\{user_${iface}\}\"
+	eval user=\"\$\{adsl_user_${iface}\}\"
 
 	# Start ADSL with the cfgfile, but override ETH and PIDFILE
 	einfo "Starting ADSL for ${iface}"

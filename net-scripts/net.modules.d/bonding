@@ -2,7 +2,7 @@
 # Version 1.0.0
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
-# Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
+# Contributed by Roy Marples (uberlord@gentoo.org)
 
 # bool bonding_check_installed(void)
 #

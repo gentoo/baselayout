@@ -2,6 +2,54 @@
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  01 Nov 2004; Roy Marples <uberlord@gentoo.org>:
+
+    net-scripts/init.d/net.lo:
+    - modules specified by interface config now error if they are not loaded
+    - moved interface check to after preup incase user preup loads drivers
+    - modules can be explicitly not used by prefixing them with a !
+      however, they are still available to other modules
+      fixes bugs #68908, #69027
+    - remove check to see if interface exists
+    - modules may setup new interfaces and still require config
+      so we have a new label counter in iface_start
+    - removed the check to see if a class wrapping already exists
+      this fixes the bug where ifconfig and iproute2 are installed, but
+      ifconfig is asked for and the interface is restarted.
+    - added check to see if the configured module is loaded
+      and installed or not in iface_start
+    - add dependancy on isdn4linux - fixes bug #69035
+    - interface_exists moved to iproute and ifconfig
+
+    net-scripts/net.modules.d
+    - Split wireless module into iwconfig and essidnet modules
+    - Added tuntap and bridge modules, fixes bug #55394, #30688
+
+    net-scripts/init.d/iwconfig:
+    - wep mode is now reported
+    - removed post_stop function so we keep existing config
+    - added pre_stop to set the ESSID variable
+    - changed to veinfo/vewarn where appropriate
+    - check if interface exists otherwise abort gracefully
+    - no longer deletes addresses as we now avoid
+      ipv6 local addresses in detecting if interface has an addresses or not
+
+    net-scripts/init.d/ifconfig:
+    - added flag enable/disable function
+    - scope:link inet6 addresses are ignored when testing is_up and
+      del_addresses - fixes bug #65417
+
+    net-scripts/init.d/iproute2:
+    - added flag enable/disable function
+    - scope:link inet6 addresses are ignored when testing is_up and
+      del_addresses - fixes bug #65417
+
+    net-scripts/init.d/macchanger:
+    - fixed detecting whether the change worked or not, fixes bug #68893
+
+    net-scripts/init.d/vlan:
+    - fixed old config problem
+
   31 Oct 2004; Martin Schlemmer <azarah@gentoo.org>:
 
     Do not delete depscan and envupdate caches on reboot, as this should

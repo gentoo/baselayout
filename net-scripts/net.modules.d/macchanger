@@ -1,8 +1,8 @@
 # macchanger module for net-scripts
-# Version 1.0.0
+# Version 1.0.1
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
-# Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
+# Contributed by Roy Marples (uberlord@gentoo.org)
 
 # char* macchanger_provides(void)
 #
@@ -75,7 +75,7 @@ macchanger_pre_start() {
 		*) opts="${opts} ${mac}" ;;
 	esac
 
-	e=$( /sbin/macchanger ${opts} ${IFACE} )
+	e=$( /sbin/macchanger ${opts} ${iface} 2>&1 1>/dev/null || echo failed )
 	if [[ -n ${e} ]]; then
 		eerror "Failed to set MAC address"
 		return 1

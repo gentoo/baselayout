@@ -35,6 +35,11 @@
 # In this case we prefer pump over dhcpcd
 #modules_eth0=( "pump" )
 
+# You can also specify which modules not to use - for example you may be
+# using a supplicant which controls wireless configuration but you still
+# want to configure network settings per ESSID associated with.
+#modules=( "!wireless" )
+
 
 ##############################################################################
 # INTERFACE HANDLERS
@@ -117,6 +122,11 @@
 # variable called ESSID is set to the Access Point's ESSID for use in the
 # pre/post user functions below - although it's probably only really
 # usefull in the postup() function
+#
+# If you're using a supplicant which controls wireless configuration but you
+# still want to configure network settings per ESSID associated with then you
+# need to explictally state you don't want wireless
+#modules=( "!wireless" )
 
 #-----------------------------------------------------------------------------
 # DHCP
@@ -202,7 +212,7 @@
 #ipaddr_eth0=( "adsl" )
 
 # You probably won't need to edit /etc/ppp/pppoe.conf if you set this
-#user_eth0="my-adsl-username"
+#adsl_user_eth0="my-adsl-username"
 
 #-----------------------------------------------------------------------------
 # MAC changer

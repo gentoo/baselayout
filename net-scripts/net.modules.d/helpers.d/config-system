@@ -2,7 +2,7 @@
 # Version 1.0.1
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
-# Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
+# Contributed by Roy Marples (uberlord@gentoo.org)
 
 source /etc/conf.d/net
 
@@ -12,13 +12,13 @@ get_wireless_vars() {
 
 	# Check we can actually load the file
 	# and our calling dhcp module
-	[[ ! -f /lib/rcscripts/net.modules.d/wireless && ! -f /lib/rcscripts/net.modules.d/${module} ]] && return
+	[[ ! -f /etc/net.modules.d/wireless && ! -f /etc/net.modules.d/${module} ]] && return
 
 	# Setup the devnull var as we probably aren't being called via net.lo
 	[[ -z ${devnull} ]] && local devnull=/dev/stderr
 
-	source /lib/rcscripts/net.modules.d/wireless
-	source /lib/rcscripts/net.modules.d/${module}
+	source /etc/net.modules.d/wireless
+	source /etc/net.modules.d/${module}
 
 	# Check we are installed
 	wireless_check_installed || return

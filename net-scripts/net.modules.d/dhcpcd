@@ -2,7 +2,7 @@
 # Version 1.0.1
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
-# Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
+# Contributed by Roy Marples (uberlord@gentoo.org)
 
 # Fix any potential localisation problems
 # Note that LC_ALL trumps LC_anything_else according to locale(7)
@@ -67,6 +67,7 @@ dhcpcd_stop() {
 	local iface=${1} count
 	
 	dhcpcd_check_installed || return 1
+	return 0
 	if ! dhcpcd -z ${iface} &>${devnull}; then
 		return 1
 	fi
@@ -96,6 +97,7 @@ dhcpcd_start() {
 
 	# Check that iface was not brought up by the kernel ...
 	if [[ ${check} == ${iface} ]] && interface_is_up ${iface} true ; then
+		ifconfig
 		einfo "Keeping kernel configuration for ${iface}"
 		return 0
 	fi

@@ -1,8 +1,8 @@
 # iproute2 module for net-scripts
-# Version 1.0.0
+# Version 1.0.1
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
-# Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
+# Contributed by Roy Marples (uberlord@gentoo.org)
 
 # Fix any potential localisation problems
 # Note that LC_ALL trumps LC_anything_else according to locale(7)
@@ -57,6 +57,15 @@ iproute2_check_depends() {
 	return 0
 }
 
+# bool iproute2_exists(char *interface)
+#
+# Returns 1 if the interface exists, otherwise 0
+iproute2_exists() {
+	local e=$( ip addr show label ${1} )
+	[[ -n ${e} ]] && return 0
+	return 1
+}
+
 # void iproute2_up(char *interface)
 #
 # provides a generic interface for bringing interfaces up
@@ -79,9 +88,19 @@ iproute2_down() {
 iproute2_is_up() {
 	local check="\<UP\>" addr=${2:-false}
 	${addr} && check="${check}.*\<inet\>"
-	local up=$( ip addr show ${1} 2>${devnull} | xargs | grep -Eq "${check}" && echo up )
+	local up=$( ip addr show ${1} scope global scope site scope host 2>${devnull} \
+		| xargs | grep -Eq "${check}" && echo up )
 	[[ up = ${up} ]] && return 0
 	return 1
+}
+
+# void iproute2_set_flag(char *iface, char *flag, bool enabled)
+#
+# Sets or disables the interface flag 
+iproute2_set_flag() {
+	local iface=${1} flag=${2} enable=${3} opt="on"
+	${enable} || opt="off"
+	ip link set ${iface} ${flag} ${opt} &>${devnull}
 }
 
 # void loopback_create(void)
@@ -98,7 +117,7 @@ iproute2_loopback_create() {
 # Fetch the address retrieved by DHCP.  If successful, echoes the
 # address on stdout, otherwise echoes nothing.
 iproute2_get_address() {
-	ip addr show ${1} 2>${devnull} | awk '/inet/ {print $2}' | cut -d/ -f1
+	ip -family inet addr show ${1} 2>${devnull} | awk '/inet/ {print $2}' | cut -d/ -f1
 }
 
 # void get_mac_address(char *interface)
@@ -149,6 +168,7 @@ iproute2_del_addresses() {
 	fi
 
 	inet6="$(ip addr show ${iface} label ${label} \
+		scope global scope site scope host \
 		| awk '$1=="inet6" {print $2}')"
 	[[ -z ${inet6} ]] && return 1
 

@@ -1,9 +1,9 @@
 #!/bin/sh
 # udhcpc dhclient wrapper for net-scripts
-# Version 1.0.1
+# Version 1.0.3
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
-# Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
+# Contributed by Roy Marples (uberlord@gentoo.org)
 
 # Instead of writing new functions for udhcpc, we simply map their variables
 # over to dhclient style ones and call those scripts!
