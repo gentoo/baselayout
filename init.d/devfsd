@@ -1,8 +1,4 @@
-#!/bin/sh
-#RCUPDATE:boot halt:04:This line is required for script management
-
-. /etc/rc.d/config/functions
-
+#!/sbin/runscript
 SERVICE="devfsd"
 opts="start stop"
 
@@ -20,5 +16,3 @@ start() {
 stop() {
 	ebegin "Stopping devfsd"; killall devfsd; eend $?
 }
-
-doservice ${@}
