@@ -56,36 +56,11 @@ start() {
 
 	if [ "${BOOT}" = "yes" ]
 	then
-		# Create /etc/mtab (done by forcing current mounted filesystems)
+		# Create /etc/mtab
 		grep -v 'rootfs' /proc/mounts > /etc/mtab
-		# NB:  this needs to be updated if our /sbin/rc mounts change ...
-#		> /etc/mtab
-#		mount -f -o rw / &> /dev/null
-#		mount -f /proc &> /dev/null
 
 		# Remove stale backups
 		rm -f /etc/mtab~ /etc/mtab~~
-		
-		# Should /dev be mounted ?
-#		if ! get_bootparam "nodevfs" && [ -e /dev/.devfsd ]
-#		then
-#			mount -f -t devfs none /dev &> /dev/null
-#		fi
-		
-		# Should we mount a ramdisk or tmpfs?
-#		if get_bootparam "tmpfs" || \
-#		   [ "${svcmount}" = "yes" -a "${svcfstype}" = "tmpfs" ]
-#		then
-			# Using tmpfs ...
-#			mount -f -t tmpfs tmpfs "${svcdir}" \
-#				-o rw,mode=0644,size="${svcsize}"k &> /dev/null
-			
-#		elif get_bootparam "ramfs" || \
-#		     [ "${svcmount}" = "yes" -a "${svcfstype}" = "ramfs" ]
-#		then
-			# Using a ramdisk ...
-#			mount -f -t ext2 /dev/ram0 "${svcdir}" -o rw &> /dev/null
-#		fi
 	fi
 }
 
