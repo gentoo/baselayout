@@ -472,7 +472,7 @@ iface_stop() {
 # Returns 0 (success) unless preup or iface_start returns 1 (failure).
 # Ignores the return value from postup.
 start() {
-	local mod RC_INDENTATION=${RC_INDENTATION}	# so it will reset after function
+	local x mod RC_INDENTATION=${RC_INDENTATION}	# so it will reset after function
 	local -a MODULES
 
 	einfo "Starting ${IFACE}"
@@ -495,7 +495,10 @@ start() {
 	# Call user-defined preup function if it exists
 	if [[ $( type -t preup ) == function ]]; then
 		einfo "Running preup function"
-		if ! preup ${IFACE} ; then
+		eindent
+		preup ${IFACE} ; x=$?
+		eoutdent
+		if [[ ${x} != 0 ]]; then
 			eerror "preup ${IFACE} failed"
 			return 1
 		fi
@@ -521,7 +524,9 @@ start() {
 	# Call user-defined postup function if it exists
 	if [[ $( type -t postup ) == function ]]; then
 		einfo "Running postup function"
+		eindent
 		postup ${IFACE}
+		eoutdent
 	fi
 
 	return 0
@@ -545,7 +550,10 @@ stop() {
 	if [[ ${IFACE} != lo ]]; then
 		if [[ $( type -t predown ) == function ]]; then
 			einfo "Running predown function"
-			if ! predown ${IFACE} ; then
+			eindent
+			predown ${IFACE} ; x=$?
+			eoutdent
+			if [[ ${x} != 0 ]]; then
 				eerror "predown ${IFACE} failed"
 				return 1
 			fi
@@ -571,7 +579,9 @@ stop() {
 	# Call user-defined postdown function if it exists
 	if [[ ${IFACE} != lo && $( type -t postdown ) == function ]]; then
 		einfo "Running postdown function"
+		eindent
 		postdown ${IFACE}
+		eoutdent
 	fi
 
 	return 0

@@ -8,11 +8,14 @@
     depend on RC_VERBOSE which defaults to no.  Add --verbose to args
     understood by runscript.sh.
 
-    Use veinfo and friends in net-scripts/init.d/net.lo when loading
-    modules since this information is confusing to users.
+    In net.lo, use veinfo and friends when loading modules since this
+    information is confusing to users.
 
-    Always load global "modules" setting in following "modules_iface"
-    since this is a little easier for users to understand.
+    In net.lo, always load global "modules" setting in following
+    "modules_iface" since this is a little easier for users to
+    understand.
+
+    In net.lo, use eindent for output of pre/post scripts
 
   18 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
 
