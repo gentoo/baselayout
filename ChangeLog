@@ -7,6 +7,9 @@
     Add some extra checks to src/awk/cachedepends.awk and
     src/awk/gendepends.awk.
 
+    Move some of the more generic functions in src/awk/gendepends.awk
+    to src/awk/functions.awk.
+
 * rc-scripts 1.4.2 (17 Nov 2002)
 
   17 Nov 2002; Martin Schlemmer <azarah@gentoo.org>:

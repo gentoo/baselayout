@@ -18,7 +18,8 @@ bash ${svcdir}/depcache | \
 	/bin/gawk -v SVCDIR="${svcdir}" \
 		-v DEPTYPES="${deptypes}" \
 		-v ORDTYPES="${ordtypes}" \
-		-f  /lib/rcscripts/awk/gendepends.awk
+		-f /lib/rcscripts/awk/functions.awk \
+		-f /lib/rcscripts/awk/gendepends.awk
 
 eend 0
 
