@@ -74,11 +74,8 @@ rm -rf ${svcdir}/need/*
 rm -rf ${svcdir}/use/*
 for x in /etc/init.d/*
 do
-	if [ ! -L $x ]
-	then
-		continue
-	fi
-
+	[ "${x##*.}" = "sh" ] && continue
+	[ "${x##*.}" = "c" ] && continue
 	#set to "" else we get problems
 	NEED=""
 	USE=""

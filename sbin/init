@@ -60,7 +60,7 @@ if [ "$devfs" = "yes" ] && [ ! -e /dev/.devfsd ]
 then
 	ebegin "Mounting devfs at /dev"; try mount -n -t devfs none /dev; eend
 fi
-	
+
 #mount shm and do dep scan	
 mountshm 
 /etc/init.d/depscan.sh

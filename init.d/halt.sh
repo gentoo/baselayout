@@ -28,16 +28,18 @@ halt -w 1>&2
 #unmounting should use /proc/mounts and work with/without devfsd running
 
 ebegin "Unmounting filesystems"
-umount -v -a -r -t noproc,notmpfs
-if [ "$?" = "1" ]
+umount -a -r -t noproc,notmpfs > /dev/null 2>/dev/null
+if [ "$?" -ne 0 ]
 then
-	eend 1 "hmmmm..."
-	ebegin "Trying to unmount again"
-	umount -a -r -f
-	eend $?
+	umount -a -r -f > /dev/null 2>/dev/null
+	if [ "$?" -ne 0 ]
+	then
+		eend 1
+		sync; sync
+		/sbin/sulogin -t 10 /dev/console
+	else
+		eend 0
+	fi
 else
 	eend 0
 fi
-
-#this is "just in case"
-sync; sync
