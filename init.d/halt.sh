@@ -128,26 +128,29 @@ ups_kill_power() {
 	fi
 }
 
+mount_readonly() {
+	local x=
+	local retval=0
+	
+	for x in `awk '{ print $2 }' /proc/mounts`
+	do
+		mount -n -o remount,ro ${x}
+		retval=$((${retval} + $?))
+	done
+
+	return ${retval}
+}
+
 ebegin "Remounting remaining filesystems readonly"
 # Get better results with a sync and sleep
-sync;sync
+sync; sync
 sleep 1
-sync
-sleep 1
-if [ -n "${CDBOOT}" ]
-then
-	# LiveCD: don't unmount the read-only livecd loopback filesystem
-	#         or all our commands will disappear
-	mount | cut -f1 -d" " | grep -v livecd | \
-		xargs umount -r -n -t nodevfs,noproc,noramfs,nosysfs,notmpfs &>/dev/null
-else
-	umount -a -r -n -t nodevfs,noproc,noramfs,nosysfs,notmpfs &>/dev/null
-fi
-if [ "$?" -ne 0 ]
+if ! mount_readonly
 then
 	killall5 -9  &>/dev/null
-	umount -a -r -n -l -d -f -t nodevfs,noproc,noramfs,nosysfs &>/dev/null
-	if [ "$?" -ne 0 ]
+	sync; sync
+	sleep 1
+	if ! mount_readonly
 	then
 		eend 1
 		sync; sync

@@ -2,6 +2,14 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  26 Oct 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    The unmount stuff in /etc/init.d/halt.sh was flawed, in the fact that
+    it called 'umount -t no<insert_fs_here>', which resulted in /proc, etc
+    unmounted anyhow.  Change it to remount the last filesystems readonly
+    without trying to unmount any.  This fixes a few cases where reboot
+    would halt due to unmounted /proc, etc.
+
   19 Oct 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     More bootsplash fixes, bug #21019 (comment #21).
