@@ -111,7 +111,8 @@ done
 eend 0
 
 # Stop LVM
-if [ -x /sbin/vgchange -a -f /etc/lvmtab -a -d /proc/lvm ]
+if [ -x /sbin/vgchange ] && [ -f /etc/lvmtab -o -d /etc/lvm ] && \
+   [ -d /proc/lvm  -o "`grep device-mapper /proc/misc 2>/dev/null`" ]
 then
 	ebegin "Shutting down the Logical Volume Manager"
 	/sbin/vgchange -a n > /dev/null
