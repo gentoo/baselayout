@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+  06 Jan 2004; Roy Marples <uberlord@gentoo.org>:
+
+    ifconfig now deletes addresses using 0.0.0.0 for uclibc - fixes #76846
+
   04 Jan 2005; Roy Marples <uberlord@gentoo.org>:
 
     bridge now marks interfaces as UP - fixes #75354
