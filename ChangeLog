@@ -5,6 +5,9 @@
 
     fixed installed typo in net.lo - fixes #74152. Thanks to Federico Galassi
 
+    dhcpcd and udhcpc now run via the eval statement so quotes can be used
+    in options. Fixes #74053 - thanks to Evan Buswell
+
   09 Dec 2004; Roy Marples <uberlord@gentoo.org>:
 
     fixed net.lo getting vlan config

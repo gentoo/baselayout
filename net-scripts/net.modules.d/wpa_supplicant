@@ -164,6 +164,8 @@ wpa_supplicant_pre_start() {
 	veinfo "Waiting for association"
 	eend 0
 
+	wpa_supplicant_associate ${iface} || return 1
+
 	# Set ESSID for essidnet and report
 	ESSID=$( wpa_supplicant_get_essid ${iface} )
 	local -a status=( "$( wpa_cli -i${iface} status | awk -F= '/^bssid|^pairwise_cipher|^key_mgmt/ { print $2 }' )" )

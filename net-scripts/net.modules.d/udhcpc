@@ -123,7 +123,7 @@ udhcpc_start() {
 
 	if [[ ${opts} != *'--hostname=' ]]; then
 		hostname=$( hostname )
-		[[ -n ${hostname} && ${hostname} != "(none)" ]] && hostname="--hostname=${hostname}"
+		[[ -n ${hostname} && ${hostname} != "(none)" ]] && opts="${opts} --hostname=${hostname}"
 	fi
 
 	# Bring up DHCP for this interface (or alias)
@@ -142,12 +142,12 @@ udhcpc_start() {
 	fi
 
 	if [[ ${background} == yes ]]; then
-		udhcpc ${hostname} ${opts} --script=${script} --pidfile=${pidfile} --interface=${iface} &>/dev/null &
+		eval "udhcpc ${opts} --script=${script} --pidfile=${pidfile} --interface=${iface}" &>/dev/null &
 		eend 0
 		go_background
 	fi
 
-	x=$( udhcpc ${hostname} ${opts} --now --script=${script} --pidfile=${pidfile} --interface=${iface} )
+	x=$( eval "udhcpc ${opts} --now --script=${script} --pidfile=${pidfile} --interface=${iface}" )
 	# We just check the last 5 letters
 	[[ ${x:((${#x} - 5)):5} == bound ]]
 	eend $? || return 1
