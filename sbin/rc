@@ -43,7 +43,7 @@ then
 	PATH="/bin:/sbin:/usr/bin:/usr/sbin:${PATH}"
 
 	echo
-	echo -e "${GOOD}Gentoo Linux${GENTOO_VERS}; \e[34;01mhttp://www.gentoo.org${NORMAL}"
+	echo -e "${GOOD}Gentoo Linux${GENTOO_VERS}; \e[34;01mhttp://www.gentoo.org/${NORMAL}"
 	echo -e " Copyright 2001-2002 Gentoo Technologies, Inc.; Distributed under the GPL"
 	echo
 
@@ -154,12 +154,68 @@ then
 	
 	/sbin/depscan.sh
 
-	# swap needs to be activated *after* devfs has been mounted and *after*
-	# devfsd has been started, so that the fstab can be properly parsed
+	# Saving the kernel attributed hostname to a file for future
+	# initialisation selection: see /etc/init.d/switch.
+	get_bootparam "adelie" && cat /proc/sys/kernel/hostname > ${svcdir}/hostname
 
-	ebegin "Activating swap"
-	/sbin/swapon -a &>/dev/null
-	eend 0
+	get_bootparam "adelie" && einfo "Server/Node low-level initialisation..."
+	if checkserver
+	then
+		get_bootparam "adelie" && einfo "Server detected."
+		
+		# swap needs to be activated *after* devfs has been mounted and *after*
+		# devfsd has been started, so that the fstab can be properly parsed
+		# and only if the server is initialized
+		ebegin "Activating swap"
+		/sbin/swapon -a &>/dev/null
+		eend 0
+	else
+		#
+		# Low-level Node Initialisation
+		#
+		einfo "Node detected."
+		ebegin "Importing local userspace on node"
+		
+		try mount -t tmpfs none ${shmdir}
+		
+		for DIR in /etc /var /root;
+		do
+			if [ -e /etc/conf.d/exclude/${DIR} ] 
+			then
+				find ${DIR} -type d | grep -v -f /etc/conf.d/exclude/${DIR} > ${shmdir}/${DIR}.lst
+			else
+				find ${DIR} -type d > ${shmdir}/${DIR}.lst
+			fi
+			
+			for SUBDIR in $(cat ${shmdir}/${DIR}.lst); 
+			do
+				mkdir ${shmdir}/${SUBDIR}
+				chmod --reference=${SUBDIR} ${shmdir}/${SUBDIR}
+				cp -dp ${SUBDIR}/* ${shmdir}/${SUBDIR} &>/dev/null
+			done
+			
+			if [ -e /etc/conf.d/exclude/${DIR} ]
+			then
+				for EMPTYDIR in $(cat /etc/conf.d/exclude/${DIR});
+				do
+					mkdir ${shmdir}/${EMPTYDIR}
+					chmod --reference=${SUBDIR} ${shmdir}/${SUBDIR}
+				done
+			fi
+			mount -n -o bind ${shmdir}/${DIR} ${DIR}
+		done
+		
+		mkdir ${shmdir}/tmp
+		chmod 0777 ${shmdir}/tmp
+		mount -n -o bind ${shmdir}/tmp /tmp
+		
+		> /etc/mtab
+		
+		cp -f /etc/inittab.node /etc/inittab
+		killall -1 init
+		
+		eend 0
+	fi
 
 	# set the console loglevel to 1 for a cleaner boot
 	# the logger should anyhow dump the ring-0 buffer at start to the

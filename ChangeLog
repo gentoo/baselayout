@@ -2,6 +2,20 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+* rc-scripts 1.4.2.4 (26 Nov 2002)
+
+  26 Nov 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Initial merge of bits for Adelie Linux for SSI clusters.  More
+    info at:
+
+      http://www.cerca.umontreal.ca/hpc/en/projects/adelie/index.html
+
+  25 Nov 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    One liner fix to src/awk/cachedepends.awk to once again fix
+    bug #7803.
+
   18 Nov 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Add 'alias char-major-89    i2c-dev' to /etc/modules.d/aliases.

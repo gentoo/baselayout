@@ -3,19 +3,24 @@
 # $Header$
 
 
-#we try to deactivate swap first because it seems to need devfsd running
-#to work.  The TERM and KILL stuff will zap devfsd, so...
-
-ebegin "Deactivating swap"
-swapoff -a &>/dev/null
-eend $?
-
-#we need to properly terminate devfsd to save the permissions
-if [ "$(ps -A | egrep 'devfsd')" ]
+if checkserver
 then
-	ebegin "Stopping devfsd"
-	killall -15 devfsd &>/dev/null
+	# We try to deactivate swap first because it seems
+	# to need devfsd running to work (this is not done
+	# on nodes).  TheTERM and KILL stuff will zap
+	# devfsd, so...
+
+	ebegin "Deactivating swap"
+	swapoff -a &>/dev/null
 	eend $?
+
+	# We need to properly terminate devfsd to save the permissions
+	if [ "$(ps -A | egrep 'devfsd')" ]
+	then
+		ebegin "Stopping devfsd"
+		killall -15 devfsd &>/dev/null
+		eend $?
+	fi
 fi
 
 ebegin "Sending all processes the TERM signal"
@@ -30,7 +35,7 @@ eend $?
 
 halt -w &>/dev/null
 
-#unmounting should use /proc/mounts and work with/without devfsd running
+# Unmounting should use /proc/mounts and work with/without devfsd running
 
 # Credits for next function to unmount loop devices, goes to:
 #
@@ -73,18 +78,19 @@ remaining="$(awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $1}' /proc/mo
 	done
 }
 
-#try to unmount all filesystems (no /proc,tmpfs,devfs,etc)
-#this is needed to make sure we dont have a mounted filesystem on a LVM volume
-#when shutting LVM down ...
+# Try to unmount all filesystems (no /proc,tmpfs,devfs,etc).
+# This is needed to make sure we dont have a mounted filesystem
+# on a LVM volume when shutting LVM down ...
 ebegin "Unmounting filesystems"
-#awk should still be availible (allthough we should consider moving it to /bin if problems arise)
+# Awk should still be availible (allthough we should consider
+# moving it to /bin if problems arise)
 for x in $(awk '!/(^#|proc|devfs|tmpfs|^none|^\/dev\/root| \/ )/ {print $2}' /proc/mounts |sort -r)
 do
 	umount -f -r ${x} &>/dev/null
 done
 eend 0
 
-#stop RAID
+# Stop RAID
 if [ -x /sbin/raidstop -a -f /etc/raidtab -a -f /proc/mdstat ]
 then
 	ebegin "Stopping software RAID"
@@ -95,7 +101,7 @@ then
 	eend $? "Failed to stop software RAID"
 fi
 
-#stop LVM
+# Stop LVM
 if [ -x /sbin/vgchange -a -f /etc/lvmtab ] && [ -d /proc/lvm ]
 then
 	ebegin "Shutting down the Logical Volume Manager"
@@ -104,7 +110,7 @@ then
 fi
 
 ebegin "Remounting remaining filesystems readonly"
-#get better results with a sync and sleep
+# Get better results with a sync and sleep
 sync;sync
 sleep 2
 umount -a -r -n -t nodevfs,noproc,notmpfs &>/dev/null
@@ -117,7 +123,7 @@ then
 		eend 1
 		sync; sync
 		[ -f /etc/killpower ] && ups_kill_power
-		/sbin/sulogin -t 10 /dev/console
+		checkserver && /sbin/sulogin -t 10 /dev/console
 	else
 		eend 0
 	fi
@@ -125,7 +131,7 @@ else
 	eend 0
 fi
 
-# inform if there is a forced or skipped fsck
+# Inform if there is a forced or skipped fsck
 if [ -f /fastboot ]
 then
 	echo

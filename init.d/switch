@@ -1,0 +1,16 @@
+#!/sbin/runscript
+# Copyright 1999-2002 Gentoo Technologies, Inc.
+# Distributed under the terms of the GNU General Public License, v2 or later
+# $Header$
+
+start() {
+	ebegin "Server/Node high-level initialisation"
+	if checkserver
+	then
+		ewarn "  Server detected." && /sbin/rc server_default
+	else
+		ewarn "  Node detected." && /sbin/rc node_default
+	fi
+	eend 0
+}
+

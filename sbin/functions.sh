@@ -16,6 +16,9 @@ svcfstype="tmpfs"
 #size of $svcdir in KB
 svcsize=1024
 
+#tmpfs mount point for diskless nodes
+shmdir=/mnt/.shm
+
 #different types of dependancies
 deptypes="need use"
 
@@ -190,6 +193,22 @@ wrap_rcscript() {
 	fi
 	rm -f ${svcdir}/foo.sh
 	return ${retval}
+}
+
+# int checkserver(void)
+#
+#    Return 0 (no error) if this script is executed 
+#    onto the server, one otherwise.
+#    See the boot section of /sbin/rc for more details.
+# 
+checkserver() {
+	# Only do check if 'gentoo=adelie' is given as kernel param
+	if get_bootparam "adelie"
+	then
+		[ "`cat ${svcdir}/hostname`" = "(none)" ] || return 1
+	fi
+	
+	return 0
 }
 
 getpidfile() {

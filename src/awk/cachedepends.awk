@@ -103,7 +103,7 @@ BEGIN {
 			}
 
 			# Filter out comments and only process if its a rcscript
-			if (($0 !~ /[[:space:]]*#/) && (ISRCSCRIPT == 1 )) {
+			if (($0 !~ /^[[:space:]]*#/) && (ISRCSCRIPT == 1 )) {
 
 				# If line contain 'depend()', set GOTDEPEND to 1
 				if ($0 ~ /depend[[:space:]]*\(\)/)
