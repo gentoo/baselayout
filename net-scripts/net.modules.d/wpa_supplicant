@@ -1,0 +1,180 @@
+# wpa_supplicant (net-analyzer/wpa_supplicant) module for net-scripts
+# Version 1.0.0
+# Copyright (c) 2004 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License V2
+# Contributed by Roy Marples (uberlord@gentoo.org)
+
+# Fix any potential localisation problems
+# Note that LC_ALL trumps LC_anything_else according to locale(7)
+wpa_supplicant() {
+	LC_ALL=C /usr/sbin/wpa_supplicant "$@"
+}
+
+wpa_cli() {
+	LC_ALL=C /usr/sbin/wpa_cli "$@"
+}
+
+# char* wpa_supplicant_provides(void)
+#
+# Returns a string to change module definition for starting up
+wpa_supplicant_provides() {
+	echo "wireless"
+}
+
+# void wpa_supplicant_depend(void)
+#
+# Sets up the dependancies for the module
+wpa_supplicant_depend() {
+	after macchanger
+	before interface
+}
+
+# bool wpa_supplicant_check_installed(void)
+#
+# Returns 1 if isnd4k-utils is installed, otherwise 0
+wpa_supplicant_check_installed() {
+	[[ -x /usr/sbin/wpa_supplicant ]] && return 0
+	${1:-false} && eerror "For WPA support (wpa_supplicant) support, emerge net-wireless/wpa-supplicant"
+	return 1
+}
+
+# bool wpa_supplicant_check_depends(void)
+#
+# Checks to see if we have the needed functions
+wpa_supplicant_check_depends() {
+	local f
+
+	for f in interface_exists interface_variable; do
+		[[ $( type -t ${f} ) == function ]] && continue
+		eerror "wpa_supplicant: missing required function ${f}\n"
+		return 1
+	done
+
+	return 0
+}
+
+# bool wpa_supplicant_check_extensions(char *interface)
+#
+# Checks to see if wireless extensions are enabled on the interface
+wpa_supplicant_check_extensions() {
+	grep -q "${1}: " /proc/net/wireless
+}
+
+# char* wpa_supplicant_get_essid(char *interface)
+#
+# Returns the MAC address of the Access Point
+# the interface is connected to
+wpa_supplicant_get_essid() {
+	wpa_cli -i${1} status 2>/dev/null | awk -F= '/^ssid=/ { print $2 }'
+}
+
+# char* wpa_supplicant_get_ap_mac_address(char *interface)
+#
+# Returns the MAC address of the Access Point
+# the interface is connected to
+wpa_supplicant_get_ap_mac_address() {
+	wpa_cli -i${1} status 2>/dev/null | awk -F= '/^bssid=/ { print toupper($2) }'
+}
+
+# bool wpa_supplicant_associated(char *interface)
+#
+# Returns 0 if we're associated correctly or 1 if not
+# Note that just because we are associated does not mean we are using the
+# correct encryption keys
+wpa_supplicant_associated() {
+	local -a status=( $( wpa_cli -iath0 status | awk -F= '/^key_mgmt|^wpa_state|^decision/ { print $2 }' ) )
+
+	if [[ ${status[0]} == NONE ]]; then
+		[[ ${status[1]} == ASSOCIATED ]]
+	else
+		[[ ${status[2]} == COND_SUCC ]]
+	fi
+	return $?
+}
+
+# bool wpa_supplicant_pre_start(char *iface)
+#
+# Start wpa_supplicant on an interface and wait for association
+# Returns 0 (true) when successful, non-zero otherwise
+wpa_supplicant_pre_start() {
+	local iface=${1} opts ifvar i cfgfile=/etc/wpa_supplicant.conf timeout
+
+	# We only work on wirelesss interfaces
+	wpa_supplicant_check_extensions ${iface} || return 0
+
+	ebegin "Starting wpa_supplicant on ${iface}"
+
+	if [[ ! -f ${cfgfile} ]]; then
+		eend 1 "configuration file ${cfgfile} not found!"
+		return 1
+	fi
+
+	ifvar=$( interface_variable ${1} )
+	eval opts=\" \$\{wpa_supplicant_${ifvar}\}\"
+	[[ ${opts} != *' -D'* ]] && ewarn "wpa_supplicant_${ifvar} does not define a driver"
+
+	# Kill off any existing wpa_supplicant on this interface
+	local pid=$( ps --no-headers -fC wpa_supplicant 2>/dev/null | awk '/-i'${iface}'/ { print $2 }' )
+	[[ -n ${pid} ]] && kill -s TERM ${pid}
+	
+	if ! wpa_supplicant ${opts} -B -c/etc/wpa_supplicant.conf -i${iface} ; then
+		eend 1
+		return 1
+	fi
+
+	eindent
+	veinfo "Waiting for association"
+	eval timeout=\"\$\{wpa_timeout_${ifvar}:-60\}\"
+	for (( i=0; i<${timeout}; i++ )); do
+		wpa_supplicant_associated ${iface} && break
+		sleep 1
+	done
+	if [[ ${i} == ${timeout} ]]; then
+		if ! wpa_supplicant_associated ${iface}; then
+			eend 1 "timed out"
+
+			# We now need to kill the process
+			kill -s TERM $( ps --no-headers -fC wpa_supplicant 2>/dev/null | awk '/-i'${iface}'/ { print $2 }' ) 2>/dev/null
+
+			return 1
+		fi
+	fi
+	eend 0
+
+	# Set ESSID for essidnet and report
+	ESSID=$( wpa_supplicant_get_essid ${iface} )
+	local -a status=( "$( wpa_cli -iath0 status | awk -F= '/^bssid|^pairwise_cipher|^key_mgmt/ { print $2 }' )" )
+	local mac=$( echo ${status[0]} | tr '[:lower:]' '[:upper:]' )
+	einfo "${iface} connected to \"${ESSID//\\\\/\\\\}\" at ${mac}"
+
+	if [[ ${status[2]} == NONE ]]; then
+		if [[ ${status[1]} == NONE ]]; then
+			ewarn "not using any encryption"
+		else
+			veinfo "using ${status[1]}"
+		fi
+	else
+		veinfo "using ${status[2]}/${status[1]}"
+	fi
+	eoutdent
+
+	return 0
+}
+
+# bool wpa_supplicant_post_stop(char *iface)
+#
+# Stops wpa_supplicant on an interface
+# Returns 0 (true) when successful, non-zero otherwise
+wpa_supplicant_post_stop() {
+	local iface=${1}
+
+	# wpa_supplicant does not write to a pid file ...
+	local pid=$( ps --no-headers -fC wpa_supplicant 2>/dev/null | awk '/-i'${iface}'/ { print $2 }' )
+	[[ -z ${pid} ]] && return 0
+
+	ebegin "Stopping wpa_supplicant on ${iface}"
+	kill -s TERM ${pid}
+	eend 0
+
+	return 0
+}
