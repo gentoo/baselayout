@@ -11,17 +11,19 @@ depend() {
 start() {
 	ebegin "Checking all filesystems"
 	fsck -R -A -a
-	if [ $? -eq 0 ]
+	if [ "$?" -eq 0 ]
 	then
 		eend 0
-	elif [ $? -eq 1 ]
+	elif [ "$?" -eq 1 ]
 	then
 		ewend 1 "Filesystem errors corrected."
 		#everything should be ok, so return a pass
 		return 0
 	else
 		eend 2 "Fsck could not correct all errors, manual repair needed"
-		/sbin/sulogin $CONSOLE
+		/sbin/sulogin ${CONSOLE}
 	fi
 }
 
+
+# vim:ts=4

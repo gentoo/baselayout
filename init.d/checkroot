@@ -10,57 +10,60 @@ depend() {
 
 start() {
 	ebegin "Remounting root filesystem read-only (if necessary)"
-	mount / -o remount,ro >/dev/null 2>&1
+	mount / -o remount,ro &>/dev/null
 	eend $?
 	ebegin "Checking root filesystem"
 	fsck -a /
-	if [ $? -eq 0 ]
+	if [ "$?" -eq 0 ]
 	then
 		eend 0
-	elif [ $? -eq 1 ]
+	elif [ "$?" -eq 1 ]
 	then
 		ewend 1 "Filesystem repaired"
 	else
 		eend 2 "Filesystem couldn't be fixed :("
-		/sbin/sulogin $CONSOLE
-		reboot -f
+		/sbin/sulogin ${CONSOLE}
+		/sbin/reboot -f
 	fi
 
 	ebegin "Remounting root filesystem read/write"
-	mount / -o remount,rw >/dev/null 2>&1
-	if [ $? -ne 0 ]
+	mount / -o remount,rw &>/dev/null
+	if [ "$?" -ne 0 ]
 	then
 		eend 2 "Root filesystem could not be mounted R/W :("
-		/sbin/sulogin $CONSOLE
+		/sbin/sulogin ${CONSOLE}
 	else
 		eend 0
 	fi
 
-	if [ "$BOOT" = "yes" ]
+	if [ "${BOOT}" = "yes" ]
 	then
 		# create /etc/mtab (done by forcing current mounted filesystems)
 		# NB:  this needs to be updated if our /sbin/rc mounts change ...
 		> /etc/mtab
-		mount -f / >/dev/null 2>&1
-		mount -f /proc >/dev/null 2>&1
+		mount -f / &>/dev/null
+		mount -f /proc &>/dev/null
 
 		# should /dev be mounted ?
 		get_bootparam "nodevfs"
-		if [ $? -ne 0 ] && [ -e /dev/.devfsd ]
+		if [ "$?" -ne 0 ] && [ -e /dev/.devfsd ]
 		then
-			mount -f -t devfs none /dev >/dev/null 2>&1
+			mount -f -t devfs none /dev &>/dev/null
 		fi
 		
 		# should we mount a ramdisk or tmpfs?
 		get_bootparam "notmpfs"
-		if [ $? -ne 0 ] 
+		if [ "$?" -ne 0 ] 
 		then
 			# using tmpfs
-			mount -f -t tmpfs tmpfs ${svcdir} -o rw,mode=0644,size=${svcsize}k >/dev/null 2>&1
+			mount -f -t tmpfs tmpfs ${svcdir} \
+				-o rw,mode=0644,size=${svcsize}k &>/dev/null
 		else
 			# using a ramdisk
-			mount -f -t ext2 /dev/ram0 ${svcdir} -o rw >/dev/null 2>&1
+			mount -f -t ext2 /dev/ram0 ${svcdir} -o rw &>/dev/null
 		fi
 	fi
 }
 
+
+# vim:ts=4

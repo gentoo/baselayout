@@ -5,10 +5,10 @@
 
 
 moduleinserted() {
-	local res=`cat /proc/modules | grep serial | cut -f1 -d" "`
-	if [ "$res" ]
+	local res="$(cat /proc/modules | grep serial | cut -f1 -d" ")"
+	if [ "${res}" ]
 	then
-		if [ "$res" = "serial" ]
+		if [ "${res}" = "serial" ]
 		then
 			return 1
 		fi
@@ -19,18 +19,18 @@ setport() {
 	# arguments: device, irq, port, args
 
 	#if serial module exists, and it's not inserted, insert it permanently
-	if [ -f /lib/modules/`uname -r`/misc/serial.o ]
+	if [ -f /lib/modules/$(uname -r)/misc/serial.o ]
 	then
 		moduleinserted;
-		if [ $? -eq 0 ]
+		if [ "$?" -eq 0 ]
 		then
-			insmod serial 1>&2
+			/sbin/insmod serial 1>&2
 		fi
 	fi
 
 	ebegin "Setting /dev/${1}"
 	${SETSERIAL} -b /dev/${1} irq ${2} port ${3} ${4} 1>&2
-	if [ $? -gt 0 ]
+	if [ "$?" -gt 0 ]
 	then
 		eend 1 "Error setting serial port ${1} to irq ${2} port ${3} (args: ${4})"
 		no_errs=0
@@ -47,7 +47,7 @@ depend() {
 start() {
 	if [ -e /etc/rc.d/config/serial ]
 	then
-		. /etc/rc.d/config/serial
+		source /etc/rc.d/config/serial
 	else
 		return
 	fi
@@ -59,3 +59,6 @@ start() {
 	setports
 	return
 }
+
+
+# vim:ts=4

@@ -9,7 +9,7 @@ depend() {
 }
 
 checkconfig() {
-	if [ -z "$KEYMAP" ]
+	if [ -z "${KEYMAP}" ]
 	then
 		eerror "You need to setup \$KEYMAP in /etc/rc.conf first"
 		return 1
@@ -22,11 +22,17 @@ start() {
 	#new kbd support
 	if [ -x /bin/loadkeys ]
 	then
-		/bin/loadkeys -q ${KEYMAP} windowkeys
+		/bin/loadkeys -q ${KEYMAP} windowkeys >/dev/null
 	#old console-tools support
 	elif [ -x /usr/bin/loadkeys ]
 	then
-		/usr/bin/loadkeys -q ${KEYMAP} windowkeys.inc
+		/usr/bin/loadkeys -q ${KEYMAP} windowkeys.inc >/dev/null
+	else
+		eend 1 "loadkeys executable not found"
+		return 1
 	fi
 	eend $? "Error loading key mappings"
 }
+
+
+# vim:ts=4

@@ -13,7 +13,7 @@ depend() {
 }
 
 checkconfig() {
-	if [ -z "`eval echo "\$\{iface_${IFACE}\}"`" ]
+	if [ -z "$(eval echo \$\{iface_${IFACE}\})" ]
 	then
 		eerror "Please make sure that /etc/conf.d/net has \$iface_$IFACE set"
 		return 1
@@ -22,36 +22,53 @@ checkconfig() {
 
 start() {
 	checkconfig || return 1
+	local iface_args="$(eval echo \$\{iface_${IFACE}\})"
+	local dhcp_args="$(eval echo \$\{dhcpcd_${IFACE}\})"
+	local retval=0
 	ebegin "Bringing ${IFACE} up"
-	if [ "`eval echo "\$\{iface_${IFACE}\}"`" != "dhcp" ]
+	if [ "$(eval echo \$\{iface_${IFACE}\})" != "dhcp" ]
 	then
-		eval /sbin/ifconfig "$IFACE" "\$iface_$IFACE" >/dev/null 2>&1 || return $?
+		/sbin/ifconfig ${IFACE} ${iface_args} &>/dev/null || {
+			retval=$?
+			eend ${retval} "Failed to bring ${IFACE} up"
+			return ${retval}
+		}
 	else
-		eval /sbin/dhcpcd "\$\{dhcpcd_${IFACE}\}" "$IFACE" >/dev/null 2>&1 || return $?
+		/sbin/dhcpcd ${dhcp_args} ${IFACE} &>/dev/null || {
+			retval=$?
+			eend ${retval} "Failed to bring ${IFACE} up"
+			return ${retval}
+		}
 	fi
+	eend 0
 
-	if [ -n "`eval echo "\$\{alias_${IFACE}\}"`" ]
+	if [ -n "$(eval echo \$\{alias_${IFACE}\})" ]
 	then
 		local x=""
 		local num=0
-		for x in `eval echo "\$\{alias_${IFACE}\}"`
+		ebegin "  Adding aliases"
+		for x in $(eval echo \$\{alias_${IFACE}\})
 		do
-			/sbin/ifconfig "${IFACE}:${num}" "$x" >/dev/null 2>&1
+			ebegin "    ${IFACE}:${num}"
+			/sbin/ifconfig ${IFACE}:${num} ${x} &>/dev/null
 			num=$((num + 1))
+			eend 0
 		done
-		save_options alias `eval echo "\$\{alias_${IFACE}\}"`
+		save_options "alias" "$(eval echo \$\{alias_${IFACE}\})"
 	fi
 	
-	if [ -n "$gateway" ] && [ "${gateway%/*}" = "$IFACE" ]
+	if [ -n "${gateway}" ] && [ "${gateway%/*}" = "${IFACE}" ]
 	then
-		/sbin/route add -net default gw "${gateway#*/}" dev "${gateway%/*}" \
-			netmask 0.0.0.0 metric 1 >/dev/null 2>&1 || {
+		ebegin "  Setting default gateway"
+		/sbin/route add -net default gw ${gateway#*/} dev ${gateway%/*} \
+			netmask 0.0.0.0 metric 1 &>/dev/null || {
 			
 			local error=$?
-			ifconfig "${IFACE}" down >/dev/null 2>&1
-			eend ${error}
+			ifconfig ${IFACE} down &>/dev/null
+			eend ${error} "Failed to bring ${IFACE} up"
 			return ${error}
 		}
+		eend 0
 	fi
 
 	#enabling rp_filter causes wacky packets to be auto-dropped by
@@ -61,24 +78,25 @@ start() {
 	then
 		echo 1 > /proc/sys/net/ipv4/conf/${IFACE}/rp_filter
 	fi
-	eend
 }
 
 stop() {
-	local myalias="`get_options alias`"
+	local myalias="$(get_options alias)"
 	ebegin "Bringing ${IFACE} down"
 	#do some cleanup in case the amount of aliases change
-	if [ -n "$myalias" ]
+	if [ -n "${myalias}" ]
 	then
 		local x=""
 		local num=0
-		for x in $myalias
+		for x in ${myalias}
 		do
-			/sbin/ifconfig "${IFACE}:${num}" down >/dev/null 2>1
+			/sbin/ifconfig ${IFACE}:${num} down &>/dev/null
 			num=$((num + 1))
 		done
 	fi
-	/sbin/ifconfig "$IFACE" down >/dev/null 2>&1
-	eend $?
+	/sbin/ifconfig ${IFACE} down &>/dev/null
+	eend $? "Failed to down ${IFACE}"
 }
 
+
+# vim:ts=4

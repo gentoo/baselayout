@@ -9,20 +9,20 @@ depend() {
 }
 
 start() {
-	if [ "$BOOT" = "yes" ]
+	if [ "${BOOT}" = "yes" ]
 	then
 		# Put a nologin file in /etc to prevent people from logging in before
 		# system startup is complete.
-		if [ "$DELAYLOGIN" = "yes" ]
+		if [ "${DELAYLOGIN}" = "yes" ]
 		then
 			echo "System bootup in progress - please wait" > /etc/nologin
-			cp /etc/nologin /etc/nologin.boot >/dev/null 2>&1
+			cp /etc/nologin /etc/nologin.boot &>/dev/null
 		fi
 
 		if [ -e /etc/sysctl.conf ]
 		then
 			ebegin "Configuring kernel parameters"
-			sysctl -p /etc/sysctl.conf >/dev/null 2>&1
+			sysctl -p /etc/sysctl.conf &>/dev/null
 			eend 0
 		fi
 
@@ -44,27 +44,29 @@ start() {
 		# Clean up /tmp directory
 		#
 		ebegin "Cleaning /tmp directory"
-		rm -f /tmp/.X*-lock >/dev/null 2>&1
-		rm -f /tmp/esrv* >/dev/null 2>&1
-		rm -f /tmp/kio* >/dev/null 2>&1
-		rm -f /tmp/jpsock.* >/dev/null 2>&1
-		rm -rf /tmp/.esd* >/dev/null 2>&1
-		rm -rf /tmp/orbit-* >/dev/null 2>&1
-		rm -rf /tmp/ssh-* >/dev/null 2>&1
-		rm -rf /tmp/ksocket-* >/dev/null 2>&1
-		rm -rf /tmp/.*-unix >/dev/null 2>&1
+		rm -f /tmp/.X*-lock &>/dev/null
+		rm -f /tmp/esrv* &>/dev/null
+		rm -f /tmp/kio* &>/dev/null
+		rm -f /tmp/jpsock.* &>/dev/null
+		rm -rf /tmp/.esd* &>/dev/null
+		rm -rf /tmp/orbit-* &>/dev/null
+		rm -rf /tmp/ssh-* &>/dev/null
+		rm -rf /tmp/ksocket-* &>/dev/null
+		rm -rf /tmp/.*-unix &>/dev/null
 		eend 0
 	fi
 
 	#
 	# Check for /etc/resolv.conf, and create if missing
 	#
-	[ -f /etc/resolv.conf ] || touch /etc/resolv.conf >/dev/null 2>&1
+	[ -f /etc/resolv.conf ] || touch /etc/resolv.conf &>/dev/null
 
 	if [ -c /dev/ttyp0 ]
 	then
-		chmod 666 /dev/tty[p-za-e][0-9a-f] >/dev/null 2>&1
-		chown root:tty /dev/tty[p-za-e][0-9a-f] >/dev/null 2>&1
+		chmod 666 /dev/tty[p-za-e][0-9a-f] &>/dev/null
+		chown root:tty /dev/tty[p-za-e][0-9a-f] &>/dev/null
 	fi
 }
 
+
+# vim:ts=4

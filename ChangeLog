@@ -2,6 +2,36 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+* rc-scripts 1.3.0 (10 March 2002)
+
+  10 March 2002; Martin Schlemmer <azarah@gentoo.org>: Resolved
+    bug #1021; updated /etc/init.d/consolefont for this.
+
+    Resolved bug #1029; updated /etc/init.d/net.eth0 for this.
+
+    Resolved bug #990; updated /etc/init.d/net.eth0, /etc/init.d/netmount
+    and /etc/init.d/localmount for this.
+
+    Lots of form/syntax cleanups, most things should be more
+    consistant now.  Fixed fail detection/return values of lots of
+    scripts.
+
+    Lots of cleanup/fixes in the three main scripts behind our
+    rc-system, /sbin/rc, /etc/init.d/depscan.sh, /etc/init.d/runscript.sh
+
+    Fix a bug regarding a invalid $PATH for portage if /etc/init.d/functions.sh
+    is sourced in a ebuild.
+
+    Fix a bug that our rc-script wrapper introduced:  Global variables
+    in scripts no longer worked.  Updated /etc/init.d/runscript.sh for
+    this.
+
+    Implemented more error checking for the main startup code in /sbin/rc.
+    Also fixed try() for mounting /proc (maybe all mount commands).
+    The function worked fine in a simulated test, but in real life failed
+    to detect a error when mounting /proc (remember to thank Grant for
+    his UserMode ebuilds, and Guide).
+
 * rc-scripts 1.2.9 (6 March 2002)
 
   6 March 2002; Martin Schlemmer <azarah@gentoo.org>: General form

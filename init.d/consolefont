@@ -10,29 +10,35 @@ depend() {
 
 start() {
 	local retval=1
-	ebegin "Setting user font"
-	if [ -n "$CONSOLEFONT" ]
+	if [ -n "${CONSOLEFONT}" ]
 	then
 		local param=""
 		local x=""
-		if [ -n "$CONSOLETRANSLATION" ]
+		if [ -n "${CONSOLETRANSLATION}" ]
 		then
-			param="-m ${CONSOLETRANSALTION}"
+			param="-m ${CONSOLETRANSLATION}"
+		fi
+		if [ -x /usr/bin/consolechars ] || [ -x /usr/bin/setfont ]
+		then
+			ebegin "Setting user font"
+		else
+			eend 1 "setfont/consolechars executable not found"
+			return 1
 		fi
 		for x in 1 2 3 4 5 6
 		do
 			if [ -e /dev/.devfsd ]
 			then
-				#old console-tools support (nicer,
-				#because it setup all the tty's)
+				#old console-tools support (nicer, because
+				#it setup all the tty's)
 				if [ -x /usr/bin/consolechars ]
 				then
 					/usr/bin/consolechars -f ${CONSOLEFONT} ${param} \
-						--tty=/dev/vc/${x} >/dev/null 2>&1
+						--tty=/dev/vc/${x} >/dev/null
 					retval=$?
 				#new kbd support
 				else
-					/usr/bin/setfont ${CONSOLEFONT} ${param} >/dev/null 2>&1
+					/usr/bin/setfont ${CONSOLEFONT} ${param} >/dev/null
 					retval=$?
 					break
 				fi
@@ -40,18 +46,20 @@ start() {
 				if [ -x /usr/bin/consolechars ]
 				then
 					/usr/bin/consolechars -f ${CONSOLEFONT} ${param} \
-						--tty=/dev/tty${x} >/dev/null 2>&1
+						--tty=/dev/tty${x} >/dev/null
 					retval=$?
 				else
-					/usr/bin/setfont ${CONSOLEFONT} ${param} >/dev/null 2>&1
+					/usr/bin/setfont ${CONSOLEFONT} ${param} >/dev/null
 					retval=$?
 					break
 				fi
 			fi
 		done
 	fi
-	eend $retval
+	eend $retval "Failed to set user font"
 	
 	return $retval
 }
 
+
+# vim:ts=4

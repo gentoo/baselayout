@@ -10,22 +10,22 @@ depend() {
 
 start() {
 	[ -f /proc/modules ] || return
-	[ -e /sbin/depmod ] || return
+	[ -x /sbin/depmod ] || return
 	ebegin "Calculating module dependencies"
-	update-modules >/dev/null 2>&1
-	depmod -a >/dev/null 2>&1
-	eend $?
+	/usr/sbin/update-modules &>/dev/null
+	/sbin/depmod -a &>/dev/null
+	eend $? "Failed to calculate dependencies"
 
 	# Loop over every line in /etc/modules.autoload.
 	(cat /etc/modules.autoload; echo) | # make sure there is a LF at the end
 	while read module args
 	do
-		case "$module" in
+		case "${module}" in
 			\#*|"") continue ;;
 		esac
-		ebegin "  Loading module $module"
-		modprobe $module $args >/dev/null 2>&1
-		eend $?
+		ebegin "  Loading module ${module}"
+		modprobe ${module} ${args} &>/dev/null
+		eend $? "  Failed to load ${module}"
 	done
 	echo
 
@@ -33,8 +33,11 @@ start() {
 	# Just in case a sysadmin prefers generic symbolic links in
 	# /lib/modules/boot for boot time modules we will load these modules
 	#
-	if [ -n "`modprobe -l -t boot`" ]
+	if [ -n "$(modprobe -l -t boot)" ]
 	then
-		modprobe -a -t boot \*  >/dev/null 2>&1
+		modprobe -a -t boot \*  &>/dev/null
 	fi
 }
+
+
+# vim:ts=4

@@ -15,26 +15,33 @@ start() {
 		ebegin "Setting up the Logical Volume Manager"
 		#still echo stderr for debugging
 		/sbin/vgscan && /sbin/vgchange -a y >/dev/null
-		eend $?
+		eend $? "Failed to setup the LVM"
 	fi
+	
 	# Mount local filesystems in /etc/fstab.
 	ebegin "Mounting local filesystems"
-	mount -at nocoda,nonfs,noproc,noncpfs,nosmbfs,noshm >/dev/null 2>&1
-	eend $?
-	if [ -z "`grep usbdevfs /proc/filesystems`" ]
+	mount -at nocoda,nonfs,noproc,noncpfs,nosmbfs,noshm >/dev/null
+	eend $? "Some local filesystem failed to mount"
+
+	# Mount usbdevfs if kernel have support
+	if [ -z "$(grep usbdevfs /proc/filesystems)" ]
 	then
 		# >/dev/null to hide errors from non-USB users
-		modprobe usbcore >/dev/null 2>1
+		modprobe usbcore &>/dev/null
 	fi
-	if [ -n "`grep usbdevfs /proc/filesystems`" ] && [ -e /proc/bus/usb ] && \
+	if [ -n "$(grep usbdevfs /proc/filesystems)" ] && [ -e /proc/bus/usb ] && \
 	   [ ! -e /proc/bus/usb/devices ]
 	then
 		ebegin "Mounting USB device filesystem"
-		mount -t usbdevfs usbdevfs /proc/bus/usb >/dev/null 2>&1
-		eend $?
+		mount -t usbdevfs usbdevfs /proc/bus/usb &>/dev/null
+		eend $? "Failed to mount USB device filesystem"
 	fi
+
 	#swap on loopback devices, and other weirdnesses
 	ebegin "Activating (possibly) more swap"
-	/sbin/swapon -a >/dev/null 2>&1
-	eend
+	/sbin/swapon -a &>/dev/null
+	eend 0
 }
+
+
+# vim:ts=4

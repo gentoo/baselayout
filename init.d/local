@@ -18,7 +18,7 @@ start() {
 		source /etc/conf.d/local.start
 	fi
 	
-	eend $? "Started local."
+	eend $? "Failed to start local."
 }
 
 stop() {
@@ -32,6 +32,8 @@ stop() {
 		source /etc/conf.d/local.stop
 	fi
 	
-	eend $? "Stopped local."
+	eend $? "Failed to stop local."
 }
 
+
+# vim:ts=4

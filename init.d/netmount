@@ -11,7 +11,7 @@ depend() {
 
 start() {
 	ebegin "Mounting network filesystems"
-	mount -at coda,nfs,ncpfs,smbfs >/dev/null 2>&1
+	mount -at coda,nfs,ncpfs,smbfs >/dev/null
 	eend $?
 }
 
@@ -21,38 +21,37 @@ stop() {
 	#     else mount do not exit cleanly
 
 	local sig retry
-	local remaining=`cat /proc/mounts | awk '{ print $3 " " $2 }' | \
-		grep -E ^'coda|nfs|ncpfs|smbfs' | awk '{ print $2 }' |sort -r`
+	local remaining="$(cat /proc/mounts | awk '{ print $3 " " $2 }' | \
+		grep -E ^'coda|nfs|ncpfs|smbfs' | awk '{ print $2 }' |sort -r)"
 
 	# just keep things nice and uniform
-	if [ -z "$remaining" ]
+	if [ -z "${remaining}" ]
 	then
 		ebegin "Unmounting network filesystems"
-		eend $?
+		eend 0
 	else
 	        sig=
 	        retry=3
-	        while [ -n "$remaining" -a "$retry" -gt 0 ]
+	        while [ -n "${remaining}" -a "${retry}" -gt 0 ]
 	        do
-	                if [ "$retry" -lt 3 ]
+	                if [ "${retry}" -lt 3 ]
 			then
 	                        ebegin "Unmounting network filesystems (retry)"
-	                        umount $remaining > /dev/null 2>&1
-	                        eend $?
+	                        umount ${remaining} &>/dev/null
+	                        eend $? "Failed to unmount filesystems this retry"
 	                else
 	                        ebegin "Unmounting network filesystems"
-	                        umount $remaining > /dev/null 2>&1
-	                        eend $?
+	                        umount ${remaining} &>/dev/null
+	                        eend $? "Failed to unmount filesystems"
 	                fi
-	                remaining=`cat /proc/mounts | awk '{ print $3 " " $2 }' | \
-				grep -E ^'coda|nfs|ncpfs|smbfs' | awk '{ print $2 }' |sort -r`
-	                [ -z "$remaining" ] && break
-	                /bin/fuser -k -m $sig $remaining >/dev/null 2>1
+	                remaining="$(cat /proc/mounts | awk '{ print $3 " " $2 }' | \
+				grep -E ^'coda|nfs|ncpfs|smbfs' | awk '{ print $2 }' |sort -r)"
+	                [ -z "${remaining}" ] && break
+	                /bin/fuser -k -m ${sig} ${remaining} &>/dev/null
 	                sleep 5
-	                retry=$(($retry -1))
+	                retry=$((${retry} -1))
 	                sig=-9
 	        done
-		eend $?
 	fi
 }
 

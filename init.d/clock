@@ -11,11 +11,12 @@ depend() {
 start() {
 	local myopts=""
 	local TBLURB=""
+	local errstr=""
 	if [ ! -f /etc/adjtime ]
 	then
 		echo "0.0 0 0.0" > /etc/adjtime
 	fi
-	if [ "$CLOCK" = "UTC" ]
+	if [ "${CLOCK}" = "UTC" ]
 	then
 		myopts="--utc"
 		TBLURB="[UTC]"
@@ -27,9 +28,17 @@ start() {
 	if [ -x /sbin/hwclock ]
 	then
 		ebegin "Setting system clock to hardware clock ${TBLURB}"
-			/sbin/hwclock --adjust ${myopts} >/dev/null 1>&2
-			/sbin/hwclock --hctosys ${myopts} >/dev/null 1>&2 
-		eend 0 
+		errstr="$(/sbin/hwclock --adjust ${myopts} 2>&1 >/dev/null)"
+		errstr="${errstr}$(/sbin/hwclock --hctosys ${myopts} 2>&1 >/dev/null)"
+		#hwclock do not return a fail status
+		if [ -n "${errstr}" ]
+		then
+			eend 1 "Failed to set system clock to hardware clock"
+			return 1
+		else
+			eend 0
+			return 0
+		fi
 	else
 		eend 1 "hwclock executable not found"
 	fi
@@ -38,7 +47,8 @@ start() {
 stop() {
 	local myopts=""
 	local TBLURB=""
-        if [ "$CLOCK" = "UTC" ]
+	local errstr=""
+	if [ "${CLOCK}" = "UTC" ]
 	then
 		myopts="--utc"
 		TBLURB="[UTC]"
@@ -50,10 +60,19 @@ stop() {
 	if [ -x /sbin/hwclock ]
 	then
 		ebegin "Syncing hardware clock to system clock ${TBLURB}"
-			/sbin/hwclock --systohc ${myopts} >/dev/null 1>&2
-		eend 0
+		errstr="$(/sbin/hwclock --systohc ${myopts} 2>&1 >/dev/null)"
+		if [ -n "${errstr}" ]
+		then
+			eend 1 "Failed to set hardware clock to system clock"
+			return 1
+		else
+			eend 0
+			return 0
+		fi
 	else
 		eend 1 "hwclock executable not found"
 	fi
 }
-												
+
+
+# vim:ts=4

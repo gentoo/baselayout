@@ -43,12 +43,12 @@ depend() {
 }
 
 setup_dm() {
-	. /etc/profile.env
-	export PATH=/bin:/sbin:/usr/bin:/usr/sbin:$ROOTPATH
+	source /etc/profile.env
+	export PATH="/bin:/sbin:/usr/bin:/usr/sbin:${ROOTPATH}"
 
-	case "`echo $DISPLAYMANAGER | awk '{ print toupper($1) }'`" in
+	case "$(echo ${DISPLAYMANAGER} | awk '{ print toupper($1) }')" in
 		KDM|KDE|KDE2|KDE3)	 
-			EXE=`which kdm`   
+			EXE="$(which kdm)"
 			;;
 		GDM|GNOME) 
 			EXE=/usr/bin/gdm
@@ -58,46 +58,43 @@ setup_dm() {
 			;;
 	esac
 
-	test ! -x "$EXE" && EXE=/usr/X11R6/bin/xdm
+	test ! -x "${EXE}" && EXE=/usr/X11R6/bin/xdm
 
-	SERVICE=${EXE##*/}
+	SERVICE="${EXE##*/}"
 }
 
 start() {
 	setup_dm
 	ebegin "Setting up ${SERVICE}"
 	#save the prefered DM
-	save_options service "$EXE"
+	save_options "service" "${EXE}"
 	#tell init to run /etc/X11/startDM.sh after current
 	#runlevel is finished (should *not* be in the "boot"
 	#                      runlevel).
-	/sbin/telinit a >/dev/null 2>&1
+	/sbin/telinit a &>/dev/null
 	eend 0
 }
 
 stop() {
 	local retval=0
-	local curvt="`fgconsole`"
-	local myexe="`get_options service`"
-	local myservice=${myexe##*/}
+	local curvt="$(fgconsole)"
+	local myexe="$(get_options "service")"
+	local myservice="${myexe##*/}"
 	ebegin "Stopping ${myservice}"
 	rm -f ${svcdir}/options/xdm/service
-	if [ "`ps -A | grep -e "${myservice}"`" ]
+	if [ "$(ps -A | grep -e "${myservice}")" ]
 	then
 		start-stop-daemon --stop --quiet \
-			--exe $myexe >/dev/null 2>&1
+			--exe ${myexe} &>/dev/null
 		retval=$?
 	else
 		retval=1
 	fi
-#	sleep 1
-#	if [ "`ps -A | grep -e "X"`" ]
-#	then
-#		killall X >/dev/null 2>&1
-#	fi
 	#switch back to original vt
-	chvt "$curvt" >/dev/null 2>&1
-	eend $retval "Error stopping ${myservice}."
-	return $retval
+	chvt "${curvt}" &>/dev/null
+	eend ${retval} "Error stopping ${myservice}."
+	return ${retval}
 }
 
+
+# vim:ts=4

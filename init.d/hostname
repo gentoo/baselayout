@@ -9,7 +9,7 @@ depend() {
 }
 
 checkconfig() {
-	if [ -z "`cat /etc/hostname`" ]
+	if [ ! -f /etc/hostname ] || [ -z "$(cat /etc/hostname)" ]
 	then
 		eerror "You need to set /etc/hostname to a valid hostname"
 		return 1
@@ -18,13 +18,16 @@ checkconfig() {
 
 start() {
 	local myhost=""
-	if [ ! checkconfig ]
+	if ! checkconfig
 	then
 		myhost="localhost"
 	else
-		myhost="`cat /etc/hostname`"
+		myhost="$(cat /etc/hostname)"
 	fi
-	ebegin "Setting hostname to $myhost"
+	ebegin "Setting hostname to ${myhost}"
 	/bin/hostname "${myhost}"
-	eend $?
+	eend $? "Failed to set the hostname"
 }
+
+
+# vim:ts=4
