@@ -151,22 +151,14 @@ iwconfig_report() {
 	eoutdent
 }
 
-# char* iwconfig_get_essid_var(void)
-#
-# Formats the essid so it can be used by bash variables
-# Basically it replaces any non alphanumeric character with a _ symbol
-iwconfig_get_essid_var() {
-	echo ${ESSID//[![:word:]]/_}
-}
-
 # char* iwconfig_get_wep_key(char *mac_address)
 #
 # Returns the configured WEP key for the given mac address
 # or the given ESSID. The mac address setting takes precendence
 iwconfig_get_wep_key() {
-	local mac=${1} essid=$( iwconfig_get_essid_var ) key
+	local mac=${1} key
 	eval key=\"\${mac_key_${mac//:/}\}\"
-	[[ -z ${key} ]] && eval key=\"\${key_${essid}\}\"
+	[[ -z ${key} ]] && eval key=\"\${key_${ESSIDVAR}\}\"
 	key=${key:-off}
 	echo ${key}
 }
@@ -226,7 +218,7 @@ iwconfig_setup_specific() {
 	if [[ -n ${e} && ${key} != off ]]; then
 		e=$( get_essid_var ${essid} )
 		ewarn "${iface} does not support setting keys"
-		ewarn "or the parameter \"mac_key_${e}\" or \"key_${e}\" is incorrect"
+		ewarn "or the parameter \"mac_key_${ESSIDVAR}\" or \"key_${ESSIDVAR}\" is incorrect"
 	fi
 
 	e=$( iwconfig ${iface} essid "${ESSID}" 2>&1 )
@@ -327,13 +319,16 @@ iwconfig_wait_for_association() {
 # so we can fail gracefully without even trying to connect
 iwconfig_associate() {
 	local iface=${1} mac=${2} wep_required=${3} w="(WEP Disabled)"
-	local dessid=${ESSID//\\\\/\\\\} key=$( iwconfig_get_wep_key ${mac} )
+	local dessid=${ESSID//\\\\/\\\\} key
 	wep_required=${wep_required:-"off"}
 
 	if [[ ${ESSID} == any ]]; then
 		iwconfig ${iface} ap any 2>/dev/null
 		dessid="any"
+		unset ESSIDVAR
 	else
+		ESSIDVAR=${ESSID//[![:word:]]/_}
+		key=$( iwconfig_get_wep_key ${mac} )
 		if [[ ${wep_required} == yes && ${key} == off ]]; then
 			vewarn "WEP key is not set for \"${dessid}\" - not connecting"
 			return 1
@@ -356,7 +351,21 @@ iwconfig_associate() {
 	[[ -n ${e} && ${ESSID} != any ]] && ewarn "${iface} does not support setting ESSID to \"${dessid}\""
 	iwconfig ${iface} nick "${ESSID}" 2>/dev/null
 
-	vebegin "Connecting to \"${ESSID//\\\\//}\" ${w}"
+	vebegin "Connecting to \"${dessid}\" ${w}"
+
+	if [[ ${ESSID} != any && $( type -t preassociate ) == function ]]; then
+		local essidx=${ESSID} essidvarx=${ESSIDVAR}
+		veinfo "Running preassociate function"
+		eindent
+		preassociate ${iface} ; e=$?
+		eoutdent
+		if [[ ${e} != 0 ]]; then
+			veend 1 "preassociate \"${dessid}\" on ${iface} failed"
+			return 1
+		fi
+		ESSID=${essidx} ESSIDVAR=${essidvarx}
+	fi
+
 	if ! iwconfig_wait_for_association ${iface} ; then
 		veend 1
 		return 1
@@ -371,6 +380,16 @@ iwconfig_associate() {
 
 	iwconfig_user_config ${iface}	
 	iwconfig_report ${iface}
+
+	if [[ $( type -t postassociate ) == function ]]; then
+		local essidx=${ESSID} essidvarx=${ESSIDVAR}
+		veinfo "Running postassociate function"
+		eindent
+		postassociate ${iface}
+		eoutdent
+		ESSID=${essidx} ESSIDVAR=${essidvarx}
+	fi
+
 	return 0
 }
 
@@ -866,5 +885,6 @@ iwconfig_pre_start() {
 # Always returns 0
 iwconfig_pre_stop() {
 	ESSID=$( iwconfig_get_essid ${1} )
+	ESSIDVAR=${ESSID//[![:word:]]/_}
 	return 0
 }

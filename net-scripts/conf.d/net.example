@@ -313,16 +313,24 @@
 #
 # The return values for the postup and postdown functions are ignored
 # since there's nothing to do if they indicate failure.
+#
+# ${IFACE} is set to the interface being brought up/down
+# ${IFVAR} is ${IFACE} converted to variable name bash allows
 
 #preup() {
-#	# This function could be used, for example, to configure a
-#	# wireless interface for Cisco LEAP authentication.
+#	# Test for link on the interface prior to bringing it up.  This
+#	# only works on some network adapters and requires the mii-diag
+#	# package to be installed.
+#	if mii-tool ${IFACE} 2> /dev/null | grep -q 'no link'; then
+#		ewarn "No link on ${IFACE}, aborting configuration"
+#		return 1
+#	fi 
 #
 #	# Test for link on the interface prior to bringing it up.  This
 #	# only works on some network adapters and requires the ethtool
 #	# package to be installed.
-#	if ethtool $1 | grep -q 'Link detected: no'; then
-#		ewarn "No link on $1, aborting configuration"
+#	if ethtool ${IFACE} | grep -q 'Link detected: no'; then
+#		ewarn "No link on ${IFACE}, aborting configuration"
 #		return 1
 #	fi
 #

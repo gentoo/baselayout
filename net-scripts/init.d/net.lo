@@ -508,11 +508,9 @@ iface_start() {
 		fi
 	done
 
-	local ifvar=$( interface_variable ${1} )
-
 	# New style config - one variable fits all
-	eval config=( \"\$\{config_${ifvar}\[@\]\}\" )
-	eval config_fallback=( \"\$\{fallback_${ifvar}\[@\]\}\" )
+	eval config=( \"\$\{config_${IFVAR}\[@\]\}\" )
+	eval config_fallback=( \"\$\{fallback_${IFVAR}\[@\]\}\" )
 
 	# We must support old configs
 	if [[ -z ${config} ]]; then
@@ -570,13 +568,12 @@ iface_start() {
 		# We do this by testing if the 1st character is a digit
 		elif [[ ${conf[0]:0:1} == [[:digit:]] ]]; then
 			x=0
-			# Removed for speed
-			#if [[ $(type -t address_exists ) == function ]]; then
-			#	if address_exists ${iface} ${conf[0]} ; then
-			#		eerror "${conf[0]%%/*} already taken on ${iface}"
-			#		x=1
-			#	fi
-			#fi
+#			if [[ $(type -t address_exists ) == function ]]; then
+#				if address_exists ${iface} ${conf[0]} ; then
+#					eerror "${conf[0]%%/*} already taken on ${iface}"
+#					x=1
+#				fi
+#			fi
 			[[ ${x} == 0 ]] && interface_add_address ${iface} ${conf[@]} ; x=$?
 			eend ${x} && continue
 		else
@@ -670,7 +667,7 @@ iface_stop() {
 # We cannot check that the device exists ourselves as modules like
 # tuntap make create it.
 run_start() {
-	local iface=${1} x mod
+	local iface=${1} ifvar x
 
 	if [[ ${iface} == lo ]]; then
 		ebegin "Bringing up ${iface}"
@@ -688,6 +685,10 @@ run_start() {
 	# Not much we can do about this :(
 	! interface_exists ${iface} && /sbin/modprobe ${iface} &>/dev/null
 
+	# Setup variables for pre/post to use
+	ifvar=$( interface_variable ${iface} )
+	local IFACE=${iface} IFVAR=${ifvar}
+
 	# Call user-defined preup function if it exists
 	if [[ $( type -t preup ) == function ]]; then
 		einfo "Running preup function"
@@ -699,6 +700,10 @@ run_start() {
 			return 1
 		fi
 	fi
+
+	# Don't let preup modify us
+	iface=${1}
+	local IFACE=${iface} IFVAR=${ifvar}
 
 	# Start the interface
 	if ! iface_start ${iface} ; then
@@ -725,7 +730,7 @@ run_start() {
 # stop returns non-zero to indicate failure bringing down device.
 # In all other cases stop returns 0 to indicate success.
 run_stop() {
-	local iface=${1} mod x
+	local iface=${1} ifvar x
 
 	# Don't run any special shutdown functions for lo
 	if [[ ${iface} == lo ]]; then
@@ -734,6 +739,10 @@ run_stop() {
 		eend $?
 		return 0
 	fi
+
+	# Setup variables for pre/post to use
+	ifvar=$( interface_variable ${iface} )
+	local IFACE=${iface} IFVAR=${ifvar}
 
 	# Call user-defined predown function if it exists
 	if [[ $( type -t predown ) == function ]]; then
@@ -750,7 +759,11 @@ run_stop() {
 		return 1
 	fi
 
-	iface_stop ${IFACE} || return 1  # always succeeds, btw
+	# Don't let predown modify us
+	iface=${1}
+	local IFACE=${iface} IFVAR=${ifvar}
+
+	iface_stop ${iface} || return 1  # always succeeds, btw
 
 	# Call user-defined postdown function if it exists
 	if [[ $( type -t postdown ) == function ]]; then
@@ -778,7 +791,7 @@ run() {
 	unset_functions=${unset_functions:-false}
 	${unset_functions} && before="$( typeset -F )"
 	[[ ${cmd} == "stop" ]] && starting=false
-	if modules_load ${IFACE} ${starting} ; then
+	if modules_load ${iface} ${starting} ; then
 		if [[ ${cmd} == "stop" ]]; then
 			# Reverse the module list for stopping
 			mods=( "${MODULES[@]}" )

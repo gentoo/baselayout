@@ -75,6 +75,5 @@ interface_type() {
 #
 # Returns a bash variable name based on the interface
 interface_variable() {
-	local n=${1//:/_}
-	echo ${n//./_}
+	echo ${1//[![:word:]]/_}
 }

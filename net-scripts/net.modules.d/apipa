@@ -46,14 +46,14 @@ apipa_check_depends() {
 	return 0
 }
 
-# bool address_exists(char *interface, char *address, int packets)
+# bool address_exists(char *interface, char *address)
 #
 # Returns 0 if the address on the interface responds to an arping
 # 1 if not - packets defaults to 1
 # If neither arping (net-misc/iputils) or arping2 (net-analyzer/arping)
 # is installed then we return 1
 address_exists() {
-	local iface=${1} address=${2%%/*} packets=${3:-1} i
+	local iface=${1} address=${2%%/*} i
 
 	# We only handle IPv4 addresses
 	[[ ${address} != *.*.*.* ]] && return 1
@@ -62,9 +62,9 @@ address_exists() {
 	interface_up ${iface}
 
 	if [[ -x /sbin/arping ]]; then
-		/sbin/arping -D -f -c ${packets} -I ${iface} ${address} &>/dev/null || return 0
+		/sbin/arping -q -c 2 -w 3 -D -f -I ${iface} ${address} &>/dev/null || return 0
 	elif [[ -x /usr/sbin/arping2 ]]; then
-		for (( i=0; i<${packets}; i++ )); do
+		for (( i=0; i<3; i++ )); do
 			/usr/sbin/arping2 -0 -c 1 -i ${iface} ${address} &>/dev/null && return 0
 		done
 	fi

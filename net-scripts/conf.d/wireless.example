@@ -213,3 +213,71 @@
 
 # NOTE: preferred_aps  list ignores blacklisted_aps - so if you have
 # the same ESSID in both, well, you're a bit silly :p
+
+
+##############################################################################
+# ADVANCED CONFIGURATION
+# 
+# Two functions can be defined which will be called surrounding the
+# associate function.  The functions are called with the interface
+# name first so that one function can control multiple adapters.
+#
+# The return values for the preassociate function should be 0
+# (success) to indicate that configuration or deconfiguration of the
+# interface can continue.  If preassociate returns a non-zero value, then
+# interface configuration will be aborted.
+#
+# The return value for the postassociate function is ignored
+# since there's nothing to do if it indicates failure.
+
+#preassociate() {
+##############################################################################
+# ADVANCED CONFIGURATION
+# 
+# Four functions can be defined which will be called surrounding the
+# start/stop operations.  The functions are called with the interface
+# name first so that one function can control multiple adapters.
+#
+# The return values for the preup and predown functions should be 0
+# (success) to indicate that configuration or deconfiguration of the
+# interface can continue.  If preup returns a non-zero value, then
+# interface configuration will be aborted.  If predown returns a
+# non-zero value, then the interface will not be allowed to continue
+# deconfiguration.
+#
+# The return values for the postup and postdown functions are ignored
+# since there's nothing to do if they indicate failure.
+#
+# ${ESSID} is set to the exact ESSID of the AP you're connecting to
+# ${ESSIDVAR} is ${ESSID} converted to variable name bash allows
+
+#preassociate() {
+#	# The below adds two configuration variables leap_user_ESSID
+#	# and leap_pass_ESSID. When they are both confiugred for the ESSID
+#	# being connected to then we run the CISCO LEAP script
+#
+#	local user pass
+#	eval user=\"\$\{leap_user_${ESSIDVAR}\}\"
+#	eval pass=\"\$\{leap_pass_${ESSIDVAR}\}\"
+#
+#	if [[ -n ${user} && -n ${pass} ]]; then
+#		if [[ ! -x /opt/cisco/bin/leapscript ]]; then
+#			eend "For LEAP support, please emerge net-misc/cisco-aironet-client-utils"
+#			return 1
+#		fi
+#		einfo "Waiting for LEAP Authentication on \"${ESSID//\\\\//}\""
+#		if /opt/cisco/bin/leapscript ${user} ${pass} | grep -q 'Login incorrect'; then
+#			ewarn "Login Failed for ${user}"
+#			return 1
+#		fi
+#	fi
+#
+#	return 0
+#}
+
+#postassociate() {
+#	# This function is mostly here for completeness... I haven't
+#	# thought of anything nifty to do with it yet ;-)
+#	# Return 0 always
+#	return 0
+#}

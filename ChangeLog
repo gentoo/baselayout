@@ -1,6 +1,13 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+  26 Nov 2004; Roy Marples <uberlord@gentoo.org>:
+
+    Fixed up address detection in apipa
+    net.lo now checks for duplicate static IPv4 addresses before assigning
+    iwconfig now supports preassociate and postassociate user hooks
+    net.example - changed $1 to ${IFACE} in examples
+
   24 Nov 2004; Mike Frysinger <vapier@gentoo.org>:
 
     Allow users to specify charset option to dumpkeys when using unicode 
