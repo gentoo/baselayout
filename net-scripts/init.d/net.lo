@@ -557,7 +557,7 @@ iface_start() {
 			fi
 		# We need to test to see if it's an IP address or a function
 		# We do this by testing if the 1st character is a digit
-		elif [[ ${conf[0]:0:1} == [[:digit:]] ]]; then
+		elif [[ ${conf[0]:0:1} == [[:digit:]] || ${conf[0]} == *:* ]]; then
 			x=0
 #			if [[ $(type -t address_exists ) == function ]]; then
 #				if address_exists ${iface} ${conf[0]} ; then
