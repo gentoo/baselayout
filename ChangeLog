@@ -2,17 +2,22 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  12 April 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update /etc/init.d/bootmisc to create /var/run/utmpx. This
+    is needed, else /usr/bin/newgrp segfault.
+
   11 April 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Update /etc/skel/.bash_profile to make it tcsh compadible.
-	Thanks to Väinö Järvelä for this fix.
+    Thanks to Väinö Järvelä for this fix.
 
-	Update /etc/profile to also set the PS? variables if $SHELL
-	is set to /bin/sh.  This should make prompt colours in
-	bootstrap work again.
+    Update /etc/profile to also set the PS? variables if $SHELL
+    is set to /bin/sh.  This should make prompt colours in
+    bootstrap work again.
 
-	Move LVM stuff to checkfs to ensure that they get fscked.
-	This resolves bug #1552.
+    Move LVM stuff to checkfs to ensure that they get fscked.
+    This resolves bug #1552.
 
 * rc-scripts 1.3.3 (5 April 2002)
 
