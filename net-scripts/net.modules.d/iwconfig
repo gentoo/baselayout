@@ -136,7 +136,7 @@ iwconfig_report() {
 	[[ -n ${mac} ]] && mac=" at ${mac}"
 	
 	eindent
-	einfo "${iface} sconnected to \"${essid}\"${mac}"
+	einfo "${iface} connected to \"${essid}\"${mac}"
 	einfo "in ${mode} mode ${channel}${wep_status}"
 	eoutdent
 }
