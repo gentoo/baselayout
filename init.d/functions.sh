@@ -174,7 +174,7 @@ dolisting() {
 		fi
 		if [ ! -d ${x} ] && ( [ -L ${x} ] || [ -f ${x} ] )
 		then
-			mylist="${mylist} $(ls ${x})"
+			mylist="${mylist} $(ls ${x} 2>/dev/null)"
 		else
 			if [ "${x%/}" != "${x}" ]
 			then

@@ -2,6 +2,12 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  18 March 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Remove the 'try' from 'try /etc/init.d/depscan.sh' in /sbin/rc
+    as not all errors by depscan.sh is critical.  It should be
+    reworked to do better error handeling.
+
   14 March 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix the GID and UID of nobody and nogroup in /etc/passwd and

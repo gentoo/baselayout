@@ -139,9 +139,7 @@ then
 		eend 0
 	fi
 	
-	ebegin "Caching service dependencies"; \
-	try /etc/init.d/depscan.sh; \
-	eend $?
+	/etc/init.d/depscan.sh
 
 	#swap needs to be activated *after* devfs has been mounted and *after*
 	#devfsd has been started, so that the fstab can be properly parsed
