@@ -222,6 +222,17 @@ checkserver() {
 	return 0
 }
 
+# int get_KV()
+#
+#   return the kernel version (major and minor concated) as a integer
+#
+get_KV() {
+	local KV_MAJOR="`uname -r | cut -d. -f1`"
+	local KV_MINOR="`uname -r | cut -d. -f2`"
+
+	echo "${KV_MAJOR}${KV_MINOR}"
+}
+
 # bool get_bootparam(param)
 #
 #   return 0 if gentoo=param was passed to the kernel

@@ -9,6 +9,9 @@
     0.9.7 or later of sys-apps/module-init-tools.  Updated
     /sbin/modules-update for this.
 
+    Change /etc/init.d/localmount to use 'usbfs' and not 'usbdevfs' if
+    we are running kernel 2.5 or later ...
+
   26 Dec 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Add /etc/init.d/crypto-loop and /etc/conf.d/crypto-loop, a cool
