@@ -7,6 +7,8 @@
     Dump the error message that hwclock returns since it tends to be 
     quite useful.  Modified init.d/clock.
 
+    Fix error in functions.sh [ -z "$@" ] -> [[ -z "$@" ]] #69789.
+
   01 Nov 2004; Roy Marples <uberlord@gentoo.org>:
 
     net-scripts/init.d/net.lo:
