@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+  12 Dec 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Tweak get_mount_fstab to only print the first mount point found and then 
+    spit warning messages for extra matches.
+
   12 Dec 2004; Martin Schlemmer <azarah@gentoo.org>:
 
     Add suport for using /sbin/udevsend from new udev-048 as hotplug multiplexer.
