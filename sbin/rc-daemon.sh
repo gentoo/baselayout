@@ -27,11 +27,6 @@ RC_FAIL_ON_ZOMBIE="no"
 RC_KILL_CHILDREN="no"
 RC_WAIT_ON_START="0.1"
 
-RC_DAEMON_vixie_cron="/usr/bin/valgrind --tool=memcheck --log-file=/tmp/valgrind.vixie-cron"
-RC_DAEMON_rsyncd="/usr/bin/valgrind --tool=memcheck --log-file=/tmp/valgrind.rsyncd"
-#RC_DAEMON_syslog_ng="/usr/bin/valgrind --tool=memcheck --log-file=/tmp/valgrind.syslogng"
-RC_DAEMON_syslog_ng="--background /usr/bin/strace -o /tmp/strace.syslog-ng -f"
-
 # Override default settings with user settings ...
 [[ -f /etc/conf.d/rc ]] && source /etc/conf.d/rc
 
