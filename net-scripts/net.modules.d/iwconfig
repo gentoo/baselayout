@@ -211,11 +211,8 @@ iwconfig_setup_specific() {
 		fi
 	fi
 
-	# Attempt to default the key to [1]
-	iwconfig ${iface} key [1] 2>/dev/null
-
 	key=$( iwconfig_get_wep_key )
-	e=$( eval "iwconfig ${iface} key [1] key ${key} 2>&1" )
+	e=$( eval "iwconfig ${iface} key ${key} 2>&1" )
 	if [[ -n ${e} && ${key} != off ]]; then
 		e=$( get_essid_var ${essid} )
 		ewarn "${iface} does not support setting keys"
@@ -345,9 +342,6 @@ iwconfig_associate() {
 			key="off"
 			vewarn "\"${dessid}\" is not WEP enabled - ignoring setting"
 		fi
-
-		# Attempt to default the key to [1]
-		iwconfig ${iface} key [1] 2>/dev/null
 
 		e=$( eval "iwconfig ${iface} key ${key} 2>&1" )
 		if [[ -n ${e} && ${key} != off ]]; then
