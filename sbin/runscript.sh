@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright 1999-2004 Gentoo Foundation
+# Copyright 1999-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
 
@@ -32,7 +32,7 @@ mylevel=$(<"${svcdir}/softlevel")
 
 
 # Set $IFACE to the name of the network interface if it is a 'net.*' script
-if [[ ${myservice%%.*} = "net" ]] && [[ ${myservice##*.} != ${myservice} ]] ; then
+if [[ ${myservice%%.*} == "net" ]] && [[ ${myservice##*.} != ${myservice} ]] ; then
 	IFACE=${myservice##*.}
 	NETSERVICE="yes"
 else
@@ -50,7 +50,7 @@ fi
 
 [[ -e $(add_suffix /etc/conf.d/${myservice}) ]] && source "$(add_suffix /etc/conf.d/${myservice})"
 [[ -e $(add_suffix /etc/conf.d/net) ]]          && \
-[[ ${NETSERVICE} = "yes" ]]                     && source "$(add_suffix /etc/conf.d/net)"
+[[ ${NETSERVICE} == "yes" ]]                    && source "$(add_suffix /etc/conf.d/net)"
 [[ -e $(add_suffix /etc/rc.conf) ]]             && source "$(add_suffix /etc/rc.conf)"
 
 
@@ -113,7 +113,7 @@ svc_stop() {
 	fi
 
 	if [[ ${svcpause} != "yes" ]] ; then
-		if [[ ${NETSERVICE} = "yes" ]] ; then
+		if [[ ${NETSERVICE} == "yes" ]] ; then
 			# A net.* service
 			if in_runlevel "${myservice}" "${BOOTLEVEL}" || \
 			   in_runlevel "${myservice}" "${mylevel}"
@@ -231,7 +231,7 @@ svc_start() {
 
 		# Start dependencies, if any
 		for x in ${startupservices} ; do
-			if [[ ${x} = "net" && ${NETSERVICE} != "yes" ]] && ! is_net_up ; then
+			if [[ ${x} == "net" && ${NETSERVICE} != "yes" ]] && ! is_net_up ; then
 				local netservices="$(dolisting "/etc/runlevels/${BOOTLEVEL}/net.*") \
 					$(dolisting "/etc/runlevels/${mylevel}/net.*")"
 
@@ -265,7 +265,7 @@ svc_start() {
 			fi
 		done
 
-		if [[ ${startfail} = "yes" ]] ; then
+		if [[ ${startfail} == "yes" ]] ; then
 			eerror "ERROR:  Problem starting needed services."
 			eerror "        \"${myservice}\" was not started."
 			retval=1
@@ -357,7 +357,7 @@ svc_homegrown() {
 	# Walk through the list of available options, looking for the
 	# requested one.
 	for x in ${opts} ; do
-		if [[ ${x} = ${arg} ]] ; then
+		if [[ ${x} == ${arg} ]] ; then
 			if typeset -F "${x}" &>/dev/null ; then
 				# Run the homegrown function
 				"${x}"
@@ -452,7 +452,7 @@ for arg in $* ; do
 		fi
 
 		# Wait for any services that may still be running ...
-#		[[ ${RC_PARALLEL_STARTUP} = "yes" ]] && wait
+#		[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && wait
 
 		rm -rf "${svcdir}/snapshot/$$"
 		svcrestart="no"
