@@ -4,10 +4,13 @@
 
 umask 022
 
-# Setup a basic $PATH.  Just add system default to existing.
-# This should solve both /sbin and /usr/sbin not present when
-# doing 'su -c foo', or for something like:  PATH= rcscript start
-PATH="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/sbin:${PATH}"
+if [ -n "${EBUILD}" ]
+then
+	# Setup a basic $PATH.  Just add system default to existing.
+	# This should solve both /sbin and /usr/sbin not present when
+	# doing 'su -c foo', or for something like:  PATH= rcscript start
+	PATH="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/sbin:${PATH}"
+fi
 
 # daemontools dir
 SVCDIR="/var/lib/supervise"
