@@ -193,7 +193,7 @@ setup_cfg_files() {
 			echo "/bin/cat /etc/ppp/resolv.conf >> /etc/resolv.conf" \
 				>>/etc/ppp/ip-up
 			# Change perms because it b0rked kppp
-			echo "chmod 640 /etc/resolv.conf" >>/etc/ppp/ip-up
+			echo "chmod 644 /etc/resolv.conf" >>/etc/ppp/ip-up
 				
 			# ip-down: restore original /etc/resolv.conf
 			echo "/bin/mv -f /etc/resolv.conf.old /etc/resolv.conf" \

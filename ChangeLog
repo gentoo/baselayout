@@ -4,13 +4,13 @@
 
   05 May 2004; Aron Griffis <agriffis@gentoo.org>:
 
+    Fix bug 48595: Make sure $(id -u) is zero (root user) when running
+    init scripts to avoid a lot of error messages.
+
     Replace many lines of awk with two lines of grep in
     init.d/localmount
 
-  05 May 2004; Aron Griffis <agriffis@gentoo.org>:
-
-    Fix bug 48595: Make sure $(id -u) is zero (root user) when running
-    init scripts to avoid a lot of error messages.
+    Fix bug 44316: Use 0644 instead of 0640 for resolv.conf in net.ppp0
 
   03 May 2004; Aron Griffis <agriffis@gentoo.org>:
 
