@@ -139,7 +139,7 @@ cache_depend() {
 	local mycount=0
 	local count=0
 	#we do not want comments in our cache
-	(cat ${1} | awk '!/^#|\t#/ { print $0 }') | { while read myline
+	(cat ${1} | awk '!/^#|^\t+#/ { print $0 }') | { while read myline
 		do
 			if [ "${myline/depend*()/}" != "${myline}" ]
 			then
