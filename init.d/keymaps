@@ -49,7 +49,7 @@ start() {
 	# Set terminal encoding to either ASCII or UNICODE
 	# see utf-8(7) for more information
 	local termencoding="" termmsg=""
-	if [ "${UNICODE}" == "yes" ]
+	if [ "${UNICODE}" = "yes" ]
 	then
 		/usr/bin/kbd_mode -u
 		dumpkeys | loadkeys --unicode
