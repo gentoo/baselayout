@@ -20,6 +20,9 @@
     /sbin/rc detects the user is missing /dev/null or /dev/console.  
     Includes a simple explanation/fix for what's wrong.
 
+    Make sure the clock init script runs right after checkroot so 
+    that timestamps are synchronized asap #68133.
+
   26 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
 
     Don't use -A with fsck to respect the fs_passno since it'll try 

@@ -106,7 +106,7 @@ get_critical_services() {
 			CRITICAL_SERVICES="${CRITICAL_SERVICES} ${x##*/}"
 		done
 	else
-		CRITICAL_SERVICES="checkroot hostname modules checkfs localmount"
+		CRITICAL_SERVICES="checkroot clock hostname modules checkfs localmount"
 	fi
 
 	export CRITICAL_SERVICES
