@@ -79,7 +79,7 @@ do
 			needsme=0
 			for mytype in need use
 			do
-				for dep in ${svcdir}/${mytype}/${myservice}
+				for dep in ${svcdir}/${mytype}/${myservice}/*
 				do
 					if [ -L /${svcdir}/softscripts.new/${dep##*/} ]
 					then
