@@ -2,6 +2,8 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+* rc-scripts 1.4.3.12p1 (26 Nov 2003)
+
   26 Nov 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix /etc/init.d/halt.sh to reset pam_console permissions, else
