@@ -5,13 +5,19 @@ export DEST="${TMP}/rc-scripts-${V}"
 
 if [[ $1 != "-f" ]] ; then
 	echo "Performing sanity checks (run with -f to skip) ..."
+
+	# Check for leftover conflicts
 	cvsfiles=$(find . -name '.#*')
 	if [[ -n ${cvsfiles} ]] ; then
 		echo "Refusing to package tarball until these files are removed:"
 		echo "$cvsfiles"
 		exit 1
 	fi
-	cvsfiles=$(cvs up 2>&1 | egrep -v '^(U|P)')
+
+	# Check that we're updated
+	cvsroot=$(<CVS/Root)
+	cvsroot=${cvsroot/-mux:/}
+	cvsfiles=$(cvs -d "$cvsroot" update 2>&1 | egrep -v '^(U|P)')
 	if [[ -n ${cvsfiles} ]] ; then
 		echo "Refusing to package tarball until cvs is in sync:"
 		echo "$cvsfiles"
