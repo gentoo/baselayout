@@ -118,7 +118,9 @@ check_rcscript() {
 	local IFS='!'
 	local hash=""
 	local shell=""
-	(cat ${1}) | { read hash shell
+	#print the first line of each script, filtering out spaces and tabs
+	(awk '/^#|^\t+#/ { gsub(/ /, "") ; gsub(/\t/, "") ; \
+		COUNT += 1 ; if (COUNT == 1) print $0 }' ${1}) | { read hash shell
 		if [ "${hash}" = "#" ] && [ "${shell}" = "/sbin/runscript" ]
 		then
 			return 0
@@ -139,7 +141,7 @@ cache_depend() {
 	local mycount=0
 	local count=0
 	#we do not want comments in our cache
-	(cat ${1} | awk '!/^#|^\t+#/ { print $0 }') | { while read myline
+	(awk '!/^#|^\t+#/ { print $0 }' ${1}) | { while read myline
 		do
 			if [ "${myline/depend*()/}" != "${myline}" ]
 			then
