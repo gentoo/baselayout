@@ -3,21 +3,22 @@
 start() {
 	ebegin "Starting Name Service Cache Daemon"
 	secure=` cat /etc/nsswitch.conf | while read curline ; do
-	  table=${curline%:*}
-	  entries=${curline##$table:}
-	  table=${table%%[^a-z]*}
-	  case $table in
-	    passwd*|group*|hosts)
-	      for entry in $entries ; do
-		case $entry in
-		  nisplus*)
-		    /usr/sbin/nscd_nischeck $table || echo "-S $table,yes"
-		  ;;
+		table=${curline%:*}
+		entries=${curline##$table:}
+		table=${table%%[^a-z]*}
+		case $table in
+			passwd*|group*|hosts)
+			for entry in $entries ; do
+			case $entry in
+				nisplus*)
+					/usr/sbin/nscd_nischeck $table || \
+					/echo "-S $table,yes"
+				;;
+			esac
+			done
+		;;
 		esac
-	      done
-	    ;;
-	  esac
-	done`
+		done`
 	start-stop-daemon --start --quiet --exec /usr/sbin/nscd -- $secure
 	eend $?
 }

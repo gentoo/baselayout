@@ -13,7 +13,7 @@ start() {
 	elif [ $? -eq 1 ]
 	then
 		eend 1 "Filesystem errors corrected."
-	else 
+	else
 		eend 2 "Fsck could not correct all errors, manual repair needed"
 		/sbin/sulogin $CONSOLE
 	fi

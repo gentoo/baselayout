@@ -35,9 +35,9 @@ setport() {
 		done="${done} /dev/${1}"
 	fi
 }
-	
+
 depend() {
-	need localmount 
+	need localmount
 }
 
 start() {
@@ -45,9 +45,9 @@ start() {
 	then
 		. /etc/rc.d/config/serial
 	else
-		return	
+		return
 	fi
-	
+
 	SETSERIAL="/sbin/setserial"
 
 	no_errs=1
@@ -55,5 +55,3 @@ start() {
 	setports
 	return
 }
-
-

@@ -21,9 +21,9 @@ mylevel=`cat ${svcdir}/softlevel`
 # (3) Source /etc/rc.conf to pick up potentially overriding
 #     configuration, if the system administrator chose to put it
 #     there (if it exists).
-[ -e /etc/conf.d/basic ]        && source /etc/conf.d/basic
+[ -e /etc/conf.d/basic ]	&& source /etc/conf.d/basic
 [ -e /etc/conf.d/${myservice} ] && source /etc/conf.d/${myservice}
-[ -e /etc/rc.conf ]             && source /etc/rc.conf
+[ -e /etc/rc.conf ]		&& source /etc/rc.conf
 
 usage() {
 	export IFS="|"
@@ -51,7 +51,7 @@ svc_stop() {
 	then
 		einfo "${myservice} has not yet been started."
 		return 1
-	fi		
+	fi
 	if [ -L /etc/init.d/boot/${myservice} ]
 	then
 		einfo "Warning: you are stopping a boot service."
@@ -78,7 +78,7 @@ svc_stop() {
 				do
 					if [ ! -L ${x} ]
 					then
-						continue	
+						continue
 					fi
 					if [ ! -L ${svcdir}/started/${x##*/} ]
 					then
@@ -105,7 +105,7 @@ svc_stop() {
 				then
 					einfo "Problems stopping dependent services.  ${myservice} still up."
 					exit 1
-				fi	
+				fi
 			fi
 		done
 	done
@@ -128,7 +128,7 @@ svc_start() {
 	then
 		#link first to prevent possible recursion
 		ln -s /etc/init.d/${myservice} ${svcdir}/started/${myservice}
-		
+
 		#start dependencies, if any
 		for x in `ineed ${myservice}` `valid_iuse ${myservice}`
 		do
@@ -142,7 +142,7 @@ svc_start() {
 						/etc/init.d/${myserv} start
 					fi
 				done
-			else	
+			else
 				if [ ! -L ${svcdir}/started/${x} ]
 				then
 					/etc/init.d/${x} start
@@ -152,10 +152,10 @@ svc_start() {
 		#start service
 		start
 		retval=$?
-		
+
 		#remove link if service didn't start; but only if we're not booting
 		#if we're booting, we need to continue and do our best to get the
-		#system up.  
+		#system up.
 		if [ "$SOFTLEVEL" = "boot" ]
 		then
 			return $retval
@@ -227,12 +227,12 @@ iuse() {
     local z
     for x in ${svcdir}/use/*/${1}
     do
-        if [ ! -L ${x} ]
-        then
-            continue
-        fi
-        z=${x%/*}
-        echo ${z##*/}
+	if [ ! -L ${x} ]
+	then
+	    continue
+	fi
+	z=${x%/*}
+	echo ${z##*/}
     done
 }
 
@@ -250,7 +250,7 @@ valid_iuse() {
 		fi
 	done
 }
-																		
+
 #call this with "needsme", "ineed", "usesme" or "iuse" as first arg
 query() {
 	local deps
@@ -264,7 +264,7 @@ query() {
 	then
 		einfo "Warning: ${myservice} not running. use info may not be accurate."
 	fi
-						
+
 	deps="${myservice}"
 	while [ "$deps" != "" ]
 	do
@@ -280,7 +280,7 @@ query() {
 	for x in ${svcdir}/depcheck/$$/*
 	do
 		if [ ! -e $x ]
-		then	
+		then
 			continue
 		fi
 		echo ${x##*/}
@@ -296,8 +296,8 @@ svc_homegrown() {
 		if [ $x = "$arg" ]; then
 			if typeset -F $x &>/dev/null; then
 				# Run the homegrown function
-                $x
-                return $?
+		$x
+		return $?
 			else
 				# This is a weak error message
 				echo "Function $x doesn't exist."
@@ -324,7 +324,7 @@ fi
 for arg in ${*}
 do
 	case $arg in
-	stop) 
+	stop)
 		svc_stop
 		;;
 	start)

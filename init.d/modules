@@ -1,16 +1,16 @@
 #!/sbin/runscript
-	
+
 depend() {
 	need bootmisc localmount
 	use sysklogd metalog syslog-ng
 }
 
 start() {
-	[ -f /proc/modules ] || return 
+	[ -f /proc/modules ] || return
 	[ -e /sbin/depmod ] || return
 	ebegin "Calculating module dependencies"
 	depmod -a > /dev/null
-	eend $? 
+	eend $?
 
 	# Loop over every line in /etc/modules.autoload.
 	(cat /etc/modules.autoload; echo) | # make sure there is a LF at the end
@@ -36,4 +36,3 @@ start() {
 
 	return
 }
-

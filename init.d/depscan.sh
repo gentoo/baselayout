@@ -67,12 +67,12 @@ do
 	#set to "" else we get problems
 	NEED=""
 	USE=""
-	
+
 	myservice=${x##*/}
 	depend() {
 		NEED=""
 		USE=""
-		return	
+		return
 	}
 	source ${x}
 	depend

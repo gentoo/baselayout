@@ -14,17 +14,17 @@ start() {
 	ebegin "Bringing ${IFACE} up using DHCP"
 	/sbin/dhcpcd ${DHCPCD_OPTIONS} $IFACE
 
-	#enabling rp_filter causes wacky packets to be auto-dropped by 
+	#enabling rp_filter causes wacky packets to be auto-dropped by
 	#the kernel
 	if [ -e /proc/sys/net/ipv4/conf/${IFACE}/rp_filter ]
 	then
 		echo 1 > /proc/sys/net/ipv4/conf/${IFACE}/rp_filter
 	fi
-    eend 
+	eend
 }
 
 stop() {
-    ebegin "Bringing ${IFACE} down"
-        kill `cat /var/run/dhcpcd-${IFACE}.pid`
-    eend 
+	ebegin "Bringing ${IFACE} down"
+	kill `cat /var/run/dhcpcd-${IFACE}.pid`
+	eend
 }

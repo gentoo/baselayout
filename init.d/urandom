@@ -5,24 +5,24 @@ depend() {
 }
 
 start() {
-	[ -c /dev/urandom ] || return 
+	[ -c /dev/urandom ] || return
 	ebegin "Initializing random number generator"
-        if [ -f /var/run/random-seed ]
-        then
-            cat /var/run/random-seed >/dev/urandom
-        fi
-        rm -f /var/run/random-seed
-        umask 077
-        dd if=/dev/urandom of=/var/run/random-seed count=1 2>/dev/null 
+	if [ -f /var/run/random-seed ]
+	then
+	    cat /var/run/random-seed >/dev/urandom
+	fi
+	rm -f /var/run/random-seed
+	umask 077
+	dd if=/dev/urandom of=/var/run/random-seed count=1 2>/dev/null
 	eend $? "Error initializing random number generator"
 	umask 022
 }
 
 stop() {
 	ebegin "Saving random seed"
-        # Carry a random seed from shut-down to start-up;
-        # see documentation in linux/drivers/char/random.c
-        umask 077
-        dd if=/dev/urandom of=/var/run/random-seed count=1 2>/dev/null 
+	# Carry a random seed from shut-down to start-up;
+	# see documentation in linux/drivers/char/random.c
+	umask 077
+	dd if=/dev/urandom of=/var/run/random-seed count=1 2>/dev/null
 	eend $? "Could not save random seed."
 }

@@ -24,7 +24,7 @@ if [ "$?" = "1" ]
 then
 	eend 1 "hmmmm..."
 	ebegin "Trying to unmount again"
-	umount -a -r -f 
+	umount -a -r -f
 	eend $?
 else
 	eend 0

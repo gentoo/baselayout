@@ -2,7 +2,7 @@
 
 start() {
 	ebegin "Remounting root filesystem read-only (if necessary)"
-	mount / -o remount,ro	
+	mount / -o remount,ro
 	eend $?
 	ebegin "Checking root filesystem"
 	fsck -a /
@@ -17,7 +17,7 @@ start() {
 		/sbin/sulogin $CONSOLE
 		reboot -f
 	fi
-	
+
 	ebegin "Remounting root filesystem read/write"
 	mount / -o remount,rw
 	eend $?

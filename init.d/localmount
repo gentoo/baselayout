@@ -7,14 +7,14 @@ depend() {
 start() {
 	# Mount local filesystems in /etc/fstab.
 	ebegin "Mounting local filesystems"
-	mount -at nonfs,noproc,noncpfs,nosmbfs,noshm  
-	eend $? 
+	mount -at nonfs,noproc,noncpfs,nosmbfs,noshm
+	eend $?
 	if [ -z "`grep usbdevfs /proc/filesystems`" ]
 	then
 		# >/dev/null to hide errors from non-USB users
 		modprobe usbcore >/dev/null 2>/dev/null
 	fi
-	if [ -n "`grep usbdevfs /proc/filesystems`" ] && [ -e /proc/bus/usb ] && [ ! -e /proc/bus/usb/devices ] 
+	if [ -n "`grep usbdevfs /proc/filesystems`" ] && [ -e /proc/bus/usb ] && [ ! -e /proc/bus/usb/devices ]
 	then
 		ebegin "Mounting USB device filesystem"
 		mount -t usbdevfs usbdevfs /proc/bus/usb
@@ -23,7 +23,6 @@ start() {
 	#swap on loopback devices, and other weirdnesses
 	ebegin "Activating (possibly) more swap"
 	/sbin/swapon -a >/dev/null 2>&1
-	eend	
+	eend
 	return
 }
-

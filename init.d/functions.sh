@@ -19,40 +19,40 @@ NORMAL=$'\e[0m'
 HILITE=$'\e[36;01m'
 
 ebegin() {
-    echo -e " ${GOOD}*${NORMAL} ${*}..."
+	echo -e " ${GOOD}*${NORMAL} ${*}..."
 }
 
 ewarn() {
-    echo -e " ${WARN}*${NORMAL} ${*}"
+	echo -e " ${WARN}*${NORMAL} ${*}"
 }
 
 eerror() {
-    echo -e " ${BAD}*${NORMAL} ${*}"
+	echo -e " ${BAD}*${NORMAL} ${*}"
 }
 
 einfo() {
-    echo -e " ${GOOD}*${NORMAL} ${*}"
+	echo -e " ${GOOD}*${NORMAL} ${*}"
 }
 
 einfon() {
-    echo -ne " ${GOOD}*${NORMAL} ${*}"
+	echo -ne " ${GOOD}*${NORMAL} ${*}"
 }
 
 eend() {
-    if [ $# -eq 0 ] || [ $1 -eq 0 ] 
-    then
-        echo -e "$ENDCOL  \e[34;01m[ ${GOOD}ok \e[34;01m]${NORMAL}"
-    else
+	if [ $# -eq 0 ] || [ $1 -eq 0 ]
+	then
+		echo -e "$ENDCOL  \e[34;01m[ ${GOOD}ok \e[34;01m]${NORMAL}"
+	else
 		local returnme
 		returnme=$1
 		if [ $# -ge 2 ]
 		then
-	     	shift
+			shift
 			eerror $*
 		fi
-        echo -e "$ENDCOL  \e[34;01m[ ${BAD}!! \e[34;01m]${NORMAL}"
-    	echo
+	echo -e "$ENDCOL  \e[34;01m[ ${BAD}!! \e[34;01m]${NORMAL}"
+	echo
 		#extra spacing makes it easier to read
 		return $returnme
-    fi
+	fi
 }

@@ -1,5 +1,5 @@
 #!/sbin/runscript
-	
+
 depend() {
 	need localmount
 }

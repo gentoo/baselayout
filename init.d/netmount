@@ -1,5 +1,5 @@
 #!/sbin/runscript
-	
+
 depend() {
 	need net
 	use portmap
@@ -7,8 +7,8 @@ depend() {
 
 start() {
 	ebegin "Mounting network filesystems"
-	mount -at coda,nfs,ncpfs,smbfs 
-	eend $? 
+	mount -at coda,nfs,ncpfs,smbfs
+	eend $?
 }
 
 stop() {
@@ -17,10 +17,9 @@ stop() {
 	# NB: we have to check if any network filesystems is mounted, else mount complains
 
 	local mymounts="`cat /proc/mounts | awk '{ print $3 " " $2 }' | grep -E ^'coda|nfs|ncpfs|smbfs' | awk 'BEGIN { ORS="	"} { print $2 }'`"
-	
+
 	if [ -n "$mymounts" ] ; then
 		umount ${mymounts}
 	fi
 	eend $?
 }
-
