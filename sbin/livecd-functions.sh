@@ -150,7 +150,7 @@ livecd_fix_inittab() {
 	sed -i -e '/^c[0-9]/ s/^/#/' /etc/inittab
 
 	# SPARC & HPPA console magic
-	if [ "${HOSTTYPE}" = "sparc" -o "${HOSTTYPE}" = "hppa" ]
+	if [ "${HOSTTYPE}" = "sparc" -o "${HOSTTYPE}" = "hppa" -o "${HOSTTYPE}" = "ppc64" ]
 	then
 		# Mount openprom tree for user debugging purposes
 		if [ "${HOSTTYPE}" = "sparc" ]
@@ -179,6 +179,11 @@ livecd_fix_inittab() {
 				echo "c${x}:12345:respawn:/sbin/mingetty --noclear --autologin root tty${x}" >> /etc/inittab
 			done
 		fi
+		if [ -c "/dev/hvc/0" ]
+		then
+			ln -s /dev/hvc/0 /dev/hvc0
+			echo "c0:12345:respawn:/sbin/agetty -nl /bin/bashlogin 9600 hvc0 vt320" >> /etc/inittab
+		fi
 	# The rest...
 	else
 		if [ "${LIVECD_CONSOLE}" = "tty0" -o "${LIVECD_CONSOLE}" = "" ]
@@ -187,6 +192,10 @@ livecd_fix_inittab() {
 			do
 				echo "c${x}:12345:respawn:/sbin/agetty -nl /bin/bashlogin 38400 tty${x} linux" >> /etc/inittab
 			done	
+		elif [ -c "/dev/hvc/0" ]
+		then
+			ln -s /dev/hvc/0 /dev/hvc0
+			echo "c1:12345:respawn:/sbin/agetty -nl /bin/bashlogin 9600 hvc0 vt320" >> /etc/inittab
 		else
 			echo "c1:12345:respawn:/sbin/agetty -nl /bin/bashlogin ${LIVECD_CONSOLE_BAUD} ${LIVECD_CONSOLE} vt100" >> /etc/inittab
 		fi
