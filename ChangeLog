@@ -8,6 +8,9 @@
     by allowing errors to show on the screen when they're encountered
     in wrap_rcscript
 
+    Apply Spock's bootsplash patch from bug 45784.  This moves most of
+    the splash functionality out of baselayout.
+
   13 Aug 2004; Aron Griffis <agriffis@gentoo.org>:
 
     Don't export PS1.  Continuation of bug 26951, comments 60-62.

@@ -402,17 +402,23 @@ is_runlevel_stop() {
 #   Start 'service' if it is not already running.
 #
 start_service() {
+	local retval=0
+	
 	[ -z "$1" ] && return 1
 	
 	if ! service_started "$1"
 	then
+		splash "svc_start" "$1"
+			
 		if is_fake_service "$1" "${SOFTLEVEL}"
 		then
 			mark_service_started "$1"
+			splash "svc_started" "$1" "0"
 		else
 			(. /sbin/runscript.sh "/etc/init.d/$1" start)
-		
-			return $?
+			retval="$?"
+			splash "svc_started" "$1" "${retval}"
+			return "${retval}"
 		fi
 	fi
 
@@ -424,30 +430,35 @@ start_service() {
 #   Stop 'service' if it is not already running.
 #
 stop_service() {
+	local retval=0
+	
 	[ -z "$1" ] && return 1
 
 	if service_started "$1" 
 	then
+		splash "svc_stop" "$1"
+			
 		if is_runlevel_stop
 		then
 			if is_fake_service "$1" "${OLDSOFTLEVEL}"
 			then
 				mark_service_stopped "$1"
-
+				splash "svc_stopped" "$1" "0"
 				return 0
 			fi
 		else
 			if is_fake_service "$1" "${SOFTLEVEL}"
 			then
 				mark_service_stopped "$1"
-
+				splash "svc_stopped" "$1" "0"
 				return 0
 			fi
 		fi
 
 		(. /sbin/runscript.sh "/etc/init.d/$1" stop)
-	
-		return $?
+		retval="$?"
+		splash "svc_stopped" "$1" "${retval}"
+		return "${retval}"
 	fi
 
 	return 0

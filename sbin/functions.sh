@@ -29,10 +29,6 @@ RC_QUIET_STDOUT="no"
 # Should we use color?
 RC_NOCOLOR="no"
 
-# Location of bootsplash.conf, which changed in bootsplash-0.6-r12 #45784
-BOOTSPLASH_CONF=/etc/conf.d/bootsplash.conf
-[[ -f ${BOOTSPLASH_CONF} ]] || BOOTSPLASH_CONF=/etc/conf.d/bootsplash
-
 #
 # Default values for rc system
 #
@@ -44,6 +40,17 @@ RC_USE_CONFIG_PROFILE="yes"
 # Override defaults with user settings ...
 [ -f /etc/conf.d/rc ] && source /etc/conf.d/rc
 
+# void splash(...)
+#
+#  Notify bootsplash/splashutils/gensplash/whatever about 
+#  important events.
+#
+splash() {
+	return 0
+}
+
+# This will override the splash() function...
+[ -f /sbin/splash-functions.sh ] && source /sbin/splash-functions.sh
 
 # void get_bootconfig()
 #
@@ -115,213 +122,6 @@ setup_defaultlevels() {
 	fi
 
 	return 0
-}
-
-#
-# void splash_init (void)
-#
-splash_init() {
-	pb_init=0
-	pb_count=0
-	pb_scripts=0
-	pb_rate=0
-
-	if [ ! -x /sbin/splash ] || \
-	   [ -e /proc/version -a ! -e /proc/splash ]
-	then
-		return 0
-	fi
-	
-	if [ -f ${BOOTSPLASH_CONF} ]
-	then
-		source ${BOOTSPLASH_CONF}
-		if [ -n "${PROGRESS_SYSINIT_RATE}" ]
-		then
-			rate=$((65535*${PROGRESS_SYSINIT_RATE}/100))
-		fi
-	fi
-	
-	if [ "${RUNLEVEL}" = "S" ]
-	then
-		pb_scripts=5
-		pb_rate=16383
-		[ -n "${rate}" ] && pb_rate="${rate}"
-	fi
-
-	export pb_init pb_count pb_scripts pb_rate
-}
-
-#
-# void splash_calc (void)
-#
-splash_calc() {
-	pb_runs=($(dolisting "/etc/runlevels/${SOFTLEVEL}/"))
-	pb_runb=($(dolisting "/etc/runlevels/${BOOTLEVEL}/"))
-	pb_scripts=${#pb_runs[*]}
-	pb_boot=${#pb_runb[*]}
-
-	[ ! -e /proc/splash -o ! -x /sbin/splash ] && return 0
-
-	if [ -f ${BOOTSPLASH_CONF} ]
-	then
-		source ${BOOTSPLASH_CONF}
-
-		if [ -n "${PROGRESS_SYSINIT_RATE}" ]
-		then
-			init_rate=$((65535*${PROGRESS_SYSINIT_RATE}/100))
-		fi
-		
-		if [ -n "${PROGRESS_BOOT_RATE}" ]
-		then
-			boot_rate=$((65535*${PROGRESS_BOOT_RATE}/100))
-		fi
-	fi
-
-	# In runlevel boot we have 5 already started scripts
-	#
-	if [ "${RUNLEVEL}" = "S" -a "${SOFTLEVEL}" = "boot" ]
-	then
-		pb_started=($(dolisting "${svcdir}/started/"))
-		pb_scripts=$((${pb_boot} - ${#pb_started[*]}))
-		pb_init=16383
-		pb_rate=26213
-		pb_count=0
-		if [ -n "${init_rate}" -a -n "${boot_rate}" ]
-		then
-			pb_init="${init_rate}"
-			pb_rate=$((${init_rate} + ${boot_rate}))
-		fi
-	elif [ "${SOFTLEVEL}" = "reboot" -o "${SOFTLEVEL}" = "shutdown" ]
-	then
-		pb_started=($(dolisting "${svcdir}/started/"))
-		pb_scripts=${#pb_started[*]}
-		pb_rate=65534
-	else
-		pb_init=26213
-		pb_rate=65534
-		if [ -n "${init_rate}" -a -n "${boot_rate}" ]
-		then
-			pb_init=$((${init_rate} + ${boot_rate}))
-		fi
-	fi
-	
-	echo "pb_init=${pb_init}" > "${svcdir}/progress"
-	echo "pb_rate=${pb_rate}" >> "${svcdir}/progress"
-	echo "pb_count=${pb_count}" >> "${svcdir}/progress"
-	echo "pb_scripts=${pb_scripts}" >> "${svcdir}/progress"
-}
-
-#
-# void splash_update (char *fsstate, char *myscript, char *action)
-#
-splash_update() {
-	local fsstate="$1"
-	local myscript="$2"
-	local action="$3"
-	
-	[ ! -e /proc/splash -o ! -x /sbin/splash ] && return 0
-	
-	if [ "${fsstate}" = "inline" ]
-	then
-		/sbin/splash "${myscript}" "${action}"
-		pb_count=$((${pb_count} + 1))
-
-		# Only needed for splash_debug() 
-		pb_execed="${pb_execed} ${myscript:-inline}"
-	else
-		# Update only runlevel scripts, no dependancies (only true for startup)
-		if [ ! -L "${svcdir}/softscripts/${myscript}" ]
-		then
-			[ "${SOFTLEVEL}" != "reboot" -a \
-			  "${SOFTLEVEL}" != "shutdown" ] && return
-		fi
-		# Source the current progress bar state
-		[ -f "${svcdir}/progress" ] && source "${svcdir}/progress"
-
-		# Do not update an already executed script
-		for x in ${pb_execed}
-		do
-			[ "${x}" = "${myscript}" ] && return
-		done	
-		
-		/sbin/splash "${myscript}" "${action}"
-		pb_count=$((${pb_count} + 1))
-		
-		echo "pb_init=${pb_init}" > "${svcdir}/progress"
-		echo "pb_rate=${pb_rate}" >> "${svcdir}/progress"
-		echo "pb_count=${pb_count}" >> "${svcdir}/progress"
-		echo "pb_scripts=${pb_scripts}" >> "${svcdir}/progress"
-		echo "pb_execed=\"${pb_execed} ${myscript}\"" >> "${svcdir}/progress"
-	fi
-}
-
-#
-# void splash_debug (char *softlevel)
-#
-splash_debug() {
-	local softlevel="$1"
-
-	[ ! -e /proc/splash -o ! -x /sbin/splash ] && return 0
-	
-	if [ -f ${BOOTSPLASH_CONF} ]
-	then
-		source ${BOOTSPLASH_CONF}
-
-		[ "${BOOTSPLASH_DEBUG}" = "yes" -a -n "${softlevel}" ] || return
-		
-		if [ -f "${svcdir}/progress" ]
-		then
-			cat "${svcdir}/progress" > "/var/log/bootsplash.${softlevel}"
-		else
-			echo "pb_init=${pb_init}" > "/var/log/bootsplash.${softlevel}"
-			echo "pb_rate=${pb_rate}" >> "/var/log/bootsplash.${softlevel}"
-			echo "pb_count=${pb_count}" >> "/var/log/bootsplash.${softlevel}"
-			echo "pb_scripts=${pb_scripts}" >> "/var/log/bootsplash.${softlevel}"
-			echo "pb_execed=\"${pb_execed}\"" >> "/var/log/bootsplash.${softlevel}"
-		fi	
-	fi
-}
-
-update_splash_wrappers() {
-	if [ -x /sbin/splash ] && \
-	   ([ ! -e /proc/version ] || \
-	    [ -e /proc/version -a -e /proc/splash ])
-	then
-		rc_splash() {
-			/sbin/splash $*
-		}
-		rc_splash_init() {
-			splash_init $*
-		}
-		rc_splash_calc() {
-			splash_calc $*
-		}
-		rc_splash_update() {
-			splash_update $*
-		}
-		rc_splash_debug() {
-			splash_debug $*
-		}
-	else
-		rc_splash() {
-			return 0
-		}
-		rc_splash_init() {
-			return 0
-		}
-		rc_splash_calc() {
-			return 0
-		}
-		rc_splash_update() {
-			return 0
-		}
-		rc_splash_debug() {
-			return 0
-		}
-	fi
-
-	export rc_splash rc_splash_init rc_splash_calc \
-		rc_splash_update rc_splash_debug
 }
 
 # void esyslog(char* priority, char* tag, char* message)
@@ -771,8 +571,6 @@ then
 	then
 		setup_defaultlevels
 	fi
-
-	update_splash_wrappers
 else
 	# Should we use colors ?
 	if [ "${*/depend}" = "$*" ]

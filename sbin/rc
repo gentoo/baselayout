@@ -22,13 +22,7 @@ try() {
 	retval=$?
 	if [ "${retval}" -ne 0 ]
 	then
-		# Progressbar begin
-		if [ -c /dev/null ]; then
-			rc_splash "stop" &>/dev/null &
-		else
-			rc_splash "stop" &
-		fi
-		# Progressbar end
+		splash "critical" &
 
 		echo -e "${ENDCOL}${NORMAL}[${BAD} oops ${NORMAL}]"
 		echo
@@ -60,6 +54,7 @@ check_statedir() {
 	then
 		if ! mkdir -p "$1" &>/dev/null
 		then
+			splash "critical" &
 			echo
 			eerror "For Gentoo Linux to function properly, \"$1\" need to exist."
 			eerror "Please mount your root partition read/write, and execute:"
@@ -118,10 +113,6 @@ get_critical_services() {
 
 # Save $1
 argv1="$1"
-
-# Progressbar begin
-rc_splash_init
-# Progressbar end
 
 # First time boot stuff goes here.  Note that 'sysinit' is an internal runlevel
 # used to bring up local filesystems, and should not be started with /sbin/rc
@@ -282,12 +273,6 @@ then
 		fi
 	fi
 
-	# Update splash wrappers.
-	update_splash_wrappers
-	# Progressbar begin
-	rc_splash "text"
-	# Progressbar end
-
 	if [ -x /sbin/irqbalance -a "$(get_KV)" -ge "$(KV_to_int '2.5.0')" ]
 	then
 		ebegin "Starting irqbalance"
@@ -323,6 +308,7 @@ then
 		try mount -n -t ext2 /dev/ram0 "${tsvcdir}" -o rw
 		eend 0
 	fi
+
 
 	# Swap needs to be activated *after* devfs has been mounted and *after*
 	# devfsd has been started, so that the fstab can be properly parsed
@@ -366,19 +352,17 @@ then
 	# defaults.
 	get_critical_services
 
+	splash "rc_init" "${argv1}"
+
 	# We do not want to break compatibility, so we do not fully integrate
 	# these into /sbin/rc, but rather start them by hand ...
 	for x in ${CRITICAL_SERVICES}
 	do
-		# Progressbar begin
-		rc_splash_update "inline" "${x}" "start"
-		# Progressbar end
+		splash "svc_start" "${x}"
 
 		if ! start_critical_service "${x}"
 		then
-			# Progressbar begin
-			rc_splash "stop" &> /dev/null &
-			# Progressbar end
+			splash "critical" &> /dev/null &
 			
 			echo
 			eerror "One of more critical startup scripts failed to start!"
@@ -390,6 +374,8 @@ then
 			einfo "Rebooting"
 			/sbin/reboot -f
 		fi
+
+		splash "svc_started" "${x}" "0"
 	done
 	# Check that $svcdir exists ...
 	check_statedir "${svcdir}"
@@ -426,19 +412,11 @@ then
 			mark_service_started "${x}"
 		done
 	)
+
+	exit 0
 fi # Sysinit ends here
 
-# Update splash wrappers.
-update_splash_wrappers
-
-if [ "${RUNLEVEL}" = "S" -a "${argv1}" = "sysinit" ]
-then
-	# Progressbar begin
-	rc_splash_debug "${argv1}"
-	# Progressbar end
-	exit 0
-
-elif [ "${RUNLEVEL}" = "S" -a "${argv1}" = "boot" ]
+if [ "${RUNLEVEL}" = "S" -a "${argv1}" = "boot" ]
 then
 	setup_defaultlevels
 
@@ -462,7 +440,6 @@ then
 	argv1="$(< ${svcdir}/ksoftlevel)"
 	rm -f "${svcdir}/ksoftlevel"
 fi
-
 
 source "${svclib}/sh/rc-services.sh"
 source "${svclib}/sh/rc-daemon.sh"
@@ -492,10 +469,6 @@ then
 	echo "${SOFTLEVEL}" > "${svcdir}/softlevel"
 fi
 
-# Progressbar begin
-rc_splash_calc
-# Progressbar end
-
 # For keeping a list of services that fails during boot/halt
 if [ ! -d "${svcdir}/failed" ]
 then
@@ -503,6 +476,8 @@ then
 else
 	rm -rf "${svcdir}"/failed/*
 fi
+
+splash "rc_init" "${argv1}"
 
 if [ "${SOFTLEVEL}" = "reboot" -o "${SOFTLEVEL}" = "shutdown" ]
 then
@@ -687,10 +662,6 @@ if [ "${SOFTLEVEL}" = "reboot" -o "${SOFTLEVEL}" = "shutdown" ]
 then
 	source /sbin/functions.sh
 	
-	# Progressbar begin
-	rc_splash_debug "${SOFTLEVEL}"
-	# Progressbar end
-
 	# Make sure that our $svcdir are clean for next reboot ...
 	rm -rf "${svcdir}"/*
 	
@@ -776,9 +747,6 @@ rm -rf "${svcdir}/failed" &> /dev/null
 # If we were in the boot runlevel, it is done now ...
 [ -n "${BOOT}" ] && unset BOOT
 
-# Progressbar begin
-rc_splash_debug "${SOFTLEVEL}"
-# Progressbar end
-
+splash "rc_exit"
 
 # vim:ts=4
