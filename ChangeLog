@@ -1,6 +1,13 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  31 Jan 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Punt the PROTOCOL variable from rc.conf since nothing uses it.
+
+    Punt the consolefont related variables from rc.conf since they've 
+    been moved to conf.d/consolefont.
+
   07 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix /sbin/functions.sh not to run stty during 'emerge depend'.
