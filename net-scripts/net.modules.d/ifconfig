@@ -151,8 +151,11 @@ ifconfig_del_addresses() {
 	[[ ${iface} == *:* ]] && return 0
 
 	# iproute2 can add many addresses to an iface unlike ifconfig ...
+	# iproute2 added addresses cause problems for ifconfig
+	# as we delete an address, a new one appears, so we have to
+	# keep polling
 	while ifconfig ${iface} | grep -q -m1 -o 'inet addr:[^ ]*' ; do
-		ifconfig ${iface} 0
+		ifconfig ${iface} 0.0.0.0 || break
 	done
 	
 	# Remove IPv6 addresses
