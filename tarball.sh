@@ -1,5 +1,5 @@
 #!/bin/bash
-export TMP="/tmp"
+export TMP="${TMP:-/tmp}"
 export V="1.6.4"
 export DEST="${TMP}/rc-scripts-${V}"
 rm -rf ${DEST}
