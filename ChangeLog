@@ -2,6 +2,14 @@
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  11 Nov 2004; Roy Marples <uberlord@gentoo.org>:
+
+    Fixed category of rp-pppoe to net-dialup error when requesting ADSL
+    Improved inet6 address deletion and detection in iproute2
+    Improved gateway logic in ifconfig
+    Changed all wireless reporting functions to use iwgetid instead of
+      parsing iwconfig output except for essid
+
 * rc-scripts 1.6.6 (08 Nov 2004)
 
   08 Nov 2004; Roy Marples <uberlord@gentoo.org>:

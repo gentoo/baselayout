@@ -1,5 +1,5 @@
 # ifconfig module for net-scripts
-# Version 1.0.4
+# Version 1.0.5
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -214,7 +214,7 @@ ifconfig_setup_vars() {
 				break
 			fi
 		done
-		[[ ${gw} == false ]] && routes_IFACE=( "${routes_IFACE[@]}" "default gw ${gateway#*/}" )
+		${gw} && routes_IFACE=( "${routes_IFACE[@]}" "default gw ${gateway#*/}" )
 	fi
 
 	# BACKWARD COMPATIBILITY: populate the config_IFACE array
@@ -254,6 +254,7 @@ ifconfig_iface_stop() {
 	# status
 	ifconfig_down ${1} && return 0
 	ifconfig_is_up $1 || return 0
+
 	# It is sometimes impossible to transition an alias from the
 	# UP state... particularly if the alias has no address.  So
 	# ignore the failure, which should be okay since the entire
@@ -288,17 +289,17 @@ ifconfig_post_start() {
 		eoutdent
 	fi
 
+	[[ -z ${routes_IFACE} ]] && return 0
+
 	# Add routes for this interface, might even include default gw
-	if [[ -n ${routes_IFACE} ]] ; then
-		einfo "Adding routes"
-		eindent
-		for ((i = 0; i < ${#routes_IFACE[@]}; i = i + 1)); do
-			ebegin "${routes_IFACE[i]}"
-			/sbin/route add ${routes_IFACE[i]} &>${devnull}
-			eend $?
-		done
-		eoutdent
-	fi
+	einfo "Adding routes"
+	eindent
+	for ((i = 0; i < ${#routes_IFACE[@]}; i = i + 1)); do
+		ebegin "${routes_IFACE[i]}"
+		/sbin/route add ${routes_IFACE[i]} &>${devnull}
+		eend $?
+	done
+	eoutdent
 	
 	return 0
 }

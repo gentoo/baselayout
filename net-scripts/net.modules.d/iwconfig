@@ -109,7 +109,7 @@ iwconfig_get_ap_mac_address() {
 #
 # Returns the wireless mode in lower case
 iwconfig_get_mode() {
-	iwgetid -m ${1} | awk -F: '{print $2}' | tr '[:upper:]' '[:lower:]'
+	iwgetid --mode ${1} | awk -F: '{print $2}' | tr '[:upper:]' '[:lower:]'
 }
 
 # char* iwconfig_get_type(char *interface)
@@ -135,10 +135,7 @@ iwconfig_report() {
 	done
 
 	local wep_status=$( iwconfig_get_wep_status ${iface} )
-
-	# Displays some info about how we are connected
-	local channel=$( iwlist ${iface} channel 2>/dev/null | awk '/Current/' | sed 's/^.*hannel[ :]\(.*\)[0-9]*.*$/\1/g' )
-	channel=${channel//[![:digit:]]/}	
+	local channel=$( iwgetid --channel | awk '{print $3}' )
 
 	essid=${essid//\\\\/\\\\}
 	local mode=$( iwconfig_get_mode ${iface} )

@@ -1,5 +1,5 @@
 # ADSL module for net-scripts
-# Version 1.0.1
+# Version 1.0.2
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -24,7 +24,7 @@ adsl_depend() {
 # Returns 1 if rp-pppoe is installed, otherwise 0
 adsl_check_installed() {
 	[[ -x /usr/sbin/adsl-start ]] && return 0
-	[[ ${1} == true ]] && eerror "For ADSL support, emerge net-misc/rp-pppoe"
+	[[ ${1} == true ]] && eerror "For ADSL support, emerge net-dialup/rp-pppoe"
 	return 1
 }
 

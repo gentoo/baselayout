@@ -1,5 +1,5 @@
 # iproute2 module for net-scripts
-# Version 1.0.4
+# Version 1.0.5
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -91,12 +91,11 @@ iproute2_down() {
 # If withaddress is true then the interface has to have an address
 # assigned as well
 iproute2_is_up() {
-	local check="\<UP\>" addr=${2:-false}
-	${addr} && check="${check}.*\<inet\>"
-	local up=$( ip addr show ${1} scope global scope site scope host 2>${devnull} \
-		| xargs | grep -Eq "${check}" && echo up )
-	[[ up = ${up} ]] && return 0
-	return 1
+	local iface=${1} addr=${2:-false}
+
+	ip link show ${iface} 2>${devnull} | grep -Eq "\<UP\>" || return 1
+	! ${addr} && return 0
+	ip addr show ${iface} 2>${devnull} | grep -v link | grep -q inet || return 1
 }
 
 # void iproute2_set_flag(char *iface, char *flag, bool enabled)
@@ -172,16 +171,7 @@ iproute2_del_addresses() {
 		esac
 	fi
 
-	inet6="$( ip addr show ${iface} label ${label} \
-		scope host \
-		| awk '$1=="inet6" {print $2}' )"
-	inet6="${inet6} $( ip addr show ${iface} label ${label} \
-		scope global \
-		| awk '$1=="inet6" {print $2}' )"
-	inet6="${inet6} $( ip addr show ${iface} label ${label} \
-		scope site \
-		| awk '$1=="inet6" {print $2}' )"
-
+	inet6="$( ip addr show eth0 | grep -v link | awk '$1=="inet6" { print $2 }' )"
 	[[ -z ${inet6} || ${inet6} == "  " ]] && return 1
 
 	${report} && einfo "Removing inet6 addresses"
