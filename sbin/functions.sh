@@ -588,6 +588,7 @@ fi
 if [ "${RC_NOCOLOR}" = "yes" ]
 then
 	COLS="25 80"
+	COLS="`getcols ${COLS}`"
 	ENDCOL=
 	
 	GOOD=
@@ -606,9 +607,16 @@ else
 	COLS="`stty size 2> /dev/null`"
 	COLS="`getcols ${COLS}`"
 	COLS=$((${COLS} - 7))
-	ENDCOL=$'\e[A\e['${COLS}'G'    # Now, ${ENDCOL} will move us to the end of the
-	                               # column;  irregardless of character width
-	
+	if [ "${COLS:0:1}" == "-" ]
+	then
+		# Sanity check ... with serial consoles and such,
+		# COLS may up being negative ...
+		COLS="80"
+	fi
+	# Now, ${ENDCOL} will move us to the end of the
+	# column;  irregardless of character width
+	ENDCOL=$'\e[A\e['${COLS}'G'
+
 	GOOD=$'\e[32;01m'
 	WARN=$'\e[33;01m'
 	BAD=$'\e[31;01m'

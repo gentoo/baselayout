@@ -28,7 +28,8 @@
 # grab code from functions.sh so we don't have to reproduce it
 source /sbin/functions.sh
 runleveldir=/etc/runlevels
-let COLS="${COLS} - 7"
+COLS="$((COLS - 6))"
+[ "${COLS:0:1}" == "-" ] && COLS="80"
 
 # grab settings from conf.d/rc
 source /etc/conf.d/rc
