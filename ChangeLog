@@ -2,10 +2,14 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+* rc-scripts 1.4.3.12 (11 Nov 2003)
+
   11 Nov 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Add carrier detection to /etc/init.d/net.eth0 closing bug #25480;
     patch by Jordan Ritter <jpr5+gentoo@darkridge.com>.
+
+    Add extra checks for critical directories to /sbin/rc.
 
   04 Nov 2003; Martin Schlemmer <azarah@gentoo.org>:
 
