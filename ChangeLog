@@ -2,12 +2,15 @@
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  13 Nov 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Update the svcdir mounting #69595.  Instead of mounting in /mnt 
+    and then bind mounting to $svcdir, we mount the ramdisk on $svcidr.
+
   12 Nov 2004; Roy Marples <uberlord@gentoo.org>:
 
     Added arping duplicate address detection to net.lo
     Created Automatic Private IP Addressing (APIPA) module
-
-  12 Nov 2004; Roy Marples <uberlord@gentoo.org>:
 
     Added dependancy checking to ipppd
     Bonding is now started pre instead of post
