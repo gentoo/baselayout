@@ -1,0 +1,65 @@
+#!/sbin/runscript
+# Copyright 1999-2004 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header$
+
+depend() {
+	local myneed="net"
+	local myuse=""
+
+	# Only have Portmap as a dependency if there is a nfs mount in fstab
+	# that should be mounted at boot time.  Also filter out comments.
+	local nfsmounts="$(awk '!/^#/ && $3 == "nfs" && $4 !~ /noauto/ { print $0 }' /etc/fstab)"
+	local nfs4mounts="$(awk '!/^#/ && $3 == "nfs4" && $4 !~ /noauto/ { print $0 }' /etc/fstab)"
+
+	if [ -n "${nfsmounts}${nfs4mounts}" ]
+	then
+		myneed="${myneed} portmap"
+		myuse="${myuse} nfs"
+	fi
+	if [ -n "${nfs4mounts}" ] && [ -x /sbin/idmapd ]
+	then
+		myneed="${myneed} idmapd"
+	fi
+
+	need ${myneed}
+	use ${myuse}
+}
+
+start() {
+	local rcfilesystems=""
+
+	# Only try to mount NFS filesystems if portmap was started.
+	# This is to fix "hang" problems for new users who do not
+	# add portmap to the default runlevel.
+	if [ -L ${svcdir}/started/portmap ]
+	then
+		rcfilesystems="${NET_FS_LIST// /,}"		# convert to comma-separated
+	else
+		rcfilesystems=" ${NET_FS_LIST} "
+		rcfilesystems=${rcfilesystems// nfs /}	# remove nfs
+		rcfilesystems=${rcfilesystems# }		# remove front and
+		rcfilesystems=${rcfilesystems% }		#   back spaces
+		rcfilesystems=${rcfilesystems// /,}		# convert to comma-separated
+	fi
+
+	ebegin "Mounting network filesystems"
+	mount -at ${rcfilesystems} >/dev/null
+
+	if [ "$?" -ne 0 ]
+	then
+		ewend 1 "Could not mount all network filesystems!"
+	else
+		eend 0
+	fi
+
+	return 0
+}
+
+stop() {
+    ebegin "Unmounting network filesystems"
+	umount -art ${NET_FS_LIST// /,}
+	eend $? "Failed to unmount filesystems"
+}
+
+# vim:ts=4

@@ -1,0 +1,128 @@
+#!/sbin/runscript
+# Copyright 1999-2004 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header$
+
+depend() {
+	need checkfs
+}
+
+start() {
+	# Mount local filesystems in /etc/fstab.
+	ebegin "Mounting local filesystems"
+	mount -at noproc,noshm,no${NET_FS_LIST// /,no} >/dev/null
+	eend $? "Some local filesystem failed to mount"
+
+	# Make sure we insert usbcore if its a module
+	if [ -f /proc/modules ]
+	then
+		# >/dev/null to hide errors from non-USB users
+		modprobe usbcore &>/dev/null
+	fi
+	
+	# Check what USB fs the kernel support.  Currently
+	# 2.5+ kernels, and later 2.4 kernels have 'usbfs',
+	# while older kernels have 'usbdevfs'.
+	local usbfs="$(grep -Fow usbfs /proc/filesystems ||
+		grep -Fow usbdevfs /proc/filesystems)"
+
+	if [ -n "${usbfs}" ] && \
+	   [ -e /proc/bus/usb -a ! -e /proc/bus/usb/devices ]
+	then
+		ebegin "Mounting USB device filesystem (${usbfs})"
+#		# Fetch usb gid from /etc/group; fixes bug 35860
+#		usbgid=$(awk -F: '/^usb:/{print $3; exit}' /etc/group)
+#		mount -t ${usbfs} ${usbgid:+-o devmode=0664,devgid=$usbgid}
+		mount -t ${usbfs} none /proc/bus/usb &>/dev/null
+		eend $? "Failed to mount USB device filesystem"
+	fi
+
+	# Swap on loopback devices, and other weirdnesses
+	ebegin "Activating (possibly) more swap"
+	/sbin/swapon -a
+	eend $?
+
+	dm-crypt-start
+}
+
+# Note: This function is exactly duplicated in localmount.  If you change it
+# here, make sure to change it there also!
+dm-crypt-start() {
+	local cryptfs_status=0 
+	local mountline mount swap options pre_mount post_mount source
+
+	if [ -f /etc/conf.d/cryptfs ] && [ -x /bin/cryptsetup ]; then
+		ebegin "Running post_mount commands for dm-crypt"
+
+		while read mountline; do
+			# skip comments and blank lines
+			[[ ${mountline}\# == \#* ]] && continue
+
+			# check for the start of a new mount/swap
+			case ${mountline} in
+				mount=*|swap=*)
+					# If we have a mount queued up, then execute it
+					dm-crypt-execute
+
+					# Prepare for the next mount/swap by resetting variables
+					unset mount swap options pre_mount post_mount source
+					;;
+
+				options=*|pre_mount=*|post_mount=*|source=*)
+					if [[ -z ${mount} && -z ${swap} ]]; then
+						ewarn "Ignoring setting outside mount/swap section: ${mountline}"
+						continue
+					fi
+					;;
+
+				*)
+					ewarn "Skipping invalid line in /etc/conf.d/cryptfs: ${mountline}"
+					;;
+			esac
+
+			# Queue this setting for the next call to dm-crypt-execute
+			eval "${mountline}"
+		done < /etc/conf.d/cryptfs
+
+		# If we have a mount queued up, then execute it
+		dm-crypt-execute
+
+		ewend ${cryptfs_status} "Failed to run a post_mount command"
+	fi
+
+	return ${cryptfs_status}
+}
+
+# Run any post_mount commands for an individual mount
+#
+# Note: This relies on variables localized in dm-crypt-start.  This function
+# is quite different from the function by the same name in checkfs...
+dm-crypt-execute() {
+	local mount_point target
+
+	if [[ -n ${mount} && -n ${post_mount} ]]; then
+		target=${mount}
+	else
+		return
+	fi
+
+	if ! /bin/cryptsetup status ${target} | egrep -q '\<active:'; then
+		ewarn "Skipping unmapped target ${target}"
+		cryptfs_status=1
+		return
+	fi
+
+	mount_point=$(grep "/dev/mapper/${target}" /proc/mounts | cut -d' ' -f2)
+	if [[ -z ${mount_point} ]]; then
+		ewarn "Failed to find mount point for ${target}, skipping"
+		cryptfs_status=1
+	fi
+
+	if [[ -n ${post_mount} ]]; then
+		ebegin "Running post_mount commands for target ${target}"
+		eval "${post_mount}" >/dev/null
+		eend $? || cryptfs_status=1
+	fi
+}
+
+# vim:ts=4

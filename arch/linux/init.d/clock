@@ -1,0 +1,139 @@
+#!/sbin/runscript
+# Copyright 1999-2004 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header$
+
+opts="${opts} save"
+
+depend() {
+	need localmount
+}
+
+setupopts() {
+	if is_uml_sys
+	then
+		TBLURB="UML"
+		return 0
+	elif grep -q ' cobd$' /proc/devices
+	then
+		TBLURB="coLinux"
+		return 0
+	elif [ "${CLOCK}" = "UTC" ]
+	then
+		myopts="--utc"
+		TBLURB="UTC"
+	else
+		myopts="--localtime"
+		TBLURB="Local Time"
+	fi
+
+	if [ "${readonly}" = "yes" ]
+	then
+		myadj="--noadjfile"
+	else
+		myadj="--adjust"
+	fi
+
+	if [ "${SRM}" = "yes" ]
+	then
+		myopts="${myopts} --srm"
+	fi
+	if [ "${ARC}" = "arc" ]
+	then
+		myopts="${myopts} --arc"
+	fi
+	myopts="${myopts} ${CLOCK_OPTS}"
+
+	# Make sure user isn't using rc.conf anymore
+	if grep -qs ^CLOCK= /etc/rc.conf ; then
+		ewarn "CLOCK should not be set in /etc/rc.conf but in /etc/conf.d/clock"
+	fi
+}
+
+start() {
+	local myopts=""
+	local myadj=""
+	local TBLURB=""
+	local errstr=""
+	local readonly="no"
+	local ret=0
+
+	if ! touch /etc/adjtime 2> /dev/null
+	then
+		readonly="yes"
+	elif [ ! -s /etc/adjtime ]
+	then
+		echo "0.0 0 0.0" > /etc/adjtime
+	fi
+
+	setupopts
+
+	ebegin "Setting system clock to hardware clock [${TBLURB}]"
+	if [ "${CLOCK}" = "UML" ] || [ "${CLOCK}" = "coLinux" ]
+	then
+		ret=0
+
+	elif [ -x /sbin/hwclock ]
+	then
+		# hwclock does not return a fail status; need to check out
+		errstr="$(/sbin/hwclock ${myadj} ${myopts} 2>&1 >/dev/null)"
+		errstr="${errstr}$(/sbin/hwclock --hctosys ${myopts} 2>&1 >/dev/null)"
+
+		if [ -n "${errstr}" ]
+		then
+			ewarn "${errstr}"
+			ret=1
+		else
+			ret=0
+		fi
+		errstr="Failed to set system clock to hardware clock"
+	else
+		ret=1
+		errstr="/sbin/hwclock not found"
+	fi
+	eend ${ret} "${errstr}"
+}
+
+stop() {
+	# Don't tweak hw clock on LiveCD halt
+	[ -n "${CDBOOT}" ] && return 0
+	
+	[ "${CLOCK_SYSTOHC}" != "yes" ] && return 0
+
+	local myopts=""
+	local TBLURB=""
+	local errstr=""
+	local ret=0
+
+	setupopts
+
+	ebegin "Syncing system clock to hardware clock [${TBLURB}]"
+	if [ "${CLOCK}" = "UML" ]
+	then
+		ret=0
+		
+	elif [ -x /sbin/hwclock ]
+	then
+		errstr="$(/sbin/hwclock --systohc ${myopts} 2>&1 >/dev/null)"
+
+		if [ -n "${errstr}" ]
+		then
+			ret=1
+		else
+			ret=0
+		fi
+		errstr="Failed to sync clocks"
+	else
+		ret=1
+		errstr="/sbin/hwclock not found"
+	fi
+	eend ${ret} "${errstr}"
+}
+
+save() {
+	CLOCK_SYSTOHC="yes"
+	stop
+}
+
+
+# vim:ts=4

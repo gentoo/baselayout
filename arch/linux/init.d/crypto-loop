@@ -1,0 +1,48 @@
+#!/sbin/runscript
+# Copyright 1999-2004 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header$
+
+loopconf="/etc/conf.d/crypto-loop"
+
+depend() {
+	 need checkroot modules
+	 before localmount
+}
+
+start() {
+	local status="0"
+
+	ebegin "Starting crypto loop devices"
+	
+	if [ -e ${loopconf} ]
+	then
+		egrep "^loop" ${loopconf} | \
+		while read loopline
+		do
+			eval ${loopline}
+			
+			local configured="`awk -v MOUNT="${device}" \
+				'($2 == MOUNT) { print "yes" }' /proc/mounts`"
+		
+			if [ "${configured}" != "yes" ]
+			then
+				einfo "  Loop ${loop} on device ${device} (cipher ${cipher}, key size ${keysize}): "
+				if ! /sbin/losetup -e ${cipher} -k ${keysize} ${loop} ${device} ${other}
+				then
+					ewarn "Failure configuring ${loop}.  Skipping."
+					status=1
+				fi
+			else
+				ewarn "  Loop ${loop} on device ${device} are already configured"
+			fi
+		done
+	fi
+	ewend ${status} "Failed to start some loop devices."
+
+	# We do not fail if some loop devices did not start ...
+	return 0
+}
+
+
+# vim:ts=4
