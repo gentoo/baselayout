@@ -80,15 +80,27 @@ depend_dbadd() {
 			fi
 			continue
 		fi
-		
-		if [ ! -d ${svcdir}/${mytype}/${x} ]
+	
+		# NEED and USE override BEFORE and AFTER
+		if (([ "${mytype}" = "before" ] && \
+		    [ ! -L ${svcdir}/need/${x}/${myservice} ]) && \
+		   ([ "${mytype}" = "before" ] && \
+		    [ ! -L ${svcdir}/use/${x}/${myservice} ])) || \
+		   (([ "${mytype}" = "after" ] && \
+		    [ ! -L ${svcdir}/need/${myservice}/${x} ]) && \
+		   ([ "${mytype}" = "after" ] && \
+		    [ ! -L ${svcdir}/use/${myservice}/${x} ])) || \
+		   ([ "${mytype}" = "need" ] || [ "${mytype}" = "use" ] || \
+		    [ "${mytype}" = "provide" ])
 		then
-			install -d -m0755 ${svcdir}/${mytype}/${x}
-		fi
-		
-		if [ ! -L ${svcdir}/${mytype}/${x}/${myservice} ]
-		then
-			ln -sf /etc/init.d/${myservice} ${svcdir}/${mytype}/${x}/${myservice}
+			if [ ! -d ${svcdir}/${mytype}/${x} ]
+			then
+				install -d -m0755 ${svcdir}/${mytype}/${x}
+			fi
+			if [ ! -L ${svcdir}/${mytype}/${x}/${myservice} ]
+			then
+				ln -sf /etc/init.d/${myservice} ${svcdir}/${mytype}/${x}/${myservice}
+			fi
 		fi
 	done
 }
@@ -185,7 +197,7 @@ do
 	myservice="${x##*/}"
 	depend() {
 		PROVIDE=""
-		return
+		return 0
 	}
 	cache_depend ${x}
 	wrap_rcscript ${svcdir}/cache/${myservice}.depend || {
@@ -201,7 +213,7 @@ do
 	fi
 done
 
-#now do the rest
+#now do NEED and USE
 for x in $(dolisting /etc/init.d/)
 do
 	[ ! -e ${svcdir}/cache/${x##*/}.depend ] && continue
@@ -209,16 +221,12 @@ do
 	#set to "" else we get problems
 	NEED=""
 	USE=""
-	BEFORE=""
-	AFTER=""
 
 	myservice="${x##*/}"
 	depend() {
 		NEED=""
 		USE=""
-		BEFORE=""
-		AFTER=""
-		return
+		return 0
 	}
 	#we already warn about the error in the provide loop
 	wrap_rcscript "${svcdir}/cache/${myservice}.depend" || continue
@@ -231,6 +239,27 @@ do
 	then
 		depend_dbadd use "${myservice}" ${USE}
 	fi
+done
+
+#now do BEFORE and AFTER (we do them in a seperate cycle to
+#so that we can check for NEED or USE)
+for x in $(dolisting /etc/init.d/)
+do
+	[ ! -e ${svcdir}/cache/${x##*/}.depend ] && continue
+
+	#set to "" else we get problems
+	BEFORE=""
+	AFTER=""
+
+	myservice="${x##*/}"
+	depend() {
+		BEFORE=""
+		AFTER=""
+		return 0
+	}
+	#we already warn about the error in the provide loop
+	wrap_rcscript "${svcdir}/cache/${myservice}.depend" || continue
+	depend
 	if [ -n "${BEFORE}" ]
 	then
 		depend_dbadd before "${myservice}" ${BEFORE}

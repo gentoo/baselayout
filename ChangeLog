@@ -9,6 +9,12 @@
     Add /sbin/rc-envupdate.sh to speedup updating of /etc/profile.env,
 	and /etc/csh.env.  Update /etc/init.d/bootmisc to use this.
 
+	Implement the status commandline argument.  Updated /sbin/runscript.sh
+	and /sbin/rc-help.sh for this.
+
+	Fix /sbin/depscan.sh to honour NEED and USE overriding BEFORE
+	and AFTER.
+
   12 April 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Update /etc/init.d/bootmisc to create /var/run/utmpx. This

@@ -29,7 +29,7 @@ start() {
 		if [ -x /usr/sbin/env-update ]
 		then
 			ebegin "Updating environment"
-			rc-envupdate.sh &>/dev/null
+			rc-envupdate.sh >/dev/null
 			eend 0
 		fi
 

@@ -638,6 +638,14 @@ do
 	needsme|ineed|usesme|iuse|broken)
 		query ${arg}
 		;;
+	status)
+		if [ -L ${svcdir}/started/${myservice} ]
+		then
+			einfo "status:  started"
+		else
+			eerror "status:  stopped"
+		fi
+		;;
 	zap)
 		if [ -e ${svcdir}/started/${myservice} ]
 		then

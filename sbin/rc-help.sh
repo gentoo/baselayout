@@ -64,6 +64,12 @@ cat <<EOHELP
       to the stopped state.  Basically for killing zombie services.
 
 EOHELP
+echo -e "    ${GREEN}status${OFF}"
+cat <<EOHELP
+      Prints "status:  started" if the service is running, else it
+      prints "status:  stopped".
+
+EOHELP
 echo -e "    ${GREEN}ineed|iuse${OFF}"
 cat <<EOHELP
       List the services this one depends on.  Consult the section about
