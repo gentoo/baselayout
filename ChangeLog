@@ -9,8 +9,8 @@
 
   3 Jun 2002; Martin Schlemmer <azarah@gentoo.org>:
 
-    Update Copyright displayed at boot, thanks to cybersystem. Updated
-    /sbin/rc for this.
+    Update Copyright displayed at boot, thanks to Sascha Schwabbauer
+    (aka cybersystem).  Updated /sbin/rc for this.
 
   30 Jun 2002; Martin Schlemmer <azarah@gentoo.org>:
 
