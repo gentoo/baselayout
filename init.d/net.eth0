@@ -5,6 +5,12 @@
 
 #NB: Config is in /etc/conf.d/net
 
+if [[ -n $NET_DEBUG ]]; then
+	set -x
+	devnull=/dev/stderr
+else
+	devnull=/dev/null
+fi
 
 # For pcmcia users. note that pcmcia must be added to the same
 # runlevel as the net.* script that needs it.
@@ -13,202 +19,269 @@ depend() {
 }
 
 checkconfig() {
-	if [ -z "${iface_IFACE}" ]
-	then
-		eerror "Please make sure that /etc/conf.d/net has \$iface_$IFACE set"
+	if [[ -z "${ifconfig_IFACE}" ]]; then
+		eerror "Please make sure that /etc/conf.d/net has \$ifconfig_$IFACE set"
+		eerror "(or \$iface_$IFACE for old-style configuration)"
 		return 1
 	fi
-	if [ -n "${vlans}" -a \! -x /sbin/vconfig ]
-	then
+	if [[ -n "${vlans_IFACE}" && ! -x /sbin/vconfig ]]; then
 		eerror "For VLAN (802.1q) support, emerge net-misc/vconfig"
 		return 1
 	fi
 }
 
-setup_env() {
-	# No reason to check these multiple times in the file
-	iface="${1/\./_}"
-	iface_IFACE="$(eval echo \$\{iface_${iface}\})"
-	dhcpcd_IFACE="$(eval echo \$\{dhcpcd_${iface}\})"
-	inet6_IFACE="$(eval echo \$\{inet6_${iface}\})"
-	alias_IFACE="$(eval echo \$\{alias_${iface}\})"
-	status_IFACE="$(ifconfig | gawk -v IFACE="${iface}" '$0 ~ /Link/ { if ($1 == IFACE) print "up" }')"
-	vlans="$(eval echo \$\{iface_${IFACE}_vlans\})"
+# setup_vars: setup variables based on $1 and content of /etc/conf.d/net
+# The following variables are set, which should be declared local by
+# the calling routine.
+#	status_IFACE	(up or '')
+#	vlans_IFACE		(space-separated list)
+#	ifconfig_IFACE	(array of ifconfig lines, replaces iface_IFACE)
+#	dhcpcd_IFACE	(command-line args for dhcpcd)
+#	routes_IFACE	(array of route lines)
+#	inet6_IFACE		(array of inet6 lines)
+setup_vars() {
+	local i iface="${1//\./_}"
+
+	status_IFACE="$(ifconfig ${1} 2>${devnull} | gawk '$1 == "UP" {print "up"}')"
+	eval vlans_IFACE=\"\$\{iface_${iface}_vlans\}\"
+	eval ifconfig_IFACE=( \"\$\{ifconfig_$iface\[@\]\}\" )
+	eval dhcpcd_IFACE=\"\$\{dhcpcd_$iface\}\"
+	eval routes_IFACE=( \"\$\{routes_$iface\[@\]\}\" )
+	eval inet6_IFACE=( \"\$\{inet6_$iface\[@\]\}\" )
+
+	# BACKWARD COMPATIBILITY: populate the ifconfig_IFACE array
+	# if iface_IFACE is set (fex. iface_eth0 instead of ifconfig_eth0)
+	eval local iface_IFACE=\"\$\{iface_$iface\}\"
+	if [[ -n ${iface_IFACE} && -z ${ifconfig_IFACE} ]]; then
+		# Make sure these get evaluated as arrays
+		local -a aliases broadcasts netmasks
+
+		# Start with the primary interface
+		ifconfig_IFACE=( "${iface_IFACE}" )
+
+		# ..then add aliases
+		eval aliases=( \$\{alias_$iface\} )
+		eval broadcasts=( \$\{broadcast_$iface\} )
+		eval netmasks=( \$\{netmask_$iface\} )
+		for ((i = 0; i < ${#aliases[@]}; i = i + 1)); do
+			ifconfig_IFACE[i+1]="${aliases[i]} ${broadcasts[i]:+broadcast ${broadcasts[i]}} ${netmasks[i]:+netmask ${netmasks[i]}}"
+		done
+	fi
+
+	# BACKWARD COMPATIBILITY: check for space-separated inet6 addresses
+	if [[ ${#inet6_IFACE[@]} == 1 && ${inet6_IFACE} == *' '* ]]; then
+		inet6_IFACE=( ${inet6_IFACE} )
+	fi
 }
 
 iface_start() {
-	local retval=0
-
-	setup_env ${1}
+	local IFACE=${1} i x
 	checkconfig || return 1
 
-	local IFACE="${1}"
-	ebegin "Bringing ${IFACE} up"
-	if [ "${iface_IFACE}" != "dhcp" ]
-	then
-		/sbin/ifconfig ${IFACE} ${iface_IFACE} >/dev/null || {
-			retval=$?
-			eend ${retval} "Failed to bring ${IFACE} up"
-			return ${retval}
-		}
-		# ifconfig do not always return failure ..
-		/sbin/ifconfig ${IFACE} &> /dev/null || {
-			retval=$?
-			eend ${retval} "Failed to bring ${IFACE} up"
-			return ${retval}
-		}
+	if [[ ${ifconfig_IFACE} != dhcp ]]; then
+		# Show the address, but catch if this interface will be inet6 only
+		i=${ifconfig_IFACE%% *}
+		if [[ ${i} == *.*.*.* ]]; then
+			ebegin "Bringing ${IFACE} up (${i})"
+		else
+			ebegin "Bringing ${IFACE} up"
+		fi
+		# ifconfig does not always return failure ..
+		/sbin/ifconfig ${IFACE} ${ifconfig_IFACE} >${devnull} && \
+		/sbin/ifconfig ${IFACE} &>${devnull}
+		eend $? || return $?
 	else
-		# Check that eth0 was not brough up by the kernel ...
-		if [ "${status_IFACE}" != "up" ]
-		then
-			/sbin/dhcpcd ${dhcpcd_IFACE} ${IFACE} >/dev/null || {
-				retval=$?
-				eend ${retval} "Failed to bring ${IFACE} up"
-				return ${retval}
+		# Check that eth0 was not brought up by the kernel ...
+		if [[ ${status_IFACE} == up ]]; then
+			einfo "Keeping kernel configuration for ${IFACE}"
+		else
+			ebegin "Bringing ${IFACE} up via DHCP"
+			/sbin/dhcpcd ${dhcpcd_IFACE} ${IFACE}
+			eend $? || return $?
+		fi
+		# Show address retrieved
+		i=$(ifconfig ${IFACE} | grep -m1 -o 'inet addr:[^ ]*' | cut -d: -f2)
+		[[ -n ${i} ]] && einfo "  ${IFACE} received address ${i}"
+	fi
+
+	if [[ ${#ifconfig_IFACE[@]} -gt 1 ]]; then
+		einfo "  Adding aliases"
+		for ((i = 1; i < ${#ifconfig_IFACE[@]}; i = i + 1)); do
+			ebegin "    ${IFACE}:${i} (${ifconfig_IFACE[i]%% *})"
+			/sbin/ifconfig ${IFACE}:${i} ${ifconfig_IFACE[i]}
+			eend $?
+		done
+	fi
+
+	if [[ -n ${inet6_IFACE} ]]; then
+		einfo "  Adding inet6 addresses"
+		for ((i = 0; i < ${#inet6_IFACE[@]}; i = i + 1)); do
+			ebegin "    ${IFACE} inet6 add ${inet6_IFACE[i]}"
+			/sbin/ifconfig ${IFACE} inet6 add ${inet6_IFACE[i]} >${devnull}
+			eend $?
+		done
+	fi
+
+	# Set static routes
+	if [[ -n ${routes_IFACE} ]]; then
+		einfo "  Adding routes"
+		for ((i = 0; i < ${#routes_IFACE[@]}; i = i + 1)); do
+			ebegin "    ${routes_IFACE[i]}"
+			/sbin/route add ${routes_IFACE[i]}
+			eend $?
+		done
+	fi
+
+	# Set default route if applicable to this interface
+	if [[ ${gateway} == ${IFACE}/* ]]; then
+		local ogw=$(/bin/netstat -rn | awk '$1 == "0.0.0.0" {print $2}')
+		local gw=${gateway#*/}
+		if [[ ${ogw} != ${gw} ]]; then
+			ebegin "  Setting default gateway ($gw)"
+
+			# First delete any existing route if it was setup by kernel...
+			/sbin/route del default dev ${IFACE} &>${devnull}
+
+			# Second delete old gateway if it was set...
+			/sbin/route del default gw ${ogw} &>${devnull}
+
+			# Third add our new default gateway
+			/sbin/route add default gw ${gw} >${devnull}
+			eend $? || {
+				true # need to have some command in here
+				# Note: This originally called stop, which is obviously
+				# wrong since it's calling with a local version of IFACE.
+				# The below code works correctly to abort configuration of
+				# the interface, but is commented because we're assuming
+				# that default route failure should not cause the interface
+				# to be unconfigured.
+				#local error=$?
+				#ewarn "Aborting configuration of ${IFACE}"
+				#iface_stop ${IFACE}
+				#return ${error}
 			}
 		fi
-	fi
-	eend 0
-
-	if [ -n "${alias_IFACE}" ]
-	then
-		local x=""
-		local num=0
-		local aliasbcast=""
-		local aliasnmask=""
-
-		ebegin "  Adding aliases"
-		for x in ${alias_IFACE}
-		do
-			aliasbcast="$(eval echo \$\{broadcast_${iface}\} \| awk \'\{ print \$$((num + 1)) \}\')"
-			if [ -n "${aliasbcast}" ]
-			then
-				aliasbcast="broadcast ${aliasbcast}"
-			fi
-
-			aliasnmask="$(eval echo \$\{netmask_${iface}\} \| awk \'\{ print \$$((num + 1)) \}\')"
-			if [ -n "${aliasnmask}" ]
-			then
-				aliasnmask="netmask ${aliasnmask}"
-			fi
-		
-			ebegin "    ${IFACE}:${num}"
-			/sbin/ifconfig ${IFACE}:${num} ${x} \
-				${aliasbcast} ${aliasnmask} >/dev/null
-			num=$((num + 1))
-			eend 0
-		done
-		save_options "alias" "${alias_IFACE}"
-	fi
-
-	if [ -n "${inet6_IFACE}" ]
-	then
-		local x=""
-		ebegin "  Adding inet6 addresses"
-		for x in ${inet6_IFACE}
-		do
-			ebegin "    ${IFACE} inet6 add ${x}"
-			/sbin/ifconfig ${IFACE} inet6 add ${x} >/dev/null
-			eend 0
-		done
-		save_options "inet6" "${inet6_IFACE}"
-	fi
-	
-	if [ -n "${gateway}" ] && [ "${gateway%/*}" = "${IFACE}" ]
-	then
-		ebegin "  Setting default gateway"
-		# First delete any existing routes if it was setup by kernel ..
-		/sbin/route del default dev ${gateway%/*} &>/dev/null
-		/sbin/route add default gw ${gateway#*/} dev ${gateway%/*} \
-			netmask 0.0.0.0 metric 1 >/dev/null || {
-			
-			local error=$?
-			ifconfig ${IFACE} down &>/dev/null
-			eend ${error} "Failed to bring ${IFACE} up"
-			stop
-			return ${error}
-		}
-		eend 0
 	fi
 
 	# Enabling rp_filter causes wacky packets to be auto-dropped by
 	# the kernel.  Note that we only do this if it is not set via
 	# /etc/sysctl.conf ...
-	if [ -e /proc/sys/net/ipv4/conf/${IFACE}/rp_filter ] && \
-	   [ -z "$(egrep '^[^#]*rp_filter' /etc/sysctl.conf 2>/dev/null)" ]
-	then
-		echo 1 > /proc/sys/net/ipv4/conf/${IFACE}/rp_filter
+	if [[ -e /proc/sys/net/ipv4/conf/${IFACE}/rp_filter && \
+			-z "$(grep -s '^[^#]*rp_filter' /etc/sysctl.conf)" ]]; then
+		echo -n 1 > /proc/sys/net/ipv4/conf/${IFACE}/rp_filter
 	fi
 }
 
+# iface_stop: bring down an interface.  Don't trust information in
+# /etc/conf.d/net since the configuration might have changed since
+# iface_start ran.  Instead query for current configuration and bring
+# down the interface.
 iface_stop() {
-	local myalias="$(get_options alias)"
-	local myinet6="$(get_options inet6)"
+	local IFACE=${1} i x aliases inet6 count
 
-	setup_env ${1}
-	local IFACE="${1}"
-
-	ebegin "Bringing ${IFACE} down"
-
-	# Also down the inet6 interfaces
-	if [ -n "${myinet6}" ]
-	then
-		local x=""
-		for x in ${myinet6}
-		do
-			/sbin/ifconfig ${IFACE} inet6 del ${x} >/dev/null
-		done
-	fi
-	
-	# Do some cleanup in case the amount of aliases change
-	if [ -n "${myalias}" ]
-	then
-		local x=""
-		local num=0
-		for x in ${myalias}
-		do
-			/sbin/ifconfig ${IFACE}:${num} down >/dev/null
-			num=$((num + 1))
-		done
+	# Try to do a simple down (no aliases, no inet6, no dhcp)
+	aliases="$(/sbin/ifconfig | grep -o "^$IFACE:[0-9]*" | tac)"
+	inet6="$(ifconfig ${IFACE} | awk '$1 == "inet6" {print $2}')"
+	if [[ -z ${aliases} && -z ${inet6} && ! -e /var/run/dhcpcd-${IFACE}.pid ]]; then
+		ebegin "Bringing ${IFACE} down"
+		/sbin/ifconfig ${IFACE} down &>/dev/null
+		eend 0
+		return 0
 	fi
 
-	if [ "${iface_IFACE}" = "dhcp" ]
-	then
-		local count=0
-		while /sbin/dhcpcd -z ${IFACE} &>/dev/null && [ "${count}" -lt 9 ]
-		do
-			# Give dhcpcd time to properly shutdown
-			sleep 1
-			count=$((count + 1))
-		done
-		if [ "${count}" -ge 9 ]
-		then
-			eerror "Timed out trying to stop dhcpcd"
+	einfo "Bringing ${IFACE} down"
+
+	# Stop aliases before primary interface.
+	# Note this must be done in reverse order, since ifconfig eth0:1 
+	# will remove eth0:2, etc.  It might be sufficient to simply remove 
+	# the base interface but we're being safe here.
+	for i in ${aliases} ${IFACE}; do
+
+		# Delete all the inet6 addresses for this interface
+		inet6="$(ifconfig ${i} | awk '$1 == "inet6" {print $2}')"
+		if [[ -n ${inet6} ]]; then
+			einfo "  Removing inet6 addresses"
+			for x in ${inet6}; do 
+				ebegin "    ${IFACE} inet6 del ${x}"
+				/sbin/ifconfig ${i} inet6 del ${x}
+				eend $?
+			done
 		fi
-	else
-		/sbin/ifconfig ${IFACE} down >/dev/null
-	fi
-	eend 0
+
+		# Stop DHCP (should be N/A for aliases)
+		# Don't trust current configuration... investigate ourselves
+		if /sbin/dhcpcd -z ${i} &>${devnull}; then
+			ebegin "  Releasing DHCP lease for ${IFACE}"
+			for ((count = 0; count < 9; count = count + 1)); do
+				/sbin/dhcpcd -z ${i} &>${devnull} || break
+				sleep 1
+			done
+			[[ ${count} -lt 9 ]]
+			eend $? "Timed out"
+		fi
+		ebegin "  Stopping ${i}"
+		/sbin/ifconfig ${i} down &>${devnull}
+		eend 0
+	done
+
+	return 0
 }
 
 start() {
+	# These variables are set by setup_vars
+	local status_IFACE vlans_IFACE dhcpcd_IFACE 
+	local -a ifconfig_IFACE routes_IFACE inet6_IFACE
+
+	# Call user-defined preup function if it exists
+	if [[ $(type -t preup) == function ]]; then
+		einfo "Running preup function"
+		preup ${IFACE} || {
+			eerror "preup ${IFACE} failed"
+			return 1
+		}
+	fi
+
+	# Start the primary interface and aliases
+	setup_vars ${IFACE}
 	iface_start ${IFACE} || return 1
-	for vlan in ${vlans}
-	do
-		/sbin/vconfig add ${IFACE} ${vlan} >/dev/null
+
+	# Start vlans
+	local vlan
+	for vlan in ${vlans_IFACE}; do
+		/sbin/vconfig add ${IFACE} ${vlan} >${devnull}
+		setup_vars ${IFACE}.${vlan}
 		iface_start ${IFACE}.${vlan}
 	done
+
+	# Call user-defined postup function if it exists
+	if [[ $(type -t postup) == function ]]; then
+		einfo "Running postup function"
+		postup ${IFACE}
+	fi
 }
 
-stop () {
-	setup_env ${IFACE}
-	checkconfig || return 1
-	for vlan in ${vlans}
-	do
+stop() {
+	# Call user-defined predown function if it exists
+	if [[ $(type -t predown) == function ]]; then
+		einfo "Running predown function"
+		predown ${IFACE}
+	fi
+
+	# Don't depend on setup_vars since configuration might have changed.
+	# Investigate current configuration instead.
+	local vlan
+	for vlan in $(ifconfig | grep -o "^${IFACE}\.[^ ]*"); do
 		iface_stop ${IFACE}.${vlan}
-		/sbin/vconfig rem ${IFACE}.${vlan} >/dev/null
+		/sbin/vconfig rem ${IFACE} ${vlan} >${devnull}
 	done
-	iface_stop ${IFACE}
+
+	iface_stop ${IFACE} || return 1  # always succeeds, btw
+
+	# Call user-defined postdown function if it exists
+	if [[ $(type -t postdown) == function ]]; then
+		einfo "Running postdown function"
+		postdown ${IFACE}
+	fi
 }
 
 # vim:ts=4
