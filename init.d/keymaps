@@ -44,14 +44,6 @@ start() {
 		
 		/bin/loadkeys -q ${WINDOWKEYS_KEYMAP} ${KEYMAP} \
 		                 ${EXTENDED_KEYMAPS} >/dev/null
-		
-	# Old console-tools support ...
-	elif [ -x /usr/bin/loadkeys ]
-	then
-		[ "${SET_WINDOWKEYS}" = "yes" ] && WINDOWKEYS_KEYMAP="windowkeys.inc"
-		
-		/usr/bin/loadkeys -q ${WINDOWKEYS_KEYMAP} ${KEYMAP} \
-		                     ${EXTENDED_KEYMAPS} >/dev/null
 	else
 		eend 1 "loadkeys executable not found"
 		return 1

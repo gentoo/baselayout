@@ -10,76 +10,71 @@ depend() {
 }
 
 start() {
+	local x=
+	local param=
 	local retval=1
+	
 	if [ -n "${CONSOLEFONT}" ]
 	then
 		# Getting additional parameters, ie consoletranslation
-		local param=""
-		local x=""
 		if [ -n "${CONSOLETRANSLATION}" ]
 		then
 			param="-m ${CONSOLETRANSLATION}"
 		fi
 		
 		# Actually setting font
-		if [ -x /usr/bin/consolechars ]
+		if [ -x /bin/setfont ]
 		then
-			#
-			# Console-Tools section:
-			#
-			
 			ebegin "Setting user font"
+
+			# We patched setfont to have --tty support ...
+			if [ -n "`setfont --help 2>&1 | grep -e '--tty'`" ]
+			then
+				for x in 1 2 3 4 5 6 7 8 9 10
+				do
+					# Using DEVFS ?
+					if [ -e /dev/.devfsd ]
+					then
+						/bin/setfont ${CONSOLEFONT} ${param} \
+							--tty=/dev/vc/${x} >/dev/null
+						retval=$?
+					else
+						/bin/setfont ${CONSOLEFONT} ${param} \
+							--tty=/dev/tty${x} >/dev/null
+						retval=$?
+					fi
+				done
+			else
+				/bin/setfont ${CONSOLEFONT} ${param} >/dev/null
+				retval=$?
+			fi
+		else
+			# No console program installed!
+			eend 1 "The setfont executable was not found"
+			return 1
+		fi
+
+		if [ "${retval}" -eq 0 ]
+		then
 			for x in 1 2 3 4 5 6 7 8 9 10
 			do
 				# Using DEVFS ?
 				if [ -e /dev/.devfsd ]
 				then
-					/usr/bin/consolechars -f ${CONSOLEFONT} ${param} \
-						--tty=/dev/vc/${x} &>/dev/null
-					retval=$?
+					echo -ne "\033(K" >/dev/vc/${x}
 				else
-					/usr/bin/consolechars -f ${CONSOLEFONT} ${param} \
-						--tty=/dev/tty${x} &>/dev/null
-					retval=$?
+					echo -ne "\033(K" >/dev/tty${x}
 				fi
 			done
-	
-		elif [ -x /usr/bin/setfont ]
-		then
-			#
-			# Kbd Section
-			#
-			
-			ebegin "Setting user font"
-			/usr/bin/setfont ${CONSOLEFONT} ${param} >/dev/null
-			retval=$?
-			
-			for x in 1 2 3 4 5 6 7 8 9 10
-			do
-				# Using DEVFS ?
-				if [ -e /dev/.devfsd ]
-			    	then
-					echo -ne "\033(K" > /dev/vc/${x} 
-					retval=$?
-				else
-					echo -ne "\033(K" > /dev/tty${x} 
-					retval=$?
-				fi
-			done
-	
-		else
-			# No console program installed!
-			eend 1 "The setfont/consolechars executable not found"
-			return 1
 		fi
 		
-		eend $retval "Failed to set user font"
+		eend ${retval} "Failed to set user font"
 	else
 		ebegin "Using the default console font"
 		eend 0
 	fi
 	
-	return $retval
+	return ${retval}
 }
 
 
