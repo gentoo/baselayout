@@ -121,7 +121,7 @@ BEGIN {
 			}
 
 			# Filter out comments and only process if its a rcscript
-			if (($0 !~ /^[[:space:]]*#/) && (ISRCSCRIPT == 1)) {
+			if (($0 !~ /^[[:space:]]*#/) && (ISRCSCRIPT)) {
 
 				# If line contain 'depend()', set GOTDEPEND to 1
 				if ($0 ~ /depend[[:space:]]*\(\)/) {
@@ -133,7 +133,7 @@ BEGIN {
 				}
 	
 				# We have the depend function...
-				if (GOTDEPEND == 1) {
+				if (GOTDEPEND) {
 
 					# Basic theory is that COUNT will be 0 when we
 					# have matching '{' and '}'
