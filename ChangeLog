@@ -2,6 +2,11 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  21 May 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Call /proc mount with explicit options to fix issues where user
+    have 'bind' mounts for /proc in fstab as well, bug #21068.
+
 * rc-scripts 1.4.3.8p1 (21 May 2003)
 
   21 May 2003; Martin Schlemmer <azarah@gentoo.org>:

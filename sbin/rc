@@ -76,7 +76,7 @@ then
 	echo
 
 	ebegin "Mounting proc at /proc"
-	try mount -n /proc
+	try try mount -n -t proc none /proc
 	eend $?
 
 	if [ -d /sys -a "$(get_KV)" -ge "$(KV_to_int '2.5.0')" ]
