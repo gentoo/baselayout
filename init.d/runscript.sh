@@ -350,7 +350,8 @@ do
 		if [ -e ${svcdir}/started/${myservice} ]
 		then
 			svc_stop
-			sleep 1
+			#sleep may not be available (it's in /usr) when runscript.sh runs
+			#sleep 1
 		fi
 		svc_start
 		;;
