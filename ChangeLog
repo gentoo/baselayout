@@ -5,33 +5,33 @@
   12 May 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Make slight modifications to /sbin/depscan.sh to improve speed (about
-	1 second on a celeron 633).
+    1 second on a celeron 633).
 
-	Finally fix /sbin/runscript.sh to properly handle interdependencies
-	between types need/use and before/after on runlevel change.  I can
-	actually kick myself for previous implementations, as this fix simplifies
-	things a lot, and is almost 30 lines of code less!
+    Finally fix /sbin/runscript.sh to properly handle interdependencies
+    between types need/use and before/after on runlevel change.  I can
+    actually kick myself for previous implementations, as this fix simplifies
+    things a lot, and is almost 30 lines of code less!
 
-	Change /etc/init.d/netmount not to fail if all mounts are not mounted.
-	It rather just exit with a warning, as I think most people have like
-	me mounts that are to boxes that are not always up.
+    Change /etc/init.d/netmount not to fail if all mounts are not mounted.
+    It rather just exit with a warning, as I think most people have like
+    me mounts that are to boxes that are not always up.
 
-	Resolve bug #2439 (should not use try with the dd command for ramdisk
-	stuff).  Also increase the number of inodes used for the ramdisk to
-	fix "out of space" errors.  Updated /sbin/rc for this.
+    Resolve bug #2439 (should not use try with the dd command for ramdisk
+    stuff).  Also increase the number of inodes used for the ramdisk to
+    fix "out of space" errors.  Updated /sbin/rc for this.
 
   10 May 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Resolve bug #2505 ... /sbin/rc-envupdate.sh should not use
     backup files to generate /etc/profile.env.
 
-	Resolve bug #2489 and #2175.  Modified /etc/init.d/net.eth0
-	for this.
+    Resolve bug #2489 and #2175.  Modified /etc/init.d/net.eth0
+    for this.
 
   6 May 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Fixed /sbin/rc-envupdate.sh to only use the $KDEDIR of the highest
-	/etc/env.d/ file.  Same for $QTDIR.
+    /etc/env.d/ file.  Same for $QTDIR.
 
   5 May 2002; Martin Schlemmer <azarah@gentoo.org>:
 
@@ -41,8 +41,8 @@
   28 April 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Update /etc/rc.conf to be more clear and state that you should
-	remove consolefont from startup if you do not use it.  Should
-	resolve bug #2174.
+    remove consolefont from startup if you do not use it.  Should
+    resolve bug #2174.
 
   26 April 2002; Donny Davies <woodchip@gentoo.org> passwd, group :
 
@@ -51,8 +51,8 @@
   25 April 2002; Martin Schlemmer <azarah@gentoo.org>:
   
     Remove the "-net" from the line setting the default gateway
-	in /etc/init.d/net.eth0.  Thanks to Peter W. Michaleas for
-	noting this.
+    in /etc/init.d/net.eth0.  Thanks to Peter W. Michaleas for
+    noting this.
 
   24 April 2002; Donny Davies <woodchip@gentoo.org> rc.conf :
 
@@ -71,13 +71,13 @@
   21 April 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Add /sbin/rc-envupdate.sh to speedup updating of /etc/profile.env,
-	and /etc/csh.env.  Update /etc/init.d/bootmisc to use this.
+    and /etc/csh.env.  Update /etc/init.d/bootmisc to use this.
 
-	Implement the status commandline argument.  Updated /sbin/runscript.sh
-	and /sbin/rc-help.sh for this.
+    Implement the status commandline argument.  Updated /sbin/runscript.sh
+    and /sbin/rc-help.sh for this.
 
-	Fix /sbin/depscan.sh to honour NEED and USE overriding BEFORE
-	and AFTER.
+    Fix /sbin/depscan.sh to honour NEED and USE overriding BEFORE
+    and AFTER.
 
   12 April 2002; Martin Schlemmer <azarah@gentoo.org>:
 
@@ -188,8 +188,9 @@
 
 * rc-scripts 1.3.0 (10 March 2002)
 
-  10 March 2002; Martin Schlemmer <azarah@gentoo.org>: Resolved
-    bug #1021; updated /etc/init.d/consolefont for this.
+  10 March 2002; Martin Schlemmer <azarah@gentoo.org>:
+  
+    Resolved bug #1021; updated /etc/init.d/consolefont for this.
 
     Resolved bug #1029; updated /etc/init.d/net.eth0 for this.
 
@@ -218,8 +219,9 @@
 
 * rc-scripts 1.2.9 (6 March 2002)
 
-  6 March 2002; Martin Schlemmer <azarah@gentoo.org>: General form
-    updates and some piping fixes.
+  6 March 2002; Martin Schlemmer <azarah@gentoo.org>:
+  
+    General form updates and some piping fixes.
 
     Updated /etc/inittab, /etc/init.d/xdm and /etc/X11/startDM.sh
     to fix a problem where startDM.sh would be respawned repeatedly
@@ -227,10 +229,11 @@
 
 * rc-scripts 1.2.8 (4 March 2002)
 
-  4 March 2002; Martin Schlemmer <azarah@gentoo.org>: add /etc/init.d/xdm,
-    /etc/X11/startDM.sh and updated /etc/inittab to fix the "dead key"
-    problem we had with xdm/gdm/kdm.  We should move them to the
-    xfree ebuild later on when things settles down.
+  4 March 2002; Martin Schlemmer <azarah@gentoo.org>:
+  
+    Add /etc/init.d/xdm, /etc/X11/startDM.sh and updated /etc/inittab
+    to fix the "dead key" problem we had with xdm/gdm/kdm.  We should
+    move them to the xfree ebuild later on when things settles down.
 
     Added some sanity checks to /sbin/rc, /etc/init.d/runscripts.sh.
 
@@ -242,10 +245,11 @@
 
 * rc-scripts 1.2.7 (3 March 2002)
 
-  3 March 2002; Martin Schlemmer <azarah@gentoo.org>: fixed the problem
-    of rc-scripts trying to start/stop a service multiple times if it
-    fails to do so.  Updated /etc/init.d/runscript.sh and /sbin/rc for
-    this.
+  3 March 2002; Martin Schlemmer <azarah@gentoo.org>:
+  
+    Fixed the problem of rc-scripts trying to start/stop a service multiple
+    times if it fails to do so.  Updated /etc/init.d/runscript.sh and /sbin/rc
+    for this.
 
     Fixing some variable declarations in /etc/init.d/runscript.sh caused
     /etc/init.d/net.lo to fail on stop ($IFACE was set invalid). Fixed
@@ -260,9 +264,10 @@
 
     Update /etc/fstab to mention /dev/shm since we dont mount it anymore.
 
-  1 March 2002; Martin Schlemmer <azarah@gentoo.org>: added a wrapper for
-    sourcing the rc-scripts to eliminate syntax errors.  Thanks to
-    Karl Trygve Kalleberg (aka karltk) for the idea.  Updated
+  1 March 2002; Martin Schlemmer <azarah@gentoo.org>:
+  
+    Added a wrapper for sourcing the rc-scripts to eliminate syntax errors.
+    Thanks to Karl Trygve Kalleberg (aka karltk) for the idea.  Updated
     /etc/init.d/depscan.sh, /etc/init.d/functions.sh and
     /etc/init.d/runscript.sh for this (added wrap_rcscript() function).
 
@@ -270,24 +275,27 @@
     a 'use'dependancy ... should be less confusing now.
     Updated /etc/init.d/runscript.sh for this.
 
-  28 Feb 2002; Martin Schlemmer <azarah@gentoo.org>: add /etc/conf.d/local.start
-  and /etc/conf.d/local.stop for adding any misc programs to startup.  This
-  should pretty much have /etc/init.d/ static, except for baselayout updates,
-  etc.
+  28 Feb 2002; Martin Schlemmer <azarah@gentoo.org>:
+  
+    Add /etc/conf.d/local.start and /etc/conf.d/local.stop for adding any misc
+    programs to startup.  This should pretty much have /etc/init.d/ static,
+    except for baselayout updates, etc.
 
-  27 Feb 2002; Martin Schlemmer <azarah@gentoo.org>: in some wierd cases,
-    a redundent /dev/.devfsd on a unmounted /dev can cause problems.  Fixed
-    this in /sbin/rc.
+  27 Feb 2002; Martin Schlemmer <azarah@gentoo.org>:
+  
+    In some wierd cases, a redundent /dev/.devfsd on a unmounted /dev can cause
+    problems.  Fixed this in /sbin/rc.
 
     Added the patches from Grant Goodyear (aka g2boojum) to enable us to
     use a ramdisk to store the contents of ${svcdir}.  Updated /sbin/rc,
     /etc/init.d/functions.sh and /etc/init.d/checkroot for this.
 
-  26 Feb 2002; Martin Schlemmer <azarah@gentoo.org>: fix my brain dead
-    update of the 25th.  It really should keep "gentoo=nodevfs" in mind.
-    Also added 'get_bootparam()' to help in retrieving kernel options.
-    Updated /etc/init.d/functions.sh, /etc/init.d/checkroot and /sbin/rc
-    for this.
+  26 Feb 2002; Martin Schlemmer <azarah@gentoo.org>:
+  
+    Fix my brain dead update of the 25th.  It really should keep
+    "gentoo=nodevfs" in mind.  Also added 'get_bootparam()' to help in
+    retrieving kernel options.  Updated /etc/init.d/functions.sh,
+    /etc/init.d/checkroot and /sbin/rc for this.
 
     Updated /etc/init.d/consolefont to work without devfs as well.
 
@@ -295,39 +303,47 @@
     if a service it depends on, fails.  Updated /etc/init.d/runscript.sh
     for this.
 
-  25 Feb 2002; Martin Schlemmer <azarah@gentoo.org>: added a check if
-  /dev is mounted when creating entries for /etc/mtab.  This should solve a
-  invalid entry or /dev being mounted even with 'gentoo=nodevfs' option.
-  Updated /etc/init.d/checkroot for this.
+  25 Feb 2002; Martin Schlemmer <azarah@gentoo.org>:
+  
+    Added a check if /dev is mounted when creating entries for /etc/mtab.
+    This should solve a invalid entry or /dev being mounted even with
+    'gentoo=nodevfs' option.  Updated /etc/init.d/checkroot for this.
 
   17 Feb 2002: Daniel Robbins <drobbins@gentoo.org>: Made "xfs" the default
   filesystem in /etc/fstab (from ReiserFS) and removed "notail" option (it's
   just in a comment now)
 
-  17 Feb 2002: Martin Schlemmer (azarah@gentoo.org): more fixes to 'after' and
-  'before', updated /etc/init.d/runscript.sh for this.  This should fix
-  services not getting started in the correct order in a tight loop,  services
-  getting stopped out of order, and some other sanity checks.  Updated
-  rc-script.sh for updated help.
+  17 Feb 2002: Martin Schlemmer (azarah@gentoo.org):
   
-  15 Feb 2002: Martin Schlemmer (azarah@gentoo.org): update /etc/profile to
-  resolve bug #588.  Reimplemented things a bit, and added the 'after' type.
-  'before' and 'after' will only work currently for a change of runlevel.
-  Updated /etc/init.d/depscan.sh, /etc/init.d/runscript.sh and /sbin/rc for it.
+    Mmore fixes to 'after' and 'before', updated /etc/init.d/runscript.sh for
+    this.  This should fix services not getting started in the correct order
+    in a tight loop,  services getting stopped out of order, and some other
+    sanity checks.  Updated rc-script.sh for updated help.
+  
+  15 Feb 2002: Martin Schlemmer (azarah@gentoo.org):
+  
+    Update /etc/profile to resolve bug #588.  Reimplemented things a bit,
+    and added the 'after' type. 'before' and 'after' will only work currently
+    for a change of runlevel.  Updated /etc/init.d/depscan.sh,
+    /etc/init.d/runscript.sh and /sbin/rc for this.
 
-  13 Feb 2002: Martin Schlemmer (azarah@gentoo.org): add some more entries to
-  /etc/devfsd.conf to make alsa users life easier ...  thanks Tod.
+  13 Feb 2002: Martin Schlemmer (azarah@gentoo.org):
+  
+    Add some more entries to /etc/devfsd.conf to make alsa users life
+    easier ...  thanks Tod.
 
-  12 Feb 2002: Martin Schlemmer (azarah@gentoo.org): Some more cleanups to
-  /etc/init.d/depscan.sh and /etc/init.d/runscript.sh.
+  12 Feb 2002: Martin Schlemmer (azarah@gentoo.org):
+  
+    Some more cleanups to /etc/init.d/depscan.sh and /etc/init.d/runscript.sh.
 
     Fixed some services not starting again when restarting a service.
     Seems simple is still the best way.
 
     Fixed some other problems created with feature additions and cleanups.
 
-  11 Feb 2002: Martin Schlemmer (azarah@gentoo.org): General cleanups to
-  /etc/init.d/depscan.sh and /etc/init.d/runscript.sh.
+  11 Feb 2002: Martin Schlemmer (azarah@gentoo.org):
+  
+    General cleanups to /etc/init.d/depscan.sh and /etc/init.d/runscript.sh.
 
     Added 'before *' to /etc/init.d/checkroot to make sure it gets
     started first.
@@ -335,9 +351,10 @@
     Added 'use *' to /etc/init.d/local to make sure it gets started
     last.
 
-  10 Feb 2002: Martin Schlemmer (azarah@gentoo.org): Fixed /sbin/rc
-    to stop a service on change of runlevel if it is in 'use' by
-    another service.
+  10 Feb 2002: Martin Schlemmer (azarah@gentoo.org):
+  
+    Fixed /sbin/rc to stop a service on change of runlevel if it is
+    in 'use' by another service.
 
     Added the 'provide' depend type for creating virtual services.
     Updated /etc/init.d/depscan.sh for this.
@@ -355,24 +372,27 @@
     /etc/init.d/net.eth0 to use these and properly down virtual
     interfaces.
 
-  6 Feb 2002: Martin Schlemmer (azarah@gentoo.org): updated both
-  /etc/init.d/bootmisc and /etc/init.d/keymaps to be quiet on no
-  errors.
+  6 Feb 2002: Martin Schlemmer (azarah@gentoo.org):
+  
+    Updated both /etc/init.d/bootmisc and /etc/init.d/keymaps to be quiet
+    on no errors.
 
 * rc-scripts 1.2.6 (6 Feb 2002)
 
-  2 Feb 2002: Martin Schlemmer (azarah@gentoo.org): updated /etc/net.eth0
-  to specify the gateway device via the $gateway variable (something like
-  gateway="eth0/192.168.0.1").
+  2 Feb 2002: Martin Schlemmer (azarah@gentoo.org):
+  
+    Updated /etc/net.eth0 to specify the gateway device via the $gateway
+    variable (something like gateway="eth0/192.168.0.1").
 
-  2 Feb 2002: Martin Schlemmer (azarah@gentoo.org): added rc-script
-  /etc/init.d/numlock, for enabling numlock at boot.
+  2 Feb 2002: Martin Schlemmer (azarah@gentoo.org):
+  
+    Added rc-script /etc/init.d/numlock, for enabling numlock at boot.
 
-  29 Jan 2002: Martin Schlemmer (azarah@gentoo.org): hopefully the
-  last fix to /etc/init.d/netmount to umount cleanly.  This fix
-  implements a retry if not successful the first time, and will
-  kill processess using the mount.  Also small type-o fix to
-  /etc/init.d/halt.sh.
+  29 Jan 2002: Martin Schlemmer (azarah@gentoo.org):
+  
+    Hopefully the last fix to /etc/init.d/netmount to umount cleanly.  This fix
+    implements a retry if not successful the first time, and will kill
+    processess using the mount.  Also small type-o fix to /etc/init.d/halt.sh.
 
   27 Jan 2002: Donny Davies (woodchip@gentoo.org): security fix to
   /etc/pam.d/sshd,login,chsh: added pam_shells.so to the stack.
@@ -421,9 +441,10 @@
   29 Dec 2001; Donny Davies (woodchip@gentoo.org):
     sort -t: -k3,3 -n /etc/passwd,group.  Ahhhh :))
 
-  28 Dec 2001; Martin Schlemmer (azarah@gentoo.org); Updated
-    /etc/init.d/depscan.sh to store info about missing dependancies of
-    type 'need' in ${svcdir}/broken.  Also updated /etc/init.d/runscript.sh
+  28 Dec 2001; Martin Schlemmer (azarah@gentoo.org);
+  
+    Updated /etc/init.d/depscan.sh to store info about missing dependancies
+    of type 'need' in ${svcdir}/broken.  Also updated /etc/init.d/runscript.sh
     to use this when starting a script ('need' dependancies is critical for
     startup).  Added the broken() function to /etc/init.d/runscript.sh
     to list the missing dependancies.
@@ -435,20 +456,24 @@
     eend(), but print a warning on error, not a error.  Updated
     /etc/init.d/checkroot and /etc/init.d/checkfs to use this function.
 
-  27 Dec 2001; Martin Schlemmer (azarah@gentoo.org); Update /sbin/runscript.c
-    to run /etc/init.d/rc-help.sh if no arguments is passed to a rc-script.
+  27 Dec 2001; Martin Schlemmer (azarah@gentoo.org);
+  
+    Update /sbin/runscript.c to run /etc/init.d/rc-help.sh if no arguments
+    is passed to a rc-script.
   
     Added /etc/init.d/rc-help.sh, simple script that prints out help for
     the rc-scripts.
 
-  25 Dec 2001; Martin Schlemmer (azarah@gentoo.org); Update
-  /etc/init.d/shutdown.sh and /etc/init.d/reboot.sh not to force the
-  halt and reboot.  This fixes a problem where / was not unmounted
-  properly in some cases.
+  25 Dec 2001; Martin Schlemmer (azarah@gentoo.org);
+  
+    Update /etc/init.d/shutdown.sh and /etc/init.d/reboot.sh not to force the
+    halt and reboot.  This fixes a problem where / was not unmounted properly
+    in some cases.
 
-  24 Dec 2001; Martin Schlemmer (azarah@gentoo.org): Move $svcdir to
-    to /etc/init.d/functions.sh, and update /etc/init.d/runscript.sh and
-    /etc/init.d/depscan.sh for this
+  24 Dec 2001; Martin Schlemmer (azarah@gentoo.org):
+  
+    Move $svcdir to to /etc/init.d/functions.sh, and update
+    /etc/init.d/runscript.sh and /etc/init.d/depscan.sh for this
 
     Modified /etc/init.d/runscript.sh to also restart the services that
     depend on a service if that service is restarted.  Enhanced the
@@ -460,13 +485,15 @@
     stop a service without stopping the services that depends on that
     service.
 
-  Add a pause function to /etc/init.d/runscript.sh.  It will basically stop a
-  service without stopping the services that depends on that service.
+    Add a pause function to /etc/init.d/runscript.sh.  It will basically stop a
+    service without stopping the services that depends on that service.
 
 * rc-scripts 1.2.3 (18 Dec 2001)
 
-  16 Dec 2001; Martin Schlemmer (azarah@gentoo.org): Moved the stuff from 
-    /sbin/init (old) to /sbin/rc (basically drop the init wrapper we used).
+  16 Dec 2001; Martin Schlemmer (azarah@gentoo.org):
+  
+    Moved the stuff from /sbin/init (old) to /sbin/rc (basically drop the
+    init wrapper we used).
 
     Some cleanups:  take out the shm resize comment;
 
@@ -487,8 +514,10 @@
     not always read the docs, it does not get compiled in ;/  Should
     make live for us a bit easier.
     
-  14 Dec 2001; Martin Schlemmer (azarah@gentoo.org): Fixed /sbin/rc to kill
-  a cosmetic bug in the part that stops all the unneeded services.  
+  14 Dec 2001; Martin Schlemmer (azarah@gentoo.org):
+  
+    Fixed /sbin/rc to kill a cosmetic bug in the part that stops all
+    the unneeded services.  
 
 * rc-scripts 1.2.2 (8 Dec 2001)
 
@@ -509,23 +538,28 @@
   tarball.sh to include the new man directory. Updated baselayout to install
   these manpages. Slightly tweak the /etc/modules.autoload comments.
 
-  28 Nov 2001; Martin Schlemmer (azarah@gentoo.org): Updated /sbin/init
-    to work correctly with the 'gentoo=nodevfs' option, and cleaned 
-    out old code.
+  28 Nov 2001; Martin Schlemmer (azarah@gentoo.org):
+  
+    Updated /sbin/init to work correctly with the 'gentoo=nodevfs' option,
+    and cleaned out old code.
 
     Updated /etc/init.d/bootmisc with additional lock files to clean.
 
-  27 Nov 2001; Martin Schlemmer (azarah@gentoo.org): Updated
-  /etc/init.d/depscan.sh for a virtual 'use' depend, called 'logger'
-  that can be used for services that needs to have a logger started
-  before they are started.  Updated /etc/conf.d/basic with $SYSLOGGER
-  that is used to define what loggers the 'logger' depend represent.
+  27 Nov 2001; Martin Schlemmer (azarah@gentoo.org):
+  
+    Updated /etc/init.d/depscan.sh for a virtual 'use' depend, called 'logger'
+    that can be used for services that needs to have a logger started before
+    they are started.  Updated /etc/conf.d/basic with $SYSLOGGER that is used
+    to define what loggers the 'logger' depend represent.
 
-  26 Nov 2001; Martin Schlemmer (azarah@gentoo.org): Updated
-  /etc/passwd and /etc/group with minor fixes to pass pwck and grpck.
+  26 Nov 2001; Martin Schlemmer (azarah@gentoo.org):
+  
+    Updated /etc/passwd and /etc/group with minor fixes to pass pwck
+    and grpck.
 
-  25 Nov 2001; Martin Schlemmer (azarah@gentoo.org): Changed umask in
-    /etc/profile for the user to 077 for security.
+  25 Nov 2001; Martin Schlemmer (azarah@gentoo.org):
+  
+    Changed umask in /etc/profile for the user to 077 for security.
 
     Added a stop() function to /etc/init.d/clock.  Also removed uneeded
     'source /etc/rc.conf' line.
@@ -546,9 +580,11 @@
 
   25 Nov 2001; Fixed init.d/clock script to work in UTC mode.
 
-  24 Nov 2001; Martin Schlemmer (azarah@gentoo.org): Added /etc/devfsd.conf
-    and updated /sbin/init to use a new scheme for saving /dev permissions.
-    Also moved /dev-state to /lib/dev-state which is a more standard location.
+  24 Nov 2001; Martin Schlemmer (azarah@gentoo.org):
+  
+    Added /etc/devfsd.conf and updated /sbin/init to use a new scheme for saving
+    /dev permissions.  Also moved /dev-state to /lib/dev-state which is a more
+    standard location.
 
     Fixed a ugly bug in /etc/init.d/depscan.sh.  If a service depended on
     itself, calling depscan.sh or changing runlevels cause a tempory effect
@@ -587,16 +623,21 @@
 
   16 Nov 2001; removed bogus "mountall.test" script.
   
-  15 Nov 2001; Martin Schlemmer (azarah@gentoo.org): Updated
-  init.d/{runscript.sh,depscan.sh}, sbin/rc to the new dep being 'use' not
-  'uses', as it fits better with 'need' (not 'needs').  Also removed unneeded
-  for loop from init.d/depscan.sh, and other fixes.  Updated names of new
-  functions in init.d/runscript.sh to better sounding ones.  Updated
-  init.d/modules, init.d/netmount to use 'use'.  Lots of other fixes/cleanups.
-  Removed try() out of init.d/runscript.sh (why was this here ?).
+  15 Nov 2001; Martin Schlemmer (azarah@gentoo.org):
+  
+    Updated init.d/{runscript.sh,depscan.sh}, sbin/rc to the new dep being
+    'use' not 'uses', as it fits better with 'need' (not 'needs').  Also
+    removed unneeded for loop from init.d/depscan.sh, and other fixes.  Updated
+    names of new functions in init.d/runscript.sh to better sounding ones.
+    Updated init.d/modules, init.d/netmount to use 'use'.  Lots of other
+    fixes/cleanups.
+    
+    Removed try() out of init.d/runscript.sh (why was this here ?).
 
-  14 Nov 2001; Martin Schlemmer (azarah@gentoo.org): init.d/bootmisc:  Now
-    cleans /tmp.  Also creates /etc/resolv.conf if it doesn't exist.
+  14 Nov 2001; Martin Schlemmer (azarah@gentoo.org): 
+  
+    Now init.d/bootmisc cleans /tmp.  Also creates /etc/resolv.conf if it
+    doesn't exist.
 
     init.d/hostname:  Added check for a valid /etc/hostname.
 
@@ -612,31 +653,38 @@
     init.d/mountall.test:  Hopefully updated to the new rc-scripts style.  Is
     this really needed (I cannot see that it is used anywhere ...)?
 
-  13 Nov 2001; Martin Schlemmer (azarah@gentoo.org): Updated
-    init.d/runscript.sh, init.d/depscan.sh and sbin/rc with a new depend called
-    'uses'.  It basically have the same usage as 'need', except that it do not
-    start services that is not in the current and 'boot' runlevels.
+  13 Nov 2001; Martin Schlemmer (azarah@gentoo.org):
+  
+    Updated init.d/runscript.sh, init.d/depscan.sh and sbin/rc with a new depend
+    called 'uses'.  It basically have the same usage as 'need', except that it
+    do not start services that is not in the current and 'boot' runlevels.
 
     Updated init.d/netmount to use the 'uses' depend.
 
-  11 Nov 2001; Martin Schlemmer (azarah@gentoo.org): Fixed init.d/runscript.sh
-  not to destroy the 'need' depends in /${svcdir}/need.  This caused subsequent
-  starting and stopping of services not to start depends.
+  11 Nov 2001; Martin Schlemmer (azarah@gentoo.org):
+  
+    Fixed init.d/runscript.sh not to destroy the 'need' depends in
+    /${svcdir}/need.  This caused subsequent starting and stopping of services
+    not to start depends.
 
-  7 Nov 2001; Martin Schlemmer (azarah@gentoo.org): Fixed a problem in sbin/rc
-  where the ${svcdir}/softscripts directory got destroyed before stopping
-  running services scheduled to be stopped.  This with the fact that $SOFTLEVEL
-  was set too early, caused the services to be stopped in the wrong order.
+  7 Nov 2001; Martin Schlemmer (azarah@gentoo.org):
+  
+    Fixed a problem in sbin/rc where the ${svcdir}/softscripts directory got
+    destroyed before stopping running services scheduled to be stopped.  This
+    with the fact that $SOFTLEVEL was set too early, caused the services to be
+    stopped in the wrong order.
 
-  30 Oct 2001; Martin Schlemmer (azarah@gentoo.org): Modified init.d/netmount to
-  check if any network filesystems is mounted.
+  30 Oct 2001; Martin Schlemmer (azarah@gentoo.org):
+  
+    Modified init.d/netmount to check if any network filesystems is mounted.
 
   29 Oct 2001; init.d/netmount: umount -art doesn't seem to work, so I added
   some awk and grep magic to find all remote filesystems and umount them.
   
-  29 Oct 2001; Martin Schlemmer (azarah@gentoo.org): A fix for checkroot
-  (missing "/"); it now actually checks the root filesystem.  Also, a
-  localmount cleanliness fix.
+  29 Oct 2001; Martin Schlemmer (azarah@gentoo.org):
+  
+    A fix for checkroot (missing "/"); it now actually checks the root
+    filesystem.  Also, a localmount cleanliness fix.
 
 * rc-scripts 1.1.7 (18 Oct 2001)
 
@@ -681,3 +729,5 @@ rc-scripts-1.1.5, released 02 Sep 2001
 	*sbin/init, init.d/checkroot
 	We're going back to a /proc/mounts-based mtab symlink because it's 
 	just plain better.  Appropriate changes made.
+
+# vim:expandtab
