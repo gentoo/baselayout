@@ -113,20 +113,20 @@ bridge_pre_start() {
 	for i in ${ports}; do
 		interface_exists ${i} && continue 
 		eerror "interface ${i} does not exist"
-		bridge_stop ${iface} &>/dev/null
 		return 1
 	done
 
 	for i in ${ports}; do
 		ebegin "${i}"
-		e=$( brctl addif ${iface} ${i} 2>&1 \
-			&& interface_del_addresses ${i} \
-			&& interface_set_flag ${i} promisc true \
-			&& interface_up ${i} )
+		interface_set_flag ${i} promisc true
+		interface_up ${i}
+		e=$( brctl addif ${iface} ${i} 2>&1 )
 		if [[ -n ${e} ]]; then
 			eend 1 "${e}"
+			interface_set_flag ${i} promisc false
 			return 1
 		fi
+		eend 0
 	done
 	eoutdent
 
@@ -150,7 +150,6 @@ bridge_stop() {
 	eindent
 	for i in ${ports}; do
 		ebegin "Removing port ${i}"
-		interface_down ${i}
 		interface_set_flag ${i} promisc false
 		brctl delif ${iface} ${i} &>${devnull}
 		eend $?

@@ -217,6 +217,19 @@ wpa_supplicant_pre_start() {
 	return 0
 }
 
+# bool wpa_supplicant_pre_stop(char *iface)
+#
+# Configures ESSID variable
+# Always returns 0
+wpa_supplicant_pre_stop() {
+	unset ESSID ESSIDVAR
+	if wpa_supplicant_check_extensions $1 ; then
+		ESSID=$( iwconfig_get_essid $1 )
+		ESSIDVAR=${ESSID//[![:word:]]/_}
+	fi
+	return 0
+}
+
 # bool wpa_supplicant_post_stop(char *iface)
 #
 # Stops wpa_supplicant on an interface
