@@ -2,6 +2,28 @@
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  02 Nov 2004; Roy Marples <uberlord@gentoo.org>:
+
+    net-scripts/init.d/net.example
+    - added bridging and tuntap examples
+
+    net-scripts/net.modules.d/ifconfig
+    - fixed interface existance check
+
+    net-scripts/net.modules.d
+    ifconfig & iproute2
+    - added boolean to interface_exists to report if it exists or not
+    - added checks to see if the interface exists or not when starting
+
+    dhcpcd
+    - removed debug line
+
+    bonding, dhclient, dhcpcd, essidnet, macchanger, pump, udhcpc
+    - added checks to see if the interface exists or not when starting
+
+    tuntap
+    - added checks to see if the interface exists or not when stopping
+
   01 Nov 2004; Mike Frysinger <vapier@gentoo.org>:
 
     Dump the error message that hwclock returns since it tends to be 

@@ -1,5 +1,5 @@
 # udhcpc (net-misc/udhcp) module for net-scripts
-# Version 1.0.1
+# Version 1.0.2
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -113,14 +113,18 @@ udhcpc_stop() {
 #
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 udhcpc_start() {
-	local iface=${1} opts script=$( udhcpc_get_script ) hostname
-	local check=$( get_device ${iface} )
+	local iface=${1} opts hostname
+
+	! interface_exists ${iface} true && return 1
 
 	# Check that iface was not brought up by the kernel ...
+	local check=$( get_device ${iface} )
 	if [[ ${check} == ${iface} ]] && interface_is_up ${iface} true ; then
 		einfo "Keeping kernel configuration for ${iface}"
 		return 0
 	fi
+
+	local script=$( udhcpc_get_script )
 
 	eval opts=\"\$\{udhcpc_${iface}\}\"
 	hostname=$( hostname )

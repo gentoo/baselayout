@@ -1,5 +1,5 @@
 # Interface bonding module for net-scripts
-# Version 1.0.0
+# Version 1.0.1
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -51,6 +51,8 @@ bonding_post_start() {
 
 	eval slaves=\"\$\{slaves_${iface}\}\"
 	[[ -z ${slaves} ]] && return 0
+
+	! interface_exists ${iface} true && return 1
 
 	if [[ -n "${iface/bond*/}" ]]; then
 		eerror "${iface} is not capable of bonding"

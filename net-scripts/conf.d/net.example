@@ -234,6 +234,30 @@
 # custom - passes all parameters directly to net-analyzer/macchanger
 #mac_eth0="some custom set of parameters"
 
+#-----------------------------------------------------------------------------
+# TUN/TAP
+# For TUN/TAP support emerge sys-apps/usermode-utilities
+#
+# The below two examples create an interface called tap0
+# ifconfig assigns it's address via dhcp
+# iproute2 assigns it's address manually
+#ifconfig_tap0=( "tuntap" "dhcp" )		# for ifconfig
+#ipaddr_tun0=( "tuntap" "192.168.0.1/24")	# for iproute2
+
+# For passing custom options to tunctl use something like the following.  This
+# example sets the owner to adm
+#tuntap_tap0="-u adm"
+
+#-----------------------------------------------------------------------------
+# Bridging
+# For bridging support emerge net-misc/bridge-utils
+#
+# To create a bridge called br0
+#ifconfig_br=( "bridge" )
+
+# To add interfaces to br0
+#bridge_interfaces_br0="eth0 eth1"
+
 
 ##############################################################################
 # ADVANCED CONFIGURATION

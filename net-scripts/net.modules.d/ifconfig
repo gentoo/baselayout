@@ -1,5 +1,5 @@
 # ifconfig module for net-scripts
-# Version 1.0.1
+# Version 1.0.2
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -49,12 +49,13 @@ ifconfig_check_depends() {
 	return 0
 }
 
-# bool ifconfig_exists(char *interface)
+# bool ifconfig_exists(char *interface, bool report)
 #
 # Returns 1 if the interface exists, otherwise 0
 ifconfig_exists() {
-	local e=$(ifconfig -a | grep -o "^${1}*" )
+	local e=$( ifconfig -a | grep -o "^${1}" ) report=${2:-false}
 	[[ -n ${e} ]] && return 0
+	${report} && eerror "${1} does not exist"
 	return 1
 }
 
@@ -303,6 +304,8 @@ ifconfig_post_start() {
 # Starts the interface with the given options
 # Returns the value of the ifconfig command
 ifconfig_configure() {
+	local iface=$( get_device ${1} )
+	! ifconfig_exists ${iface} true && return 1
 	ifconfig $@ &>${devnull}
 	eend $?
 	return $?

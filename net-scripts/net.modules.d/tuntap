@@ -1,5 +1,5 @@
 # TUN/TAP (sys-apps/usermode-utilities) module for net-scripts
-# Version 1.0.0
+# Version 1.0.1
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -56,6 +56,8 @@ tuntap_stop() {
 	local iface=${1}
 	
 	tuntap_check_installed || return 0
+
+	! interface_exists ${iface} && return 0
 
 	# tunctl doesn't always error on on tun/tap
 	#interfaces (mainly aliases, etc)

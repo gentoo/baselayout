@@ -1,5 +1,5 @@
 # Pump module for net-scripts
-# Version 1.0.1
+# Version 1.0.2
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -96,9 +96,11 @@ pump_stop() {
 # the return value from pump
 pump_start() {
 	local iface=${1} opts hostname
-	local check=$( get_device ${iface} )
+
+	! interface_exists ${iface} true && return 1
 
 	# Check that iface was not brought up by the kernel ...
+	local check=$( get_device ${iface} )
 	if [[ ${check} == ${iface} ]] && interface_is_up ${iface} true ; then
 		einfo "Keeping kernel configuration for ${iface}"
 		return 0

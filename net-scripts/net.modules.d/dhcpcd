@@ -1,5 +1,5 @@
 # DHCP (net-misc/dhcpcd) module for net-scripts
-# Version 1.0.1
+# Version 1.0.2
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -93,11 +93,13 @@ dhcpcd_stop() {
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 dhcpcd_start() {
 	local iface=${1} opts hostname
+
+	! interface_exists ${iface} true && return 1
+
 	local check=$( get_device ${iface} )
 
 	# Check that iface was not brought up by the kernel ...
 	if [[ ${check} == ${iface} ]] && interface_is_up ${iface} true ; then
-		ifconfig
 		einfo "Keeping kernel configuration for ${iface}"
 		return 0
 	fi

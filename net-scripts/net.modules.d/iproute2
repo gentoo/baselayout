@@ -1,5 +1,5 @@
 # iproute2 module for net-scripts
-# Version 1.0.1
+# Version 1.0.2
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -57,12 +57,13 @@ iproute2_check_depends() {
 	return 0
 }
 
-# bool iproute2_exists(char *interface)
+# bool iproute2_exists(char *interface, bool report)
 #
 # Returns 1 if the interface exists, otherwise 0
 iproute2_exists() {
-	local e=$( ip addr show label ${1} )
+	local e=$( ip addr show label ${1} ) report=${2:-false}
 	[[ -n ${e} ]] && return 0
+	${report} && eerror "${1} does not exist"
 	return 1
 }
 
@@ -242,7 +243,9 @@ iproute2_iface_stop() {
 # Starts the interface
 # Returns 0 on success, otherwise 1
 iproute2_configure() {
-	local label=${1} iface=$(get_device ${1})
+	local label=${1} iface=$( get_device ${1} )
+
+	! iproute2_exists ${iface} true && return 1
 
 	# Extract the config
 	local -a config=( "$@" )

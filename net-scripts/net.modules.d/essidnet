@@ -1,5 +1,5 @@
 # essidnet module for net-scripts
-# Version 1.0.0
+# Version 1.0.1
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -59,7 +59,8 @@ essidnet_check_depends() {
 essidnet_pre_start() {
 	local iface=${1}
 
-	wireless_check_extensions ${iface} || return 0
+	! interface_exists ${iface} && return 0
+	! wireless_check_extensions ${iface} && return 0
 
 	local mod func evars evar vars x i mvars mac=$( wireless_get_ap_mac_address ${iface} )
 	local essid=${ESSID//[![:word:]]/_}
