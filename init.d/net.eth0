@@ -18,23 +18,31 @@ checkconfig() {
 		eerror "Please make sure that /etc/conf.d/net has \$iface_$IFACE set"
 		return 1
 	fi
+	if [ -n "${vlans}" -a \! -x /sbin/vconfig ]
+	then
+		eerror "For VLAN (802.1q) support, emerge net-misc/vconfig"
+		return 1
+	fi
 }
 
 setup_env() {
 	# No reason to check these multiple times in the file
-	iface_IFACE="$(eval echo \$\{iface_${IFACE}\})"
-	dhcpcd_IFACE="$(eval echo \$\{dhcpcd_${IFACE}\})"
-	inet6_IFACE="$(eval echo \$\{inet6_${IFACE}\})"
-	alias_IFACE="$(eval echo \$\{alias_${IFACE}\})"
-	status_IFACE="$(ifconfig | gawk -v IFACE="${IFACE}" '/Link/ { if ($1 == IFACE) print "up" }')"
+	iface="${1/\./_}"
+	iface_IFACE="$(eval echo \$\{iface_${iface}\})"
+	dhcpcd_IFACE="$(eval echo \$\{dhcpcd_${iface}\})"
+	inet6_IFACE="$(eval echo \$\{inet6_${iface}\})"
+	alias_IFACE="$(eval echo \$\{alias_${iface}\})"
+	status_IFACE="$(ifconfig | gawk -v IFACE="${iface}" '/Link/ { if ($1 == IFACE) print "up" }')"
+	vlans="$(eval echo \$\{iface_${IFACE}_vlans\})"
 }
 
-start() {
+iface_start() {
 	local retval=0
 
-	setup_env
+	setup_env ${1}
 	checkconfig || return 1
 	
+	local IFACE="${1}"
 	ebegin "Bringing ${IFACE} up"
 	if [ "${iface_IFACE}" != "dhcp" ]
 	then
@@ -72,13 +80,13 @@ start() {
 		ebegin "  Adding aliases"
 		for x in ${alias_IFACE}
 		do
-			aliasbcast="$(eval echo \$\{broadcast_${IFACE}\} \| awk \'\{ print \$$((num + 1)) \}\')"
+			aliasbcast="$(eval echo \$\{broadcast_${iface}\} \| awk \'\{ print \$$((num + 1)) \}\')"
 			if [ -n "${aliasbcast}" ]
 			then
 				aliasbcast="broadcast ${aliasbcast}"
 			fi
 
-			aliasnmask="$(eval echo \$\{netmask_${IFACE}\} \| awk \'\{ print \$$((num + 1)) \}\')"
+			aliasnmask="$(eval echo \$\{netmask_${iface}\} \| awk \'\{ print \$$((num + 1)) \}\')"
 			if [ -n "${aliasnmask}" ]
 			then
 				aliasnmask="netmask ${aliasnmask}"
@@ -133,11 +141,12 @@ start() {
 	fi
 }
 
-stop() {
+iface_stop() {
 	local myalias="$(get_options alias)"
 	local myinet6="$(get_options inet6)"
 
-	setup_env
+	setup_env ${1}
+	local IFACE="${1}"
 
 	ebegin "Bringing ${IFACE} down"
 
@@ -182,5 +191,24 @@ stop() {
 	eend 0
 }
 
+start() {
+	iface_start ${IFACE} || return 1
+	for vlan in ${vlans}
+	do
+		/sbin/vconfig add ${IFACE} ${vlan} >/dev/null
+		iface_start ${IFACE}.${vlan}
+	done
+}
+
+stop () {
+	setup_env ${IFACE}
+	checkconfig || return 1
+	for vlan in ${vlans}
+	do
+		iface_stop ${IFACE}.${vlan}
+		/sbin/vconfig rem ${IFACE}.${vlan} >/dev/null
+	done
+	iface_stop ${IFACE}
+}
 
 # vim:ts=4
