@@ -31,7 +31,7 @@ wpa_supplicant_depend() {
 
 # bool wpa_supplicant_check_installed(void)
 #
-# Returns 1 if isnd4k-utils is installed, otherwise 0
+# Returns 1 if wpa_supplicant is installed, otherwise 0
 wpa_supplicant_check_installed() {
 	[[ -x /usr/sbin/wpa_supplicant ]] && return 0
 	${1:-false} && eerror "For WPA support (wpa_supplicant) support, emerge net-wireless/wpa-supplicant"
@@ -62,8 +62,7 @@ wpa_supplicant_check_extensions() {
 
 # char* wpa_supplicant_get_essid(char *interface)
 #
-# Returns the MAC address of the Access Point
-# the interface is connected to
+# Gets the current ESSID of iface
 wpa_supplicant_get_essid() {
 	wpa_cli -i${1} status 2>/dev/null | awk -F= '/^ssid=/ { print $2 }'
 }
