@@ -241,6 +241,11 @@ then
 			fi
 		fi
 
+		# Selinux lovin; /selinux should be mounted by selinux-patched init
+		if [[ -x /sbin/restorecon ]] && [[ -c /selinux/null ]]; then
+			restorecon /dev &> /selinux/null
+		fi
+
 		# Actually start setting up /dev now
 		if [[ ${udev} = "yes" ]] ; then
 			# Setup temporary storage for /dev
