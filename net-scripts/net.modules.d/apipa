@@ -54,7 +54,10 @@ apipa_check_depends() {
 # is installed then we return 1
 address_exists() {
 	local iface=${1} address=${2%%/*} packets=${3:-1} i
-	
+
+	# We need to bring the interface up to test
+	interface_up ${iface}
+
 	if [[ -x /sbin/arping ]]; then
 		/sbin/arping -D -f -c ${packets} -I ${iface} ${address} &>/dev/null || return 0
 	elif [[ -x /usr/sbin/arping2 ]]; then

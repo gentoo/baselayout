@@ -600,7 +600,7 @@ iface_start() {
 			x=0
 			if [[ $(type -t address_exists ) == function ]]; then
 				if address_exists ${label} ${conf[0]} ; then
-					eerror "${conf[0]} already taken on ${label}"
+					eerror "${conf[0]%%/*} already taken on ${label}"
 					x=1
 				fi
 			fi

@@ -113,12 +113,12 @@ vlan_pre_start() {
 #
 # Always returns 0 (true) 
 vlan_post_start() {
-	local iface=${1} vlan vlans vlans_old e ifname
+	local iface=${1} vlan vlans vlans_old e ifname ifvar=$( interface_variable ${1} )
 
-	eval vlans=\"\$\{vlans_${iface}\}\"
+	eval vlans=\"\$\{vlans_${ifvar}\}\"
 
 	# BACKWARD COMPATIBILITY: check for old vlan variable name
-	eval vlans_old=\"\$\{iface_${iface}_vlans\}\"
+	eval vlans_old=\"\$\{iface_${ifvar}_vlans\}\"
 	[[ -n ${vlans_old} && -z ${vlans} ]] && vlans=${vlans_old}
 
 	[[ -z ${vlans} ]] && return 0

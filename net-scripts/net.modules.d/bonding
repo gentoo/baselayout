@@ -63,10 +63,10 @@ bonding_pre_start() {
 	for s in ${slaves}; do
 		# If the interface does not exist, it may be because another
 		# module needs to create it
-		net_start ${i} || continue
+		net_start ${s} || continue
 
-		if ! interface_exists ${i} ; then
-			ewarn "interface ${i} does not exist"
+		if ! interface_exists ${s} ; then
+			ewarn "interface ${s} does not exist"
 			continue
 		fi
 
