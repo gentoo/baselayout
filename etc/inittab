@@ -37,6 +37,11 @@ c6:12345:respawn:/sbin/agetty 38400 tty6 linux
 # What to do at the "Three Finger Salute".
 ca:12345:ctrlaltdel:/sbin/shutdown -r now
 
-x:3:respawn:/etc/X11/startDM.sh
+# Used by /etc/init.d/xdm to control DM startup.
+# Read the comments in /etc/init.d/xdm for more
+# info. Do NOT remove, as this will start nothing
+# extra at boot if /etc/init.d/xdm is not added
+# to the "default" runlevel.
+x:a:once:/etc/X11/startDM.sh
 
 # End of /etc/inittab

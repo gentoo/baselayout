@@ -9,20 +9,22 @@ depend() {
 }
 
 checkconfig() {
-	if [ -z "`cat /etc/hostname`" ] ; then
+	if [ -z "`cat /etc/hostname`" ]
+	then
 		eerror "You need to set /etc/hostname to a valid hostname"
 		return 1
 	fi
 }
 
 start() {
-	if [ ! checkconfig ] ; then
-		myhost=localhost
+	local myhost=""
+	if [ ! checkconfig ]
+	then
+		myhost="localhost"
 	else
-		myhost=`cat /etc/hostname` 1>&2
+		myhost="`cat /etc/hostname`"
 	fi
 	ebegin "Setting hostname to $myhost"
-	/bin/hostname ${myhost}
+	/bin/hostname "${myhost}"
 	eend $?
-	return
 }

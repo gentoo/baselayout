@@ -10,16 +10,18 @@ depend() {
 
 start() {
 	ebegin "Enabling numlock on ttys"
-	for tty in /dev/tty[1-8] ; do
-		setleds -D +num < $tty
+	for tty in /dev/tty[1-8]
+	do
+		setleds -D +num < $tty >/dev/null 2>&1
 	done
 	eend $?
 }
 
 stop() {
 	ebegin "Disabling numlock on ttys"
-	for tty in /dev/tty[1-8] ; do
-		setleds -D -num < $tty
+	for tty in /dev/tty[1-8]
+	do
+		setleds -D -num < $tty >/dev/null 2>&1
 	done
 	eend $?
 }

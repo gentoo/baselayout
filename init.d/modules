@@ -6,15 +6,14 @@
 
 depend() {
 	need bootmisc localmount
-#	use logger
 }
 
 start() {
 	[ -f /proc/modules ] || return
 	[ -e /sbin/depmod ] || return
 	ebegin "Calculating module dependencies"
-	update-modules > /dev/null
-	depmod -a > /dev/null
+	update-modules >/dev/null 2>&1
+	depmod -a >/dev/null 2>&1
 	eend $?
 
 	# Loop over every line in /etc/modules.autoload.
@@ -36,8 +35,6 @@ start() {
 	#
 	if [ -n "`modprobe -l -t boot`" ]
 	then
-		modprobe -a -t boot \*
+		modprobe -a -t boot \*  >/dev/null 2>&1
 	fi
-
-	return
 }

@@ -1,6 +1,15 @@
 # ChangeLog for Gentoo Linux System Intialization ("rc") scripts 
-# Copyright 2001 Gentoo Technologies, Inc.; Distributed under the GPL
+# Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
+
+* rc-scripts 1.2.9 (6 March 2002)
+
+  6 March 2002; Martin Schlemmer <azarah@gentoo.org>: General form
+    updates and some piping fixes.
+
+    Updated /etc/inittab, /etc/init.d/xdm and /etc/X11/startDM.sh
+    to fix a problem where startDM.sh would be respawned repeatedly
+    if xdm was not in the default runlevel.
 
 * rc-scripts 1.2.8 (4 March 2002)
 

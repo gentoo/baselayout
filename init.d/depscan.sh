@@ -20,9 +20,9 @@ done
 
 #call: depend_dbadd dep_type service deps....
 depend_dbadd() {
-	local mytype=$1
-	local myservice=$2
-	local x=[]
+	local mytype="$1"
+	local myservice="$2"
+	local x=""
 	shift 2
 	for x in $*
 	do
@@ -94,8 +94,8 @@ check_rcscript() {
 	[ "${1##*.}" = "c" ] && return 1
 
 	local IFS='!'
-	local hash=[]
-	local shell=[]
+	local hash=""
+	local shell=""
 	(cat $1) | { read hash shell
         	if [ "$hash" = "#" ] && [ "$shell" = "/sbin/runscript" ]
 		then
@@ -112,7 +112,7 @@ cache_depend() {
 	#the cached file should not be empty
 	echo 'echo foo >/dev/null 2>/dev/null' > ${svcdir}/cache/${1##*/}.depend
 
-	local myline=[]
+	local myline=""
 	local dowrite=1
 	(cat ${1}) | { while read myline
 		do
@@ -172,7 +172,7 @@ touch ${svcdir}/provide/dummy
 rm -rf ${svcdir}/cache/*
 
 #for the '*' need and use types to work
-oldpwd=`pwd`
+oldpwd="`pwd`"
 cd /etc/init.d
 
 #first cache the depend lines, and calculate all the provides
@@ -183,12 +183,12 @@ do
 	#set to "" else we get problems
 	PROVIDE=""
 
-	myservice=${x##*/}
+	myservice="${x##*/}"
 	depend() {
 		PROVIDE=""
 		return
 	}
-	cache_depend ${x}
+	cache_depend "${x}"
 	wrap_rcscript ${svcdir}/cache/${myservice}.depend || {
 		echo
 		einfo "${x} has syntax errors in it, please fix this before trying"
@@ -199,7 +199,7 @@ do
 	depend
 	if [ -n "$PROVIDE" ]
 	then
-		depend_dbadd provide $myservice $PROVIDE
+		depend_dbadd provide "$myservice" $PROVIDE
 	fi
 done
 
@@ -214,7 +214,7 @@ do
 	BEFORE=""
 	AFTER=""
 
-	myservice=${x##*/}
+	myservice="${x##*/}"
 	depend() {
 		NEED=""
 		USE=""
@@ -227,26 +227,26 @@ do
 	depend
 	if [ -n "$NEED" ]
 	then
-		depend_dbadd need $myservice $NEED
+		depend_dbadd need "$myservice" $NEED
 	fi
 	if [ -n "$USE" ]
 	then
-		depend_dbadd use $myservice $USE
+		depend_dbadd use "$myservice" $USE
 	fi
 	if [ -n "$BEFORE" ]
 	then
-		depend_dbadd before $myservice $BEFORE
+		depend_dbadd before "$myservice" $BEFORE
 		for x in $BEFORE
 		do
-			depend_dbadd after ${x} $myservice
+			depend_dbadd after "${x}" "$myservice"
 		done
 	fi
 	if [ -n "$AFTER" ]
 	then
-		depend_dbadd after $myservice $AFTER
+		depend_dbadd after "$myservice" $AFTER
 		for x in $AFTER
 		do
-			depend_dbadd before ${x} $myservice
+			depend_dbadd before "${x}" "$myservice"
 		done
 	fi
 done
@@ -260,9 +260,9 @@ do
 		then
 			for y in ${svcdir}/${mytype}/${x##*/}/*
 			do
-				depend_dbadd ${mytype} ${y##*/} `ls ${x}/`
+				depend_dbadd "${mytype}" "${y##*/}" `ls ${x}/`
 			done
-			rm -rf ${svcdir}/${mytype}/${x##*/}
+			rm -rf ${svcdir}/${mytype}/${x##*/} >/dev/null 2>&1
 		fi
 	done
 
@@ -281,7 +281,7 @@ then
 	cerror="yes"
 fi
 
-cd $oldpwd
+cd "$oldpwd" >/dev/null 2>&1
 
 eend
 

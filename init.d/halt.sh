@@ -7,7 +7,7 @@
 #to work.  The TERM and KILL stuff will zap devfsd, so...
 
 ebegin "Deactivating swap"
-swapoff -a 1>&2
+swapoff -a >/dev/null 2>&1
 eend $?
 
 #we need to properly terminate devfsd to save the permissions
@@ -19,16 +19,16 @@ then
 fi
 
 ebegin "Sending all processes the TERM signal"
-killall5 -15
+killall5 -15 >/dev/null 2>&1
 eend $?
 sleep 5
 ebegin "Sending all processes the KILL signal"
-killall5 -9
+killall5 -9 >/dev/null 2>&1
 eend $?
 
 # Write a reboot record to /var/log/wtmp before unmounting
 
-halt -w 1>&2
+halt -w >/dev/null 2>&1
 
 #unmounting should use /proc/mounts and work with/without devfsd running
 
@@ -48,23 +48,23 @@ remaining=`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $1}' /proc/moun
 	do
 		if [ "$retry" -lt 3 ]; then
 			ebegin "Unmounting loopback filesystems (retry)"
-			umount $remaining > /dev/null 2>&1
+			umount $remaining >/dev/null 2>&1
 			eend $?
 		else
 			ebegin "Unmounting loopback filesystems"
-			umount $remaining > /dev/null 2>&1
+			umount $remaining >/dev/null 2>&1
 			eend $?
 		fi
 		for dev in $remaining ; do
 			losetup $dev > /dev/null 2>&1 && {
 				ebegin "  Detaching loopback device $dev"
-				losetup -d $dev > /dev/null 2>&1
+				losetup -d $dev >/dev/null 2>&1
 				eend $?
 			}
 		done
 		remaining=`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts |sort -r`
 		[ -z "$remaining" ] && break
-		/bin/fuser -k -m $sig $remaining >/dev/null
+		/bin/fuser -k -m $sig $remaining >/dev/null 2>&1
 		sleep 5
 		retry=$(($retry -1))
 		sig=-9
@@ -78,7 +78,7 @@ ebegin "Unmounting filesystems"
 #awk should still be availible (allthough we should consider moving it to /bin if problems arise)
 for x in `awk '!/(^#|proc|devfs|tmpfs|^none|^\/dev\/root| \/ )/ {print $2}' /proc/mounts |sort -r`
 do
-	umount -f -r ${x} > /dev/null 2>/dev/null
+	umount -f -r ${x} >/dev/null 2>&1
 done
 eend 0
 
@@ -86,7 +86,7 @@ eend 0
 if [ -x /sbin/vgchange -a -f /etc/lvmtab ] && [ -d /proc/lvm ]
 then
 	ebegin "Shutting down the Logical Volume Manager"
-	/sbin/vgchange -a n
+	/sbin/vgchange -a n >/dev/null
 	eend $?
 fi
 
@@ -94,11 +94,11 @@ ebegin "Remounting remaining filesystems readonly"
 #get better results with a sync and sleep
 sync;sync
 sleep 2
-umount -a -r -n -t nodevfs,noproc,notmpfs > /dev/null 2>/dev/null
+umount -a -r -n -t nodevfs,noproc,notmpfs >/dev/null 2>&1
 if [ "$?" -ne 0 ]
 then
-	killall5 -9
-	umount -a -r -n -l -d -f > /dev/null 2>/dev/null
+	killall5 -9  >/dev/null 2>&1
+	umount -a -r -n -l -d -f >/dev/null 2>&1
 	if [ "$?" -ne 0 ]
 	then
 		eend 1
@@ -110,3 +110,4 @@ then
 else
 	eend 0
 fi
+

@@ -5,24 +5,14 @@
 
 source /etc/init.d/functions.sh
 
-#dont quit too soon, else init will catch a respawn
-x=10
-while [ $x -ne 0 ]
-do
-	if [ -e ${svcdir}/options/xdm/service ]
+if [ -e ${svcdir}/options/xdm/service ]
+then
+	/sbin/start-stop-daemon --start --quiet \
+		--exec "`cat ${svcdir}/options/xdm/service`"
+	if [ $? -ne 0 ]
 	then
-		exec "`cat ${svcdir}/options/xdm/service`" -nodaemon
-		if [ $? -ne 0 ]
-		then
-			#there was a error running the DM, so return control to
-			#init, so that it can catch any respawning
-			einfo "ERROR: could not start the Display Manager..."
-			continue
-		fi
-	else
-		sleep 3
+		#there was a error running the DM
+		einfo "ERROR: could not start the Display Manager..."
 	fi
-	x=$((x - 1))
-done
-
+fi
 

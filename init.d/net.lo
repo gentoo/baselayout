@@ -6,12 +6,13 @@
 
 start() {
 	ebegin "Bringing ${IFACE} up"
-	/sbin/ifconfig lo 127.0.0.1 up
+	/sbin/ifconfig lo 127.0.0.1 up >/dev/null 2>&1
 	eend
 }
 
 stop() {
 	ebegin "Bringing ${IFACE} down"
-	/sbin/ifconfig $IFACE down
+	/sbin/ifconfig $IFACE down >/dev/null 2>&1
 	eend
 }
+

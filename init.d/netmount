@@ -11,7 +11,7 @@ depend() {
 
 start() {
 	ebegin "Mounting network filesystems"
-	mount -at coda,nfs,ncpfs,smbfs
+	mount -at coda,nfs,ncpfs,smbfs >/dev/null 2>&1
 	eend $?
 }
 
@@ -25,7 +25,8 @@ stop() {
 		grep -E ^'coda|nfs|ncpfs|smbfs' | awk '{ print $2 }' |sort -r`
 
 	# just keep things nice and uniform
-	if [ -z "$remaining" ] ; then
+	if [ -z "$remaining" ]
+	then
 		ebegin "Unmounting network filesystems"
 		eend $?
 	else
@@ -33,7 +34,8 @@ stop() {
 	        retry=3
 	        while [ -n "$remaining" -a "$retry" -gt 0 ]
 	        do
-	                if [ "$retry" -lt 3 ]; then
+	                if [ "$retry" -lt 3 ]
+			then
 	                        ebegin "Unmounting network filesystems (retry)"
 	                        umount $remaining > /dev/null 2>&1
 	                        eend $?
@@ -45,7 +47,7 @@ stop() {
 	                remaining=`cat /proc/mounts | awk '{ print $3 " " $2 }' | \
 				grep -E ^'coda|nfs|ncpfs|smbfs' | awk '{ print $2 }' |sort -r`
 	                [ -z "$remaining" ] && break
-	                /bin/fuser -k -m $sig $remaining >/dev/null
+	                /bin/fuser -k -m $sig $remaining >/dev/null 2>1
 	                sleep 5
 	                retry=$(($retry -1))
 	                sig=-9
@@ -53,3 +55,4 @@ stop() {
 		eend $?
 	fi
 }
+

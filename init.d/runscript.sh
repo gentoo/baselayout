@@ -13,18 +13,18 @@ svcrestart="no"
 myscript=${1}
 if [ -L $1 ]
 then
-	myservice=`readlink ${1}`
+	myservice="`readlink ${1}`"
 else
-	myservice=${1}
+	myservice="${1}"
 fi
 
-myservice=${myservice##*/}
-mylevel=`cat ${svcdir}/softlevel`
+myservice="${myservice##*/}"
+mylevel="`cat ${svcdir}/softlevel`"
 
 
 #set $IFACE to the name of the network interface if it is a 'net.*' script
-IFACE=[]
-NETSERVICE=[]
+IFACE=""
+NETSERVICE=""
 if [ "${myservice%%.*}" = "net" ] && [ "${myservice##*.}" != "$myservice" ]
 then
 	IFACE="${myservice##*.}"
@@ -69,12 +69,12 @@ restart() {
 }
 			
 svc_stop() {
-	local x=[]
+	local x=""
 	local stopfail="no"
-	local mydep=[]
-	local mydeps=[]
+	local mydep=""
+	local mydeps=""
 	local retval=0
-	local depservice=[]
+	local depservice=""
 	if [ ! -L ${svcdir}/started/${myservice} ]
 	then
 		einfo "${myservice} has not yet been started."
@@ -122,10 +122,10 @@ svc_stop() {
 		then
 			mydeps="net $myservice"
 		else
-			mydeps=$myservice
+			mydeps="$myservice"
 		fi
 	else
-		mydeps=$myservice
+		mydeps="$myservice"
 	fi
 	if [ "$svcpause" = "yes" ]
 	then
@@ -201,10 +201,10 @@ svc_stop() {
 svc_start() {
 	local retval=0
 	local startfail="no"
-	local x=[]
-	local y=[]
-	local myserv=[]
-	local depservice=[]
+	local x=""
+	local y=""
+	local myserv=""
+	local depservice=""
 	if [ ! -L ${svcdir}/started/${myservice} ]
 	then
 		#do not try to start if i have done so already on runlevel change
@@ -344,13 +344,13 @@ wrap_rcscript ${myscript} || {
 	exit 1
 }
 
-if [ "$opts" = "" ]
+if [ -z "$opts" ]
 then
 	opts="start stop restart"
 fi
 
 needsme() {
-	local x=[]
+	local x=""
 	if [ -d ${svcdir}/need/${1} ]
 	then
 		for x in ${svcdir}/need/${1}/*
@@ -359,13 +359,13 @@ needsme() {
 			then
 				continue
 			fi
-			echo ${x##*/}
+			echo "${x##*/}"
 		done
 	fi
 }
 
 usesme() {
-	local x=[]
+	local x=""
 	if [ -d ${svcdir}/use/${1} ]
 	then
 		for x in ${svcdir}/use/${1}/*
@@ -374,59 +374,59 @@ usesme() {
 			then
 				continue
 			fi
-			echo ${x##*/}
+			echo "${x##*/}"
 		done
 	fi
 }
 
 ineed() {
-	local x=[]
-	local z=[]
+	local x=""
+	local z=""
 	for x in ${svcdir}/need/*/${1}
 	do
 		if [ ! -L ${x} ]
 		then
 			continue
 		fi
-		z=${x%/*}
-		echo ${z##*/}
+		z="${x%/*}"
+		echo "${z##*/}"
 	done
 }
 
 #this will give all the use's of the service, even if not in current or boot
 #runlevels
 iuse() {
-    local x=[]
-    local z=[]
+    local x=""
+    local z=""
     for x in ${svcdir}/use/*/${1}
     do
 		if [ ! -L ${x} ]
 		then
 		    continue
 		fi
-		z=${x%/*}
-		echo ${z##*/}
+		z="${x%/*}"
+		echo "${z##*/}"
     done
 }
 
 #this will only give the valid use's for the service (they must be in the boot
 #or current runlevel)
 valid_iuse() {
-	local x=[]
-	local y=[]
+	local x=""
+	local y=""
 	for x in `iuse ${1}`
 	do
 		if [ -e /etc/runlevels/boot/${x} ] || [ -e /etc/runlevels/${mylevel}/${x} ]
 		then
-			z=${x%/*}
-			echo ${z##*/}
+			z="${x%/*}"
+			echo "${z##*/}"
 		fi
 	done
 }
 
 #list broken dependancies of type 'need'
 broken() {
-	local x=[]
+	local x=""
 	if [ -d ${svcdir}/broken/${1} ]
 	then
 		for x in ${svcdir}/broken/${1}/*
@@ -435,15 +435,15 @@ broken() {
 			then
 				continue
 			fi
-			echo ${x##*/}
+			echo "${x##*/}"
 		done
 	fi
 }
 
 #call this with "needsme", "ineed", "usesme", "iuse" or "broken" as first arg
 query() {
-	local deps=[]
-	local x=[]
+	local deps=""
+	local x=""
 	install -d -m0755 ${svcdir}/depcheck/$$
 	if [ "$1" = "ineed" ] && [ ! -L ${svcdir}/started/${myservice} ]
 	then
@@ -455,9 +455,9 @@ query() {
 	fi
 
 	deps="${myservice}"
-	while [ "$deps" != "" ]
+	while [ -n "$deps" ]
 	do
-		deps=`${1} ${deps}`
+		deps="`${1} ${deps}`"
 		for x in $deps
 		do
 			if [ ! -e ${svcdir}/depcheck/$$/${x} ]
@@ -472,19 +472,22 @@ query() {
 		then
 			continue
 		fi
-		echo ${x##*/}
+		echo "${x##*/}"
 	done
 	rm -rf ${svcdir}/depcheck/
 }
 
 svc_homegrown() {
 	local arg="$1"
-	local x=[]
+	local x=""
 	# Walk through the list of available options, looking for the
 	# requested one.
-	for x in $opts; do
-		if [ $x = "$arg" ]; then
-			if typeset -F $x &>/dev/null; then
+	for x in $opts
+	do
+		if [ "$x" = "$arg" ]
+		then
+			if typeset -F $x &>/dev/null
+			then
 				# Run the homegrown function
 				$x
 				return $?
@@ -574,7 +577,7 @@ do
 		;;
 	*)
 		# Allow for homegrown functions
-		svc_homegrown $arg
+		svc_homegrown "$arg"
 		;;
 	esac
 done

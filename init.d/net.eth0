@@ -13,7 +13,7 @@ depend() {
 }
 
 checkconfig() {
-	if [ -z "`eval echo \$\{iface_${IFACE}\}`" ]
+	if [ -z "`eval echo "\$\{iface_${IFACE}\}"`" ]
 	then
 		eerror "Please make sure that /etc/conf.d/net has \$iface_$IFACE set"
 		return 1
@@ -23,32 +23,32 @@ checkconfig() {
 start() {
 	checkconfig || return 1
 	ebegin "Bringing ${IFACE} up"
-	if [ "`eval echo \$\{iface_${IFACE}\}`" != "dhcp" ]
+	if [ "`eval echo "\$\{iface_${IFACE}\}"`" != "dhcp" ]
 	then
-		eval /sbin/ifconfig $IFACE \$iface_$IFACE || return $?
+		eval /sbin/ifconfig "$IFACE" "\$iface_$IFACE" >/dev/null 2>&1 || return $?
 	else
-		eval /sbin/dhcpcd \$\{dhcpcd_${IFACE}\} $IFACE || return $?
+		eval /sbin/dhcpcd "\$\{dhcpcd_${IFACE}\}" "$IFACE" >/dev/null 2>&1 || return $?
 	fi
 
-	if [ -n "`eval echo \$\{alias_${IFACE}\}`" ]
+	if [ -n "`eval echo "\$\{alias_${IFACE}\}"`" ]
 	then
 		local x=""
 		local num=0
-		for x in `eval echo \$\{alias_${IFACE}\}`
+		for x in `eval echo "\$\{alias_${IFACE}\}"`
 		do
-			/sbin/ifconfig ${IFACE}:${num} $x
+			/sbin/ifconfig "${IFACE}:${num}" "$x" >/dev/null 2>&1
 			num=$((num + 1))
 		done
-		save_options alias `eval echo \$\{alias_${IFACE}\}`
+		save_options alias `eval echo "\$\{alias_${IFACE}\}"`
 	fi
 	
 	if [ -n "$gateway" ] && [ "${gateway%/*}" = "$IFACE" ]
 	then
-		/sbin/route add -net default gw ${gateway#*/} dev ${gateway%/*} \
-			netmask 0.0.0.0 metric 1 >/dev/null 2>/dev/null || {
+		/sbin/route add -net default gw "${gateway#*/}" dev "${gateway%/*}" \
+			netmask 0.0.0.0 metric 1 >/dev/null 2>&1 || {
 			
 			local error=$?
-			ifconfig ${IFACE} down
+			ifconfig "${IFACE}" down >/dev/null 2>&1
 			eend ${error}
 			return ${error}
 		}
@@ -74,10 +74,11 @@ stop() {
 		local num=0
 		for x in $myalias
 		do
-			/sbin/ifconfig ${IFACE}:${num} down >/dev/null 2>/dev/null
+			/sbin/ifconfig "${IFACE}:${num}" down >/dev/null 2>1
 			num=$((num + 1))
 		done
 	fi
-	/sbin/ifconfig $IFACE down
+	/sbin/ifconfig "$IFACE" down >/dev/null 2>&1
 	eend $?
 }
+

@@ -8,7 +8,7 @@ source /etc/init.d/functions.sh
 umask 022
 
 try() {
-	eval $*
+	eval $* >/dev/null 2>&1
 	if [ $? -ne 0 ]
 	then
 		echo -e "$ENDCOL$NORMAL[$BAD oops $NORMAL]"
@@ -48,7 +48,7 @@ then
 	mymounts="`cat /proc/mounts`"
 	if [ -e /dev/.devfsd ] && [ "${mymounts/devfs//}" = "${mymounts}" ]
 	then
-		rm -f /dev/.devfsd
+		rm -f /dev/.devfsd >/dev/null 2>&1
 	fi
 
 	#with the new way, /dev can be mounted by the kernel ...
@@ -95,19 +95,19 @@ then
 
 	if [ ! -d $svcdir ]
 	then
-		mkdir -p $svcdir
+		mkdir -p $svcdir >/dev/null 2>&1
 	fi
 	
 	if [ "$tmpfs" = "yes" ] ; then
 		ebegin "Mounting tmpfs at ${svcdir}"
 		try mount -n -t tmpfs tmpfs ${svcdir} -o rw,mode=0644,size=${svcsize}k
-		eend
+		eend 0
 	else
 		ebegin "Mounting ramdisk 0 at ${svcdir}"
 		try dd if=/dev/zero of=/dev/ram0 bs=1k count=$svcsize
 		try mke2fs -vm0 /dev/ram0 $svcsize
 		try mount -n -t ext2 /dev/ram0 ${svcdir} -o rw
-		eend
+		eend 0
 	fi
 			
 	/etc/init.d/depscan.sh
@@ -116,7 +116,7 @@ then
 	#devfsd has been started, so that the fstab can be properly parsed
 
 	ebegin "Activating swap"
-	swapon -a
+	swapon -a >/dev/null 2>&1
 	eend
 
 	#set the console loglevel to 1 for a cleaner boot
@@ -141,15 +141,15 @@ then
 		export SOFTLEVEL="boot"
 	fi
 else
-	export SOFTLEVEL=$argv1
+	export SOFTLEVEL="$argv1"
 fi
 
 #for keeping a list of services that fails during boot/halt
 if [ ! -d ${svcdir}/fails ]
 then
-	mkdir -p ${svcdir}/fails
+	mkdir -p ${svcdir}/fails >/dev/null 2>&1
 else
-	rm -rf ${svcdir}/fails/*
+	rm -rf ${svcdir}/fails/* >/dev/null 2>&1
 fi
 
 if [ "$SOFTLEVEL" = "reboot" ] || [ "$SOFTLEVEL" = "shutdown" ]
@@ -199,10 +199,10 @@ do
 done
 
 dep_stop() {
-	local x
-	local needsme
-	local myservice
-	local depservice
+	local x=""
+	local needsme=""
+	local myservice=""
+	local depservice=""
 	[ ! -L ${1} ] && continue
 	if [ ! -e ${1} ]
 	then
@@ -217,7 +217,7 @@ dep_stop() {
 		#candidate for zapping
 
 		#should not work for 'use'
-		if [ ! -d ${svcdir}/need/${myservice} ] #&& [ ! -d ${svcdir}/use/${myservice} ]
+		if [ ! -d ${svcdir}/need/${myservice} ]
 		then
 			#nothing depends on me
 			if [ -L ${svcdir}/started/${myservice} ]
@@ -259,7 +259,7 @@ done
 # Only change softlevel AFTER all the services have been stopped,
 # else they will not get the depend's right (wrong SOFTLEVEL)
 
-echo $SOFTLEVEL > ${svcdir}/softlevel
+echo "$SOFTLEVEL" > ${svcdir}/softlevel
 
 if [ "$SOFTLEVEL" = "reboot" ] || [ "$SOFTLEVEL" = "shutdown" ]
 then
@@ -276,13 +276,13 @@ fi
 #move the old softscritps directory to a different one
 #and make the new softscripts directory the current
 
-mv ${svcdir}/softscripts ${svcdir}/softscripts.old
-mv ${svcdir}/softscripts.new/ ${svcdir}/softscripts
+mv ${svcdir}/softscripts ${svcdir}/softscripts.old >/dev/null 2>&1
+mv ${svcdir}/softscripts.new/ ${svcdir}/softscripts >/dev/null 2>&1
 
 dep_start() {
-	local x
-	local myservice
-	local depservice
+	local x=""
+	local myservice=""
+	local depservice=""
 	if [ ! -L $1 ]
 	then
 		continue
@@ -294,6 +294,7 @@ dep_start() {
 		$1 start
 	fi
 }
+
 #start scripts
 for i in ${svcdir}/softscripts/*
 do
@@ -301,23 +302,23 @@ do
 done
 
 #clean the old runlevel
-rm -rf ${svcdir}/softscripts.old
+rm -rf ${svcdir}/softscripts.old >/dev/null 2>&1
 
 #depends gets newked, so update them
 #(this problem should be solved now, but i think it will be a good idea
 # to recreate the deps after a change in runlevel)
 
-/etc/init.d/depscan.sh >/dev/null 2>/dev/null
+/etc/init.d/depscan.sh >/dev/null 2>&1
 
 #we want devfsd running after a change of runlevel (this is mostly if we return
 #from runlevel 'single')
-if [ "`cat /proc/mounts | grep '/dev devfs'`" ] && [ ! "`ps -A |grep devfsd`" ]
+if [ "`cat /proc/mounts | grep -e '/dev devfs'`" ] && [ ! "`ps -A | grep devfsd`" ]
 then
 	/sbin/devfsd /dev >/dev/null 2>&1
 fi
 
 #runlevel end, so clear stale fail list
-rm -rf ${svcdir}/fails
+rm -rf ${svcdir}/fails >/dev/null 2>&1
 
 #if we were in the boot runlevel, it is done now ...
 [ -n "$BOOT" ] && unset BOOT

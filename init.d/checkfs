@@ -23,5 +23,5 @@ start() {
 		eend 2 "Fsck could not correct all errors, manual repair needed"
 		/sbin/sulogin $CONSOLE
 	fi
-	return
 }
+

@@ -9,30 +9,49 @@ depend() {
 }
 
 start() {
-	if [ -n "$CONSOLEFONT" ] ; then
-		if [ -x /usr/bin/setfont ] ; then
-			local param x
-			if [ -n "$CONSOLETRANSLATION" ] ; then
-				param="-m ${CONSOLETRANSALTION}"
-			fi
-			for x in 1 2 3 4 5 6
-			do
-				if [ -e /dev/.devfsd ]
-				then
-					if [ -x /usr/bin/consolechars ]
-					then
-						/usr/bin/consolechars -f ${CONSOLEFONT} ${param} \
-							--tty=/dev/vc/${x}
-					else
-						/usr/bin/setfont ${CONSOLEFONT} ${param}
-						continue
-					fi
-				else
-					/usr/bin/consolechars -f ${CONSOLEFONT} ${param} \
-						--tty=/dev/tty${x}
-				fi
-			done
+	local retval=1
+	ebegin "Setting user font"
+	if [ -n "$CONSOLEFONT" ]
+	then
+		local param=""
+		local x=""
+		if [ -n "$CONSOLETRANSLATION" ]
+		then
+			param="-m ${CONSOLETRANSALTION}"
 		fi
+		for x in 1 2 3 4 5 6
+		do
+			if [ -e /dev/.devfsd ]
+			then
+				#old console-tools support (nicer,
+				#because it setup all the tty's)
+				if [ -x /usr/bin/consolechars ]
+				then
+					/usr/bin/consolechars -f ${CONSOLEFONT} ${param} \
+						--tty=/dev/vc/${x} >/dev/null 2>&1
+					retval=$?
+				#new kbd support
+				else
+					/usr/bin/setfont ${CONSOLEFONT} ${param} >/dev/null 2>&1
+					retval=$?
+					break
+				fi
+			else
+				if [ -x /usr/bin/consolechars ]
+				then
+					/usr/bin/consolechars -f ${CONSOLEFONT} ${param} \
+						--tty=/dev/tty${x} >/dev/null 2>&1
+					retval=$?
+				else
+					/usr/bin/setfont ${CONSOLEFONT} ${param} >/dev/null 2>&1
+					retval=$?
+					break
+				fi
+			fi
+		done
 	fi
-	return
+	eend $retval
+	
+	return $retval
 }
+

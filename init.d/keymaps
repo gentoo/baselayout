@@ -9,8 +9,9 @@ depend() {
 }
 
 checkconfig() {
-	if [ -z "$KEYMAP" ] ; then
-		eerror "You need to setup KEYMAP first"
+	if [ -z "$KEYMAP" ]
+	then
+		eerror "You need to setup \$KEYMAP in /etc/rc.conf first"
 		return 1
 	fi
 }
@@ -18,7 +19,14 @@ checkconfig() {
 start() {
 	checkconfig || return 1
 	ebegin "Loading key mappings"
-	/bin/loadkeys -q ${KEYMAP} windowkeys
+	#new kbd support
+	if [ -x /bin/loadkeys ]
+	then
+		/bin/loadkeys -q ${KEYMAP} windowkeys
+	#old console-tools support
+	elif [ -x /usr/bin/loadkeys ]
+	then
+		/usr/bin/loadkeys -q ${KEYMAP} windowkeys.inc
+	fi
 	eend $? "Error loading key mappings"
-	return
 }

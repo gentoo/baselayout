@@ -13,27 +13,28 @@ start() {
 	if [ -x /sbin/vgchange -a -f /etc/lvmtab ]
 	then
 		ebegin "Setting up the Logical Volume Manager"
-		/sbin/vgscan && /sbin/vgchange -a y
+		#still echo stderr for debugging
+		/sbin/vgscan && /sbin/vgchange -a y >/dev/null
 		eend $?
 	fi
 	# Mount local filesystems in /etc/fstab.
 	ebegin "Mounting local filesystems"
-	mount -at nocoda,nonfs,noproc,noncpfs,nosmbfs,noshm
+	mount -at nocoda,nonfs,noproc,noncpfs,nosmbfs,noshm >/dev/null 2>&1
 	eend $?
 	if [ -z "`grep usbdevfs /proc/filesystems`" ]
 	then
 		# >/dev/null to hide errors from non-USB users
-		modprobe usbcore >/dev/null 2>/dev/null
+		modprobe usbcore >/dev/null 2>1
 	fi
-	if [ -n "`grep usbdevfs /proc/filesystems`" ] && [ -e /proc/bus/usb ] && [ ! -e /proc/bus/usb/devices ]
+	if [ -n "`grep usbdevfs /proc/filesystems`" ] && [ -e /proc/bus/usb ] && \
+	   [ ! -e /proc/bus/usb/devices ]
 	then
 		ebegin "Mounting USB device filesystem"
-		mount -t usbdevfs usbdevfs /proc/bus/usb
+		mount -t usbdevfs usbdevfs /proc/bus/usb >/dev/null 2>&1
 		eend $?
 	fi
 	#swap on loopback devices, and other weirdnesses
 	ebegin "Activating (possibly) more swap"
 	/sbin/swapon -a >/dev/null 2>&1
 	eend
-	return
 }

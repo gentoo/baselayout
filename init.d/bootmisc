@@ -16,13 +16,13 @@ start() {
 		if [ "$DELAYLOGIN" = "yes" ]
 		then
 			echo "System bootup in progress - please wait" > /etc/nologin
-			cp /etc/nologin /etc/nologin.boot
+			cp /etc/nologin /etc/nologin.boot >/dev/null 2>&1
 		fi
 
 		if [ -e /etc/sysctl.conf ]
 		then
 			ebegin "Configuring kernel parameters"
-			sysctl -p /etc/sysctl.conf > /dev/null
+			sysctl -p /etc/sysctl.conf >/dev/null 2>&1
 			eend 0
 		fi
 
@@ -44,27 +44,27 @@ start() {
 		# Clean up /tmp directory
 		#
 		ebegin "Cleaning /tmp directory"
-		rm -f /tmp/.X*-lock
-		rm -f /tmp/esrv*
-		rm -f /tmp/kio*
-		rm -f /tmp/jpsock.*
-		rm -rf /tmp/.esd*
-		rm -rf /tmp/orbit-*
-		rm -rf /tmp/ssh-*
-		rm -rf /tmp/ksocket-*
-		rm -rf /tmp/.*-unix
+		rm -f /tmp/.X*-lock >/dev/null 2>&1
+		rm -f /tmp/esrv* >/dev/null 2>&1
+		rm -f /tmp/kio* >/dev/null 2>&1
+		rm -f /tmp/jpsock.* >/dev/null 2>&1
+		rm -rf /tmp/.esd* >/dev/null 2>&1
+		rm -rf /tmp/orbit-* >/dev/null 2>&1
+		rm -rf /tmp/ssh-* >/dev/null 2>&1
+		rm -rf /tmp/ksocket-* >/dev/null 2>&1
+		rm -rf /tmp/.*-unix >/dev/null 2>&1
 		eend 0
 	fi
 
 	#
 	# Check for /etc/resolv.conf, and create if missing
 	#
-	[ -f /etc/resolv.conf ] || touch /etc/resolv.conf
+	[ -f /etc/resolv.conf ] || touch /etc/resolv.conf >/dev/null 2>&1
 
 	if [ -c /dev/ttyp0 ]
 	then
-		chmod 666 /dev/tty[p-za-e][0-9a-f]
-		chown root:tty /dev/tty[p-za-e][0-9a-f]
+		chmod 666 /dev/tty[p-za-e][0-9a-f] >/dev/null 2>&1
+		chown root:tty /dev/tty[p-za-e][0-9a-f] >/dev/null 2>&1
 	fi
-	return
 }
+
