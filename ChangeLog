@@ -2,6 +2,10 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+   7 Aug 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+     Move the color ls stuff to .bashrc.  Fix bug #5250.
+
    6 Aug 2002; Dan Armak <danarmak@gentoo.org>:
    
     Correct the comments in rc.conf about the XSESSION variable: it should

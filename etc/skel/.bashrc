@@ -2,13 +2,18 @@
 # Distributed under the terms of the GNU General Public License, v2 or later
 # $Header$
 
-# This file is sourced by all bash shells on startup, whether interactive
-# or not.  This file *should generate no output* or it will break the
-# scp and rcp commands.
+# This file is sourced by all *interactive* bash shells on startup.  This
+# file *should generate no output* or it will break the scp and rcp commands.
+
+# colors for ls, etc.
+eval `dircolors -b /etc/DIR_COLORS`
+alias d="ls --color"
+alias ls="ls --color=auto"
+alias ll="ls --color -l"
 
 # Change the window title of X terminals 
 case $TERM in
-	xterm*|rxvt)
+	xterm*|rxvt|eterm)
 		PROMPT_COMMAND='echo -ne "\033]0;${USER}@${HOSTNAME%%.*}:${PWD/$HOME/~}\007"'
 		;;
 	screen)
