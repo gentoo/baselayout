@@ -2,31 +2,37 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  08 Apr 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix interactive shell not to have coloured prompt when used as a
+    dumb client, bug #18886.  Fix was inspired by patch from
+    Matthew Kennedy <mkennedy@gentoo.org>.
+
 * rc-scripts 1.4.3.5 (06 Apr 2003)
 
   06 Apr 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Hopefully get the serial support sane again.  Added /bin/consoletype
-	from Redhat to check for serial console.  This should resolve bug
-	#18329 partly.
+    from Redhat to check for serial console.  This should resolve bug
+    #18329 partly.
 
-	Add the --nocolor option to suppress the use of colors.
+    Add the --nocolor option to suppress the use of colors.
 
-	Change the 'status' option to return true if the service is running,
-	and false if stopped.  This is only if the '--quiet' flag was also
-	given.
+    Change the 'status' option to return true if the service is running,
+    and false if stopped.  This is only if the '--quiet' flag was also
+    given.
 
-	Change the start and stop options not to output or return false if
-	the '--quiet' flag was given.
+    Change the start and stop options not to output or return false if
+    the '--quiet' flag was given.
 
-	Redirect stderr for consolechars in /etc/init.d/consolefont to /dev/null
-	as well, fixing bug #18344.
+    Redirect stderr for consolechars in /etc/init.d/consolefont to /dev/null
+    as well, fixing bug #18344.
 
-	Optimize $EDITOR extraction in /etc/profile closing bug #18614, thanks to
-	Aron Griffis <agriffis@gentoo.org>.
+    Optimize $EDITOR extraction in /etc/profile closing bug #18614, thanks to
+    Aron Griffis <agriffis@gentoo.org>.
 
-	Set HALT to 'shutdown' or 'reboot' depending on if we are shutting down
-	or rebooting.
+    Set HALT to 'shutdown' or 'reboot' depending on if we are shutting down
+    or rebooting.
 
   30 Mar 2003; Martin Schlemmer <azarah@gentoo.org>:
 
