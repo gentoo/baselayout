@@ -24,33 +24,6 @@ mountshm() {
 	ebegin "Mounting tmpfs at /dev/shm"
 	try mount -n -t tmpfs tmpfs /dev/shm -o rw,mode=0644,size=4m
 	eend
-	install -d -m0755 /dev/shm/etc
-	#set up mtab script
-	touch /dev/shm/etc/mtab.sh
-	chmod 0644 /dev/shm/etc/*
-	echo mount -f / >> /dev/shm/etc/mtab.sh
-	echo mount -f -t tmpfs tmpfs /dev/shm -o rw,mode=0644,size=4m >> /dev/shm/etc/mtab.sh
-	[ $wrongmount -eq 0 ] && echo mount -f --bind /dev /dev-state >> /dev/shm/etc/mtab.sh
-#	local swaptot
-#	local tmpfsmax
-#	if [ ! -e /proc/meminfo ]
-#	then
-#		tmpfsmax=4
-#	else
-#		swaptot=`cat /proc/meminfo | sed -n -e '/^Mem:/{s/\(Mem:\)[[:space:]]*\([[:digit:]]*\) \(.*\)/\2/;p}'`
-#		swaptot=$(( $swaptot / 1024000 ))
-#		tmpfsmax=$(( $swaptot / 2 ))
-#		if [ $tmpfsmax -lt 4 ]
-#		then
-#			tmpfsmax=4
-#		fi
-#	fi
-#	echo ebegin "Limiting tmpfs size to ${tmpfsmax}Mb" >> /dev/shm/etc/mtab.sh
-#	#hopefully, this will avoid the "tmpfs not mounted" error
-#	echo mount -t tmpfs tmpfs /dev/shm -o remount,size=${tmpfsmax}m >> /dev/shm/etc/mtab.sh
-#	echo eend \$? >> /dev/shm/etc/mtab.sh	
-	echo mount -f /proc >> /dev/shm/etc/mtab.sh
-	echo mount -f -t devfs none /dev >> /dev/shm/etc/mtab.sh
 }
 
 if [ $$ -ne 1 ]

@@ -12,24 +12,30 @@ ENDCOL=$'\e[A\e['$COLS'G'
 
 NORMAL="\033[0m"
 GOOD=$'\e[32;01m'
+WARN=$'\e[33;01m'
 BAD=$'\e[31;01m'
 NORMAL=$'\e[0m'
+
 HILITE=$'\e[36;01m'
 
 ebegin() {
     echo -e " ${GOOD}*${NORMAL} ${*}..."
 }
 
+ewarn() {
+    echo -e " ${WARN}*${NORMAL} ${*}"
+}
+
 eerror() {
-    echo -e ">>$BAD ${*}$NORMAL"
+    echo -e " ${BAD}*${NORMAL} ${*}"
 }
 
 einfo() {
-    echo -e "$HILITE${*}$NORMAL"
+    echo -e " ${GOOD}*${NORMAL} ${*}"
 }
 
 einfon() {
-    echo -ne "$HILITE${*}$NORMAL"
+    echo -ne " ${GOOD}*${NORMAL} ${*}"
 }
 
 eend() {

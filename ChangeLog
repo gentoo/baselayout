@@ -1,0 +1,15 @@
+rc-scripts-1.1.5, released 02 Sep 2001
+====================================
+
+	*sbin/rc-update
+	New version of the rc-update command for the new initscripts.  Works
+	similarly to the old version, except this one updates our dependency
+	cache.
+
+	*init.d/functions.sh
+	New and better looking informational message functions (einfo, einfon).
+	Brand new message functions (ewarn).
+
+	*sbin/init, init.d/checkroot
+	We're going back to a /proc/mounts-based mtab symlink because it's 
+	just plain better.  Appropriate changes made.
