@@ -88,6 +88,35 @@ ewend() {
 	fi
 }
 
+# bool get_bootparam(param)
+#
+#   return 0 if gentoo=param was passed to the kernel
+#
+#   NOTE: you should always query the longer argument, for instance
+#         if you have 'nodevfs' and 'devfs', query 'nodevfs', or 
+#         results may be unpredictable.
+#
+#         if get_bootparam "nodevfs" -eq 0 ; then ....
+#
+get_bootparam() {
+	local copt
+	local parms
+	local retval=1
+	for copt in `cat /proc/cmdline`
+	do
+		if [ "${copt%=*}" = "gentoo" ]
+		then
+			parms=${copt##*=}
+			#parse gentoo option
+			if [ "`eval echo \${parms/${1}/}`" != "${parms}" ]
+			then
+				retval=0
+			fi
+		fi
+	done
+	return $retval
+}
+
 save_options() {
 	local myopts=$1
 	shift

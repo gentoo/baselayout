@@ -2,6 +2,14 @@
 # Copyright 2001 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  26 Feb 2002; Martin Schlemmer <azarah@gentoo.org>: fix my brain dead
+    update of the 25th.  It really should keep "gentoo=nodevfs" in mind.
+    Also added 'get_bootparam()' to help in retrieving kernel options.
+    Updated /etc/init.d/functions.sh, /etc/init.d/checkroot and /sbin/rc
+    for this.
+
+    Updated /etc/init.d/consolefont to work without devfs as well.
+
   25 Feb 2002; Martin Schlemmer <azarah@gentoo.org>: added a check if
   /dev is mounted when creating entries for /etc/mtab.  This should solve a
   invalid entry or /dev being mounted even with 'gentoo=nodevfs' option.

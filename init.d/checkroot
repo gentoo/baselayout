@@ -37,10 +37,14 @@ start() {
 		> /etc/mtab
 		mount -f /
 		mount -f /proc
-		if [ -e /dev/.devfsd ]
+
+		# should /dev be mounted ?
+		get_bootparam "nodevfs"
+		if [ $? -ne 0 ] && [ -e /dev/.devfsd ]
 		then
 			mount -f -t devfs none /dev
 		fi
+		
 		mount -f -t tmpfs tmpfs /dev/shm -o rw,mode=0644,size=4m
 	fi
 	
