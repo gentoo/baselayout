@@ -6,26 +6,26 @@ depend() {
 
 start() {
 	source /etc/rc.conf
-
+	local myopts
+	myopts=""
 	if [ ! -f /etc/adjtime ]
 	then
 			echo "0.0 0 0.0" > /etc/adjtime
 	fi
 	
-	if [ "$CLOCK" = "GMT" ]
+	if [ "$CLOCK" = "UTC" ]
 	then
-		GMT="-u"; GMTT="--utc"
-		TBLURB="[GMT]"
+		myopts="--utc"
+		TBLURB="UTC"
 	else
-		GMT=""; GMTT=""
-		TBLURB="[Local Time]"
+		TBLURB="Local Time"
 	fi
 	
 	if [ -x /sbin/hwclock ]
 	then
 		ebegin "Setting system clock to hardware clock ${TBLURB}"
-			/sbin/hwclock --adjust ${GMTT} 1>&2
-			/sbin/hwclock --hctosys ${GMTT} 1>&2 
+			/sbin/hwclock --adjust ${myopts} 1>&2
+			/sbin/hwclock --hctosys ${myopts} 1>&2 
 		eend 0 
 	else
 		eend 1 "hwclock executable not found"
