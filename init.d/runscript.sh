@@ -108,7 +108,9 @@ svc_stop() {
 			if [ ! -L ${svcdir}/softscripts.new/${depservice##*/} ] && \
 			   [ -L ${svcdir}/started/${depservice##*/} ] && \
 			   [ ! -L ${svcdir}/need/${depservice##*/}/${myservice} ] && \
+			   [ ! -L ${svcdir}/need/${myservice}/${depservice##*/} ] && \
 			   [ ! -L ${svcdir}/use/${depservice##*/}/${myservice} ] && \
+			   [ ! -L ${svcdir}/use/${myservice}/${depservice##*/} ] && \
 			   [ ! -L ${svcdir}/before/${myservice}/${depservice##*/} ] && \
 			   [ "${myservice}" != "${depservice}" ]
 			then
@@ -238,7 +240,9 @@ svc_start() {
 				   [ ! -L ${svcdir}/started/${depservice##*/} ] && \
 				   [ -L ${svcdir}/softscripts/${depservice##*/} ] && \
 				   [ ! -L ${svcdir}/need/${myservice}/${depservice##*/} ] && \
+				   [ ! -L ${svcdir}/need/${depservice##*/}/${myservice} ] && \
 				   [ ! -L ${svcdir}/use/${myservice}/${depservice##*/} ] && \
+				   [ ! -L ${svcdir}/use/${depservice##*/}/${myservice} ] && \
 				   [ ! -L ${svcdir}/after/${myservice}/${depservice##*/} ] && \
 				   [ "${myservice}" != "${depservice}" ]
 				then
@@ -338,7 +342,9 @@ svc_start() {
 				   [ ! -L ${svcdir}/started/${depservice##*/} ] && \
 				   [ -L ${svcdir}/softscripts/${depservice##*/} ] && \
 				   [ ! -L ${svcdir}/need/${depservice##*/}/${myservice} ] && \
+				   [ ! -L ${svcdir}/need/${myservice}/${depservice##*/} ] && \
 				   [ ! -L ${svcdir}/use/${depservice##*/}/${myservice} ] && \
+				   [ ! -L ${svcdir}/use/${myservice}/${depservice##*/} ] && \
 				   [ ! -L ${svcdir}/before/${myservice}/${depservice##*/} ] && \
 				   [ "${myservice}" != "${depservice}" ]
 				then
