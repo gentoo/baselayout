@@ -19,6 +19,11 @@
     Fix bug 46680: Add cifs support to localmount and netmount.
     Thanks to Ronald Moesbergen for the patches
 
+    Related to bug 38955, don't set INPUTRC.  Instead patch bash so
+    that it looks for /etc/inputrc automatically if ~/.inputrc is
+    missing.  This is better than using INPUTRC since that will
+    override even after the user creates ~/.inputrc.
+
   21 Jul 2004; Aron Griffis <agriffis@gentoo.org>:
 
     Fix bug 26952: Use /etc/bash/bashrc to setup PS1, testing $- to

@@ -29,11 +29,6 @@ fi
 export PATH
 unset ROOTPATH
 
-if [ -z "$INPUTRC" -a ! -f "$HOME/.inputrc" ]; then
-	INPUTRC="/etc/inputrc"
-	export INPUTRC
-fi
-
 # Extract the value of EDITOR
 [ -z "$EDITOR" ] && EDITOR="`. /etc/rc.conf 2>/dev/null; echo $EDITOR`"
 [ -z "$EDITOR" ] && EDITOR="`. /etc/conf.d/basic 2>/dev/null; echo $EDITOR`"
