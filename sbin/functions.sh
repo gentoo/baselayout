@@ -392,50 +392,37 @@ wrap_rcscript() {
 
 # char *KV_major(string)
 #
-#    Return the Major version part of given kernel version.
+#    Return the Major (X of X.Y.Z) kernel version
 #
 KV_major() {
-	local KV=
-	
-	[ -z "$1" ] && return 1
+	[[ -z $1 ]] && return 1
 
-	KV="$(echo "$1" | \
-		awk '{ tmp = $0; gsub(/^[0-9\.]*/, "", tmp); sub(tmp, ""); print }')"
-	echo "${KV}" | awk -- 'BEGIN { FS = "." } { print $1 }'
-
-	return 0
+	local KV=$@
+	echo ${KV%%.*}
 }
 
 # char *KV_minor(string)
 #
-#    Return the Minor version part of given kernel version.
+#    Return the Minor (Y of X.Y.Z) kernel version
 #
 KV_minor() {
-	local KV=
-	
-	[ -z "$1" ] && return 1
+	[[ -z $1 ]] && return 1
 
-	KV="$(echo "$1" | \
-		awk '{ tmp = $0; gsub(/^[0-9\.]*/, "", tmp); sub(tmp, ""); print }')"
-	echo "${KV}" | awk -- 'BEGIN { FS = "." } { print $2 }'
-
-	return 0
+	local KV=$@
+	KV=${KV#*.}
+	echo ${KV%%.*}
 }
 
 # char *KV_micro(string)
 #
-#    Return the Micro version part of given kernel version.
+#    Return the Micro (Z of X.Y.Z) kernel version.
 #
 KV_micro() {
-	local KV=
-	
-	[ -z "$1" ] && return 1
+	[[ -z $1 ]] && return 1
 
-	KV="$(echo "$1" | \
-		awk '{ tmp = $0; gsub(/^[0-9\.]*/, "", tmp); sub(tmp, ""); print }')"
-	echo "${KV}" | awk -- 'BEGIN { FS = "." } { print $3 }'
-
-	return 0
+	local KV=$@
+	KV=${KV#*.*.}
+	echo ${KV%%[^[:digit:]]*}
 }
 
 # int KV_to_int(string)
@@ -444,24 +431,17 @@ KV_micro() {
 #    for easy compairing or versions ...
 #
 KV_to_int() {
-	local KV_MAJOR=
-	local KV_MINOR=
-	local KV_MICRO=
-	local KV_int=
+	[[ -z $1 ]] && return 1
 
-	[ -z "$1" ] && return 1
-
-	KV_MAJOR="$(KV_major "$1")"
-	KV_MINOR="$(KV_minor "$1")"
-	KV_MICRO="$(KV_micro "$1")"
-	KV_int="$(( KV_MAJOR * 65536 + KV_MINOR * 256 + KV_MICRO ))"
+	local KV_MAJOR=$(KV_major "$1")
+	local KV_MINOR=$(KV_minor "$1")
+	local KV_MICRO=$(KV_micro "$1")
+	local KV_int=$(( KV_MAJOR * 65536 + KV_MINOR * 256 + KV_MICRO ))
 
 	# We make version 2.2.0 the minimum version we will handle as
 	# a sanity check ... if its less, we fail ...
-	if [ "${KV_int}" -ge 131584 ]
-	then
+	if [[ ${KV_int} -ge 131584 ]] ; then
 		echo "${KV_int}"
-
 		return 0
 	fi
 
@@ -470,12 +450,15 @@ KV_to_int() {
 
 # int get_KV()
 #
-#    return the kernel version (major, minor and micro concated) as an integer
+#    Return the kernel version (major, minor and micro concated) as an integer.
+#    Assumes X and Y of X.Y.Z are numbers.  Also assumes that some leading 
+#    portion of Z is a number.
+#    e.g. 2.4.25, 2.6.10, 2.6.4-rc3, 2.2.40-poop, 2.0.15+foo
 #
 get_KV() {
-	local KV="$(uname -r)"
+	local KV=$(uname -r)
 
-	echo "$(KV_to_int "${KV}")"
+	echo $(KV_to_int "${KV}")
 
 	return $?
 }
@@ -606,6 +589,16 @@ add_suffix() {
 	fi
 
 	return 0
+}
+
+# char *get_base_ver()
+#
+#    get the version of baselayout that this system is running
+#
+get_base_ver() {
+	[[ ! -r /etc/gentoo-release ]] && return 0
+	local ver=$(</etc/gentoo-release)
+	echo ${ver##* }
 }
 
 # Network filesystems list for common use in rc-scripts.

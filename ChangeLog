@@ -5,6 +5,8 @@
 
     Use clock, don't need it.  Not everyone has a RTC #78997.
 
+    Rewrite the KV_* functions to use pure bash rather than awk #75836.
+
   27 Jan 2004; Roy Marples <uberlord@gentoo.org>:
 
     removed udhcpc-* and dhclient-* helper modules and replaced them with a
