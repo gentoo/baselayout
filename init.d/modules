@@ -50,7 +50,7 @@ start() {
 		# Loop over every line in /etc/modules.autoload.
 		load_modules /etc/modules.autoload
 	else
-		local KV="$(</proc/sys/kernel/osrelease)"
+		local KV="$(uname -r)"
 		local KV_MAJOR="`KV_major "${KV}"`"
 		local KV_MINOR="`KV_minor "${KV}"`"
 

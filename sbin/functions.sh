@@ -478,7 +478,7 @@ KV_to_int() {
 #    return the kernel version (major, minor and micro concated) as an integer
 #   
 get_KV() {
-	local KV="$(< /proc/sys/kernel/osrelease)"
+	local KV="$(uname -r)"
 
 	echo "$(KV_to_int "${KV}")"
 

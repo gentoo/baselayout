@@ -12,6 +12,9 @@
     Add mdadm support to /etc/init.d/checkfs, bug #23437, many thanks
 	to Rex Walters <rw@pobox.com>.
 
+    Rather use 'uname -r' to get kernel version, as else we need sysctl.
+    This closes bug #23923, modified /etc/init.d/modules.
+
   16 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Add aliases for add/del to /sbin/rc-update closing bug #24317, thanks
