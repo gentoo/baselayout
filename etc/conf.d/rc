@@ -44,14 +44,6 @@ RC_DEVICES="auto"
 
 RC_DEVICE_TARBALL="yes"
 
-# UDEV OPTION:
-# FS type that should be used for /dev.  Currently just tmpfs and 
-# ramfs are supported.  The downside of tmpfs is that you have to 
-# enable support for it in the kernel.  The downside of ramfs is 
-# that it has no size restrictions.
-
-RC_DEVICE_FS="tmpfs"
-
 
 
 

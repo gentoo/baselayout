@@ -139,11 +139,10 @@ setup_defaultlevels() {
 #
 #    prints the current libdir {lib,lib32,lib64}
 #
-get_libdir()
-{
-	if [ -n "${CONF_LIBDIR_OVERRIDE}" ]; then
+get_libdir() {
+	if [ -n "${CONF_LIBDIR_OVERRIDE}" ] ; then
 		CONF_LIBDIR="${CONF_LIBDIR_OVERRIDE}"
-	elif [ -x "/usr/bin/portageq" ]; then
+	elif [ -x "/usr/bin/portageq" ] ; then
 		CONF_LIBDIR="$(/usr/bin/portageq envvar CONF_LIBDIR)"
 	fi
 	echo ${CONF_LIBDIR:=lib}
@@ -635,6 +634,16 @@ is_net_fs() {
 is_uml_sys() {
 	grep -q 'UML' /proc/cpuinfo &> /dev/null
 	return $?
+}
+
+# bool is_in_fstab(path)
+#
+#   return 0 if path is listed in /etc/fstab
+#
+#   EXAMPLE:  if is_in_fstab /proc ; then ...
+#
+is_in_fstab() {
+	[ -n "$(awk '($2 ~ /^'${*//\//\\/}'$/) { print }' /etc/fstab)" ]
 }
 
 

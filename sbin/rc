@@ -136,7 +136,11 @@ then
 	check_statedir /proc
 
 	ebegin "Mounting proc at /proc"
-	try mount -n -t proc none /proc
+	if is_in_fstab /proc ; then
+		try mount -n /proc
+	else
+		try mount -n -t proc none /proc
+	fi
 	eend $?
 
 	# Read off the kernel commandline to see if there's any special settings
@@ -149,7 +153,11 @@ then
 		if [ -d /sys ]
 		then
 			ebegin "Mounting sysfs at /sys"
-			mount -n -t sysfs none /sys
+			if is_in_fstab /sys ; then
+				mount -n /sys
+			else
+				mount -n -t sysfs none /sys
+			fi
 			eend $?
 		else
 			ewarn "No /sys to mount sysfs needed in 2.6 and later kernels!"
@@ -219,12 +227,16 @@ then
 		if [ "${udev}" = "yes" ]
 		then
 			# Setup temporary storage for /dev
-			if [ "${RC_DEVICE_FS}" != "tmpfs" -a "${RC_DEVICE_FS}" != "ramfs" ]
-			then
-				RC_DEVICE_FS="tmpfs"
+			ebegin "Mounting /dev for udev"
+			if is_in_fstab /dev ; then
+				try mount -n /dev
+			else
+				if egrep -qs tmpfs /proc/filesystems ; then
+					try mount -n -t tmpfs none /dev
+				else
+					try mount -n -t ramfs none /dev
+				fi
 			fi
-			ebegin "Mounting ${RC_DEVICE_FS} at /dev"
-			try mount -n -t ${RC_DEVICE_FS} none /dev
 			eend $?
 
 			# Actually get udev rolling
@@ -320,7 +332,11 @@ then
 			if [ -d /dev/pts ]
 			then
 				ebegin "Mounting devpts at /dev/pts"
-				try mount -n -t devpts -o gid=5,mode=0620 none /dev/pts
+				if is_in_fstab /dev/pts ; then
+					try mount -n /dev/pts
+				else
+					try mount -n -t devpts -o gid=5,mode=0620 none /dev/pts
+				fi
 				eend $?
 			fi
 		fi

@@ -5,6 +5,11 @@
 
     Fix the UML/coLinux check in init.d/clock #72937.
 
+    Allow the user to override the default mount options via /etc/fstab 
+    for all the mounts.  Added a 'is_in_fstab' function to see if the 
+    user has defined the mount, and if not, fall back to the hardcoded 
+    stuff from before.  This also lets us get rid of $RC_DEVICE_FS #70044.
+
   26 Nov 2004; Roy Marples <uberlord@gentoo.org>:
 
     Fixed up address detection in apipa
