@@ -1,6 +1,10 @@
-# ChangeLog for Gentoo Linux System Intialization ("rc") scripts 
-# Copyright 2002-2004 Gentoo Foundation; Distributed under the GPL
-# Written by Daniel Robbins (drobbins@gentoo.org)
+# ChangeLog for Gentoo System Intialization ("rc") scripts
+# Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
+
+  15 Nov 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Add a check to clock init.d to make sure users dont try to set 
+    config their clock in rc.conf anymore.
 
   15 Nov 2004; Roy Marples <uberlord@gentoo.org>:
 
