@@ -474,10 +474,10 @@ modules_load()  {
 # VLAN interfaces (for example eth0.0, eth0.1).  VLAN setup is accomplished by
 # calling itself recursively.
 iface_start() {
-	local iface=${1} mod config_counter=-1 x warn=false config_worked
+	local iface=${1} mod config_counter=-1 x warn=false config_worked=false
 	local RC_INDENTATION=${RC_INDENTATION}	# so it will reset after function
 	local -a config config_fallback conf
-	local ifvar=$( interface_variable ${iface} ) config_worked=false
+	local ifvar=$( interface_variable ${iface} )
 
 	# pre Start any modules with
 	for mod in ${MODULES[@]}; do
