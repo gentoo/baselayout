@@ -3,4 +3,4 @@
 # $Header$
 
 # Set to the hostname of this machine
-HOSTNAME="gentoo"
+HOSTNAME="localhost"
