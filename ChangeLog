@@ -9,6 +9,9 @@
     Add src/awk/genenviron.awk which is rc-envupdate.sh ported
     to awk.  This is also much faster than its bash version.
 
+    Remove the 'Spider cat fix' from depscan.sh.bash, as it makes
+    things even slower on older boxes.  Bug #10548.
+
 * rc-scripts 1.4.2.1 (18 Nov 2002)
 
   18 Nov 2002; Martin Schlemmer <azarah@gentoo.org>:

@@ -24,10 +24,6 @@ do
 	fi
 done
 
-# According to Spider, this should speed things up a bit, as
-# all the stuff in /etc/init.d/ should be cached by the kernel
-/bin/cat /etc/init.d/* >/dev/null
-
 #call: depend_dbadd dep_type service deps....
 depend_dbadd() {
 	local mytype="$1"
