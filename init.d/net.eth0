@@ -33,6 +33,12 @@ start() {
 			eend ${retval} "Failed to bring ${IFACE} up"
 			return ${retval}
 		}
+		# ifconfig do not always return failure ..
+		/sbin/ifconfig ${IFACE} &> /dev/null || {
+			retval=$?
+			eend ${retval} "Failed to bring ${IFACE} up"
+			return ${retval}
+		}
 	else
 		/sbin/dhcpcd ${dhcp_args} ${IFACE} >/dev/null || {
 			retval=$?

@@ -109,10 +109,16 @@ svc_stop() {
 		if [ -L /etc/runlevels/boot/${myservice} -o \
 		     -L /etc/runlevels/${mylevel}/${myservice} ]
 		then
-			mydeps="net ${myservice}"
-		else
-			mydeps="${myservice}"
+			local netcount="$(ls -1 ${svcdir}/started/net.* \
+				2> /dev/null | egrep -c "\/net\..*[[:digit:]]+$")"
+
+			if [ "${netcount}" -lt 1 -o "${RC_NET_FAIL_CRITICAL}" = "yes" ]
+			then
+				mydeps="net"
+			fi
 		fi
+		
+		mydeps="${mydeps} ${myservice}"
 	else
 		mydeps="${myservice}"
 	fi
@@ -243,7 +249,13 @@ svc_start() {
 						#a 'need' dependancy is critical for startup
 						if [ "$?" -ne 0 -a -L ${svcdir}/need/${x}/${myservice} ]
 						then
-							startfail="yes"
+							local netcount="$(ls -1 ${svcdir}/started/net.* \
+								2> /dev/null | egrep -c "\/net\..*[[:digit:]]+$")"
+							
+							if [ "${netcount}" -lt 1 -o "${RC_NET_FAIL_CRITICAL}" = "yes" ]
+							then
+								startfail="yes"
+							fi
 						fi
 					fi
 				done

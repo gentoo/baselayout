@@ -7,6 +7,12 @@
 # NOTE: most of these are not in use yet!!
 #
 
+# Set to "yes" if the default behaviour of at least one net.*
+# service starting beside net.lo is NOT enouth to consider
+# the 'net' dependency up and running.
+
+RC_NET_FAIL_CRITICAL="no"
+
 # Set to "yes" if stop-daemon() should always retry killing the
 # service if it fails the first time.
 

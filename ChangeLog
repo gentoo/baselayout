@@ -2,6 +2,14 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  26 Nov 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Change default 'net' dependency behaviour to be more suited
+    for notebook users.  Basically if at least one net.* service
+    beside net.lo start successfully, the 'net' dependency is
+    considered up.  Server admin can set RC_NET_FAIL_CRITICAL="yes"
+    in /etc/conf.d/rc to change this back to the old default.
+
 * rc-scripts 1.4.2.4 (26 Nov 2002)
 
   26 Nov 2002; Martin Schlemmer <azarah@gentoo.org>:

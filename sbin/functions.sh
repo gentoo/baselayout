@@ -32,6 +32,11 @@ ordtypes="before after"
 #dont output to stdout?
 QUIET_STDOUT="no"
 
+#
+# Default values for rc system
+#
+RC_NET_FAIL_CRITICAL="no"
+
 #stuff for getpids() and co
 declare -ax MASTERPID=""
 declare -ax PIDLIST=""
