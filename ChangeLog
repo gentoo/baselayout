@@ -14,6 +14,10 @@
 
     Add pop3 entries to /etc/services, bug #25501.
 
+    Add a switch for devfsd startup to /etc/conf.d/rc, fix /sbin/rc to check
+    RC_DEVFSD_STARTUP.  Closes bug #24361, thanks to patches from
+    Kurt V. Hindenburg <khindenburg@cherrynebula.net>.
+
   29 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Tweak /etc/init.d/check{root,fs} to set retval after each fsck call,

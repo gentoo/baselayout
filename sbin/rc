@@ -182,9 +182,12 @@ then
 	if [ "${devfs}" = "yes" -a -e "/dev/.devfsd" -a \
 	     "${mymounts}" = "yes" ]
 	then
-		ebegin "Starting devfsd"
-		/sbin/devfsd /dev > /dev/null
-		eend $?
+		if [ "${RC_DEVFSD_STARTUP}" != "no" ]
+		then
+			ebegin "Starting devfsd"
+			/sbin/devfsd /dev > /dev/null
+			eend $?
+		fi
 	fi
 
 	if [ -x /sbin/irqbalance -a "$(get_KV)" -ge "$(KV_to_int '2.5.0')" ]
@@ -636,7 +639,10 @@ rm -rf "${svcdir}/softscripts.old" &> /dev/null
 if [ -z "`ps --no-heading -C 'devfsd'`" -a \
      -n "`gawk '/\/dev devfs/ { print }' /proc/mounts 2> /dev/null`" ]
 then
-	/sbin/devfsd /dev &> /dev/null
+	if [ "${RC_DEVFSD_STARTUP}" != "no" ]
+	then
+		/sbin/devfsd /dev &> /dev/null
+	fi
 fi
 
 # Runlevel end, so clear stale fail list
