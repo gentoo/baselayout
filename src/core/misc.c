@@ -42,6 +42,7 @@ char *memrepchr(char **str, char old, char new, size_t size) {
 
 	if ((NULL == str) || (NULL == *str) || (0 == strlen(*str))) {
 		DBG_MSG("Invalid argument passed!\n");
+		errno = EINVAL;
 		return NULL;
 	}
 
@@ -62,6 +63,7 @@ char *strcatpaths(const char *pathname1, const char *pathname2) {
 	if ((NULL == pathname1) || (0 == strlen(pathname1)) ||
 	    (NULL == pathname2) || (0 == strlen(pathname2))) {
 		DBG_MSG("Invalid argument passed!\n");
+		errno = EINVAL;
 		return NULL;
 	}
 
@@ -83,10 +85,15 @@ char *strcatpaths(const char *pathname1, const char *pathname2) {
 	return new_path;
 }
 
-char *strndup(const char *str, size_t size)
-{
+char *strndup(const char *str, size_t size) {
 	char *new_str = NULL;
 	size_t len = strlen(str);
+
+	if ((NULL == str) || (0 == strlen(str))) {
+		DBG_MSG("Invalid argument passed!\n");
+		errno = EINVAL;
+		return NULL;
+	}
 
 	/* We only want to cp max size chars */
 	if (len > size)
@@ -103,6 +110,19 @@ char *strndup(const char *str, size_t size)
 	
 	return (char *)memcpy(new_str, str, len);
 }
+
+char *gbasename(const char *path) {
+	if ((NULL == path) || (0 == strlen(path))) {
+		DBG_MSG("Invalid argument passed!\n");
+		errno = EINVAL;
+		return NULL;
+	}
+
+	/* Copied from glibc */
+	char *new_path = strrchr (path, '/');
+	return new_path ? new_path + 1 : (char *)path;
+}
+	
 
 int exists(const char *pathname) {
 	struct stat buf;

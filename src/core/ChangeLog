@@ -4,6 +4,11 @@
 
   17 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
 
+    misc.c, misc.h: Add gbasename() that is similar to GNU's basename().
+    parse.c: Use gbasename() instead of POSIX version.
+
+  17 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
+
     parse.c: Fix write_legacy_stage3() to quote the mtime in its output.
 
   17 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:

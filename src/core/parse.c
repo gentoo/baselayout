@@ -23,7 +23,6 @@
  */
 
 #include <errno.h>
-#include <libgen.h>
 #include <string.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -61,8 +60,6 @@ int get_rcscripts(void) {
 	rcscript_info_t *info;
 	char **file_list = NULL;
 	char *rcscript;
-	char *rc_basename = NULL;
-	char *rc_bname_ptr = NULL;
 	char *confd_file = NULL;
 	int count;
 
@@ -73,13 +70,6 @@ int get_rcscripts(void) {
 	}
 
 	STRING_LIST_FOR_EACH(file_list, rcscript, count) {
-		rc_bname_ptr = strndup(rcscript, strlen(rcscript));
-		if (NULL == rc_bname_ptr) {
-			DBG_MSG("Failed to allocate buffer!\n");
-			goto loop_error;
-		}
-		rc_basename = basename(rc_bname_ptr);
-		
 		    /* Is it a file? */
 		if ((!is_file(rcscript, 1)) ||
 		    /* Do not process scripts, source or backup files. */
@@ -88,10 +78,10 @@ int get_rcscripts(void) {
 		    (CHECK_FILE_EXTENSION(rcscript, "~")))
 		{
 			DBG_MSG("'%s' is not a valid rc-script!\n",
-					rc_basename);
+					gbasename(rcscript));
 		} else {
 			DBG_MSG("Adding rc-script '%s' to list.\n",
-					rc_basename);
+					gbasename(rcscript));
 
 			info = malloc(sizeof(rcscript_info_t));
 			if (NULL == info) {
@@ -116,7 +106,8 @@ int get_rcscripts(void) {
 			}
 
 			/* File name for the conf.d config file (if any) */
-			confd_file = strcatpaths(CONFD_DIR_NAME, rc_basename);
+			confd_file = strcatpaths(CONFD_DIR_NAME,
+					gbasename(rcscript));
 			if (NULL == confd_file) {
 				DBG_MSG("Failed to allocate temporary buffer!\n");
 				goto loop_error;
@@ -133,7 +124,6 @@ int get_rcscripts(void) {
 			}
 			
 			free(confd_file);
-			free(rc_bname_ptr);
 
 			list_add_tail(&info->node, &rcscript_list);
 
@@ -143,12 +133,9 @@ loop_error:
 			if (NULL != info)
 				free(info->filename);
 			free(info);
-			free(rc_bname_ptr);
 			
 			goto error;
 		}
-
-		free(rc_bname_ptr);
 	}
 
 	/* Final check if we have some entries */
@@ -223,8 +210,6 @@ int parse_rcscript(char *scriptname, time_t mtime, FILE *output) {
 	regex_data_t tmp_data;
 	char *buf = NULL;
 	char *tmp_buf = NULL;
-	char *rc_basename = NULL;
-	char *rc_bname_ptr = NULL;
 	size_t lenght;
 	int count;
 	int current = 0;
@@ -243,16 +228,9 @@ int parse_rcscript(char *scriptname, time_t mtime, FILE *output) {
 		return -1;
 	}
 
-	rc_bname_ptr = strndup(scriptname, strlen(scriptname));
-	if (NULL == rc_bname_ptr) {
-		DBG_MSG("Failed to allocate buffer!\n");
-		return -1;
-	}
-	rc_basename = basename(rc_bname_ptr);
-	
 	if (-1 == file_map(scriptname, &buf, &lenght)) {
 		DBG_MSG("Could not open '%s' for reading!\n",
-				rc_basename);
+				gbasename(scriptname));
 		return -1;
 	}
 	
@@ -271,7 +249,7 @@ int parse_rcscript(char *scriptname, time_t mtime, FILE *output) {
 				"[ \t]*#![ \t]*/sbin/runscript[ \t]*.*", error);
 			if (REGEX_FULL_MATCH != tmp_data.match) {
 				DBG_MSG("'%s' is not a valid rc-script!\n",
-						rc_basename);
+						gbasename(scriptname));
 				errno = 0;
 				goto error;
 			}
@@ -279,13 +257,13 @@ int parse_rcscript(char *scriptname, time_t mtime, FILE *output) {
 			/* We do not want rc-scripts ending in '.sh' */
 			if (CHECK_FILE_EXTENSION(scriptname, ".sh")) {
 				EWARN("'%s' is invalid (should not end with '.sh')!\n",
-						rc_basename);
+						gbasename(scriptname));
 				errno = 0;
 				goto error;
 			}
-			DBG_MSG("Parsing '%s'.\n", basename(scriptname));
+			DBG_MSG("Parsing '%s'.\n", gbasename(scriptname));
 
-			parse_print_header(rc_basename, mtime, output);
+			parse_print_header(gbasename(scriptname), mtime, output);
 
 			goto _continue;
 		}
@@ -340,14 +318,12 @@ _continue:
 		free(tmp_buf);
 	}
 
-	free(rc_bname_ptr);
 	file_unmap(buf, lenght);
 	
 	return 0;
 
 error:
 	free(tmp_buf);
-	free(rc_bname_ptr);
 	if (NULL != buf) {
 		int old_errno = errno;
 		file_unmap(buf, lenght);
@@ -371,11 +347,13 @@ int generate_stage1(FILE *output) {
 
 	list_for_each_entry(info, &rcscript_list, node) {
 		if (-1 == parse_rcscript(info->filename, info->mtime, output)) {
-			DBG_MSG("Failed to parse rc-script!\n");
+			DBG_MSG("Failed to parse '%s'!\n",
+					gbasename(info->filename));
 
 			/* If 'errno' is set, it is critical (hopefully) */
 			if (0 != errno) {
-				EERROR("Failed to parse rc-script!\n");
+				EERROR("Failed to parse '%s'!\n",
+						gbasename(info->filename));
 				/* Rather should just print error than abort
 				 * for now, as it might be critical to get the
 				 * box booted */

@@ -240,7 +240,11 @@ char *memrepchr(char **str, char old, char _new, size_t size);
 /* Concat two paths adding '/' if needed.  Memory will be allocated
  * with the malloc() call. */
 char *strcatpaths(const char *pathname1, const char *pathname2);
+
+/* Compat functions for GNU extensions */
 char *strndup(const char *str, size_t size);
+/* Same as basename(3), but do not modify path */
+char *gbasename(const char *path);
 
 /* The following functions do not care about errors - they only return
  * 1 if 'pathname' exist, and is the type requested, or else 0.
