@@ -28,7 +28,7 @@
 
   21 Jan 2003; Mike Frysinger <vapier@gentoo.org>:
 
-    Updated /etc/rc.conf to add elogind support #13790.
+    Updated /etc/rc.conf to add elogin/entrance support #13790.
 
   21 Jan 2003; Martin Schlemmer <azarah@gentoo.org>:
 
