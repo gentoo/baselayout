@@ -57,7 +57,7 @@ get_dep_info() {
 	# We already have the right stuff ...
 	[ "$1" = "${rc_name}" ] && return 0
 
-	while [ "${x}" -lt "${RC_DEPEND_TREE[0]}" ]
+	while [ "${x}" -le "${RC_DEPEND_TREE[0]}" ]
 	do
 		if [ "$1" = "${RC_DEPEND_TREE[$((${x} * ${rc_index_scale}))]}" ]
 		then

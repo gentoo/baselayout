@@ -25,6 +25,10 @@
     Change /sbin/rc again to not set the hotplug agent to /sbin/udev, as
     /sbin/hotplug will call udev as well.
 
+    Fix a logic error in /lib/rcscripts/sh/rc-services.sh that cause the
+    get_dep_info() function to skip the last entry in the RC_DEPEND_TREE
+    array (in my case 'net') to be ignored.
+
   19 Oct 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     More bootsplash fixes, bug #21019 (comment #21).
