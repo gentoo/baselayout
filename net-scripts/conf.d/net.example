@@ -80,6 +80,13 @@
 #	"4321:0:1:2:3:4:567:89ac"
 #)
 
+# If you wish to keep existing addresses + routing and the interface is up,
+# you can specify a noop (no operation). If the interface is down or there
+# are no addresses assigned, then we move onto the next step (default dhcp)
+# This is useful when configuring your interface with a kernel command line
+# or similar
+#config_eth0=( "noop" "192.168.0.2/24" )
+
 # If you don't want ANY address (only useful when calling for advanced stuff)
 #config_eth0=( "null" )
 

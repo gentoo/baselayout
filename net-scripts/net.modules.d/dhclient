@@ -47,7 +47,7 @@ dhclient_get_script() {
 dhclient_check_depends() {
 	local f
 
-	for f in interface_variable interface_device interface_is_up interface_get_address interface_module; do
+	for f in interface_exists interface_variable interface_get_address interface_module; do
 		[[ $( type -t ${f} ) == function ]] && continue
 		eerror "dhclient: missing required function ${f}\n"
 		return 1
@@ -106,13 +106,6 @@ dhclient_start() {
 	local ifvar=$( interface_variable ${iface} )
 
 	interface_exists ${iface} true || return 1
-
-	# Check that iface was not brought up by the kernel ...
-	local check=$( interface_device ${iface} )
-	if [[ ${check} == ${iface} ]] && interface_is_up ${iface} true ; then
-		einfo "Keeping kernel configuration for ${iface}"
-		return 0
-	fi
 
 	local script=$( dhclient_get_script )
 

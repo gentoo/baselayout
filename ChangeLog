@@ -1,6 +1,12 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+  11 Jan 2004; Roy Marples <uberlord@gentoo.org>:
+
+    added "noop" config parameter which means take no action if the interface
+    is up and has an address configured, otherwise continue
+    addresses are now removed when starting an interface - fixes #77111
+
   06 Jan 2004; Roy Marples <uberlord@gentoo.org>:
 
     ifconfig, udhcpc-ifconfig now deletes addresses using 0.0.0.0 for uclibc

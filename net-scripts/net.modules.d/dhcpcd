@@ -39,7 +39,7 @@ dhcpcd_check_installed() {
 dhcpcd_check_depends() {
 	local f
 
-	for f in interface_variable interface_device interface_is_up interface_get_address; do
+	for f in interface_exists interface_variable interface_get_address; do
 		[[ $( type -t ${f} ) == function ]] && continue
 		eerror "dhcpcd: missing required function ${f}\n"
 		return 1
@@ -96,14 +96,6 @@ dhcpcd_start() {
 	local ifvar=$( interface_variable ${iface} )
 
 	interface_exists ${iface} true || return 1
-
-	local check=$( interface_device ${iface} )
-
-	# Check that iface was not brought up by the kernel ...
-	if [[ ${check} == ${iface} ]] && interface_is_up ${iface} true ; then
-		einfo "Keeping kernel configuration for ${iface}"
-		return 0
-	fi		
 
 	# Get our options
 	eval opts=\"\$\{dhcpcd_${ifvar}\}\"
