@@ -1,5 +1,5 @@
 # DHCP (net-misc/dhcp) module for net-scripts
-# Version 0.6.2
+# Version 0.6.3
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
@@ -30,7 +30,7 @@ dhclient_depend() {
 # Returns 1 if dhclient is installed, otherwise 0
 dhclient_check_installed() {
 	[[ -x /sbin/dhclient ]] && return 0
-	[[ true == ${1} ]] && eerror "For DHCP (dhclient) support, emerge net-misc/dhcp"
+	[[ ${1} == true ]] && eerror "For DHCP (dhclient) support, emerge net-misc/dhcp"
 	return 1
 }
 
@@ -46,26 +46,13 @@ dhclient_get_script() {
 #
 # Checks to see if we have the needed functions
 dhclient_check_depends() {
-	local e
+	local f
 
-	if [[ function != $( type -t get_device ) ]]; then
-		eerror "dhclient: net.lo is missing the required function get_device\n"
+	for f in get_device interface_is_up interface_get_address interface_module; do
+		[[ $(type -t ${f}) == function ]] && continue
+		eerror "dhclient: missing required function ${f}\n"
 		return 1
-	fi
-
-	[[ -z ${e} && function != $( type -t interface_get_status ) ]] && e=interface_get_address
-	[[ -z ${e} && function != $( type -t interface_get_address ) ]] && e=interface_get_address
-	[[ -z ${e} && function != $( type -t interface_module ) ]] && e=interface_module
-	if [[ -n ${e} ]]; then
-		eerror "dhclient: interface is missing the required function ${e}\n"
-		return 1
-	fi
-
-	local script=$( dhclient_get_script )
-	if [[ ! -f ${script} ]]; then
-		eerror "The required file ${script} does not exist!"
-		return 1
-	fi
+	done
 
 	return 0
 }
@@ -99,7 +86,7 @@ dhclient_stop() {
 	r=$( dhclient -sf ${script} -r ${iface} -q )
 	[[ -z ${r} ]] && return 1
 
-	if [[ RELEASE == ${r} ]]; then
+	if [[ ${r} == RELEASE ]]; then
 		eend 0
 	else
 		ewarn "  dhclient returned a ${r}"
@@ -115,10 +102,10 @@ dhclient_stop() {
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 dhclient_start() {
 	local iface=${1} opts script=$( dhclient_get_script )
-	local status=$( interface_get_status ${iface} ) check=$( get_device ${iface} )
+	local check=$( get_device ${iface} )
 
 	# Check that iface was not brought up by the kernel ...
-	if [[ ${status} == up && ${check} == ${iface} ]]; then
+	if [[ ${check} == ${iface} ]] && interface_is_up ${iface} true ; then
 		einfo "    Keeping kernel configuration for ${iface}"
 		return 0
 	fi
@@ -127,7 +114,7 @@ dhclient_start() {
 	eval opts=\"\$\{dhclient_${iface}\}\"
 	local r=$( dhclient ${opts} -sf ${script} -q ${iface} )
 	# We just check the last 5 letters
-	if [[ BOUND != ${r:((${#r} - 5)):5} ]]; then
+	if [[ ${r:((${#r} - 5)):5} != BOUND ]]; then
 		eend 1 "  dhclient returned a ${r}"
 		return 1
 	fi

@@ -1,5 +1,5 @@
 # udhcpc (net-misc/udhcp) module for net-scripts
-# Version 0.6.2
+# Version 0.6.3
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
@@ -30,7 +30,7 @@ udhcpc_depend() {
 # Returns 1 if udhcpc is installed, otherwise 0
 udhcpc_check_installed() {
 	[[ -x /sbin/udhcpc ]] && return 0
-	[[ true == ${1} ]] && eerror "For DHCP (udhcpc) support, emerge net-misc/udhcp"
+	[[ ${1} == true ]] && eerror "For DHCP (udhcpc) support, emerge net-misc/udhcp"
 	return 1
 }
 
@@ -46,26 +46,13 @@ udhcpc_get_script() {
 #
 # Checks to see if we have the needed functions
 udhcpc_check_depends() {
-	local e
+	local f
 
-	if [[ function != $( type -t get_device ) ]]; then
-		eerror "udhcpc: net.lo is missing the required function get_device\n"
+	for f in get_device interface_is_up interface_get_address interface_module; do
+		[[ $(type -t ${f}) == function ]] && continue
+		eerror "udhcpc: missing required function ${f}\n"
 		return 1
-	fi
-
-	[[ -z ${e} && function != $( type -t interface_get_status ) ]] && e=interface_get_address
-	[[ -z ${e} && function != $( type -t interface_get_address ) ]] && e=interface_get_address
-	[[ -z ${e} && function != $( type -t interface_module ) ]] && e=interface_module
-	if [[ -n ${e} ]]; then
-		eerror "udhcpc: interface is missing the required function ${e}\n"
-		return 1
-	fi
-
-	local script=$( udhcpc_get_script )
-	if [[ ! -f ${script} ]]; then
-		eerror "The required file ${script} does not exist!"
-		return 1
-	fi
+	done
 
 	return 0
 }
@@ -105,7 +92,7 @@ udhcpc_stop() {
 #		while (( i < 30 )); do
 #			addr=$( interface_get_address ${iface} )
 #			[[ -z ${addr} ]] && break
-#			((i = i + 1))
+#			(( i++ ))
 #			sleep 1
 #		done
 		# For some reason we have no mech of removing the process, so
@@ -114,11 +101,8 @@ udhcpc_stop() {
 	done
 
 	r=$( ps -fC udhcpc | awk "/--interface=${iface}/ {print \$1}")
-	if [[ -z ${r} ]]; then
-		eend 0
-	else
-		eend 1
-	fi
+	[[ -z ${r} ]]
+	eend $?
 
 	return 0
 }
@@ -129,20 +113,22 @@ udhcpc_stop() {
 #
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 udhcpc_start() {
-	local iface=${1} opts script=$( udhcpc_get_script )
-	local status=$( interface_get_status ${iface} ) check=$( get_device ${iface} )
+	local iface=${1} opts script=$( udhcpc_get_script ) hostname
+	local check=$( get_device ${iface} )
 
 	# Check that iface was not brought up by the kernel ...
-	if [[ ${status} == up && ${check} == ${iface} ]]; then
+	if [[ ${check} == ${iface} ]] && interface_is_up ${iface} true ; then
 		einfo "    Keeping kernel configuration for ${iface}"
 		return 0
 	fi
 
 	# Bring up DHCP for this interface (or alias)
 	eval opts=\"\$\{udhcpc_${iface}\}\"
-	local r=$( udhcpc ${opts} --script=${script} --now --interface=${iface} )
+	hostname=$( hostname )
+	[[ -n ${hostname} ]] && hostname="--hostname=${hostname%%.*}"
+	local r=$( udhcpc ${hostname} ${opts} --script=${script} --now --interface=${iface} )
 	# We just check the last 5 letters
-	if [[ BOUND != ${r:((${#r} - 5)):5} ]]; then
+	if [[ ${r:((${#r} - 5)):5} != BOUND ]]; then
 		eend 1 "  udhcpc recieved a ${r}"
 		return 1
 	fi

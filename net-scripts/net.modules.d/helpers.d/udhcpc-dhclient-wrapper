@@ -1,12 +1,14 @@
 #!/bin/bash
 # udhcpc dhclient wrapper for net-scripts
-# Version 0.6.2
+# Version 0.6.3
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
 
 # Instead of writing new functions for udhcpc, we simply map their variables
 # over to dhclient style ones and call those scripts!
+
+set
 
 iface_type=${1}
 
@@ -28,7 +30,7 @@ export new_subnet_mask=${subnet// /}
 export new_broadcast_address=${broadcast// /}
 export new_routers=${router}
 export new_domain_name=${domain}
-export new_domain_servers=${dns}
+export new_domain_name_servers=${dns}
 export new_hostname=${hostname}
 export new_ntp_servers=${ntpsrv}
 

@@ -1,5 +1,5 @@
 # iproute2 module for net-scripts
-# Version 0.6.2
+# Version 0.6.3
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
@@ -46,12 +46,15 @@ iproute2_module() {
 #
 # Checks to see if we have the needed functions
 iproute2_check_depends() {
-	local e
+	local f
 
-	[[ -z ${e} && function != $( type -t get_device ) ]] && e="get_device"
-	[[ -z ${e} ]] && return 0
-	eerror "iproute2: net.lo is missing the required function ${e}\n"
-	return 1	
+	for f in get_device; do
+		[[ $(type -t ${f}) == function ]] && continue
+		eerror "iproute2: missing required function ${f}\n"
+		return 1
+	done
+
+	return 0
 }
 
 # void iproute2_up(char *interface)
@@ -68,6 +71,19 @@ iproute2_down() {
 	ip link set down dev ${1} &>${devnull}
 }
 
+# bool ifproute2_is_up(char *iface, bool withaddress)
+#
+# Returns 0 if the interface is up, otherwise 1
+# If withaddress is true then the interface has to have an address
+# assigned as well
+iproute2_is_up() {
+	local check="\<UP\>" addr=${2:-false}
+	${addr} && check="${check}.*\<inet\>"
+	local up=$( ip addr show ${1} 2>${devnull} | xargs | grep -Eq "${check}" && echo up )
+	[[ up = ${up} ]] && return 0
+	return 1
+}
+
 # void loopback_create(void)
 #
 # Creates our loopback interface
@@ -75,15 +91,6 @@ iproute2_loopback_create() {
 	ip addr add 127.0.0.1/8 dev lo brd + scope host &>/dev/null
 	iproute2_up lo
 	ip route add 127.0.0.0/8 dev lo &>/dev/null
-}
-
-# void iproute2_get_status(char *interface)
-#
-# Test that the interface has an address and is configured UP.
-# If successful, echoes "up" on stdout, otherwise echoes nothing.
-iproute2_get_status() {
-	ip addr show ${1} 2>${devnull} | xargs | grep -Eq \
-		'\<UP\>.*\<inet6?' && echo up
 }
 
 # void iproute2_get_address(char *interface)
@@ -122,13 +129,14 @@ iproute2_get_aliases_rev() {
 		'$NF~re {print $NF}' | tac | xargs
 }
 
-# bool iproute2_del_addresses(char *interface)
+# bool iproute2_del_addresses(char *interface, bool report)
 #
 # Remove addresses from interface.  Returns 0 (true) if there
 # were addresses to remove (whether successful or not).  Returns 1
 # (false) if there were no addresses to remove.
 iproute2_del_addresses() {
-	local inet inet6 label=${1} iface=$( get_device ${1} ) x e
+	local inet inet6 label=${1} iface=$( get_device ${1} ) x e report=${2}
+	report=${report:-false}
 
 	inet="$(ip addr show ${iface} label ${label} \
 		| awk '$1=="inet" {print $2}')"
@@ -144,9 +152,9 @@ iproute2_del_addresses() {
 		| awk '$1=="inet6" {print $2}')"
 	[[ -z ${inet6} ]] && return 1
 
-	einfo "  Removing inet6 addresses"
+	${report} && einfo "  Removing inet6 addresses"
 	for x in ${inet6}; do 
-		einfo "    ${iface} inet6 del ${x}"
+		${report} && einfo "    ${iface} inet6 del ${x}"
 		e=$( ip addr del ${x} dev ${iface} label $label} 2>&1 )
 		case "${e}" in
 			'RTNETLINK answers: Invalid argument'|'') ;;

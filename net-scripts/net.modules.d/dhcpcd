@@ -1,5 +1,5 @@
 # DHCP (net-misc/dhcpcd) module for net-scripts
-# Version 0.6.2
+# Version 0.6.3
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
@@ -30,7 +30,7 @@ dhcpcd_depend() {
 # Returns 1 if dhcpcd is installed, otherwise 0
 dhcpcd_check_installed() {
 	[[ -x /sbin/dhcpcd ]] && return 0
-	[[ true == ${1} ]] && eerror "For DHCP (dhcpcd) support, emerge net-misc/dhcpcd"
+	[[ ${1} == true ]] && eerror "For DHCP (dhcpcd) support, emerge net-misc/dhcpcd"
 	return 1
 }
 
@@ -38,19 +38,15 @@ dhcpcd_check_installed() {
 #
 # Checks to see if we have the needed functions
 dhcpcd_check_depends() {
-	local e
+	local f
 
-	if [[ function != $( type -t get_device ) ]]; then
-		eerror "dhcpcd: net.lo is missing the required function get_device\n"
+	for f in get_device interface_is_up interface_get_address; do
+		[[ $(type -t ${f}) == function ]] && continue
+		eerror "dhcpcd: missing required function ${f}\n"
 		return 1
-	fi
+	done
 
-	[[ -z ${e} && function != $( type -t interface_get_status ) ]] && e=interface_get_address
-	[[ -z ${e} && function != $( type -t interface_get_address ) ]] && e=interface_get_address
-	[[ -z ${e} ]] && return 0
-
-	eerror "dhcpcd: interface is missing the required function ${e}\n"
-	return 1
+	return 0
 }
 
 # char* dhcpcd_get_vars(char *interface)
@@ -95,11 +91,11 @@ dhcpcd_stop() {
 #
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 dhcpcd_start() {
-	local iface=${1} opts
-	local status=$( interface_get_status ${iface} ) check=$( get_device ${iface} )
+	local iface=${1} opts hostname
+	local check=$( get_device ${iface} )
 
 	# Check that iface was not brought up by the kernel ...
-	if [[ ${status} == up && ${check} == ${iface} ]]; then
+	if [[ ${check} == ${iface} ]] && interface_is_up ${iface} true ; then
 		einfo "    Keeping kernel configuration for ${iface}"
 		return 0
 	fi
@@ -107,9 +103,27 @@ dhcpcd_start() {
 	# Remove stale PID file
 	[[ -f /var/run/dhcpcd-${iface}.pid ]] && rm -f /var/run/dhcpcd-${iface}.pid
 
-	# Bring up DHCP for this interface (or alias)
+	# Get our options
 	eval opts=\"\$\{dhcpcd_${iface}\}\"
-	
+
+	# Map some generic options to dhcpcd
+	eval peer=\"\$\{peer_dns_${interface}\}\"
+	[[ -z ${peer} ]] && eval peer=\"\$\{peer_dns\}\"
+	[[ ${peer} != no ]] && opts="-R ${opts}"
+
+	eval peer=\"\$\{peer_nis_${interface}\}\"
+	[[ -z ${peer} ]] && eval peer=\"\$\{peer_nis\}\"
+	[[ ${peer} != no ]] && opts="-Y ${opts}"
+
+	eval peer=\"\$\{peer_ntp_${interface}\}\"
+	[[ -z ${peer} ]] && eval peer=\"\$\{peer_ntp\}\"
+	[[ ${peer} != no ]] && opts="-N ${opts}"
+
+	# We transmit the hostname by default	
+	hostname=$( hostname )
+	[[ -n ${hostname} ]] && opts="-h ${hostname%%.*} ${opts}"
+
+	# Bring up DHCP for this interface (or alias)
 	dhcpcd ${opts} ${iface} 2>${devnull}
 	eend $?
 	[[ 0 != $? ]] && return 1

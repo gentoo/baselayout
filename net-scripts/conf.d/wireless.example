@@ -108,13 +108,14 @@
 #iwpriv_scan_post_eth0="host_roaming 0"
 
 # Define a WEP key per ESSID or MAC address (of the AP, not your card)
+# The encryption type (open or restricted) must match the
+# encryption type on the Access Point
 # You can't use "any" for an ESSID here
 #key_ESSID="1234-1234-1234-1234-1234-1234-56"
 # or you can use strings. Passphrase IS NOT supported
+# To use a string, prefix it with s:
 # Note - this example also sets the encryption method to open
 # which is regarded as more secure than restricted
-# The encryption type (open or restricted) must match the
-# encryption type on the Access Point
 #key_ESSID="s:foobar enc open"
 #key_ESSID="s:foobar enc restricted"
 
@@ -148,7 +149,7 @@
 # Setting name/domain server causes /etc/resolv.conf to be overwritten
 # Note that if DHCP is used, and you want this to take precedence then
 # please put -R in your dhcpcd options
-#nameserver_ESSID="192.168.0.1"
+#nameservers_ESSID=( "192.168.0.1" "192.168.0.2" )
 #domain_ESSID="some.domain"
 
 # You can also set any of the /etc/conf.d/net variables per MAC address
@@ -157,7 +158,7 @@
 # method with other variables
 #mac_ifconfig_001122334455=( "dhcp ")
 #mac_dhcpcd_001122334455="-t 10"
-#mac_nameserver_001122334455="192.168.0.1"
+#mac_nameservers_001122334455=( "192.168.0.1" "192.168.0.2" )
 
 # Map a MAC address to an ESSID
 # This is used when the Access Point is not broadcasting it's ESSID

@@ -1,5 +1,5 @@
 # Pump module for net-scripts
-# Version 0.6.2
+# Version 0.6.3
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
@@ -30,7 +30,7 @@ pump_depend() {
 # Returns 1 if pump is installed, otherwise 0
 pump_check_installed() {
 	[[ -x /sbin/pump ]] && return 0
-	[[ true == ${1} ]] && eerror "For DHCP (pump) support, emerge net-misc/pump"
+	[[ ${1} == true ]] && eerror "For DHCP (pump) support, emerge net-misc/pump"
 	return 1
 }
 
@@ -38,19 +38,15 @@ pump_check_installed() {
 #
 # Checks to see if we have the needed functions
 pump_check_depends() {
-	local e
+	local f
 
-	if [[ function != $( type -t get_device ) ]]; then
-		eerror "pump: net.lo is missing the required function get_device\n"
+	for f in get_device interface_is_up interface_get_address; do
+		[[ $(type -t ${f}) == function ]] && continue
+		eerror "pump: missing required function ${f}\n"
 		return 1
-	fi		
+	done
 
-	[[ -z ${e} && function != $( type -t interface_get_status ) ]] && e=interface_get_address
-	[[ -z ${e} && function != $( type -t interface_get_address ) ]] && e=interface_get_address
-	[[ -z ${e} ]] && return 0
-
-	eerror "pump: interface is missing the required function ${e}\n"
-	return 1
+	return 0
 }
 
 # char* pump_get_vars(char *interface)
@@ -99,17 +95,27 @@ pump_stop() {
 # Returns 0 (true) when a dhcp address is obtained, otherwise
 # the return value from pump
 pump_start() {
-	local iface=${1} opts
-	local status=$( interface_get_status ${iface} ) check=$( get_device ${iface} )
+	local iface=${1} opts hostname
+	local check=$( get_device ${iface} )
 
 	# Check that iface was not brought up by the kernel ...
-	if [[ ${status} == up && ${check} == ${iface} ]]; then
+	if [[ ${check} == ${iface} ]] && interface_is_up ${iface} true ; then
 		einfo "    Keeping kernel configuration for ${iface}"
 		return 0
 	fi
 
-	# Bring up DHCP for this interface (or alias)
 	eval opts=\"\$\{pump_${iface}\}\"
+
+	# Map some generic options to pump
+	eval peer=\"\$\{peer_dns_${interface}\}\"
+	[[ -z ${peer} ]] && eval peer=\"\$\{peer_dns\}\"
+	[[ ${peer} != no ]] && opts="--no-dns ${opts}"
+
+	# We transmit the hostname by default	
+	hostname=$( hostname )
+	[[ -n ${hostname} ]] && opts="--hostname=${hostname%%.*} ${opts}"
+
+	# Bring up DHCP for this interface (or alias)
 	pump ${opts} --win-client-ident --interface ${iface} 2>${devnull}
 	eend $?
 	[[ 0 != $? ]] && return $?
@@ -117,6 +123,11 @@ pump_start() {
 	# pump succeeded, show address retrieved
 	local addr=$( interface_get_address ${iface} )
 	einfo "    ${iface} received address ${addr}"
+
+	export new_ntp_servers=$( pump -i eth1 --status | awk '/Ntpservers/ {print $2}' 2>/dev/null )
+
+	source /etc/net.modules.d/helpers.d/config-system
+	config_system
 
 	return 0
 }

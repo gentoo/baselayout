@@ -1,6 +1,6 @@
 #!/sbin/runscript
 # net-scripts main code
-# Version 0.6.2
+# Version 0.6.3
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
@@ -55,8 +55,7 @@ modules_load()
 {
 	local iface=${1} all=${2:-false} i j k p e before after diffs mod
 	local loaded_interface changed_something tmp modnums missingdeps
-	local sort_history
-	local -a mods=( $( find /etc/net.modules.d/ -maxdepth 1 -type f | sort ) ) umods
+	local -a mods=( $( find /etc/net.modules.d/ -maxdepth 1 -type f | sort ) ) umods sort_history
 
 	[[ lo != ${iface} ]] && ebegin "Loading networking scripts"
 
@@ -67,20 +66,21 @@ modules_load()
 	j=${#mods[@]}
 	loaded_interface=false
 	for ((i=0; i < j; i++ )); do
-		source ${mods[i]} || {
+		if ! source ${mods[i]} ; then
 			eerror "  ${mods[i]##*/} failed a sanity check - will not load"
 			unset mods[i]
 			continue
-		}
+		fi
+
 		mods[i]=${mods[i]##*/}
-		if [[ interface == ${mods[i]} ]]; then
+		if [[ ${mods[i]} == interface ]]; then
 			eerror "  interface is a reserved name - cannot load a module called interface"
 			return 1
 		fi
 
 		e=false
 		for p in check_installed provides check_depends depend; do
-			[[ function == $(type -t ${mods[i]}_${p}) ]] && continue
+			[[ $(type -t ${mods[i]}_${p}) == function ]] && continue
 			eerror "  ${mods[i]} does not support the required function ${p}\n"
 			e=true
 		done
@@ -107,7 +107,7 @@ modules_load()
 			continue
 		fi
 
-		[[ -n ${mods[i]} && interface == $( ${mods[i]}_provides ) ]] && loaded_interface=true
+		[[ -n ${mods[i]} && $( ${mods[i]}_provides ) == interface ]] && loaded_interface=true
 	done
 
 	if ! ${loaded_interface}; then
@@ -130,7 +130,7 @@ modules_load()
 		# First we strip any modules that conflict from user settings
 		# So if the user specifies pump then we don't use dhcpcd
 		for ((i=0; i < ${#umods[@]}; i++)); do
-			if [[ function != $( type -t ${umods[i]}_provides ) ]]; then
+			if [[ $( type -t ${umods[i]}_provides ) != function ]]; then
 				eerror "${umods[i]} is not a valid module (missing provides)"
 				return 1
 			fi
@@ -182,13 +182,13 @@ modules_load()
 	done
 
 	# Then we swap numbers based on and after/before flags
-	# until we don't swap anymore.  The sort_history array prevents
-	# any possibility of an infinite loop
-	sort_history[0]="${modnums[*]}"		# capture starting state
+	# until we don't swap anymore. The sort_history array prevents
+	# the possibility of an infinite loop
+	sort_history[0]="${modnums[*]}"
 	for ((k=1; 1; k++)); do
 		changed_something=false
 		for ((i=0; i < ${#mods[@]}; i++)); do
-			if [[ function == $( type -t ${mods[i]}_after ) ]]; then
+			if [[ $( type -t ${mods[i]}_after ) == function ]]; then
 				for p in $( ${mods[i]}_after ); do
 					for ((j=0; j < ${#mods[@]}; j++)); do
 						[[ ${p} != ${mods[j]} && ${p} != $( ${mods[j]}_provides ) ]] && continue
@@ -201,7 +201,7 @@ modules_load()
 					done
 				done
 			fi
-			if [[ function == $( type -t ${mods[i]}_before ) ]]; then
+			if [[ $( type -t ${mods[i]}_before ) == function ]]; then
 				for p in $( ${mods[i]}_before ); do
 					for ((j=0; j < ${#mods[@]}; j++)); do
 						[[ ${p} != ${mods[j]} && ${p} != $( ${mods[j]}_provides ) ]] && continue
@@ -215,11 +215,9 @@ modules_load()
 				done
 			fi
 		done
-
 		${changed_something} || break
 
-		# Make sure we aren't repeating a previous state.
-		# First time through, k=1, k/2=0.
+		# Make sure we aren't repeating a previous state
 		sort_history[k]="${modnums[*]}"
 		if [[ ${sort_history[k]} == ${sort_history[k/2]} ]]; then
 			eerror "detected an infinite loop sorting modules; blundering ahead"
@@ -227,14 +225,14 @@ modules_load()
 		fi
 	done
 
-	# Finally we sort our modules in number order and volia :)
+	# Finally we sort our modules in number order
 	um=""
 	for ((i=0; i < ${#mods[@]}; i++)); do
 		um="${um}${modnums[i]} ${mods[i]}\n"
 	done
 	MODULES=( $( echo -e ${um} | sort -n | awk '{print $2}' ) )
 
-	[[ lo != ${iface} ]] && einfo "  modules: ${MODULES[@]}"
+	[[ ${iface} != lo ]] && einfo "  modules: ${MODULES[@]}"
 
 	# Setup class wrappers: interface_up -> iproute2_up, for example
 	for i in ${MODULES[@]}; do
@@ -248,7 +246,7 @@ modules_load()
 	# Ensure that all modules have what they need
 	# from either other modules or the system
 	for i in ${MODULES[@]}; do
-		if [[ function == $( type -t ${i}_need ) ]]; then
+		if [[ $( type -t ${i}_need ) == function ]]; then
 			for j in $( ${i}_need ); do
 				missingdeps=true
 				for k in ${MODULES[@]}; do
@@ -266,7 +264,7 @@ modules_load()
 		fi
 		${i}_check_depends || return 1
 		e=$( ${i}_provides )
-		if [[ true != ${all} && lo != ${iface} && ${e} != ${i} ]]; then
+		if [[ ${all} != true && ${iface} != lo && ${e} != ${i} ]]; then
 			einfo "    ${i} provides ${e}"
 		fi
 	done
@@ -296,12 +294,12 @@ iface_start() {
 	# Localise and initialise variables
 	for mod in ${MODULES[@]}; do
 		x="${mod}_local_vars"
-		if [[ function == $( type -t ${x} ) ]]; then
+		if [[ $( type -t ${x} ) == function ]]; then
 			x=$( ${x} )
 			${x}
 		fi
 		x="${mod}_setup_vars"
-		if [[ function == $( type -t ${x} ) ]]; then
+		if [[ $( type -t ${x} ) == function ]]; then
 			${x} ${iface} || return 1
 		fi
 	done
@@ -322,13 +320,13 @@ iface_start() {
 		einfo "  ${label} ${conf[0]}"
 		
 		# Do we have a function for our config?
-		if [[ function == $( type -t ${conf[0]}_start ) ]]; then
+		if [[ $( type -t ${conf[0]}_start ) == function ]]; then
 			${conf[0]}_start ${label} && continue
 			if [[ -n ${config_fallback_IFACE[i]} ]]; then
 				einfo "    Trying fallback configuration"
 				config_IFACE[i]=${config_fallback_IFACE[i]}
 				config_fallback_IFACE[i]=''
-				(( i = i - 1 )) # since the loop will increment it
+				(( i-- )) # since the loop will increment it
 			else
 				# Only return failure if it was the first address for the interface
 				[[ ${i} -eq 0 ]] && return 1
@@ -395,11 +393,11 @@ iface_stop() {
 	for i in ${aliases} ${iface}; do
 		# Stop all our modules
 		for mod in ${MODULES[@]}; do
-			[[ function == $( type -t ${mod}_stop ) ]] && ${mod}_stop ${i} && need_begin=true
+			[[ $( type -t ${mod}_stop ) == function ]] && ${mod}_stop ${i} && need_begin=true
 		done
 
 		# Delete all the addresses for this alias
-		interface_del_addresses ${i} && need_begin=true
+		interface_del_addresses ${i} true && need_begin=true
 
 		# Do final shut down of this alias
 		${need_begin} && einfo "  Stopping ${i}"
@@ -421,9 +419,9 @@ start() {
 
 	modules_load ${IFACE}
 	eend $?
-	[[ 0 != $? ]] && return 1
+	[[ $? != 0 ]] && return 1
 
-	if [[ lo == ${IFACE} ]]; then
+	if [[ ${IFACE} == lo ]]; then
 		ebegin "Bringing ${IFACE} up"
 		interface_loopback_create
 		eend $?
@@ -431,17 +429,17 @@ start() {
 	fi
 
 	# Call user-defined preup function if it exists
-	if [[ function == $( type -t preup ) ]]; then
+	if [[ $( type -t preup ) == function ]]; then
 		einfo "Running preup function"
-		preup ${IFACE} || {
+		if ! preup ${IFACE} ; then
 			eerror "preup ${IFACE} failed"
 			return 1
-		}
+		fi
 	fi
 
 	# pre Start any modules with
 	for mod in ${MODULES[@]}; do
-		if [[ function == $( type -t ${mod}_pre_start ) ]]; then
+		if [[ $( type -t ${mod}_pre_start ) == function ]]; then
 			${mod}_pre_start ${IFACE} || return 1
 		fi
 	done
@@ -457,7 +455,7 @@ start() {
 	# and they may have to call iface_start recursively
 
 	# Call user-defined postup function if it exists
-	if [[ function == $( type -t postup ) ]]; then
+	if [[ $( type -t postup ) == function ]]; then
 		einfo "Running postup function"
 		postup ${IFACE}
 	fi
@@ -477,17 +475,17 @@ stop() {
 	modules_load ${IFACE} true || return 1
 
 	# Call user-defined predown function if it exists
-	if [[ lo != ${IFACE} && function == $(type -t predown) ]]; then
+	if [[ ${IFACE} != lo && function == $(type -t predown) ]]; then
 		einfo "Running predown function"
-		predown ${IFACE} || {
+		if ! predown ${IFACE} ; then
 			eerror "predown ${IFACE} failed"
 			return 1
-		}
+		fi
 	fi
 
 	# pre Stop any modules
 	for mod in ${MODULES[@]}; do
-		[[ function == $( type -t ${mod}_pre_stop ) ]] && ${mod}_pre_stop ${IFACE}
+		[[ $( type -t ${mod}_pre_stop ) == function ]] && ${mod}_pre_stop ${IFACE}
 	done
 
 	iface_stop ${IFACE} || return 1  # always succeeds, btw
@@ -495,11 +493,11 @@ stop() {
 	# post Stop any modules
 	for mod in ${MODULES[@]}; do
 		# We have already taken down the interface, so no need to error
-		[[ function == $( type -t ${mod}_post_stop ) ]] && ${mod}_post_stop ${IFACE}
+		[[ $( type -t ${mod}_post_stop ) == function ]] && ${mod}_post_stop ${IFACE}
 	done
 
 	# Call user-defined postdown function if it exists
-	if [[ lo != ${IFACE} && $(type -t postdown) == function ]]; then
+	if [[ ${IFACE} != lo && $(type -t postdown) == function ]]; then
 		einfo "Running postdown function"
 		postdown ${IFACE}
 	fi

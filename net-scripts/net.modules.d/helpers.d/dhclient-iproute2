@@ -1,6 +1,6 @@
 #!/bin/bash
 # dhclient iproute2 module for net-scripts
-# Version 0.6.2
+# Version 0.6.3
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
@@ -21,14 +21,14 @@ ip link set up dev ${interface} &>/dev/null
 # Check that we can handle the reason
 [[ ${reason} != BOUND && ${reason} != RENEW && ${reason} != REBIND && ${reason} != REBOOT ]] && exit 0
 
-source /etc/net.modules.d/helpers.d/dhclient-systemconfig
+source /etc/net.modules.d/helpers.d/config-system
 
 masks=${new_subnet_mask//./ }
 len=0
 for mask in ${masks}; do
 	binary=$( echo "obase=2; ${mask}" | bc )
 	for ((i = 0; i < ${#binary}; i++)) do
-		[[ 1 -eq ${binary:${i}:1} ]] && ((len = len + 1))
+		[[ ${binary:${i}:1} -eq 1 ]] && ((len = len + 1))
 	done
 done
 

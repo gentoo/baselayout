@@ -1,5 +1,5 @@
 # Interface bonding module for net-scripts
-# Version 0.6.2
+# Version 0.6.3
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
@@ -32,15 +32,15 @@ bonding_depend() {
 #
 # Checks to see if we have the needed functions
 bonding_check_depends() {
-	local e
+	local f
 
-	[[ -z ${e} && function != $( type -t interface_up ) ]] && e=interface_up
-	[[ -z ${e} && function != $( type -t interface_down ) ]] && e=interface_up
-	[[ -z ${e} && function != $( type -t interface_del_addresses ) ]] && e=interface_del_addresses
-	[[ -z ${e} ]] && return 0
+	for f in interface_up interface_down interface_del_addresses; do
+		[[ $(type -t ${f}) == function ]] && continue
+		eerror "bonding: missing required function ${f}\n"
+		return 1
+	done
 
-	eerror "bonding: interface is missing the required function ${e}\n"
-	return 1
+	return 0
 }
 
 # bool bonding_post_start(char *iface)

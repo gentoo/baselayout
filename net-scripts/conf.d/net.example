@@ -3,8 +3,8 @@
 #                      READ THIS COMMENT FIRST
 #
 # We now support modular networking scripts which means we can easily
-# add support for new interface types  and modules whilst keeping compatability
-# with existing ones
+# add support for new interface types  and modules whilst keeping
+# compatability with existing ones
 
 # Modules only load by default if the package they need is installed
 # If you specify a module here that doesn't have it's package installed then
@@ -36,8 +36,8 @@
 #)
 
 # This is just like setting the gateway config option in the old-style iface
-# config, but allows one to add custom routes.  This should not be needed if you
-# are obtaining an address via DHCP since the default route should be set
+# config, but allows one to add custom routes.  This should not be needed if
+# you are obtaining an address via DHCP since the default route should be set
 # automatically.
 #routes_eth0=(
 #	"default gw 192.168.0.1"
@@ -45,7 +45,8 @@
 
 ##############################################################################
 # IPROUTE2
-# For iproute2 support, emerge sys-apps/iproute2 and add "iproute2" to the modules array above like so
+# For iproute2 support, emerge sys-apps/iproute2 and add "iproute2" to the
+# modules array above like so
 #modules=( "iproute2" )
 
 # For a static configuration, use something like this.  This sets the primary
@@ -83,14 +84,22 @@
 # DHCP
 # DHCP can be provided by dhcpcd (default), pump, dhclient or udhcpc
 # For dhcpcd support, emerge net-misc/dhcpcd
-# For pump support, emerge net-misc/pump and add "pump" to the modules array above like so
-#modules=( "pump" )
-# For dhclient support, emerge net-misc/dhcp and add "dhclient" to the modules array above like so
+# For dhclient support, emerge net-misc/dhcp and add "dhclient" to the modules
+# array above like so
 #modules=( "dhclient" )
-# For udhcp support, emerge net-misc/udhcp and add "udhcpc" to the modules array above like so
+# For udhcp support, emerge net-misc/udhcp and add "udhcpc" to the modules
+# array above like so
 #modules=( "udhcpc" )
+# For pump support, emerge net-misc/pump and add "pump" to the modules
+# array above like so
+#modules=( "pump" )
 
-#This is how to configure eth0 for dhcp (regardless of using dhcpcd or pump)
+# Note - all clients except for dhclient send the current hostname to the DHCP
+# server by default
+# Note - pump does not support NIS
+
+#This is how to configure eth0 for dhcp (regardless of using dhcpcd, dhclient,
+# udhcpc or pump)
 # for iproute2
 #ipaddr=( "dhcp" )
 # and ifconfig
@@ -98,15 +107,30 @@
 
 # For passing custom options to dhcpcd use something like the following.  This
 # example reduces the timeout for retrieving an address from 60 seconds (the
-# default) to 10 seconds.  Note that this might be too short for some servers,
-# so the default is encouraged unless you know what you're doing.
+# default) to 10 seconds and broadcasts the current hostname. 
 #dhcpcd_eth0="-t 10"
 
-# pump, dhclient and udhcpc don't have many runtime options
+# dhclient, udhcpc and pump don't have many runtime options
 # You can pass options to them in a similar manner to dhcpcd though
-#pump_eth0="--hostname=myhostname"
 #dhclient_eth0="..."
-#udhcpc_eth0="--hostname=myhostname"
+#udhcpc_eth0="..."
+#pump_eth0="..."
+
+# To set options for dhclient, you need to have an /etc/dhclient.conf file
+# See the dhclient man page for details
+
+# GENERIC DHCP OPTIONS
+# To stop DHCP from overwritting DNS (/etc/resolv.conf) use the below settings
+# peer_dns="no"
+# peer_dns_eth0="no"
+
+# To stop DHCP from overwritting NIS (/etc/yp.conf) use the below settings
+# peer_nis="no"
+# peer_nis_eth0="no"
+
+# To stop DHCP from overwritting NTP /etc/ntp.conf use the below settings
+# peer_ntp="no"
+# peer_ntp_eth0="no"
 
 ##############################################################################
 # VLAN (802.1q support)
@@ -116,7 +140,8 @@
 # Please ensure your VLAN IDs are NOT zero-padded
 #vlans_eth0="1 2"
 
-# Then setup the interface for each VLAN using either iproute2 or ifconfig like so
+# Then setup the interface for each VLAN using either iproute2 or ifconfig like
+# so
 #ipaddr_eth0_1=( "dhcp" )
 #ipaddr_eth0_2=( "172.16.2.1/23 brd 172.16.3.255" )
 # This configures eth0_1 to use DHCP and eth0_2 for a static address
@@ -138,11 +163,14 @@
 #mac_eth0="00:11:22:33:44:55"
 # - to randomize the last 3 bytes only
 #mac_eth0="random-ending"
-# - to randomize between the same physical type of connection (eg fibre, copper, wireless) , all vendors
+# - to randomize between the same physical type of connection (eg fibre,
+# copper, wireless) , all vendors
 #mac_eth0="random-samekind"
-# - to randomize between any physical type of connection (eg fibre, copper, wireless) , all vendors
+# - to randomize between any physical type of connection (eg fibre, copper,
+# wireless) , all vendors
 #mac_eth0="random-anykind"
-# - full randomization - WARNING: some MAC addresses generated by this may NOT act as expected
+# - full randomization - WARNING: some MAC addresses generated by this may NOT
+# act as expected
 #mac_eth0="random-full"
 # custom - passes all parameters directly to net-analyzer/macchanger
 #mac_eth0="some custom set of parameters"

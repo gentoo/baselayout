@@ -1,5 +1,5 @@
 # ifconfig module for net-scripts
-# Version 0.6.2
+# Version 0.6.3
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
@@ -49,7 +49,7 @@ ifconfig_check_depends() {
 	return 0
 }
 
-# void ifconfig_up(char *options ...)
+# void ifconfig_up(char *iface)
 #
 # provides a generic interface for bringing interfaces up
 ifconfig_up() {
@@ -63,6 +63,19 @@ ifconfig_down() {
 	ifconfig ${1} down &>${devnull}
 }
 
+# bool ifconfig_is_up(char *iface, bool withaddress)
+#
+# Returns 0 if the interface is up, otherwise 1
+# If withaddress is true then the interface has to have an address
+# assigned as well
+ifconfig_is_up() {
+	local check="\<UP\>" addr=${2:-false}
+	${addr} && check="\<addr:.*${check}"
+	local up=$( ifconfig ${1} 2>${devnull} | xargs | grep -Eq "${check}" && echo up )
+	[[ up = ${up} ]] && return 0
+	return 1
+}
+
 # void ifconfig_loopback_create(void)
 #
 # Creates our loopback interface
@@ -70,15 +83,6 @@ ifconfig_loopback_create() {
 	ifconfig lo 127.0.0.1 up 2>/dev/null
 	/sbin/route add -net 127.0.0.0 netmask 255.0.0.0 \
 		gw 127.0.0.1 dev lo 2> /dev/null
-}
-
-# void ifconfig_get_status(char *interface)
-#
-# Test that the interface has an address and is configured UP.
-# If successful, echoes "up" on stdout, otherwise echoes nothing.
-ifconfig_get_status() {
-	ifconfig ${1} 2>${devnull} | xargs | grep -Eq \
-		'\<addr:.*\<UP\>' && echo up
 }
 
 # void ifconfig_get_address(char *interface)
@@ -113,22 +117,23 @@ ifconfig_get_aliases_rev() {
 	ifconfig ${1} | grep -o "^${1}:[0-9]*" | tac | xargs
 }
 
-# bool ifconfig_interface_del_addresses(char *interface)
+# bool ifconfig_interface_del_addresses(char *interface, bool report)
 #
 # Remove addresses from interface.  Returns 0 (true) if there
 # were addresses to remove (whether successful or not).  Returns 1
 # (false) if there were no addresses to remove.
 ifconfig_del_addresses() {
-	local inet6 iface=${1} x
+	local inet6 iface=${1} x report=${2}
+	report=${report:-false}
 
 	ifconfig ${iface} 0
 
 	inet6="$(ifconfig ${iface} | awk '$1=="inet6" {print $3}')"
 	[[ -z ${inet6} ]] && return 1
 
-	einfo "  Removing inet6 addresses"
+	${report} && einfo "  Removing inet6 addresses"
 	for x in ${inet6}; do
-		einfo "    ${iface} inet6 del ${x}"
+		${report} && einfo "    ${iface} inet6 del ${x}"
 		ifconfig ${iface} inet6 del ${x}
 	done
 
@@ -179,10 +184,10 @@ ifconfig_setup_vars() {
 		for i in "${routes_IFACE[@]}"; do
 			if [[ "default gw " == "${i:0:11}" ]]; then
 				gw=true
-				break;
+				break
 			fi
 		done
-		[[ false == ${gw} ]] && routes_IFACE=( "${routes_IFACE[@]}" "default gw ${gateway#*/}" )
+		[[ ${gw} == false ]] && routes_IFACE=( "${routes_IFACE[@]}" "default gw ${gateway#*/}" )
 	fi
 
         # BACKWARD COMPATIBILITY: populate the config_IFACE array

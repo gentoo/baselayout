@@ -1,6 +1,6 @@
 #!/bin/bash
 # dhclient ifconfig module for net-scripts
-# Version 0.6.2
+# Version 0.6.3
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
@@ -21,7 +21,7 @@ echo ${reason}
 # Check that we can handle the reason
 [[ ${reason} != BOUND && ${reason} != RENEW && ${reason} != REBIND && ${reason} != REBOOT ]] && exit 0
 
-source /etc/net.modules.d/helpers.d/dhclient-systemconfig
+source /etc/net.modules.d/helpers.d/config-system
 
 if [[ -z ${old_ip_address} || ${old_ip_address} != ${new_ip_address} || \
 	${reason} == BOUND || ${reason} == REBOOT ]]; then
