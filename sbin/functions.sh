@@ -616,10 +616,7 @@ get_KV() {
 #   EXAMPLE:  if get_bootparam "nodevfs" ; then ....
 #
 get_bootparam() {
-	local x=
-	local copt=
-	local parms=
-	local retval=1
+	local x copt params retval=1
 
 	[ ! -e "/proc/cmdline" ] && return 1
 	

@@ -158,7 +158,7 @@ livecd_fix_inittab() {
 			echo "s0:12345:respawn:/sbin/agetty -nl /bin/bashlogin ${LIVECD_CONSOLE_BAUD} tts/0 vt100" >> /etc/inittab
 		fi
 		# HPPA software PDC console (K-models)
-		if [ "${LIVECD_CONSOLE}" = "ttyB0" ]; then
+		if [ "${LIVECD_CONSOLE}" = "ttyB0" ]
 		then
 			mknod /dev/ttyB0 c 11 0
 			LIVECD_CONSOLE_BAUD=`stty -F /dev/ttyB0 speed`
