@@ -1,0 +1,5 @@
+.cvsignore
+*.o
+consoletype
+runscript
+start-stop-daemon
