@@ -2,6 +2,11 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  25 Sep 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix /etc/init.d/bootmisc not to kill pidfiles of running
+    daemons.  Improve NGPT support in /sbin/rc a bit.
+
   23 Sep 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix my last screwup with /etc/init.d/net.ppp0.  Basically

@@ -44,19 +44,28 @@ start() {
 		#
 		# Clean up /var/run and create /var/run/utmp so that we can login.
 		#
-		( cd /var/run && \
-			find . ! -type d ! -name utmp ! -name innd.pid ! -name random-seed \
-			-exec rm -f -- {} \; 1>&2 )
+		cd /var/run && \
+		for x in $(find . ! -type d ! -name utmp ! -name innd.pid ! -name random-seed)
+		do
+			local daemon="${x##*/}"
+			daemon="${daemon%*.pid}"
+			# Do not remove pidfiles of already running daemons
+			if [ "$(ps -A | awk '{print $4}' | grep ${daemon})" != "${daemon}" ]
+			then
+				rm -f ${x}
+			fi
+		done
+		# Setup login records
 		: > /var/run/utmp
 		touch /var/log/wtmp
 		chgrp utmp /var/run/utmp /var/log/wtmp
 		chmod 0664 /var/run/utmp /var/log/wtmp
-		#remove /var/run/utmpx
+		# Remove /var/run/utmpx (bug from the past)
 		rm -f /var/run/utmpx
 		# Reset pam_console permissions
 		[ -x /sbin/pam_console_apply -a ! -c /dev/.devfsd ] && \
 			/sbin/pam_console_apply -r
-		#create the .keep to stop portage from removing /var/lock
+		# Create the .keep to stop portage from removing /var/lock
 		>/var/lock/.keep
 		eend 0
 

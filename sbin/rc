@@ -10,14 +10,15 @@ umask 022
 
 try() {
 	local retval=0
-	#this works fine in test, but real life booting, fails for mounting /proc
-	#for instance, if we only check $?, thus we need to [ -n "${errstr}" ]
-	#as well
+	# this works fine in test, but real life booting, fails for mounting /proc
+	# for instance, if we only check $?, thus we need to [ -n "${errstr}" ]
+	# as well
 	local errstr
 	errstr="$((eval $*) 2>&1 >/dev/null)"
 	retval=$?
+	# next test should be two fold (reminder)
 	if [ "${retval}" -ne 0 ] || \
-	   ( [ -n "$(echo $* | grep mount)" ] && [ -n "${errstr}" ] )
+	   [ -n "$(echo $* | grep mount)" -a -n "${errstr}" ]
 	then
 		echo -e "${ENDCOL}${NORMAL}[${BAD} oops ${NORMAL}]"
 		echo
@@ -33,13 +34,13 @@ try() {
 	return ${retval}
 }
 
-#save $1
+# save $1
 argv1="${1}"
 
-#first time boot stuff goes here
-if [ "${RUNLEVEL}" = "S" ] && [ "${argv1}" = "boot" ]
+# first time boot stuff goes here
+if [ "${RUNLEVEL}" = "S" -a "${argv1}" = "boot" ]
 then
-	#setup initial $PATH just in case
+	# setup initial $PATH just in case
 	PATH="/bin:/sbin:/usr/bin:/usr/sbin:${PATH}"
 
 	echo
@@ -51,7 +52,7 @@ then
 	try mount -n /proc; \
 	eend $?
 
-	#check if the user disabled devfs
+	# check if the user disabled devfs
 	devfs="yes"
 	get_bootparam "nodevfs"
 	if [ "$?" -eq 0 ]
@@ -59,18 +60,18 @@ then
 		devfs="no"
 	fi
 	
-	#fix weird bug where there is a /dev/.devfsd in a unmounted /dev
+	# fix weird bug where there is a /dev/.devfsd in a unmounted /dev
 	mymounts="$(awk '$3 ~ "devfs" { print $0 }' /proc/mounts)"
-	if [ -e /dev/.devfsd ] && [ -z "${mymounts}" ]
+	if [ -e /dev/.devfsd -a -z "${mymounts}" ]
 	then
 		rm -f /dev/.devfsd &>/dev/null
 	fi
 
-	#with the new way, /dev can be mounted by the kernel ...
-	if [ "${devfs}" = "yes" ] && [ ! -e /dev/.devfsd ]
+	# with the new way, /dev can be mounted by the kernel ...
+	if [ "${devfs}" = "yes" -a ! -e /dev/.devfsd ]
 	then
 		mymounts="$(awk '$2 ~ "devfs" { print $0 }' /proc/filesystems)"
-		#is devfs support compiled in?
+		# is devfs support compiled in?
 		if [ -n "${mymounts}" ]
 		then
 			ebegin "Mounting devfs at /dev"; \
@@ -95,8 +96,8 @@ then
 
 	# need devfsd running now so that /dev/ram0 exists if we need it
 	mymounts="$(cat /proc/mounts)"
-	if [ "${devfs}" = "yes" ] && [ -e /dev/.devfsd ] && \
-	   [ "${mymounts/devfs//}" != "${mymounts}" ]
+	if [ "${devfs}" = "yes" -a -e /dev/.devfsd -a \
+	     "${mymounts/devfs//}" != "${mymounts}" ]
 	then
 		ebegin "Starting devfsd"
 		/sbin/devfsd /dev &>/dev/null
@@ -117,11 +118,11 @@ then
 		/sbin/reboot -f
 	fi
 	
-	#mount either a ramdisk or tmpfs and do dep scan
+	# mount either a ramdisk or tmpfs and do dep scan
 	
-	#should we use tmpfs or a ramdisk ?
+	# should we use tmpfs or a ramdisk ?
 	if ! get_bootparam "notmpfs" && \
-	   ( [ "${svcfstype}" = "tmpfs" ] || [ "${svcfstype}" != "ramfs" ] )
+	   [ "${svcfstype}" = "tmpfs" -o "${svcfstype}" != "ramfs" ]
 	then
 		ebegin "Mounting tmpfs at ${svcdir}"; \
 		try mount -n -t tmpfs tmpfs ${svcdir} \
@@ -135,36 +136,43 @@ then
 		eend 0
 	fi
 
-	# POSIX shared memory support
-	try mount -n /dev/shm
-
-	# NGPT support (http://www-124.ibm.com/developerworks/oss/pthreads/)
-	if [ -x /usr/bin/ngptinit ]
+	if ! get_bootparam "notmpfs"
 	then
-		/usr/bin/ngptinit &> /dev/null
+		# POSIX shared memory support
+		ebegin "Mounting POSIX shared memory"
+		try mount -n -t tmpfs tmpfs /dev/shm
+		eend $?
+
+		# NGPT support (http://www-124.ibm.com/developerworks/oss/pthreads/)
+		if [ -x /usr/bin/ngptinit ]
+		then
+			ebegin "Initializing NGPT"
+			/usr/bin/ngptinit &> /dev/null || :
+			eend $?
+		fi
 	fi
 	
 	/sbin/depscan.sh
 
-	#swap needs to be activated *after* devfs has been mounted and *after*
-	#devfsd has been started, so that the fstab can be properly parsed
+	# swap needs to be activated *after* devfs has been mounted and *after*
+	# devfsd has been started, so that the fstab can be properly parsed
 
 	ebegin "Activating swap"
 	/sbin/swapon -a &>/dev/null
 	eend 0
 
-	#set the console loglevel to 1 for a cleaner boot
-	#the logger should anyhow dump the ring-0 buffer at start to the
-	#logs, and that with dmesg can be used to check for problems
+	# set the console loglevel to 1 for a cleaner boot
+	# the logger should anyhow dump the ring-0 buffer at start to the
+	# logs, and that with dmesg can be used to check for problems
 	
 	/bin/dmesg -n 1
 
-	#$BOOT can be used by rc-scripts to test if it is the first time
-	#the 'boot' runlevel is executed
+	# $BOOT can be used by rc-scripts to test if it is the first time
+	# the 'boot' runlevel is executed
 	
 	export BOOT="yes"
 	
-fi #boot ends here
+fi # boot ends here
 
 if [ -z "${argv1}" ]
 then
@@ -183,7 +191,7 @@ then
 	echo "${SOFTLEVEL}" > ${svcdir}/softlevel
 fi
 
-#for keeping a list of services that fails during boot/halt
+# for keeping a list of services that fails during boot/halt
 if [ ! -d ${svcdir}/failed ]
 then
 	install -d -m0755 ${svcdir}/failed
@@ -191,7 +199,7 @@ else
 	rm -rf ${svcdir}/failed/*
 fi
 
-if [ "${SOFTLEVEL}" = "reboot" ] || [ "${SOFTLEVEL}" = "shutdown" ]
+if [ "${SOFTLEVEL}" = "reboot" -o "${SOFTLEVEL}" = "shutdown" ]
 then
 	myscripts=""
 elif [ ! -d /etc/runlevels/${SOFTLEVEL} ]
@@ -202,11 +210,11 @@ else
 	myscripts=""
 	if [ "${SOFTLEVEL}" != "boot" ]
 	then
-		#normal runlevels *include* boot scripts
+		# normal runlevels *include* boot scripts
 		mylevels="$(dolisting /etc/runlevels/${SOFTLEVEL}/)"
 		mylevels="${mylevels} $(dolisting /etc/runlevels/boot/)"
 	else
-		#non-normal runlevels don't include boot scripts as default
+		# non-normal runlevels don't include boot scripts as default
 		mylevels="$(dolisting /etc/runlevels/${SOFTLEVEL}/)"
 	fi
 	for x in ${mylevels}
@@ -218,10 +226,10 @@ else
 	done
 fi
 
-#the softscripts dir contains all scripts that belong to the
-#runlevel specified in ${svcdir}/softlevel
-#it needs to be a new directory, else when stopping the services
-#and the old directory is not intact, things get broken
+# the softscripts dir contains all scripts that belong to the
+# runlevel specified in ${svcdir}/softlevel
+# it needs to be a new directory, else when stopping the services
+# and the old directory is not intact, things get broken
 
 install -d -m0755 ${svcdir}/softscripts.new
 
@@ -232,9 +240,9 @@ do
 		ewarn "WARNING:  /etc/init.d/${x} missing; skipping..."
 		continue
 	fi
-	#the -f eliminates a warning if the symlink already exists, 
-	#which can happen if a service is in both the boot level and
-	#the current "normal" runlevel
+	# the -f eliminates a warning if the symlink already exists, 
+	# which can happen if a service is in both the boot level and
+	# the current "normal" runlevel
 	ln -sf /etc/init.d/${x} ${svcdir}/softscripts.new/${x}
 done
 
@@ -246,7 +254,7 @@ dep_stop() {
 	[ ! -L ${1} ] && continue
 	if [ ! -e ${1} ]
 	then
-		#remove dud symlinks
+		# remove dud symlinks
 		rm ${1}
 		continue
 	fi
@@ -254,25 +262,24 @@ dep_stop() {
 	
 	if [ ! -L ${svcdir}/softscripts.new/${myservice} ]
 	then
-		#candidate for zapping
+		# candidate for zapping
 
-		#should not work for 'use'
+		# should not work for 'use'
 		if [ ! -d ${svcdir}/need/${myservice} ]
 		then
-			#nothing depends on me
+			# nothing depends on me
 			if [ -L ${svcdir}/started/${myservice} ]
 			then
 				${1} stop
 			fi
 		else
-			#something may depend on me
+			# something may depend on me
 			needsme=0
 			for dep in $(dolisting ${svcdir}/need/${myservice}/)
 			do
-				if [ -L ${svcdir}/softscripts.new/${dep##*/} ] && \
-				   [ -e ${dep} ]
+				if [ -L ${svcdir}/softscripts.new/${dep##*/} -a -e ${dep} ]
 				then
-					#this dep is valid
+					# this dep is valid
 					needsme=1
 					break
 				fi
@@ -288,7 +295,7 @@ dep_stop() {
 	fi
 }
 
-#stop services
+# stop services
 for i in $(dolisting ${svcdir}/started/)
 do
 	dep_stop ${i}
@@ -299,7 +306,7 @@ done
 
 echo "${SOFTLEVEL}" > ${svcdir}/softlevel
 
-if [ "${SOFTLEVEL}" = "reboot" ] || [ "${SOFTLEVEL}" = "shutdown" ]
+if [ "${SOFTLEVEL}" = "reboot" -o "${SOFTLEVEL}" = "shutdown" ]
 then
 	source /sbin/functions.sh
 	source /etc/init.d/halt.sh
@@ -309,12 +316,12 @@ then
 	else
 		source /etc/init.d/shutdown.sh
 	fi
-	#should never get here
+	# should never get here
 	exit 0
 fi
 
-#move the old softscritps directory to a different one
-#and make the new softscripts directory the current
+# move the old softscritps directory to a different one
+# and make the new softscripts directory the current
 
 mv ${svcdir}/softscripts ${svcdir}/softscripts.old &>/dev/null
 mv ${svcdir}/softscripts.new ${svcdir}/softscripts &>/dev/null
@@ -327,7 +334,7 @@ dep_start() {
 	then
 		continue
 	fi
-	#only start a script if it isn't already running
+	# only start a script if it isn't already running
 	myservice="${1##*/}"
 	if [ ! -L ${svcdir}/started/${myservice} ]
 	then
@@ -335,33 +342,34 @@ dep_start() {
 	fi
 }
 
-#start scripts
+# start scripts
 for i in $(dolisting ${svcdir}/softscripts/)
 do
 	dep_start ${i}
 done
 
-#clean the old runlevel
+# clean the old runlevel
 rm -rf ${svcdir}/softscripts.old &>/dev/null
 
-#depends gets nuked, so update them
-#(this problem should be solved now, but i think it will be a good idea
-# to recreate the deps after a change in runlevel)
+# depends gets nuked, so update them
+# (this problem should be solved now, but i think it will be a good idea
+#  to recreate the deps after a change in runlevel)
 
 #/sbin/depscan.sh &>/dev/null
 
-#we want devfsd running after a change of runlevel (this is mostly if we return
-#from runlevel 'single')
-if [ -z "$(ps -A | grep devfsd)" ] && \
-   [ -n "$(cat /proc/mounts | grep -e '/dev devfs')" ]
+# we want devfsd running after a change of runlevel (this is mostly if we return
+# from runlevel 'single')
+if [ -z "$(ps -A | egrep "devfsd")" -a \
+     -n "$(cat /proc/mounts | egrep "/dev devfs")" ]
 then
 	/sbin/devfsd /dev &>/dev/null
 fi
 
-#runlevel end, so clear stale fail list
+# runlevel end, so clear stale fail list
 rm -rf ${svcdir}/failed &>/dev/null
 
-#if we were in the boot runlevel, it is done now ...
+# if we were in the boot runlevel, it is done now ...
 [ -n "${BOOT}" ] && unset BOOT
+
 
 # vim:ts=4
