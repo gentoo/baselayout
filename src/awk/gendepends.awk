@@ -251,25 +251,28 @@ function resolve_depend(type, service, deplist,    x, deparray)
 					continue
 			}
 
-			if ((type == BEFORE) || (type == AFTER)) {
-				# Do not add circular ordering
-				if ((check_depend(deparray[x], type, service)) &&
-				    (!((service,deparray[x]) in CIRCULAR_DEPEND)) &&
-					(!((deparray[x],service) in CIRCULAR_DEPEND))) {
-					ewarn(" Services '" service "' and '" deparray[x] "' have circular")
-					ewarn(" dependency of type '" TYPE_NAMES[type] "';  continuing...")
-					
-					CIRCULAR_DEPEND[service,deparray[x]] = "yes"
-					
-					continue
-				}
-			}
-
 			# NEED override USE (service USE deparray[x])
 			if ((type == USE) && (check_depend(deparray[x], NEED, service))) {
 				ewarn(" Service '" deparray[x] "' NEED service '" service "', but service '" service "' wants")
 				ewarn(" to USE service '" deparray[x] "'!")
 				continue
+			}
+
+			# We do not want to add circular depends ...
+			if (check_depend(deparray[x], type, service)) {
+					
+					if ((service,deparray[x],type) in CIRCULAR_DEPEND)
+						continue
+						
+					if ((deparray[x],service,type) in CIRCULAR_DEPEND)
+						continue
+					
+					ewarn(" Services '" service "' and '" deparray[x] "' have circular")
+					ewarn(" dependency of type '" TYPE_NAMES[type] "';  continuing...")
+					
+					CIRCULAR_DEPEND[service,deparray[x],type] = "yes"
+					
+					continue
 			}
 
 			add_db_entry(service, type, deparray[x])
