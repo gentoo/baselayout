@@ -141,7 +141,7 @@ udhcpc_start() {
 		[[ -n ${x} ]] && opts="${opts} --request=${x}"
 	fi
 
-	x=$( udhcpc ${hostname} ${opts} --script=${script} --now --pidfile=${pidfile} --interface=${iface} )
+	x=$( eval "udhcpc ${hostname} ${opts} --script=${script} --now --pidfile=${pidfile} --interface=${iface}" )
 	# We just check the last 5 letters
 	[[ ${x:((${#x} - 5)):5} == bound ]]
 	eend $? || return 1

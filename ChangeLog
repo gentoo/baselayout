@@ -1,6 +1,12 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+  05 Jan 2004; Roy Marples <uberlord@gentoo.org>:
+
+    dhcpcd and udhcpc now run via the eval statement so quotes can be used
+    in options. Fixes #74053 - thanks to Evan Buswell
+    (merged from HEAD change on 12 Dec 2004)
+
   04 Jan 2005; Roy Marples <uberlord@gentoo.org>:
 
     bridge now marks interfaces as UP - fixes #75354

@@ -130,7 +130,7 @@ dhcpcd_start() {
 		return 0
 	fi
 
-	dhcpcd ${opts} ${iface}
+	eval "dhcpcd ${opts} ${iface}"
 	eend $? || return 1
 
 	# DHCP succeeded, show address retrieved
