@@ -45,15 +45,13 @@ start() {
 		mount -f /proc &>/dev/null
 
 		# should /dev be mounted ?
-		get_bootparam "nodevfs"
-		if [ "$?" -ne 0 ] && [ -e /dev/.devfsd ]
+		if ! get_bootparam "nodevfs" && [ -e /dev/.devfsd ]
 		then
 			mount -f -t devfs none /dev &>/dev/null
 		fi
 		
 		# should we mount a ramdisk or tmpfs?
-		get_bootparam "notmpfs"
-		if [ "$?" -ne 0 ] 
+		if ! get_bootparam "notmpfs" 
 		then
 			# using tmpfs
 			mount -f -t tmpfs tmpfs ${svcdir} \

@@ -15,7 +15,8 @@ try() {
 	#as well
 	local errstr="$((eval $*) 2>&1 >/dev/null)"
 	retval=$?
-	if [ "${retval}" -ne 0 ] || [ -n "${errstr}" ]
+	if [ "${retval}" -ne 0 ] || \
+	   ( [ -n "$(echo $* | grep mount)" ] && [ -n "${errstr}" ] )
 	then
 		echo -e "${ENDCOL}${NORMAL}[${BAD} oops ${NORMAL}]"
 		echo
@@ -127,7 +128,7 @@ then
 	else
 		ebegin "Mounting ramdisk 0 at ${svcdir}"; \
 		try dd if=/dev/zero of=/dev/ram0 bs=1k count=${svcsize}; \
-		try /sbin/mke2fs -vm0 /dev/ram0 ${svcsize}; \
+		try /sbin/mke2fs -i 1024 -vm0 /dev/ram0 ${svcsize}; \
 		try mount -n -t ext2 /dev/ram0 ${svcdir} -o rw; \
 		eend 0
 	fi

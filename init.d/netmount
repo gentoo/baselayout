@@ -12,7 +12,15 @@ depend() {
 start() {
 	ebegin "Mounting network filesystems"
 	mount -at coda,nfs,ncpfs,smbfs >/dev/null
-	eend $?
+
+	if [ "$?" -ne 0 ]
+	then
+		ewend 1 "Could not mount all network filesystems!"
+	else
+		eend 0
+	fi
+
+	return 0
 }
 
 stop() {

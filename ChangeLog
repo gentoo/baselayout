@@ -2,6 +2,24 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  12 May 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Make slight modifications to /sbin/depscan.sh to improve speed (about
+	1 second on a celeron 633).
+
+	Finally fix /sbin/runscript.sh to properly handle interdependencies
+	between types need/use and before/after on runlevel change.  I can
+	actually kick myself for previous implementations, as this fix simplifies
+	things a lot, and is almost 30 lines of code less!
+
+	Change /etc/init.d/netmount not to fail if all mounts are not mounted.
+	It rather just exit with a warning, as I think most people have like
+	me mounts that are to boxes that are not always up.
+
+	Resolve bug #2439 (should not use try with the dd command for ramdisk
+	stuff).  Also increase the number of inodes used for the ramdisk to
+	fix "out of space" errors.  Updated /sbin/rc for this.
+
   10 May 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Resolve bug #2505 ... /sbin/rc-envupdate.sh should not use
