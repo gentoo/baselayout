@@ -2,6 +2,12 @@
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  04 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    More (i mean a LOT more) services.  This takes care of #44458, 
+    #52881 #55939 #58997 #66166 #66297.  Gleaned many from the IANA 
+    list/Fedora/FreeBSD/Debian.
+
   03 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
 
     Add support for NFSv4 from #25106 to the netmount script.  Don't 
