@@ -1,14 +1,23 @@
 #!/bin/bash
 export TMP="/tmp"
-export V="1.5.3"
+export V="1.6.0"
 export DEST="${TMP}/rc-scripts-${V}"
 rm -rf ${DEST}
 install -d -m0755 ${DEST}
+
 for x in bin etc init.d sbin src rc-lists man
 do
 	cp -ax $x ${DEST}
 done
+
+# copy net-scripts and remove older stuff
+cp -ax net-scripts/init.d ${DEST}
+cp -ax net-scripts/net.modules.d ${DEST}/etc
+cp -ax net-scripts/conf.d ${DEST}/etc
+ln -sfn net.lo ${DEST}/init.d/net.eth0
+
 cp ChangeLog ${DEST}
+
 chown -R root:root ${DEST}
 chmod 0755 ${DEST}/sbin/*
 chmod 0755 ${DEST}/init.d/*

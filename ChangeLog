@@ -2,10 +2,14 @@
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+* rc-scripts 1.6.0 (15 Sep 2004)
+
   15 Sep 2004; Aron Griffis <agriffis@gentoo.org>:
 
     Fix bug 64034: simplify netmount script's stop function so that
     mountpoints containing spaces work correctly
+
+    Update tarball.sh to use net-scripts
 
   14 Sep 2004; Aron Griffis <agriffis@gentoo.org>:
 
