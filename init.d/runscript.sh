@@ -33,7 +33,9 @@ mylevel=`cat ${svcdir}/softlevel`
 usage() {
 	export IFS="|"
 	myline="Usage: ${myservice} {$*"
+	echo
 	eerror "${myline}}"
+	ewarn "       ${myservice} without arguments for full help"
 }
 
 stop() {
@@ -116,7 +118,7 @@ svc_stop() {
 				done
 				if [ "$stopfail" = "yes" ]
 				then
-					einfo "Problems stopping dependent services.  ${myservice} still up."
+					eerror "Problems stopping dependent services.  \"${myservice}\" still up."
 					exit 1
 				fi
 			fi
@@ -134,7 +136,8 @@ svc_stop() {
 }
 
 svc_start() {
-	local retval
+	local retval=0
+	local startfail="no"
 	local x
 	local y
 	local myserv
@@ -154,18 +157,45 @@ svc_start() {
 					if [ ! -L ${svcdir}/started/${myserv} ]
 					then
 						/etc/init.d/${myserv} start
+
+						#a 'need' dependacy is critical for the service to start
+						if [ $? -ne 0 ] && [ -L ${svcdir}/need/${x}/${myservice} ]
+						then
+							startfail="yes"
+						fi
 					fi
 				done
 			else
 				if [ ! -L ${svcdir}/started/${x} ]
 				then
 					/etc/init.d/${x} start
+
+					#a 'need' dependacy is critical for the service to start
+					if [ $? -ne 0 ] && [ -L ${svcdir}/need/${x}/${myservice} ]
+					then
+						startfail="yes"
+					fi
 				fi
 			fi
 		done
+		
+		if [ "$startfail" = "yes" ]
+		then
+			eerror "Problem starting needed services.  \"${myservice}\" was not started."
+			retval=1
+		fi
+		
 		#start service
-		start
-		retval=$?
+		if [ -d ${svcdir}/broken/${myservice} ] && [ $retval -eq 0 ]
+		then
+			eerror "Some services needed is missing.  Run './${myservice} broken'"
+			eerror "for a list of those services.  \"${myservice}\" was not started."
+			retval=1
+		elif [ ! -d ${svcdir}/broken/${myservice} ] && [ $retval -eq 0 ]
+		then
+			start
+			retval=$?
+		fi
 
 		#remove link if service didn't start; but only if we're not booting
 		#if we're booting, we need to continue and do our best to get the
@@ -247,12 +277,12 @@ iuse() {
     local z
     for x in ${svcdir}/use/*/${1}
     do
-	if [ ! -L ${x} ]
-	then
-	    continue
-	fi
-	z=${x%/*}
-	echo ${z##*/}
+		if [ ! -L ${x} ]
+		then
+		    continue
+		fi
+		z=${x%/*}
+		echo ${z##*/}
     done
 }
 
@@ -271,7 +301,23 @@ valid_iuse() {
 	done
 }
 
-#call this with "needsme", "ineed", "usesme" or "iuse" as first arg
+#list broken dependancies of type 'need'
+broken() {
+	local x
+	if [ -d ${svcdir}/broken/${1} ]
+	then
+		for x in ${svcdir}/broken/${1}/*
+		do
+			if [ ! -f $x ]
+			then
+				continue
+			fi
+			echo ${x##*/}
+		done
+	fi
+}
+
+#call this with "needsme", "ineed", "usesme", "iuse" or "broken" as first arg
 query() {
 	local deps
 	local x
@@ -350,7 +396,7 @@ do
 	start)
 		svc_start
 		;;
-	needsme|ineed|usesme|iuse)
+	needsme|ineed|usesme|iuse|broken)
 		query $arg
 		;;
 	zap)

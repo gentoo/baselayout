@@ -97,6 +97,7 @@ sleep 2
 umount -a -r -t noproc,notmpfs > /dev/null 2>/dev/null
 if [ "$?" -ne 0 ]
 then
+	killall5 -9
 	umount -a -r -l -d -f > /dev/null 2>/dev/null
 	if [ "$?" -ne 0 ]
 	then

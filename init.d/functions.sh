@@ -60,8 +60,27 @@ eend() {
 			shift
 			eerror $*
 		fi
-	echo -e "$ENDCOL  \e[34;01m[ ${BAD}!! \e[34;01m]${NORMAL}"
-	echo
+		echo -e "$ENDCOL  \e[34;01m[ ${BAD}!! \e[34;01m]${NORMAL}"
+		echo
+		#extra spacing makes it easier to read
+		return $returnme
+	fi
+}
+
+ewend() {
+	if [ $# -eq 0 ] || [ $1 -eq 0 ]
+	then
+		echo -e "$ENDCOL  \e[34;01m[ ${GOOD}ok \e[34;01m]${NORMAL}"
+	else
+		local returnme
+		returnme=$1
+		if [ $# -ge 2 ]
+		then
+			shift
+			ewarn $*
+		fi
+		echo -e "$ENDCOL  \e[34;01m[ ${WARN}!! \e[34;01m]${NORMAL}"
+		echo
 		#extra spacing makes it easier to read
 		return $returnme
 	fi

@@ -2,6 +2,26 @@
 # Copyright 2001 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  28 Dec 2001; Martin Schlemmer (azarah@gentoo.org); Updated
+    /etc/init.d/depscan.sh to store info about missing dependancies of
+    type 'need' in ${svcdir}/broken.  Also updated /etc/init.d/runscript.sh
+    to use this when starting a script ('need' dependancies is critical for
+    startup).  Added the broken() function to /etc/init.d/runscript.sh
+    to list the missing dependancies.
+
+    Updated /etc/init.d/runscript.sh for svc_start() to have better error
+    checking.
+
+    Updated /etc/init.d/functions.sh with ewend(), which is the same as
+    eend(), but print a warning on error, not a error.  Updated
+    /etc/init.d/checkroot and /etc/init.d/checkfs to use this function.
+
+  27 Dec 2001; Martin Schlemmer (azarah@gentoo.org); Update /sbin/runscript.c
+    to run /etc/init.d/rc-help.sh if no arguments is passed to a rc-script.
+  
+    Added /etc/init.d/rc-help.sh, simple script that prints out help for
+    the rc-scripts.
+
   25 Dec 2001; Martin Schlemmer (azarah@gentoo.org); Update
   /etc/init.d/shutdown.sh and /etc/init.d/reboot.sh not to force the
   halt and reboot.  This fixes a problem where / was not unmounted

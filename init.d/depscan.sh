@@ -17,13 +17,16 @@ if [ ! -d $svcdir ]
 then
 	install -d -m0755 $svcdir
 fi
-for x in softscripts snapshot started ${deptypes}
+for x in softscripts snapshot broken started ${deptypes}
 do
 	if [ ! -d ${svcdir}/${x} ]
 	then
 		install -d -m0755 ${svcdir}/${x}
 	fi
 done
+
+#reset the broken services
+rm -rf ${svcdir}/broken/*
 
 #call: depend_dbadd dep_type service deps....
 depend_dbadd() {
@@ -42,6 +45,18 @@ depend_dbadd() {
 			then
 			#bogus dependency
 				einfo "need: can't find service \"${x}\" needed by \"${myservice}\"; continuing..."
+				#$myservice is broken due to missing 'need' dependancies
+				if [ "$mytype" = "need" ]
+				then
+					if [ ! -d ${svcdir}/broken/${myservice} ]
+					then
+						install -d -m0755 ${svcdir}/broken/${myservice}
+					fi
+					if [ ! -e ${svcdir}/broken/${myservice}/${x} ]
+					then
+						touch ${svcdir}/broken/${myservice}/${x}
+					fi
+				fi
 				continue
 			fi
 		fi
