@@ -11,7 +11,7 @@ wpa_supplicant() {
 }
 
 wpa_cli() {
-	LC_ALL=C /usr/sbin/wpa_cli "$@"
+	LC_ALL=C /usr/bin/wpa_cli "$@"
 }
 
 # char* wpa_supplicant_provides(void)
