@@ -2,6 +2,11 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  04 Nov 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update /bin/rc-status giving a working '-u' parameter, bug #32417.
+    Fix by Michael Frysinger <vapier@gentoo.org>.
+
   31 Oct 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Add support for --tty switch added to setfont and remove consolechars

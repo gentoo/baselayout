@@ -156,13 +156,17 @@ fi
 ################################################################################
 # Define a helper method for printing the status of a service; '[ xxx ]'
 print_msg() {
-	printf "${BRACKET}[ $1%-7s ${BRACKET}]${NORMAL}\n" $2
+	printf "${BRACKET}[ $1%-7s ${BRACKET}]${NORMAL}\n" "$2"
 }
 
 # if --all wasnt specified, dont print everything
 [ -z "${ALL}" ] && runlevelidxs="${runlevel}"
+if [ -z "${UNUSED}" ] ; then
+	arridx=0
+else
+	runlevelidxs="unused"
+fi
 
-arridx=0
 for level in ${runlevelidxs} ; do
 	echo "Runlevel: ${HILITE}${level}${NORMAL}"
 	for service in ${runlevels[${arridx}]} ; do
@@ -175,7 +179,7 @@ for level in ${runlevelidxs} ; do
 			elif [ -n "${broken}" ] && [ $(in_list "${broken}" "${service}") -eq 1 ] ; then
 				print_msg "${BAD}", "broken"
 			else
-				print_msg "${WARN}" "off"
+				print_msg "${WARN}" "  off"
 			fi
 		fi
 	done
