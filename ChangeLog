@@ -7,6 +7,9 @@
     Call /proc mount with explicit options to fix issues where user
     have 'bind' mounts for /proc in fstab as well, bug #21068.
 
+	Fix /etc/init.d/bootmisc to check for /sbin/env-update.sh, bug #21384,
+	reported by Gunnlaugur Thor Briem <gthb@hi.is>.
+
 * rc-scripts 1.4.3.8p1 (21 May 2003)
 
   21 May 2003; Martin Schlemmer <azarah@gentoo.org>:
