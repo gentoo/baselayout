@@ -2,12 +2,16 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  29 Apr 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Change test in /etc/profile for root to '[ "$EUID" -eq 0 ]', bug #20140.
+
   27 Apr 2003; Martin Schlemmer <azarah@gentoo.org>:
 
-    Add some patches from Rach:
+    Add various patches from Rachel Holmes <rach@gmx.net>:
 
       Dropped use of 'cat' in bash scripts, '$(<$file)' is there for that
-	  purpose.  Modified:
+      purpose.  Modified:
     
         /etc/init.d/net.ppp0
         /etc/init.d/nscd
@@ -19,8 +23,8 @@
 
       Exchanged some gratuitous use of awk for grep. Awk is a little resource
       hungry just for a simple test. (I [azarah] did not apply the changes to
-	  tests for 'devfs', as having 'usbdevfs' in the equation will break
-	  things).  Modified /sbin/rc for this.
+      tests for 'devfs', as having 'usbdevfs' in the equation will break
+      things).  Modified /sbin/rc for this.
 
       Gentoo enforces having /proc, so uname -r is a little redundant when the
       information is available without an external command.  Modified:
@@ -31,16 +35,16 @@
         /sbin/modules-update
 
       Changed 'id -u' commands to use $EUID in bash executed scripts, same
-	  result no extra command.  Modified:
+      result no extra command.  Modified:
 
         /sbin/rc-envupdate.sh
         /sbin/rc-envupdate.sh.bash
         /sbin/rc-update
 
       Removed all the cat sections, and the separate echo sections.  The output
-	  is _exactly_ the same, minus some spare spaces that have been removed.
-	  Fourfold speed increase in the (granted flimsy) tests I have done.
-	  Modified /sbin/rc-help.sh for this.
+      is _exactly_ the same, minus some spare spaces that have been removed.
+      Fourfold speed increase in the (granted flimsy) tests I have done.
+      Modified /sbin/rc-help.sh for this.
 
       Final remaining 'cat' commands removed, in favour of using bash's internal
       '$(< )' or 'echo'.  Use of echo leads the way to future support for bash's
@@ -76,8 +80,8 @@
     be more 'generic' ?  Only try to disable swap if any devices/files was
     activated.  This should close bug #19089.
 
-	Fix /etc/init.d/checkroot to only remount / rw if not set explicitly to
-	rw in /etc/fstab, bug #19158.
+    Fix /etc/init.d/checkroot to only remount / rw if not set explicitly to
+    rw in /etc/fstab, bug #19158.
 
   24 Apr 2003; Martin Schlemmer <azarah@gentoo.org>:
 
