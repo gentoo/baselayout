@@ -125,7 +125,7 @@ static const char *userspec = NULL;
 static char *changeuser = NULL;
 static const char *changegroup = NULL;
 static char *changeroot = NULL;
-static const char *changedir = "/";
+static const char *changedir = NULL;
 static const char *cmdname = NULL;
 static char *execname = NULL;
 static char *startas = NULL;
@@ -1257,7 +1257,7 @@ main(int argc, char **argv)
 		if (chroot(changeroot) < 0)
 			fatal("Unable to chroot() to %s", changeroot);
 	}
-	if (chdir(changedir) < 0)
+	if (changedir != NULL && chdir(changedir) < 0)
 		fatal("Unable to chdir() to %s", changedir);
 	if (changeuser != NULL) {
  		if (setgid(runas_gid))
