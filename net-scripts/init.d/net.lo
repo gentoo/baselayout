@@ -60,7 +60,7 @@ modules_load()
 	local -a mods=( $( find /lib/rcscripts/net.modules.d/ -maxdepth 1 -type f | sort ) ) umods sort_history
 	local RC_INDENTATION=${RC_INDENTATION}	# so it will reset after function
 
-	[[ ${iface} != lo ]] && einfo "Loading networking modules for ${iface}"
+	[[ ${iface} != lo ]] && veinfo "Loading networking modules for ${iface}"
 	eindent
 
 	# Each of these sources into the global namespace, so it's
@@ -150,8 +150,8 @@ modules_load()
 		# Has the interface got any specific modules?
 		eval umods=( \"\$\{modules_${iface}\[@\]\}\" )
 
-		# If not then has a global setting been made?
-		[[ -z ${umods} ]] && umods=( "${modules[@]}" )
+		# Global setting follows interface-specific setting
+		umods=( "${umods[@]}" "${modules[@]}" )
 
 		# We add our preferred modules here
 		umods=( "${umods[@]}" "ifconfig" "dhcpcd" )
@@ -159,6 +159,12 @@ modules_load()
 		# First we strip any modules that conflict from user settings
 		# So if the user specifies pump then we don't use dhcpcd
 		for ((i=0; i < ${#umods[@]}; i++)); do
+			# Some users will inevitably put "dhcp" in their modules
+			# list.  To keep users from screwing up their system this
+			# way, ignore this setting so that the default dhcp
+			# module will be used.
+			[[ ${umods[i]} == dhcp ]] && continue
+
 			if [[ $( type -t ${umods[i]}_provides ) != function ]]; then
 				eerror "${umods[i]} is not a valid module (missing provides)"
 				return 1
@@ -174,8 +180,8 @@ modules_load()
 			k=${#mods[@]}
 			for (( j=0; j < k; j++ )); do
 				if [[ $( ${mods[j]}_provides ) == $( ${umods[i]}_provides ) && ${umods[i]} != ${mods[j]} ]]; then
-					# We don't have a match - now ensure that we still provide an alternative
-					# This is to handle our preferred modules
+					# We don't have a match - now ensure that we still provide an alternative.
+					# This is to handle our preferred modules.
 					for (( e=0; e < k; e++ )); do
 						[[ ${e} -eq ${j} || -z ${mods[e]} ]] && continue
 						if [[ $( ${mods[e]}_provides ) == $( ${umods[i]}_provides ) ]]; then
@@ -187,11 +193,11 @@ modules_load()
 			done
 			mods=( "${mods[@]}" )
 		done
-	
-		# Then we strip conflicting modules
-		# We only need todo this for 3rd party modules that conflict with
+
+		# Then we strip conflicting modules.
+		# We only need to do this for 3rd party modules that conflict with
 		# our own modules and the preferred list AND the user modules
-		# list doesn't specify a preferrence
+		# list doesn't specify a preference.
 		k=${#mods[@]}
 		for (( i=0; i < k-1; i++ )); do
 			[[ -z ${mods[i]} ]] && continue			
@@ -260,9 +266,9 @@ modules_load()
 	for (( i=0; i < ${#mods[@]}; i++ )); do
 		um="${um}${modnums[i]} ${mods[i]}\n"
 	done
-	MODULES=( $( echo -e ${um} | sort -n | awk '{print $2}' ) )
+	MODULES=( $( echo -e "${um}" | sort -n | awk '{print $2}' ) )
 
-	[[ ${iface} != lo ]] && einfo "modules: ${MODULES[@]}"
+	[[ ${iface} != lo ]] && veinfo "modules: ${MODULES[@]}"
 	eindent
 
 	# Setup class wrappers: interface_up -> iproute2_up, for example
@@ -296,7 +302,7 @@ modules_load()
 		${i}_check_depends || return 1
 		e=$( ${i}_provides )
 		if [[ ${all} != true && ${iface} != lo && ${e} != ${i} ]]; then
-			einfo "${i} provides ${e}"
+			veinfo "${i} provides ${e}"
 		fi
 	done
 }

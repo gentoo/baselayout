@@ -447,6 +447,9 @@ do
 #	--nocolor)
 #		RC_NOCOLOR="yes"
 #		;;
+	--verbose)
+		RC_VERBOSE="yes"
+		;;
 	esac
 done
 for arg in $*

@@ -25,6 +25,7 @@ ordtypes="before after"
 
 # Dont output to stdout?
 RC_QUIET_STDOUT="no"
+RC_VERBOSE="${RC_VERBOSE:-no}"
 
 # Should we use color?
 RC_NOCOLOR="${RC_NOCOLOR:-no}"
@@ -349,6 +350,22 @@ ewend() {
 
 	LAST_E_CMD=ewend
 	return $retval
+}
+
+# v-e-commands honor RC_VERBOSE which defaults to no.
+# The condition is negated so the return value will be zero.
+veinfo() { [[ "${RC_VERBOSE}" != yes ]] || einfo "$@"; }
+veinfon() { [[ "${RC_VERBOSE}" != yes ]] || einfon "$@"; }
+vewarn() { [[ "${RC_VERBOSE}" != yes ]] || ewarn "$@"; }
+veerror() { [[ "${RC_VERBOSE}" != yes ]] || eerror "$@"; }
+vebegin() { [[ "${RC_VERBOSE}" != yes ]] || ebegin "$@"; }
+veend() { 
+	[[ "${RC_VERBOSE}" == yes ]] && { eend "$@"; return $?; }
+	return ${1:-0}
+}
+veend() { 
+	[[ "${RC_VERBOSE}" == yes ]] && { ewend "$@"; return $?; }
+	return ${1:-0}
 }
 
 # bool wrap_rcscript(full_path_and_name_of_rc-script)

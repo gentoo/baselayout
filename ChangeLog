@@ -2,6 +2,18 @@
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  18 Oct 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Add v-e-commands (veinfo, vbegin, etc) to sbin/functions.sh that
+    depend on RC_VERBOSE which defaults to no.  Add --verbose to args
+    understood by runscript.sh.
+
+    Use veinfo and friends in net-scripts/init.d/net.lo when loading
+    modules since this information is confusing to users.
+
+    Always load global "modules" setting in following "modules_iface"
+    since this is a little easier for users to understand.
+
   18 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
 
     Add shfs to our list of net filesystems #61452.
