@@ -83,11 +83,7 @@ RC_FAIL_ON_ZOMBIE="no"
 
 
 # Set to "yes" if stop_daemon() should attempt to kill
-# any children left in the system.
-# IMPORTANT: you may want to set RC_KILL_CHILDREN="no"
-# in /etc/conf.d/sshd so that sshd doesn't kill it's children
-# otherwise you'll get a nasty suprise restarting sshd over
-# a network!
+# any children left in the system. This does not affect sshd.
 
 RC_KILL_CHILDREN="yes"
 
