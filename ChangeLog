@@ -2,6 +2,12 @@
 # Copyright 2002-2004 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+* rc-scripts 1.4.6 (08 Apr 2004)
+
+  08 Apr 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Update patch from Gustavoz; -ln /bin/bash should have been -nl /bin/bash
+
 * rc-scripts 1.4.5 (08 Apr 2004)
 
   08 Apr 2004; Aron Griffis <agriffis@gentoo.org>:
