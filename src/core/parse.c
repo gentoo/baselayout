@@ -225,7 +225,7 @@ int parse_rcscript(char *scriptname, time_t mtime, FILE *output) {
 	char *tmp_buf = NULL;
 	char *rc_basename = NULL;
 	char *rc_bname_ptr = NULL;
-	int lenght;
+	size_t lenght;
 	int count;
 	int current = 0;
 	int got_depend = 0;

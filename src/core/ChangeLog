@@ -4,6 +4,11 @@
 
   17 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
 
+    misc.c, parse.c: Change type of length from int to size_t to avoid warnings
+                     when compiled for darwin.
+
+  17 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
+
     misc.c, misc.h: Add strndup() instead of relying on glibc's implementation
                     (should fix some issues on bsd and darwin).
     depend.c, simple-regex.c: Do not define _GNU_SOURCE, but rather use our

@@ -415,7 +415,7 @@ char *get_cnf_entry(const char *pathname, const char *entry) {
 	char *tmp_p;
 	char *value = NULL;
 	char *token;
-	int lenght;
+	size_t lenght;
 	int count;
 	int current = 0;
 			
