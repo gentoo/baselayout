@@ -273,6 +273,8 @@ ebegin() {
 		dots=$(printf "%$(( COLS - 3 - ${#RC_INDENTATION} - ${#msg} - 7 ))s" '')
 		dots=${dots//${spaces}/${RC_DOT_PATTERN}}
 		msg="${msg}${dots}"
+	else
+		msg="${msg} ..."
 	fi
 	einfon "${msg}"
 	[[ ${RC_ENDCOL} == yes ]] && echo
