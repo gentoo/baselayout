@@ -10,10 +10,12 @@
 
 iface_type=${1}
 
+echo ${reason}
 case "${reason}" in
-	BOUND|REBOOT) action=bound ;;
+	BOUND|REBOOT|REBIND) action=bound ;;
 	RENEW) action=renew ;;
-	RELEASE|PREINIT) action=deconfig ;;
+	RELEASE|PREINIT|FAIL|EXPIRE|TIMEOUT) action=deconfig ;;
+	MEDIUM) exit 0 ;;
 esac
 
 if [[ -z ${action} ]]; then

@@ -301,7 +301,7 @@ ifconfig_add_address() {
 		# for multiple addresses
 		if ifconfig ${iface} | grep -v Scope | xargs | grep -Eq "\<addr:.*" ; then
 			# Get the last alias made for the interface and add 1 to it
-			i=$( ifconfig | tac | grep -m 1 -o "^eth0:[0-9]*" | awk -F: '{ print $2 }' )
+			i=$( ifconfig | tac | grep -m 1 -o "^${iface}:[0-9]*" | awk -F: '{ print $2 }' )
 			i=${i:-0}
 			(( i++ ))
 			iface=${iface}:${i}

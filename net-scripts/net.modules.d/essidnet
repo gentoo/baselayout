@@ -1,5 +1,5 @@
 # essidnet module for net-scripts
-# Version 1.0.2
+# Version 1.0.3
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -15,16 +15,14 @@
 essidnet_depend() {
 	before interface
 	after wireless
-	use wireless
-	need interface
+	installed wireless
 }
 
 # bool essidnet_check_installed(void)
 #
-# Returns 1 if wireless-tools is installed, otherwise 0
+# Always returns 0 as we are "installed" by wireless in the depend function
 essidnet_check_installed() {
-	[[ -x /usr/sbin/iwconfig ]] && return 0
-	return 1
+	return 0
 }
 
 # char* essidnet_provides(void)
@@ -40,7 +38,7 @@ essidnet_provides() {
 essidnet_check_depends() {
 	local f
 
-	for f in interface_variable wireless_check_extensions wireless_get_ap_mac_address; do
+	for f in interface_variable wireless_check_extensions wireless_get_essid wireless_get_ap_mac_address; do
 		[[ $( type -t ${f} ) == function ]] && continue
 		eerror "essidnet: missing required function ${f}\n"
 		return 1
@@ -62,6 +60,7 @@ essidnet_pre_start() {
 	wireless_check_extensions ${iface} || return 0
 
 	local mod func evars evar vars x i mvars mac=$( wireless_get_ap_mac_address ${iface} )
+	local ESSID=$( wireless_get_essid ${iface} )
 	local essid=${ESSID//[![:word:]]/_}
 	mac=${mac//:/}
 

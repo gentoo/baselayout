@@ -1,6 +1,39 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+  06 Dec 2004; Roy Marples <uberlord@gentoo.org>:
+
+    macchanger defaults to setting the interface down, and then trying
+    with it up - fixes #71929
+    macchanger converts mac_${IFACE} to lowercase - fixes #73549
+    iproute2 now configures the interface up everytime we add an address
+    removed "need interface" from all modules depends as net.lo requires
+    interface anyway
+
+  05 Dec 2004; Roy Marples <uberlord@gentoo.org>:
+
+    dhclient now kill it's process if it failed to get a lease on startup
+    all dhclient responses are now handled correctly
+
+  04 Dec 2004; Roy Marples <uberlord@gentoo.org>:
+
+    fixed dhclient-ifconfig to look for dhclient-udhcpc-wrapper in the correct
+    place and changed hardcoded eth1 to ${interface} in udhcpc-ifconfig.
+    Fixes #73327 - thanks to Benoit Boissinot
+
+    essidnet gets the essid itself instead of relying on ${ESSID}
+    wpa_supplicant module added
+    config-system now creates files as .tmp instead of .new and loads
+    the wpa_supplicant module if needed
+    ifconfig now addes aliases to devices other than eth0
+    dhcpcd, dhclient, pump and udhcpc now expose the dhcp_${IFACE} variable
+    instead of the old peer_dns_${IFACE}, peer_ntp_${IFACE}, peer_nis_${IFACE}
+    ones
+
+    removed modules use dependancy in net.lo and added installed
+    - this allows use to provide "virtual" modules which are only "installed"
+      when other depended modules are installed
+
 * rc-scripts 1.6.7 (03 Dec 2004)
 
   03 Dec 2004; Mike Frysinger <vapier@gentoo.org>:

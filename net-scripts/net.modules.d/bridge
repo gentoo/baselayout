@@ -23,7 +23,6 @@ bridge_provides() {
 bridge_depend() {
 	after interface tuntap
 	before dhcp
-	need interface
 }
 
 # bool bridge_check_installed(void)
