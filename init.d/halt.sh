@@ -100,7 +100,7 @@ umount -a -r -n -t nodevfs,noproc,notmpfs &>/dev/null
 if [ "$?" -ne 0 ]
 then
 	killall5 -9  &>/dev/null
-	umount -a -r -n -l -d -f &>/dev/null
+	umount -a -r -n -l -d -f -t nodevfs,noproc &>/dev/null
 	if [ "$?" -ne 0 ]
 	then
 		eend 1

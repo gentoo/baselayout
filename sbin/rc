@@ -302,6 +302,8 @@ then
 	else
 		source /etc/init.d/shutdown.sh
 	fi
+	#should never get here
+	return
 fi
 
 #move the old softscritps directory to a different one

@@ -2,6 +2,13 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  23 March 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Resolve bug #1292.
+
+    Remove the extra 'depmod -a' in /etc/init.d/modules, thanks to
+    Spidler.
+
   21 March 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Update /sbin/rc to fix a 'cat mounts' instead of the correct

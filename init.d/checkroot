@@ -10,7 +10,7 @@ depend() {
 
 start() {
 	ebegin "Remounting root filesystem read-only (if necessary)"
-	mount / -o remount,ro &>/dev/null
+	mount / -n -o remount,ro &>/dev/null
 	eend $?
 	ebegin "Checking root filesystem"
 	fsck -a /
@@ -27,7 +27,7 @@ start() {
 	fi
 
 	ebegin "Remounting root filesystem read/write"
-	mount / -o remount,rw &>/dev/null
+	mount / -n -o remount,rw &>/dev/null
 	if [ "$?" -ne 0 ]
 	then
 		eend 2 "Root filesystem could not be mounted R/W :("
@@ -41,7 +41,7 @@ start() {
 		# create /etc/mtab (done by forcing current mounted filesystems)
 		# NB:  this needs to be updated if our /sbin/rc mounts change ...
 		> /etc/mtab
-		mount -f / &>/dev/null
+		mount -f -o rw / &>/dev/null
 		mount -f /proc &>/dev/null
 
 		# should /dev be mounted ?
