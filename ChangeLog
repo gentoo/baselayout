@@ -2,6 +2,11 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  05 Feb 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix /sbin/rc-envupdate.sh to use $svcdir to set SVCDIR.  This is thanks
+    to Max Kalika <alkern23@yahoo.com>, bug #15050.
+
   03 Feb 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix /sbin/modules-update to work with module-init-tools-0.9.9.

@@ -29,7 +29,7 @@ if [ "$#" -ne 0 ]
 then
 	usage
 else
-	/bin/gawk -v SVCDIR="/mnt/.init.d" \
+	/bin/gawk -v SVCDIR="${svcdir}" \
 		-f /lib/rcscripts/awk/functions.awk \
 		-f /lib/rcscripts/awk/genenviron.awk
 fi
