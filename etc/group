@@ -34,6 +34,7 @@ postgres::70:
 cdrw::80:
 apache::81:
 usb::85:
+vpopmail:x:89:
 users::100:games
 nofiles:x:200:
 qmail:x:201:
