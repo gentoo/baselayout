@@ -440,14 +440,9 @@ dep_stop() {
 	local myservice="${1##*/}"
 	local depservice=
 
-	[ ! -L "${svcdir}/started/${myservice}" ] && continue
-	
-	if [ ! -e "${svcdir}/started/${myservice}" ]
+	if ! service_started "${myservice}"
 	then
-		# Remove dud symlinks
-		rm -f "${svcdir}/started/${myservice}"
-		
-		continue
+		return 0
 	fi
 	
 	# Candidate for zapping
@@ -468,7 +463,7 @@ dep_stop() {
 			then
 				# This service is not in the previous runlevel, so
 				# do not stop it ...
-				continue
+				return 0
 			fi
 		fi
 
@@ -533,21 +528,21 @@ else
 	do
 		if [ -n "${LOGGER_SERVICE}" ]
 		then
-			# Do not stop it if it depends on the logger
-			if query_before "${i##*/}" "${LOGGER_SERVICE}"
+			# Only stop it if the logger do not depends on it
+			if ! query_before "${i##*/}" "${LOGGER_SERVICE}"
 			then
-				# Same if it is a critical service
-				is_critical_service "${i}" || dep_stop "${i}"
+				continue
 			fi
-		else
-			is_critical_service "${i}" || dep_stop "${i}"
 		fi
+
+		# Do not stop critical services just yet
+		is_critical_service "${i}" || dep_stop "${i}"
 	done
 
 	# Now stop the logger if running
 	if [ -n "${LOGGER_SERVICE}" ]
 	then
-		service_started "${LOGGER_SERVICE}" && dep_stop "${LOGGER_SERVICE}"
+		dep_stop "${LOGGER_SERVICE}"
 	fi
 
 	# Now stop the rest

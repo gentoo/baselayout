@@ -32,7 +32,7 @@ examples:
        Delete the net.eth2 script from the default and wumpus runlevels.
        All other runlevels are unaffected.  Again, the net.eth2 script
        residing in /etc/init.d is not deleted, just any symlinks in
-       /etc/runlevels/default and /etc/runlevels wumpus.
+       /etc/runlevels/default and /etc/runlevels/wumpus.
 
        rc-update show
        Show all the available scripts and list at which runlevels they

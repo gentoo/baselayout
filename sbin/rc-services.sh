@@ -375,6 +375,12 @@ service_started() {
 
 	if [ -L "${svcdir}/started/$1" ]
 	then
+		if [ ! -e "${svcdir}/started/$1" ]
+		then
+			rm -f "${svcdir}/started/$1"
+			
+			return 1
+		fi
 		return 0
 	fi
 

@@ -24,13 +24,15 @@
 
     Add IPV6 versions of localhost and co in /etc/hosts, bug #25859.
 
+    Fix type-o in /sbin/rc-update, bug #25854.
+
   29 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Tweak /etc/init.d/check{root,fs} to set retval after each fsck call,
     and not the whole block.  Tweak check checkroot to reboot if need be
     (This is with sufficient warning and message).  Tweak checkfs to not
     drop to a sulogin if return code 2 or 3 is given - as we did not
-    mount the filesystems yet, we should not need to reboot ...
+    mount the filesystems yet, we should not need to reboot ... bug #25398.
 
     Add '-T' option to fsck (/etc/init.d/check{root,fs} - requested by
     Michael Frysinger <vapier@gentoo.org>.
