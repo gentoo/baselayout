@@ -406,7 +406,7 @@ int match_list(regex_data_t *regex_data) {
 	char *data_p = regex_data->data;
 	char *list_p = regex_data->regex;
 	char *r_list = NULL;
-	size_t r_count;
+	size_t r_count = 0;
 	int retval;
 
 	CHECK_REGEX_DATA_P(regex_data, failed);
@@ -494,7 +494,7 @@ int __match_wildcard(regex_data_t *regex_data, int (*match_func)(regex_data_t *r
 	char *wildcard_p = regex_data->regex;
 	char r_wildcard[3];
 	size_t count = 0;
-	size_t r_count;
+	size_t r_count = 0;
 	int match = 0;
 	int retval;
 

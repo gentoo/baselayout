@@ -515,7 +515,7 @@ remove:
 int service_resolve_dependencies(void) {
 	service_info_t *info;
 	char *service;
-	char *next;
+	char *next = NULL;
 	int count;
 
 	/* Add our 'net' service */

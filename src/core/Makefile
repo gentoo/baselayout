@@ -17,7 +17,7 @@
 # $Header$
 
 CC = gcc
-CFLAGS = -Wall
+override CFLAGS += -Wall
 EXTRA_CFLAGS = -DLEGACY_DEPSCAN
 STRIP = strip
 
@@ -51,8 +51,8 @@ cc-option = $(shell if $(CC) $(1) -S -o /dev/null -xc /dev/null \
 
 
 ifeq ($(DEBUG),1)
-  CFLAGS += -ggdb3
-  CFLAGS += $(call cc-option, -fbounds-checking, -pipe)
+  override CFLAGS += -ggdb3
+  override CFLAGS += $(call cc-option, -fbounds-checking, -pipe)
   EXTRA_CFLAGS += -DRC_DEBUG
 endif
 
