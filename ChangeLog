@@ -2,6 +2,11 @@
 # Copyright 2001 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  25 Feb 2002; Martin Schlemmer <azarah@gentoo.org>: added a check if
+  /dev is mounted when creating entries for /etc/mtab.  This should solve a
+  invalid entry or /dev being mounted even with 'gentoo=nodevfs' option.
+  Updated /etc/init.d/checkroot for this.
+
   17 Feb 2002: Daniel Robbins <drobbins@gentoo.org>: Made "xfs" the default
   filesystem in /etc/fstab (from ReiserFS) and removed "notail" option (it's
   just in a comment now)

@@ -37,7 +37,10 @@ start() {
 		> /etc/mtab
 		mount -f /
 		mount -f /proc
-		mount -f -t devfs none /dev
+		if [ -e /dev/.devfsd ]
+		then
+			mount -f -t devfs none /dev
+		fi
 		mount -f -t tmpfs tmpfs /dev/shm -o rw,mode=0644,size=4m
 	fi
 	
