@@ -146,6 +146,9 @@ wpa_supplicant_pre_start() {
 	eval opts=\" \$\{wpa_supplicant_${ifvar}\}\"
 	[[ ${opts} != *' -D'* ]] && ewarn "wpa_supplicant_${ifvar} does not define a driver"
 	
+	# Some drivers require the interface to be up
+	interface_up ${iface}
+
 	if ! wpa_supplicant ${opts} -B -c/etc/wpa_supplicant.conf -i${iface} ; then
 		eend 1
 		return 1

@@ -1,6 +1,12 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+  17 Dec 2004; Roy Marples <uberlord@gentoo.org>:
+
+    wpa_supplicant - fixed file location for wpa_cli and association test
+    as it they changed in wpa_supplicant-0.3.x
+    wpa_supplicant now brings the interface up before launching - fixes #74637
+
 * rc-scripts 1.6.8 (15 Dec 2004)
 
   15 Dec 2004; Mike Frysinger <vapier@gentoo.org>:
