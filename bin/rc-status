@@ -85,14 +85,14 @@ done
 #  Find the current runlevel being queried.  This is either something supplied #
 #  on the command line, or pulled from softlevel                               #
 ################################################################################
-if [[ -z "${runlevel}" ]] ; then
-	if [[ -e "${svcdir}/softlevel" ]] ; then
-		runlevel="$( <${svcdir}/softlevel )"
+if [[ -z ${runlevel} ]] ; then
+	if [[ -e ${svcdir}/softlevel ]] ; then
+		runlevel=$(<${svcdir}/softlevel)
 	else
 		ewarn "Could not local current runlevel in ${svcdir}/softlevel"
-		if [[ -d "${runleveldir}/single" ]] ; then
+		if [[ -d ${runleveldir}/single ]] ; then
 			runlevel=single
-		elif [[ -d "${runleveldir}/default" ]] ; then
+		elif [[ -d ${runleveldir}/default ]] ; then
 			runlevel=default
 		else
 			eerror "Your installation is probably broken ... please \`emerge baselayout\`"
@@ -101,7 +101,7 @@ if [[ -z "${runlevel}" ]] ; then
 		ewarn "Assuming current runrevel is '${runlevel}'"
 	fi
 fi
-if [[ ! -d "${runleveldir}/${runlevel}" ]] ; then
+if [[ ! -d ${runleveldir}/${runlevel} ]] ; then
 	eerror "${runlevel} is not a valid run level !"
 	eerror "Valid runlevels (obtained from \`rc-status --list\`):"
 	rc-status --list
@@ -115,13 +115,13 @@ fi
 # specified, we pull info about all of the services and filter for the ones    #
 # that don't appear in any runlevel.                                           #
 ################################################################################
-runlevelidxs=$( ls ${runleveldir} )
+runlevelidxs=$(ls ${runleveldir})
 declare -a runlevels
 # For each directory in /etc/runlevels, do ...
 arridx=0
 for level in ${runlevelidxs} ; do
 	if [[ ${level} == ${runlevel} || -n ${ALL} ]] ; then
-		runlevels[${arridx}]=$( find ${runleveldir}/${level} -maxdepth 1 -type l -printf '%f ' )
+		runlevels[${arridx}]=$(find ${runleveldir}/${level} -maxdepth 1 -type l -printf '%f ')
 		let "arridx += 1"
 	fi
 done
@@ -142,8 +142,8 @@ in_list() { #$1=list  $2=find
 if [[ -n ${ALL} ]] ; then
 	unassigned=
 	allservices=
-	for service in $( ls -1 /etc/init.d | grep -v '\.sh$' ) ; do
-		if [[ $( in_list "${runlevels[*]}" "${service}" ) -eq 0 ]] ; then
+	for service in $(ls -1 /etc/init.d | grep -v '\.sh$') ; do
+		if [[ $(in_list "${runlevels[*]}" "${service}") -eq 0 ]] ; then
 			unassigned="${unassigned} ${service}"
 		fi
 		allservices="${allservices} ${service}"
@@ -158,12 +158,12 @@ fi
 #  they're started, broken, or failed.  Put all of this into arrays.           #
 ################################################################################
 # Read services from ${svcdir}/{started,failed,broken}
-[[ -x "${svcdir}/starting" ]] && starting=$( ls ${svcdir}/starting )
-[[ -x "${svcdir}/inactive" ]] && inactive=$( ls ${svcdir}/inactive )
-[[ -x "${svcdir}/started" ]] && started=$( ls ${svcdir}/started )
-[[ -x "${svcdir}/stopping" ]] && stopping=$( ls ${svcdir}/stopping )
-[[ -x "${svcdir}/failed"  ]] && failed=$( ls ${svcdir}/failed )
-[[ -x "${svcdir}/broken"  ]] && broken=$( ls ${svcdir}/broken )
+[[ -x ${svcdir}/starting ]] && starting=$(ls ${svcdir}/starting)
+[[ -x ${svcdir}/inactive ]] && inactive=$(ls ${svcdir}/inactive)
+[[ -x ${svcdir}/started ]] && started=$(ls ${svcdir}/started)
+[[ -x ${svcdir}/stopping ]] && stopping=$(ls ${svcdir}/stopping)
+[[ -x ${svcdir}/failed"  ]] && failed=$(ls ${svcdir}/failed)
+[[ -x ${svcdir}/broken"  ]] && broken=$(ls ${svcdir}/broken)
 
 ################################################################################
 #  Now print out the information we've gathered.  We do this by going through  #
@@ -192,17 +192,17 @@ fi
 for level in ${runlevelidxs} ; do
 	echo "Runlevel: ${HILITE}${level}${NORMAL}"
 	for service in ${runlevels[${arridx}]} ; do
-		if [[ -n ${inactive} && $( in_list "${inactive}" "${service}" ) -eq 1 ]] ; then
+		if [[ -n ${inactive} && $(in_list "${inactive}" "${service}") -eq 1 ]] ; then
 			print_msg "${service}" "${WARN}" 'inactive'
 		elif [[ $(in_list "${started}" "${service}") -eq 1 ]] ; then
 			print_msg "${service}" "${GOOD}" 'started'
-		elif [[ -n ${starting} && $( in_list "${starting}" "${service}" ) -eq 1 ]] ; then
+		elif [[ -n ${starting} && $(in_list "${starting}" "${service}") -eq 1 ]] ; then
 			print_msg "${service}" "${GOOD}" 'starting'
-		elif [[ -n ${stopping} && $( in_list "${stopping}" "${service}" ) -eq 1 ]] ; then
+		elif [[ -n ${stopping} && $(in_list "${stopping}" "${service}") -eq 1 ]] ; then
 			print_msg "${service}" "${BAD}" 'stopping'
-		elif [[ -n ${failed} && $( in_list "${failed}" "${service}" ) -eq 1 ]] ; then
+		elif [[ -n ${failed} && $(in_list "${failed}" "${service}") -eq 1 ]] ; then
 			print_msg "${service}" "${BAD}" 'failed'
-		elif [[ -n ${broken} && $( in_list "${broken}" "${service}" ) -eq 1 ]] ; then
+		elif [[ -n ${broken} && $(in_list "${broken}" "${service}") -eq 1 ]] ; then
 			print_msg "${service}" "${BAD}" 'broken'
 		else
 			print_msg "${service}" "${WARN}" '  off'
