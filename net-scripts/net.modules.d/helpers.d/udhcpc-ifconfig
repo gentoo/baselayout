@@ -30,22 +30,36 @@ ifconfig() {
 	LC_ALL=C /sbin/ifconfig "$@"
 }
 
-# Remove all aliases
-for i in $( ifconfig | grep -o "^${interface}:[0-9]*" | tac | xargs ); do
-	ifconfig ${i} down
-done
+ip=${ip// }
+ip=${ip//000/0}
+ip=${ip//00/0}
+subnet=${subnet// }
+subnet=${subnet//000/0}
+subnet=${subnet//00/0}
+broadcast=${broadcast// }
+[[ -n ${broadcast} ]] && broadcast="broadcast ${broadcast}"
 
-# Remove all addresses
-while ifconfig ${interface} | grep -q -m1 -o 'inet addr:[^ ]*' ; do
-	ifconfig ${interface} 0
-done
-	
-# Remove IPv6 addresses
-for i in $( ifconfig ${interface} | awk '$1=="inet6" && $4!="Scope:Link" {print $3}' ); do
-	ifconfig ${interface} inet6 del ${i} &>/dev/null
-done
+# If the current address does not match or we are deconfiguring
+# then we take the all the addresses on the interface down
+cur=$( ifconfig eth1 | grep 'inet ' | awk -F: '{ print $2,$3 }' | awk '{ print $1,$3 }' )
+if [[ ${cur} != "${ip} ${subnet}" || ${action} == deconfig ]]; then
+	# Remove all aliases
+	for i in $( ifconfig | grep -o "^${interface}:[0-9]*" | tac | xargs ); do
+		ifconfig ${i} down
+	done
 
-/sbin/ifconfig ${interface} up &>/dev/null
+	# Remove all addresses
+	while ifconfig ${interface} | grep -q -m1 -o 'inet addr:[^ ]*' ; do
+		ifconfig ${interface} 0
+	done
+
+	# Remove IPv6 addresses
+	for i in $( ifconfig ${interface} | awk '$1=="inet6" && $4!="Scope:Link" {print $3}' ); do
+		ifconfig ${interface} inet6 del ${i}
+	done
+fi
+
+/sbin/ifconfig ${interface} up
 
 [[ -z ${MODULES_DIR} ]] && MODULES_DIR=/lib/rcscripts/net.modules.d
 source ${MODULES_DIR}/helpers.d/config-system
@@ -55,19 +69,15 @@ if [[ ${action} == deconfig ]]; then
 	exit 0
 fi
 
-# Configure our IP address(es)
-ip=( ${ip} )
-subnet=( ${subnet} )
-broadcast=( ${broadcast} )
-for (( i=0; i<${#ip[@]}; i++ )); do
-	[[ ${i} -eq 0 ]] && l=${interface} || l=${interface}:${i}
-		b=${broadcast[i]}
-	[[ -n ${b} ]] && b="broadcast ${b}"
-		ifconfig ${l} inet ${ip[i]} netmask ${subnet[i]} ${b}
-done
+# Configure our IP address
+ifconfig ${interface} inet ${ip} netmask ${subnet} ${broadcast}
 
 # Configure our routers
 for r in ${router}; do
+	while true; do
+		/sbin/route del 0.0.0.0 2>/dev/null || break
+	done
+
 	# We can only have one default route!
 	/sbin/route add default gw ${r} dev ${interface} && break
 done

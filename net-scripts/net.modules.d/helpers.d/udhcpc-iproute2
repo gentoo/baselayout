@@ -31,33 +31,46 @@ ip() {
 }
 
 # We don't flush the link local address
-ip addr flush dev ${interface} scope global &>/dev/null
-ip addr flush dev ${interface} scope host &>/dev/null
 ip link set up dev ${interface} &>/dev/null
 
 [[ -z ${MODULES_DIR} ]] && MODULES_DIR=/lib/rcscripts/net.modules.d
 source ${MODULES_DIR}/helpers.d/config-system
 
 if [[ ${action} == deconfig ]]; then
+	ip addr flush dev ${interface} scope global &>/dev/null
+	ip addr flush dev ${interface} scope host &>/dev/null
 	restore_configs
 	exit 0
 fi
 
-# Configure our IP address(es)
-ip=( ${ip} )
-subnet=( ${subnet} )
-broadcast=( ${broadcast} )
-for (( i=0; i<${#ip[@]}; i++ )); do
-	cidr=$( netmask2cidr ${subnet[i]} )
-		b=${broadcast[i]}
-	[[ -n ${b} ]] && b="broadcast ${b}"
-		ip addr add dev ${interface} ${ip[i]}/${cidr} ${b}
-done
+# Configure our IP address
+ip=${ip// }
+subnet=${subnet// }
+cidr=$( netmask2cidr ${subnet} )
+broadcast=${broadcast// }
+[[ -n ${broadcast} ]] && broadcast="broadcast ${broadcast}"
 
-# Configure our routers
+# If we have other addresses then we flush it and then add our new one
+ip -family inet addr show scope global dev ${interface} | grep inet | grep -qv "${ip}/${cidr}"
+if [[ $? == 1 ]] ; then
+	ip addr flush dev ${interface} scope global &>/dev/null
+	ip addr flush dev ${interface} scope host &>/dev/null
+	ip addr add dev ${interface} ${ip}/${cidr} ${broadcast}
+fi
+
+# Configure our default route
+x=$(ip route show | awk '{ if ($1 == "default") {print $3} }')
 for r in ${router}; do
+	# ip route doesn't pad 0's, so we strip any padding if we have any
+	r=${r//000/0}
+	r=${r//00/0}
+
 	# We can only have one default route!
-	ip route add default via ${r} dev ${interface} 2>/dev/null && break
+	if [[ -z ${x} ]]; then
+		ip route add default via ${r} dev ${interface} 2>/dev/null && break
+	elif [[ ${x} != ${r} ]]; then
+		ip route change default via ${r} dev ${interface} 2>/dev/null && break
+	fi
 done
 
 # Set our module to udhcpc if it's not set
