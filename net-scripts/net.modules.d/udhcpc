@@ -137,7 +137,7 @@ udhcpc_start() {
 	fi
 
 	# Try and load the cache if it exists
-	if [[ -f ${cachefile} ]]; then
+	if [[ -f ${cachefile} && ${opts} != *'--request='* && ${opts} != *'-r '* ]]; then
 		x=$( cat ${cachefile} )
 		[[ -n ${x} ]] && opts="${opts} --request=${x}"
 	fi
