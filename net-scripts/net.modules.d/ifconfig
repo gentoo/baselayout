@@ -130,6 +130,13 @@ ifconfig_get_mac_address() {
 	ifconfig ${1} | grep -m1 -o 'HWaddr [^ ]*' | cut -d" " -f2
 }
 
+# void ifconfig_set_mac_address(char *interface, char *mac)
+#
+# Assigned the mac address to the network card
+ifconfig_set_mac_address() {
+	ifconfig ${1} hw ether ${2}
+}
+
 # void ifconfig_get_aliases_rev(char *interface)
 #
 # Fetch the list of aliases for an interface.  

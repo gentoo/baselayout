@@ -6,6 +6,9 @@
     essidnet - fixed setting up search domains
     ifconfig now reads the old gateway variable correctly - fixes #73607
     iwconfig now supports backgrounding
+    ifconfig and iproute2 now support function interface_set_mac_address
+    macchanger no longer depends on macchanger if configuring a specific
+    mac address
 
   06 Dec 2004; Roy Marples <uberlord@gentoo.org>:
 

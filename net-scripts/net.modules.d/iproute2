@@ -124,11 +124,18 @@ iproute2_get_address() {
 	ip -family inet addr show ${1} 2>${devnull} | awk '/inet/ {print $2}' | cut -d/ -f1
 }
 
-# void get_mac_address(char *interface)
+# void iproute2_get_mac_address(char *interface)
 #
 # Fetch the mac address assingned to the network card
 iproute2_get_mac_address() {
 	ip link show ${1} 2>${devnull} | awk '/link/ {print $2}' | cut -d/ -f1
+}
+
+# void iproute2_set_mac_address(char *interface, char *mac)
+#
+# Assigned the mac address to the network card
+iproute2_set_mac_address() {
+	ip link set address ${2} dev ${1}
 }
 
 # void iproute2_get_aliases_rev(char *interface)

@@ -38,7 +38,8 @@
 # You can also specify which modules not to use - for example you may be
 # using a supplicant or linux-wlan-ng to control wireless configuration but
 # you still want to configure network settings per ESSID associated with.
-#modules=( "!iwconfig" )
+#modules=( "!iwconfig" "!wpa_supplicant" )
+# IMPORTANT: If you need the above, please disable modules in that order
 
 
 ##############################################################################
@@ -270,10 +271,10 @@
 
 #-----------------------------------------------------------------------------
 # MAC changer
-# For changing MAC addresses emerge net-analyzer/macchanger
-
-# - to set a specific MAC address
+# To set a specific MAC address
 #mac_eth0="00:11:22:33:44:55"
+
+# For changing MAC addresses using the below, emerge net-analyzer/macchanger
 # - to randomize the last 3 bytes only
 #mac_eth0="random-ending"
 # - to randomize between the same physical type of connection (eg fibre,
