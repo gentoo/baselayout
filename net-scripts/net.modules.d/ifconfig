@@ -26,7 +26,7 @@ ifconfig_depend() {
 # Returns 1 if ifconfig is installed, otherwise 0
 ifconfig_check_installed() {
 	[[ -x /sbin/ifconfig ]] && return 0
-	[[ ${1} == true ]] && eerror "For ifconfig support, emerge sys-apps/net-tools"
+	${1:-false} && eerror "For ifconfig support, emerge sys-apps/net-tools"
 	return 1
 }
 
@@ -80,12 +80,12 @@ ifconfig_down() {
 # bool ifconfig_is_up(char *iface, bool withaddress)
 #
 # Returns 0 if the interface is up, otherwise 1
-# If withaddress is true then the interface has to have an address
+# If withaddress is true then the interface has to have an IPv4 address
 # assigned as well
 ifconfig_is_up() {
 	local check="\<UP\>" addr=${2:-false}
 	${addr} && check="\<addr:.*${check}"
-	ifconfig ${1} 2>${devnull} | grep -v Scope:Link | xargs | grep -Eq "${check}" && return 0
+	ifconfig ${1} 2>${devnull} | grep -v Scope | xargs | grep -Eq "${check}" && return 0
 	return 1
 }
 
@@ -131,32 +131,26 @@ ifconfig_get_aliases_rev() {
 	ifconfig | grep -o "^${1}:[0-9]*" | tac | xargs
 }
 
-# bool ifconfig_interface_del_addresses(char *interface, bool report)
+# bool ifconfig_interface_del_addresses(char *interface)
 #
 # Remove addresses from interface.  Returns 0 (true) if there
 # were addresses to remove (whether successful or not).  Returns 1
 # (false) if there were no addresses to remove.
 ifconfig_del_addresses() {
-	local inet6 iface=${1} x report=${2}
-	report=${report:-false}
+	local iface=${1} i
 
-	# Ifconfig is buggy when dealing with aliases.  If you remove
-	# the address using the following command, then you can no
-	# longer down the interface.  It will always report UP.
-	if [[ ${iface} != *:* ]]; then
-		ifconfig ${iface} 0 &>/dev/null
-	fi
+	# We don't remove addresses from aliases
+	[[ ${iface} == *:* ]] && return 0
 
-	inet6="$(ifconfig ${iface} | awk '$1=="inet6" && $4!="Scope:Link" {print $3}')"
-	[[ -z ${inet6} ]] && return 0
-
-	${report} && einfo "Removing inet6 addresses"
-	eindent
-	for x in ${inet6}; do
-		${report} && einfo "${x}"
-		ifconfig ${iface} inet6 del ${x}
+	# iproute2 can add many addresses to an iface unlike ifconfig ...
+	while ifconfig ${iface} | grep -q -m1 -o 'inet addr:[^ ]*' ; do
+		ifconfig ${iface} 0
 	done
-	eoutdent
+	
+	# Remove IPv6 addresses
+	for i in "$(ifconfig ${iface} | awk '$1=="inet6" && $4!="Scope:Link" {print $3}')"; do
+		/sbin/ifconfig ${interface} inet6 del ${i} &>/dev/null
+	done
 
 	return 0
 }
@@ -166,73 +160,45 @@ ifconfig_del_addresses() {
 # Returns a string spaced with possible user set
 # configuration variables
 ifconfig_get_vars() {
-        echo "ifconfig_${1} ifconfig_fallback_${1} routes_${1} inet6_${1} iface_${1} alias_${1} broadcast_${1} netmask_${1}"
-	# The depreciated gateway var has to be handeled by
+        echo "config_${1} routes_${1} fallback_${1}  ifconfig_${1} ifconfig_fallback_${1} routes_${1} inet6_${1} iface_${1} alias_${1} broadcast_${1} netmask_${1}"
+	# The depreciated gateway var has to be handled by
 	# each module if needed
 }
 
-# void ifconfig_local_vars(void)
+# bool ifconfig_get_old_config(char *iface)
 #
-# Returns a string command to localise variables
-ifconfig_local_vars() {
-	echo "local -a config_IFACE routes_IFACE inet6_IFACE config_fallback_IFACE"
-}
+# Returns config and config_fallback for the given interface
+ifconfig_get_old_config() {
+	local iface=${1} ifvar=$( interface_variable ${1} ) i inet6
 
-# bool ifconfig_setup_vars(char *iface)
-#
-# Setup variables based on $1 and content of /etc/conf.d/net
-# The following variables are set, which should be declared local by
-# the calling routine.
-#       config_IFACE			(array of ifconfig lines, replaces iface_IFACE)
-#       routes_IFACE			(array of route lines)
-#       inet6_IFACE			(array of inet6 lines)
-#       config_fallback_IFACE 		(fallback ifconfig if a module fails)
-#
-# Returns 0 (true) if variables are set successfully, non-zero
-# otherwise
-ifconfig_setup_vars() {
-	local iface=${1} ifvar=$( interface_variable ${1} ) i
-
-	eval config_IFACE=( \"\$\{ifconfig_${ifvar}\[@\]\}\" )
-	eval config_fallback_IFACE=( \"\$\{ifconfig_fallback_${ifvar}\[@\]\}\" )
-	eval routes_IFACE=( \"\$\{routes_${ifvar}\[@\]\}\" )
-	eval inet6_IFACE=( \"\$\{inet6_${ifvar}\[@\]\}\" )
-
-	# BACKWARD COMPATIBILITY: set the default gateway
-	if [[ ${gateway} == ${iface}/* ]]; then
-		# We don't add the old gateway if one has been set in routes_IFACE
-		local gw=false
-		for i in "${routes_IFACE[@]}"; do
-			[[ ${i} != "*default gw*" ]] && continue
-			gw=true
-			break
-		done
-		${gw} && routes_IFACE=( "${routes_IFACE[@]}" "default gw ${gateway#*/}" )
-	fi
+	eval config=( \"\$\{ifconfig_${ifvar}\[@\]\}\" )
+	eval config_fallback=( \"\$\{ifconfig_fallback_${ifvar}\[@\]\}\" )
+	eval inet6=( \"\$\{inet6_${ifvar}\[@\]\}\" )
 
 	# BACKWARD COMPATIBILITY: populate the config_IFACE array
 	# if iface_IFACE is set (fex. iface_eth0 instead of ifconfig_eth0)
-	eval local iface_IFACE=\"\$\{iface_$ifvar\}\"
-	if [[ -n ${iface_IFACE} && -z ${config_IFACE} ]]; then
+	eval local i=\"\$\{iface_${ifvar}\}\"
+	if [[ -n ${i} && -z ${config} ]]; then
 		# Make sure these get evaluated as arrays
 		local -a aliases broadcasts netmasks
 
 		# Start with the primary interface
-		config_IFACE=( "${iface_IFACE}" )
+		config=( "${i}" )
 
 		# ..then add aliases
 		eval aliases=( \$\{alias_${ifvar}\} )
 		eval broadcasts=( \$\{broadcast_${ifvar}\} )
 		eval netmasks=( \$\{netmask_${ifvar}\} )
 		for (( i=0; i<${#aliases[@]}; i++ )); do
-			config_IFACE[i+1]="${aliases[i]} ${broadcasts[i]:+broadcast ${broadcasts[i]}} ${netmasks[i]:+netmask ${netmasks[i]}}"
+			config[i+1]="${aliases[i]} ${broadcasts[i]:+broadcast ${broadcasts[i]}} ${netmasks[i]:+netmask ${netmasks[i]}}"
 		done
 	fi
 
 	# BACKWARD COMPATIBILITY: check for space-separated inet6 addresses
-	if [[ ${#inet6_IFACE[@]} == 1 && ${inet6_IFACE} == *' '* ]]; then
-		inet6_IFACE=( ${inet6_IFACE} )
-	fi
+	[[ ${#inet6[@]} == 1 && ${inet6} == *' '* ]] &&  inet6=( ${inet6} )
+
+	# Add inet6 addresses to our config if required
+	[[ -n ${inet6} ]] && config=( "${config[@]}" "${inet6[@]}" )
 }
 
 # bool ifconfig_iface_stop(char *interface)
@@ -265,30 +231,36 @@ ifconfig_iface_stop() {
 # fail, the routine should still return success to indicate that
 # net.eth0 was successful
 ifconfig_post_start() {
-	local iface=${1} x
+	local iface=${1} ifvar=$( interface_variable ${1} ) routes x
 
 	# Make sure interface is marked UP
 	ifconfig_up ${iface}
 
-	# Add IPv6 addresses
-	if [[ -n ${inet6_IFACE} ]]; then
-		einfo "Adding inet6 addresses"
-		eindent
-		for x in "${inet6_IFACE[@]}"; do
-			ebegin "${x}"
-			ifconfig ${iface} inet6 add ${x} &>${devnull}
-			eend $?
+	eval routes=( \"\$\{routes_${ifvar}\[@\]\}\" )
+
+	# BACKWARD COMPATIBILITY: set the default gateway
+	if [[ ${gateway} == ${iface}/* ]]; then
+		# We don't add the old gateway if one has been set in routes_IFACE
+		local gw=false
+		for x in "${routes[@]}"; do
+			[[ ${x} != "*default gw*" ]] && continue
+			gw=true
+			break
 		done
-		eoutdent
+		${gw} && routes=( "${routes[@]}" "default gw ${gateway#*/}" )
 	fi
 
-	[[ -z ${routes_IFACE} ]] && return 0
+	[[ -z ${routes} ]] && return 0
 
 	# Add routes for this interface, might even include default gw
 	einfo "Adding routes"
 	eindent
-	for x in "${routes_IFACE[@]}"; do
+	for x in "${routes[@]}"; do
+		# Support iproute2 style routes
+		x=${x//via/gw}
+		
 		ebegin "${x}"
+		# Support adding IPv6 addresses easily
 		if [[ ${x} == *:* && ${x} != *'-A inet6'* ]]; then
 			/sbin/route add -A inet6 ${x} &>${devnull}
 		else
@@ -305,11 +277,33 @@ ifconfig_post_start() {
 #
 # Starts the interface with the given options
 # Returns the value of the ifconfig command
-ifconfig_configure() {
-	local iface=$( interface_device ${1} )
-	! ifconfig_exists ${iface} true && return 1
+ifconfig_add_address() {
+	local iface=${1} i=0
 
-	ifconfig $@ &>${devnull}
+	# Extract the config
+	local -a config=( "$@" )
+	config=( ${config[@]:1} )
+
+	if [[ ${config[0]} == *:* ]]; then
+		# Support IPv6 - nice and simple
+		config[0]="inet6 add ${config[0]}"
+	else
+		# IPv4 is tricky - ifconfig requires an aliased device
+		# for multiple addresses
+		if ifconfig ${iface} | grep -v Scope | xargs | grep -Eq "\<addr:.*" ; then
+			# Get the last alias made for the interface and add 1 to it
+			i=$( ifconfig | tac | grep -m 1 -o "^eth0:[0-9]*" | awk -F: '{ print $2 }' )
+			i=${i:-0}
+			(( i++ ))
+			iface=${iface}:${i}
+		fi
+
+		# Support iproute2 style config where possible
+		config=( "${config[@]//brd/broadcast}" )
+		config=( "${config[@]//peer/pointtopoint}" )
+	fi
+
+	ifconfig ${iface} ${config[@]} &>${devnull}
 	eend $?
 	return $?
 }

@@ -1,0 +1,80 @@
+# net-scripts helper functions
+# Version 1.0.0
+# Copyright (c) 2004 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License V2
+# Contributed by Roy Marples (uberlord@gentoo.org)
+
+# int netmask2cidr(char *netmask)
+#
+# Returns the CIDR of a given netmask
+netmask2cidr() {
+	local binary="" i
+
+	for i in ${1//./ }; do
+		while [[ ${i} != 0 ]]; do
+			binary=$[${i}%2]${binary}
+			(( i=i>>1 ))
+		done
+	done
+	binary=${binary%%0*}
+	echo ${#binary}
+}
+
+# char* netmask2cidr(int cidr)
+#
+# Returns the netmask of a given CIDR
+cidr2netmask() {
+	local cidr=${1} netmask="" done=0 i sum=0 cur=128
+	local octets frac
+
+	(( octets=cidr/8 ))
+	(( frac=cidr%8 ))
+	while [[ octets -gt 0 ]]; do
+		netmask="${netmask}.255"
+		(( octets-- ))
+		(( done++ ))
+	done
+
+	if [[ ${done} -lt 4 ]]; then
+		for (( i=0; i<${frac}; i++ )); do
+			(( sum+=cur ))
+			(( cur/=2 ))
+		done
+		netmask="${netmask}.${sum}"
+		(( done++ ))
+		
+		while [[ ${done} -lt 4 ]]; do
+			netmask="${netmask}.0"
+			(( done++ ))
+		done
+	fi
+
+	echo ${netmask:1}
+}
+
+# char* interface_device(char *iface)
+#
+# Gets the base device of the interface
+# Can handle eth0:1 and eth0.1
+# Which returns eth0 in this case
+interface_device() {
+	local dev=${1%%.*}
+	[[ ${dev} == ${1} ]] && dev=${1%%:*}
+	echo ${dev}
+}
+
+# char* interface_type(char* iface)
+#
+# Returns the base type of the interface
+# eth, ippp, etc
+interface_type() {
+	echo ${1%%[0-9]*}
+}
+
+# char* interface_variable(char *iface)
+#
+# Returns a bash variable name based on the interface
+interface_variable() {
+	local n=${1//:/_}
+	echo ${n//./_}
+}

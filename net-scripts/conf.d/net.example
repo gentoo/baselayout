@@ -7,7 +7,7 @@
 # specified anything.
 #
 # If you want to use a static address or use DHCP explicitly, jump
-# down to the section labelled IFCONFIG.
+# down to the section labelled INTERFACE HANDLERS.
 #
 # If you want to do anything more fancy, you should take the time to
 # read through the rest of this file.
@@ -32,8 +32,8 @@
 #modules=( "iproute2" )
 
 # You can also specify other modules for an interface
-# In this case we prefer pump over dhcpcd
-#modules_eth0=( "pump" )
+# In this case we prefer udhcpc over dhcpcd
+#modules_eth0=( "udhcpc" )
 
 # You can also specify which modules not to use - for example you may be
 # using a supplicant which controls wireless configuration but you still
@@ -46,87 +46,51 @@
 # 
 # We provide two interface handlers presently: ifconfig and iproute2.
 # You need one of these to do any kind of network configuration.
-
-#-----------------------------------------------------------------------------
-# IFCONFIG
 # For ifconfig support, emerge sys-apps/net-tools
+# For iproute2 support, emerge sys-apps/iproute2
 
-# For a static configuration, use something like this
-#ifconfig_eth0=(
-#	"192.168.0.2 netmask 255.255.255.0"
-#)
-
-# If you need aliases, use something like this instead.  This sets the
-# primary eth0 address to 192.168.0.2 and adds two aliases, eth0:1 and
-# eth0:2
-#ifconfig_eth0=(
-#	"192.168.0.2 netmask 255.255.255.0"
-#	"192.168.0.3 netmask 255.255.255.0"
-#	"192.168.0.4 netmask 255.255.255.0"
-#)
-
-# To add IPv6 addresses to an interface (cannot add to an aliased interface)
-# These addresses are bogus - use your own
-#inet6_eth0=( "4321:0:1:2:3:4:567:89ab" "4321:0:1:2:3:4:567:89ac" )
-
-# If you don't want an inet address on your interface (ie only inet6) then
-# supply null as the ifconfig parameter
-#ifconfig_eth0=( "null" )
-
-# This is just like setting the gateway config option in the old-style iface
-# config, but allows one to add custom routes.  This should not be needed if
-# you are obtaining an address via DHCP since the default route should be set
-# automatically. This example also uses an IPv6 address we added above.
-#routes_eth0=(
-#	"default gw 192.168.0.1"
-#	"default gw 4321:0:1:2:3:4:567:89ab"
-#)
-
-# If a specified module fails (like dhcp - see below), you can specify a fallback like so
-#ifconfig_fallback_eth0=( "192.168.0.2 netmask 255.255.255.0" )
-# NOTE: fallback entry must match the entry in ifconfig_eth0
-
-
-#-----------------------------------------------------------------------------
-# IPROUTE2
-# For iproute2 support, emerge sys-apps/iproute2 and add "iproute2" to the
-# modules array above like so
+# If you don't specify an interface then we prefer ifconfig it it's installed
+# Prefer iproute2 over ifconfig
 #modules=( "iproute2" )
 
 # For a static configuration, use something like this
-#ipaddr_eth0=(
-#	"192.168.0.2/24"
-#)
+# (They all do exactly the same thing btw)
+#config_eth0=( "192.168.0.2/24" )
+#config_eth0=( "192.168.0.2 netmask 255.255.255.0" )
 
-# If you need aliases, use something like this instead.  This sets the
-# primary eth0 address to 192.168.0.2 and adds two aliases, eth0:1 and
-# eth0:2
-#ipaddr_eth0=(
+# We can also specify a broadcast
+#config_eth0=( "192.168.0.2/24 brd 192.168.0.255" )
+#config_eth0=( "192.168.0.2 netmask 255.255.255.0 broadcast 192.168.0.255" )
+
+# If you need more than one address, you can use something like this
+# NOTE: ifconfig creates an aliased device for each extra IPv4 address
+#       (eth0:1, eth0:2, etc)
+#       iproute2 does not do this
+#config_eth0=(
 #	"192.168.0.2/24"
 #	"192.168.0.3/24"
 #	"192.168.0.4/24"
 #)
-# NOTE: inet6 addresses do not create an aliases
 
-# To add IPv6 addresses to an interface (cannot add to an aliased interface)
-# These addresses are bogus - use your own
-#inet6_eth0=( "4321:0:1:2:3:4:567:89ab" "4321:0:1:2:3:4:567:89ac" )
+# You can also use IPv6 addresses
+#config_eth0=(
+#	"192.168.0.2/24"
+#	"4321:0:1:2:3:4:567:89ab"
+#	"4321:0:1:2:3:4:567:89ac"
+#)
 
-# If you don't want an inet address on your interface (ie only inet6) then
-# supply null as the ipaddr parameter
-#ipaddr_eth0=( "null" )
+# If you don't want ANY address (only useful when calling for advanced stuff)
+#config_eth0=( "null" )
 
-# The following will set up the default gateway. You can also pass advanced
-# route configs via this option. This example also uses an IPv6 address we
-# added above.
-#iproute_eth0=(
+# Here's how todo routing if you need it - the below sets the default gateway
+#routes_eth0=(
 #	"default via 192.168.0.1"
 #	"default via 4321:0:1:2:3:4:567:89ab"
 #)
 
 # If a specified module fails (like dhcp - see below), you can specify a fallback like so
-#ipaddr_fallback_eth0=( "192.168.0.2/24" )
-# NOTE: fallback entry must match the entry in ifconfig_eth0
+#fallback_eth0=( "192.168.0.2 netmask 255.255.255.0" )
+# NOTE: fallback entry must match the entry in config_eth0
 
 
 ##############################################################################
@@ -170,12 +134,13 @@
 # - udhcp-0.9.3-r3 and earlier does not support getting NTP servers 
 # - dhclient does not support getting NTP servers 
 # - pump does not support getting NIS servers
+# - DHCP tends to erase any existing device information - so add
+#   static addresses after dhcp if you need them
 
 # Regardless of which DHCP client you prefer, you configure them the
 # same way using one of following depending on which interface modules
 # you're using.
-#ifconfig_eth0=( "dhcp" )	# for ifconfig
-#ipaddr_eth0=( "dhcp" )		# for iproute2
+#config_eth0=( "dhcp" )
 
 # For passing custom options to dhcpcd use something like the following.  This
 # example reduces the timeout for retrieving an address from 60 seconds (the
@@ -216,8 +181,8 @@
 
 # This is only useful for LANs where there is no DHCP server and you don't
 # connect directly to the internet.
-#ifconfig_eth0=( "dhcp" )
-#ifconfig_fallback_eth0=( "apipa" )
+#config_eth0=( "dhcp" )
+#fallback_eth0=( "apipa" )
 
 #-----------------------------------------------------------------------------
 # VLAN (802.1q support)
@@ -227,27 +192,19 @@
 # Please ensure your VLAN IDs are NOT zero-padded
 #vlans_eth0="1 2"
 
-# Then setup the interface for each VLAN using either iproute2 or ifconfig like
-# so
-#ifconfig_eth0_1=( "dhcp" )
-#ifconfig_eth0_2=( "172.16.2.1 netmask 255.255.254.0" )
-# This configures eth0_1 to use DHCP and eth0_2 for a static address
-
-# You can also configure the vlan - see for vconfig man page for more details
-#vlans_eth0="1 2"
+# You can also configure the VLAN - see for vconfig man page for more details
 #vconfig_eth0=( "set_name_type VLAN_PLUS_VID_NO_PAD" )
-#ifconfig_vlan1=( "dhcp" )
 #vconfig_vlan1=( "set_flag 1" "set_egress_map 2 6" )
-#ifconfig_vlan2=( "172.16.2.1 netmask 255.255.254.0" )
+#config_vlan1=( "172.16.3.1 netmask 255.255.254.0" )
+#config_vlan2=( "172.16.2.1 netmask 255.255.254.0" )
 
 #-----------------------------------------------------------------------------
 # Bonding
 # For link bonding/trunking emerge net-misc/ifenslave
 
-# If you are using any of the slave interfaces, it is important that you remove
-# configurations for them and take them down first!
+# To bond interfaces together
 #slaves_bond0="eth0 eth1 eth2"
-#ipaddr_bond0=( "null" ) # You may not want to assign an IP the the bond
+#config_bond0=( "null" ) # You may not want to assign an IP the the bond
 
 #-----------------------------------------------------------------------------
 # ADSL
@@ -255,10 +212,8 @@
 # You should make the following settings and also put your
 # username/password information in /etc/ppp/pap-secrets
 
-# Configure the interface to use ADSL with one of the following lines,
-# depending on whether you're using ifconfig (default) or iproute2.
-#ifconfig_eth0=( "adsl" )
-#ipaddr_eth0=( "adsl" )
+# Configure the interface to use ADSL
+#config_eth0=( "adsl" )
 
 # You probably won't need to edit /etc/ppp/pppoe.conf if you set this
 #adsl_user_eth0="my-adsl-username"
@@ -269,11 +224,10 @@
 # You should make the following settings and also put your
 # username/password information in /etc/ppp/pap-secrets
 
-# Configure the interface to use ISDN with one of the following lines,
-# depending on whether you're using ifconfig (default) or iproute2.
-#ifconfig_ippp0=( "dhcp" )
+# Configure the interface to use ISDN
+#config_ippp0=( "dhcp" )
 # It's important to specify dhcp if you need it!
-#ipaddr_ippp0=( "192.168.0.1/24" )
+#config_ippp0=( "192.168.0.1/24" )
 # Otherwise, you can use a static IP
 
 # NOTE: The interface name must be either ippp or isdn followed by a number
@@ -305,17 +259,12 @@
 # TUN/TAP
 # For TUN/TAP support emerge sys-apps/usermode-utilities
 #
-# The below two examples create an interface called tap0
-# ifconfig assigns it's address via dhcp
-# iproute2 assigns it's address manually
-#ifconfig_tap0=( "dhcp" )		# for ifconfig
-#ipaddr_tap0=( "192.168.0.1/24")	# for iproute2
-
 # NOTE: The interface name must be either tun or tap followed by a number
+#config_tun1=( "192.168.0.1/24")
 
 # For passing custom options to tunctl use something like the following.  This
 # example sets the owner to adm
-#tunctl_tap0="-u adm"
+#tunctl_tun1="-u adm"
 
 #-----------------------------------------------------------------------------
 # Bridging (802.1d)
@@ -325,9 +274,9 @@
 #bridge_br0="eth0 eth1"
 
 # You NEED to configure the interface as well
-#ifconfig_br0=( "null" ) # This is needed so that dhcp is not started!
-#ifconfig_br0=( "dhcp" )
-#ifconfig_br0=( "192.168.0.1 netmask 255.255.255.0" )
+#config_br0=( "null" ) # This is needed so that dhcp is not started!
+#config_br0=( "dhcp" )
+#config_br0=( "192.168.0.1/24" )
 
 # NOTE: This creates an interface called br0 - you can give the interface
 # any name you like
@@ -344,11 +293,9 @@
 # For IPIP tunnels
 #iptunnel_vpn0="mode ipip remote 207.170.82.2 ttl 255"
 
-# To configure the interface via ifconfig
-#ifconfig_vpn0=( "192.168.0.2 pointopoint 192.168.1.2" )
-
-# To configure the interface via iproute2
-#ipaddr_vpn0=( "192.168.0.2 peer 192.168.1.1" )
+# To configure the interface
+#config_vpn0=( "192.168.0.2 pointopoint 192.168.1.2" )		# ifconfig style
+#config_vpn0=( "192.168.0.2 peer 192.168.1.1" )			# iproute2 style
 
 ##############################################################################
 # ADVANCED CONFIGURATION
@@ -450,6 +397,4 @@
 # Although it will not crash, essidnet will not work as it has to come after
 # iwconfig
 #modules_force=( "iproute2" "ifconfig" )
-# Although it will not crash, the interface will be setup by ifconfig's rules
-# as it comes last in the list - although iproute2 will attempt to setup the
-# interface as well.
+# The interface will be setup twice which will cause problems

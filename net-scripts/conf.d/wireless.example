@@ -140,17 +140,10 @@
 
 # You can also override the interface settings found in /etc/conf.d/net
 # per ESSID - which is very handy if you use different networks a lot
-# At this time, the only settings you cannot override are the peer_* settings
-#ifconfig_ESSID=( "dhcp" )
+#config_ESSID=( "dhcp" )
 #dhcpcd_ESSID="-t 5"
-#inet6_ESSID=()
 #routes_ESSID=()
-#ifconfig_fallback_ESSID=()
-
-# iproute-2 style setup
-#ipaddr_ESSID=( "dhcp" )
-#iproute_ESSID=()
-#ipaddr_fallback_ESSID=()
+#fallback_ESSID=()
 
 # Setting name/domain server causes /etc/resolv.conf to be overwritten
 # Note that if DHCP is used, and you want this to take precedence then
@@ -166,7 +159,7 @@
 # incase you use Access Points with the same ESSID but need different
 # networking configs. Below is an example - of course you use the same
 # method with other variables
-#mac_ifconfig_001122334455=( "dhcp ")
+#mac_config_001122334455=( "dhcp" )
 #mac_dhcpcd_001122334455="-t 10"
 #mac_nameservers_001122334455=( "192.168.0.1" "192.168.0.2" )
 

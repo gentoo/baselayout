@@ -30,7 +30,7 @@ udhcpc_depend() {
 # Returns 1 if udhcpc is installed, otherwise 0
 udhcpc_check_installed() {
 	[[ -x /sbin/udhcpc ]] && return 0
-	${1} && eerror "For DHCP (udhcpc) support, emerge net-misc/udhcp"
+	${1:-false} && eerror "For DHCP (udhcpc) support, emerge net-misc/udhcp"
 	return 1
 }
 
@@ -89,7 +89,8 @@ udhcpc_stop() {
 		# udhcp-0.9.8-r3 and earlier do not process signals correctly
 		# so we need to kill them off
 		ps -p ${pid} &>/dev/null || continue
-		kill -s KILL ${pid} &>/dev/null || e=false
+		kill -s KILL ${pid} &>/dev/null
+		ps -p ${pid} &>/dev/null && e=false
 	done
 
 	${e}
@@ -118,13 +119,18 @@ udhcpc_start() {
 	local ifvar=$( interface_variable ${iface} )
 	local script=$( udhcpc_get_script ) opts hostname=$( hostname )
 	eval opts=\"\$\{udhcpc_${ifvar}\}\"
-	[[ -n ${hostname} && ${hostname} != "(none)" ]] && hostname="--hostname=${hostname%%.*}"
+
+	if [[ ${opts} != *'--hostname=' ]]; then
+		hostname=$( hostname )
+		[[ -n ${hostname} && ${hostname} != "(none)" ]] && hostname="--hostname=${hostname}"
+	fi
 
 	# Bring up DHCP for this interface (or alias)
+	ebegin "Running udhcpc"
 	local r=$( udhcpc ${hostname} ${opts} --script=${script} --now --interface=${iface} )
 	# We just check the last 5 letters
 	[[ ${r:((${#r} - 5)):5} == bound ]]
-	eend $? "udhcpc recieved a ${r}" || return 1
+	eend $? || return 1
 
 	# DHCP succeeded, show address retrieved
 	local addr=$( interface_get_address ${iface} )

@@ -30,7 +30,7 @@ dhclient_depend() {
 # Returns 1 if dhclient is installed, otherwise 0
 dhclient_check_installed() {
 	[[ -x /sbin/dhclient ]] && return 0
-	${1} && eerror "For DHCP (dhclient) support, emerge net-misc/dhcp"
+	${1:-false} && eerror "For DHCP (dhclient) support, emerge net-misc/dhcp"
 	return 1
 }
 
@@ -115,7 +115,7 @@ dhclient_start() {
 	local r=$( dhclient ${opts} -sf ${script} -q ${iface} )
 	# We just check the last 5 letters
 	[[ ${r:${#r} - 5:5} == bound ]]
-	eend $? "dhclient returned a ${r}" || return 1
+	eend $? || return 1
 
 	# DHCP succeeded, show address retrieved
 	local addr=$( interface_get_address ${iface} )

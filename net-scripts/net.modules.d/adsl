@@ -24,7 +24,7 @@ adsl_depend() {
 # Returns 1 if rp-pppoe is installed, otherwise 0
 adsl_check_installed() {
 	[[ -x /usr/sbin/adsl-start ]] && return 0
-	[[ ${1} == true ]] && eerror "For ADSL support, emerge net-dialup/rp-pppoe"
+	${1:-false} && eerror "For ADSL support, emerge net-dialup/rp-pppoe"
 	return 1
 }
 

@@ -24,7 +24,7 @@ ipppd_depend() {
 # Returns 1 if isnd4k-utils is installed, otherwise 0
 ipppd_check_installed() {
 	[[ -x /sbin/ipppd ]] && return 0
-	[[ ${1} == true ]] && eerror "For ISDN (ipppd) support, emerge net-dialup/isdn4k-utils"
+	${1:-false} && eerror "For ISDN (ipppd) support, emerge net-dialup/isdn4k-utils"
 	return 1
 }
 

@@ -9,8 +9,12 @@ action=${1}
 echo ${action}
 
 case "${action}" in
-	bound|renew|deconfig|nak)
+	bound|renew|deconfig)
 		# We handle these actions
+		;;
+	nak|leasefail)
+		# These are valid actions, but we don't handle them
+		exit 0
 		;;
 	*)
 		echo "We don't handle that action"
@@ -20,14 +24,26 @@ esac
 
 [[ ${action} == nak ]] && exit 0
 
-# Reset all addresses
-/sbin/ifconfig ${interface}:0- inet 0 &>/dev/null
-/sbin/ifconfig ${interface} 0
+# Fix any potential localisation problems
+# Note that LC_ALL trumps LC_anything_else according to locale(7)
+ifconfig() {
+	LC_ALL=C /sbin/ifconfig "$@"
+}
 
+# Remove all aliases
+for i in $( ifconfig | grep -o "^${interface}:[0-9]*" | tac | xargs ); do
+	ifconfig ${i} down
+done
+
+# Remove all addresses - iproute2 does not need to create dummy interfaces for
+# aliased addresses
+while ifconfig ${interface} | grep -q -m1 -o 'inet addr:[^ ]*' ; do
+	ifconfig ${interface} 0
+done
+	
 # Remove IPv6 addresses
-x="$(ifconfig ${iface} | awk '$1=="inet6" && $4!="Scope:Link" {print $3}')"
-for i in ${x}; do
-	/sbin/ifconfig ${interface} inet6 del ${i} &>/dev/null
+for i in $( ifconfig ${interface} | awk '$1=="inet6" && $4!="Scope:Link" {print $3}' ); do
+	ifconfig ${interface} inet6 del ${i} &>/dev/null
 done
 
 /sbin/ifconfig ${interface} up &>/dev/null
@@ -44,7 +60,7 @@ if [[ ${action} == bound ]]; then
 		b=${broadcast[i]}
 		[[ -n ${b} ]] && b="broadcast ${b}"
 
-		/sbin/ifconfig ${l} inet ${ip[i]} netmask ${subnet[i]} ${b}
+		ifconfig ${l} inet ${ip[i]} netmask ${subnet[i]} ${b}
 	done
 
 	for r in ${router}; do

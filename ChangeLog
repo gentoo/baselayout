@@ -1,10 +1,28 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+  23 Nov 2004; Roy Marples <uberlord@gentoo.org>:
+
+    iproute2 does not need to create dummy interfaces for aliases
+    unlike ifconfig so we no longer do this
+    We now bring down all aliases and addresses properly
+    Split off some functions from net.lo into helpers.d/functions
+    so that our DHCP helper scripts can use them too :)
+    Deprecated interface specific setup in favour of a generic config
+    macchanger brings interface up now - fixes #71929
+    DHCP over VLAN now works - fixes #71860
+    Disabled modified function checking as it's far too expensive on CPU
+    and still isn't 100% reliable
+    When specifing a module that isn't emerged, you now get an error
+    telling you what to emerge
+    Removed -p option from the diff call used for function removal
+    
   19 Nov 2004; Aron Grffis <agriffis@gentoo.org>:
+
     Remove crap "ll" and "d" aliases from skel .bashrc
 
   19 Nov 2004; Roy Marples <uberlord@gentoo.org>:
+
     tests for hostname (none) when sending hostname via dhcpcd, udhpc or pump
     udhcpc now does correct signal handling so we can release leases and
     terminate cleanly
@@ -15,6 +33,7 @@
     removed iproute2 udhcpc reliance on the "bc" command
 
   17 Nov 2004; Roy Marples <uberlord@gentoo.org>:
+
     Fixed invalid variable handling in bonding and vlan - bug #71419
     apipa now brings the interface up before testing if address exists
     Updated bonding documentation - bug #71419

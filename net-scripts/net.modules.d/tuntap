@@ -30,7 +30,7 @@ tuntap_depend() {
 # Returns 1 if tuntap is installed, otherwise 0
 tuntap_check_installed() {
 	[[ -x /usr/bin/tunctl ]] && return 0
-	${1} && eerror "For TunTap support, emerge sys-apps/usermode-utilities"
+	${1:-false} && eerror "For TunTap support, emerge sys-apps/usermode-utilities"
 	return 1
 }
 

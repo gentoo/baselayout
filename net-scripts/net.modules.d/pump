@@ -30,7 +30,7 @@ pump_depend() {
 # Returns 1 if pump is installed, otherwise 0
 pump_check_installed() {
 	[[ -x /sbin/pump ]] && return 0
-	${1} && eerror "For DHCP (pump) support, emerge net-misc/pump"
+	${1:-false} && eerror "For DHCP (pump) support, emerge net-misc/pump"
 	return 1
 }
 
@@ -112,9 +112,11 @@ pump_start() {
 	[[ -z ${peer} ]] && eval peer=\"\$\{peer_dns\}\"
 	[[ ${peer} == no ]] && opts="--no-dns ${opts}"
 
-	# We transmit the hostname by default	
-	hostname=$( hostname )
-	[[ -n ${hostname} && ${hostname} != "(none)" ]] && opts="--hostname=${hostname%%.*} ${opts}"
+	# We transmit the hostname by default
+	if [[ ${opts} != *'-h '* && ${opts} != '*--hostname='* ]]; then
+		hostname=$( hostname )
+		[[ -n ${hostname} && ${hostname} != "(none)" ]] && opts="--hostname=${hostname} ${opts}"
+	fi
 
 	# Bring up DHCP for this interface (or alias)
 	ebegin "Running pump"

@@ -9,7 +9,7 @@
 # Returns 1 if ifenslave is installed, otherwise 0
 bonding_check_installed() {
 	[[ -x /sbin/ifenslave ]] && return 0
-	${1} && eerror "For link aggregation (bonding) support, emerge net-misc/ifenslave"
+	${1:-false} && eerror "For link aggregation (bonding) support, emerge net-misc/ifenslave"
 	return 1
 }
 

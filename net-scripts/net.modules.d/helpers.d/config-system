@@ -52,8 +52,7 @@ config_system() {
 	local x=$( hostname ) peer
 	[[ -n ${hostname} && ${x} != ${hostname} ]] && hostname ${new_host_name} >/dev/null
 
-	local ifvar=${interface//:/_}
-	ifvar=${ifvar//./_}
+	local ifvar=$( interface_variable ${interface} )
 
 	eval peer=\"\$\{peer_dns_${ifvar}\}\"
 	[[ -z ${peer} ]] && eval peer=\"\$\{peer_dns\}\"

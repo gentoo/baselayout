@@ -9,7 +9,7 @@
 
 #NB: Config is in /etc/conf.d/net
 
-if [[ -n $NET_DEBUG ]]; then
+if [[ -n ${NET_DEBUG} ]]; then
 	set -x
 	devnull=/dev/stderr
 else
@@ -21,6 +21,12 @@ fi
 depend() {
 	use coldplug hotplug pcmcia usb isdn4linux wlan
 }
+
+# Define where our modules are
+[[ -z ${MODULES_DIR} ]] && MODULES_DIR=/lib/rcscripts/net.modules.d
+
+# Load some functions shared between ourselves and our dhcp helpers
+source ${MODULES_DIR}/helpers.d/functions
 
 # Make some wrappers to fudge after/before/need/use depend flags.
 # These are callbacks so mods[i] will be set.
@@ -114,76 +120,62 @@ module_load_minimum() {
 # Load and check each module for sanity
 # If the module is not installed, the functions are to be removed
 modules_load_auto() {
-	local e f i j before after beforefuncs diffs unload
+	local e f i j before after beforefuncs afterfuncs diffs unload
 
 	# Populate the MODULES array
-	MODULES=( $( find /lib/rcscripts/net.modules.d/ -maxdepth 1 -type f | sort ) )
+	MODULES=( $( find ${MODULES_DIR}/ -maxdepth 1 -type f | sort ) )
 
 	# Each of these sources into the global namespace, so it's
 	# important that module functions and variables are prefixed with
 	# the module name, for example iproute2_
 
-	${checkmodify} && before=$( typeset -f )
+#	before="$( typeset -f )"
+	beforefuncs="$( typeset -F )"
 	j=${#MODULES[@]}
 	loaded_interface=false
 	for (( i=0; i<j; i++ )); do
-		beforefuncs="$( typeset -F )"
 
 		unload=false
 		module_load_minimum ${MODULES[i]} || unload=true
 		MODULES[i]=${MODULES[i]##*/}
-		! ${unload} && ${MODULES[i]}_check_installed || unload=true
+
+# Checking if the module has modified any functions is too expensive on CPU
+# at the moment
+# Plus it isn't entirely reliable
+
+#		# Double check that we've only *added* to the function list, not
+#		# replaced.  This is as much protection for devs as for users ;-)
+#		after="$( typeset -f )"
+#		diffs="$( diff -U0 -p <( echo "${before}" ) <( echo "${after}" ) 2>/dev/null | \
+#			awk 'BEGIN { ORS = " "; }				# no need for xargs
+#				 /^@@ / { f = $(NF-1); }			# collect function names reported by diff
+#				 /^-/ && $2 == "()" { f = substr($1, 2); }	# override when functions are removed
+#				 /^+/ && $2 == "()" { f = ""; }			# ignore when functions are added
+#				 /^-/ && f { print f; f = ""; }			# report only once per function
+#				 ' )"
+#		if [[ -n ${diffs} ]]; then
+#			eerror "${MODULES[i]} modified functions: ${diffs}"
+#			return 1
+#		fi
+
+		! ${unload} && ${MODULES[i]}_check_installed false || unload=true
 
 		if [[ ${MODULES[i]} == interface ]]; then
 			eerror "interface is a reserved name - cannot load a module called interface"
-			unload=true
-		fi
-
-		if ${unload}; then		
-			unset MODULES[i]
-			unset $( diff -U0 -p <( echo "${beforefuncs}" ) <( echo "$( typeset -F )" ) 2>/dev/null \
-				| awk 'BEGIN { ORS = " "; } /+declare -f/ { print $3; }' ) 2>/dev/null
-			before="$( typeset -f )"
-			continue
-		fi
-		
-		# Double check that we've only *added* to the function list, not
-		# replaced.  This is as much protection for devs as for users ;-)
-		after="$( typeset -f )"
-
-		# Though diffutils is in the profiles, don't depend that it will exist.
-		# Here is an example of the output we're looking through.
-		# 
-		# $ diff -U0 -p <(echo "$funcs") <(echo "$funcs2")
-		# --- /dev/fd/63  2004-10-12 17:51:10.342906704 -0400
-		# +++ /dev/fd/62  2004-10-12 17:51:10.346905655 -0400
-		# @@ -69,0 +70,4 @@ addpath () 
-		# +asdf () 
-		# +{ 
-		# +    echo
-		# +}
-		# @@ -1160,4 +1163,0 @@ xvf () 
-		# -xzf () 
-		# -{ 
-		# -    xf "$@"
-		# -}
-		# @@ -1166 +1166,2 @@ xzvf () 
-		# -    xvf "$@"
-		# +    xvf "$@";
-		# +    echo whoah
-		#
-		diffs=$( diff -U0 -p <( echo "${before}" ) <( echo "${after}" ) 2>/dev/null | \
-			awk 'BEGIN { ORS = " "; }						# no need for xargs
-				 /^@@ / { f = $(NF-1); }					# collect function names reported by diff
-				 /^-/ && $2 == "()" { f = substr($1, 2); }	# override when functions are removed
-				 /^+/ && $2 == "()" { f = ""; }				# ignore when functions are added
-				 /^-/ && f { print f; f = ""; }				# report only once per function
-				 ' )
-		if [[ -n ${diffs} ]]; then
-			eerror "${MODULES[i]} modified functions: ${diffs}"
 			return 1
 		fi
-		before="${after}"
+
+		afterfuncs="$( typeset -F )"
+		if ${unload} ; then
+			unset MODULES[i]
+			unsetfuncs="${unsetfuncs} $( diff -U0 <( echo "${beforefuncs}" ) <( echo "${afterfuncs}" ) 2>/dev/null \
+				| awk 'BEGIN { ORS = " "; } /+declare -f/ { print $3; }' )"
+#			before="$( typeset -f )"
+#		else
+#			before="${after}"
+		fi
+		beforefuncs="${afterfuncs}"
+
 	done
 	MODULES=( "${MODULES[@]}" )
 
@@ -203,11 +195,11 @@ modules_load_auto() {
 modules_check_use() {
 	local i j missingdeps nmods=${#MODULES[@]}
 
-	for (( i=0; i<${nmods}; i++ )); do
+	for (( i=0; i<nmods; i++ )); do
 		[[ $( type -t ${MODULES[i]}_use ) != function ]] && continue
 		for j in $( ${MODULES[i]}_use ); do
 			missingdeps=true
-			for (( k=0; k<${nmods}; k++ )); do
+			for (( k=0; k<nmods; k++ )); do
 				[[ -z ${MODULES[k]} ]] && continue
 				[[ ${j} != ${MODULES[k]} && ${j} != ${PROVIDES[k]} ]] && continue
 				missingdeps=false
@@ -247,9 +239,9 @@ modules_check_user() {
 
 		# We remove any modules we explicitly don't want
 		if [[ ${umods[i]} == !* ]]; then
-			for (( j=0; j<${nmods}; j++ )); do
+			for (( j=0; j<nmods; j++ )); do
 				[[ -z ${MODULES[j]} ]] && continue
-				if [[ ${umods[i]:1} == ${MODULES[j]} || ${umods[i]:1} == ${modprovides[j]} ]]; then
+				if [[ ${umods[i]:1} == ${MODULES[j]} || ${umods[i]:1} == ${PROVIDES[j]} ]]; then
 					# We may need to setup a class wrapper for it even though
 					# we don't use it directly
 					${MODULES[j]}_check_installed && module_class_wrap ${MODULES[j]}
@@ -281,12 +273,12 @@ modules_check_user() {
 		fi
 
 		mod=$( ${umods[i]}_provides )
-		for (( j=0; j<${nmods}; j++ )); do
+		for (( j=0; j<nmods; j++ )); do
 			[[ -z ${MODULES[j]} ]] && continue
 			if [[ ${PROVIDES[j]} == ${mod} && ${umods[i]} != ${MODULES[j]} ]]; then
 				# We don't have a match - now ensure that we still provide an alternative.
 				# This is to handle our preferred modules.
-				for (( l=0; l<${nmods}; l++ )); do
+				for (( l=0; l<nmods; l++ )); do
 					[[ ${l} -eq ${j} || -z ${MODULES[l]} ]] && continue
 					if [[ ${PROVIDES[l]} == ${mod} ]]; then
 						unset MODULES[j]
@@ -302,11 +294,11 @@ modules_check_user() {
 	# We only need to do this for 3rd party modules that conflict with
 	# our own modules and the preferred list AND the user modules
 	# list doesn't specify a preference.
-	for (( i=0; i<${nmods}-1; i++ )); do
+	for (( i=0; i<nmods-1; i++ )); do
 		[[ -z ${MODULES[i]} ]] && continue			
-		for (( j=i+1; j<${nmods}; j++)); do
+		for (( j=i+1; j<nmods; j++)); do
 			[[ -z ${MODULES[j]} ]] && continue
-			[[ ${PROVIDES[i]} == ${modprovides[j]} ]] && unset MODULES[j] && unset PROVIDES[j]
+			[[ ${PROVIDES[i]} == ${PROVIDES[j]} ]] && unset MODULES[j] && unset PROVIDES[j]
 		done
 	done
 
@@ -319,14 +311,14 @@ modules_check_user() {
 
 modules_sort() {
 	local -a modnums sort_history modafter modbefore
-	local i j k p changed_something
+	local i j k p changed_something nmods=${#MODULES[@]}
 
 	# Sort our modules
 	# We do this by assigning numbers to each module
 	# We also assign modbefore and modafter so we don't
 	# shell out as much because it's expensive on CPU.
 	modnums=()
-	for (( i=0; i<${#MODULES[@]}; i++ )); do
+	for (( i=0; i<nmods; i++ )); do
 		modnums[i]=${i}
 		[[ $( type -t ${MODULES[i]}_after ) == function ]] && modafter[i]=$( ${MODULES[i]}_after )
 		[[ $( type -t ${MODULES[i]}_before ) == function ]] && modbefore[i]=$( ${MODULES[i]}_before )
@@ -338,9 +330,9 @@ modules_sort() {
 	sort_history[0]="${modnums[*]}"
 	for (( k=1; 1; k++ )); do
 		changed_something=false
-		for (( i=0; i<${#MODULES[@]}; i++ )); do
+		for (( i=0; i<nmods; i++ )); do
 			for p in ${modafter[i]}; do
-				for (( j=0; j<${#MODULES[@]}; j++ )); do
+				for (( j=0; j<nmods; j++ )); do
 					[[ ${p} != ${MODULES[j]} && ${p} != ${PROVIDES[j]} ]] && continue
 					if [[ ${modnums[i]} -lt ${modnums[j]} ]]; then
 						tmp=${modnums[i]}
@@ -351,7 +343,7 @@ modules_sort() {
 				done
 			done
 			for p in ${modbefore[i]}; do
-				for (( j=0; j<${#MODULES[@]}; j++ )); do
+				for (( j=0; j<nmods; j++ )); do
 					[[ ${p} != ${MODULES[j]} && ${p} != ${PROVIDES[j]} ]] && continue
 					if [[ ${modnums[i]} -gt ${modnums[j]} ]]; then
 						tmp=${modnums[i]}
@@ -375,7 +367,7 @@ modules_sort() {
 
 	# Finally we sort our modules in number order
 	um=""
-	for (( i=0; i < ${#MODULES[@]}; i++ )); do
+	for (( i=0; i<nmods; i++ )); do
 		um="${um}${modnums[i]} ${MODULES[i]} ${PROVIDES[i]}\n"
 	done
 
@@ -383,7 +375,7 @@ modules_sort() {
 	MODULES=()
 	PROVIDES=()
 	j=0
-	for ((i=0; i < ${#p[@]}; i=i+2 )); do
+	for (( i=0; i<${#p[@]}; i+=2 )); do
 		MODULES[j]=${p[i]}
 		PROVIDES[j]=${p[i+1]}
 		(( j++ ))
@@ -395,11 +387,11 @@ modules_check_depends() {
 	local showprovides=${1:-false} nmods=${#MODULES[@]} i j needmod
 	local missingdeps p  interface=false
 
-	for (( i=0; i<${nmods}; i++ )); do
+	for (( i=0; i<nmods; i++ )); do
 		if [[ $( type -t ${MODULES[i]}_need ) == function ]]; then
 			for needmod in $( ${MODULES[i]}_need ); do
 				missingdeps=true
-				for (( j=0; j<${nmods}; j++ )); do
+				for (( j=0; j<nmods; j++ )); do
 					if [[ ${needmod} == ${MODULES[j]} || ${needmod} == ${PROVIDES[j]} ]]; then
 						missingdeps=false
 						break
@@ -433,14 +425,14 @@ modules_check_depends() {
 # Loads the defined handler and modules for the interface
 # Returns 0 on success, otherwise 1
 modules_load()  {
-	local iface=${1} starting=${2:-true} mod p=false i j
+	local iface=${1} starting=${2:-true} mod p=false i j unsetfuncs
 	local -a x
 	local RC_INDENTATION=${RC_INDENTATION}	# so it will reset after function
 	local -a PROVIDES
 
 	if [[ ${iface} == lo ]]; then
 		# We force lo to only use these modules for a major speed boost
-		modules_force=( "ifconfig" "iproute2" )
+		modules_force=( "iproute2" "ifconfig" )
 	else
 		eval x=( \"\$\{modules_force_${iface}\[@\]\}\" )
 		[[ -n ${x} ]] && modules_force=( "${x[@]}" )
@@ -458,7 +450,7 @@ modules_load()  {
 	else
 		j=${#modules_force[@]}
 		for (( i=0; i<j; i++ )); do
-			module_load_minimum "/lib/rcscripts/net.modules.d/${modules_force[i]}" || return 1
+			module_load_minimum "${MODULES_DIR}/${modules_force[i]}" || return 1
 			${modules_force[i]}_check_installed || unset modules_force[i]
 		done
 		MODULES=( "${modules_force[@]}" )
@@ -475,6 +467,12 @@ modules_load()  {
 		if ${starting}; then
 			modules_check_user || return 1
 		fi
+
+		# We unset unloaded module functions here as so we can error
+		# with a message informing the user to emerge the correct
+		# package if it's in their modules
+		[[ -n ${unsetfuncs} ]] && unset ${unsetfuncs}
+
 		modules_sort
 	fi
 
@@ -492,34 +490,6 @@ modules_load()  {
 	return 0
 }
 
-# char* interface_device(char *iface)
-#
-# Gets the base device of the interface
-# Can handle eth0:1 and eth0.1
-# Which returns eth0 in this case
-interface_device() {
-	local iface=${1}
-	local dev=${iface%%.*}
-	[[ ${dev} == ${iface} ]] && dev=${iface%%:*}
-	echo ${dev}
-}
-
-# char* interface_type(char* iface)
-#
-# Returns the base type of the interface
-# eth, ippp, etc
-interface_type() {
-	echo ${1%%[0-9]*}
-}
-
-# char* interface_variable(char *iface)
-#
-# Returns a bash variable name based on the interface
-interface_variable() {
-	local n=${1//:/_}
-	echo ${n//./_}
-}
-
 # bool iface_start(char *interface)
 #
 # iface_start is called from start.  It's expected to start the base
@@ -527,26 +497,32 @@ interface_variable() {
 # VLAN interfaces (for example eth0.0, eth0.1).  VLAN setup is accomplished by
 # calling itself recursively.
 iface_start() {
-	local iface=${1} mod i label label_counter=-1 x conf warn=false inet6
+	local iface=${1} mod i label config_counter=-1 x conf warn=false inet6
 	local RC_INDENTATION=${RC_INDENTATION}	# so it will reset after function
+	local -a config config_fallback
 
-	# Localise and initialise variables
+	# pre Start any modules with
 	for mod in ${MODULES[@]}; do
-		x="${mod}_local_vars"
-		if [[ $( type -t ${x} ) == function ]]; then
-			x=$( ${x} )
-			${x}
-		fi
-		x="${mod}_setup_vars"
-		if [[ $( type -t ${x} ) == function ]]; then
-			${x} ${iface} || return 1
+		if [[ $( type -t ${mod}_pre_start ) == function ]]; then
+			${mod}_pre_start ${iface} || { eend 1; return 1; }
 		fi
 	done
 
+	local ifvar=$( interface_variable ${1} )
+
+	# New style config - one variable fits all
+	eval config=( \"\$\{config_${ifvar}\[@\]\}\" )
+	eval config_fallback=( \"\$\{fallback_${ifvar}\[@\]\}\" )
+
+	# We must support old configs
+	if [[ -z ${config} ]]; then
+		interface_get_old_config ${iface} || return 1
+	fi
+
 	# Provide a default of DHCP if no configuration is set
-	if [[ -z ${config_IFACE} ]]; then
+	if [[ -z ${config} ]]; then
 		if [[ $( type -t dhcp_start ) == function ]]; then
-			config_IFACE=( "dhcp" )
+			config=( "dhcp" )
 			warn=true
 		else
 			eerror "Cannot default to dhcp as there is no dhcp module loaded"
@@ -557,21 +533,18 @@ iface_start() {
 
 	einfo "Bringing up ${iface}"
 	eindent
-	for (( label_counter=0; label_counter < ${#config_IFACE[@]}; label_counter++ )); do
-		# Set a label for the alias if $label_counter > 0
-		[[ ${label_counter} -eq 0 ]] && label=${iface} || label=${iface}:${label_counter}
-
+	for (( config_counter=0; config_counter<${#config[@]}; config_counter++ )); do
 		# Null inet address
 		# We do this so we can have an inet6 only setup
-		[[ ${config_IFACE[label_counter]} == "null" ]] && eend 0 && continue
+		[[ ${config[config_counter]} == "null" ]] && eend 0 && continue
 
 		${warn} && ewarn "Configuration not set for ${iface} - assuming dhcp"
 		warn=false
 
 		# We convert it to an array - this has the added
 		# bonus of trimming spaces!
-		conf=( ${config_IFACE[label_counter]} )
-		einfo "${label} ${conf[0]}"
+		conf=( ${config[config_counter]} )
+		einfo "${conf[0]}"
 
 		# Do we have a function for our config?
 		if [[ $( type -t ${conf[0]}_start ) == function ]]; then
@@ -589,38 +562,37 @@ iface_start() {
 				eerror "No loaded modules provide \"${conf[0]}\" (${conf[0]}_start)"
 			else
 				eindent
-				${conf[0]}_start ${label} ; x=$?
+				${conf[0]}_start ${iface} ; x=$?
 				eoutdent
 				[[ ${x} == 0 ]] && continue
 			fi
 		# We need to test to see if it's an IP address or a function
 		# We do this by testing if the 1st character is a digit
 		elif [[ ${conf[0]:0:1} == [[:digit:]] ]]; then
-			eindent
 			x=0
-			if [[ $(type -t address_exists ) == function ]]; then
-				if address_exists ${label} ${conf[0]} ; then
-					eerror "${conf[0]%%/*} already taken on ${label}"
-					x=1
-				fi
-			fi
-			[[ ${x} == 0 ]] && interface_configure ${label} ${conf[@]} ; x=$?
-			[[ ${x} == 0 ]] && continue
-			eoutdent
+			# Removed for speed
+			#if [[ $(type -t address_exists ) == function ]]; then
+			#	if address_exists ${iface} ${conf[0]} ; then
+			#		eerror "${conf[0]%%/*} already taken on ${iface}"
+			#		x=1
+			#	fi
+			#fi
+			[[ ${x} == 0 ]] && interface_add_address ${iface} ${conf[@]} ; x=$?
+			eend ${x} && continue
 		else
 			eerror "No loaded modules provide \"${conf[0]}\" (${conf[0]}_start)"
 		fi
 
-		if [[ -n ${config_fallback_IFACE[label_counter]} ]]; then
+		if [[ -n ${config_fallback[config_counter]} ]]; then
 			einfo "Trying fallback configuration"
-			config_IFACE[label_counter]=${config_fallback_IFACE[label_counter]}
-			config_fallback_IFACE[label_counter]=''
-			(( label_counter-- )) # since the loop will increment it
+			config[config_counter]=${config_fallback[config_counter]}
+			config_fallback[label_counter]=''
+			(( config_counter-- )) # since the loop will increment it
 			continue
 		fi
 
 		# Only return failure if it was the first address for the interface
-		[[ ${label_counter} -eq 0 ]] && return 1
+		[[ ${config_counter} -eq 0 ]] && return 1
 	done
 	eoutdent
 
@@ -633,7 +605,6 @@ iface_start() {
 	fi
 
 	# Start any modules with _post_start
-	# We do this here as the variables were localised in this function
 	for mod in ${MODULES[@]}; do
 		if [[ function == $( type -t ${mod}_post_start ) ]]; then
 			${mod}_post_start ${iface} || return 1
@@ -656,6 +627,11 @@ iface_stop() {
 	local iface=${1} i aliases need_begin=false mod
 	local RC_INDENTATION=${RC_INDENTATION}	# so it will reset after function
 
+	# pre Stop any modules
+	for mod in ${MODULES[@]}; do
+		[[ $( type -t ${mod}_pre_stop ) == function ]] && ${mod}_pre_stop ${iface}
+	done
+
 	einfo "Bringing down ${iface}"
 	eindent
 
@@ -677,12 +653,18 @@ iface_stop() {
 		interface_exists ${iface} || { eend 0; continue; }
 
 		# Delete all the addresses for this alias
-		interface_del_addresses ${i} true
+		interface_del_addresses ${i}
 
 		# Do final shut down of this alias
 		ebegin "Shutting down ${i}"
 		interface_iface_stop ${i}
 		eend $?
+	done
+
+	# post Stop any modules
+	for mod in ${MODULES[@]}; do
+		# We have already taken down the interface, so no need to error
+		[[ $( type -t ${mod}_post_stop ) == function ]] && ${mod}_post_stop ${iface}
 	done
 
 	return 0
@@ -726,13 +708,6 @@ run_start() {
 		fi
 	fi
 
-	# pre Start any modules with
-	for mod in ${MODULES[@]}; do
-		if [[ $( type -t ${mod}_pre_start ) == function ]]; then
-			${mod}_pre_start ${iface} || { eend 1; return 1; }
-		fi
-	done
-
 	# Start the interface
 	if ! iface_start ${iface} ; then
 		interface_down ${iface}
@@ -740,9 +715,6 @@ run_start() {
 		return 1
 	fi
 
-	# post Start modules is called in iface_start
-	# as that's where the functions get localised
-	# and they may have to call iface_start recursively
 
 	# Call user-defined postup function if it exists
 	if [[ $( type -t postup ) == function ]]; then
@@ -786,18 +758,7 @@ run_stop() {
 		return 1
 	fi
 
-	# pre Stop any modules
-	for mod in ${MODULES[@]}; do
-		[[ $( type -t ${mod}_pre_stop ) == function ]] && ${mod}_pre_stop ${iface}
-	done
-
 	iface_stop ${IFACE} || return 1  # always succeeds, btw
-
-	# post Stop any modules
-	for mod in ${MODULES[@]}; do
-		# We have already taken down the interface, so no need to error
-		[[ $( type -t ${mod}_post_stop ) == function ]] && ${mod}_post_stop ${iface}
-	done
 
 	# Call user-defined postdown function if it exists
 	if [[ $( type -t postdown ) == function ]]; then
@@ -817,11 +778,13 @@ run_stop() {
 # added as we may be called inside the same shell scope for another interface
 run() {
 	local iface=${1} cmd=${2} r=1 RC_INDENTATION=${RC_INDENTATION}	# so it will reset after function
-	local before="$( typeset -F )" starting=true
+	local before starting=true
 	local -a MODULES mods
 
 	eindent
 
+	unset_functions=${unset_functions:-false}
+	${unset_functions} && before="$( typeset -F )"
 	[[ ${cmd} == "stop" ]] && starting=false
 	if modules_load ${IFACE} ${starting} ; then
 		if [[ ${cmd} == "stop" ]]; then
@@ -839,7 +802,8 @@ run() {
 
 	# We need to remove added functions before we quit as other init
 	# scripts may be launching afterwards
-	unset $( diff -U0 -p <( echo "${before}" ) <( echo "$( typeset -F )" ) 2>/dev/null \
+	${unset_functions} && \
+	unset $( diff -U0 <( echo "${before}" ) <( echo "$( typeset -F )" ) 2>/dev/null \
 		| awk 'BEGIN { ORS = " "; } /+declare -f/ { print $3; }' ) 2>/dev/null
 
 	return ${r}
@@ -850,7 +814,6 @@ run() {
 # Start entry point so that we only have one function
 # which localises variables and unsets functions
 start() {
-
 	einfo "Starting ${IFACE}"
 	run ${IFACE} start
 	return $?
@@ -863,6 +826,18 @@ start() {
 stop() {
 	einfo "Stopping ${IFACE}"
 	run ${IFACE} stop
+	return $?
+}
+
+# bool restart(void)
+#
+# Restart entry point
+# We do this so as we only have to remove functions when stopping
+restart() {
+	local unset_functions=true
+	service_started "${myservice}" && svc_stop
+	unset_functions=false
+	svc_start
 	return $?
 }
 

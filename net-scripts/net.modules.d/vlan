@@ -15,7 +15,7 @@ vconfig() {
 # Returns 1 if vconfig is installed, otherwise 0
 vlan_check_installed() {
 	[[ -x /sbin/vconfig ]] && return 0
-	${1} && eerror "For VLAN (802.1q) support, emerge net-misc/vconfig"
+	${1:-false} && eerror "For VLAN (802.1q) support, emerge net-misc/vconfig"
 	return 1
 }
 

@@ -30,7 +30,7 @@ dhcpcd_depend() {
 # Returns 1 if dhcpcd is installed, otherwise 0
 dhcpcd_check_installed() {
 	[[ -x /sbin/dhcpcd ]] && return 0
-	${1} && eerror "For DHCP (dhcpcd) support, emerge net-misc/dhcpcd"
+	${1:-false} && eerror "For DHCP (dhcpcd) support, emerge net-misc/dhcpcd"
 	return 1
 }
 
@@ -121,9 +121,11 @@ dhcpcd_start() {
 	[[ -z ${peer} ]] && eval peer=\"\$\{peer_ntp\}\"
 	[[ ${peer} == no ]] && opts="-N ${opts}"
 
-	# We transmit the hostname by default	
-	hostname=$( hostname )
-	[[ -n ${hostname} && ${hostname} != "(none)" ]] && opts="-h ${hostname%%.*} ${opts}"
+	# We transmit the hostname by default
+	if [[ ${opts} != *'-h '* ]]; then
+		hostname=$( hostname )
+		[[ -n ${hostname} && ${hostname} != "(none)" ]] && opts="-h ${hostname} ${opts}"
+	fi
 
 	# Bring up DHCP for this interface (or alias)
 	ebegin "Running dhcpcd"

@@ -9,8 +9,12 @@ action=${1}
 echo ${action}
 
 case "${action}" in
-	bound|renew|deconfig|nak)
+	bound|renew|deconfig)
 		# We handle these actions
+		;;
+	nak|leasefail)
+		# These are valid actions, but we don't handle them
+		exit 0
 		;;
 	*)
 		echo "We don't handle that action"
@@ -20,43 +24,41 @@ esac
 
 [[ ${action} == nak ]] && exit 0
 
+# Fix any potential localisation problems
+# Note that LC_ALL trumps LC_anything_else according to locale(7)
+ip() {
+	LC_ALL=C /sbin/ip "$@"
+}
+
 # We don't flush the link local address
-ip addr flush ${interface} scope global &>/dev/null
-ip addr flush ${interface} scope host &>/dev/null
-ip route flush ${interface} &>/dev/null
+ip addr flush dev ${interface} scope global &>/dev/null
+ip addr flush dev ${interface} scope host &>/dev/null
 ip link set up dev ${interface} &>/dev/null
 
 [[ ${action} == deconfig ]] && exit 0
 
 if [[ ${action} == bound ]]; then
+	# Load some helpful stuff
+	source /lib/rcscripts/net.modules.d/helpers.d/functions
+
 	ip=( ${ip} )
 	subnet=( ${subnet} )
 	broadcast=( ${broadcast} )
 	for (( i=0; i<${#ip[@]}; i++ )); do
-		[[ ${i} -eq 0 ]] && l=${interface} || l=${interface}:${i}
-
-		# We need to translate 255.255.255.0 into 24
-		bin=""
-		for x in ${subnet[i]//./ }; do
-			while [[ ${x} != 0 ]]; do
-				bin=$[${x}%2]${bin}
-				x=$[${x}>>1]
-			done
-		done
-		bin=${bin%%0*}
-		cidr=${#bin}
+		cidr=$( netmask2cidr ${subnet[i]} )
 
 		b=${broadcast[i]}
-		[[ -n ${b} ]] && b="brd ${b}"
-		/sbin/ip addr add dev ${interface} label ${l} ${ip[i]}/${cidr} ${b}
+		[[ -n ${b} ]] && b="broadcast ${b}"
+
+		ip addr add dev ${interface} ${ip[i]}/${cidr} ${b}
 	done
 
 	for r in ${router}; do
-		x=$( /sbin/ip route show | awk '{ if ($1 == "default") {print $1} }' )
+		x=$( ip route show | awk '{ if ($1 == "default") {print $1} }' )
 		if [[ -n ${x} ]]; then
-			x=$( /sbin/ip route change default via ${r} dev ${interface} 2>&1 )
+			x=$( ip route change default via ${r} dev ${interface} 2>&1 )
 		else
-			x=$( /sbin/ip route add default via ${r} dev ${interface} 2>&1 )
+			x=$( ip route add default via ${r} dev ${interface} 2>&1 )
 		fi
 		case "${x}" in
 			'RTNETLINK answers: File exists'|'') ;;

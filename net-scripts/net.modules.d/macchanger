@@ -24,7 +24,7 @@ macchanger_depend() {
 # Returns 1 if macchanger is installed, otherwise 0
 macchanger_check_installed() {
 	[[ -x /sbin/macchanger ]] && return 0
-	[[ ${1} == true ]] && eerror "For changing MAC addresses, emerge net-analyzer/macchanger"
+	${1:-false} && eerror "For changing MAC addresses, emerge net-analyzer/macchanger"
 	return 1
 }
 
@@ -35,7 +35,7 @@ macchanger_check_depends() {
 	local f
 
 	for f in interface_get_mac_address; do
-		[[ $(type -t ${f}) == function ]] && continue
+		[[ $( type -t ${f} ) == function ]] && continue
 		eerror "macchanger: missing required function ${f}\n"
 		return 1
 	done
@@ -47,14 +47,15 @@ macchanger_check_depends() {
 #
 # Configures the MAC address for iface 
 macchanger_pre_start() {
-	local iface=${1} mac opts e
+	local iface=${1} mac opts e old_mac new_mac
 
 	eval mac=\"\$\{mac_${iface}\}\"
 	[[ -z ${mac} ]] && return 0
 
+	mac=$( echo ${mac} | tr '[:lower:]' '[:upper:]' )
 	case "${mac}" in
 		# specific mac-addr, i wish there were a shorter way to specify this 
-		[0-9a-zA-Z][0-9a-zA-Z]:[0-9a-zA-Z][0-9a-zA-Z]:[0-9a-zA-Z][0-9a-zA-Z]:[0-9a-zA-Z][0-9a-zA-Z]:[0-9a-zA-Z][0-9a-zA-Z]:[0-9a-zA-Z][0-9a-zA-Z]) opts="${opts} --mac=${mac}" ;;
+		[0-9A-F][0-9A-F]:[0-9A-F][0-9A-F]:[0-9A-F][0-9A-F]:[0-9A-F][0-9A-F]:[0-9A-F][0-9A-F]:[0-9A-F][0-9A-F]) opts="${opts} --mac=${mac}" ;;
 
 		# increment MAC address, default macchanger behavior
 		increment) opts="${opts}" ;;
@@ -75,14 +76,20 @@ macchanger_pre_start() {
 		*) opts="${opts} ${mac}" ;;
 	esac
 
-	e=$( /sbin/macchanger ${opts} ${iface} 2>&1 1>/dev/null || echo failed )
-	if [[ -n ${e} ]]; then
-		eerror "Failed to set MAC address"
+	# The interface needs to be up for macchanger to work
+	interface_up ${iface}
+
+	ebegin "Changing MAC address of ${iface}"
+	mac=$( /sbin/macchanger ${opts} ${iface} | awk '/Faked MAC:/ { print $3 }' )
+	if [[ -z ${mac} ]]; then
+		eend 1 "Failed to set MAC address"
 		return 1
 	fi
 
-	mac=$( interface_get_mac_address ${iface} )
-	einfo "MAC address for ${iface} changed to ${mac}"
+	eend 0
+	eindent
+	einfo "changed to ${mac}"
+	eoutdent
 
 	return 0 #important
 }
