@@ -9,61 +9,53 @@ depend() {
 }
 
 checkconfig_nis() {
-	if [ ! -f /etc/nisdomainname ] || [ -z "$(< /etc/nisdomainname)" ]
+	if [ -f /etc/nisdomainname ]
 	then
-#		eerror "You need to set /etc/nisdomainname to a valid NIS domainname"
-		return 1
+		ewarn "You should stop using /etc/nisdomainname and use /etc/conf.d/domainname"
+		export NISDOMAIN="$(</etc/nisdomainname)"
+		return 0
 	fi
-	return 0
+	[ -n "${NISDOMAIN}" ]
 }
 
 checkconfig_dns() {
-	if [ ! -f /etc/dnsdomainname ] || [ -z "$(< /etc/dnsdomainname)" ]
+	if [ -f /etc/dnsdomainname ]
 	then
-#		eerror "You need to set /etc/dnsdomainname to a valid DNS domainname"
-		return 1
+		ewarn "You should stop using /etc/dnsdomainname and use /etc/conf.d/domainname"
+		export DNSDOMAIN="$(</etc/dnsdomainname)"
 	fi
+	[ -z "${DNSDOMAIN}" ] && return 1
 
-	mydnsdomain="$(< /etc/dnsdomainname)"
-
-	if ! touch /etc/dnsdomainname 2> /dev/null
+	if ! touch /etc/resolv.conf 2> /dev/null
 	then
 		ewarn "Unable to set domain in resolv.conf (ro root?)"
 		return 1
+	else
+		return 0
 	fi
-
-	return 0
 }
 
 start() {
-	local mynisdomain=
-	local mydnsdomain=
 	local retval=0
 	local retval2=0
 
 	if checkconfig_nis
 	then
-		mynisdomain="$(< /etc/nisdomainname)"
-
-		ebegin "Setting NIS domainname to ${mynisdomain}"
-		/bin/domainname "${mynisdomain}"
+		ebegin "Setting NIS domainname to ${NISDOMAIN}"
+		/bin/domainname "${NISDOMAIN}"
 		retval=$?
 		eend ${retval} "Failed to set the NIS domainname"
-		
 	fi
 
 	if checkconfig_dns
 	then
-		[ ! -f /etc/resolv.conf ] && touch /etc/resolv.conf
-		ebegin "Setting DNS domainname to ${mydnsdomain}"
-		gawk -v DOMAIN="${mydnsdomain}" \
-			'END { print "domain " DOMAIN }
-			 $0 !~ /^[[:space:]]*domain/ { print }' \
-			/etc/resolv.conf > /etc/resolv.conf.new
+		ebegin "Setting DNS domainname to ${DNSDOMAIN}"
+		resolv="$(grep -v '^[[:space:]]*domain' /etc/resolv.conf)"
+		[ "${OVERRIDE}" = "1" ] \
+			&& resolv="${resolv}"$'\n'"domain ${DNSDOMAIN}" \
+			|| resolv="domain ${DNSDOMAIN}"$'\n'"${resolv}"
+		echo "${resolv}" > /etc/resolv.conf
 		retval2=$?
-		[ "${retval2}" -eq 0 ] \
-			&& (mv -f /etc/resolv.conf.new /etc/resolv.conf) \
-			|| (rm -f /etc/resolv.conf.new)
 		eend ${retval2} "Failed to set the DNS domainname"
 	fi
 

@@ -1,0 +1,19 @@
+# Copyright 1999-2004 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header$
+
+# When setting up resolv.conf, what should take precedence?
+# If you wish to always override DHCP/whatever, set this to 1.
+OVERRIDE=1
+
+# To have a proper FQDN, you need to setup /etc/hosts and /etc/resolv.conf
+# properly (domain entry in /etc/resolv.conf, and FQDN in /etc/hosts).
+# 
+#DNSDOMAIN=""
+
+# This only set what /bin/hostname returns.  If you need to setup NIS, meaning
+# what /bin/domainname returns, please see:
+#
+#   http://www.linux-nis.org/nis-howto/HOWTO/
+# 
+#NISDOMAIN=""

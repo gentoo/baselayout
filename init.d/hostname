@@ -3,27 +3,8 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
 
-# This only set what /bin/hostname returns.  If you need to setup NIS, meaning
-# what /bin/domainname returns, please see:
-#
-#   http://www.linux-nis.org/nis-howto/HOWTO/
-#
-# To have a proper FQDN, you need to setup /etc/hosts and /etc/resolv.conf
-# properly (domain entry in /etc/resolv.conf, and FQDN in /etc/hosts).
-
 depend() {
 	need checkroot
-}
-
-checkconfig() {
-	if [ ! -f /etc/hostname ] || [ -z "$(</etc/hostname)" ]
-	then
-		if [ "${myhost}" = "localhost" ]
-		then
-			eerror "You need to set /etc/hostname to a valid hostname"
-			return 1
-		fi
-	fi
 }
 
 start() {
@@ -37,21 +18,12 @@ start() {
 		myhost="localhost"
 	fi
 
-	# We use whatever is in /etc/hostname here.  That means:
-	#
-	# 1)  For doing it the proper way, you should NOT put a
-	#     FQDN in there, but:
-	#     a) Only have the hostname in there (no dns/nis domainname)
-	#     b) Set the dnsdomainname via /etc/resolv.conf
-	#     c) Set the nisdomainname via 'domainname'.
-	#
-	# 2)  If the user want a FQDN in there, it should be possible
-	#     without hacking things to pieces, but then he should
-	#     know what he is doing ...
-	#
-	if checkconfig
+	if [ -f /etc/hostname ]
 	then
+		ewarn "You should stop using /etc/hostname and use /etc/conf.d/hostname"
 		myhost="$(</etc/hostname)"
+	else
+		myhost="${HOSTNAME}"
 	fi
 
 	ebegin "Setting hostname to ${myhost}"
@@ -67,6 +39,5 @@ start() {
 
 	return ${retval}
 }
-
 
 # vim:ts=4
