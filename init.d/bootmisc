@@ -98,7 +98,7 @@ start() {
 	#
 	[ -f /etc/resolv.conf ] || touch /etc/resolv.conf &>/dev/null
 
-	if [ -c /dev/ttyp0 ]
+	if test -c /dev/ttyp0 &> /dev/null
 	then
 		chmod 666 /dev/tty[p-za-e][0-9a-f] &>/dev/null
 		chown root:tty /dev/tty[p-za-e][0-9a-f] &>/dev/null

@@ -17,7 +17,7 @@ try() {
 	errstr="`(eval $*) 2>&1 >/dev/null`"
 	retval=$?
 	if [ "${retval}" -ne 0 ] || \
-	   ([ -n "`echo $* | grep 'mount'`" -a -n "${errstr}" ])
+	   ([ -n "`echo "$*" | gawk '/mount/ { print "yes" }'`" -a -n "${errstr}" ])
 	then
 		echo -e "${ENDCOL}${NORMAL}[${BAD} oops ${NORMAL}]"
 		echo
@@ -450,8 +450,8 @@ rm -rf "${svcdir}/softscripts.old" &> /dev/null
 
 # We want devfsd running after a change of runlevel (this is mostly if we return
 # from runlevel 'single')
-if [ -z "`ps -A | grep 'devfsd'`" -a \
-     -n "`cat /proc/mounts | grep '/dev devfs'`" ]
+if [ -z "`ps -A | gawk '/devfsd/ { print }'`" ] && \
+   ([ -f /proc/mounts ] && [ -n "`gawk '/\/dev devfs/ { print }' /proc/mounts`" ])
 then
 	/sbin/devfsd /dev &> /dev/null
 fi
