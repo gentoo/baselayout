@@ -130,7 +130,6 @@ setup_defaultlevels() {
 #
 get_libdir()
 {
-	CONF_LIBDIR=""
 	if [ -n "${CONF_LIBDIR_OVERRIDE}" ]; then
 		CONF_LIBDIR="${CONF_LIBDIR_OVERRIDE}"
 	elif [ -x "/usr/bin/portageq" ]; then
