@@ -71,12 +71,17 @@ adsl_setup_vars() {
 #
 # Returns 0 (true) when successful, non-zero otherwise
 adsl_start() {
-	local iface=${1}
+	local iface=${1} user
+
+	# Might or might not be set in conf.d/net
+	eval user=\"\$\{user_${iface}\}\"
 
 	# Start ADSL with the cfgfile, but override ETH and PIDFILE
 	einfo "Starting ADSL for ${iface}"
 	/usr/sbin/adsl-start <(cat ${adsl_cfgfile_IFACE}; \
-		echo "ETH=${iface}"; echo "PIDFILE=/var/run/adsl-${iface}.pid") \
+		echo "ETH=${iface}"; \
+		echo "PIDFILE=/var/run/adsl-${iface}.pid"; \
+		[[ -n ${user} ]] && echo "USER=${user}") \
 		>${devnull}
 	eend $? || return $?
 }

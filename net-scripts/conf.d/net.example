@@ -193,12 +193,16 @@
 #-----------------------------------------------------------------------------
 # ADSL
 # For ADSL support, emerge net-dialup/rp-pppoe 
-# and edit /etc/ppp/pppoe.conf
+# You should make the following settings and also put your
+# username/password information in /etc/ppp/pap-secrets
 
 # Configure the interface to use ADSL with one of the following lines,
 # depending on whether you're using ifconfig (default) or iproute2.
 #ifconfig_eth0=( "adsl" )
 #ipaddr_eth0=( "adsl" )
+
+# You probably won't need to edit /etc/ppp/pppoe.conf if you set this
+#user_eth0="my-adsl-username"
 
 #-----------------------------------------------------------------------------
 # MAC changer
