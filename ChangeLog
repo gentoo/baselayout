@@ -2,6 +2,15 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  24 March 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Optimize USB fs stuff in /etc/init.d/localmount to use less cats etc.
+    Fix a problem where it might not have mounted the USB fs when usbcore
+    was compiled as module, and the kernel did not mount it by the time
+    the script was started.  Get it to rather check what filesystems is
+    supported when deciding if it should use 'usbdevfs' or 'usbfs', as
+    later 2.4 kernels now also support the newer 'usbfs'.
+
   16 March 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Update sbin/rc-envupdate.sh.bash for bug #17549.

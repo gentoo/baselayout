@@ -14,28 +14,38 @@ start() {
 	mount -at nocoda,nonfs,noproc,noncpfs,nosmbfs,noshm >/dev/null
 	eend $? "Some local filesystem failed to mount"
 
-	# Check what kernel we are running ...
-	if [ "$(get_KV)" -ge "$(KV_to_int '2.5.0')" ]
-	then
-		USBFS="usbfs"
-	else
-		USBFS="usbdevfs"
-	fi
-
-	# Cache whether USBFS is 
-	USBBOOL="$(egrep "${USBFS}" /proc/filesystems)"
-
-	# Mount usbdevfs if kernel have support
-	if [ -z "${USBBOOL}" ]
+	# Make sure we insert usbcore if its a module
+	if [ -f /proc/modules ]
 	then
 		# >/dev/null to hide errors from non-USB users
 		modprobe usbcore &>/dev/null
 	fi
-	if [ -n "${USBBOOL}" ] && \
+	
+	# Check what USB fs the kernel support.  Currently
+	# 2.5+ kernels, and later 2.4 kernels have 'usbfs',
+	# while older kernels have 'usbdevfs'.
+	local usbfs="$(awk '
+	  {
+	    # Since 'usbfs' is the newer one, always try to use it
+	    if ($2 == "usbfs")
+	      USBFS = "usbfs"
+	    # With my 2.4.20 kernel, 'usbdevfs' gets listed before 'usbfs',
+	    # but this might change, so only change USBFS if it was not already
+	    # set (and thus to 'usbfs').
+	    if (($2 == "usbdevfs") && (USBFS == ""))
+	      USBFS = "usbdevfs"
+	  }
+	
+	  END {
+	    if (USBFS != "")
+	      print USBFS
+	  }' /proc/filesystems)"
+
+	if [ -n "${usbfs}" ] && \
 	   [ -e /proc/bus/usb -a ! -e /proc/bus/usb/devices ]
 	then
-		ebegin "Mounting USB device filesystem (${USBFS})"
-		mount -t ${USBFS} ${USBFS} /proc/bus/usb &>/dev/null
+		ebegin "Mounting USB device filesystem (${usbfs})"
+		mount -t ${usbfs} none /proc/bus/usb &>/dev/null
 		eend $? "Failed to mount USB device filesystem"
 	fi
 
