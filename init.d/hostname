@@ -4,7 +4,15 @@ depend() {
 	need localmount
 }
 
+checkconfig() {
+	if [ -z "`cat /etc/hostname`" ] ; then
+		eerror "You need to set /etc/hostname to a valid hostname"
+		return 1
+	fi
+}
+
 start() {
+	checkconfig || return 1
 	myhost=`cat /etc/hostname` 1>&2
 	ebegin "Setting hostname to $myhost"
 	/bin/hostname ${myhost}

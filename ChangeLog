@@ -2,13 +2,60 @@
 # Copyright 2001 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
-  29 Oct 2001; init.d/netmount: umount -art doesn't seem to work, so 
-  I added some awk and grep magic to find all remote filesystems and 
-  umount them.
+* rc-scripts 1.1.8 (15 Nov 2001)
+
+  16 Nov 2001; removed bogus "mountall.test" script.
   
-  29 Oct 2001; Martin Schlemmer (azarah@gentoo.org)
-  A fix for checkroot (missing "/"); it now actually checks the root
-  filesystem.  Also, a localmount cleanliness fix.
+  15 Nov 2001; Martin Schlemmer (azarah@gentoo.org): Updated
+  init.d/{runscript.sh,depscan.sh}, sbin/rc to the new dep being 'use' not
+  'uses', as it fits better with 'need' (not 'needs').  Also removed unneeded
+  for loop from init.d/depscan.sh, and other fixes.  Updated names of new
+  functions in init.d/runscript.sh to better sounding ones.  Updated
+  init.d/modules, init.d/netmount to use 'use'.  Lots of other fixes/cleanups.
+  Removed try() out of init.d/runscript.sh (why was this here ?).
+
+  14 Nov 2001; Martin Schlemmer (azarah@gentoo.org): init.d/bootmisc:  Now
+  cleans /tmp.  Also creates /etc/resolv.conf if it doesn't exist.
+
+  init.d/hostname:  Added check for a valid /etc/hostname.
+
+  init.d/keymaps:  Added check for valid $KEYMAP.
+
+  init.d/modules:  Added sysklogd, metalog, syslog-ng as 'use' deps.  This
+  should solve Woodchip's syslog+glue issue.  We just have to change the
+  console loglevel for metalog and syslog-ng (sysklogd already updated) not to
+  output info and warnings, etc to the console, then boot will be much cleaner.
+  Also the install guide will need changing to add the loggers to 'boot' and
+  not 'default' runlevel.
+
+  init.d/mountall.test:  Hopefully updated to the new rc-scripts style.  Is
+  this really needed (I cannot see that it is used anywhere ...)?
+
+  13 Nov 2001; Martin Schlemmer (azarah@gentoo.org): Updated
+  init.d/runscript.sh, init.d/depscan.sh and sbin/rc with a new depend called
+  'uses'.  It basically have the same usage as 'need', except that it do not
+  start services that is not in the current and 'boot' runlevels.
+
+  Updated init.d/netmount to use the 'uses' depend.
+
+  11 Nov 2001; Martin Schlemmer (azarah@gentoo.org): Fixed init.d/runscript.sh
+  not to destroy the 'need' depends in /${svcdir}/need.  This caused subsequent
+  starting and stopping of services not to start depends.
+
+  7 Nov 2001; Martin Schlemmer (azarah@gentoo.org): Fixed a problem in sbin/rc
+  where the ${svcdir}/softscripts directory got destroyed before stopping
+  running services scheduled to be stopped.  This with the fact that $SOFTLEVEL
+  was set too early, caused the services to be stopped in the wrong order.
+
+  30 Oct 2001; Martin Schlemmer (azarah@gentoo.org): Modified init.d/netmount to
+  check if any network filesystems is mounted.
+
+  29 Oct 2001; init.d/netmount: umount -art doesn't seem to work, so I added
+  some awk and grep magic to find all remote filesystems and umount them.
+  
+  29 Oct 2001; Martin Schlemmer (azarah@gentoo.org): A fix for checkroot
+  (missing "/"); it now actually checks the root filesystem.  Also, a
+  localmount cleanliness fix.
 
 * rc-scripts 1.1.7 (18 Oct 2001)
 

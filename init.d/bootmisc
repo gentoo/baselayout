@@ -28,6 +28,24 @@ start() {
 	: > /var/run/utmp
 	eend 0
 
+	#
+	# Clean up /tmp directory
+	#
+	ebegin "Cleaning /tmp directory"
+	rm -f /tmp/.X*-lock
+	rm -f /tmp/esrv*
+	rm -f /tmp/kio*
+	rm -rf /tmp/.esd*
+	rm -rf /tmp/orbit-*
+	rm -rf /tmp/ssh-*
+	rm -rf /tmp/ksocket-*
+	eend 0
+
+	#
+	# Check for /etc/resolv.conf, and create if missing
+	#
+	[ -f /etc/resolv.conf ] || touch /etc/resolv.conf
+
 	if [ -c /dev/ttyp0 ]
 	then
 		chmod 666 /dev/tty[p-za-e][0-9a-f]

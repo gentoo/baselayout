@@ -7,7 +7,7 @@ if [ ! -d $svcdir ]
 then
 	install -d -m0755 $svcdir
 fi
-for x in softscripts snapshot started need
+for x in softscripts snapshot started need use
 do
 	if [ ! -d ${svcdir}/${x} ]
 	then
@@ -15,44 +15,34 @@ do
 	fi
 done
 
-need_dbadd() {
+#call: depend_dbadd dep_type service deps....
+depend_dbadd() {
+	local mytype
 	local myservice
 	local x
-	myservice=$1
-	shift
+	mytype=$1
+	myservice=$2
+	shift 2
 	for x in $*
 	do
-		local myneeded
-#		if [ "$x" = "net" ]
-#		then
-#			myneeded=""
-#			for y in ${svcdir}/softscripts/net.*
-#			do
-#				myneeded="$myneeded ${y##*/}"
-#			done
-#		else
-		myneeded=${x}
-#		fi
-		for y in ${myneeded}
-		do
-			if [ ! -e /etc/init.d/${y} ]
+		if [ ! -e /etc/init.d/${x} ]
+		then
+			#nice thing about use's, is that they do not have to exist
+			if [ "$x" != "net" ] && [ "$mytype" != "use" ]
 			then
-				if [ "$y" != "net" ]
-				then
-				#bogus dependency
-					einfo "need: can't find service \"${y}\" needed by \"${myservice}\"; continuing..."
-					continue
-				fi
+			#bogus dependency
+				einfo "need: can't find service \"${x}\" needed by \"${myservice}\"; continuing..."
+				continue
 			fi
-			if [ ! -d ${svcdir}/need/${y} ]
-			then
-				install -d -m0755 ${svcdir}/need/${y}
-			fi
-			if [ ! -L ${svcdir}/need/${y}/${myservice} ]
-			then
-				ln -s /etc/init.d/${myservice} ${svcdir}/need/${y}/${myservice}
-			fi
-		done
+		fi
+		if [ ! -d ${svcdir}/${mytype}/${x} ]
+		then
+			install -d -m0755 ${svcdir}/${mytype}/${x}
+		fi
+		if [ ! -L ${svcdir}/${mytype}/${x}/${myservice} ]
+		then
+			ln -sf /etc/init.d/${myservice} ${svcdir}/${mytype}/${x}/${myservice}
+		fi
 	done
 }
 
@@ -60,25 +50,43 @@ need() {
 	NEED="$*"
 }
 
+use() {
+	USE="$*"
+}
+
 ebegin "Caching service dependencies"
 rm -rf ${svcdir}/need/*
+rm -rf ${svcdir}/use/*
 for x in /etc/runlevels/*/*
 do
 	if [ ! -L $x ]
 	then
 		continue
 	fi
+
+	#set to "" else we get problems
+	NEED=""
+	USE=""
+	
 	myservice=${x##*/}
 	depend() {
 		NEED=""
+		USE=""
 		return	
 	}
 	source ${x}
 	depend
-	if [ "$NEED" = "" ]
+	if [ "$NEED" = "" ] && [ "$USE" = "" ]
 	then
 		continue
 	fi
-	need_dbadd $myservice $NEED
+	if [ "$NEED" != "" ]
+	then
+		depend_dbadd need $myservice $NEED
+	fi
+	if [ "$USE" != "" ]
+	then
+		depend_dbadd use $myservice $USE
+	fi
 done
 eend

@@ -4,7 +4,15 @@ depend() {
 	need localmount
 }
 
+checkconfig() {
+	if [ -z "$KEYMAP" ] ; then
+		eerror "You need to setup KEYMAP first"
+		return 1
+	fi
+}
+
 start() {
+	checkconfig || return 1
 	ebegin "Loading key mappings"
 	/usr/bin/loadkeys ${KEYMAP} windowkeys.inc
 	eend $? "Error loading key mappings"

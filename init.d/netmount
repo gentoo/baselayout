@@ -2,6 +2,7 @@
 	
 depend() {
 	need net
+	use portmap
 }
 
 start() {
@@ -13,7 +14,13 @@ start() {
 stop() {
 	ebegin "Unmounting network filesystems"
 	# umount -art $fstypes doesn't seem to work, so...
-	umount `cat /proc/mounts | awk '{ print $3 " " $2 }' | grep -E ^'coda|nfs|ncpfs|smbfs' | awk 'BEGIN { ORS=" "} { print $2 }'`
+	# NB: we have to check if any network filesystems is mounted, else mount complains
+
+	local mymounts="`cat /proc/mounts | awk '{ print $3 " " $2 }' | grep -E ^'coda|nfs|ncpfs|smbfs' | awk 'BEGIN { ORS="	"} { print $2 }'`"
+	
+	if [ -n "$mymounts" ] ; then
+		umount ${mymounts}
+	fi
 	eend $?
 }
 

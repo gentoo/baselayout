@@ -70,35 +70,44 @@ svc_stop() {
 	fi
 	for mydep in $mydeps
 	do
-		if [ -d ${svcdir}/need/${mydep} ]
-		then
-			for x in ${svcdir}/need/${mydep}/*
-			do
-				if [ ! -L ${x} ]
-					then
-					continue	
-				fi
-				if [ ! -L ${svcdir}/started/${x##*/} ]
-				then
-					#service not currently running, continue
-					rm ${x}
-					continue
-				fi
-				${x} stop
-				if [ $? -ne 0 ]
-				then
-					stopfail="yes"
-					break
-				else
-					rm ${x}
-				fi
-			done
-			if [ "$stopfail" = "yes" ]
+		for mytype in need use
+		do
+			if [ -d ${svcdir}/${mytype}/${mydep} ]
 			then
-				einfo "Problems stopping dependent services.  ${myservice} still up."
-				exit 1
-			fi	
-		fi
+				for x in ${svcdir}/${mytype}/${mydep}/*
+				do
+					if [ ! -L ${x} ]
+					then
+						continue	
+					fi
+					if [ ! -L ${svcdir}/started/${x##*/} ]
+					then
+						#service not currently running, continue
+					# This breaks the need's, and since they do not get
+					# regenerated, things will break when the services
+					# gets started again.  We should keep the need's and
+					# use's (when actually official) intact at all time
+					# anyhow.
+					#	rm ${x}
+						continue
+					fi
+					${x} stop
+					if [ $? -ne 0 ]
+					then
+						stopfail="yes"
+						break
+					# See above.  The need's and use's needs to stay intact.
+					#else
+					#	rm ${x}
+					fi
+				done
+				if [ "$stopfail" = "yes" ]
+				then
+					einfo "Problems stopping dependent services.  ${myservice} still up."
+					exit 1
+				fi	
+			fi
+		done
 	done
 	#now that deps are stopped, stop our service
 	stop
@@ -121,7 +130,7 @@ svc_start() {
 		ln -s /etc/init.d/${myservice} ${svcdir}/started/${myservice}
 		
 		#start dependencies, if any
-		for x in `ineed ${myservice}`
+		for x in `ineed ${myservice}` `valid_iuse ${myservice}`
 		do
 			if [ "$x" = "net" ]
 			then
@@ -167,24 +176,26 @@ then
 	opts="start stop restart"
 fi
 
-try() {
-	eval $*
-	if [ $? -ne 0 ]
-	then
-		echo 
-		echo '!!! '"ERROR: the $1 command did not complete successfully."
-		echo '!!! '"(\"${*}\")"
-		echo '!!! '"Since this is a critical task, ebuild will be stopped."
-		echo
-		exit 1
-	fi
-}
-
 needsme() {
 	local x
 	if [ -d ${svcdir}/need/${1} ]
 	then
 		for x in ${svcdir}/need/${1}/*
+		do
+			if [ ! -L $x ]
+			then
+				continue
+			fi
+			echo ${x##*/}
+		done
+	fi
+}
+
+usesme() {
+	local x
+	if [ -d ${svcdir}/use/${1} ]
+	then
+		for x in ${svcdir}/use/${1}/*
 		do
 			if [ ! -L $x ]
 			then
@@ -209,15 +220,51 @@ ineed() {
 	done
 }
 
-#call this with "whoneeds" or "ineed" as first arg
+#this will give all the use's of the service, even if not in current or boot
+#runlevels
+iuse() {
+    local x
+    local z
+    for x in ${svcdir}/use/*/${1}
+    do
+        if [ ! -L ${x} ]
+        then
+            continue
+        fi
+        z=${x%/*}
+        echo ${z##*/}
+    done
+}
+
+#this will only give the valid use's for the service (they must be in the boot
+#or current runlevel)
+valid_iuse() {
+	local x
+	local y
+	for x in `iuse ${1}`
+	do
+		if [ -e /etc/runlevels/boot/${x} ] || [ -e /etc/runlevels/${mylevel}/${x} ]
+		then
+			z=${x%/*}
+			echo ${z##*/}
+		fi
+	done
+}
+																		
+#call this with "needsme", "ineed", "usesme" or "iuse" as first arg
 query() {
 	local deps
 	local x
 	install -d -m0755 ${svcdir}/depcheck/$$
 	if [ "$1" = "ineed" ] && [ ! -L ${svcdir}/started/${myservice} ]
 	then
-			einfo "Warning: ${myservice} not running. need info may not be accurate."
+		einfo "Warning: ${myservice} not running. need info may not be accurate."
 	fi
+	if [ "$1" = "iuse" ] && [ ! -L ${svcdir}/started/${myservice} ]
+	then
+		einfo "Warning: ${myservice} not running. use info may not be accurate."
+	fi
+						
 	deps="${myservice}"
 	while [ "$deps" != "" ]
 	do
@@ -238,7 +285,7 @@ query() {
 		fi
 		echo ${x##*/}
 	done
-	rm -rf ${svcdir}/depcheck/$$
+	rm -rf ${svcdir}/depcheck/
 }
 
 svc_homegrown() {
@@ -283,7 +330,7 @@ do
 	start)
 		svc_start
 		;;
-	needsme|ineed)
+	needsme|ineed|usesme|iuse)
 		query $arg
 		;;
 	zap)

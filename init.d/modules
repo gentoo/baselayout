@@ -2,6 +2,7 @@
 	
 depend() {
 	need bootmisc localmount
+	use sysklogd metalog syslog-ng
 }
 
 start() {

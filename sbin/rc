@@ -2,7 +2,6 @@
 
 export SOFTLEVEL=$1
 svcdir=/dev/shm/.init.d
-echo $SOFTLEVEL > /dev/shm/.init.d/softlevel
 
 if [ "$SOFTLEVEL" = "reboot" ] || [ "$SOFTLEVEL" = "shutdown" ]
 then
@@ -32,12 +31,10 @@ fi
 
 #the softscripts dir contains all scripts that belong to the
 #runlevel specified in ${svcdir}/softlevel
+#it needs to be a new directory, else when stopping the services
+#and the old directory is not intact, things get broken
 
-install -d -m0755 ${svcdir}/softscripts
-
-#clean out directory to remove traces of previous runlevel
-
-rm -f ${svcdir}/softscripts/*
+install -d -m0755 ${svcdir}/softscripts.new
 
 for x in $myscripts
 do
@@ -49,7 +46,7 @@ do
 	#the -f eliminates a warning if the symlink already exists, 
 	#which can happen if a service is in both the boot level and
 	#the current "normal" runlevel
-	ln -sf /etc/init.d/${x} ${svcdir}/softscripts/${x}
+	ln -sf /etc/init.d/${x} ${svcdir}/softscripts.new/${x}
 done
 
 #stop services
@@ -64,25 +61,28 @@ do
 	fi
 	myservice=${i##*/}
 	
-	if [ ! -L ${svcdir}/softscripts/${myservice} ]
+	if [ ! -L ${svcdir}/softscripts.new/${myservice} ]
 	then
 		#candidate for zapping
 		
-		if [ ! -d ${svcdir}/need/${myservice} ]
+		if [ ! -d ${svcdir}/need/${myservice} ] && [ ! -d ${svcdir}/use/${myservice} ]
 		then
 			#nothing depends on me
 			${i} stop
 		else
 			#something may depend on me
 			needsme=0
-			for dep in ${svcdir}/need/${myservice}
+			for mytype in need use
 			do
-				if [ -L /${svcdir}/softscripts/${dep##*/} ]
-				then
-					#this dep is valid
-					needsme=1
-					break
-				fi
+				for dep in ${svcdir}/${mytype}/${myservice}
+				do
+					if [ -L /${svcdir}/softscripts.new/${dep##*/} ]
+					then
+						#this dep is valid
+						needsme=1
+						break
+					fi
+				done
 			done
 			if [ $needsme -eq 0 ]
 			then
@@ -92,6 +92,9 @@ do
 	fi
 done
 
+# Only change softlevel AFTER all the services have been stopped,
+# else they will not get the depend's right (wrong SOFTLEVEL)
+echo $SOFTLEVEL > /dev/shm/.init.d/softlevel
 
 if [ "$SOFTLEVEL" = "reboot" ] || [ "$SOFTLEVEL" = "shutdown" ]
 then
@@ -104,6 +107,11 @@ then
 		source /etc/init.d/shutdown.sh
 	fi
 fi
+
+#clean out directory to remove traces of previous runlevel
+#and make the new softscripts directory the current
+rm -rf ${svcdir}/softscripts
+mv ${svcdir}/softscripts.new/ ${svcdir}/softscripts
 
 #start scripts
 for i in ${svcdir}/softscripts/* 
@@ -118,4 +126,9 @@ do
 		$i start
 	fi
 done
+
+#depends gets newked, so update them
+#(this problem should be solved now, but i think it will be a good idea
+# to recreate the deps after a change in runlevel)
+/etc/init.d/depscan.sh >/dev/null 2>/dev/null
 
