@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
 
-source /sbin/functions.sh
+[ -z "${svcdir}" ] && source /sbin/functions.sh
 
 #stuff for getpids() and co
 declare -ax MASTER_PID=""
@@ -15,7 +15,7 @@ RC_RETRY_COUNT=5
 RC_FAIL_ON_ZOMBIE="no"
 
 # Override default settings with user settings ...
-[ -f /etc/conf.d/rc ] && source /etc/conf.d/rc
+#[ -f /etc/conf.d/rc ] && source /etc/conf.d/rc
 
 getpidfile() {
 	local x=""

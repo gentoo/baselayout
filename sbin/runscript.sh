@@ -4,6 +4,7 @@
 # $Header$
 
 
+source /sbin/functions.sh
 source /sbin/rc-daemon.sh
 
 #state variables
