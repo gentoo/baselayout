@@ -19,7 +19,7 @@ USERNAME="user"                 # The PAP/CHAP username
 PASSWORD="passwd"               # Your password/secret.  Ugly I know, but i
                                 # will work on something more secure later
                                 # on.  700 permission on /etc/init.d/net.ppp0
-                                # should be enouth for now.
+                                # should be enough for now.
 NUMBER="9180000"                # The telephone number of your ISP
 REMIP=""                        # The ip of the remote box if it should be set
 NETMASK=""                      # Netmask

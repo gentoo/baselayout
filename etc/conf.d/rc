@@ -19,7 +19,7 @@ RC_TTY_NUMBER=11
 RC_PARALLEL_STARTUP="no"
 
 # Set to "yes" if the default behaviour of at least one net.*
-# service starting beside net.lo is NOT enouth to consider
+# service starting beside net.lo is NOT enough to consider
 # the 'net' dependency up and running.
 
 RC_NET_STRICT_CHECKING="no"

@@ -1697,7 +1697,7 @@
     /etc/env.d/00basic for this.
 
     Add some new daemon stop and pid detection stuff to /sbin/functions.sh.
-    Nothing official, but I spent enouth time on it not to want to loose it :)
+    Nothing official, but I spent enough time on it not to want to loose it :)
 
     Fixed a bug in /sbin/functions.sh that caused rc-scripts run as cron jobs
     to give output to stderr.  This was caused by a call to "stty", which when
