@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright 1999-2004 Gentoo Technologies, Inc.
+# Copyright 1999-2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
 
@@ -23,7 +23,7 @@ myservice=${myservice##*/}
 
 echo -e "
 ${GREEN}Gentoo Linux RC-Scripts; ${BLUE}http://www.gentoo.org/${OFF}
- Copyright 2001-2004 Gentoo Technologies, Inc.; Distributed under the GPL
+ Copyright 1999-2004 Gentoo Foundation; Distributed under the GPL
 
 Usage: ${CYAN}${myservice}${OFF} < ${GREEN}flags${OFF} > [ ${GREEN}options${OFF} ]
 

@@ -4,7 +4,7 @@
 # Written by Wichert Akkerman <wakkerma@debian.org>
 # Copyright (C) 1998, 1999 Software in the Public Interest
 #
-# Modifications by Daniel Robbins <drobbins@gentoo.org>, Gentoo Technologies, Inc.
+# Modifications by Daniel Robbins <drobbins@gentoo.org>, Gentoo Foundation
 # 02 Sep 2001 -- Removed "arch" stuff since I see no reason to have
 # support for varying CPU architectures on a single system.
 #
