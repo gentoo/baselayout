@@ -4,6 +4,8 @@
   03 Mar 2005; Roy Marples <uberlord@gentoo.org>:
 
     iwconfig now defaults the transmit key to 1
+    bridging and bonding modules now start an interface if it's not
+    marked as started
 
   02 Mar 2005; Roy Marples <uberlord@gentoo.org>:
 
@@ -141,7 +143,7 @@
     Add support for loopback dm-crypt by Dylan Carlson #73598 and for gpg 
     dm-crypt by Lars Strojny #75659.
 
-    Update crypto-loop to newer util-linux #40874 by jochen / JÃ¼rgen HÃ¶tzel
+    Update crypto-loop to newer util-linux #40874 by jochen / JÃÂ¼rgen HÃÂ¶tzel
 
   27 Jan 2005; Roy Marples <uberlord@gentoo.org>:
 
@@ -1309,7 +1311,7 @@
 
     Fix bug 47218 (net.eth0 broken for vlans) with patch provided by
     Andy Dustman.  Fix bug 47250 (depscan.sh fails to create
-    /var/lib/init.d/* directories) with patch from Terje BergstrÃ¶m
+    /var/lib/init.d/* directories) with patch from Terje BergstrÃÂ¶m
 
 * rc-scripts 1.4.6 (08 Apr 2004)
 
@@ -2933,7 +2935,7 @@
   11 Apr 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Update /etc/skel/.bash_profile to make it tcsh compadible.
-    Thanks to VÃ¤inÃ¶ JÃ¤rvelÃ¤ for this fix.
+    Thanks to VÃÂ¤inÃÂ¶ JÃÂ¤rvelÃÂ¤ for this fix.
 
     Update /etc/profile to also set the PS? variables if $SHELL
     is set to /bin/sh.  This should make prompt colours in

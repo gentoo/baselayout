@@ -113,8 +113,7 @@ bonding_pre_stop() {
 
 	# reset all slaves
 	for s in ${slaves}; do
-		interface_del_addresses ${s}
-		interface_down ${s}
+		net_stop ${s}
 	done
 
 	eend 0

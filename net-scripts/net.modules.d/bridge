@@ -107,8 +107,15 @@ bridge_pre_start() {
 			ewarn "interface ${i} does not exist"
 			continue
 		fi
+	done
 
-		ebegin "Adding port ${i}"
+	echo 
+	eoutdent
+	einfo "Adding ports to ${iface}"
+	eindent
+
+	for i in ${ports}; do
+		ebegin "${i}"
 		e=$( brctl addif ${iface} ${i} 2>&1 \
 			&& interface_del_addresses ${i} \
 			&& interface_set_flag ${i} promisc true \
@@ -148,6 +155,11 @@ bridge_stop() {
 	eoutdent
 	
 	brctl delbr ${iface} &>${devnull}
+
+	for i in ${ports}; do
+		net_stop ${i}
+	done
+	echo
 
 	eend 0
 	return 0

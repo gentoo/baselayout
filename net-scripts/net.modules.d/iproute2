@@ -67,6 +67,7 @@ iproute2_check_depends() {
 iproute2_exists() {
 	local e=$( ip addr show label $1 ) report=${2:-false}
 	[[ -n ${e} ]] && return 0
+
 	${report} && eerror "$1 does not exist"
 	return 1
 }

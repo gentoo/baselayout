@@ -66,16 +66,37 @@ sort() {
 # This is used by bridge and bond modules as the interfaces
 # they need may have to be created
 net_start() {
-	local iface=$1
+	local service=net.$1 retval
 
-	interface_exists ${iface} && return 0
-	[[ -f ${svcdir}/started/net.${iface} ]] && return 0
-	if [[ ! -x /etc/init.d/net.${iface} ]]; then
-		eerror "/etc/init.d/net.${iface} does not exist"
+	service_started ${service} && return 0
+
+	if [[ ! -x /etc/init.d/${service} ]]; then
+		eerror "/etc/init.d/${service} does not exist"
 		eerror "Cannot start ${iface}"
 		return 1
 	fi
-	/etc/init.d/net.${iface} start
+
+	echo
+	/etc/init.d/${service} start
+	return $?
+}
+
+# bool net_stop(char *iface)
+#
+# Stops a net.${iface} if required
+net_stop() {
+	local iface=$1 service=net.$1
+
+	service_stopped && return 0
+	
+	if [[ ! -x /etc/init.d/${service} ]]; then
+		interface_del_addresses ${iface}
+		interface_down ${iface}
+		return 0
+	fi
+
+	echo
+	/etc/init.d/${service} stop
 	return $?
 }
 
