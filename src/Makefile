@@ -13,16 +13,21 @@ SBIN_TARGETS = consoletype runscript start-stop-daemon
 
 TARGET = $(BIN_TARGETS) $(SBIN_TARGETS)
 
+OS = Linux
+ifeq ($(OS),Linux)
+LDFLAGS_RS  = -ldl
+endif
+ifeq ($(OS),BSD)
+LDFLAGS_SSD = -lkvm
+endif
+
 all: $(TARGET)
 
-consoletype: consoletype.o
-	$(LD) -o $@ $^
-
 runscript: runscript.o
-	$(LD) -o $@ $^ -ldl
+	$(LD) $(LDFLAGS) $(LDFLAGS_RS) $^ -o $@
 
 start-stop-daemon: start-stop-daemon.c
-	$(CC) -o $@ $(CFLAGS) -DHAVE_ERROR_H -DHAVE_TIOCNOTTY -DHAVE_SETSID $^
+	$(CC) $(CFLAGS) $(LDFLAGS) $(LDFLAGS_SSD) $^ -o $@
 
 install: $(TARGET)
 	install -m 0755 -d $(DESTDIR)/bin

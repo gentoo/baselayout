@@ -102,11 +102,10 @@
 #include <assert.h>
 #include <ctype.h>
 
-#ifdef HAVE_ERROR_H
-#  include <error.h>
-#endif
+#include "headers.h"
+
 #ifdef HURD_IHASH_H
-  #include <hurd/ihash.h>
+# include <hurd/ihash.h>
 #endif
 
 static int testmode = 0;
@@ -856,8 +855,8 @@ pid_is_user(pid_t pid, uid_t uid)
 		errx(1, "%s", errbuf);
 	if ((kp = kvm_getprocs(kd, KERN_PROC_PID, pid, &nentries)) == 0)
 		errx(1, "%s", kvm_geterr(kd));
-	if (kp->kp_proc.p_cred )
-		kvm_read(kd, (u_long)&(kp->kp_proc.p_cred->p_ruid),
+	if (kp->ki_ruid )
+		kvm_read(kd, (u_long)&(kp->ki_ruid),
 			&proc_uid, sizeof(uid_t));
 	else
 		return 0;
@@ -877,7 +876,7 @@ pid_is_exec(pid_t pid, const char *name)
 		errx(1, "%s", errbuf);
 	if ((kp = kvm_getprocs(kd, KERN_PROC_PID, pid, &nentries)) == 0)
 		errx(1, "%s", kvm_geterr(kd));
-	pidexec = (&kp->kp_proc)->p_comm;
+	pidexec = kp->ki_comm;
 	if (strlen(name) != strlen(pidexec))
 		return 0;
 	return (strcmp(name, pidexec) == 0) ? 1 : 0;
