@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+  30 Dec 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Touch up rc-update to match our new STYLE.  Also tweak the help 
+    to fit in the standard console.
+
   23 Dec 2004; Mike Frysinger <vapier@gentoo.org>:
 
     Merge a bunch of BSD fixes into our .c files.
