@@ -146,6 +146,9 @@ ifconfig_del_addresses() {
 	# We don't remove addresses from aliases
 	[[ ${iface} == *:* ]] && return 0
 
+	# If the interface doesn't exist, don't try and delete
+	ifconfig_exists ${iface} || return 0
+
 	# iproute2 can add many addresses to an iface unlike ifconfig ...
 	# iproute2 added addresses cause problems for ifconfig
 	# as we delete an address, a new one appears, so we have to

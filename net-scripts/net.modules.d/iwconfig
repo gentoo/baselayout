@@ -893,7 +893,10 @@ iwconfig_pre_start() {
 # Configures ESSID variable
 # Always returns 0
 iwconfig_pre_stop() {
-	ESSID=$( iwconfig_get_essid $1 )
-	ESSIDVAR=${ESSID//[![:word:]]/_}
+	unset ESSID ESSIDVAR
+	if iwconfig_check_extensions $1 ; then
+		ESSID=$( iwconfig_get_essid $1 )
+		ESSIDVAR=${ESSID//[![:word:]]/_}
+	fi
 	return 0
 }

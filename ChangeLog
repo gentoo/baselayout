@@ -1,6 +1,13 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  23 Mar 2005; Roy Marples <uberlord@gentoo.ord>:
+
+    bridge stops removing IP addresses from bridge ports.
+    iwconfig no longer tries to get an ESSID from non-wireless interfaces.
+    ifconfig no longer errors when deleting addresses on a non-existant
+    interface.
+
   23 Mar 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     Get modules-update to clean up after itself if we on a 2.6 kernel without
