@@ -5,15 +5,20 @@
 
 source /etc/init.d/functions.sh
 
-BLUE="\033[34;01m"
-GREEN="\033[32;01m"
-OFF="\033[0m"
-CYAN="\033[36;01m"
-
-myscript=${1}
-if [ -L $1 ]
+if [ "${RC_NOCOLOR}" = "yes" ]
 then
-	myservice=`readlink ${1}`
+	unset BLUE GREEN OFF CYAN
+else
+	BLUE="\033[34;01m"
+	GREEN="\033[32;01m"
+	OFF="\033[0m"
+	CYAN="\033[36;01m"
+fi
+
+myscript="${1}"
+if [ -L "${1}" ]
+then
+	myservice="$(readlink "${1}")"
 else
 	myservice=${1}
 fi
