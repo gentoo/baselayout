@@ -24,7 +24,7 @@ start() {
 	local param=
 	local sf_param=
 	local retval=1
-	
+
 	# Get additional parameters
 	if [[ -n ${CONSOLETRANSLATION} ]] ; then
 		param="-m ${CONSOLETRANSLATION}"
@@ -50,11 +50,11 @@ start() {
 
 			for x in $(seq 1 "${RC_TTY_NUMBER}") ; do
 				/bin/setfont ${CONSOLEFONT} ${param} \
-					${sf_param}/${ttydev}${x} >/dev/null
+					${sf_param}/${ttydev}${x} > /dev/null
 				retval=$?
 			done
 		else
-			/bin/setfont ${CONSOLEFONT} ${param} >/dev/null
+			/bin/setfont ${CONSOLEFONT} ${param} > /dev/null
 			retval=$?
 		fi
 		errmsg="Failed to set user font"
