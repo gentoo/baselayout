@@ -90,6 +90,7 @@ then
 	eend $?
 fi
 
+sync;sync
 sleep 2
 
 ebegin "Remounting remaining filesystems readonly"
