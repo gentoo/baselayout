@@ -57,7 +57,7 @@ start() {
 	if [ "${BOOT}" = "yes" ]
 	then
 		# Create /etc/mtab (done by forcing current mounted filesystems)
-		cp -f /proc/mounts /etc/mtab
+		grep -v 'rootfs' /proc/mounts > /etc/mtab
 		# NB:  this needs to be updated if our /sbin/rc mounts change ...
 #		> /etc/mtab
 #		mount -f -o rw / &> /dev/null

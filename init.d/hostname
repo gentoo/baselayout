@@ -17,18 +17,30 @@ checkconfig() {
 }
 
 start() {
-	local myhost=""
-	retval=0
-	if ! checkconfig
+	local myhost="localhost"
+	local mydomain="localdomain"
+	local retval=0
+	
+	if checkconfig
 	then
-		myhost="localhost"
-	else
-		myhost="$(cat /etc/hostname)"
+		myhost="$(cut -f1 -d . < /etc/hostname)"
+		mydomain="$(cut -f2- -d . < /etc/hostname)"
+
+		if [ -z "${mydomain}" ]
+		then
+			mydomain="localdomain"
+		fi
 	fi
+	
 	ebegin "Setting hostname to ${myhost}"
 	/bin/hostname "${myhost}"
 	retval=$?
 	eend ${retval} "Failed to set the hostname"
+	
+	ebegin "Setting domainname to ${mydomain}"
+	/bin/domainname "${mydomain}"
+	retval=$(($retval + $?))
+	eend ${retval} "Failed to set the domainname"
 
 	if [ "${retval}" -eq 0 ]
 	then

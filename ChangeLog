@@ -2,6 +2,11 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  02 March 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update /etc/init.d/hostname to only set the hostname to whatever is before
+    the first '.', and then set the domainname to the rest, closing bug #14946.
+
   28 Feb 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Merge some of the optimizations from Graham Forest <vladimir@gentoo.org>.
