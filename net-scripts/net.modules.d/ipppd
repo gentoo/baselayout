@@ -34,7 +34,7 @@ ipppd_check_installed() {
 ipppd_check_depends() {
 	local f
 
-	for f in interface_exists interface_variable interface_type; do
+	for f in interface_exists interface_variable interface_type clean_pidfile; do
 		[[ $( type -t ${f} ) == function ]] && continue
 		eerror "ipppd: missing required function ${f}\n"
 		return 1
@@ -50,7 +50,7 @@ ipppd_check_depends() {
 # Returns 0 (true) when successful, non-zero otherwise
 ipppd_pre_start() {
 	local iface=${1} opts itype=$( interface_type ${1} )
-	local ifvar=$( interface_variable ${1} )
+	local ifvar=$( interface_variable ${1} ) pidfile="/var/run/ipppd-${iface}.pid"
 
 	# Check that we are a valid isdn interface
 	[[ ${itype} != "ippp" && ${itype} != "isdn" ]] && return 0
@@ -58,11 +58,17 @@ ipppd_pre_start() {
 	# Check that the interface exists
 	! interface_exists ${iface} true && return 1
 
+	if ! clean_pidfile ${pidfile} ; then
+		ewarn "ipppd is already running on ${iface}"
+		eend 0
+		return 0
+	fi
+
 	# Might or might not be set in conf.d/net
 	eval opts=\"\$\{ipppd_${ifvar}\}\"
 
 	einfo "Starting ipppd for ${iface}"
-	/usr/sbin/ipppd ${opts} pidfile /var/run/ipppd-${iface}.pid file /etc/ppp/options.${iface} >${devnull}
+	/usr/sbin/ipppd ${opts} pidfile ${pidfile} file /etc/ppp/options.${iface} >${devnull}
 	eend $? || return $?
 
 	return 0
@@ -75,15 +81,20 @@ ipppd_pre_start() {
 ipppd_stop() {
 	local iface=${1} pidfile="/var/run/ipppd-${1}.pid"
 
-	ipppd_check_installed || return 1
-	[[ ! -f ${pidfile} ]] && return 1
+	ipppd_check_installed || return 0
+	[[ ! -f ${pidfile} ]] && return 0
+
+	clean_pidfile ${pidfile} && return 0
+	local pid=$( cat ${pidfile} ) i
 
 	einfo "Stopping ipppd for ${iface}"
-	test -s "${pidfile}" && kill $( cat ${pidfile} )
-	sleep 1
-	test -s "${pidfile}" && sleep 2 && test -s "${pidfile}" && einfo "Killing ipppd" && kill -KILL $( cat ${pidfile} )
+	kill ${pid}
+	for (( i=0; i<10; i++ )); do
+		clean_pidfile ${pidfile} && break
+	done
+	[[ ${i} == 10 ]] && kill -s KILL ${pid}
 
-	test -s "${pidfile}" && false
+	clean_pidfile ${pidfile}
 	eend $? || return $?
 
 	return 0

@@ -4,6 +4,7 @@
   12 Jan 2004; Roy Marples <uberlord@gentoo.org>:
 
     net.lo now ignores dot files when loading modules
+    ipppd module now stops correctly - fixes #73067 again
 
   11 Jan 2004; Roy Marples <uberlord@gentoo.org>:
 
