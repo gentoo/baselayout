@@ -712,16 +712,23 @@ else
 		RC_NOCOLOR="$(portageq envvar NOCOLOR 2>/dev/null)"
 		[ "${RC_NOCOLOR}" = "true" ] && RC_NOCOLOR="yes"
 	else
-		# We do not want colors or stty to run during emerge depend
+		# We do not want colors during emerge depend
 		RC_NOCOLOR="yes"
+		# No output is seen during emerge depend, so this is not needed.
 		RC_ENDCOL="no"
 	fi
 fi
 
-# Setup COLS and ENDCOL so eend can line up the [ ok ]
-COLS=${COLUMNS:-0}		# bash's internal COLUMNS variable
-(( COLS == 0 )) && COLS=$(stty size 2>/dev/null | cut -d' ' -f2)
-(( COLS > 0 )) || (( COLS = 80 ))	# width of [ ok ] == 7
+if [[ -n ${EBUILD} && $* != *depend* ]]; then
+	# We do not want stty to run during emerge depend
+	COLS=80
+else
+	# Setup COLS and ENDCOL so eend can line up the [ ok ]
+	COLS=${COLUMNS:-0}		# bash's internal COLUMNS variable
+	(( COLS == 0 )) && COLS=$(stty size 2>/dev/null | cut -d' ' -f2)
+	(( COLS > 0 )) || (( COLS = 80 ))	# width of [ ok ] == 7
+fi
+
 if [[ ${RC_ENDCOL} == yes ]]; then
 	ENDCOL=$'\e[A\e['$(( COLS - 8 ))'C'
 else
