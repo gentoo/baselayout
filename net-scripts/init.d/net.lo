@@ -60,7 +60,7 @@ modules_load()
 	local -a mods=( $( find /lib/rcscripts/net.modules.d/ -maxdepth 1 -type f | sort ) ) umods sort_history
 	local RC_INDENTATION=${RC_INDENTATION}	# so it will reset after function
 
-	[[ lo != ${iface} ]] && einfo "Loading networking modules for ${iface}"
+	[[ ${iface} != lo ]] && einfo "Loading networking modules for ${iface}"
 	eindent
 
 	# Each of these sources into the global namespace, so it's
@@ -472,12 +472,10 @@ start() {
 	einfo "Starting ${IFACE}"
 	eindent
 
-	modules_load ${IFACE}
-	eend $?
-	[[ $? != 0 ]] && return 1
+	modules_load ${IFACE} || { eend 1; return 1; }
 
 	if [[ ${IFACE} == lo ]]; then
-		ebegin "Bringing ${IFACE} up"
+		ebegin "Bringing up ${IFACE}"
 		interface_loopback_create
 		eend $?
 		return $?
