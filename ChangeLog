@@ -146,8 +146,8 @@
     /sbin/rc detects the user is missing /dev/null or /dev/console.  
     Includes a simple explanation/fix for what's wrong.
 
-    Make sure the clock init script runs right after checkroot so 
-    that timestamps are synchronized asap #68133.
+    Make sure the clock init script runs after checkroot/modules/localmount 
+    so that timestamps are synchronized asap #68133 / #70008.
 
     Accept '-nc' as a short option to '--nocolor' #64736.
 
