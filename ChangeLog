@@ -4,8 +4,8 @@
 
   07 Nov 2004; Aron Griffis <agriffis@gentoo.org>:
 
-    Fix shell scripting error that would result in 
-    /sbin/functions.sh: line 166: [: too many arguments
+    Fix shell scripting errors that would result in 
+    /sbin/functions.sh: line 166: [: too many arguments.
 
   05 Nov 2004; Roy Marples <uberlord@gentoo.org>:
 

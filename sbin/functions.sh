@@ -207,7 +207,7 @@ esetdent() {
 #    show an informative message (with a newline)
 #
 einfo() {
-	einfon "$@\n"
+	einfon "$*\n"
 	LAST_E_CMD=einfo
 	return 0
 }
@@ -219,7 +219,7 @@ einfo() {
 einfon() {
 	[[ ${RC_QUIET_STDOUT} == yes ]] && return 0
 	[[ ${RC_ENDCOL} != yes && ${LAST_E_CMD} == ebegin ]] && echo
-	echo -ne " ${GOOD}*${NORMAL} ${RC_INDENTATION}$@"
+	echo -ne " ${GOOD}*${NORMAL} ${RC_INDENTATION}$*"
 	LAST_E_CMD=einfon
 	return 0
 }
@@ -230,14 +230,14 @@ einfon() {
 #
 ewarn() {
 	if [[ ${RC_QUIET_STDOUT} == yes ]]; then
-		echo " $@"
+		echo " $*"
 	else
 		[[ ${RC_ENDCOL} != yes && ${LAST_E_CMD} == ebegin ]] && echo
-		echo -e " ${WARN}*${NORMAL} ${RC_INDENTATION}$@"
+		echo -e " ${WARN}*${NORMAL} ${RC_INDENTATION}$*"
 	fi
 
 	# Log warnings to system log
-	esyslog "daemon.warning" "rc-scripts" "$@"
+	esyslog "daemon.warning" "rc-scripts" "$*"
 
 	LAST_E_CMD=ewarn
 	return 0
@@ -249,14 +249,14 @@ ewarn() {
 #
 eerror() {
 	if [[ ${RC_QUIET_STDOUT} == yes ]]; then
-		echo " $@" >/dev/stderr
+		echo " $*" >/dev/stderr
 	else
 		[[ ${RC_ENDCOL} != yes && ${LAST_E_CMD} == ebegin ]] && echo
-		echo -e " ${BAD}*${NORMAL} ${RC_INDENTATION}$@"
+		echo -e " ${BAD}*${NORMAL} ${RC_INDENTATION}$*"
 	fi
 
 	# Log errors to system log
-	esyslog "daemon.err" "rc-scripts" "$@"
+	esyslog "daemon.err" "rc-scripts" "$*"
 
 	LAST_E_CMD=eerror
 	return 0
@@ -267,7 +267,7 @@ eerror() {
 #    show a message indicating the start of a process
 #
 ebegin() {
-	local msg="$@" dots spaces=${RC_DOT_PATTERN//?/ }
+	local msg="$*" dots spaces=${RC_DOT_PATTERN//?/ }
 	[[ ${RC_QUIET_STDOUT} == yes ]] && return 0
 
 	if [[ -n ${RC_DOT_PATTERN} ]]; then
@@ -306,8 +306,8 @@ _eend() {
 		else
 			rc_splash "stop" &
 		fi
-		if [[ -n "$@" ]]; then
-			${efunc} "$@"
+		if [[ -n "$*" ]]; then
+			${efunc} "$*"
 		fi
 		msg="${BRACKET}[ ${BAD}!!${BRACKET} ]${NORMAL}"
 	fi
@@ -331,7 +331,7 @@ eend() {
 	local retval=${1:-0}
 	shift
 
-	_eend ${retval} eerror "$@"
+	_eend ${retval} eerror "$*"
 
 	LAST_E_CMD=eend
 	return $retval
@@ -346,7 +346,7 @@ ewend() {
 	local retval=${1:-0}
 	shift
 
-	_eend ${retval} ewarn "$@"
+	_eend ${retval} ewarn "$*"
 
 	LAST_E_CMD=ewend
 	return $retval
@@ -533,7 +533,7 @@ dolisting() {
 	local y=
 	local tmpstr=
 	local mylist=
-	local mypath="$@"
+	local mypath="$*"
 
 	if [ "${mypath%/\*}" != "${mypath}" ]
 	then
@@ -575,7 +575,7 @@ save_options() {
 		mkdir -p -m 0755 "${svcdir}/options/${myservice}"
 	fi
 	
-	echo "$@" > "${svcdir}/options/${myservice}/${myopts}"
+	echo "$*" > "${svcdir}/options/${myservice}/${myopts}"
 
 	return 0
 }
@@ -660,11 +660,11 @@ then
 		RC_ENDCOL="no"
 	fi
 	
-	for arg in "$@"
+	for arg in $*
 	do
 		case "${arg}" in
 			# Lastly check if the user disabled it with --nocolor argument
-			--nocolor|-nc)
+			--nocolor)
 				RC_NOCOLOR="yes"
 				;;
 		esac
@@ -676,7 +676,7 @@ then
 	fi
 else
 	# Should we use colors ?
-	if [[ $@ != *depend* ]]; then
+	if [[ $* != *depend* ]]; then
 		# Check user pref in portage
 		RC_NOCOLOR="$(portageq envvar NOCOLOR 2>/dev/null)"
 		[ "${RC_NOCOLOR}" = "true" ] && RC_NOCOLOR="yes"
