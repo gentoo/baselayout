@@ -2,6 +2,13 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+* rc-scripts 1.3.4 (21 April 2002)
+
+  21 April 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add /sbin/rc-envupdate.sh to speedup updating of /etc/profile.env,
+	and /etc/csh.env.  Update /etc/init.d/bootmisc to use this.
+
   12 April 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Update /etc/init.d/bootmisc to create /var/run/utmpx. This
