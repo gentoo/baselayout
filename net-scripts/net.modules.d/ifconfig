@@ -71,8 +71,7 @@ ifconfig_down() {
 ifconfig_is_up() {
 	local check="\<UP\>" addr=${2:-false}
 	${addr} && check="\<addr:.*${check}"
-	local up=$( ifconfig ${1} 2>${devnull} | xargs | grep -Eq "${check}" && echo up )
-	[[ up = ${up} ]] && return 0
+	ifconfig ${1} 2>${devnull} | xargs | grep -Eq "${check}" && return 0
 	return 1
 }
 
@@ -114,7 +113,7 @@ ifconfig_get_vlans() {
 # Outputs a space-separated list on stdout, in reverse order, for
 # example "eth0:2 eth0:1"
 ifconfig_get_aliases_rev() {
-	ifconfig ${1} | grep -o "^${1}:[0-9]*" | tac | xargs
+	ifconfig | grep -o "^${1}:[0-9]*" | tac | xargs
 }
 
 # bool ifconfig_interface_del_addresses(char *interface, bool report)
@@ -126,10 +125,15 @@ ifconfig_del_addresses() {
 	local inet6 iface=${1} x report=${2}
 	report=${report:-false}
 
-	ifconfig ${iface} 0
+	# Ifconfig is buggy when dealing with aliases.  If you remove
+	# the address using the following command, then you can no
+	# longer down the interface.  It will always report UP.
+	if [[ ${iface} != *:* ]]; then
+		ifconfig ${iface} 0 &>/dev/null
+	fi
 
 	inet6="$(ifconfig ${iface} | awk '$1=="inet6" {print $3}')"
-	[[ -z ${inet6} ]] && return 1
+	[[ -z ${inet6} ]] && return 0
 
 	${report} && einfo "Removing inet6 addresses"
 	for x in ${inet6}; do
@@ -219,7 +223,14 @@ ifconfig_setup_vars() {
 #
 # Do final shutdown for an interface or alias.
 ifconfig_iface_stop() {
-	ifconfig_down $@
+	# If an alias is already down, then "ifconfig eth0:1 down"
+	# will try to bring it up with an address of "down" which
+	# fails.  Do some double-checking before returning error
+	# status
+	ifconfig_down ${1} && return 0
+	ifconfig_is_up $1 || return 0
+	[[ ${1} == *:* ]] && return 0
+	return 1
 }
 
 # bool ifconfig_iface_start(char *iface)

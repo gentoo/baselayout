@@ -2,6 +2,16 @@
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  25 Oct 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    In net-scripts/net.modules.d/ifconfig:
+    - Simplify ifconfig_is_up() 
+    - Fix ifconfig_get_aliases_rev() to actually work... you can't
+      specify an interface name to ifconfig if you want to see the
+      aliases.
+    - Workaround a couple ifconfig bugs dealing with aliases
+    - Correct a return status in ifconfig_interface_del_addresses()
+
   24 Oct 2004; Aron Griffis <agriffis@gentoo.org>:
 
     Include livecd patch that was applied to baselayout-1.9.4-r6
