@@ -9,6 +9,10 @@
 
     Add extended status functionality.  Should close bug #2462.
 
+    Add support for /sbin/rc-update to check if the rc-script
+    is executable or not.  Thanks to widersacher@gmx.net, closing
+    bug #8326.
+
   25 Sep 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix /etc/init.d/bootmisc not to kill pidfiles of running

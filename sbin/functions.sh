@@ -125,7 +125,7 @@ einfon() {
 # void eend(int error, char *errstr)
 #
 eend() {
-	if [ "$#" -eq 0 -o "${1}" -eq 0 ]
+	if [ "$#" -eq 0 ] || [ -n "${1}" -a "${1}" -eq 0 ]
 	then
 		if [ "${QUIET_STDOUT}" != "yes" ]
 		then
@@ -151,7 +151,7 @@ eend() {
 # void ewend(int error, char *errstr)
 #
 ewend() {
-	if [ "$#" -eq 0 -o "${1}" -eq 0 ]
+	if [ "$#" -eq 0 ] || [ -n "${1}" -a "${1}" -eq 0 ]
 	then
 		if [ "${QUIET_STDOUT}" != "yes" ]
 		then

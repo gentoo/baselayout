@@ -68,7 +68,11 @@ then
 			ewarn "${myscript} already installed in runlevel ${x}; skipping"
 			continue
 		fi
-		ln -sf /etc/init.d/${myscript} /etc/runlevels/${x}/${myscript}
+		if [ ! -x /etc/init.d/${myscript} ]
+		then
+			ewarn "${myscript} not executable; skipping"
+			continue
+		fi		ln -sf /etc/init.d/${myscript} /etc/runlevels/${x}/${myscript}
 		ebegin "${myscript} added to runlevel ${x}"
 	done
 elif [ "$1" = "del" ]

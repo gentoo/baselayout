@@ -5,7 +5,7 @@
 
 
 depend() {
-	need checkroot
+	need checkroot modules
 }
 
 start() {
@@ -13,8 +13,8 @@ start() {
 	# This should be done *before* checking local
 	# volumes, or they never get checked.
 	
-	# Load LVM modules if needed
-	/sbin/modprobe -a lvm-mod &>/dev/null || :
+	# NOTE: Add needed modules for LVM or RAID, etc
+	#       to /etc/modules.autoload if needed
 	
 	if [ -x /sbin/vgscan -a -d /proc/lvm ]
 	then

@@ -52,7 +52,10 @@ start() {
 			# Do not remove pidfiles of already running daemons
 			if [ "$(ps -A | awk '{print $4}' | grep ${daemon})" != "${daemon}" ]
 			then
-				rm -f ${x}
+				if [ -f ${x} -o -L ${x} ]
+				then
+					rm -f ${x}
+				fi
 			fi
 		done
 		# Setup login records
