@@ -65,10 +65,7 @@ config_system() {
 
 		echo "# generated automatically by net-scripts" > /etc/resolv.conf
 		chmod 644 /etc/resolv.conf
-		if [[ -n ${new_domain_name} ]]; then
-			echo "domain ${new_domain_name}" >> /etc/resolv.conf
-			echo "search ${new_domain_name}" >> /etc/resolv.conf
-		fi
+		[[ -n ${new_domain_name} ]] && echo "domain ${new_domain_name}" >> /etc/resolv.conf
 
 		for x in ${new_domain_name_servers}; do
 			echo "nameserver ${x}" >>/etc/resolv.conf

@@ -157,6 +157,10 @@
 # please put -R in your dhcpcd options
 #nameservers_ESSID=( "192.168.0.1" "192.168.0.2" )
 #domain_ESSID="some.domain"
+#searchdomains_ESSID="search.this.domain search.that.domain"
+# Please check the man page for resolv.conf for more information
+# as domain and search (searchdomains) are mutually exclusive and
+# searchdomains takes precedence
 
 # You can also set any of the /etc/conf.d/net variables per MAC address
 # incase you use Access Points with the same ESSID but need different

@@ -13,6 +13,9 @@
 
   15 Nov 2004; Roy Marples <uberlord@gentoo.org>:
 
+    Added searchdomains_ESSID option to essidnet
+    Stopped the domain setting from putting the same entry in search
+      in config-system and essidnet
     Removed second warning in net.lo when configuration not set
     Documented APIPA module in net.example
     Added kernel checking for vlan - fixes #70829
