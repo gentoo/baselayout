@@ -12,6 +12,10 @@
     Remove the 'Spider cat fix' from depscan.sh.bash, as it makes
     things even slower on older boxes.  Bug #10548.
 
+    After a bored Vapier decided that he needed to update the
+    licenses of things in /etc :P, I did the rest.  Hopefully
+    not too many people will nuke thier fstab :/
+
 * rc-scripts 1.4.2.1 (18 Nov 2002)
 
   18 Nov 2002; Martin Schlemmer <azarah@gentoo.org>:
