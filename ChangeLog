@@ -9,6 +9,9 @@
     Add an additional sanity check to the udev tarball usage.  Don't try to 
     unpack an empty or non-existant tarball.
 
+    Tweak the 'static' description so users know they can use it to make 
+    /sbin/rc ignore /dev completely.
+
   12 Dec 2004; Martin Schlemmer <azarah@gentoo.org>:
 
     Add suport for using /sbin/udevsend from new udev-048 as hotplug multiplexer.
