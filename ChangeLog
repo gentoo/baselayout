@@ -2,8 +2,20 @@
 # Copyright 2001 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  8  Jan 2002: Martin Schlemmer (azarah@gentoo.org): added '--sh' to
+  the dircolors command in /etc/skel/.bash_profile to handle cases
+  where bash do not export $SHELL.
+
+  6  Jan 2002: Martin Schlemmer (azarah@gentoo.org): updated 
+  /etc/init.d/runscripts.sh, /etc/init.d/net.eth0, /etc/conf.d/net and
+  removed /etc/init.d/net.eth0-dhcp to reflect a new 'bsd-ish' config
+  scheme for the net.eth* scripts.
+
   6  Jan 2002: Donny Davies (woodchip@gentoo.org): Removed email address
   from manpages; no need for that..
+
+  5  Jan 2002: Martin Schlemmer (azarah@gentoo.org): fix type-o in
+  /etc/devfsd.conf; had 'dvd' in the cdrw stuff.
 
 * rc-scripts 1.2.4 (30 Dec 2001)
 
