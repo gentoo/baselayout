@@ -135,7 +135,8 @@ iwconfig_report() {
 	done
 
 	local wep_status=$( iwconfig_get_wep_status ${iface} )
-	local channel=$( iwgetid --channel | awk '{print $3}' )
+	local channel=$( iwgetid --channel 2>${devnull} | awk '{print $3}' )
+	[[ -n ${channel} ]] && channel="on channel ${channel} "
 
 	essid=${essid//\\\\/\\\\}
 	local mode=$( iwconfig_get_mode ${iface} )
@@ -147,7 +148,7 @@ iwconfig_report() {
 	
 	eindent
 	einfo "${iface} connected ${m} \"${essid}\"${mac}"
-	einfo "in ${mode} mode on channel ${channel} ${wep_status}"
+	einfo "in ${mode} mode ${channel}${wep_status}"
 	eoutdent
 }
 

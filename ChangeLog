@@ -7,6 +7,7 @@
     defaults to no
     Changed variables peer_* to dhcp_*
     dhclient and udhcpc now specify a pidfile
+    Fixed iwconfig report if iwgetid does not support --channel
 
   01 Dec 2004; Mike Frysinger <vapier@gentoo.org>:
 
