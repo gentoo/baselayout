@@ -8,5 +8,5 @@ MANPATH=/usr/share/man:/usr/local/share/man
 INFODIR=/usr/share/info
 CVS_RSH=ssh
 PAGER=/usr/bin/less
-EDITOR=/usr/bin/nano
+EDITOR=/bin/nano
 LESSOPEN="|lesspipe.sh %s"

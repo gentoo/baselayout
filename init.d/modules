@@ -22,7 +22,7 @@ start() {
 	fi
 	
 	ebegin "Calculating module dependencies"
-	/sbin/update-modules &>/dev/null
+	/sbin/modules-update &>/dev/null
 	eend $? "Failed to calculate dependencies"
 
 	# Loop over every line in /etc/modules.autoload.

@@ -7,6 +7,12 @@
     Fix typeo in /etc/devfsd.conf, closing bug #11424, thanks to the
     sharp eye of Techie2000 <Linux@mochamail.com>.
 
+    Rename /sbin/update-modules to /sbin/modules-update, closing
+    bug #11445.
+
+    Nano moved from /usr/bin/nano to /bin/nano.  Fix this in
+    /etc/env.d/00basic, bug #10916.
+
   27 Nov 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Add more improvements to clustering code.  This is from
