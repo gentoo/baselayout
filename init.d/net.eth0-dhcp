@@ -1,5 +1,7 @@
 #!/sbin/runscript
 
+DHCPCD_OPTIONS="-h `hostname`"
+
 IFACE=${1##*.}
 IFACE=${IFACE/-dhcp/}
 #IFACE should now be equal to the name of the interface.
