@@ -17,8 +17,7 @@ load_modules() {
 	local modcount=0
 	local config="$1"
 
-	[ -z "${config}" ] && return 0
-	[ ! -r "${config}" ] && return 0
+	[[ -z ${config} || ! -r ${config} ]] && return 0
 
 	# Loop over every line in $config
 	eval $(awk '
@@ -47,19 +46,17 @@ load_modules() {
 		}
 	' "${config}")
 
-	if [ "${modcount}" -gt 0 ]
-	then
+	if [[ ${modcount} -gt 0 ]]; then
 		einfo "Using ${config} as config:"
 		
-		for x in ${modules}
-		do
+		for x in ${modules}; do
 			ebegin "  Loading module ${x}"
 			modprobe -q ${x} ${modargs[${i}]} &>/dev/null
 			retval=$?
 			eend ${retval} "  Failed to load ${x}"
 			
 			i=$((i+1))
-			[ "${retval}" -eq 0 ] || modcount=$((modcount-1))
+			[[ ${retval} -eq 0 ]] || modcount=$((modcount-1))
 		done
 
 		einfo "Autoloaded ${modcount} module(s)"
@@ -69,42 +66,45 @@ load_modules() {
 }
 
 start() {
+	local KV="$(uname -r)"
+	local KV_MAJOR="`KV_major "${KV}"`"
+	local KV_MINOR="`KV_minor "${KV}"`"
+
 	# Should not fail if kernel do not have module
 	# support compiled in ...
-	[ -f /proc/modules ] || return 0
+	[[ -f /proc/modules ]] || return 0
 
 	# Here we should fail, as a modular kernel do need
 	# depmod command ...
-	if [ ! -x /sbin/depmod ]
-	then
+	if [[ ! -x /sbin/depmod ]]; then
 		eerror "ERROR:  system is missing /sbin/depmod !"
 		return 1
 	fi
 
-	if [ -z "${CDBOOT}" ] && touch /etc/modules.conf 2> /dev/null
-	then
+	# Make sure depmod from modutils do not whine, but do not bother if
+	# we are on a 2.6 kernel without modprobe.old
+	if [[ -z "${CDBOOT}" ]] && [[ $(get_KV) -lt $(KV_to_int '2.5.48') || \
+	     -x /sbin/modprobe.old ]]; then
+		touch /etc/modules.conf 2> /dev/null
+	fi
+	# Only do this if we have modules.conf or a 2.6 kernel
+	if [[ -z "${CDBOOT}" ]] && [[ -f /etc/modules.conf || \
+	      $(get_KV) -ge $(KV_to_int '2.5.48') ]]; then
 		ebegin "Calculating module dependencies"
 		/sbin/modules-update &>/dev/null
 		eend $? "Failed to calculate module dependencies"
 	fi
 
-	if [ -f /etc/modules.autoload -a ! -L /etc/modules.autoload ]
-	then
+	if [[ -f /etc/modules.autoload && ! -L /etc/modules.autoload ]]; then
 		# Loop over every line in /etc/modules.autoload.
 		load_modules /etc/modules.autoload
 	else
-		local KV="$(uname -r)"
-		local KV_MAJOR="`KV_major "${KV}"`"
-		local KV_MINOR="`KV_minor "${KV}"`"
-
 		# New support for /etc/modules.autoload/kernel-$KV
-		if [ "$(get_KV)" -ge "$(KV_to_int '2.5.48')" ] && \
-		   [ -f /etc/modules.autoload.d/kernel-"${KV_MAJOR}.${KV_MINOR}" ]
-		then
+		if [[ $(get_KV) -ge $(KV_to_int '2.5.48') && \
+		      -f /etc/modules.autoload.d/kernel-${KV_MAJOR}.${KV_MINOR} ]]; then
 			load_modules /etc/modules.autoload.d/kernel-"${KV_MAJOR}.${KV_MINOR}"
 			
-		elif [ ! -f /etc/modules.autoload.d/kernel-"${KV_MAJOR}.${KV_MINOR}" ]
-		then
+		elif [[ ! -f /etc/modules.autoload.d/kernel-${KV_MAJOR}.${KV_MINOR} ]]; then
 			ewarn "Missing /etc/modules.autoload.d/kernel-${KV_MAJOR}.${KV_MINOR}"
 			load_modules /etc/modules.autoload.d/kernel-2.4
 		else
@@ -116,10 +116,7 @@ start() {
 	# Just in case a sysadmin prefers generic symbolic links in
 	# /lib/modules/boot for boot time modules we will load these modules
 	#
-	if [ -n "$(modprobe -l -t boot)" ]
-	then
-		modprobe -a -t boot \*  &>/dev/null
-	fi
+	[[ -n $(modprobe -l -t boot) ]] && modprobe -a -t boot \*  &>/dev/null
 }
 
 
