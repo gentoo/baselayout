@@ -9,7 +9,7 @@ depend() {
 
 start() {
 	local retval=0
-	
+
 	# Start software raid.
 	# You need a properly configured /etc/raidtab for raidtools usage or a
 	# properly configured /etc/mdadm.conf for mdadm usage. Devices in
@@ -38,7 +38,7 @@ start() {
 		do
 			local raiddev="${i##*/}"
 			local raidstat="$(egrep "^${raiddev} : active" /proc/mdstat)"
-			
+
 			if [ -z "${raidstat}" ]
 			then
 				# First scan the /etc/fstab for the "noauto"-flag
@@ -76,7 +76,7 @@ start() {
 				fi
 			fi
 		done
-        
+
 		for i in ${raidtools_devices}
 		do
 			local raiddev="${i##*/}"
@@ -120,7 +120,7 @@ start() {
 				fi
 
 				echo "${raiddev}"
-				
+
 				if [ "${retval}" -gt 0 ]
 				then
 					rc=1
@@ -130,7 +130,7 @@ start() {
 				fi
 			fi
 		done
-		
+
 		# A non-zero return means there were problems.
 		if [ "${rc}" -gt 0 ]
 		then
@@ -157,14 +157,14 @@ start() {
 		retval=$?	
 		eend ${retval}
 	fi
-	
+
 	# LVM support for /usr, /home, /opt ....
 	# This should be done *before* checking local
 	# volumes, or they never get checked.
-	
+
 	# NOTE: Add needed modules for LVM or RAID, etc
 	#       to /etc/modules.autoload if needed
-	
+
 	if [ -z "${CDBOOT}" -a -x /sbin/vgscan ] && \
 	   [ -d /proc/lvm -o "$(grep device-mapper /proc/misc 2>/dev/null)" ]
 	then
@@ -181,7 +181,7 @@ start() {
 
 
 	ebegin 'Setting up dm-crypt mappings'
-    
+
 	if [ -f /etc/conf.d/cryptfs ]
 	then
 		cryptfs_status=0
@@ -210,7 +210,7 @@ start() {
 
 			! /bin/cryptsetup status ${target}|egrep '\<active:' > /dev/null
 			configured=$?
- 
+
 			if [ ${configured} -eq 0 ]
 			then
 				einfo "dm-crypt map ${target}"
@@ -239,7 +239,7 @@ start() {
 				ewarn "dm-crypt mapping ${target} is already configured"
 				cryptfs_status=1
 			fi
-		done 
+		done
 	fi
 	ewend ${cryptfs_status} 'Failed to setup a mapping or swap device.'
 
@@ -272,6 +272,5 @@ start() {
 		fi
 	fi
 }
-
 
 # vim:ts=4
