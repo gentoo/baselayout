@@ -83,7 +83,7 @@ dhclient_stop() {
 
 	eval release=\"\$\{dhcp_release_${ifvar}\}\"
 	[[ -z ${release} ]] && eval release=\"\$\{dhcp_release\}\"
-	[[ ${release} != no ]] && opts="-r"
+	[[ ${release} == yes ]] && opts="-r"
 
 	ebegin "Stopping dhclient on ${iface}"
 	local r=$( dhclient -q ${opts} -sf ${script} -pf ${pidfile} ${iface} )
