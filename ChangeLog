@@ -10,6 +10,8 @@
     Don't use 'none' when mounting virtual filesystems since `umount` can 
     produce some pretty vague output #78684.  Fixed sbin/rc and etc/fstab.
 
+    modules-update.8 touchups by Benno Schulenberg #77582.
+
   27 Jan 2004; Roy Marples <uberlord@gentoo.org>:
 
     removed udhcpc-* and dhclient-* helper modules and replaced them with a
