@@ -172,8 +172,7 @@ rm -rf ${svcdir}/provide/*
 rm -rf ${svcdir}/cache/*
 
 #for the '*' need and use types to work
-pushd "$(pwd)" $>/dev/null
-cd /etc/init.d
+pushd /etc/init.d &>/dev/null
 
 #first cache the depend lines, and calculate all the provides
 for x in $(dolisting /etc/init.d/)
@@ -251,6 +250,7 @@ do
 done
 
 #resolve provides
+dblprovide="no"
 for x in $(dolisting ${svcdir}/provide/)
 do
 	for mytype in ${deptypes}
@@ -269,16 +269,20 @@ do
 	for y in $(dolisting ${x})
 	do
 		counter=$((counter + 1))
-		errstr="${x##*/}"
 	done
+	if [ "${counter}" -gt 1 ] && [ "${x##*/}" != "net" ]
+	then
+		dblprovide="yes"
+		errstr="${x##*/}"
+	fi
 done
-if [ "${counter}" -gt 1 ] && [ "${x##*/}" != "net" ]
+if [ "${dblprovide}" = "yes" ]
 then
 	ewarn "PROVIDE:  it usually is not a good idea to have more than one"
-	ewarn "          service providing the same virtual service (${errstr})!"
+	ewarn "          service provide the same virtual service (${errstr})!"
 fi
 
-popd $>/dev/null
+popd &>/dev/null
 
 eend
 

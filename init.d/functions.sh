@@ -184,7 +184,7 @@ dolisting() {
 			tmpstr="$(ls)"
 			for y in ${tmpstr}
 			do
-				mylist="${mylist} ${x}/$(basename ${y})"
+				mylist="${mylist} ${x}/${y}"
 			done
 		fi
 	done

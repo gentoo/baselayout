@@ -2,6 +2,17 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  11 March 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Updated /etc/init.d/functions.sh not to use /usr/bin/basename,
+    as some users have /usr on seperate partition which is not
+    mounted when depscan.sh is run the first time.
+
+    Updated the checking for more than one service providing the
+    same virtual function in /etc/init.d/depscan.sh.  It should
+    be working now, and this also fix a problem that when there is no
+    service providing a virtual, counter was used uninitialized.
+
 * rc-scripts 1.3.0 (10 March 2002)
 
   10 March 2002; Martin Schlemmer <azarah@gentoo.org>: Resolved
