@@ -122,13 +122,12 @@ is_daemon_running() {
 	pids=$( /bin/pidof ${cmd} )
 	[[ -z ${pids} ]] && return 1
 	
-	if [[ -s ${pidfile} ]]; then
-		read pid < ${pidfile}
-		pids=" ${pids} "
-		[[ ${pids// ${pid} } == ${pids} ]] && return 1
-		return 0 
-	fi
-	return 0
+	[[ -s ${pidfile} ]] || return 0
+		
+	read pid < ${pidfile}
+	pids=" ${pids} "
+	[[ ${pids// ${pid} } != ${pids} ]]
+	return $? 
 }
 
 # int start_daemon(void)
@@ -180,7 +179,10 @@ stop_daemon() {
 	if [[ -s ${pidfile} ]]; then
 		read pid < ${pidfile}
 		# Check that the given program is actually running the pid
-		[[ -n ${pids} && " ${pids} " != *" ${pid} "* ]] && return 1
+		if [[ -n ${pids} ]]; then
+			pids=" ${pids} "
+			[[ ${pids// ${pid} } == ${pids} ]] && return 1
+		fi
 		pids=${pid}
 	fi
 
