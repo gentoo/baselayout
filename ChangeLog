@@ -4,13 +4,25 @@
 
   25 Oct 2004; Aron Griffis <agriffis@gentoo.org>:
 
-    In net-scripts/net.modules.d/ifconfig:
+    net-scripts/net.modules.d/ifconfig:
     - Simplify ifconfig_is_up() 
     - Fix ifconfig_get_aliases_rev() to actually work... you can't
       specify an interface name to ifconfig if you want to see the
       aliases.
     - Workaround a couple ifconfig bugs dealing with aliases
     - Correct a return status in ifconfig_interface_del_addresses()
+    - ifconfig_iface_stop() is bool, not void; fix the comments
+
+    net-scripts/net.modules.d/iproute2:
+    - iproute2_iface_stop() is bool, not void.  Fix the code so it
+      returns meaningful values
+
+    net-scripts/init.d/net.lo:
+    - Fix preferred (ifconfig/dhcpcd) module loading so it doesn't
+      barf when a preferred module is either (1) missing from
+      net.modules.d or (2) not available due to missing dependencies
+    - When loading all modules in order to stop an interface, only use
+      the first available to satisfy each class wrapper
 
   24 Oct 2004; Aron Griffis <agriffis@gentoo.org>:
 

@@ -201,14 +201,20 @@ iproute2_setup_vars() {
 	eval iproute_IFACE=( \"\$\{iproute_${iface}\[@\]\}\" )
 }
 
-# void iproute2_iface_stop(char *interface)
+# bool iproute2_iface_stop(char *interface)
 #
 # Do final shutdown for an interface or alias.
+#
+# Returns 0 (true) when successful, non-zero (false) on failure
 iproute2_iface_stop() {
 	local label=${1} iface=$( get_device ${1} )
 
 	# Shut down the link if this isn't an alias or vlan
-	[[ ${label} == ${iface} ]] && iproute2_down ${iface}
+	if [[ ${label} == ${iface} ]]; then
+		iproute2_down ${iface}
+		return $?
+	fi
+	return 0
 }
 
 # bool iproute2_confgiure(char *interface, char *options ...)

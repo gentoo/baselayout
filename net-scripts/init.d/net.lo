@@ -57,7 +57,10 @@ modules_load()
 {
 	local iface=${1} all=${2:-false} i j k p e before after diffs mod
 	local loaded_interface changed_something tmp modnums missingdeps
-	local -a mods=( $( find /lib/rcscripts/net.modules.d/ -maxdepth 1 -type f | sort ) ) umods sort_history
+	local -a mods=( $( find /lib/rcscripts/net.modules.d/ -maxdepth 1 -type f | sort ) ) 
+	local -a umods 			# user-specified modules
+	local -a sort_history	# used during module sort to prevent inf loop
+	local npref				# number of preferred modules appended to umods
 	local RC_INDENTATION=${RC_INDENTATION}	# so it will reset after function
 
 	[[ ${iface} != lo ]] && veinfo "Loading networking modules for ${iface}"
@@ -153,7 +156,8 @@ modules_load()
 		# Global setting follows interface-specific setting
 		umods=( "${umods[@]}" "${modules[@]}" )
 
-		# We add our preferred modules here
+		# Add our preferred modules
+		npref=2
 		umods=( "${umods[@]}" "ifconfig" "dhcpcd" )
 
 		# First we strip any modules that conflict from user settings
@@ -166,15 +170,22 @@ modules_load()
 			[[ ${umods[i]} == dhcp ]] && continue
 
 			if [[ $( type -t ${umods[i]}_provides ) != function ]]; then
+				# If the module is one of our preferred modules, then
+				# ignore this error; whatever is available will be
+				# used instead.
+				(( i < ${#umods[@]} - npref )) || continue
 				eerror "${umods[i]} is not a valid module (missing provides)"
 				return 1
 			fi
 
-			# Ensure that the user specified module has it's package installed.
-			# This is ${#umods[@]}-2 because we added two modules,
-			# ifconfig and dhcpcd, to the end of the list.
-			if [[ ${i} -lt ${#umods[@]}-2 ]]; then
+			# Ensure that the user specified module has its package installed
+			if (( i < ${#umods[@]} - npref )); then
+				# $1==true causes check_installed to report its own errors
 				${umods[i]}_check_installed true || return 1
+			else
+				# If this happens on a preferred modules, ignore it;
+				# whatever is available will be used instead.
+				${umods[i]}_check_installed false || continue
 			fi
 
 			k=${#mods[@]}
@@ -275,6 +286,10 @@ modules_load()
 	for i in ${MODULES[@]}; do
 		p=$( ${i}_provides )
 		[[ ${p} == ${i} ]] && continue
+		# When stopping an interface, all modules are loaded via ${all}
+		# This can result in multiple modules providing the same
+		# function.  Only wrap the first available.
+		[[ $( type -t ${p}_provides ) == function ]] && continue
 		for j in $( typeset -f | grep -o ^${i}_'[^ ]*' ); do
 			eval "${p}${j#${i}}() { ${j} \"\$@\"; }"
 		done
