@@ -19,10 +19,16 @@ start() {
 			do
 				if [ -e /dev/.devfsd ]
 				then
-					/usr/bin/setfont ${CONSOLEFONT} ${param} \
-						--tty=/dev/vc/${x}
+					if [ -x /usr/bin/consolechars ]
+					then
+						/usr/bin/consolechars -f ${CONSOLEFONT} ${param} \
+							--tty=/dev/vc/${x}
+					else
+						/usr/bin/setfont ${CONSOLEFONT} ${param}
+						continue
+					fi
 				else
-					/usr/bin/setfont ${CONSOLEFONT} ${param} \
+					/usr/bin/consolechars -f ${CONSOLEFONT} ${param} \
 						--tty=/dev/tty${x}
 				fi
 			done

@@ -67,14 +67,14 @@ stop() {
 	local myservice=${myexe##*/}
 	ebegin "Stopping ${myservice}"
 	rm -f ${svcdir}/options/xdm/service
-	if [ "`ps -A |grep ${myservice}`" ]
+	if [ "`ps -A | grep "${myservice}" `" ]
 	then
 		start-stop-daemon --stop --quiet \
 			--exe $myexe >/dev/null 2>/dev/null
 	fi
-	if [ "`ps -A |grep X`" ]
+	if [ "`ps -A | grep "X" `" ]
 	then
-		killall X
+		killall X >/dev/null 2>/dev/null
 	fi
 	eend $? "Error stopping ${myservice}."
 }
