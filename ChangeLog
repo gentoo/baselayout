@@ -2,6 +2,13 @@
 # Copyright 2002-2004 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+* rc-scripts 1.4.4 (26 Feb 2004)
+
+  07 Apr 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Patch from Gustavoz for Sparc console: Fetch LIVECD_CONSOLE from dmesg
+    output.  Also support 4800 baud correctly.
+
   16 Mar 2004; Aron Griffis <agriffis@gentoo.org>:
 
     The changes in this commit pertain primarily to

@@ -35,7 +35,7 @@ livecd_console_settings() {
 		2400*)
 			LIVECD_CONSOLE_BAUD=2400
 		;;
-		4800)
+		4800*)
 			LIVECD_CONSOLE_BAUD=4800
 		;;
 		9600*)
@@ -143,6 +143,17 @@ livecd_fix_inittab() {
 
 	# Comment out current getty settings
 	sed -i -e '/^c[0-9]/ s/^/#/' /etc/inittab	
+
+	# Sparc console workaround, kernel detects it automatically
+	if [ "${HOSTTYPE}" = "sparc" ]
+	then
+		mount -t openpromfs none /proc/openprom
+		LIVECD_CONSOLE=`dmesg|grep 'Console: ttyS'|cut -d ' ' -f 2`
+		if [ -n "${LIVECD_CONSOLE}" ]
+		then
+			LIVECD_CONSOLE_BAUD=`stty -F /dev/${LIVECD_CONSOLE} speed`
+		fi
+	fi
 
 	if [ "${LIVECD_CONSOLE}" = "tty0" -o "${LIVECD_CONSOLE}" = "" ]
 	then
