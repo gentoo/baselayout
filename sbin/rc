@@ -231,6 +231,9 @@ then
 		mount --bind "${tsvcdir}" "${svcdir}"
 	fi
 
+	# Clear $svcdir from stale entries
+	rm -rf "${svcdir}"/*
+
 	# Update the dependency cache
 	/sbin/depscan.sh
 

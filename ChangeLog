@@ -2,6 +2,12 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  15 Jan 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Clear $svcdir in /sbin/rc before we run depscan to make sure we do
+    not have stale entries left from hard reboot, thanks to pac1085 on
+    irc.
+
 * rc-scripts 1.4.3.2 (15 Jan 2003)
 
   15 Jan 2003; Martin Schlemmer <azarah@gentoo.org>:
