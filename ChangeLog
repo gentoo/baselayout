@@ -21,6 +21,9 @@
     - noted that inet6 addresses do not create aliases
     - added examples of assigning inet6 addresses
 
+    net-scripts/net.modules.d/iwconfig
+    - improve error message when card does not support scanning
+
   02 Nov 2004; Roy Marples <uberlord@gentoo.org>:
 
     net-scripts/conf.d/net.example

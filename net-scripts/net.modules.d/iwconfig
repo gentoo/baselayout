@@ -1,5 +1,5 @@
 # iwconfig module for net-scripts
-# Version 1.0.4
+# Version 1.0.5
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -423,9 +423,17 @@ iwconfig_scan() {
 	if [[ -z ${scan} ]]; then
 		ewarn "${iface} does not support scanning"
 		eval x=\"\$\{adhoc_essid_${iface}\}\"
-		[[ -n ${preferred_aps} || -n ${x} ]] && return 0
+		[[ -n ${x} ]] && return 0
+		if [[ -n ${preferred_aps} ]]; then
+			[[ ${associate_order} == forcepreferred \
+			|| ${associate_order} == forcepreferredonly ]] && return 0
+		fi
 		eerror "You either need to set a preferred_aps list in /etc/conf.d/wireless"
 		eerror "   preferred_aps=( \"ESSID1\" \"ESSID2\" )"
+		eerror "   and set associate_order_${iface}=\"forcepreferred\""
+		eerror "   or set associate_order_${iface}=\"forcepreferredonly\""
+		eerror "or hardcode the ESSID to \"any\" and let the driver find an Access Point"
+		eerror "   essid_${iface}=\"any\""
 		eerror "or configure defaulting to Ad-Hoc when Managed fails"
 		eerror "   adhoc_essid_${iface}=\"WLAN\""
 		eerror "or hardcode the ESSID against the interface (not recommended)"
@@ -809,7 +817,7 @@ iwconfig_configure() {
 	
 	eval ESSID=\"\$\{adhoc_essid_${iface}\}\"
 	if [[ -n ${ESSID} ]]; then
-		ewarn ${e}
+		ewarn "${e}"
 		iwconfig_setup_specific ${iface} ad-hoc
 		return $?
 	fi
