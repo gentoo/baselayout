@@ -5,7 +5,7 @@
 PATH=/usr/local/bin
 ROOTPATH=/usr/local/bin
 LDPATH=/usr/local/lib
-MANPATH=/usr/share/man
+MANPATH=/usr/share/man:/usr/local/share/man
 INFODIR=/usr/share/info
 CVS_RSH=ssh
 PAGER=/usr/bin/less

@@ -2,6 +2,11 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  5 Jun 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add /usr/local/share/man to $MANPATH (/etc/env.d/00basic), resolving
+    bug #3363
+
   26 May 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Update /etc/init.d/netmount not to try and mount NFS filesystems
