@@ -1,12 +1,11 @@
 #!/bin/bash
 export TMP="${TMP:-/tmp}"
-export V="1.6.7"
+export V="1.6.9"
 export DEST="${TMP}/rc-scripts-${V}"
 rm -rf ${DEST}
 install -d -m0755 ${DEST}
 
-for x in bin etc init.d sbin src rc-lists man
-do
+for x in bin etc init.d sbin src rc-lists man ; do
 	cp -ax $x ${DEST}
 done
 
