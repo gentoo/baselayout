@@ -17,7 +17,7 @@ then
 	eend $?
 
 	# We need to properly terminate devfsd to save the permissions
-	if [ "`ps -A | grep 'devfsd'`" ]
+	if [ -n "`ps -A | gawk '/devfsd/ { print }'`" ]
 	then
 		ebegin "Stopping devfsd"
 		killall -15 devfsd &> /dev/null
@@ -86,7 +86,7 @@ remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $1}' /proc/mou
 ebegin "Unmounting filesystems"
 # Awk should still be availible (allthough we should consider
 # moving it to /bin if problems arise)
-for x in $(awk '!/(^#|proc|devfs|tmpfs|^none|^\/dev\/root|[[:space:]]\/[[:space:]])/ {print $2}' /proc/mounts |sort -r)
+for x in `mount | awk '{ if (($5 !~ /(proc|devfs|tmpfs)/) && ($1 !~ /^rootfs|^\/dev\/root/)) print $3 }' | sort -r`
 do
 	umount -f -r ${x} &> /dev/null
 done

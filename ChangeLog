@@ -2,6 +2,10 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  27 Feb 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Finally fix /etc/init.d/halt.sh to unmount non critical mounts properly.
+
   20 Feb 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Kill /dev/ttyp0 error at boot by changing test in /etc/init.d/modules
