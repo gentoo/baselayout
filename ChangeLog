@@ -7,6 +7,8 @@
     Add vlan support to /etc/init.d/net.eth0, bug #15588, thanks to
 	Andy Dustman <andy-gentoo.54e552@dustman.net>.
 
+    Add 'TERM=Eterm' to /etc/DIR_COLORS, bug #23423.
+
   16 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Add aliases for add/del to /sbin/rc-update closing bug #24317, thanks
