@@ -16,6 +16,9 @@
     options out of rc.conf and into conf.d/keymaps and add some config 
     checks to init.d/keymaps like the clock/hostname init.d scripts.
 
+    Make sure /etc/rc.conf overrides conf.d files when starting up 
+    critical services.  Should help out with transition from rc.conf.
+
   24 Nov 2004; Roy Marples <uberlord@gentoo.org>:
 
     Ensure all net-scripts modules depend on interface_variable function

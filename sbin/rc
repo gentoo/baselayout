@@ -363,6 +363,7 @@ then
 		retval=$?
 		[ "${retval}" -ne 0 ] && return "${retval}"
 		[ -e "/etc/conf.d/${x}" ] && source "/etc/conf.d/${x}"
+		source /etc/rc.conf
 
 		start || eerror "Failed to start /etc/init.d/${x}"
 		retval=$?
