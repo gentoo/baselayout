@@ -344,7 +344,7 @@ rm -rf ${svcdir}/softscripts.old &>/dev/null
 #we want devfsd running after a change of runlevel (this is mostly if we return
 #from runlevel 'single')
 if [ -z "$(ps -A | grep devfsd)" ] && \
-   [ -n "$(cat mounts | grep -e '/dev devfs')" ]
+   [ -n "$(cat /proc/mounts | grep -e '/dev devfs')" ]
 then
 	/sbin/devfsd /dev &>/dev/null
 fi

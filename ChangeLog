@@ -2,6 +2,11 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  21 March 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update /sbin/rc to fix a 'cat mounts' instead of the correct
+    version, 'cat /proc/mounts'.
+
   19 March 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Add initial support for the --quiet flag that suppress output.
