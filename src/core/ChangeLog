@@ -1,5 +1,10 @@
 # ChangeLog for Gentoo System Intialization core utilities.
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
+# $Header$
+
+  16 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add Header tags to all source files and Makefile.
 
   16 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
 

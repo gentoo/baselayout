@@ -4,6 +4,8 @@
  * Licensed under the GPL v2 as per the whole kernel source tree.
  *
  * Ripped out the rcu stuff, as it's not needed.
+ *
+ * $Header$
  */
 
 #ifndef _LINUX_LIST_H
