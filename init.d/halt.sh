@@ -15,7 +15,7 @@ then
 fi
 
 # We need to properly terminate devfsd to save the permissions
-if [ -n "`ps --no-heading -C 'devfsd'`" ]
+if [ -n "$(ps --no-heading -C 'devfsd')" ]
 then
 	ebegin "Stopping devfsd"
 	killall -15 devfsd &>/dev/null
@@ -59,7 +59,7 @@ fi
 # occure, bug #13599.
 umount -at tmpfs &>/dev/null
 
-if [ -n "`swapon -s 2>/dev/null`" ]
+if [ -n "$(swapon -s 2>/dev/null)" ]
 then
 	ebegin "Deactivating swap"
 	swapoff -a &>/dev/null
@@ -151,7 +151,6 @@ done
 eend 0
 
 # Try to remove any dm-crypt mappings
-
 if [ -f /etc/conf.d/cryptfs ] && [ -x /bin/cryptsetup ]
 then
 	einfo "Removing dm-crypt mappings"
