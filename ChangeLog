@@ -7,6 +7,7 @@
     net.lo tests the return value of modprobe - fixes #76385
     iwconfig now sets enc keys through an eval statement - fixes #76601
     updated wireless.example for whitespace in keys
+    iwconfig now accepts mode "auto" and defaults to it
 
   19 Dec 2004; Roy Marples <uberlord@gentoo.org>:
 

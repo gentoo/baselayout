@@ -63,9 +63,10 @@
 # do require the ESSID to be set - do this here
 #essid_eth0="any"
 
-# Set the mode of the interface (managed, ad-hoc or master). Managed is default
+# Set the mode of the interface (managed, ad-hoc, master or auto)
+# The default is auto
 # If it's ad-hoc or master you also may need to specify the channel below
-#mode_eth0="Managed"
+#mode_eth0="auto"
 
 # If managed mode fails, drop to ad-hoc mode with the below ESSID?
 #adhoc_essid_eth0="WLAN"
