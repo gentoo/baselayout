@@ -84,9 +84,12 @@ BEGIN {
 
 				# strip variable name and '=' from data
 				sub("^[[:space:]]*" envnode[1] "[[:space:]]*=", "")
-				# Strip all '"' and '\''
+				# strip all '"' and '\''
 				gsub(/\"/, "")
 				gsub(/\'/, "")
+				# strip leading and trailing spaces
+				gsub(/^[[:space:]]*/, "")
+				gsub(/[[:space:]]*$/, "")
 
 				if (envnode[1] in ENVTREE) {
 
