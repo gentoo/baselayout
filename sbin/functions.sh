@@ -660,11 +660,11 @@ then
 		RC_ENDCOL="no"
 	fi
 	
-	for arg in $*
+	for arg in "$@"
 	do
 		case "${arg}" in
 			# Lastly check if the user disabled it with --nocolor argument
-			--nocolor)
+			--nocolor|-nc)
 				RC_NOCOLOR="yes"
 				;;
 		esac
