@@ -1,5 +1,5 @@
 #!/sbin/runscript
-# Copyright 1999-2004 Gentoo Foundation
+# Copyright 1999-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
 
@@ -14,20 +14,19 @@ start() {
 	eend $? "Some local filesystem failed to mount"
 
 	# Make sure we insert usbcore if its a module
-	if [ -f /proc/modules ]
-	then
+	if [[ -f /proc/modules ]] ; then
 		# >/dev/null to hide errors from non-USB users
-		modprobe usbcore &>/dev/null
+		modprobe usbcore &> /dev/null
 	fi
 	
 	# Check what USB fs the kernel support.  Currently
 	# 2.5+ kernels, and later 2.4 kernels have 'usbfs',
 	# while older kernels have 'usbdevfs'.
-	local usbfs="$(grep -Fow usbfs /proc/filesystems ||
-		grep -Fow usbdevfs /proc/filesystems)"
+	local usbfs=$(grep -Fow usbfs /proc/filesystems ||
+		grep -Fow usbdevfs /proc/filesystems)
 
-	if [ -n "${usbfs}" ] && \
-	   [ -e /proc/bus/usb -a ! -e /proc/bus/usb/devices ]
+	if [[ -n ${usbfs} ]] && \
+	   [[ -e /proc/bus/usb && ! -e /proc/bus/usb/devices ]]
 	then
 		ebegin "Mounting USB device filesystem (${usbfs})"
 #		# Fetch usb gid from /etc/group; fixes bug 35860
@@ -49,9 +48,9 @@ start() {
 # here, make sure to change it there also!
 dm-crypt-start() {
 	local cryptfs_status=0 
-	local mountline mount swap options pre_mount post_mount source
+	local gpg_options key loop_file mountline mount options post_mount pre_mount source swap
 
-	if [ -f /etc/conf.d/cryptfs ] && [ -x /bin/cryptsetup ]; then
+	if [[ -f /etc/conf.d/cryptfs ]] && [[ -x /bin/cryptsetup ]] ; then
 		ebegin "Running post_mount commands for dm-crypt"
 
 		while read mountline; do
@@ -65,11 +64,11 @@ dm-crypt-start() {
 					dm-crypt-execute
 
 					# Prepare for the next mount/swap by resetting variables
-					unset mount swap options pre_mount post_mount source
+					unset gpg_options key loop_file mount options pre_mount post_mount source swap
 					;;
 
-				options=*|pre_mount=*|post_mount=*|source=*)
-					if [[ -z ${mount} && -z ${swap} ]]; then
+				gpg_options=*|key=*|loop_file=*|options=*|post_mount=*|pre_mount=*|source=*)
+					if [[ -z ${mount} && -z ${swap} ]] ; then
 						ewarn "Ignoring setting outside mount/swap section: ${mountline}"
 						continue
 					fi
@@ -100,7 +99,7 @@ dm-crypt-start() {
 dm-crypt-execute() {
 	local mount_point target
 
-	if [[ -n ${mount} && -n ${post_mount} ]]; then
+	if [[ -n ${mount} && -n ${post_mount} ]] ; then
 		target=${mount}
 	else
 		return
@@ -113,12 +112,12 @@ dm-crypt-execute() {
 	fi
 
 	mount_point=$(grep "/dev/mapper/${target}" /proc/mounts | cut -d' ' -f2)
-	if [[ -z ${mount_point} ]]; then
+	if [[ -z ${mount_point} ]] ; then
 		ewarn "Failed to find mount point for ${target}, skipping"
 		cryptfs_status=1
 	fi
 
-	if [[ -n ${post_mount} ]]; then
+	if [[ -n ${post_mount} ]] ; then
 		ebegin "Running post_mount commands for target ${target}"
 		eval "${post_mount}" >/dev/null
 		eend $? || cryptfs_status=1

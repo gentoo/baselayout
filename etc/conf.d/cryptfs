@@ -23,3 +23,10 @@
 #options='-d /dev/urandom'
 #pre_mount='/sbin/mkreiserfs -f -f ${dev}'
 #post_mount='chown root:root ${mount_point}; chmod 1777 ${mount_point}'
+
+# Loopback file example
+
+#mount='home-crypt'
+#source='/dev/loop0'
+#options='-c serpent -s 256'
+#loop_file='/mnt/crypt/home'

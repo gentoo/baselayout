@@ -1,4 +1,4 @@
-# Copyright 1999-2004 Gentoo Foundation
+# Copyright 1999-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
 
@@ -102,6 +102,9 @@ halt -w &>/dev/null
 # Unmount file systems, killing processes if we have to.
 # Unmount loopback stuff first
 # Use `umount -d` to detach the loopback device
+
+# Remove loopback devices started by dm-crypt
+
 remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts | \
             sort -r | grep -v '/newroot' | grep -v '/mnt/livecd'`"
 [ -n "${remaining}" ] && {
@@ -192,6 +195,20 @@ then
 		/bin/cryptsetup remove ${target}
 		eend $? "Failed to remove dm-crypt mapping for: ${target}"
 	done
+
+	if [[ -n $(/bin/egrep -e "^(source=)./dev/loop*" /etc/conf.d/cryptfs) ]] ; then
+		einfo "Taking down any dm-crypt loop devices"
+		/bin/egrep -e "^(source)" /etc/conf.d/cryptfs | while read sourceline
+		do
+			source=
+			eval ${sourceline}
+			if [[ -n $(echo ${source} | grep /dev/loop) ]] ; then
+				ebegin "   Taking down ${source}"
+				/sbin/losetup -d ${source}
+				eend $? "  Failed to remove loop"
+			fi
+		done
+	fi
 fi
 
 # Stop LVM
