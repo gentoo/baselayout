@@ -7,6 +7,9 @@
     We should still use /sbin/udev as hotplug agent if /sbin/hotplug do
     not exist.  Updated /sbin/rc for this.
 
+    Add a fix to /etc/init.d/keymaps for bug #32111 (we should not have
+    '-u' in the call to loadkeys when using unicode).
+
   27 Oct 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix return code checking of fsck in /etc/init.d/checkfs, bug #31349.

@@ -34,6 +34,7 @@ start() {
 	if [ "$1" = "-u" ]
 	then
 		/usr/bin/kbd_mode -u
+		KEYMAP="${KEYMAP/-u}"
 	fi
 	
 	# New kbd support ...
