@@ -1,0 +1,13 @@
+bootmisc  
+checkroot  
+consolefont  
+keymaps     
+modules  
+rmnologin  
+urandom
+checkfs   
+clock      
+hostname     
+localmount  
+net.lo   
+serial
