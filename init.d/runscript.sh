@@ -71,11 +71,31 @@ svc_stop() {
 	local stopfail="no"
 	local mydeps
 	local mydep
+	local depservice
 	if [ ! -L ${svcdir}/started/${myservice} ]
 	then
 		einfo "${myservice} has not yet been started."
 		return 1
 	fi
+
+	#stop all services that should be before on runlevel change
+	for x in ${svcdir}/before/*/${myservice}
+	do
+		if [ ! -L ${x} ]
+		then
+			continue
+		fi
+		depservice=${x%/*}
+		if [ -d ${svcdir}/softscripts.new ]
+		then
+			if [ ! -L ${svcdir}/softscripts.new/${depservice##*/} ] && \
+			   [ -L ${svcdir}/started/${depservice##*/} ]
+			then
+				/etc/init.d/${depservice##*/} stop
+			fi
+		fi
+	done
+	
 	if [ -L /etc/init.d/boot/${myservice} ]
 	then
 		einfo "Warning: you are stopping a boot service."
@@ -145,9 +165,28 @@ svc_start() {
 	local x
 	local y
 	local myserv
+	local depservice
 	if [ ! -L ${svcdir}/started/${myservice} ]
 	then
-		#link first to prevent possible recursion
+		#start anything that should be started before on runlevel change
+		for x in ${svcdir}/after/*/${myservice}
+		do
+			if [ ! -L ${x} ]
+			then
+				continue
+			fi
+			depservice=${x%/*}
+			if [ -d ${svcdir}/softscripts.old ]
+			then
+				if [ ! -L ${svcdir}/softscripts.old/${depservice##*/} ] && \
+				   [ ! -L ${svcdir}/started/${depservice##*/} ]
+				then
+					/etc/init.d/${depservice##*/} start
+				fi
+			fi
+		done
+
+		#link first to prevent possible recursion		
 		ln -s /etc/init.d/${myservice} ${svcdir}/started/${myservice}
 
 		#start dependencies, if any
@@ -204,14 +243,11 @@ svc_start() {
 		#remove link if service didn't start; but only if we're not booting
 		#if we're booting, we need to continue and do our best to get the
 		#system up.
-		if [ "$SOFTLEVEL" = "boot" ]
-		then
-			return $retval
-		elif [ $retval -ne 0 ]
+		if [ $retval -ne 0 ] && [ "$SOFTLEVEL" != "boot" ]
 		then
 			rm ${svcdir}/started/${myservice}
-			return $retval
 		fi
+		return $retval
 	else
 		einfo "${myservice} has already been started."
 		return 1

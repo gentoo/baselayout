@@ -2,8 +2,14 @@
 # Copyright 2001 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+
   15 Feb 2002: Martin Schlemmer (azarah@gentoo.org): update
-  /etc/profile to resolve bug #588.
+    /etc/profile to resolve bug #588.
+
+    Reimplemented things a bit, and added the 'after' type.  'before'
+    and 'after' will only work currently for a change of runlevel.
+    Updated /etc/init.d/depscan.sh, /etc/init.d/runscript.sh and
+    /sbin/rc for it.
 
   13 Feb 2002: Martin Schlemmer (azarah@gentoo.org): add some more
   entries to /etc/devfsd.conf to make alsa users life easier ...

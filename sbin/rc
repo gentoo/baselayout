@@ -185,12 +185,6 @@ dep_stop() {
 		#should not work for 'use'
 		if [ ! -d ${svcdir}/need/${myservice} ] #&& [ ! -d ${svcdir}/use/${myservice} ]
 		then
-			for x in ${svcdir}/after/*/${myservice}
-			do
-				depservice=${x%/*}
-				dep_stop ${svcdir}/softscripts/${depservice##*/}
-			done
-		
 			#nothing depends on me
 			if [ -L ${svcdir}/started/${myservice} ]
 			then
@@ -213,12 +207,6 @@ dep_stop() {
 			done
 			if [ $needsme -eq 0 ]
 			then
-				for x in ${svcdir}/after/*/${myservice}
-				do
-					depservice=${x%/*}
-					dep_stop ${svcdir}/softscripts/${depservice##*/}
-				done
-			
 				if [ -L ${svcdir}/started/${myservice} ]
 				then
 					${1} stop
@@ -251,10 +239,10 @@ then
 	fi
 fi
 
-#clean out directory to remove traces of previous runlevel
+#move the old softscritps directory to a different one
 #and make the new softscripts directory the current
 
-rm -rf ${svcdir}/softscripts
+mv ${svcdir}/softscripts ${svcdir}/softscripts.old
 mv ${svcdir}/softscripts.new/ ${svcdir}/softscripts
 
 dep_start() {
@@ -269,12 +257,6 @@ dep_start() {
 	myservice=${1##*/}
 	if [ ! -L ${svcdir}/started/${myservice} ]
 	then
-		for x in ${svcdir}/before/*/${myservice}
-		do
-			depservice=${x%/*}
-			dep_start ${svcdir}/softscripts/${depservice##*/}
-		done
-	
 		$1 start
 	fi
 }
@@ -283,6 +265,9 @@ for i in ${svcdir}/softscripts/*
 do
 	dep_start $i
 done
+
+#clean the old runlevel
+rm -rf ${svcdir}/softscripts.old
 
 #depends gets newked, so update them
 #(this problem should be solved now, but i think it will be a good idea
