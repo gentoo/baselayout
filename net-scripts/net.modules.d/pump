@@ -76,7 +76,7 @@ pump_stop() {
 	e=$( pump --status --interface ${iface} 2>${devnull} | grep ${iface})
 	[[ -z ${e} ]] && return 1
 	
-	ebegin "  Releasing DHCP lease for ${iface}"
+	ebegin "Releasing DHCP lease for ${iface}"
 	for ((count = 0; count < 9; count = count + 1)); do
 		e=$( pump --release --interface ${iface} 2>${devnull} )
 		[[ -z ${e} ]] && break
@@ -100,7 +100,7 @@ pump_start() {
 
 	# Check that iface was not brought up by the kernel ...
 	if [[ ${check} == ${iface} ]] && interface_is_up ${iface} true ; then
-		einfo "    Keeping kernel configuration for ${iface}"
+		einfo "Keeping kernel configuration for ${iface}"
 		return 0
 	fi
 
@@ -116,19 +116,19 @@ pump_start() {
 	[[ -n ${hostname} ]] && opts="--hostname=${hostname%%.*} ${opts}"
 
 	# Bring up DHCP for this interface (or alias)
+	ebegin "Running pump"
 	pump ${opts} --win-client-ident --interface ${iface} 2>${devnull}
-	eend $?
-	[[ 0 != $? ]] && return $?
+	eend $? || return $?
 
 	# pump succeeded, show address retrieved
 	local addr=$( interface_get_address ${iface} )
-	einfo "    ${iface} received address ${addr}"
+	einfo "${iface} received address ${addr}"
 
 	eval peer=\"\$\{peer_ntp_${iface}\}\"
 	[[ -z ${peer} ]] && eval peer=\"\$\{peer_ntp\}\"
 	if [[ ${peer} != no ]]; then
 		export new_ntp_servers=$( pump -i eth1 --status | awk '/Ntpservers/ {print $2}' 2>/dev/null )
-		source /etc/net.modules.d/helpers.d/config-system
+		source /lib/rcscripts/net.modules.d/helpers.d/config-system
 		config_system
 	fi
 

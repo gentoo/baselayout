@@ -69,7 +69,7 @@ vlan_post_start() {
 
 	# Start vlans for this interface
 	for vlan in ${vlans}; do
-		einfo "  Adding VLAN ${vlan} to ${iface}"
+		einfo "Adding VLAN ${vlan} to ${iface}"
 		/sbin/vconfig add ${iface} ${vlan} >${devnull}
 		eend $? && iface_start ${iface}.${vlan}
 	done

@@ -23,7 +23,7 @@ ip link set up dev ${interface} &>/dev/null
 
 # Set our module to dhclient if it's not set
 [[ -z ${module} ]] && module=dhclient
-source /etc/net.modules.d/helpers.d/config-system
+source /lib/rcscripts/net.modules.d/helpers.d/config-system
 
 masks=${new_subnet_mask//./ }
 len=0

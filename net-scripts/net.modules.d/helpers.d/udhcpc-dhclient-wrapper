@@ -34,5 +34,5 @@ export new_ntp_servers=${ntpsrv}
 export module=udhcpc
 
 # Execute the dhclient script and exit with it's code
-/etc/net.modules.d/helpers.d/dhclient-${iface_type}
+/lib/rcscripts/net.modules.d/helpers.d/dhclient-${iface_type}
 exit $?

@@ -146,8 +146,8 @@ wireless_report() {
 		mac=" at ${mac}"
 	fi
 	
-	einfo "    ${iface} connected ${m} \"${essid}\"${mac}"
-	einfo "    in ${mode} mode on channel ${channel} ${wep_status}"
+	einfo "  ${iface} connected ${m} \"${essid}\"${mac}"
+	einfo "  in ${mode} mode on channel ${channel} ${wep_status}"
 }
 
 # char* wireless_get_essid_var(void)
@@ -181,8 +181,8 @@ wireless_user_config() {
 	if [[ -n ${conf} ]]; then
 		e=$( iwconfig ${iface} ${conf} 2>&1 )
 		if [[ -n ${e} ]]; then
-			ewarn "  ${iface} does not support the following configuration commands"
-			ewarn "    \"${conf}\""
+			ewarn "${iface} does not support the following configuration commands"
+			ewarn "  \"${conf}\""
 		fi
 	fi
 
@@ -190,8 +190,8 @@ wireless_user_config() {
 	if [[ -n ${conf} ]]; then
 		e=$( iwpriv ${iface} ${conf} 2>&1 )
 		if [[ -n ${e} ]]; then
-			ewarn "  ${iface} does not support the following private ioctls"
-			ewarn "    \"${conf}\""
+			ewarn "${iface} does not support the following private ioctls"
+			ewarn "  \"${conf}\""
 		fi
 	fi
 }
@@ -253,8 +253,8 @@ wireless_setup_specific() {
 	local iface=${1} mode=${2} channel key dessid e
 
 	if [[ -z ${ESSID} ]]; then
-		eerror "  ${iface} requires an ESSID to be set to operate in ${mode} mode"
-		eerror "  adjust the essid_${iface} setting in /etc/conf.d/wireless"
+		eerror "${iface} requires an ESSID to be set to operate in ${mode} mode"
+		eerror "adjust the essid_${iface} setting in /etc/conf.d/wireless"
 		return 1
 	fi
 	dessid=${ESSID//\\\\/\\\\}
@@ -273,13 +273,13 @@ wireless_setup_specific() {
 	e=$( iwconfig ${iface} key ${key} 2>&1 )
 	if [[ -n ${e} && ${key} != off ]]; then
 		e=$( get_essid_var ${essid} )
-		ewarn "  ${iface} does not support setting keys"
-		ewarn "  or the parameter \"mac_key_${e}\" or \"key_${e}\" is incorrect"
+		ewarn "${iface} does not support setting keys"
+		ewarn "or the parameter \"mac_key_${e}\" or \"key_${e}\" is incorrect"
 	fi
 
 	e=$( iwconfig ${iface} essid "${ESSID}" 2>&1 )
 	if [[ -n ${e} ]]; then
-		eerror "  ${iface} does not support setting ESSID to \"${dessid}\""
+		eerror "${iface} does not support setting ESSID to \"${dessid}\""
 		return 1
 	fi
 	iwconfig ${iface} nick "${ESSID}" 2>/dev/null
@@ -291,7 +291,7 @@ wireless_setup_specific() {
 	e=$( iwconfig ${iface} channel ${channel} 2>&1 )
 	if [[ -n ${e} ]]; then
 		eerror ${e}
-		ewarn "  ${iface} does not support setting the channel to \"${channel}\""
+		ewarn "${iface} does not support setting the channel to \"${channel}\""
 		return 1
 	fi
 
@@ -337,8 +337,8 @@ wireless_test_associated() {
 	test=$( eval echo \$\{associate_test_${iface}\} | tr '[:upper:]' '[:lower:]' )
 	test=${test:-mac}
 	if [[ ${test} != mac && ${test} != quality && ${test} != all ]]; then
-		ewarn "    associate_test_${iface} is not set to mac, quality or all"
-		ewarn "    defaulting to \"mac\""
+		ewarn "  associate_test_${iface} is not set to mac, quality or all"
+		ewarn "  defaulting to \"mac\""
 		test=mac
 	fi
 
@@ -384,25 +384,25 @@ wireless_associate() {
 		dessid="any"
 	else
 		if [[ ${wep_required} == yes && ${key} == off ]]; then
-			ewarn "  WEP key is not set for \"${dessid}\" - not connecting"
+			ewarn "WEP key is not set for \"${dessid}\" - not connecting"
 			return 1
 		fi
 		if [[ ${wep_required} == no && ${key} != off ]]; then
 			key="off"
-			ewarn "  \"${dessid}\" is not WEP enabled - ignoring setting"
+			ewarn "\"${dessid}\" is not WEP enabled - ignoring setting"
 		fi
 		e=$( iwconfig ${iface} key ${key} 2>&1 )
 		if [[ -n ${e} && ${key} != off ]]; then
 			e=$( wireless_get_essid_var ${essid} )
-			ewarn "  ${iface} does not support setting keys"
-			ewarn "  or the parameter \"mac_key_${e}\" or \"key_${e}\" is incorrect"
+			ewarn "${iface} does not support setting keys"
+			ewarn "or the parameter \"mac_key_${e}\" or \"key_${e}\" is incorrect"
 			return 1
 		fi
 		[[ ${key} != off ]] && w="(WEP enabled)"
 	fi
 
 	e=$( iwconfig ${iface} essid "${ESSID}" 2>&1 )
-	[[ -n ${e} && ${ESSID} != any ]] && ewarn "  ${iface} does not support setting ESSID to \"${dessid}\""
+	[[ -n ${e} && ${ESSID} != any ]] && ewarn "${iface} does not support setting ESSID to \"${dessid}\""
 	iwconfig ${iface} nick "${ESSID}" 2>/dev/null
 
 	ebegin "  Connecting to \"${ESSID//\\\\//}\" ${w}"
@@ -434,7 +434,7 @@ wireless_scan() {
 	mode=$( eval echo \$\{scan_mode_${iface}\} | tr '[:upper:]' '[:lower:]' )
 	if [[ -n ${mode} ]]; then
 		e=$( iwconfig ${iface} mode ${mode} 2>&1 )
-		[[ -n ${e} ]] && ewarn "  ${iface} does not support setting the mode to \"${mode}\""
+		[[ -n ${e} ]] && ewarn "${iface} does not support setting the mode to \"${mode}\""
 	fi
 
 	# Next we set any private driver ioctls needed
@@ -442,12 +442,12 @@ wireless_scan() {
 	if [[ -n ${x} ]]; then
 		e=$( iwpriv ${iface} ${x} 2>&1 )
 		if [[ -n ${e} ]]; then
-			ewarn "  ${iface} does not support the following private ioctls" \
-			ewarn "    \"${x}\""
+			ewarn "${iface} does not support the following private ioctls" \
+			ewarn "  \"${x}\""
 		fi
 	fi
 
-	einfo "  Scanning for access points"
+	einfo "Scanning for access points"
 
 	# Sleep if required
 	eval x=\"\$\{sleep_scan_${iface}\}\"
@@ -460,8 +460,8 @@ wireless_scan() {
 	if [[ -n ${x} ]]; then
 		e=$( iwpriv ${iface} ${x} 2>&1 )
 		if [[ -n ${e} ]]; then
-			ewarn "  ${iface} does not support the following private ioctls" \
-			ewarn "    \"${x}\""
+			ewarn "${iface} does not support the following private ioctls" \
+			ewarn "  \"${x}\""
 		fi
 	fi
 
@@ -555,7 +555,7 @@ wireless_scan_report() {
 	local i k m remove
 	local -a u
 
-	[[ -z ${mac_APs} ]] && ewarn "    no access points found"
+	[[ -z ${mac_APs} ]] && ewarn "  no access points found"
 
 	# We need to do the for loop like this so we can
 	# dynamically remove from the array
@@ -564,15 +564,15 @@ wireless_scan_report() {
 		[[ ${enc_APs[i]} == yes ]] && k="(WEP required)"
 
 		if [[ -z ${essid_APs[i]} ]]; then
-			einfo "    Found ${mac_APs[i]} ${k}"
+			einfo "  Found ${mac_APs[i]} ${k}"
 		else
-			einfo "    Found \"${essid_APs[i]//\\\\/\\\\}\" at ${mac_APs[i]} ${k}"
+			einfo "  Found \"${essid_APs[i]//\\\\/\\\\}\" at ${mac_APs[i]} ${k}"
 		fi
 
 		eval m=\"\$\{mac_essid_${mac_APs[i]//:/}\}\"
 		if [[ -n ${m} ]]; then
 			essid_APs[i]=${m}
-			einfo "      mapping to \"${m//\\\\/\\\\}\""
+			einfo "    mapping to \"${m//\\\\/\\\\}\""
 		fi
 
 		remove=false
@@ -583,7 +583,7 @@ wireless_scan_report() {
 		else
 			for k in "${blacklist_aps[@]}"; do
 				if [[ ${k} == ${essid_APs[i]} ]]; then
-					ewarn "      \"${k//\\\\/\\\\}\" has been blacklisted - not connecting"
+					ewarn "    \"${k//\\\\/\\\\}\" has been blacklisted - not connecting"
 					remove=true
 					break
 				fi
@@ -620,7 +620,7 @@ wireless_force_preferred() {
 
 	[[ -z ${preferred_aps} ]] && return 1
 
-	ewarn "  Trying to force preferred incase they are hidden"
+	ewarn "Trying to force preferred in case they are hidden"
 	for essid in "${preferred_aps[@]}"; do
 		local found_AP=false
 		for ((i = 0; i < ${#mac_APs[@]}; i++)); do
@@ -635,7 +635,7 @@ wireless_force_preferred() {
 		fi
 	done
 
-	ewarn "  Failed to associate with any preferred access points on ${iface}"
+	ewarn "Failed to associate with any preferred access points on ${iface}"
 	return 1
 }
 
@@ -719,7 +719,7 @@ wireless_strip_associated() {
 		u=()
 		for ((j=0; j<${#mac_APs[@]}; j++)); do
 			if [[ ${essid_APs[j]} == ${e} ]]; then
-				ewarn "    ${e} has already been associated with ${i}"
+				ewarn "  ${e} has already been associated with ${i}"
 				unset essid_APs[j]
 				unset mac_APs[j]
 				unset enc_APs[j]
@@ -871,13 +871,13 @@ wireless_pre_start() {
 			wasup=false
 		fi
 		if ! wireless_check_extensions ${iface} ; then
-			einfo "  Wireless extensions not found for ${iface}"
+			einfo "Wireless extensions not found for ${iface}"
 			! ${wasup} && interface_down ${iface}
 			return 0
 		fi
 	fi
 
-	einfo "  Configuring wireless network for ${iface}"
+	einfo "Configuring wireless network for ${iface}"
 
 	# Setup IFS incase parent script has modified it
 	local IFS=$' '$'\n'$'\t'

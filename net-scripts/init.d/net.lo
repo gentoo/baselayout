@@ -57,9 +57,11 @@ modules_load()
 {
 	local iface=${1} all=${2:-false} i j k p e before after diffs mod
 	local loaded_interface changed_something tmp modnums missingdeps
-	local -a mods=( $( find /etc/net.modules.d/ -maxdepth 1 -type f | sort ) ) umods sort_history
+	local -a mods=( $( find /lib/rcscripts/net.modules.d/ -maxdepth 1 -type f | sort ) ) umods sort_history
+	local RC_INDENTATION=${RC_INDENTATION}	# so it will reset after function
 
-	[[ lo != ${iface} ]] && ebegin "Loading networking modules"
+	[[ lo != ${iface} ]] && einfo "Loading networking modules for ${iface}"
+	eindent
 
 	# Each of these sources into the global namespace, so it's
 	# important that module functions and variables are prefixed with
@@ -69,21 +71,21 @@ modules_load()
 	loaded_interface=false
 	for (( i=0; i < j; i++ )); do
 		if ! source ${mods[i]} ; then
-			eerror "  ${mods[i]##*/} failed a sanity check - will not load"
+			eerror "${mods[i]##*/} failed a sanity check - will not load"
 			unset mods[i]
 			continue
 		fi
 
 		mods[i]=${mods[i]##*/}
 		if [[ ${mods[i]} == interface ]]; then
-			eerror "  interface is a reserved name - cannot load a module called interface"
+			eerror "interface is a reserved name - cannot load a module called interface"
 			return 1
 		fi
 
 		e=false
 		for p in check_installed provides check_depends depend; do
 			[[ $( type -t ${mods[i]}_${p} ) == function ]] && continue
-			eerror "  ${mods[i]} does not support the required function ${p}"
+			eerror "${mods[i]} does not support the required function ${p}"
 			e=true
 		done
 		${e} && return 1
@@ -95,11 +97,36 @@ modules_load()
 		# replaced.  This is as much protection for devs as for users ;-)
 		after=$( typeset -f )
 
-		# Though diffutils is in the profiles, don't depend that it will exist
-		# Currently we cannot tell which function got modified as bash can do nested functions .... :/
-		diffs=$( diff -up <(echo "${before}") <(echo "${after}") 2>/dev/null | awk '{if ($1 == "-") print "changed"}' | xargs )
+		# Though diffutils is in the profiles, don't depend that it will exist.
+		# Here is an example of the output we're looking through.
+		# 
+		# $ diff -U0 -p <(echo "$funcs") <(echo "$funcs2")
+		# --- /dev/fd/63  2004-10-12 17:51:10.342906704 -0400
+		# +++ /dev/fd/62  2004-10-12 17:51:10.346905655 -0400
+		# @@ -69,0 +70,4 @@ addpath () 
+		# +asdf () 
+		# +{ 
+		# +    echo
+		# +}
+		# @@ -1160,4 +1163,0 @@ xvf () 
+		# -xzf () 
+		# -{ 
+		# -    xf "$@"
+		# -}
+		# @@ -1166 +1166,2 @@ xzvf () 
+		# -    xvf "$@"
+		# +    xvf "$@";
+		# +    echo whoah
+		#
+		diffs=$( diff -U0 -p <(echo "${before}") <(echo "${after}") 2>/dev/null | \
+			awk 'BEGIN { ORS = " "; }						# no need for xargs
+				 /^@@ / { f = $(NF-1); }					# collect function names reported by diff
+				 /^-/ && $2 == "()" { f = substr($1, 2); }	# override when functions are removed
+				 /^+/ && $2 == "()" { f = ""; }				# ignore when functions are added
+				 /^-/ && f { print f; f = ""; }				# report only once per function
+				 ' )
 		if [[ -n ${diffs} ]]; then
-			eerror "  ${mods[i]} modified at least one existing function"
+			eerror "${mods[i]} modified functions: ${diffs}"
 			return 1
 		fi
 		before="${after}"
@@ -113,7 +140,7 @@ modules_load()
 	done
 
 	if ! ${loaded_interface}; then
-		eerror "  no interface module has been loaded"
+		eerror "no interface module has been loaded"
 		return 1
 	fi
 
@@ -235,7 +262,8 @@ modules_load()
 	done
 	MODULES=( $( echo -e ${um} | sort -n | awk '{print $2}' ) )
 
-	[[ ${iface} != lo ]] && einfo "  modules: ${MODULES[@]}"
+	[[ ${iface} != lo ]] && einfo "modules: ${MODULES[@]}"
+	eindent
 
 	# Setup class wrappers: interface_up -> iproute2_up, for example
 	for i in ${MODULES[@]}; do
@@ -268,7 +296,7 @@ modules_load()
 		${i}_check_depends || return 1
 		e=$( ${i}_provides )
 		if [[ ${all} != true && ${iface} != lo && ${e} != ${i} ]]; then
-			einfo "    ${i} provides ${e}"
+			einfo "${i} provides ${e}"
 		fi
 	done
 }
@@ -301,6 +329,7 @@ interface_exists() {
 # calling itself recursively.
 iface_start() {
 	local iface=${1} mod i label x conf warn=false
+	local RC_INDENTATION=${RC_INDENTATION}	# so it will reset after function
 
 	# Localise and initialise variables
 	for mod in ${MODULES[@]}; do
@@ -322,52 +351,53 @@ iface_start() {
 			warn=true
 		else
 			eerror "Cannot default to dhcp as there is no dhcp module loaded"
-			eerror "Configuration not set for ${iface}"
+			eerror "No configuration for ${iface}"
 			return 1
 		fi
 	fi
 
-	ebegin "Bringing ${iface} up"
+	einfo "Bringing up ${iface}"
+	eindent
 	for (( i=0; i < ${#config_IFACE[@]}; i++ )); do
 		# Set a label for the alias if $i > 0
 		[[ ${i} -eq 0 ]] && label=${iface} || label=${iface}:${i}
 
-		${warn} && ewarn "  Configuration not set for ${iface} - assuming dhcp"
+		${warn} && ewarn "Configuration not set for ${iface} - assuming dhcp"
 
 		# We convert it to an array - this has the added
 		# bonus of trimming spaces!
 		conf=( ${config_IFACE[i]} )
-		einfo "  ${label} ${conf[0]}"
-		
+		einfo "${label} ${conf[0]}"
+
 		# Do we have a function for our config?
 		if [[ $( type -t ${conf[0]}_start ) == function ]]; then
-			${conf[0]}_start ${label} && continue
-			if [[ -n ${config_fallback_IFACE[i]} ]]; then
-				einfo "    Trying fallback configuration"
-				config_IFACE[i]=${config_fallback_IFACE[i]}
-				config_fallback_IFACE[i]=''
-				(( i-- )) # since the loop will increment it
-			else
-				# Only return failure if it was the first address for the interface
-				[[ ${i} -eq 0 ]] && return 1
-				continue
-			fi
-		fi
-
+			eindent
+			${conf[0]}_start ${label} ; x=$?
+			eoutdent
+			[[ ${x} == 0 ]] && continue
 		# We need to test to see if it's an IP address or a function
 		# We do this by testing if the 1st character is a digit
-		x=${conf[0]:0:1}
-		if [[ ${x//[![:digit:]]/} != ${x} ]]; then
+		elif [[ ${conf[0]:0:1} == [[:digit:]] ]]; then
+			eindent
+			interface_configure ${label} ${conf[@]} ; x=$?
+			eoutdent
+			[[ ${x} == 0 ]] && continue
+		else
 			eerror "No loaded modules provide \"${conf[0]}\" (${conf[0]}_start)"
-			# Only return failure if it was the first address for the interface
-			[[ ${i} -eq 0 ]] && return 1
+		fi
+
+		if [[ -n ${config_fallback_IFACE[i]} ]]; then
+			einfo "Trying fallback configuration"
+			config_IFACE[i]=${config_fallback_IFACE[i]}
+			config_fallback_IFACE[i]=''
+			(( i-- )) # since the loop will increment it
 			continue
 		fi
 
-		interface_configure ${label} ${conf[@]} && continue
 		# Only return failure if it was the first address for the interface
 		[[ ${i} -eq 0 ]] && return 1
 	done
+	eoutdent
 
 	# Enabling rp_filter causes wacky packets to be auto-dropped by
 	# the kernel.  Note that we only do this if it is not set via
@@ -399,13 +429,14 @@ iface_start() {
 # in /etc/conf.d/net
 iface_stop() {
 	local iface=${1} i aliases need_begin=false mod
+	local RC_INDENTATION=${RC_INDENTATION}	# so it will reset after function
 
-	ebegin "Bringing ${iface} down"
+	einfo "Bringing down ${iface}"
+	eindent
 
 	# Collect list of aliases for this interface.
 	# List will be in reverse order.
 	aliases=$( interface_get_aliases_rev ${iface} )
-	[[ -n ${aliases} ]] && need_begin=true
 
 	# Stop aliases before primary interface.
 	# Note this must be done in reverse order, since ifconfig eth0:1 
@@ -414,14 +445,14 @@ iface_stop() {
 	for i in ${aliases} ${iface}; do
 		# Stop all our modules
 		for mod in ${MODULES[@]}; do
-			[[ $( type -t ${mod}_stop ) == function ]] && ${mod}_stop ${i} && need_begin=true
+			[[ $( type -t ${mod}_stop ) == function ]] && ${mod}_stop ${i}
 		done
 
 		# Delete all the addresses for this alias
-		interface_del_addresses ${i} true && need_begin=true
+		interface_del_addresses ${i} true
 
 		# Do final shut down of this alias
-		${need_begin} && einfo "  Stopping ${i}"
+		ebegin "Shutting down ${i}"
 		interface_iface_stop ${i}
 		eend $?
 	done
@@ -435,8 +466,11 @@ iface_stop() {
 # Returns 0 (success) unless preup or iface_start returns 1 (failure).
 # Ignores the return value from postup.
 start() {
-	local mod
+	local mod RC_INDENTATION=${RC_INDENTATION}	# so it will reset after function
 	local -a MODULES
+
+	einfo "Starting ${IFACE}"
+	eindent
 
 	modules_load ${IFACE}
 	eend $?
@@ -495,8 +529,11 @@ start() {
 # stop returns non-zero to indicate failure bringing down device.
 # In all other cases stop returns 0 to indicate success.
 stop() {
-	local mod
+	local mod RC_INDENTATION=${RC_INDENTATION}	# so it will reset after function
 	local -a MODULES
+
+	einfo "Stopping ${IFACE}"
+	eindent
 
 	modules_load ${IFACE} true || return 1
 

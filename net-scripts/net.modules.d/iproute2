@@ -135,8 +135,8 @@ iproute2_get_aliases_rev() {
 # were addresses to remove (whether successful or not).  Returns 1
 # (false) if there were no addresses to remove.
 iproute2_del_addresses() {
-	local inet inet6 label=${1} iface=$( get_device ${1} ) x e report=${2}
-	report=${report:-false}
+	local inet inet6 label=${1} iface=$( get_device ${1} ) x e
+	local report=${2:-false}
 
 	inet="$(ip addr show ${iface} label ${label} \
 		| awk '$1=="inet" {print $2}')"
@@ -152,15 +152,17 @@ iproute2_del_addresses() {
 		| awk '$1=="inet6" {print $2}')"
 	[[ -z ${inet6} ]] && return 1
 
-	${report} && einfo "  Removing inet6 addresses"
+	${report} && einfo "Removing inet6 addresses"
+	eindent
 	for x in ${inet6}; do 
-		${report} && einfo "    ${iface} inet6 del ${x}"
+		${report} && einfo "${iface} inet6 del ${x}"
 		e=$( ip addr del ${x} dev ${iface} label $label} 2>&1 )
 		case "${e}" in
 			'RTNETLINK answers: Invalid argument'|'') ;;
 			*) printf '%s\n' "${e}" >&2 ;;
 		esac
 	done
+	eoutdent
 	return 0
 }
 
@@ -172,7 +174,7 @@ iproute2_get_vars() {
 	echo "ipaddr_${1} ipaddr_fallback_${1} iproute_${1}"
 }
 
-# void ifconfig_local_vars(void)
+# void iproute2_local_vars(void)
 #
 # Returns a string command to localise variables
 iproute2_local_vars() {
@@ -251,9 +253,10 @@ iproute2_post_start() {
 	[[ -z ${iproute_IFACE} ]] && return 0
 
 	# Set routes with ip route -- this might also include default route
-	einfo "  Adding routes"
+	einfo "Adding routes"
+	eindent
 	for ((i = 0; i < ${#iproute_IFACE[@]}; i = i + 1)); do
-		einfo "    ${iproute_IFACE[i]}"
+		einfo "${iproute_IFACE[i]}"
 		x=$( ip route add dev ${iface} ${iproute_IFACE[i]} 2>&1 )
 		case "${x}" in
 			'RTNETLINK answers: File exists'|'') ;;
@@ -261,6 +264,7 @@ iproute2_post_start() {
 		esac
 		eend $?
 	done
+	eoutdent
 
 	return 0
 }

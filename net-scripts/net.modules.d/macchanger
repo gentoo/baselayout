@@ -82,7 +82,7 @@ macchanger_pre_start() {
 	fi
 
 	mac=$( interface_get_mac_address ${iface} )
-	einfo "  MAC address for ${iface} changed to ${mac}"
+	einfo "MAC address for ${iface} changed to ${mac}"
 
 	return 0 #important
 }

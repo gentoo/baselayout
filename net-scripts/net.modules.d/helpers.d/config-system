@@ -12,13 +12,13 @@ get_wireless_vars() {
 
 	# Check we can actually load the file
 	# and our calling dhcp module
-	[[ ! -f /etc/net.modules.d/wireless && ! -f /etc/net.modules.d/${module} ]] && return
+	[[ ! -f /lib/rcscripts/net.modules.d/wireless && ! -f /lib/rcscripts/net.modules.d/${module} ]] && return
 
 	# Setup the devnull var as we probably aren't being called via net.lo
 	[[ -z ${devnull} ]] && local devnull=/dev/stderr
 
-	source /etc/net.modules.d/wireless
-	source /etc/net.modules.d/${module}
+	source /lib/rcscripts/net.modules.d/wireless
+	source /lib/rcscripts/net.modules.d/${module}
 
 	# Check we are installed
 	wireless_check_installed || return

@@ -39,6 +39,12 @@ RC_NET_STRICT_CHECKING="no"
 RC_PARALLEL_STARTUP="no"
 RC_USE_CONFIG_PROFILE="yes"
 
+# 
+# Default values for e-message indentation
+#
+RC_INDENTATION=''
+RC_DEFAULT_INDENT=3
+
 # Override defaults with user settings ...
 [ -f /etc/conf.d/rc ] && source /etc/conf.d/rc
 
@@ -162,16 +168,44 @@ esyslog() {
 	return 0
 }
 
+# void eindent(int num)
+#
+#    increase the indent used for e-commands.
+#
+eindent() {
+	local i=$1
+	(( i > 0 )) || (( i = RC_DEFAULT_INDENT ))
+	esetdent $(( ${#RC_INDENTATION} + i ))
+}
+
+# void eoutdent(int num)
+#
+#    decrease the indent used for e-commands.
+#
+eoutdent() {
+	local i=$1
+	(( i > 0 )) || (( i = RC_DEFAULT_INDENT ))
+	esetdent $(( ${#RC_INDENTATION} - i ))
+}
+
+# void esetdent(int num)
+#
+#    hard set the indent used for e-commands.
+#    num defaults to 0
+#
+esetdent() {
+	local i=$1
+	(( i < 0 )) && (( i = 0 ))
+	RC_INDENTATION=$(printf "%${i}s" '')
+}
+
 # void einfo(char* message)
 #
 #    show an informative message (with a newline)
 #
 einfo() {
-	if [ "${RC_QUIET_STDOUT}" != "yes" ]
-	then
-		echo -e " ${GOOD}*${NORMAL} ${*}"
-	fi
-
+	einfon "$*\n"
+	LAST_E_CMD=einfo
 	return 0
 }
 
@@ -180,11 +214,10 @@ einfo() {
 #    show an informative message (without a newline)
 #
 einfon() {
-	if [ "${RC_QUIET_STDOUT}" != "yes" ]
-	then
-		echo -ne " ${GOOD}*${NORMAL} ${*}"
-	fi
-
+	[[ ${RC_QUIET_STDOUT} == yes ]] && return 0
+	[[ ${RC_ENDCOL} != yes && ${LAST_E_CMD} == ebegin ]] && echo
+	echo -ne " ${GOOD}*${NORMAL} ${RC_INDENTATION}$*"
+	LAST_E_CMD=einfon
 	return 0
 }
 
@@ -193,16 +226,17 @@ einfon() {
 #    show a warning message + log it
 #
 ewarn() {
-	if [ "${RC_QUIET_STDOUT}" = "yes" ]
-	then
-		echo " ${*}"
+	if [[ ${RC_QUIET_STDOUT} == yes ]]; then
+		echo " $*"
 	else
-		echo -e " ${WARN}*${NORMAL} ${*}"
+		[[ ${RC_ENDCOL} != yes && ${LAST_E_CMD} == ebegin ]] && echo
+		echo -e " ${WARN}*${NORMAL} ${RC_INDENTATION}$*"
 	fi
 
 	# Log warnings to system log
-	esyslog "daemon.warning" "rc-scripts" "${*}"
+	esyslog "daemon.warning" "rc-scripts" "$*"
 
+	LAST_E_CMD=ewarn
 	return 0
 }
 
@@ -211,16 +245,17 @@ ewarn() {
 #    show an error message + log it
 #
 eerror() {
-	if [ "${RC_QUIET_STDOUT}" = "yes" ]
-	then
-		echo " ${*}" >/dev/stderr
+	if [[ ${RC_QUIET_STDOUT} == yes ]]; then
+		echo " $*" >/dev/stderr
 	else
-		echo -e " ${BAD}*${NORMAL} ${*}"
+		[[ ${RC_ENDCOL} != yes && ${LAST_E_CMD} == ebegin ]] && echo
+		echo -e " ${BAD}*${NORMAL} ${RC_INDENTATION}$*"
 	fi
 
 	# Log errors to system log
-	esyslog "daemon.err" "rc-scripts" "${*}"
+	esyslog "daemon.err" "rc-scripts" "$*"
 
+	LAST_E_CMD=eerror
 	return 0
 }
 
@@ -229,17 +264,56 @@ eerror() {
 #    show a message indicating the start of a process
 #
 ebegin() {
-	if [ "${RC_QUIET_STDOUT}" != "yes" ]
-	then
-		if [ "${RC_ENDCOL}" = "yes" ]
-		then
-			echo -e " ${GOOD}*${NORMAL} ${*}..."
+	local msg dots
+	[[ ${RC_QUIET_STDOUT} == yes ]] && return 0
+
+	msg="$*"
+	dots=$(printf "%$(( COLS - 3 - ${#RC_INDENTATION} - ${#msg} - 7 ))s" '')
+	dots=${dots//  / .}
+	msg="${msg}${dots}"
+	einfon "${msg}"
+	[[ ${RC_ENDCOL} == yes ]] && echo
+
+	LAST_E_LEN=$(( 3 + ${#RC_INDENTATION} + ${#msg} ))
+	LAST_E_CMD=ebegin
+	return 0
+}
+
+# void _eend(int error, char *efunc, char* errstr)
+#
+#    indicate the completion of process, called from eend/ewend
+#    if error, show errstr via efunc
+#
+#    This function is private to functions.sh.  Do not call it from a
+#    script.
+#
+_eend() {
+	local retval=${1:-0} efunc=${2:-eerror} msg
+	shift 2
+
+	if [[ ${retval} == 0 ]]; then
+		[[ ${RC_QUIET_STDOUT} == yes ]] && return 0
+		msg="${BRACKET}[ ${GOOD}ok${BRACKET} ]${NORMAL}"
+	else
+		if [[ -c /dev/null ]]; then
+			rc_splash "stop" &>/dev/null &
 		else
-			echo -ne " ${GOOD}*${NORMAL} ${*}..."
+			rc_splash "stop" &
 		fi
+		if [[ -n "$*" ]]; then
+			${efunc} "$*"
+		fi
+		msg="${BRACKET}[ ${BAD}!!${BRACKET} ]${NORMAL}"
 	fi
 
-	return 0
+	if [[ ${RC_ENDCOL} == yes ]]; then
+		echo -e "${ENDCOL}  ${msg}"
+	else
+		[[ ${LAST_E_CMD} == ebegin ]] || LAST_E_LEN=0
+		printf "%$(( COLS - LAST_E_LEN - 6 ))s%b\n" '' "${msg}"
+	fi
+
+	return ${retval}
 }
 
 # void eend(int error, char* errstr)
@@ -248,71 +322,28 @@ ebegin() {
 #    if error, show errstr via eerror
 #
 eend() {
-	local retval=
-	
-	if [ "$#" -eq 0 ] || ([ -n "$1" ] && [ "$1" -eq 0 ])
-	then
-		if [ "${RC_QUIET_STDOUT}" != "yes" ]
-		then
-			echo -e "${ENDCOL}  ${BRACKET}[ ${GOOD}ok${BRACKET} ]${NORMAL}"
-		fi
-	else
-		retval="$1"
-		
-		if [ -c /dev/null ] ; then
-			rc_splash "stop" &>/dev/null &
-		else
-			rc_splash "stop" &
-		fi
-		
-		if [ "$#" -ge 2 ]
-		then
-			shift
-			eerror "${*}"
-		fi
-		if [ "${RC_QUIET_STDOUT}" != "yes" ]
-		then
-			echo -e "${ENDCOL}  ${BRACKET}[ ${BAD}!!${BRACKET} ]${NORMAL}"
-			# extra spacing makes it easier to read
-			echo
-		fi
-		return ${retval}
-	fi
+	local retval=${1:-0}
+	shift
 
-	return 0
+	_eend ${retval} eerror "$*"
+
+	LAST_E_CMD=eend
+	return $retval
 }
 
-# void ewend(int error, char *warnstr)
+# void ewend(int error, char* errstr)
 #
 #    indicate the completion of process
-#    if error, show warnstr via ewarn
+#    if error, show errstr via ewarn
 #
 ewend() {
-	local retval=
-	
-	if [ "$#" -eq 0 ] || ([ -n "$1" ] && [ "$1" -eq 0 ])
-	then
-		if [ "${RC_QUIET_STDOUT}" != "yes" ]
-		then
-			echo -e "${ENDCOL}  ${BRACKET}[ ${GOOD}ok${BRACKET} ]${NORMAL}"
-		fi
-	else
-		retval="$1"
-		if [ "$#" -ge 2 ]
-		then
-			shift
-			ewarn "${*}"
-		fi
-		if [ "${RC_QUIET_STDOUT}" != "yes" ]
-		then
-			echo -e "${ENDCOL}  ${BRACKET}[ ${WARN}!!${BRACKET} ]${NORMAL}"
-			# extra spacing makes it easier to read
-			echo
-		fi
-		return "${retval}"
-	fi
+	local retval=${1:-0}
+	shift
 
-	return 0
+	_eend ${retval} ewarn "$*"
+
+	LAST_E_CMD=ewend
+	return $retval
 }
 
 # bool wrap_rcscript(full_path_and_name_of_rc-script)
@@ -402,7 +433,7 @@ KV_to_int() {
 	KV_MAJOR="$(KV_major "$1")"
 	KV_MINOR="$(KV_minor "$1")"
 	KV_MICRO="$(KV_micro "$1")"
-	KV_int="$((KV_MAJOR * 65536 + KV_MINOR * 256 + KV_MICRO))"
+	KV_int="$(( KV_MAJOR * 65536 + KV_MINOR * 256 + KV_MICRO ))"
 
 	# We make version 2.2.0 the minimum version we will handle as
 	# a sanity check ... if its less, we fail ...
@@ -480,7 +511,7 @@ dolisting() {
 	local y=
 	local tmpstr=
 	local mylist=
-	local mypath="${*}"
+	local mypath="$*"
 
 	if [ "${mypath%/\*}" != "${mypath}" ]
 	then
@@ -597,23 +628,18 @@ else
 	fi
 fi
 
-# Setup ENDCOL so that all our calls to eend line up the [ ok ]
-if [ "${RC_ENDCOL}" == "yes" ] ; then
-	COLS=${COLUMNS:-0}		# bash's internal COLUMNS variable
-	(( COLS == 0 )) && COLS=$(stty size 2>/dev/null | cut -d' ' -f2)
-	(( COLS -= 7 ))			# width of [ ok ]
-	if (( COLS <= 0 )); then
-		# Sanity check ... with serial consoles and such,
-		# COLS may up being negative ...
-		(( COLS = 80 ))
-	fi
-	ENDCOL=$'\e[A\e['${COLS}'G'
+# Setup COLS and ENDCOL so eend can line up the [ ok ]
+COLS=${COLUMNS:-0}		# bash's internal COLUMNS variable
+(( COLS == 0 )) && COLS=$(stty size 2>/dev/null | cut -d' ' -f2)
+(( COLS > 0 )) || (( COLS = 80 ))	# width of [ ok ] == 7
+if [[ ${RC_ENDCOL} == yes ]]; then
+	ENDCOL=$'\e[A\e['$(( COLS - 7 ))'G'
 else
-	ENDCOL=""
+	ENDCOL=''
 fi
 
 # Setup the colors so our messages all look pretty
-if [ "${RC_NOCOLOR}" = "yes" ]; then
+if [[ ${RC_NOCOLOR} == yes ]]; then
 	unset GOOD WARN BAD NORMAL HILITE BRACKET
 else
 	GOOD=$'\e[32;01m'

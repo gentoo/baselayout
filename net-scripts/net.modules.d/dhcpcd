@@ -71,13 +71,13 @@ dhcpcd_stop() {
 		return 1
 	fi
 
-	ebegin "  Releasing DHCP lease for ${iface}"
+	ebegin "Releasing DHCP lease for ${iface}"
 	for ((count = 0; count < 9; count = count + 1)); do
 		dhcpcd -z ${iface} &>${devnull} || break
 		sleep 1
 	done
 	[[ ${count} -lt 9 ]]
-	eend $? "  timed out"
+	eend $? "timed out"
 
 	# Remove stale PID file
 	[[ -f /var/run/dhcpcd-${iface}.pid ]] && rm -f /var/run/dhcpcd-${iface}.pid
@@ -96,7 +96,7 @@ dhcpcd_start() {
 
 	# Check that iface was not brought up by the kernel ...
 	if [[ ${check} == ${iface} ]] && interface_is_up ${iface} true ; then
-		einfo "    Keeping kernel configuration for ${iface}"
+		einfo "Keeping kernel configuration for ${iface}"
 		return 0
 	fi
 
@@ -124,13 +124,13 @@ dhcpcd_start() {
 	[[ -n ${hostname} ]] && opts="-h ${hostname%%.*} ${opts}"
 
 	# Bring up DHCP for this interface (or alias)
+	ebegin "Running dhcpcd"
 	dhcpcd ${opts} ${iface}
-	eend $?
-	[[ 0 != $? ]] && return 1
+	eend $? || return 1
 
 	# DHCP succeeded, show address retrieved
 	local addr=$( interface_get_address ${iface} )
-	einfo "    ${iface} received address ${addr}"
+	einfo "${iface} received address ${addr}"
 
 	return 0
 }

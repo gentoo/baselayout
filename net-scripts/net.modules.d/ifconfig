@@ -131,9 +131,9 @@ ifconfig_del_addresses() {
 	inet6="$(ifconfig ${iface} | awk '$1=="inet6" {print $3}')"
 	[[ -z ${inet6} ]] && return 1
 
-	${report} && einfo "  Removing inet6 addresses"
+	${report} && einfo "Removing inet6 addresses"
 	for x in ${inet6}; do
-		${report} && einfo "    ${iface} inet6 del ${x}"
+		${report} && einfo "${iface} inet6 del ${x}"
 		ifconfig ${iface} inet6 del ${x}
 	done
 
@@ -170,12 +170,12 @@ ifconfig_local_vars() {
 # Returns 0 (true) if variables are set successfully, non-zero
 # otherwise
 ifconfig_setup_vars() {
-        local iface="${1//./_}" i
+	local iface="${1//./_}" i
 
-        eval config_IFACE=( \"\$\{ifconfig_$iface\[@\]\}\" )
-        eval config_fallback_IFACE=( \"\$\{ifconfig_fallback_$iface\[@\]\}\" )
-        eval routes_IFACE=( \"\$\{routes_$iface\[@\]\}\" )
-        eval inet6_IFACE=( \"\$\{inet6_$iface\[@\]\}\" )
+	eval config_IFACE=( \"\$\{ifconfig_$iface\[@\]\}\" )
+	eval config_fallback_IFACE=( \"\$\{ifconfig_fallback_$iface\[@\]\}\" )
+	eval routes_IFACE=( \"\$\{routes_$iface\[@\]\}\" )
+	eval inet6_IFACE=( \"\$\{inet6_$iface\[@\]\}\" )
 
 	# BACKWARD COMPATIBILITY: set the default gateway
 	if [[ ${gateway} == ${iface}/* ]]; then
@@ -190,29 +190,29 @@ ifconfig_setup_vars() {
 		[[ ${gw} == false ]] && routes_IFACE=( "${routes_IFACE[@]}" "default gw ${gateway#*/}" )
 	fi
 
-        # BACKWARD COMPATIBILITY: populate the config_IFACE array
-        # if iface_IFACE is set (fex. iface_eth0 instead of ifconfig_eth0)
-        eval local iface_IFACE=\"\$\{iface_$iface\}\"
-        if [[ -n ${iface_IFACE} && -z ${config_IFACE} ]]; then
-                # Make sure these get evaluated as arrays
-                local -a aliases broadcasts netmasks
+	# BACKWARD COMPATIBILITY: populate the config_IFACE array
+	# if iface_IFACE is set (fex. iface_eth0 instead of ifconfig_eth0)
+	eval local iface_IFACE=\"\$\{iface_$iface\}\"
+	if [[ -n ${iface_IFACE} && -z ${config_IFACE} ]]; then
+		# Make sure these get evaluated as arrays
+		local -a aliases broadcasts netmasks
 
-                # Start with the primary interface
-                config_IFACE=( "${iface_IFACE}" )
+		# Start with the primary interface
+		config_IFACE=( "${iface_IFACE}" )
 
-                # ..then add aliases
-                eval aliases=( \$\{alias_$iface\} )
-                eval broadcasts=( \$\{broadcast_$iface\} )
-                eval netmasks=( \$\{netmask_$iface\} )
-                for ((i = 0; i < ${#aliases[@]}; i = i + 1)); do
-                        config_IFACE[i+1]="${aliases[i]} ${broadcasts[i]:+broadcast ${broadcasts[i]}} ${netmasks[i]:+netmask ${netmasks[i]}}"
+		# ..then add aliases
+		eval aliases=( \$\{alias_$iface\} )
+		eval broadcasts=( \$\{broadcast_$iface\} )
+		eval netmasks=( \$\{netmask_$iface\} )
+		for ((i = 0; i < ${#aliases[@]}; i = i + 1)); do
+			config_IFACE[i+1]="${aliases[i]} ${broadcasts[i]:+broadcast ${broadcasts[i]}} ${netmasks[i]:+netmask ${netmasks[i]}}"
 		done
-        fi
+	fi
 
-        # BACKWARD COMPATIBILITY: check for space-separated inet6 addresses
-        if [[ ${#inet6_IFACE[@]} == 1 && ${inet6_IFACE} == *' '* ]]; then
-                inet6_IFACE=( ${inet6_IFACE} )
-        fi
+	# BACKWARD COMPATIBILITY: check for space-separated inet6 addresses
+	if [[ ${#inet6_IFACE[@]} == 1 && ${inet6_IFACE} == *' '* ]]; then
+		inet6_IFACE=( ${inet6_IFACE} )
+	fi
 }
 
 # void ifconfig_iface_stop(char *interface)
@@ -238,22 +238,26 @@ ifconfig_post_start() {
 
 	# Add IPv6 addresses
 	if [[ -n ${inet6_IFACE} ]]; then
-		einfo "  Adding IPv6 addresses"
+		einfo "Adding IPv6 addresses"
+		eindent
 		for ((i = 0; i < ${#inet6_IFACE[@]}; i = i + 1)); do
-			einfo "    ${inet6_IFACE[i]}"
+			ebegin "${inet6_IFACE[i]}"
 			ifconfig ${iface} inet6 add ${inet6_IFACE[i]} >${devnull}
 			eend $?
 		done
+		eoutdent
 	fi
 
 	# Add routes for this interface, might even include default gw
 	if [[ -n ${routes_IFACE} ]] ; then
-		einfo "  Adding routes"
+		einfo "Adding routes"
+		eindent
 		for ((i = 0; i < ${#routes_IFACE[@]}; i = i + 1)); do
-			einfo "    ${routes_IFACE[i]}"
+			ebegin "${routes_IFACE[i]}"
 			/sbin/route add ${routes_IFACE[i]}
 			eend $?
 		done
+		eoutdent
 	fi
 	
 	return 0

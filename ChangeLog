@@ -2,6 +2,29 @@
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  13 Oct 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Install net.modules.d to /lib/rcscripts instead of /etc so we
+    don't have to deal with CONFIG_PROTECT
+
+    Fix diff code in modules_load so it can identify which functions
+    have been modified
+
+    Fix fallback mechanism in iface_start so that it works correctly
+    and doesn't report a bogus error message when trying the fallback
+
+    Get rid of need_begin trickery in iface_stop
+
+    Simplify eend processing in dhcp modules
+
+    Implement eindent, eoutdent, esetdent in functions.sh and adjust
+    net-scripts to use them.
+
+    Re-write einfo, ewarn, eerror, ebegin, eend, ewend to use
+    RC_INDENTATION and to work better on serial terminals
+
+    Remove conf.d/net.ppp0 since that is provided by net-dialup/ppp
+
   12 Oct 2004; Aron Griffis <agriffis@gentoo.org>:
 
     Fix ipaddr_fallback in net-scripts/conf.d/net.example

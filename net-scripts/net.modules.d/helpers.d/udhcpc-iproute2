@@ -5,5 +5,5 @@
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy "UberLord" Marples (uberlord@rsm.demon.co.uk)
 
-/etc/net.modules.d/helpers.d/udhcpc-dhclient-wrapper iproute2 ${1}
+/lib/rcscripts/net.modules.d/helpers.d/udhcpc-dhclient-wrapper iproute2 ${1}
 exit $?

@@ -23,7 +23,7 @@ echo ${reason}
 
 # Set our module to dhclient if it's not set
 [[ -z ${module} ]] && module=dhclient
-source /etc/net.modules.d/helpers.d/config-system
+source /lib/rcscripts/net.modules.d/helpers.d/config-system
 
 if [[ -z ${old_ip_address} || ${old_ip_address} != ${new_ip_address} || \
 	${reason} == BOUND || ${reason} == REBOOT ]]; then

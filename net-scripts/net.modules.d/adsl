@@ -74,7 +74,7 @@ adsl_start() {
 	local iface=${1}
 
 	# Start ADSL with the cfgfile, but override ETH and PIDFILE
-	einfo "    Starting ADSL for ${iface}"
+	einfo "Starting ADSL for ${iface}"
 	/usr/sbin/adsl-start <(cat ${adsl_cfgfile_IFACE}; \
 		echo "ETH=${iface}"; echo "PIDFILE=/var/run/adsl-${iface}.pid") \
 		>${devnull}
@@ -95,7 +95,7 @@ adsl_stop() {
 	adsl_check_installed || return 1
 	[[ ! -f /var/run/adsl-${iface}.pid ]] && return 1
 
-	einfo "  Stopping ADSL for ${iface}"
+	einfo "Stopping ADSL for ${iface}"
 	/usr/sbin/adsl-stop <(cat ${adsl_cfgfile_IFACE}; \
 		echo "ETH=${iface}"; echo "PIDFILE=/var/run/adsl-${iface}.pid") \
 		>${devnull}
