@@ -60,8 +60,7 @@ struct list_head rcscript_list;
 
 int get_rcscripts(void);
 int check_rcscripts_mtime(char *cachefile);
-int parse_rcscript(char *scriptname, time_t mtime, FILE *output);
-int generate_stage1(FILE *output);
+size_t generate_stage1(char **data);
 size_t generate_stage2(char **data);
 size_t read_stage2(char **data);
 int write_stage2(FILE *outfile);

@@ -27,6 +27,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -44,17 +45,34 @@
 #define READ_PIPE 0
 #define WRITE_PIPE 1
 
-#define PARSE_BUFFER_SIZE 80
+#define PARSE_BUFFER_SIZE 256
+
+#define OUTPUT_MAX_LINE_LENGHT 256
+#define OUTPUT_BUFFER_SIZE (60 * 1024)
+
+/* void write_output(char **_buf, int _count, label _error, format) */
+#define write_output(_buf, _count, _error, _output...) \
+	do { \
+		int _i = 0; \
+		/* FIXME: Might do something more dynamic here */ \
+		if (OUTPUT_BUFFER_SIZE < (_count + OUTPUT_MAX_LINE_LENGHT)) { \
+			errno = ENOMEM; \
+			DBG_MSG("Output buffer size too small!\n"); \
+			goto _error; \
+		} \
+		_i = sprintf(&((*_buf)[_count]), _output); \
+		if (0 < _i) \
+			_count += _i + 1; \
+	} while (0)
 
 LIST_HEAD(rcscript_list);
 
-int parse_rcscript(char *scriptname, time_t mtime, FILE *output);
-int generate_stage1(FILE *output);
+size_t parse_rcscript(char *scriptname, time_t mtime, char **data, size_t index);
 
-void parse_print_start(FILE *output);
-void parse_print_header(char *scriptname, time_t mtime, FILE *output);
-void parse_print_body(FILE *output);
-void parse_print_end(FILE *output);
+size_t parse_print_start(char **data, size_t index);
+size_t parse_print_header(char *scriptname, time_t mtime, char **data, size_t index);
+size_t parse_print_body(char **data, size_t index);
+size_t parse_print_end(char **data, size_t index);
 
 int get_rcscripts(void) {
 	rcscript_info_t *info;
@@ -205,11 +223,12 @@ int check_rcscripts_mtime(char *cachefile) {
 	return 0;
 }
 
-/* Return 0 on success, -1 on error.  If it was critical, errno will be set. */
-int parse_rcscript(char *scriptname, time_t mtime, FILE *output) {
+/* Return count on success, -1 on error.  If it was critical, errno will be set. */
+size_t parse_rcscript(char *scriptname, time_t mtime, char **data, size_t index) {
 	regex_data_t tmp_data;
 	char *buf = NULL;
 	char *tmp_buf = NULL;
+	size_t write_count = index;
 	size_t lenght;
 	int count;
 	int current = 0;
@@ -223,11 +242,6 @@ int parse_rcscript(char *scriptname, time_t mtime, FILE *output) {
 		return -1;
 	}
 	
-	if (-1 == fileno(output)) {
-		DBG_MSG("Bad output stream!\n");
-		return -1;
-	}
-
 	if (-1 == file_map(scriptname, &buf, &lenght)) {
 		DBG_MSG("Could not open '%s' for reading!\n",
 				gbasename(scriptname));
@@ -263,7 +277,12 @@ int parse_rcscript(char *scriptname, time_t mtime, FILE *output) {
 			}
 			DBG_MSG("Parsing '%s'.\n", gbasename(scriptname));
 
-			parse_print_header(gbasename(scriptname), mtime, output);
+			write_count = parse_print_header(gbasename(scriptname),
+					mtime, data, write_count);
+			if (-1 == write_count) {
+				DBG_MSG("Failed to call parse_print_header()!\n");
+				goto error;
+			}
 
 			goto _continue;
 		}
@@ -279,7 +298,11 @@ int parse_rcscript(char *scriptname, time_t mtime, FILE *output) {
 			DBG_MSG("Got 'depend()' function.\n");
 
 			got_depend = 1;
-			parse_print_body(output);
+			write_count = parse_print_body(data, write_count);
+			if (-1 == write_count) {
+				DBG_MSG("Failed to call parse_print_body()!\n");
+				goto error;
+			}
 		}
 
 		/* We have the depend function... */
@@ -297,15 +320,21 @@ int parse_rcscript(char *scriptname, time_t mtime, FILE *output) {
 			/* Make sure depend() contain something, else bash
 			 * errors out (empty function). */
 			if ((depend_started > 0) && (0 == brace_count))
-				fprintf(output, "  \treturn 0\n");
+				write_output(data, write_count, error,
+						"  \treturn 0\n");
 
 			/* Print the depend() function */
-			fprintf(output, "  %s\n", tmp_buf);
+			write_output(data, write_count, error,
+					"  %s\n", tmp_buf);
 
 			/* If COUNT=0, and SBCOUNT>0, it means we have read
 			 * all matching '{' and '}' for depend(), so stop. */
 			if ((depend_started > 0) && (0 == brace_count)) {
-				parse_print_end(output);
+				write_count = parse_print_end(data, write_count);
+				if (-1 == write_count) {
+					DBG_MSG("Failed to call parse_print_end()!\n");
+					goto error;
+				}
 
 				/* Make sure this is the last loop */
 				current += lenght;
@@ -320,7 +349,7 @@ _continue:
 
 	file_unmap(buf, lenght);
 	
-	return 0;
+	return write_count;
 
 error:
 	free(tmp_buf);
@@ -335,36 +364,37 @@ error:
 }
 
 
-int generate_stage1(FILE *output) {
+size_t generate_stage1(char **data) {
 	rcscript_info_t *info;
+	size_t write_count = 0;
+	size_t tmp_count;
 
-	if (-1 == fileno(output)) {
-		DBG_MSG("Bad output stream!\n");
+	write_count = parse_print_start(data, write_count);
+	if (-1 == write_count) {
+		DBG_MSG("Failed to call parse_print_start()!\n");
 		return -1;
 	}
 
-	parse_print_start(output);
-
 	list_for_each_entry(info, &rcscript_list, node) {
-		if (-1 == parse_rcscript(info->filename, info->mtime, output)) {
+		tmp_count = parse_rcscript(info->filename, info->mtime, data, write_count);
+		if (-1 == tmp_count) {
 			DBG_MSG("Failed to parse '%s'!\n",
 					gbasename(info->filename));
 
 			/* If 'errno' is set, it is critical (hopefully) */
-			if (0 != errno) {
-				EERROR("Failed to parse '%s'!\n",
-						gbasename(info->filename));
-				/* Rather should just print error than abort
-				 * for now, as it might be critical to get the
-				 * box booted */
-#if 0
+			if (0 != errno)
 				return -1;
-#endif
-			}
+		} else {
+			write_count = tmp_count;
 		}
 	}
 		
-	return 0;
+	return write_count;
+}
+
+/* Empty signal handler for SIGPIPE */
+static void sig_handler(int signum) {
+	return;
 }
 
 /* Returns data's lenght on success, else -1 on error. */
@@ -440,76 +470,151 @@ size_t generate_stage2(char **data) {
 		 ***   In parent
 		 ***/
 
-		FILE *write_pipe;
-		FILE *read_pipe;
-		int status;
-		int read_count;
+		struct sigaction act_new;
+		struct sigaction act_old;
+		struct timeval tv;
+		fd_set write_fds;
+		fd_set read_fds;
 		char buf[PARSE_BUFFER_SIZE+1];
+		char *stage1_data = NULL;
+		size_t stage1_write_count = 0;
+		size_t stage1_written = 0;
+		int max_write_fds = child_pfds[WRITE_PIPE] + 1;
+		int max_read_fds = parent_pfds[READ_PIPE] + 1;
+		int status = 0;
+		int read_count;
+		int closed_write_pipe = 0;
+		int tmp_pid = 0;
 
 		DBG_MSG("Child pid = %i\n", child_pid);
+
+		/* Set signal handler for SIGPIPE to empty in case bash errors
+		 * out.  It will then close the write pipe, and instead of us
+		 * getting SIGPIPE, we can handle the write error like normal.
+		 */
+		memset(&act_new, 0x00, sizeof(act_new));
+		act_new.sa_handler = (void (*) (int))sig_handler;
+		sigemptyset (&act_new.sa_mask);
+		act_new.sa_flags = 0;
+		sigaction(SIGPIPE, &act_new, &act_old);
 
 		/* Close the sides of the pipes we do not use */
 		close(parent_pfds[WRITE_PIPE]); /* Only used for reading */
 		close(child_pfds[READ_PIPE]); /* Only used for writing */
 
-		write_pipe = fdopen(child_pfds[WRITE_PIPE], "w");
-		if (NULL == write_pipe) {
-			DBG_MSG("Failed to open child_pfds for writing!\n");
-			goto error_c_p_side;
-		}
-
-		read_pipe = fdopen(parent_pfds[READ_PIPE], "r");
-		if (NULL == read_pipe) {
-			DBG_MSG("Failed to open parent_pfds for writing!\n");
+		stage1_data = malloc(OUTPUT_BUFFER_SIZE + 1);
+		if (NULL == stage1_data) {
+			DBG_MSG("Failed to allocate buffer!\n");
 			goto error_c_p_side;
 		}
 
 		/* Pipe parse_rcscripts() to bash */
-		if (-1 == generate_stage1(write_pipe)) {
+		stage1_write_count = generate_stage1(&stage1_data);
+		if (-1 == stage1_write_count) {
 			DBG_MSG("Failed to generate stage1!\n");
 			goto error_c_p_side;
 		}
 
-		fclose(write_pipe);
+		/* Do setup for select() */
+		tv.tv_sec = 0;		/* We do not want to wait for select() */
+		tv.tv_usec = 0;		/* Same thing here */
+		FD_ZERO(&write_fds);
+		FD_SET(child_pfds[WRITE_PIPE], &write_fds);
+		FD_ZERO(&read_fds);
+		FD_SET(parent_pfds[READ_PIPE], &read_fds);
 
 		do {
-			read_count = fread(buf, 1, PARSE_BUFFER_SIZE, read_pipe);
-			if (ferror(read_pipe)) {
-				DBG_MSG("Error reading parent_pfds[READ_PIPE]!\n");
-				/* Set old_errno to disable child exit code
-				 * checking below */
-				old_errno = errno;
-				goto failed;
-			}
-			if (read_count > 0) {
-				char *tmp_p;
+			fd_set wwrite_fds = write_fds;
+			fd_set wread_fds = read_fds;
+			int tmp_count = 0;
+			int do_write = 0;
+			int do_read = 0;
+		
+			/* Check if we can read from parent_pfds[READ_PIPE] */
+			select(max_read_fds, &wread_fds, NULL, NULL, &tv);
+			do_read = FD_ISSET(parent_pfds[READ_PIPE], &wread_fds);
 
-				tmp_p = realloc(*data, write_count + read_count);
-				if (NULL == tmp_p) {
-					DBG_MSG("Failed to allocate buffer!\n");
-					/* Set old_errno to disable child exit
-					 * code checking below */
-					old_errno = errno;
+			/* While there is data to be written */
+			if (stage1_written < stage1_write_count) {
+				/* Check if we can write */
+				select(max_write_fds, NULL, &wwrite_fds,
+						NULL, &tv);
+				do_write = FD_ISSET(child_pfds[WRITE_PIPE],
+						&wwrite_fds);
+
+				/* If we can write, or there is nothing to
+				 * read, keep feeding the write pipe */
+				if (do_write || !do_read) {
+					tmp_count = write(child_pfds[WRITE_PIPE],
+							&stage1_data[stage1_written],
+							strlen(&stage1_data[stage1_written]));
+					if (-1 == tmp_count) {
+						DBG_MSG("Error writing to child_pfds[WRITE_PIPE]!\n");
+						goto failed;
+					}
+					/* What was written before, plus what
+					 * we wrote now as well as the ending
+					 * '\0' of the line */
+					stage1_written += tmp_count + 1;
+				
+					/* Close the write pipe if we done
+					 * writing to get a EOF signaled to
+					 * bash */
+					if (stage1_written >= stage1_write_count) {
+						closed_write_pipe = 1;
+						close(child_pfds[WRITE_PIPE]);
+					}
+				}
+			}
+			
+			if (do_read) {
+				read_count = read(parent_pfds[READ_PIPE], buf,
+						PARSE_BUFFER_SIZE);
+				if (-1 == read_count) {
+					DBG_MSG("Error reading parent_pfds[READ_PIPE]!\n");
 					goto failed;
 				}
-				
-				memcpy(&tmp_p[write_count], buf, read_count);
+				if (read_count > 0) {
+					char *tmp_p;
 
-				*data = tmp_p;				
-				write_count += read_count;
+					tmp_p = realloc(*data, write_count +
+								read_count);
+					if (NULL == tmp_p) {
+						DBG_MSG("Failed to allocate buffer!\n");
+						goto failed;
+					}
+					
+					memcpy(&tmp_p[write_count], buf,
+							read_count);
+
+					*data = tmp_p;				
+					write_count += read_count;
+				}
 			}
-		} while ((read_count > 0) && (!feof(read_pipe)));
-
+			tmp_pid = waitpid(child_pid, &status, WNOHANG);
+		} while (0 == tmp_pid);
 
 failed:
-		fclose(read_pipe);
+		/* Set old_errno to disable child exit code checking below */
+		if (0 != errno)
+			old_errno = errno;
 
-		/* Wait for bash to finish */
-		waitpid(child_pid, &status, 0);
+		free(stage1_data);
+
+		if (0 == closed_write_pipe)
+			close(child_pfds[WRITE_PIPE]);
+		close(parent_pfds[READ_PIPE]);
+
+		/* Restore the old signal handler for SIGPIPE */
+		sigaction(SIGPIPE, &act_old, NULL);
+
+		if (tmp_pid != child_pid)
+			/* Wait for bash to finish */
+			waitpid(child_pid, &status, 0);
 		/* If old_errno is set, we had an error in the read loop, so do
 		 * not worry about the child's exit code */
 		if (0 == old_errno) {
-			if (!WIFEXITED(status) || (WEXITSTATUS(status) != 0)) {
+			if ((!WIFEXITED(status)) || (0 != WEXITSTATUS(status))) {
 				DBG_MSG("Bash failed with status 0x%x!\n", status);
 				goto error;
 			}
@@ -835,54 +940,83 @@ error:
 	return -1;
 }
 
-void parse_print_start(FILE *output) {
-	fprintf(output, "source /sbin/functions.sh\n\n");
-	fprintf(output, "need() {\n");
-	fprintf(output, " [ -n \"$*\" ] && echo \"NEED $*\"; return 0\n");
-	fprintf(output, "}\n\n");
-	fprintf(output, "use() {\n");
-	fprintf(output, " [ -n \"$*\" ] && echo \"USE $*\"; return 0\n");
-	fprintf(output, "}\n\n");
-	fprintf(output, "before() {\n");
-	fprintf(output, " [ -n \"$*\" ] && echo \"BEFORE $*\"; return 0\n");
-	fprintf(output, "}\n\n");
-	fprintf(output, "after() {\n");
-	fprintf(output, " [ -n \"$*\" ] && echo \"AFTER $*\"; return 0\n");
-	fprintf(output, "}\n\n");
-	fprintf(output, "provide() {\n");
-	fprintf(output, " [ -n \"$*\" ] && echo \"PROVIDE $*\"; return 0\n");
-	fprintf(output, "}\n\n");
-	fprintf(output, "parallel() {\n");
-	fprintf(output, " [ -n \"$*\" ] && echo \"PARALLEL $*\"; return 0\n");
-	fprintf(output, "}\n\n");
+size_t parse_print_start(char **data, size_t index) {
+	size_t write_count = index;
+	
+	write_output(data, write_count, error, "source /sbin/functions.sh\n\n");
+	write_output(data, write_count, error, "set -e\n\n");
+	write_output(data, write_count, error, "need() {\n");
+	write_output(data, write_count, error, " [ -n \"$*\" ] && echo \"NEED $*\"; return 0\n");
+	write_output(data, write_count, error, "}\n\n");
+	write_output(data, write_count, error, "use() {\n");
+	write_output(data, write_count, error, " [ -n \"$*\" ] && echo \"USE $*\"; return 0\n");
+	write_output(data, write_count, error, "}\n\n");
+	write_output(data, write_count, error, "before() {\n");
+	write_output(data, write_count, error, " [ -n \"$*\" ] && echo \"BEFORE $*\"; return 0\n");
+	write_output(data, write_count, error, "}\n\n");
+	write_output(data, write_count, error, "after() {\n");
+	write_output(data, write_count, error, " [ -n \"$*\" ] && echo \"AFTER $*\"; return 0\n");
+	write_output(data, write_count, error, "}\n\n");
+	write_output(data, write_count, error, "provide() {\n");
+	write_output(data, write_count, error, " [ -n \"$*\" ] && echo \"PROVIDE $*\"; return 0\n");
+	write_output(data, write_count, error, "}\n\n");
+	write_output(data, write_count, error, "parallel() {\n");
+	write_output(data, write_count, error, " [ -n \"$*\" ] && echo \"PARALLEL $*\"; return 0\n");
+	write_output(data, write_count, error, "}\n\n");
+
+	return write_count;
+
+error:
+	return -1;
 }
 
-void parse_print_header(char *scriptname, time_t mtime, FILE *output) {
-	fprintf(output, "#*** %s ***\n\n", scriptname);
-	fprintf(output, "myservice=\"%s\"\n", scriptname);
-	fprintf(output, "echo \"RCSCRIPT ${myservice}\"\n\n");
-	fprintf(output, "echo \"MTIME %li\"\n\n", mtime);
+size_t parse_print_header(char *scriptname, time_t mtime, char **data, size_t index) {
+	size_t write_count = index;
+	
+	write_output(data, write_count, error, "#*** %s ***\n\n", scriptname);
+	write_output(data, write_count, error, "myservice=\"%s\"\n", scriptname);
+	write_output(data, write_count, error, "echo \"RCSCRIPT ${myservice}\"\n\n");
+	write_output(data, write_count, error, "echo \"MTIME %li\"\n\n", mtime);
+
+	return write_count;
+
+error:
+	return -1;
 }
 
-void parse_print_body(FILE *output) {
-	fprintf(output, "(\n");
-	fprintf(output, "  # Get settings for rc-script ...\n");
-	fprintf(output, "  [ -e \"/etc/conf.d/${myservice}\" ] && \\\n");
-	fprintf(output, "  	source \"/etc/conf.d/${myservice}\"\n");
-	fprintf(output, "  [ -e /etc/conf.d/net ] && \\\n");
-	fprintf(output, "  [ \"${myservice%%.*}\" = \"net\" ] && \\\n");
-	fprintf(output, "  [ \"${myservice##*.}\" != \"${myservice}\" ] && \\\n");
-	fprintf(output, "  	source /etc/conf.d/net\n");
-	fprintf(output, "  [ -e /etc/rc.conf ] && source /etc/rc.conf\n\n");
-	fprintf(output, "  depend() {\n");
-	fprintf(output, "    return 0\n");
-	fprintf(output, "  }\n\n");
-	fprintf(output, "  # Actual depend() function ...\n");
+size_t parse_print_body(char **data, size_t index) {
+	size_t write_count = index;
+	
+	write_output(data, write_count, error, "\n");
+	write_output(data, write_count, error, "  # Get settings for rc-script ...\n");
+	write_output(data, write_count, error, "  [ -e \"/etc/conf.d/${myservice}\" ] && \\\n");
+	write_output(data, write_count, error, "  	source \"/etc/conf.d/${myservice}\"\n");
+	write_output(data, write_count, error, "  [ -e /etc/conf.d/net ] && \\\n");
+	write_output(data, write_count, error, "  [ \"${myservice%%.*}\" = \"net\" ] && \\\n");
+	write_output(data, write_count, error, "  [ \"${myservice##*.}\" != \"${myservice}\" ] && \\\n");
+	write_output(data, write_count, error, "  	source /etc/conf.d/net\n");
+	write_output(data, write_count, error, "  [ -e /etc/rc.conf ] && source /etc/rc.conf\n\n");
+	write_output(data, write_count, error, "  depend() {\n");
+	write_output(data, write_count, error, "    return 0\n");
+	write_output(data, write_count, error, "  }\n\n");
+	write_output(data, write_count, error, "  # Actual depend() function ...\n");
+
+	return write_count;
+
+error:
+	return -1;
 }
 
-void parse_print_end(FILE *output) {
-	fprintf(output, "\n");
-	fprintf(output, "  depend\n");
-	fprintf(output, ")\n\n");
+size_t parse_print_end(char **data, size_t index) {
+	size_t write_count = index;
+	
+	write_output(data, write_count, error, "\n");
+	write_output(data, write_count, error, "  depend\n");
+	write_output(data, write_count, error, "\n\n");
+
+	return write_count;
+
+error:
+	return -1;
 }
 
