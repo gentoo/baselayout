@@ -19,6 +19,8 @@
 	Fix .../boot/... paths hardcoded in /lib/rcscripts/sh/rc-services.sh,
 	thanks to Jean-Francois Richard <jean-francois@richard.name>.
 
+	Replace the Suse /etc/inputrc with a non copyrighted one, bug #24918.
+
   23 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     From Jean-Francois Richard <jean-francois@richard.name> and
