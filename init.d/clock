@@ -76,6 +76,7 @@ start() {
 
 		if [ -n "${errstr}" ]
 		then
+			ewarn "${errstr}"
 			ret=1
 		else
 			ret=0

@@ -2,6 +2,11 @@
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  01 Nov 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Dump the error message that hwclock returns since it tends to be 
+    quite useful.  Modified init.d/clock.
+
   01 Nov 2004; Roy Marples <uberlord@gentoo.org>:
 
     net-scripts/init.d/net.lo:
