@@ -11,6 +11,10 @@
 
     Start udevd if present.
 
+    Small fix to sbin/rc-services.sh related to mtime checking and 'net'
+    virtual service - it had no mtime generated, so check_mtime() failed
+    for it ...
+
   25 Feb 2004; Martin Schlemmer <azarah@gentoo.org>:
 
     Update to enable checking of mtimes on rc-scripts, and auto running

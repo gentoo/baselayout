@@ -67,11 +67,14 @@ rc_mtime=
 #   Return 0 if 'service's mtime is the same as 'mtime'
 #
 check_mtime() {
+	# This one have no 'mtime' ...
+	[ "$1" = "net" ] && return 0
+
 	[ -z "$1" -o -z "$2" ] && return 1
 
-	# Do not fail if there is no script, as virtuals (such as 'net')
+	# Do not fail if there is no script, as virtuals
 	# will then not work ...
-	if [ -f "/etc/init.d/$1" -a -x "/bin/stat" ] && \
+	if [ -e "/etc/init.d/$1" -a -x "/bin/stat" ] && \
 	   [ "$(stat -c "%Y" "/etc/init.d/$1" 2>/dev/null)" -ne "$2" ]
 	then
 		return 1
