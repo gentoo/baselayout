@@ -1,6 +1,8 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+* rc-scripts 1.6.8 (15 Dec 2004)
+
   15 Dec 2004; Mike Frysinger <vapier@gentoo.org>:
 
     start_critical_service in /sbin/rc should rely on $1 instead of 
