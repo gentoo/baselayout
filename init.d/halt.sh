@@ -9,6 +9,13 @@ then
 	ebegin "Stopping devfsd"
 	killall -15 devfsd &> /dev/null
 	eend $?
+elif [ ! -e /dev/.devfsd -a -e /dev/.udev ]
+then
+	ebegin "Saving device nodes"
+	cd /dev
+	try tar -jclpf "/tmp/devices-$$.tar.bz2" *
+	try mv -f "/tmp/devices-$$.tar.bz2" /lib/udev-state/devices.tar.bz2
+	eend 0
 fi
 
 ebegin "Sending all processes the TERM signal"

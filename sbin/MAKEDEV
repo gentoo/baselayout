@@ -55,6 +55,13 @@ then
     exit 0
 fi
 
+
+# make sure we are not in /
+if [ "`pwd`" = "/" ]; then
+	echo "Running MAKEDEV in your root filesystem is a VERY BAD IDEA."
+	exit 0
+fi	
+
 #---#---#---#---#---#---#---#---#---#---#---#---#---#---#---#---#---#---#---#
 
 procfs=/proc

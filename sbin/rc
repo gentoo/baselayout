@@ -100,20 +100,31 @@ then
 	try try mount -n -t proc none /proc
 	eend $?
 
-	if [ -d /sys -a "$(get_KV)" -ge "$(KV_to_int '2.5.0')" ]
+	if [ -d /sys -a "$(get_KV)" -ge "$(KV_to_int '2.6.0')" ]
 	then
 		ebegin "Mounting sysfs at /sys"
 		mount -t sysfs none /sys
 		eend $?
 
-	elif [ "$(get_KV)" -ge "$(KV_to_int '2.5.0')" ]
+	elif [ "$(get_KV)" -ge "$(KV_to_int '2.6.0')" ]
 	then
-		ewarn "No /sys to mount sysfs needed in 2.5+ kernels!"
+		ewarn "No /sys to mount sysfs needed in 2.6 and later kernels!"
 	fi
 
-	# Check if the user disabled devfs
 	devfs="yes"
-	if get_bootparam "nodevfs"
+	udev="yes"
+
+	# Check if we can use udev, and that the user did not disable
+	# it explicitly ...
+	if get_bootparam "noudev" || \
+	   [ ! -x /sbin/udev -o -e "/dev/.devfsd" ] || \
+	   [ "$(get_KV)" -lt "$(KV_to_int '2.6.0')" ]
+	then
+		udev="no"
+	fi
+
+	# Check if the user disabled devfs explicitly
+	if get_bootparam "nodevfs" || [ "${udev}" = "yes" ]
 	then
 		devfs="no"
 	fi
@@ -125,8 +136,29 @@ then
 		rm -f /dev/.devfsd
 	fi
 
+	if [ "${udev}" = "yes" ]
+	then
+		ebegin "Mounting ramfs at /dev"
+		try mount -n -t ramfs none /dev
+		eend $?
+		ebegin "Configuring system to use udev"
+		einfo "  Populating /dev with device nodes..."
+		try tar -jxpf /lib/udev-state/devices.tar.bz2 -C /dev
+		if [ -f /proc/sys/kernel/hotplug ]
+		then
+			einfo "  Setting udev as hotplug agent..."
+			echo "/sbin/udev" > /proc/sys/kernel/hotplug
+		else
+			ewarn "  Kernel was not compiled with hotplug support!"
+		fi
+		eend 0
+		# Create problematic directories
+		mkdir -p /dev/{pts,shm}
+		# Same thing as /dev/.devfsd
+		touch /dev/.udev
+
 	# With the new way, /dev can be mounted by the kernel ...
-	if [ "${devfs}" = "yes" -a ! -e "/dev/.devfsd" ]
+	elif [ "${devfs}" = "yes" -a ! -e "/dev/.devfsd" ]
 	then
 		mymounts="$(awk '($2 == "devfs") { print "yes"; exit 0 }' /proc/filesystems)"
 		# Is devfs support compiled in?

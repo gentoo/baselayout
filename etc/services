@@ -317,18 +317,20 @@ swat		901/tcp				# Samba configuration tool
 skkserv		1178/tcp                        # skk jisho server port
 rmtcfg		1236/tcp			# Gracilis Packeten remote config server
 xtel		1313/tcp			# french minitel
-ms-sql-s	1433/tcp		Microsoft-SQL-Server
-ms-sql-s	1433/udp		Microsoft-SQL-Server
-ms-sql-m	1434/tcp		Microsoft-SQL-Monitor
-ms-sql-m	1434/udp		Microsoft-SQL-Monitor
+ms-sql-s	1433/tcp			# Microsoft-SQL-Server
+ms-sql-s	1433/udp			# Microsoft-SQL-Server
+ms-sql-m	1434/tcp			# Microsoft-SQL-Monitor
+ms-sql-m	1434/udp			# Microsoft-SQL-Monitor
 support		1529/tcp			# GNATS
 cfinger		2003/tcp			# GNU Finger
 ninstall	2150/tcp			# ninstall service
 ninstall	2150/udp			# ninstall service
 afbackup	2988/tcp			# Afbackup system
 afbackup	2988/udp			# Afbackup system
-njp		3689/tcp		Network Jukebox Protocol
-njp		3689/udp		Network Jukebox Protocol
+webcache	3128/tcp			# WWW caching service
+webcache	3128/udp                        # WWW caching service
+njp		3689/tcp			# Network Jukebox Protocol
+njp		3689/udp			# Network Jukebox Protocol
 fax		4557/tcp			# FAX transmission service        (old)
 hylafax		4559/tcp			# HylaFAX client-server protocol  (new)
 noclog		5354/tcp			# noclogd with TCP (nocol)

@@ -2,6 +2,15 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  18 Oct 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add initial udev support.  Modified /sbin/rc and /etc/init.d/halt.sh.
+
+    Add squid to /etc/services, bug #30995.  Other cleanups from rac.
+
+    Add patch from Kumba <kumba@gentoo.org> to MAKEDEV to not allow
+    running while pwd is root (/).
+
   14 Sep 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Change update-modules to modules-update in manpage, bug #28101.
