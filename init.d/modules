@@ -19,7 +19,7 @@ load_modules() {
 	do
 		[ -z "${module}" ] && continue
 		ebegin "  Loading module ${module}"
-		modprobe ${module} ${args} &>/dev/null
+		modprobe -q ${module} ${args} &>/dev/null
 		eend $? "  Failed to load ${module}"
 	done
 	echo

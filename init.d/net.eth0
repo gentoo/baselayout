@@ -109,6 +109,8 @@ start() {
 	if [ -n "${gateway}" ] && [ "${gateway%/*}" = "${IFACE}" ]
 	then
 		ebegin "  Setting default gateway"
+		# First delete any existing routes if it was setup by kernel ..
+		/sbin/route del default dev ${gateway%/*} &>/dev/null
 		/sbin/route add default gw ${gateway#*/} dev ${gateway%/*} \
 			netmask 0.0.0.0 metric 1 >/dev/null || {
 			

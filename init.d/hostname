@@ -23,8 +23,8 @@ start() {
 	
 	if checkconfig
 	then
-		myhost="$(cut -f1 -d . < /etc/hostname)"
-		mydomain="$(cut -f2- -d . < /etc/hostname)"
+		myhost="$(awk '{ sub(/\..*/, ""); print }' /etc/hostname)"
+		mydomain="$(awk '{ if (sub(/^[^\.]*\./, "")) print }' /etc/hostname)"
 
 		if [ -z "${mydomain}" ]
 		then
