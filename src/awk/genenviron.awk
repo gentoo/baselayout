@@ -71,6 +71,11 @@ BEGIN {
 				if (envnode[1] == "LDPATH")
 					continue
 
+				# In bash there should be no space between the variable name and
+				# the '=' ...
+				if (envnode[1] ~ /[^[:space:]]*[[:space:]]+$/)
+					continue
+
 				# strip variable name and '=' from data
 				sub("^[[:space:]]*" envnode[1] "[[:space:]]*=", "")
 				# Strip all '"' and '\''

@@ -2,6 +2,11 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  09 Apr 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add one more check to genenviron.awk, to spot cases where there is a
+    space between the variable and the '='.
+
   08 Apr 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix interactive shell not to have coloured prompt when used as a
