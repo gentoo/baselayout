@@ -26,6 +26,12 @@ RC_PARALLEL_STARTUP="no"
 
 RC_NET_STRICT_CHECKING="no"
 
+# RC_VOLUME_ORDER allows you to specify, or even remove the volume setup
+# for various volume managers (MD, EVMS2, LVM, DM, etc).  Note that the are
+# stopped in reverse order.
+
+RC_VOLUME_ORDER="raid evms lvm dm dm-crypt"
+
 # RC_USE_FSTAB allows you to override the default mount options for the 
 # standard /proc, /sys, /dev, and /dev/pts mount points.  Note that this 
 # is the new way for selecting ramfs/tmpfs/etc... for udev mounting.

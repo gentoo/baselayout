@@ -655,6 +655,46 @@ get_mount_fstab() {
 	' /etc/fstab
 }
 
+# char *reverse_list(list)
+#
+#   Returns the reversed order of list
+#
+reverse_list() {
+		for (( i = $# ; i > 0 ; i -= 1 )); do
+				echo -n "${!i} "
+		done
+}
+
+# void start_volumes()
+#
+#   Starts all volumes in RC_VOLUME_ORDER.
+#
+start_volumes() {
+		local x=
+		
+		for x in ${RC_VOLUME_ORDER}; do
+				[[ -r ${svclib}/addons/${x}-start.sh ]] && \
+					source "${svclib}/addons/${x}-start.sh"
+		done
+
+		return 0
+}
+
+# void stop_volumes()
+#
+#   Stops all volumes in RC_VOLUME_ORDER (reverse order).
+#
+stop_volumes() {
+		local x=
+
+		for x in $(reverse_list ${RC_VOLUME_ORDER}); do
+				[[ -r ${svclib}/addons/${x}-stop.sh ]] && \
+					source "${svclib}/addons/${x}-stop.sh"
+		done
+
+		return 0
+}
+
 # bool is_older_than(reference, files/dirs to check)
 #
 #   return 0 if any of the files/dirs are newer than 
