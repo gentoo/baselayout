@@ -58,7 +58,7 @@ start() {
 
 stop() {
     ebegin "Unmounting network filesystems"
-	umount -art coda,nfs,ncpfs,smbfs,cifs
+	umount -art ${NET_FS_LIST// /,}
 	eend $? "Failed to unmount filesystems"
 }
 
