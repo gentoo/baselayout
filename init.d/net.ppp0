@@ -69,7 +69,7 @@ stop() {
 		fi
 		
 #		/sbin/ifconfig ${IFACE} down
-		kill $(cat /var/run/ppp-${IFACE}.pid | egrep -v "${IFACE}")
+		kill $(egrep -v "${IFACE}" /var/run/ppp-${IFACE}.pid)
 	fi
 	eend
 }

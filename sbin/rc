@@ -17,7 +17,7 @@ try() {
 	errstr="`(eval $*) 2>&1 >/dev/null`"
 	retval=$?
 	if [ "${retval}" -ne 0 ] || \
-	   ([ -n "`echo "$*" | gawk '/mount/ { print "yes" }'`" -a -n "${errstr}" ])
+	   ([ "${*/mount/}" != "$*" -a -n "${errstr}" ])
 	then
 		echo -e "${ENDCOL}${NORMAL}[${BAD} oops ${NORMAL}]"
 		echo
@@ -200,7 +200,7 @@ then
 		
 		# Saving the kernel attributed hostname to a file for future
 		# initialisation selection: see /etc/init.d/switch.
-		cat /proc/sys/kernel/hostname > "${svcdir}/hostname"
+		echo "$(</proc/sys/kernel/hostname)" > "${svcdir}/hostname"
 
 		if checkserver
 		then

@@ -4,7 +4,7 @@
 # $Header$
 
 source /sbin/functions.sh
-if [ `id -u` -ne 0 ]
+if [ "${EUID}" -ne 0 ]
 then
 	eerror "$0: must be root."
 	exit 1

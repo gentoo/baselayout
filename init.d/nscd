@@ -6,7 +6,7 @@
 
 start() {
 	ebegin "Starting Name Service Cache Daemon"
-	secure=` cat /etc/nsswitch.conf | while read curline ; do
+	secure=`while read curline ; do
 		table=${curline%:*}
 		entries=${curline##$table:}
 		table=${table%%[^a-z]*}
@@ -22,7 +22,7 @@ start() {
 			done
 		;;
 		esac
-		done`
+		done < /etc/nsswitch.conf`
 	start-stop-daemon --start --quiet --exec /usr/sbin/nscd -- $secure
 	eend $?
 }

@@ -20,7 +20,7 @@ else
 fi
 
 myservice="${myservice##*/}"
-mylevel="$(cat "${svcdir}/softlevel")"
+mylevel="$(<"${svcdir}/softlevel")"
 
 
 # Set $IFACE to the name of the network interface if it is a 'net.*' script

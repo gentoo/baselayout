@@ -7,21 +7,19 @@
 
 source /etc/init.d/functions.sh
 
-if [ `id -u` -ne 0 ]
+if [ "${EUID}" -ne 0 ]
 then
 	eerror "$0: must be root."
 	exit 1
 fi
 
 usage() {
-cat << FOO
-usage: rc-envupdate.sh
+echo "usage: rc-envupdate.sh
 
 note:
       This utility generates /etc/profile.env and /etc/csh.env
       from the contents of /etc/env.d/
-
-FOO
+"
 	exit 1
 }
 		
@@ -44,7 +42,7 @@ parse_envd() {
 			continue
 		fi
 
-		VARLIST="$(/bin/cat ${svcdir}/varlist)"
+		VARLIST="$(<${svcdir}/varlist)"
 		local variable=""
 		local value=""
 		if [ -f ${x} ] || ([ -L ${x} ] && [ -f $(/bin/readlink ${x}) ])
@@ -68,7 +66,7 @@ parse_envd() {
 	done
 
 	#clear the environment of stale variables
-	VARLIST="$(/bin/cat ${svcdir}/varlist)"
+	VARLIST="$(<${svcdir}/varlist)"
 	for x in ${VARLIST/LDPATH}
 	do
 		echo "export $(eval echo ${x})=\"\"" >> ${svcdir}/vardata
@@ -78,7 +76,7 @@ parse_envd() {
 	for x in ${myenvd_files}
 	do
 		source ${svcdir}/vardata
-		VARLIST="$(/bin/cat ${svcdir}/varlist)"
+		VARLIST="$(<${svcdir}/varlist)"
 		if [ -f ${x} ] || ([ -L ${x} ] && [ -f $(/bin/readlink ${x}) ])
 		then
 			(/bin/awk '!/^#|^\t+#/ { gsub ( /=/, "\t" ) ; print $0 }' ${x}) | \

@@ -7,21 +7,19 @@
 
 source /etc/init.d/functions.sh
 
-if [ `id -u` -ne 0 ]
+if [ "${EUID}" -ne 0 ]
 then
 	eerror "$0: must be root."
 	exit 1
 fi
 
 usage() {
-cat << FOO
-usage: rc-envupdate.sh
+echo "usage: rc-envupdate.sh
 
 note:
       This utility generates /etc/profile.env and /etc/csh.env
       from the contents of /etc/env.d/
-
-FOO
+"
 	exit 1
 }
 		

@@ -19,7 +19,7 @@ setport() {
 	# arguments: device, irq, port, args
 
 	#if serial module exists, and it's not inserted, insert it permanently
-	if [ -f /lib/modules/$(uname -r)/misc/serial.o ]
+	if [ -f /lib/modules/$(</proc/sys/kernel/osrelease)/misc/serial.o ]
 	then
 		moduleinserted;
 		if [ "$?" -eq 0 ]

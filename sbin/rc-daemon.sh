@@ -95,7 +95,7 @@ getpids() {
 			pidfile="$(getpidfile ${x})"
 			if [ -n "${pidfile}" ]
 			then
-				MASTER_PID[${count}]="$(cat ${pidfile})"
+				MASTER_PID[${count}]="$(<${pidfile})"
 			fi
 			if [ -n "$(pidof ${x})" ]
 			then

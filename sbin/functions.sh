@@ -295,7 +295,7 @@ checkserver() {
 	# Only do check if 'gentoo=adelie' is given as kernel param
 	if get_bootparam "adelie"
 	then
-		[ "`cat ${svcdir}/hostname`" = "(none)" ] || return 1
+		[ "$(<${svcdir}/hostname)" = "(none)" ] || return 1
 	fi
 	
 	return 0
@@ -326,7 +326,7 @@ init_node() {
 			find "${DIR}/" -type d > "${shmdir}/${DIR}.lst"
 		fi
 
-		for SUBDIR in `cat ${shmdir}/${DIR}.lst`
+		for SUBDIR in $(<${shmdir}/${DIR}.lst)
 		do
 			mkdir -p "${shmdir}/${SUBDIR}"
 			chmod --reference="${SUBDIR}" "${shmdir}/${SUBDIR}"
@@ -335,7 +335,7 @@ init_node() {
 
 		if [ -e "/etc/conf.d/exclude/${DIR}" ]
 		then
-			for EMPTYDIR in `cat "/etc/conf.d/exclude/${DIR}"`
+			for EMPTYDIR in $(<"/etc/conf.d/exclude/${DIR}")
 			do
 				mkdir -p "${shmdir}/${EMPTYDIR}"
 				chmod --reference="${SUBDIR}" "${shmdir}/${SUBDIR}"
@@ -425,7 +425,7 @@ KV_to_int() {
 #    return the kernel version (major, minor and micro concated) as an integer
 #   
 get_KV() {
-	local KV="`uname -r 2> /dev/null`"
+	local KV="$(</proc/sys/kernel/osrelease)"
 
 	echo "`KV_to_int ${KV}`"
 
@@ -443,7 +443,7 @@ get_bootparam() {
 	local parms=""
 	local retval=1
 	
-	for copt in `cat /proc/cmdline`
+	for copt in $(</proc/cmdline)
 	do
 		if [ "${copt%=*}" = "gentoo" ]
 		then

@@ -29,7 +29,7 @@ depdir() {
 	dep="`egrep '[[:space:]]*depfile' ${CFGFILE} | tail -n 1 | sed -e 's/depfile=//' -e 's,/[^/]*$,,'`"
 	if [ -z "${dep}" ]
 	then
-	    dep="/lib/modules/`uname -r`"
+	    dep="/lib/modules/$(</proc/sys/kernel/osrelease)"
 	fi
 
 	echo "${dep}"
