@@ -128,6 +128,7 @@ ewend() {
 			ewarn "${*}"
 		fi
 		if [ "${QUIET_STDOUT}" != "yes" ]
+		then
 			echo -e "${ENDCOL}  \e[34;01m[ ${WARN}!! \e[34;01m]${NORMAL}"
 			#extra spacing makes it easier to read
 			echo
