@@ -10,20 +10,62 @@ depend() {
 }
 
 load_modules() {
-	[ -z "$1" ] && return 0
-	[ ! -r "$1" ] && return 0
+	local x=
+	local i=1
+	local retval=0
+	local modules=
+	local modargs=
+	local modcount=0
+	local config="$1"
 
-	# Loop over every line in $1
-	(egrep -v "^#|^$" "$1"; echo) | # make sure there is a LF at the end
-	while read module args
-	do
-		[ -z "${module}" ] && continue
-		ebegin "  Loading module ${module}"
-		modprobe -q ${module} ${args} &>/dev/null
-		eend $? "  Failed to load ${module}"
-	done
-	echo
-	
+	[ -z "${config}" ] && return 0
+	[ ! -r "${config}" ] && return 0
+
+	# Loop over every line in $config
+	eval $(awk '
+		BEGIN {
+			COUNT = 0 # Make sure COUNT is set
+		}
+
+		$0 !~ /(^[[:space:]]*(#|$))/ {
+			if (MODULES == "")
+				MODULES = $1
+			else
+				MODULES = MODULES " " $1
+			
+			# Not the greatest method to remove $1 from $0, but it works
+			sub(/^[[:space:]]*[^[:space:]]*[[:space:]]*/, "")
+			ARGS[COUNT] = $0
+			COUNT++
+		}
+		
+		END {
+			# 'eval' will make sure these are set to proper bash variables
+			print "modcount=" COUNT
+			print "modules=\"" MODULES "\""
+			for (x = 0;x < COUNT;x++)
+				print "modargs[" x "]=\"" ARGS[x] "\""
+		}
+	' "${config}")
+
+	if [ "${modcount}" -gt 0 ]
+	then
+		einfo "Using ${config} as config:"
+		
+		for x in ${modules}
+		do
+			ebegin "  Loading module ${x}"
+			modprobe -q ${x} ${modargs[${i}]} &>/dev/null
+			retval=$?
+			eend ${retval} "  Failed to load ${x}"
+			
+			i=$((i+1))
+			[ "${retval}" -eq 0 ] || modcount=$((modcount-1))
+		done
+
+		einfo "Autoloaded ${modcount} module(s)"
+	fi
+
 	return 0
 }
 
@@ -46,7 +88,6 @@ start() {
 
 	if [ -f /etc/modules.autoload -a ! -L /etc/modules.autoload ]
 	then
-		einfo "Using /etc/modules.autoload:"
 		# Loop over every line in /etc/modules.autoload.
 		load_modules /etc/modules.autoload
 	else
@@ -58,16 +99,13 @@ start() {
 		if [ "$(get_KV)" -ge "$(KV_to_int '2.5.48')" ] && \
 		   [ -f /etc/modules.autoload.d/kernel-"${KV_MAJOR}.${KV_MINOR}" ]
 		then
-			einfo "Using /etc/modules.autoload.d/kernel-${KV_MAJOR}.${KV_MINOR}:"
 			load_modules /etc/modules.autoload.d/kernel-"${KV_MAJOR}.${KV_MINOR}"
 			
 		elif [ ! -f /etc/modules.autoload.d/kernel-"${KV_MAJOR}.${KV_MINOR}" ]
 		then
 			ewarn "Missing /etc/modules.autoload.d/kernel-${KV_MAJOR}.${KV_MINOR}"
-			ewarn "Using /etc/modules.autoload.d/kernel-2.4 for the time being:"
 			load_modules /etc/modules.autoload.d/kernel-2.4
 		else
-			einfo "Using /etc/modules.autoload.d/kernel-2.4:"
 			load_modules /etc/modules.autoload.d/kernel-2.4
 		fi
 	fi
