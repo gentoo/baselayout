@@ -18,18 +18,6 @@ depend() {
 	use hotplug pcmcia
 }
 
-checkconfig() {
-	if [[ -z "${ifconfig_IFACE}" ]]; then
-		eerror "Please make sure that /etc/conf.d/net has \$ifconfig_$IFACE set"
-		eerror "(or \$iface_$IFACE for old-style configuration)"
-		return 1
-	fi
-	if [[ -n "${vlans_IFACE}" && ! -x /sbin/vconfig ]]; then
-		eerror "For VLAN (802.1q) support, emerge net-misc/vconfig"
-		return 1
-	fi
-}
-
 # Fix bug 50039 (init.d/net.eth0 localization)
 # Some other commands in this script might need to be wrapped, but
 # we'll get them one-by-one.  Note that LC_ALL trumps LC_anything_else
@@ -84,11 +72,108 @@ setup_vars() {
 	fi
 }
 
-iface_start() {
-	local IFACE=${1} i x retval
-	checkconfig || return 1
+iface_start_adsl() {
+	local cfgfile IFACE=${1}
 
-	if [[ ${ifconfig_IFACE} != dhcp ]]; then
+	# Decide which configuration to use.  Hopefully there is an
+	# interface-specific one
+	cfgfile=/etc/ppp/pppoe-$IFACE.conf
+	[[ -f ${cfgfile} ]] || cfgfile=/etc/ppp/pppoe.conf
+
+	# Start ADSL with the cfgfile, but override ETH and PIDFILE
+	ebegin "Starting ADSL for ${IFACE}"
+	/usr/sbin/adsl-start <(cat ${cfgfile}; \
+		echo "ETH=${IFACE}"; echo "PIDFILE=/var/run/adsl-${IFACE}.pid") \
+		>/dev/null
+	eend $? || return $?
+}
+
+iface_stop_adsl() {
+	local IFACE=${1}
+
+	if [[ -f /var/run/adsl-${IFACE}.pid ]]; then
+		# Decide which configuration to use.  Hopefully there is an
+		# interface-specific one
+		cfgfile=/etc/ppp/pppoe-$IFACE.conf
+		[[ -f ${cfgfile} ]] || cfgfile=/etc/ppp/pppoe.conf
+
+		ebegin "Stopping ADSL for ${IFACE}"
+		/usr/sbin/adsl-stop <(cat ${cfgfile}; \
+			echo "ETH=${IFACE}"; echo "PIDFILE=/var/run/adsl-${IFACE}.pid") \
+			>/dev/null
+		eend $? || return $?
+	fi
+}
+
+iface_start_dhcp() {
+	local IFACE=${1} retval i
+
+	ebegin "Bringing ${IFACE} up via DHCP"
+	/sbin/dhcpcd ${dhcpcd_IFACE} ${IFACE}
+	retval=$?
+	eend $retval
+
+	if [[ $retval == 0 ]]; then
+		# DHCP succeeded, show address retrieved
+		i=$(ifconfig ${IFACE} | grep -m1 -o 'inet addr:[^ ]*' | 
+		cut -d: -f2)
+		[[ -n ${i} ]] && einfo "  ${IFACE} received address ${i}"
+	elif [[ -n "${ifconfig_fallback_IFACE}" ]]; then
+		# DHCP failed, try fallback.
+		# Show the address, but catch if this interface will be inet6 only
+		i=${ifconfig_fallback_IFACE%% *}
+		if [[ ${i} == *.*.*.* ]]; then
+			ebegin "Using fallback configuration (${i}) for ${IFACE}"
+		else
+			ebegin "Using fallback configuration for ${IFACE}"
+		fi
+		ifconfig ${IFACE} ${ifconfig_fallback_IFACE} >${devnull} && \
+		ifconfig ${IFACE} up &>${devnull}
+		eend $? || return $?
+	else
+		return $retval
+	fi
+}
+
+iface_stop_dhcp() {
+	local IFACE=$1
+
+	if /sbin/dhcpcd -z ${IFACE} &>${devnull}; then
+		ebegin "  Releasing DHCP lease for ${IFACE}"
+		for ((count = 0; count < 9; count = count + 1)); do
+			/sbin/dhcpcd -z ${IFACE} &>${devnull} || break
+			sleep 1
+		done
+		[[ ${count} -lt 9 ]]
+		eend $? "Timed out"
+	fi
+}
+
+iface_start() {
+	local IFACE=${1} i
+
+	# This used to be the function checkconfig but there's no point
+	# since it was only called from here
+	if [[ -z ${ifconfig_IFACE} ]]; then
+		eerror "Please make sure that /etc/conf.d/net has \$ifconfig_$IFACE set"
+		eerror "(or \$iface_$IFACE for old-style configuration)"
+		return 1
+	fi
+	if [[ -n ${vlans_IFACE} && ! -x /sbin/vconfig ]]; then
+		eerror "For VLAN (802.1q) support, emerge net-misc/vconfig"
+		return 1
+	fi
+
+	if [[ ${ifconfig_IFACE} == dhcp ]]; then
+		# Check that eth0 was not brought up by the kernel ...
+		if [[ ${status_IFACE} == up ]]; then
+			einfo "Keeping kernel configuration for ${IFACE}"
+		else
+			iface_start_dhcp ${IFACE} || return $?
+		fi
+	elif [[ ${ifconfig_IFACE} == adsl ]]; then
+		iface_start_adsl ${IFACE} || return $?
+	else
 		# Show the address, but catch if this interface will be inet6 only
 		i=${ifconfig_IFACE%% *}
 		if [[ ${i} == *.*.*.* ]]; then
@@ -100,36 +185,6 @@ iface_start() {
 		ifconfig ${IFACE} ${ifconfig_IFACE} >${devnull} && \
 		ifconfig ${IFACE} up &>${devnull}
 		eend $? || return $?
-	else
-		# Check that eth0 was not brought up by the kernel ...
-		if [[ ${status_IFACE} == up ]]; then
-			einfo "Keeping kernel configuration for ${IFACE}"
-		else
-			ebegin "Bringing ${IFACE} up via DHCP"
-			/sbin/dhcpcd ${dhcpcd_IFACE} ${IFACE}
-			retval=$?
-			eend $retval
-			if [[ $retval == 0 ]]; then
-				# DHCP succeeded, show address retrieved
-				i=$(ifconfig ${IFACE} | grep -m1 -o 'inet addr:[^ ]*' | 
-					cut -d: -f2)
-				[[ -n ${i} ]] && einfo "  ${IFACE} received address ${i}"
-			elif [[ -n "${ifconfig_fallback_IFACE}" ]]; then
-				# DHCP failed, try fallback.
-				# Show the address, but catch if this interface will be inet6 only
-				i=${ifconfig_fallback_IFACE%% *}
-				if [[ ${i} == *.*.*.* ]]; then
-					ebegin "Using fallback configuration (${i}) for ${IFACE}"
-				else
-					ebegin "Using fallback configuration for ${IFACE}"
-				fi
-				ifconfig ${IFACE} ${ifconfig_fallback_IFACE} >${devnull} && \
-				ifconfig ${IFACE} up &>${devnull}
-				eend $? || return $?
-			else
-				return $retval
-			fi
-		fi
 	fi
 
 	if [[ ${#ifconfig_IFACE[@]} -gt 1 ]]; then
@@ -236,17 +291,19 @@ iface_stop() {
 			done
 		fi
 
+		# Stop ADSL
+		# Don't trust current configuration... investigate ourselves
+		# in case the configuration has changed since the interface
+		# was brought up
+		iface_stop_adsl ${i}
+
 		# Stop DHCP (should be N/A for aliases)
 		# Don't trust current configuration... investigate ourselves
-		if /sbin/dhcpcd -z ${i} &>${devnull}; then
-			ebegin "  Releasing DHCP lease for ${IFACE}"
-			for ((count = 0; count < 9; count = count + 1)); do
-				/sbin/dhcpcd -z ${i} &>${devnull} || break
-				sleep 1
-			done
-			[[ ${count} -lt 9 ]]
-			eend $? "Timed out"
-		fi
+		# in case the configuration has changed since the interface
+		# was brought up
+		iface_stop_dhcp ${i}
+
+		# Do final shut down of interface
 		ebegin "  Stopping ${i}"
 		ifconfig ${i} down &>${devnull}
 		eend 0
