@@ -2,6 +2,84 @@
 # Copyright 2002-2004 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  16 Mar 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    The changes in this commit pertain primarily to
+        http://bugs.gentoo.org/show_bug.cgi?id=19695
+        http://bugs.gentoo.org/show_bug.cgi?id=35736
+
+    Specify routes as an array per interface, for example:
+        routes_eth0=(
+            "-net 10.1.0.0 netmask 255.255.0.0 gw 10.0.0.5"
+            "-net 10.2.0.0 netmask 255.255.0.0 gw 10.0.0.6"
+            "-host 10.3.0.1 dev eth0"
+        )
+
+    You can optionally use the gateway variable or just put the default route
+    in the routes variable.  The following two are REDUNDANT:
+
+        routes_eth0=( "default gw 10.0.0.5" )
+        gateway="eth0/10.0.0.5"
+
+    Old configuration variables in /etc/conf.d/net are fully supported and
+    used transparently if ifconfig_eth0 is missing.  In other words, this new
+    script is fully backward-compatible.  However you can get rid of
+    iface_eth0, alias_eth0, broadcast_eth0 and netmask_eth0 if you want by
+    using the new syntax:
+
+        ifconfig_eth0=(
+            "10.0.0.6 broadcast 10.0.255.255 netmask 255.255.0.0"
+            "192.168.1.1 netmask 255.255.255.0"
+            "123.456.789.1"
+        )
+
+    Full backward compatibility so no danger to screwing up users relying on
+    existing /etc/conf.d/net setup
+
+    NET_DEBUG can be set in the environment for copious debugging output
+
+    Deprecate [ ] in favor of [[ ]] which has fewer quoting issues and
+    better functionality (and is even slightly faster)
+
+    Properly localize all variables, including variables returned by
+    setup_vars
+
+    Allow full options for every ifconfig command, both base address and
+    aliases via ifconfig_eth0, replacing the convoluted and less-functional
+    iface_eth0, alias_eth0, broadcast_eth0, netmask_eth0
+
+    Provide full support for static routes via routes_eth0
+
+    Fix potential quoting problems in setup_vars by using better eval syntax
+    instead of eval echo
+
+    Display IP addresses while configuring, both DHCP-retrieved and
+    statically set addresses
+
+    Collapse redundant caching of $? since eend returns $? again
+
+    Report when keeping kernel configuration for an interface along with IP
+    address gleaned
+
+    Don't reset the default gateway if it is already set correctly
+
+    Don't bind default gateway to particular interface when /sbin/route is
+    called so that it can survive if there is more than one interface on the
+    required subnet.  (Old behavior can be obtained by setting
+    routes_eth0="default gw 1.2.3.4 dev eth0" if you really want it)
+
+    Don't bomb if default gateway can't be set since that doesn't
+    necessarily mean that the interface configuration is invalid.
+    (Old behavior was completely broken, but commented section
+    demonstrates how to do it right if necessary)
+
+    iface_stop no longer relies on configuration in /etc/conf.d/net AT ALL.
+    This is very good because it means you can put new configuration in
+    /etc/conf.d/net, then restart the interface and the old configuration will
+    be properly shut down.
+
+    iface_stop reports when it is releasing the DHCP lease
+
 * rc-scripts 1.4.3.13p1 (26 Feb 2004)
 
   26 Feb 2004; Martin Schlemmer <azarah@gentoo.org>:
