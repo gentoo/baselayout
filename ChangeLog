@@ -2,6 +2,8 @@
 # Copyright 2002-2004 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+* rc-scripts 1.4.3.13p1 (26 Feb 2004)
+
   26 Feb 2004; Martin Schlemmer <azarah@gentoo.org>:
 
     Remove /etc/DIR_COLORS, as coreutils provides it now.
