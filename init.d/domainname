@@ -1,5 +1,5 @@
 #!/sbin/runscript
-# Copyright 1999-2004 Gentoo Foundation
+# Copyright 1999-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
 
@@ -9,25 +9,22 @@ depend() {
 }
 
 checkconfig_nis() {
-	if [ -f /etc/nisdomainname ]
-	then
+	if [[ -f /etc/nisdomainname ]] ; then
 		ewarn "You should stop using /etc/nisdomainname and use /etc/conf.d/domainname"
-		export NISDOMAIN="$(</etc/nisdomainname)"
+		export NISDOMAIN=$(</etc/nisdomainname)
 		return 0
 	fi
-	[ -n "${NISDOMAIN}" ]
+	[[ -n ${NISDOMAIN} ]]
 }
 
 checkconfig_dns() {
-	if [ -f /etc/dnsdomainname ]
-	then
+	if [[ -f /etc/dnsdomainname ]] ; then
 		ewarn "You should stop using /etc/dnsdomainname and use /etc/conf.d/domainname"
-		export DNSDOMAIN="$(</etc/dnsdomainname)"
+		export DNSDOMAIN=$(</etc/dnsdomainname)
 	fi
-	[ -z "${DNSDOMAIN}" ] && return 1
+	[[ -z ${DNSDOMAIN} ]] && return 1
 
-	if ! touch /etc/resolv.conf 2> /dev/null
-	then
+	if ! touch /etc/resolv.conf 2> /dev/null ; then
 		ewarn "Unable to set domain in resolv.conf (ro root?)"
 		return 1
 	else
@@ -39,19 +36,17 @@ start() {
 	local retval=0
 	local retval2=0
 
-	if checkconfig_nis
-	then
+	if checkconfig_nis ; then
 		ebegin "Setting NIS domainname to ${NISDOMAIN}"
 		/bin/domainname "${NISDOMAIN}"
 		retval=$?
 		eend ${retval} "Failed to set the NIS domainname"
 	fi
 
-	if checkconfig_dns
-	then
+	if checkconfig_dns ; then
 		ebegin "Setting DNS domainname to ${DNSDOMAIN}"
-		resolv="$(grep -v '^[[:space:]]*domain' /etc/resolv.conf)"
-		[ "${OVERRIDE}" = "1" ] \
+		resolv=$(grep -v '^[[:space:]]*domain' /etc/resolv.conf)
+		[[ ${OVERRIDE} == "1" ]] \
 			&& resolv="${resolv}"$'\n'"domain ${DNSDOMAIN}" \
 			|| resolv="domain ${DNSDOMAIN}"$'\n'"${resolv}"
 		echo "${resolv}" > /etc/resolv.conf
