@@ -42,7 +42,7 @@ RC_USE_CONFIG_PROFILE="yes"
 
 # void splash(...)
 #
-#  Notify bootsplash/splashutils/gensplash/whatever about 
+#  Notify bootsplash/splashutils/gensplash/whatever about
 #  important events.
 #
 splash() {
@@ -380,30 +380,30 @@ KV_to_int() {
 	local KV_MINOR=
 	local KV_MICRO=
 	local KV_int=
-	
+
 	[ -z "$1" ] && return 1
-    
+
 	KV_MAJOR="$(KV_major "$1")"
 	KV_MINOR="$(KV_minor "$1")"
 	KV_MICRO="$(KV_micro "$1")"
 	KV_int="$((KV_MAJOR * 65536 + KV_MINOR * 256 + KV_MICRO))"
-    
+
 	# We make version 2.2.0 the minimum version we will handle as
 	# a sanity check ... if its less, we fail ...
 	if [ "${KV_int}" -ge 131584 ]
-	then 
+	then
 		echo "${KV_int}"
 
 		return 0
 	fi
 
 	return 1
-}   
+}
 
 # int get_KV()
 #
 #    return the kernel version (major, minor and micro concated) as an integer
-#   
+#
 get_KV() {
 	local KV="$(uname -r)"
 
@@ -428,7 +428,7 @@ get_bootparam() {
 		if [ "${copt%=*}" = "gentoo" ]
 		then
 			params="$(gawk -v PARAMS="${copt##*=}" '
-				BEGIN { 
+				BEGIN {
 					split(PARAMS, nodes, ",")
 					for (x in nodes)
 						print nodes[x]
@@ -582,7 +582,7 @@ else
 	else
 		# We do not want colors or stty to run during emerge depend
 		RC_NOCOLOR="yes"
-	fi                                                                                                                       
+	fi
 fi
 
 if [ "${RC_NOCOLOR}" = "yes" ]

@@ -3,7 +3,6 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
 
-
 source /etc/init.d/functions.sh
 
 BLUE="\033[34;01m"
@@ -97,7 +96,7 @@ ${CYAN}Dependencies:${OFF}
     }
 
     Here we have foo and bar as dependencies of type 'need', and ray of
-    type 'use'.  You can have as many dependencies of each type as needed, as 
+    type 'use'.  You can have as many dependencies of each type as needed, as
     long as there is only one entry for each type, listing all its dependencies
     on one line only.
 
@@ -155,7 +154,7 @@ ${CYAN}Dependencies:${OFF}
 
     will make the service the last to start.
 
-    You should however be careful how you use this, as I really will not 
+    You should however be careful how you use this, as I really will not
     recommend using it with the 'need' or 'use' dependency type ... you have
     been warned!
 
@@ -168,7 +167,7 @@ ${CYAN}'net' Dependency and 'net.*' Services:${OFF}
 
     This is a special dependency of type 'need'.  It represents a state where
     a network interface or interfaces besides lo is up and active.  Any service
-    starting with 'net.' will be treated as a part of the 'net' dependency, 
+    starting with 'net.' will be treated as a part of the 'net' dependency,
     if:
 
     1.  It is part of the 'boot' runlevel

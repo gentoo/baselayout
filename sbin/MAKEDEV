@@ -50,9 +50,9 @@ major_lp=6
 # don't stomp on devfs users
 if  [ -c .devfsd ]
 then
-    echo ".devfsd presence implies active DevFS.  Aborting MAKEDEV invocation."
-    # use exit 0, not 1, so postinst scripts don't fail on this
-    exit 0
+	echo ".devfsd presence implies active DevFS.  Aborting MAKEDEV invocation."
+	# use exit 0, not 1, so postinst scripts don't fail on this
+	exit 0
 fi
 
 
@@ -97,7 +97,7 @@ makedev () {	# usage: makedev name [bcu] major minor owner group mode
 	if [ "$opt_v" ]
 	then	if [ "$opt_d" ]
 		then	echo "delete $1"
-		else	echo "create $1	$2 $3 $4 $5:$6 $7" 
+		else	echo "create $1	$2 $3 $4 $5:$6 $7"
 		fi
 	fi
 	if [ ! "$opt_n" ]
@@ -403,7 +403,7 @@ do
 		$0 $opts audio
 		$0 $opts fb
 		$0 $opts isdn-io eda edb sonycd mcd mcdx cdu535
-		$0 $opts optcd sjcd cm206cd gscd 
+		$0 $opts optcd sjcd cm206cd gscd
 		$0 $opts lmscd sbpcd aztcd bpcd dac960 ida ataraid cciss
 		;;
 	generic-ia64)
@@ -458,7 +458,7 @@ do
 		$0 $opts sg
 		$0 $opts pty
 		$0 $opts console
-		$0 $opts ttyS0 ttyS1 ttyS2 ttyS3 
+		$0 $opts ttyS0 ttyS1 ttyS2 ttyS3
 		$0 $opts lp
 		$0 $opts par
 		$0 $opts audio
@@ -477,7 +477,7 @@ do
 		$0 $opts sg
 		$0 $opts pty
 		$0 $opts console
-		$0 $opts ttyS0 ttyS1 ttyS2 ttyS3 
+		$0 $opts ttyS0 ttyS1 ttyS2 ttyS3
 		$0 $opts lp
 		$0 $opts par
 		$0 $opts audio
@@ -563,7 +563,7 @@ do
 		$0 $opts bc
 		;;
 	scc)
-		for unit in 0 1 2 3 4 5 6 7 
+		for unit in 0 1 2 3 4 5 6 7
 		do
 			makedev scc$unit c 34 $unit $system
 		done
@@ -710,7 +710,7 @@ do
 		major1=`Major ttyC 19` || continue
 		#major2=`Major cub 20` || continue
 		for i in 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 \
-                         16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 
+		         16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31
 		do
 			makedev ttyC$i c $major1 $i $dialout
 			#makedev cub$i c $major2 $i $dialout
@@ -1056,14 +1056,14 @@ do
 		makedev smapi     c $major 170 $mouse
 		symlink thinkpad smapi
 		;;
-        rtc)
+	rtc)
 		major=`Major mouse 10` || continue
 		makedev rtc       c $major 135 $mouse
 		;;
 	efirtc)
 		major=`Major mouse 10` || continue
 		makedev efirtc    c $major 136 $mouse
- 		;;
+		;;
 	js)
 		major=`Major Joystick 13` || continue
 		for unit in 0 1 2 3
@@ -1073,7 +1073,7 @@ do
 		done
 		;;
 	fd[0-7]-bare)
-		sarg="${arg%-bare}" 
+		sarg="${arg%-bare}"
 		major=`Major fd 2` || continue
 		base=`suffix $sarg fd`
 		if [ $base -ge 4 ]
@@ -1265,7 +1265,7 @@ do
 			minor=$(( $base + $part ))
 			makedev sd$unit$part b $major $minor $disk
 		done
-                ;;
+		;;
 	dasd[a-z])
 		major=`Major dasd 94` || continue
 		unit=`suffix $arg dasd`
@@ -1337,16 +1337,16 @@ do
 			chown root:root ataraid
 			chmod 755 ataraid
 		}
-                unit=`suffix $arg ataraid.`
-                major=114
-                minor=`math $unit \* 16`
-                makedev ataraid/d${unit} b $major $minor $disk
-                for part in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
-                do
-                   minor=`math $minor + 1`
-                   makedev ataraid/d${unit}p$part b $major $minor $disk
-                done
- 		;;
+		unit=`suffix $arg ataraid.`
+		major=114
+		minor=`math $unit \* 16`
+		makedev ataraid/d${unit} b $major $minor $disk
+		for part in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
+		do
+			minor=`math $minor + 1`
+			makedev ataraid/d${unit}p$part b $major $minor $disk
+		done
+		;;
 	ida)
 		for ctr in 0 1 2 # 3 4 5 6 7
 		do
@@ -1595,7 +1595,7 @@ do
 		makedev ${arg}0 b $major 0 $cdrom
 		;;
 	pcd)
-		for unit in 0 1 2 3 
+		for unit in 0 1 2 3
 		do
 			makedev pcd$unit b 46 $unit $cdrom
 		done
@@ -1705,7 +1705,7 @@ do
 		# devices might be good, but 8 should suffice for now
 		major=`Major i2c 89` || continue
 		minor=0
-		until [ $minor -gt 7 ] 
+		until [ $minor -gt 7 ]
 		do
 			makedev i2c-$minor c $major $minor $private
 			minor=`math $minor + 1`
@@ -1823,23 +1823,23 @@ do
 		makedev usb/rio500 c $major 64 $audio
 		;;
 	paride)
-                major=45
-                for unit in a b c d
+		major=45
+		for unit in a b c d
 		do
-                    base=`index abcd $unit`
-                    base=`math $base \* 16`
-                    makedev pd$unit b $major $base $disk
-                    for part in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
-                    do
-                        makedev pd$unit$part b $major $(( $base + $part )) $disk
-                    done
+			base=`index abcd $unit`
+			base=`math $base \* 16`
+			makedev pd$unit b $major $base $disk
+			for part in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
+			do
+				makedev pd$unit$part b $major $(( $base + $part )) $disk
+			done
 		done
 		for i in 0 1 2 3
 		do
-		    makedev pcd$i b 46 $i $cdrom
-		    makedev pf$i  b 47 $i $floppy
+			makedev pcd$i b 46 $i $cdrom
+			makedev pf$i  b 47 $i $floppy
 		done
-                ;;
+		;;
 	update)
 		if [ ! "$devices" ]
 		then

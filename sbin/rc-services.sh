@@ -434,7 +434,7 @@ stop_service() {
 	
 	[ -z "$1" ] && return 1
 
-	if service_started "$1" 
+	if service_started "$1"
 	then
 		splash "svc_stop" "$1"
 			

@@ -6,7 +6,7 @@
 
 trap ":" INT QUIT TSTP
 source /sbin/functions.sh
-# Only source this when this is a livecd booting ... 
+# Only source this when this is a livecd booting ...
 [ -f /sbin/livecd-functions.sh ] && source /sbin/livecd-functions.sh
 umask 022
 
@@ -50,7 +50,7 @@ try() {
 check_statedir() {
 	[ -z "$1" ] && return 0
 	
-	if [ ! -d "$1" ] 
+	if [ ! -d "$1" ]
 	then
 		if ! mkdir -p "$1" &>/dev/null
 		then
@@ -351,8 +351,8 @@ then
 		)
 	}
 
-	# We first try to find a locally defined list of critical services 
-	# for a particular runlevel.  If we cannot find it, we use the 
+	# We first try to find a locally defined list of critical services
+	# for a particular runlevel.  If we cannot find it, we use the
 	# defaults.
 	get_critical_services
 
@@ -436,7 +436,7 @@ then
 	export BOOT="yes"
 
 	# We reset argv1 to the bootlevel given on the kernel command line
-	# if there is one 
+	# if there is one
 	argv1="${BOOTLEVEL}"
 	
 elif [ "${RUNLEVEL}" != "S" -a -e "${svcdir}/ksoftlevel" ]
@@ -532,7 +532,7 @@ do
 		ewarn "WARNING:  /etc/init.d/${x} missing; skipping..."
 		continue
 	fi
-	# The -f eliminates a warning if the symlink already exists, 
+	# The -f eliminates a warning if the symlink already exists,
 	# which can happen if a service is in both the boot level and
 	# the current "normal" runlevel
 	ln -snf "/etc/init.d/${x}" "${svcdir}/softscripts.new/${x}"
@@ -673,7 +673,7 @@ then
 	
 	if [ "${SOFTLEVEL}" = "reboot" ]
 	then
-		source /etc/init.d/reboot.sh 
+		source /etc/init.d/reboot.sh
 	else
 		source /etc/init.d/shutdown.sh
 	fi

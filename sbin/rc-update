@@ -102,7 +102,7 @@ del() {
 	if [ $# -eq 0 ]
 	then
 		mylevels="`( cd /etc/runlevels; ls )`"
-	else 
+	else
 		mylevels="$*"
 	fi
 	remlevels=""
@@ -113,8 +113,8 @@ del() {
 			regen=1
 			rm -f "/etc/runlevels/${x}/${myscript}"
 			remlevels="${remlevels} ${x}"
- 		fi
- 	done
+		fi
+	done
 	if [ "${remlevels}" = "" ]
 	then
 		einfo "${myscript} not found in any of the specified runlevels."
