@@ -636,12 +636,20 @@ trace_dependencies() {
 		unsorted=( ${unsorted[@]} )
 	
 		if [[ -n ${deptype} ]] ; then
-			dependencies=( $( "${deptype}" "${service}" ) )
+			dependencies=(
+				$( "${deptype}" "${service}" )
+			)
 		else
 			# Services that should start before $service
-			dependencies=( $(ineed "${service}") $(valid_iuse "service") )
+			dependencies=(
+				$(ineed "${service}")
+				$(valid_iuse "${service}")
+			)
 			if is_runlevel_start || is_runlevel_stop ; then
-				dependencies=( "${dependencies[@]}" $(valid_iafter "${service}") )
+				dependencies=(
+					${dependencies[@]}
+					$(valid_iafter "${service}")
+				)
 			fi
 		fi
 	
@@ -649,12 +657,16 @@ trace_dependencies() {
 		# them all to the unsorted so we analyze them later
 		for dependency in ${dependencies[@]} ; do
 			for (( x=0 ; x < ${#sorted[*]} ; x++ )) ; do
-				[[ ${sorted[x]} == "${dependency}" ]] && \
+				if [[ ${sorted[x]} == "${dependency}" ]]; then
 					unset sorted[x]
+					break
+				fi
 			done
 			for (( x=0 ; x < ${#unsorted[*]} ; x++ )) ; do
-				[[ ${unsorted[x]} == "${dependency}" ]] && \
+				if [[ ${unsorted[x]} == "${dependency}" ]]; then
 					unset unsorted[x]
+					break
+				fi
 			done
 			
 			sorted=( ${sorted[@]} )
@@ -667,8 +679,10 @@ trace_dependencies() {
 	# If deptype is set, we do not want the name of this service
 	if [[ -n ${deptype} ]] ; then
 		for (( x=0 ; x < ${#sorted[*]} ; x++ )) ; do
-			[[ ${sorted[x]} == "${myservice}" ]] && \
+			if [[ ${sorted[x]} == "${myservice}" ]]; then
 				unset sorted[x]
+				break
+			fi
 		done
 		sorted=( ${sorted[@]} )
 	fi
