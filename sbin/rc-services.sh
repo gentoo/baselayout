@@ -537,7 +537,8 @@ valid_iuse() {
 	for x in $(iuse "$1")
 	do
 		if [ -e "/etc/runlevels/${BOOTLEVEL}/${x}" -o \
-		     -e "/etc/runlevels/${mylevel}/${x}" ]
+		     -e "/etc/runlevels/${mylevel}/${x}" -o \
+			 ${x} = "net" ]
 		then
 			echo "${x}"
 		fi
@@ -557,7 +558,8 @@ valid_iafter() {
 	for x in $(iafter "$1")
 	do
 		if [ -e "/etc/runlevels/${BOOTLEVEL}/${x}" -o \
-		     -e "/etc/runlevels/${mylevel}/${x}" ]
+		     -e "/etc/runlevels/${mylevel}/${x}" -o \
+			 ${x} = "net" ]
 		then
 			echo "${x}"
 		fi

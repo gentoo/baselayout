@@ -29,6 +29,10 @@
     get_dep_info() function to skip the last entry in the RC_DEPEND_TREE
     array (in my case 'net') to be ignored.
 
+    We did not handle the 'net' dependency properly in valid_iuse() and
+    valid_iafter().  Fix this in /lib/rcscripts/sh/rc-services.sh, closing
+    bugs #30327 and #31950.
+
   19 Oct 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     More bootsplash fixes, bug #21019 (comment #21).
