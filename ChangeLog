@@ -2,6 +2,13 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  28 Dec 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add support for generate-modprobe.conf or generating /etc/modprobe.conf
+    in the new sys-apps/module-init-tools.  Note that you need version
+    0.9.7 or later of sys-apps/module-init-tools.  Updated
+    /sbin/modules-update for this.
+
   26 Dec 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Add /etc/init.d/crypto-loop and /etc/conf.d/crypto-loop, a cool
