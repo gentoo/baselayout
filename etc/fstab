@@ -1,8 +1,5 @@
-# Copyright 1999-2002 Gentoo Technologies, Inc.
-# Distributed under the terms of the GNU General Public License v2
-# $Header$
-
 # /etc/fstab: static file system information.
+# $Header$
 #
 # noatime turns of atimes for increased performance (atimes normally aren't
 # needed; notail increases performance of ReiserFS (at the expense of storage

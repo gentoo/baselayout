@@ -2,10 +2,19 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+* rc-scripts 1.4.2.3 (18 Nov 2002)
+
   18 Nov 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Add some more checks to src/awk/*.  Fix error printing for
     /sbin/depscan.sh.
+
+    Link awk module with gcc and not with ld.  This should fix
+    problems on sparc and alpha.  Many thanks for this fix to
+    Stephan Jones <cretin@gentoo.org>.
+
+    Remove the copyright info from config files, thanks to
+    Matthew Kennedy <mkennedy@gentoo.org>.
 
 * rc-scripts 1.4.2.2 (18 Nov 2002)
 

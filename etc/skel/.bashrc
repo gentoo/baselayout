@@ -1,5 +1,4 @@
-# Copyright 1999-2002 Gentoo Technologies, Inc.
-# Distributed under the terms of the GNU General Public License v2
+# /etc/skel/.bashrc:
 # $Header$
 
 # This file is sourced by all *interactive* bash shells on startup.  This

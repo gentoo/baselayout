@@ -1,5 +1,4 @@
-# Copyright 1999-2002 Gentoo Technologies, Inc.
-# Distributed under the terms of the GNU General Public License v2
+# /etc/conf.d/local.stop:
 # $Header$
 
 # This is a good place to unload any misc.

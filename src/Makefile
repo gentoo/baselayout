@@ -1,5 +1,5 @@
 CC = gcc
-LD = ld
+LD = gcc
 
 TARGETS = filefuncs.so
 
