@@ -2,6 +2,11 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+   5 Aug 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+     Fix the 'Usage' line in the help to return the correct options for
+     the script (/sbin/runscript.sh).  Resolve bug #6029.
+
    3 Aug 2002; Donny Davies <woodchip@gentoo.org>:
 
     Added UPS shutdown support for nut to halt.sh.

@@ -52,7 +52,7 @@ fi
 
 usage() {
 	local IFS="|"
-	myline="Usage: ${myservice} {$*"
+	myline="Usage: ${myservice} { $* "
 	echo
 	eerror "${myline}}"
 	eerror "       ${myservice} without arguments for full help"
@@ -308,8 +308,13 @@ wrap_rcscript ${myscript} || {
 	eerror "ERROR:  \"${myscript}\" has syntax errors in it; not executing..."
 	exit 1
 }
+
+# set *after* wrap_rcscript, else we get duplicates.
+opts="start stop restart"
+
 source ${myscript}
 
+# make sure whe have valid $opts
 if [ -z "${opts}" ]
 then
 	opts="start stop restart"
