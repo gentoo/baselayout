@@ -2,6 +2,16 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+* rc-scripts 1.4.2 (17 Nov 2002)
+
+  17 Nov 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add initial version of new depscan.sh.  This uses awk scripts
+    to do the main work, giving about 10 times speed improvement on
+    slower machines.  Updated /sbin/depscan.sh, src/filefuncts.c,
+    src/Makefile, src/awk/cachedepends.awk and src/awk/gendepends.awk
+    for this.  This should close bug #10548.
+
 * rc-scripts 1.4.1.2 (5 Nov 2002)
 
   5 Nov 2002; Martin Schlemmer <azarah@gentoo.org>:
