@@ -3,7 +3,6 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
 
-
 trap ":" INT QUIT TSTP
 source /sbin/functions.sh
 # Only source this when this is a livecd booting ...
@@ -126,14 +125,16 @@ then
 	# Setup initial $PATH just in case
 	PATH="/bin:/sbin:/usr/bin:/usr/sbin:${PATH}"
 
-	if [ ! -c /dev/null ] ; then
-		echo -e "${BAD}Your root filesystem is missing /dev/null${NORMAL}"
+	if [ ! -c /dev/null ]
+	then
+		echo -e "${BAD}Your root filesystem is missing /dev/null !${NORMAL}"
 		echo -e "${BAD}You should really get this sorted out.${NORMAL}"
+		echo -e "${BAD}A simple 'mknod /dev/null c 1 3' should work.${NORMAL}"
 	fi
 
 	echo
 	echo -e "${GOOD}Gentoo Linux${GENTOO_VERS}; ${BRACKET}http://www.gentoo.org/${NORMAL}"
-	echo -e " Copyright 1999-2004 Gentoo Foundation; Distributed under the GPL"
+	echo -e " Copyright 1999-2004 Gentoo Foundation; Distributed under the GPLv2"
 	echo
 
 	check_statedir /proc
@@ -147,37 +148,20 @@ then
 	# Note: /proc MUST be mounted
 	[ -f /sbin/livecd-functions.sh ] && livecd_read_commandline
 
-	if [ -d /sys -a "$(get_KV)" -ge "$(KV_to_int '2.6.0')" ]
+	if [ "$(get_KV)" -ge "$(KV_to_int '2.6.0')" ]
 	then
-		ebegin "Mounting sysfs at /sys"
-		mount -n -t sysfs none /sys
-		eend $?
-
-	elif [ "$(get_KV)" -ge "$(KV_to_int '2.6.0')" ]
-	then
-		ewarn "No /sys to mount sysfs needed in 2.6 and later kernels!"
+		if [ -d /sys ]
+		then
+			ebegin "Mounting sysfs at /sys"
+			mount -n -t sysfs none /sys
+			eend $?
+		else
+			ewarn "No /sys to mount sysfs needed in 2.6 and later kernels!"
+		fi
 	fi
 
 	check_statedir /dev
 
-	devfs="yes"
-	udev="yes"
-
-	# Check if we can use udev, and that the user did not disable
-	# it explicitly ...
-	if get_bootparam "noudev" || \
-	   [ ! -x /sbin/udev -o -e "/dev/.devfsd" ] || \
-	   [ "$(get_KV)" -lt "$(KV_to_int '2.6.0')" ]
-	then
-		udev="no"
-	fi
-
-	# Check if the user disabled devfs explicitly
-	if get_bootparam "nodevfs" || [ "${udev}" = "yes" ]
-	then
-		devfs="no"
-	fi
-	
 	# Fix weird bug where there is a /dev/.devfsd in a unmounted /dev
 	mymounts="$(awk '($3 == "devfs") { print "yes"; exit 0 }' /proc/mounts)"
 	if [ -e "/dev/.devfsd" -a "${mymounts}" != "yes" ]
@@ -185,53 +169,120 @@ then
 		rm -f /dev/.devfsd
 	fi
 
-	if [ "${udev}" = "yes" ]
+	# Try to figure out how the user wants /dev handled
+	#  - check $RC_DEVICES from /etc/conf.d/rc
+	#  - check boot parameters
+	#  - make sure the required binaries exist
+	#  - make sure the kernel has support
+	if [ "${RC_DEVICES}" == "static" ]
 	then
-		ebegin "Mounting ramfs at /dev"
-		try mount -n -t ramfs none /dev
-		eend $?
-		ebegin "Configuring system to use udev"
-		if [ "${RC_DEVICE_TARBALL}" = "yes" ]
-		then
-			einfo "  Populating /dev with device nodes..."
-			try tar -jxpf /lib/udev-state/devices.tar.bz2 -C /dev
-		fi
-		populate_udev
-		if [ -e /proc/sys/kernel/hotplug -a -x /sbin/hotplug ]
-		then
-			einfo "  Using /sbin/hotplug for udev management..."
-			
-		elif [ -e /proc/sys/kernel/hotplug ]
-		then
-			einfo "  Setting /sbin/udev as hotplug agent..."
-			echo "/sbin/udev" > /proc/sys/kernel/hotplug
-		else
-			ewarn "  Kernel was not compiled with hotplug support!"
-		fi
+		ebegin "Using existing device nodes in /dev"
 		eend 0
+	else
+		fellback_to_devfs="no"
+		case "${RC_DEVICES}" in
+			devfs)	devfs="yes"
+					udev="no"
+					;;
+			udev)	devfs="yes"
+					udev="yes"
+					fellback_to_devfs="yes"
+					;;
+			auto|*)	devfs="yes"
+					udev="yes"
+					;;
+		esac
 
-	# With the new way, /dev can be mounted by the kernel ...
-	elif [ "${devfs}" = "yes" -a ! -e "/dev/.devfsd" ]
-	then
-		mymounts="$(awk '($2 == "devfs") { print "yes"; exit 0 }' /proc/filesystems)"
-		# Is devfs support compiled in?
-		if [ "${mymounts}" = "yes" ]
+		# Check udev prerequisites and kernel params
+		if [ "${udev}" == "yes" ]
 		then
-			ebegin "Mounting devfs at /dev"
-			try mount -n -t devfs none /dev
+			if get_bootparam "noudev" || \
+			   [ ! -x /sbin/udev -o -e "/dev/.devfsd" ] || \
+			   [ "$(get_KV)" -lt "$(KV_to_int '2.6.0')" ]
+			then
+				udev="no"
+			fi
+		fi
+
+		# Check devfs prerequisites and kernel params
+		if [ "${devfs}" == "yes" ]
+		then
+			if get_bootparam "nodevfs" || [ "${udev}" == "yes" ]
+			then
+				devfs="no"
+			fi
+		fi
+
+		# Actually start setting up /dev now
+		if [ "${udev}" == "yes" ]
+		then
+			# Setup temporary storage for /dev
+			ebegin "Mounting ramfs at /dev"
+			try mount -n -t ramfs none /dev
 			eend $?
-		else
+
+			# Actually get udev rolling
+			ebegin "Configuring system to use udev"
+			if [ "${RC_DEVICE_TARBALL}" = "yes" ]
+			then
+				einfo "  Populating /dev with device nodes..."
+				try tar -jxpf /lib/udev-state/devices.tar.bz2 -C /dev
+			fi
+			populate_udev
+
+			# Setup hotplugging (if possible)
+			if [ -e /proc/sys/kernel/hotplug ]
+			then
+				if [ -x /sbin/hotplug ]
+				then
+					einfo "  Using /sbin/hotplug for udev management..."
+				else
+					einfo "  Setting /sbin/udev as hotplug agent..."
+					echo "/sbin/udev" > /proc/sys/kernel/hotplug
+				fi
+			fi
+			eend 0
+
+		# With devfs, /dev can be mounted by the kernel ...
+		elif [ "${devfs}" = "yes" -a ! -e "/dev/.devfsd" ]
+		then
+			mymounts="$(awk '($2 == "devfs") { print "yes"; exit 0 }' /proc/filesystems)"
+			# Is devfs support compiled in?
+			if [ "${mymounts}" = "yes" ]
+			then
+				ebegin "Mounting devfs at /dev"
+				try mount -n -t devfs none /dev
+				eend $?
+				ebegin "Starting devfsd"
+				/sbin/devfsd /dev > /dev/null
+				eend $? "Could not start /sbin/devfsd"
+			else
+				devfs="no"
+			fi
+
+			# Did the user want udev in the config file but for 
+			# some reason, udev support didnt work out ?
+			if [ "${fellback_to_devfs}" == "yes" ]
+			then
+				ewarn "You wanted udev but support for it was not available!"
+				ewarn "Please review your system after it's booted!"
+			fi
+		fi
+
+		# OK, if we got here, things are probably not right :)
+		if [ "${devfs}" == "no" ] && [ "${udev}" == "no" ]
+		then
 			clear
 			echo
-			einfo "The Gentoo Linux system initialization scripts have detected that your"
-			einfo "kernel has been compiled without DEVFS support.  Because Gentoo Linux"
-			einfo "has been designed to work with DEVFS, it is required that you compile"
-			einfo "support for it into your kernel.  Please read the 'Gentoo Linux from"
-			einfo "source (build) CD Installation Guide' at:"
+			einfo "The Gentoo Linux system initialization scripts have detected that"
+			einfo "your system does not support DEVFS or UDEV.  Since Gentoo Linux"
+			einfo "has been designed with these dynamic /dev managers in mind, it is"
+			einfo "highly suggested that you build support for it into your kernel."
+			einfo "Please read the Gentoo Handbook for more information!"
 			echo
-			einfo "    http://www.gentoo.org/doc/build.html"
+			einfo "    http://www.gentoo.org/doc/en/handbook/"
 			echo
-			einfo "for more information on how to do this."
+			einfo "Thanks for using Gentoo! :)"
 			echo
 			read -t 15 -p "(hit Enter to continue or wait 15 seconds...)"
 		fi
@@ -241,13 +292,13 @@ then
 	if [ "$(get_KV)" -ge "$(KV_to_int '2.5.68')" ]
 	then
 		have_devpts="$(awk '($2 == "devpts") { print "yes"; exit 0 }' /proc/filesystems)"
-		mymounts="$(awk '($3 == "devfs") { print "yes"; exit 0 }' /proc/mounts)"
 
 		if [ "${have_devpts}" = "yes" ]
 		then
-			# Only try to create /dev/pts if we have /dev mounted as devfs,
+			# Only try to create /dev/pts if we have /dev mounted dynamically,
 			# else it might fail as / might be still mounted readonly.
-			if [ ! -d /dev/pts -a -e "/dev/.devfsd" -a "${mymounts}" = "yes" ]
+			if [ ! -d /dev/pts ] && \
+			   [ "${devfs}" == "yes" -o "${udev}" == "yes" ]
 			then
 				# Make sure we have /dev/pts
 				mkdir -p /dev/pts &>/dev/null || \
@@ -260,19 +311,6 @@ then
 				try mount -n -t devpts -o gid=5,mode=0620 none /dev/pts
 				eend $?
 			fi
-		fi
-	fi
-
-	# Need devfsd running now so that /dev/ram0 exists if we need it
-	mymounts="$(awk '($3 == "devfs") { print "yes"; exit 0 }' /proc/mounts)"
-	if [ "${devfs}" = "yes" -a -e "/dev/.devfsd" -a \
-	     "${mymounts}" = "yes" ]
-	then
-		if [ "${RC_DEVFSD_STARTUP}" != "no" ]
-		then
-			ebegin "Starting devfsd"
-			/sbin/devfsd /dev > /dev/null
-			eend $?
 		fi
 	fi
 

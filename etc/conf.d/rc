@@ -4,42 +4,46 @@
 #
 # Global config file for the Gentoo RC System
 #
-# NOTE: most of these are not in use yet!!
-#
 
-
-# This is the amount of tty's used in most of the rc-scripts (like
-# consolefont, numlock, etc
+# This is the number of tty's used in most of the rc-scripts (like
+# consolefont, numlock, etc ...)
 
 RC_TTY_NUMBER=11
 
 # Set to "yes" if you want the rc system to try and start services
-# in parallel for slight speed improvement.
+# in parallel for a slight speed improvement.
 
 RC_PARALLEL_STARTUP="no"
 
-# Set to "yes" if the default behaviour of at least one net.*
-# service starting beside net.lo is NOT enough to consider
-# the 'net' dependency up and running.
+# Set to "yes" if you require a net.* service running (other than 
+# just net.lo) to satisfy the generic 'net' dependency
 
 RC_NET_STRICT_CHECKING="no"
 
+# Use this variable to control the /dev management behavior.
+#  auto   - let the scripts figure out what's best at boot
+#  devfs  - use devfs (requires sys-fs/devfsd)
+#  udev   - use udev (requires sys-fs/udev)
+#  static - let the user manage static nodes
+
+RC_DEVICES="auto"
+
 # Set to "yes" if you want to save /dev to a tarball on shutdown
 # and restore it on startup.  This is useful if you have a lot of
-# custom device nodes that udev do not handle/know about.
+# custom device nodes that udev does not handle/know about.
 # (ONLY used by UDEV enabled systems!)
 
 RC_DEVICE_TARBALL="yes"
 
-# Set to "yes" if you want devfsd to start upon bootup.  This is
-# the default for Gentoo.
-# Set to "no" only if you understand the full implications.  A
-# number of files may need to be altered (i.e. /etc/inittab,
-# /etc/fstab, etc.).
-# Also note that it does _NOT_ start for UDEV enabled systems,
-# even if RC_DEVFSD_STARTUP="yes" ...
 
-RC_DEVFSD_STARTUP="yes"
+
+
+
+#
+# Controlling start-stop-daemon behavior
+#
+# NOTE: most of these are not in use yet!!
+#
 
 # Set to "yes" if stop-daemon() should always retry killing the
 # service if it fails the first time.
@@ -63,6 +67,8 @@ RC_RETRY_COUNT=5
 # is marked as started, but not actually running on stop.
 
 RC_FAIL_ON_ZOMBIE="no"
+
+
 
 
 
@@ -99,5 +105,3 @@ svcfstype="tmpfs"
 # Size of $svcdir in KB
 
 svcsize=2048
-
-
