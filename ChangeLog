@@ -2,6 +2,14 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  16 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add aliases for add/del to /sbin/rc-update closing bug #24317, thanks
+    to Antonio Dolcetta <zagarna@yahoo.com>.
+
+    Fix /etc/init.d/net.eth0 to not set rp_filter if already set via
+    /etc/sysctl.conf, bug #24235 - thanks jochen <jochen.eisinger@gmx.de>.
+
   15 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Add /bin/csh to /etc/shells.

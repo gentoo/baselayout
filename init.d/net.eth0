@@ -124,8 +124,10 @@ start() {
 	fi
 
 	# Enabling rp_filter causes wacky packets to be auto-dropped by
-	# the kernel
-	if [ -e /proc/sys/net/ipv4/conf/${IFACE}/rp_filter ]
+	# the kernel.  Note that we only do this if it is not set via
+	# /etc/sysctl.conf ...
+	if [ -e /proc/sys/net/ipv4/conf/${IFACE}/rp_filter ] && \
+	   [ -z "$(egrep '^[^#]*rp_filter' /etc/sysctl.conf 2>/dev/null)" ]
 	then
 		echo 1 > /proc/sys/net/ipv4/conf/${IFACE}/rp_filter
 	fi

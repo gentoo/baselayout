@@ -12,8 +12,8 @@ fi
 
 usage() {
 cat << FOO
-usage: rc-update add script runlevel2 [runlevel2...]
-       rc-update del script [runlevel1...]
+usage: rc-update -a|add script runlevel2 [runlevel2...]
+       rc-update -d|del script [runlevel1...]
 
 note:
        After rc-update executes, the script dependency cache is automatically
@@ -37,18 +37,10 @@ FOO
 	exit 1
 }
 
-if [ $# -lt 1 ]
-then
-	usage
-fi
-
-regen=0
-
-if [ "$1" = "add" ]
-then
+add() {
 	if [ $# -lt 3 ]
 	then
-		eerror "${0}: at least two arguments expected after \"add\"."
+		eerror "${0}: at least two arguments expected after \"$1\"."
 		exit 1
 	fi
 	shift
@@ -79,17 +71,18 @@ then
 		ln -snf /etc/init.d/${myscript} /etc/runlevels/${x}/${myscript}
 		if [ "$?" -ne 0 ]
 		then
-			eerror "$0: failed to add $1 to ${x}."
+			eerror "$0: failed to add ${myscript} to ${x}."
 			exit 1
 		fi
 		regen=1
 		einfo "${myscript} added to runlevel ${x}"
 	done
-elif [ "$1" = "del" ]
-then
+}
+
+del() {
 	if [ $# -lt 2 ]
 	then
-		eerror "$0: at least one argument expected after \"del\"."
+		eerror "$0: at least one argument expected after \"$1\"."
 		exit 1
 	fi
 	shift
@@ -117,10 +110,28 @@ then
 	else
 		einfo "${myscript} removed from the following runlevels:${remlevels}"
 	fi
-else
+}
+
+if [ $# -lt 1 ]
+then
 	usage
 	exit 1
 fi
+
+regen=0
+
+case "$1" in
+	add|-a)
+		add "$@"
+		;;
+	del|delete|-d)
+		del "$@"
+		;;
+	*)
+		usage
+		exit 1
+		;;
+esac
 
 if [ "${regen}" -eq 1 ]
 then
