@@ -2,10 +2,15 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+* rc-scripts 1.4.0 (7 Sep 2002)
+
   7 Sep 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Update /etc/init.d/net.eth0 to handle individual broadcast
     and netmask for aliases.  Should close bug #7407.
+
+    Give /var/run/utmp and /var/log/wtmp the proper permissions
+    and ownership.  First steps in fixing bug #7630.
 
   26 Aug 2002; Donny Davies <woodchip@gentoo.org>:
 

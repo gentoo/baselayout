@@ -48,6 +48,9 @@ start() {
 			find . ! -type d ! -name utmp ! -name innd.pid ! -name random-seed \
 			-exec rm -f -- {} \; 1>&2 )
 		: > /var/run/utmp
+		touch /var/log/wtmp
+		chgrp utmp /var/run/utmp /var/log/wtmp
+		chmod 0664 /var/run/utmp /var/log/wtmp
 		#remove /var/run/utmpx
 		rm -f /var/run/utmpx
 		# Reset pam_console permissions
