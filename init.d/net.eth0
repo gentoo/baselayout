@@ -49,19 +49,21 @@ start() {
 		local aliasbcast=""
 		local aliasnmask=""
 
-		if [ -n  "`eval echo \$\{broadcast_${IFACE}\}`" ]
-		then
-			aliasbcast="broadcast `eval echo \$\{broadcast_${IFACE}\}`"
-		fi
-
-		if [ -n  "`eval echo \$\{netmask_${IFACE}\}`" ]
-		then
-			aliasnmask="netmask `eval echo \$\{netmask_${IFACE}\}`"
-		fi
-		
 		ebegin "  Adding aliases"
 		for x in $(eval echo \$\{alias_${IFACE}\})
 		do
+			aliasbcast="$(eval echo \$\{broadcast_${IFACE}\} \| awk \'\{ print \$${num} \}\')"
+			if [ -n "${aliasbcast}" ]
+			then
+				aliasbcast="broadcast ${aliasbcast}"
+			fi
+
+			aliasnmask="$(eval echo \$\{netmask_${IFACE}\} \| awk \'\{ print \$${num} \}\')"
+			if [ -n "${aliasnmask}" ]
+			then
+				aliasnmask="netmask ${aliasnmask}"
+			fi
+		
 			ebegin "    ${IFACE}:${num}"
 			/sbin/ifconfig ${IFACE}:${num} ${x} \
 				${aliasbcast} ${aliasnmask} >/dev/null

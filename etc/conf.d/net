@@ -22,10 +22,11 @@ iface_eth0="192.168.0.2 broadcast 192.168.0.255 netmask 255.255.255.0"
 # NB:  The next is only used for aliases.
 #
 # To add a custom netmask/broadcast address to created aliases,
-# uncomment and change accordingly.
+# uncomment and change accordingly.  Leave commented to assign
+# defaults for that interface.
 #
-#broadcast_eth0="192.168.0.255"
-#netmask_eth0="255.255.255.0"
+#broadcast_eth0="192.168.0.255 192.168.0.255"
+#netmask_eth0="255.255.255.0 255.255.255.0"
 
 
 # For setting the default gateway

@@ -2,6 +2,11 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  7 Sep 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update /etc/init.d/net.eth0 to handle individual broadcast
+    and netmask for aliases.  Should close bug #7407.
+
   26 Aug 2002; Donny Davies <woodchip@gentoo.org>:
 
     Give root a 'root' GECOS in /etc/passwd, was NULL before.
