@@ -757,14 +757,14 @@ iwconfig_configure() {
 
 	# Setup ad-hoc mode?
 	x=$( eval echo \$\{mode_${ifvar}\} | tr '[:upper:]' '[:lower:]' )
-	x=${x:-managed}
+	x=${x:-auto}
 	if [[ ${x} == ad-hoc || ${x} == master ]]; then
 		iwconfig_setup_specific ${iface} ${x}
 		return $?
 	fi
 
-	if [[ ${x} != managed ]]; then
-		eerror "Only managed, ad-hoc and master modes are supported"
+	if [[ ${x} != managed && ${x} != auto ]]; then
+		eerror "Only managed, ad-hoc, master and auto modes are supported"
 		return 1
 	fi
 
