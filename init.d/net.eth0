@@ -201,7 +201,7 @@ setup_vars() {
 	local i iface="${1//./_}"
 
 	status_IFACE=$(get_status ${1})
-	eval vlans_IFACE=\"\$\{iface_${iface}_vlans\}\"
+	eval vlans_IFACE=\"\$\{vlans_${iface}\}\"
 	eval ifconfig_IFACE=( \"\$\{ifconfig_$iface\[@\]\}\" )
 	eval dhcpcd_IFACE=\"\$\{dhcpcd_$iface\}\"
 	eval routes_IFACE=( \"\$\{routes_$iface\[@\]\}\" )
@@ -212,7 +212,7 @@ setup_vars() {
 	eval ipaddr_IFACE=( \"\$\{ipaddr_$iface\[@\]\}\" )
 	eval iproute_IFACE=( \"\$\{iproute_$iface\[@\]\}\" )
 	eval ipaddr_fallback_IFACE=( \"\$\{ipaddr_fallback_$iface\[@\]\}\" )
-	
+
 	# BACKWARD COMPATIBILITY: populate the ifconfig_IFACE array
 	# if iface_IFACE is set (fex. iface_eth0 instead of ifconfig_eth0)
 	eval local iface_IFACE=\"\$\{iface_$iface\}\"
@@ -237,6 +237,12 @@ setup_vars() {
 		inet6_IFACE=( ${inet6_IFACE} )
 	fi
 
+	# BACKWARD COMPATIBILITY: check for old vlan variable name
+	eval local vlans_IFACE_old=\"\$\{iface_${iface}_vlans\}\"
+	if [[ -n ${vlans_IFACE_old} && -z ${vlans_IFACE} ]]; then
+		vlans_IFACE=${vlans_IFACE_old}
+	fi
+
 	# Validate some variables
 	if [[ -z ${ifconfig_IFACE} && -z ${ipaddr_IFACE} ]]; then
 		eerror "Please make sure that /etc/conf.d/net has one of the following set:"
@@ -248,6 +254,15 @@ setup_vars() {
 	if [[ -n ${vlans_IFACE} && ! -x /sbin/vconfig ]]; then
 		eerror "For VLAN (802.1q) support, emerge net-misc/vconfig"
 		return 1
+	fi
+	if [[ -n ${ipaddr_IFACE} && ! -x /sbin/ip ]]; then
+		eerror "For iproute2 support, emerge sys-apps/iproute2"
+		if [[ -n ${ifconfig_IFACE} ]]; then
+			einfo "Falling back to ifconfig configuration"
+			ipaddr_IFACE=
+		else
+			return 1
+		fi
 	fi
 
 	return 0
@@ -338,7 +353,7 @@ iface_stop_dhcp() {
 # fail, the routine should still return success to indicate that
 # net.eth0 was successful
 iface_start_ipaddr() {
-	local iface=$1 i x y label
+	local iface=$1 i x label
 
 	# Force link to up as inet6 will not work without this
 	ip link set dev ${iface} up &>${devnull}
@@ -434,7 +449,7 @@ iface_start_ipaddr() {
 # fail, the routine should still return success to indicate that
 # net.eth0 was successful
 iface_start_ifconfig() {
-	local iface=$1 i label
+	local iface=$1 i x label
 
 	# Why bother having the aliases in a different section if they can be
 	# handled here?  This covers inet6 addresses as well
@@ -459,8 +474,8 @@ iface_start_ifconfig() {
 
 			if [[ $retval == 0 ]]; then
 				# DHCP succeeded, show address retrieved
-				i=$(ifconfig ${1} | grep -m1 -o 'inet addr:[^ ]*' | cut -d: -f2)
-				[[ -n ${i} ]] && einfo "    ${iface} received address ${i}"
+				x=$(ifconfig ${1} | grep -m1 -o 'inet addr:[^ ]*' | cut -d: -f2)
+				[[ -n ${x} ]] && einfo "    ${iface} received address ${x}"
 
 			elif [[ -n "${ifconfig_fallback_IFACE[i]}" ]]; then
 				# DHCP failed, try ifconfig fallback

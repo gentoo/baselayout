@@ -2,6 +2,23 @@
 # Copyright 2002-2004 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+* rc-scripts 1.5.1 (28 Jun 2004)
+
+  28 Jun 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Fix dhcp in iface_start_ifconfig: It was re-using the variable
+    ${i} which would result in the following error:
+        /sbin/runscript.sh: line 441: ((: 16.141.88.153: syntax error
+        in expression (error token is ".141.88.153")
+
+    Use vlan_IFACE instead of iface_IFACE_vlans in net.eth0 for more
+    consistent vlan configuration.  Thanks to robbat2 in bug 55394
+    (not fully resolved)
+
+    Add example for checking if root filesystem is NFS-mounted via
+    predown function in conf.d/net for bug 53104.  This might be
+    better integrated at some point into net.eth0
+
 * rc-scripts 1.5.0 (26 Jun 2004)
 
   26 Jun 2004; Aron Griffis <agriffis@gentoo.org>:
