@@ -675,7 +675,7 @@ start_addon() {
 		[[ -z ${addon} ]] && return 0
 		
 		[[ -r ${svclib}/addons/${addon}-start.sh ]] && {
-				source "${svclib}/addons/${addon}-start.sh"
+				(source "${svclib}/addons/${addon}-start.sh")
 		}
 
 		return 0
@@ -705,7 +705,7 @@ stop_addon() {
 		[[ -z ${addon} ]] && return 0
 		
 		[[ -r ${svclib}/addons/${addon}-stop.sh ]] && {
-			source "${svclib}/addons/${addon}-stop.sh"
+			(source "${svclib}/addons/${addon}-stop.sh")
 		}
 
 		return 0
