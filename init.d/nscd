@@ -1,7 +1,5 @@
 #!/sbin/runscript
 
-EXE=/usr/sbin/nscd
-
 start() {
 	ebegin "Starting Name Service Cache Daemon"
 	secure=` cat /etc/nsswitch.conf | while read curline ; do
@@ -20,12 +18,12 @@ start() {
 	    ;;
 	  esac
 	done`
-	start-stop-daemon --start --quiet --exec $EXE -- $secure 1>&2
-	eend $? "Error starting $SERVICE"
-}
-stop () {
-	ebegin "Shutting down Name Service Cache Daemon"
-	start-stop-daemon --stop --quiet --pid /var/run/nscd.pid 1>&2
-	eend $? "Error stopping $SERVICE"
+	start-stop-daemon --start --quiet --exec /usr/sbin/nscd -- $secure
+	eend $?
 }
 
+stop () {
+	ebegin "Shutting down Name Service Cache Daemon"
+	start-stop-daemon --stop --quiet --pid /var/run/nscd.pid
+	eend $?
+}
