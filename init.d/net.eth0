@@ -95,6 +95,7 @@ start() {
 			local error=$?
 			ifconfig ${IFACE} down &>/dev/null
 			eend ${error} "Failed to bring ${IFACE} up"
+			stop
 			return ${error}
 		}
 		eend 0

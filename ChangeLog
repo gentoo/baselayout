@@ -2,6 +2,13 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  12 Oct 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update /etc/init.d/net.eth0 to fix bug #8626.
+
+    Fix /sbin/rc-update to check return code of "ln".  This should
+    close bug #8867.
+
   29 Sep 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix indentation in /etc/inputrc.  This should close

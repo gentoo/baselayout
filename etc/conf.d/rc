@@ -55,6 +55,6 @@ svcfstype="tmpfs"
 
 # Size of $svcdir in KB
 
-svcsize=1024
+svcsize=2048
 
 

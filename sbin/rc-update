@@ -74,6 +74,11 @@ then
 			continue
 		fi
 		ln -sf /etc/init.d/${myscript} /etc/runlevels/${x}/${myscript}
+		if [ "$?" -ne 0 ]
+		then
+			eerror "${0}: failed to add $1 to ${x}."
+			exit 1
+		fi
 		ebegin "${myscript} added to runlevel ${x}"
 	done
 elif [ "$1" = "del" ]
@@ -108,3 +113,4 @@ else
 fi
 /sbin/depscan.sh
 einfo "rc-update complete."
+
