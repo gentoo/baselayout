@@ -2,6 +2,14 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  18 May 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Do not let devfsd handle /dev/log's permission management, as it breaks
+	selinux.  Modified /etc/devfsd.conf, changes submited by Chris PeBenito
+	<pebenito@gentoo.org>.
+
+	Fix type-o in /etc/init.d/net.ppp0, and add local ip-up/ip-down support.
+
   14 May 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     We should not export the RC_GOT_* variables, as it breaks on some systems,

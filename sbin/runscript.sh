@@ -500,13 +500,14 @@ do
 			do
 				if ! service_started "${x##*/}"
 				then
-					schedule_service_startup "${x##*/}"
+#					schedule_service_startup "${x##*/}"
+					start_service "${x##*/}"
 				fi
 			done
 		fi
 
 		# Wait for any services that may still be running ...
-		[ "${RC_PARALLEL_STARTUP}" = "yes" ] && wait
+#		[ "${RC_PARALLEL_STARTUP}" = "yes" ] && wait
 				
 		rm -rf "${svcdir}/snapshot/$$"
 		svcrestart="no"

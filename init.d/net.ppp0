@@ -197,13 +197,18 @@ setup_cfg_files() {
 			echo "/bin/cat /etc/ppp/resolv.conf >> /etc/resolv.conf" \
 				>>/etc/ppp/ip-up
 			# Change perms because it b0rked kppp
-			echo "chmod 640 /etc/resolv.conf" >>/etc/ip-up
+			echo "chmod 640 /etc/resolv.conf" >>/etc/ppp/ip-up
 				
 			# ip-down: restore original /etc/resolv.conf
 			echo "/bin/mv -f /etc/resolv.conf.old /etc/resolv.conf" \
 				>>/etc/ppp/ip-down
-			echo "chmod 640 /etc/resolv.conf" >>/etc/ip-down 
+			echo "chmod 640 /etc/resolv.conf" >>/etc/ppp/ip-down 
 		fi
+
+		echo "[ -f /etc/ppp/ip-up.local ] && . /etc/ppp/ip-up.local" \
+			>>/etc/ppp/ip-up
+		echo "[ -f /etc/ppp/ip-down.local ] && . /etc/ppp/ip-down.local" \
+			>>/etc/ppp/ip-down
 	fi
 }
 
