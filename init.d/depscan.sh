@@ -1,4 +1,8 @@
 #!/bin/bash
+# Copyright 1999-2002 Gentoo Technologies, Inc.
+# Distributed under the terms of the GNU General Public License, v2 or later
+# $Header$
+
 
 #needed for $SYSLOGGER (/etc/rc.conf overrides /etc/conf.d/basic).
 [ -e /etc/conf.d/basic ] && source /etc/conf.d/basic

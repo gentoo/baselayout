@@ -1,9 +1,12 @@
 #!/sbin/runscript
+# Copyright 1999-2002 Gentoo Technologies, Inc.
+# Distributed under the terms of the GNU General Public License, v2 or later
+# $Header$
+
 
 depend() {
 	need clock localmount
 }
-
 
 start() {
 	if [ "$BOOT" = "yes" ]
@@ -14,6 +17,13 @@ start() {
 		then
 			echo "System bootup in progress - please wait" > /etc/nologin
 			cp /etc/nologin /etc/nologin.boot
+		fi
+
+		if [ -e /etc/sysctl.conf ]
+		then
+			ebegin "Configuring kernel parameters"
+			sysctl -p /etc/sysctl.conf
+			eend 0
 		fi
 
 		#
