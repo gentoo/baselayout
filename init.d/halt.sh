@@ -168,57 +168,10 @@ done
 eend 0
 
 # Try to remove any dm-crypt mappings
-if [ -f /etc/conf.d/cryptfs ] && [ -x /bin/cryptsetup ]
-then
-	einfo "Removing dm-crypt mappings"
+stop-addon dm-crypt
 
-	/bin/egrep "^(mount|swap)" /etc/conf.d/cryptfs | \
-	while read mountline
-	do
-		mount=
-		swap=
-		target=
-
-		eval ${mountline}
-
-		if [ -n "${mount}" ]
-		then
-			target=${mount}
-		elif [ -n "${swap}" ]
-		then
-			target=${swap}
-		else
-			ewarn "Invalid line in /etc/conf.d/cryptfs: ${mountline}"
-		fi
-
-		ebegin "Removing dm-crypt mapping for: ${target}"
-		/bin/cryptsetup remove ${target}
-		eend $? "Failed to remove dm-crypt mapping for: ${target}"
-	done
-
-	if [[ -n $(/bin/egrep -e "^(source=)./dev/loop*" /etc/conf.d/cryptfs) ]] ; then
-		einfo "Taking down any dm-crypt loop devices"
-		/bin/egrep -e "^(source)" /etc/conf.d/cryptfs | while read sourceline
-		do
-			source=
-			eval ${sourceline}
-			if [[ -n $(echo ${source} | grep /dev/loop) ]] ; then
-				ebegin "   Taking down ${source}"
-				/sbin/losetup -d ${source}
-				eend $? "  Failed to remove loop"
-			fi
-		done
-	fi
-fi
-
-# Stop LVM
-if [ -x /sbin/vgchange ] && [ -f /etc/lvmtab -o -d /etc/lvm ] && \
-   [ -d /proc/lvm  -o "`grep device-mapper /proc/misc 2>/dev/null`" ]
-then
-	ebegin "Shutting down the Logical Volume Manager"
-	/sbin/vgchange -a n >/dev/null
-	eend $? "Failed to shut LVM down"
-fi
+# Stop LVM, etc
+stop-volumes
 
 # This is a function because its used twice below
 ups_kill_power() {
