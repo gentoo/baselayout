@@ -29,9 +29,9 @@ setupopts() {
 
 	if [ "${readonly}" = "yes" ]
 	then
-		myopts="${myopts} --noadjfile"
+		myadj="--noadjfile"
 	else
-		myopts="${myopts} --adjust"
+		myadj="--adjust"
 	fi
 
 	if [ "${SRM}" = "yes" ]
@@ -47,6 +47,7 @@ setupopts() {
 
 start() {
 	local myopts=""
+	local myadj=""
 	local TBLURB=""
 	local errstr=""
 	local readonly="no"
@@ -70,7 +71,7 @@ start() {
 	elif [ -x /sbin/hwclock ]
 	then
 		# hwclock does not return a fail status; need to check out
-		errstr="$(/sbin/hwclock ${myopts} 2>&1 >/dev/null)"
+		errstr="$(/sbin/hwclock ${myadj} ${myopts} 2>&1 >/dev/null)"
 		errstr="${errstr}$(/sbin/hwclock --hctosys ${myopts} 2>&1 >/dev/null)"
 
 		if [ -n "${errstr}" ]
