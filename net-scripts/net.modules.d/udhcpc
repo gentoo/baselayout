@@ -33,21 +33,13 @@ udhcpc_check_installed() {
 	return 1
 }
 
-# char* udhcpc_get_script(void)
-#
-# Returns the filename of the script to run
-udhcpc_get_script() {
-	local module=$( interface_module )
-	echo "${MODULES_DIR}/helpers.d/udhcpc-${module}"
-}
-
 # bool udhcpc_check_depends(void)
 #
 # Checks to see if we have the needed functions
 udhcpc_check_depends() {
 	local f
 
-	for f in interface_exists interface_get_address interface_module; do
+	for f in interface_exists interface_get_address; do
 		[[ $( type -t ${f} ) == "function" ]] && continue
 		eerror "udhcpc: missing required function ${f}\n"
 		return 1
@@ -82,7 +74,8 @@ udhcpc_stop() {
 	eval dhcp=\" \$\{dhcp_${ifvar}\} \"
 	if [[ ${dhcp} == *' release '* ]]; then
 		kill -s USR2 ${pid} &>/dev/null
-		rm /var/cache/udhcpc-${iface}.cache
+		[[ -f /var/cache/dhcp-${iface}.lease ]] \
+			&& rm /var/cache/dhcp-${iface}.lease
 	fi
 
 	kill -s TERM ${pid} &>/dev/null
@@ -106,12 +99,11 @@ udhcpc_stop() {
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 udhcpc_start() {
 	local iface=$1 opts hostname pidfile="/var/run/udhcpc-$1.pid"
-	local cachefile="/var/cache/udhcpc-${1}.cache" x
+	local cachefile="/var/cache/dhcp-${1}.lease" x
 
 	interface_exists ${iface} true || return 1
 
-	local ifvar=${iface//[![:word:]]/_}
-	local script=$( udhcpc_get_script ) opts hostname=$( hostname )
+	local ifvar=${iface//[![:word:]]/_} opts hostname=$( hostname )
 	eval opts=\"\$\{udhcpc_${ifvar}\}\"
 
 	if [[ ${opts} != *'--hostname=' ]]; then
@@ -140,7 +132,7 @@ udhcpc_start() {
 		go_background
 	fi
 
-	x=$( eval "udhcpc ${opts} --now --script=${script} --pidfile=${pidfile} --interface=${iface}" )
+	x=$( eval "udhcpc ${opts} --now --script=${MODULES_DIR}/helpers.d/dhcp --pidfile=${pidfile} --interface=${iface}" )
 	# We just check the last 5 letters
 	[[ ${x:((${#x} - 5)):5} == "bound" ]]
 	eend $? || return 1
@@ -148,10 +140,6 @@ udhcpc_start() {
 	# DHCP succeeded, show address retrieved
 	local addr=$( interface_get_address ${iface} )
 	einfo "${iface} received address ${addr}"
-
-	# Store the address in a cache for future usage
-	echo ${addr} > ${cachefile}
-	chmod 600 ${cachefile}
 
 	return 0
 }

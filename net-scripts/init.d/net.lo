@@ -89,19 +89,6 @@ go_background() {
 	exit 0
 }
 
-# void module_class_wrap(char *module, char *provides)
-# Setup class wrappers: interface_up -> iproute2_up, for example
-module_class_wrap() {
-	local module=$1 provides=$2 x 
-
-	# Don't wrap functions if another module already has
-	[[ $( type -t ${provides}_provides ) == function ]] && return
-
-	for x in $( typeset -f | grep -o ^${module}_'[^ ]*' ); do
-		eval "${provides}${x#${module}}() { ${x} \"\$@\"; }"
-	done
-}
-
 # bool module_load_minimum(char *module)
 #
 # Does the minimum checking on a module - even when forcing
@@ -214,7 +201,7 @@ modules_check_user() {
 
 	# Add our preferred modules
 	npref=3
-	umods=( "${umods[@]}" "ifconfig" "dhcpcd" "iwconfig" )
+	umods=( "${umods[@]}" "iproute2" "dhcpcd" "iwconfig" )
 
 	# First we strip any modules that conflict from user settings
 	# So if the user specifies pump then we don't use dhcpcd
@@ -468,7 +455,7 @@ modules_load()  {
 	# Setup class wrappers: interface_up -> iproute2_up, for example
 	j=${#MODULES[@]}
 	for (( i=0; i<j; i++ )); do
-		module_class_wrap ${MODULES[i]} ${PROVIDES[i]}
+		function_wrap ${MODULES[i]} ${PROVIDES[i]}
 	done
 
 	modules_check_installed || return 1

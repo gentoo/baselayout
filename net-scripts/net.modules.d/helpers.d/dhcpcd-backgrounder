@@ -6,7 +6,7 @@
 # Contributed by Roy Marples (uberlord@gentoo.org)
 
 [[ -z ${MODULES_DIR} ]] && MODULES_DIR=/lib/rcscripts/net.modules.d
-source ${MODULES_DIR}/helpers.d/config-system
+. ${MODULES_DIR}/helpers.d/functions
 
 iface=${1##*/dhcpcd-}
 iface=${iface%%.info}

@@ -4,36 +4,10 @@
 
 # Contributed by Roy Marples (uberlord@gentoo.org)
 
-source /etc/conf.d/net
-[[ -z ${MODULES_DIR} ]] && MODULES_DIR=/lib/rcscripts/net.modules.d
+. /etc/conf.d/net
+[[ -z ${MODULES_DIR} ]] && MODULES_DIR="/lib/rcscripts/net.modules.d"
 
-# Sourcing rc-scripts stuff causes errors - so we copy some functions
-svcdir=/var/lib/init.d
-mark_service_inactive() {
-	[[ -z $1 ]] && return 1
-	ln -snf /etc/init.d/$1 ${svcdir}/inactive/$1
-	return $?
-}
-mark_service_stopped() {
-	[[ -z $1 ]] && return 1
-
-	[[ -f ${svcdir}/starting/$1 ]] && rm -f ${svcdir}/starting/$1
-	[[ -f ${svcdir}/started/$1 ]] && rm -f ${svcdir}/started/$1
-	[[ -f ${svcdir}/inactive/$1 ]] && rm -f ${svcdir}/inactive/$1
-
-	return $?
-}
-mark_service_started() {
-	[[ -z $1 ]] && return 1
-	ln -snf /etc/init.d/${1} ${svcdir}/started/$1
-	[[ -f ${svcdir}/starting/$1 ]] && rm -f ${svcdir}/starting/$1
-	[[ -f ${svcdir}/inactive/$1 ]] && rm -f ${svcdir}/inactive/$1
-	return $?
-}
-
-if [[ $( type -t interface_variable ) != "function" ]]; then
-	source ${MODULES_DIR}/helpers.d/functions
-fi
+. ${MODULES_DIR}/helpers.d/functions
 
 # bool need_hostname(void)
 #
@@ -59,38 +33,32 @@ restore_configs() {
 # Configures variables depending on SSID connected to
 get_wireless_vars() {
 	# Check that wireless has not already been configured
-	[[ $(type -t wireless_check_extensions) == "function" ]] && return
+	[[ $( type -t wireless_check_extensions ) == "function" ]] && return
 
 	# Check we can load up the basics
-	[[ ! -f ${MODULES_DIR}/essidnet || ! -f ${MODULES_DIR}/${module} ]] && return
+	[[ ! -f ${MODULES_DIR}/essidnet || ! -f ${MODULES_DIR}/${interface_module} ]] && return
 
-	local m x
+	local wireless_module
 	# Lets do this the easy way - iwconfig is what we need as it supports
 	# getting all the information we need regardless of how it was setup
 	if [[ -f /usr/sbin/iwconfig ]]; then
-		m="iwconfig"
+		wireless_module="iwconfig"
 	else
 		# This is hairy. We need to know if a supplicant is installed
 		# and running on the interface
 		if [[ -f /usr/sbin/wpa_supplicant && -S /var/run/wpa_supplicant/${interface} ]]; then
-			m="wpa_supplicant"
+			wireless_module="wpa_supplicant"
 		fi
 	fi
-	[[ -z ${m} ]] && return
+	[[ -z ${wireless_module} ]] && return
 
-	source ${MODULES_DIR}/${m}
-	for x in $( typeset -f | grep -o ^${m}_'[^ ]*' ); do
-		eval "wireless${x#${m}}() { ${x} \"\$@\"; }"
-	done
-
-	# Setup the devnull var as we probably aren't being called via net.lo
-	[[ -z ${devnull} ]] && local devnull=/dev/null
+	source ${MODULES_DIR}/${wireless_module}
+	function_wrap ${wireless_module} wireless
 
 	# Check we are a wireless interface
 	wireless_check_extensions ${interface} || return
 
-	local -a MODULES=( "${module}" )
-	source ${MODULES_DIR}/${module}
+	local -a MODULES=( "${interface_module}" )
 	source ${MODULES_DIR}/essidnet
 
 	essidnet_pre_start ${interface}

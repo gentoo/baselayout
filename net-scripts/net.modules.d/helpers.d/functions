@@ -4,6 +4,8 @@
 
 # Contributed by Roy Marples (uberlord@gentoo.org)
 
+[[ -z ${devnull} ]] && devnull=/dev/null
+
 # int netmask2cidr(char *netmask)
 #
 # Returns the CIDR of a given netmask
@@ -105,3 +107,42 @@ process_finished() {
 
 	return 1
 }
+
+# void function_wrap(char* source, char* target)
+#
+# wraps function calls - for example function_wrap(this, that)
+# maps function names this_* to that_*
+function_wrap() {
+	local i
+
+	[[ $( type -t ${2}_provides ) == function ]] && return
+
+	for i in $( typeset -f | grep -o ^${1}_'[^ ]*' ); do
+		eval "${2}${i#${1}}() { ${i} \"\$@\"; }"
+	done
+}
+
+# Currently sorucing rc-services.sh causes problems, so we replicate
+# code here when needed
+if [[ $( type -t mark_service_inactive ) != "function" ]]; then
+	svcdir=/var/lib/init.d
+	mark_service_inactive() {
+		[[ -z $1 ]] && return 1
+		ln -snf /etc/init.d/$1 ${svcdir}/inactive/$1
+		return $?
+	}
+	mark_service_stopped() {
+		[[ -z $1 ]] && return 1
+		[[ -f ${svcdir}/starting/$1 ]] && rm -f ${svcdir}/starting/$1
+		[[ -f ${svcdir}/started/$1 ]] && rm -f ${svcdir}/started/$1
+		[[ -f ${svcdir}/inactive/$1 ]] && rm -f ${svcdir}/inactive/$1
+		return $?
+	}
+	mark_service_started() {
+		[[ -z $1 ]] && return 1
+		ln -snf /etc/init.d/${1} ${svcdir}/started/$1
+		[[ -f ${svcdir}/starting/$1 ]] && rm -f ${svcdir}/starting/$1
+		[[ -f ${svcdir}/inactive/$1 ]] && rm -f ${svcdir}/inactive/$1
+		return $?
+	}
+fi

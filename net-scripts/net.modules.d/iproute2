@@ -120,7 +120,7 @@ iproute2_loopback_create() {
 # Fetch the address retrieved by DHCP.  If successful, echoes the
 # address on stdout, otherwise echoes nothing.
 iproute2_get_address() {
-	ip -family inet addr show $1 2>${devnull} | sed -ne 's/.*inet \([^ ]*\)\/.*/\1/p'
+	ip -family inet addr show $1 2>${devnull} | sed -ne 's/.*inet \([^ ]*\).*/\1/p'
 }
 
 # void iproute2_get_mac_address(char *interface)
@@ -235,12 +235,10 @@ iproute2_add_address() {
 	x=$( ip addr add dev ${iface} ${config[@]} 2>&1 )
 	case "${x}" in
 		'RTNETLINK answers: File exists'|'')
-			eend 0
 			return 0
 			;;
 		*)
 			printf '%s\n' "${x}" >&2
-			eend 1
 			return 1
 	esac
 }
@@ -286,4 +284,13 @@ iproute2_post_start() {
 	eoutdent
 
 	return 0
+}
+
+# void iproute2_default_route(char* gateway_ip)
+#
+# Force default route to the specified gateway, optionaly on
+# the given interface
+iproute2_default_route() {
+	ip route change default via $1 metric 0 2>/dev/null \
+	|| ip route add default via $1 metric 0 2>/dev/null
 }

@@ -33,21 +33,13 @@ dhclient_check_installed() {
 	return 1
 }
 
-# char* dhclient_get_script(void)
-#
-# Returns the filename of the script to run
-dhclient_get_script() {
-	local module=$( interface_module )
-	echo "${MODULES_DIR}/helpers.d/dhclient-${module}"
-}
-
 # bool dhclient_check_depends(void)
 #
 # Checks to see if we have the needed functions
 dhclient_check_depends() {
 	local f
 
-	for f in interface_exists interface_get_address interface_module; do
+	for f in interface_exists interface_get_address; do
 		[[ $( type -t ${f} ) == "function" ]] && continue
 		eerror "dhclient: missing required function ${f}\n"
 		return 1
@@ -79,15 +71,16 @@ dhclient_stop() {
 	# an interface for which dhclient has obtained an IP in the past
 	# it causes a "RELEASE" event anyway.
 	local pid=$( cat ${pidfile} )
-	local script=$( dhclient_get_script )
 
 	eval dhcp=\" \$\{dhcp_${ifvar}\} \"
 
 	ebegin "Stopping dhclient on ${iface}"
 	if [[ ${dhcp} == *' release '* ]]; then
-		local r=$( dhclient -q -r -sf ${script} -pf ${pidfile} ${iface} )
+		local r=$( dhclient -q -r -sf ${MODULES_DIR}/helpers.d/dhclient-wrapper -pf ${pidfile} ${iface} )
 		[[ ${r} == "deconfig" ]]
 		eend $? "dhclient returned a ${r}"
+		[[ -f /var/cache/dhcp-${iface}.lease ]] \
+			&& rm -f /var/cache/dhcp-${iface}.lease
 	else
 		kill -s TERM ${pid} 2>/dev/null
 		clean_pidfile ${pidfile}
@@ -108,8 +101,6 @@ dhclient_start() {
 
 	interface_exists ${iface} true || return 1
 
-	local script=$( dhclient_get_script )
-
 	# Bring up DHCP for this interface (or alias)
 	ebegin "Running dhclient"
 
@@ -122,14 +113,13 @@ dhclient_start() {
 	eval opts=\"\$\{dhclient_${ifvar}\}\"
 
 	if [[ ${background} == "yes" ]]; then
-		dhclient ${opts} -sf ${script} -pf ${pidfile} -q ${iface} &>/dev/null &
+		dhclient ${opts} -sf ${MODULES_DIR}/helpers.d/dhclient-wrapper -pf ${pidfile} -q ${iface} &>/dev/null &
 		eend 0
 		go_background
 	fi
 
-	local x=$( dhclient ${opts} -1 -sf ${script} -pf ${pidfile} -q ${iface} )
+	local x=$( dhclient ${opts} -1 -sf ${MODULES_DIR}/helpers.d/dhclient-wrapper -pf ${pidfile} -q ${iface} )
 	# We just check the last 5 letters
-	echo ${x}
 	[[ ${x:${#x} - 5:5} == "bound" ]]
 	if [[ $? != 0 ]]; then
 		# We need to kill the process if we fail

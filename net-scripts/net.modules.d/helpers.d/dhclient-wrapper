@@ -11,9 +11,9 @@
 iface_type=$1
 
 case "${reason}" in
-	BOUND|REBOOT|REBIND) action=bound ;;
-	RENEW) action=renew ;;
-	RELEASE|PREINIT|FAIL|EXPIRE|TIMEOUT) action=deconfig ;;
+	BOUND|REBOOT|REBIND) action="bound" ;;
+	RENEW) action="renew" ;;
+	RELEASE|PREINIT|FAIL|EXPIRE|TIMEOUT) action="deconfig" ;;
 	MEDIUM) exit 0 ;;
 esac
 
@@ -40,8 +40,6 @@ export ntpsrv=${new_domain_name_servers}
 export nisdomain=${new_nis_domain}
 export nissrv=${new_nis_servers}
 
-export module=dhclient
-
 # Execute the dhclient script and exit with it's code
-/lib/rcscripts/net.modules.d/helpers.d/udhcpc-${iface_type} ${action}
+/lib/rcscripts/net.modules.d/helpers.d/dhcp ${action}
 exit $?

@@ -28,7 +28,7 @@
 #
 # In other words, you probably should DO NOTHING HERE...
 
-# Prefer iproute2 over ifconfig
+# Prefer ifconfig over iproute2
 #modules=( "iproute2" )
 
 # You can also specify other modules for an interface
@@ -50,9 +50,9 @@
 # For ifconfig support, emerge sys-apps/net-tools
 # For iproute2 support, emerge sys-apps/iproute2
 
-# If you don't specify an interface then we prefer ifconfig it it's installed
-# Prefer iproute2 over ifconfig
-#modules=( "iproute2" )
+# If you don't specify an interface then we prefer iproute2 if it's installed
+# To prefer ifconfig over iproute2
+#modules=( "ifconfig" )
 
 # For a static configuration, use something like this
 # (They all do exactly the same thing btw)
@@ -66,7 +66,7 @@
 # If you need more than one address, you can use something like this
 # NOTE: ifconfig creates an aliased device for each extra IPv4 address
 #       (eth0:1, eth0:2, etc)
-#       iproute2 does not do this
+#       iproute2 does not do this as there is no need to
 #config_eth0=(
 #	"192.168.0.2/24"
 #	"192.168.0.3/24"
@@ -167,8 +167,8 @@
 # DHCP can be provided by dhcpcd, dhclient, udhcpc or pump
 #
 # dhcpcd:   emerge net-misc/dhcpcd
-# dhclient: emerge net-misc/dhcp
 # udhcpc:   emerge net-misc/udhcp
+# dhclient: emerge net-misc/dhcp
 # pump:     emerge net-misc/pump
 
 # If you have more than one DHCP client installed, you need to specify which

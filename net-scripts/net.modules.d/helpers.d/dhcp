@@ -1,0 +1,82 @@
+#!/bin/bash
+# Copyright (c) 2004-2005 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header$
+
+# Contributed by Roy Marples (uberlord@gentoo.org)
+
+action=$1
+echo "${action}"
+
+case "${action}" in
+	"bound"|"renew"|"deconfig")
+		# We handle these actions
+		;;
+	"nak"|"leasefail")
+		# These are valid actions, but we don't handle them
+		[[ ${action} == "leasefail" ]] && mark_service_inactive net.${interface}
+		exit 0
+		;;
+	*)
+		echo "We don't handle that action" >&2
+		exit 1
+		;;
+esac
+
+[[ ${action} == "nak" ]] && exit 0
+
+[[ -z ${MODULES_DIR} ]] && MODULES_DIR=/lib/rcscripts/net.modules.d
+. ${MODULES_DIR}/helpers.d/functions
+. ${MODULES_DIR}/helpers.d/config-system
+
+# Guess which interface module to load - we prefer iproute2
+if [[ -x /sbin/ip ]]; then
+	interface_module=iproute2
+elif [[ -x /sbin/ifconfig ]]; then
+	interface_module=ifconfig
+else
+	echo "Can't find a known interface module" >&2
+	exit 1
+fi
+
+# Load our interface module
+. ${MODULES_DIR}/${interface_module}
+function_wrap ${interface_module} interface
+
+# Bring the interface up
+interface_is_up ${interface} || interface_up ${interface}
+
+if [[ ${action} == "deconfig" ]]; then
+	interface_del_addresses ${interface}
+	restore_configs
+	mark_service_inactive net.${interface}
+	exit 0
+fi
+
+# Configure our IP address
+ip=${ip// }
+subnet=${subnet// }
+cidr=$( netmask2cidr ${subnet} )
+broadcast=${broadcast// }
+[[ -n ${broadcast} ]] && broadcast="broadcast ${broadcast}"
+
+# Store the address in a cache for future usage
+echo ${ip} > /var/cache/dhcp-${interface}.lease
+chmod 600 /var/cache/dhcp-${interface}.lease
+
+# If we don't have our address then we flush it and then add our new one
+curip=$( interface_get_address ${interface} )
+if [[ ${curip} != "${ip}/${cidr}" ]] ; then
+	interface_del_addresses ${interface}
+	interface_add_address ${interface} ${ip}/${cidr} ${broadcast}
+fi
+
+# Configure our default route - we only have 1 default route
+for r in ${router}; do
+	interface_default_route ${r} && break
+done
+
+config_system
+mark_service_started net.${interface}
+
+exit 0

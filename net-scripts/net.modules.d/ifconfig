@@ -14,6 +14,10 @@ ifconfig_tunnel() {
 	LC_ALL=C /sbin/iptunnel "$@"
 }
 
+route() {
+	LC_ALL=C /sbin/route "$@"
+}
+
 # void ifconfig_depend(void)
 #
 # Sets up the dependancies for the module
@@ -112,7 +116,9 @@ ifconfig_loopback_create() {
 # Fetch the address retrieved by DHCP.  If successful, echoes the
 # address on stdout, otherwise echoes nothing.
 ifconfig_get_address() {
-	ifconfig $1 | sed -ne 's/.*inet addr:\([^ ]*\).*/\1/p'
+	local -a x=( $( ifconfig $1 | sed -ne 's/.*inet addr:\([^ ]*\).*Mask:\([^ ]*\).*/\1 \2/p' ) )
+	x[1]=$( netmask2cidr ${x[1]} )
+	echo "${x[0]}/${x[1]}"
 }
 
 # void ifconfig_get_mac_address(char *interface)
@@ -274,9 +280,9 @@ ifconfig_post_start() {
 		ebegin "${x}"
 		# Support adding IPv6 addresses easily
 		if [[ ${x} == *:* && ${x} != *'-A inet6'* ]]; then
-			/sbin/route add -A inet6 ${x} &>${devnull}
+			route add -A inet6 ${x} &>${devnull}
 		else
-			/sbin/route add ${x} &>${devnull}
+			route add ${x} &>${devnull}
 		fi
 		eend $?
 	done
@@ -317,6 +323,18 @@ ifconfig_add_address() {
 	fi
 
 	ifconfig ${iface} ${config[@]} &>${devnull}
-	eend $?
 	return $?
+}
+
+# void ifconfig_default_route(char* gateway_ip)
+#
+# Force default route to the specified gateway
+ifconfig_default_route() {
+	# Delete any existing default routes
+	while true ; do
+		route del default metric 0 2>/dev/null || break
+	done
+
+	# Then we add our route
+	route add default gw $1 metric 0
 }
