@@ -52,13 +52,13 @@ start() {
 		ebegin "  Adding aliases"
 		for x in $(eval echo \$\{alias_${IFACE}\})
 		do
-			aliasbcast="$(eval echo \$\{broadcast_${IFACE}\} \| awk \'\{ print \$${num} \}\')"
+			aliasbcast="$(eval echo \$\{broadcast_${IFACE}\} \| awk \'\{ print \$$((num+1)) \}\')"
 			if [ -n "${aliasbcast}" ]
 			then
 				aliasbcast="broadcast ${aliasbcast}"
 			fi
 
-			aliasnmask="$(eval echo \$\{netmask_${IFACE}\} \| awk \'\{ print \$${num} \}\')"
+			aliasnmask="$(eval echo \$\{netmask_${IFACE}\} \| awk \'\{ print \$$((num+1)) \}\')"
 			if [ -n "${aliasnmask}" ]
 			then
 				aliasnmask="netmask ${aliasnmask}"
@@ -67,7 +67,7 @@ start() {
 			ebegin "    ${IFACE}:${num}"
 			/sbin/ifconfig ${IFACE}:${num} ${x} \
 				${aliasbcast} ${aliasnmask} >/dev/null
-			num=$((num + 1))
+			num=$((num+1))
 			eend 0
 		done
 		save_options "alias" "$(eval echo \$\{alias_${IFACE}\})"
@@ -131,7 +131,7 @@ stop() {
 		for x in ${myalias}
 		do
 			/sbin/ifconfig ${IFACE}:${num} down >/dev/null
-			num=$((num + 1))
+			num=$((num+1))
 		done
 	fi
 
@@ -146,7 +146,7 @@ stop() {
 		do
 			echo -n "."
 			sleep 1
-			count=$((count + 1))
+			count=$((count+1))
 		done
 		echo "done"
 	else

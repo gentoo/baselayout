@@ -2,6 +2,11 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  17 Sep 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Did a small fix to /etc/init.d/net.eth0, thanks to
+    naanyaar2000@yahoo.com, bug #7407.
+
   16 Sep 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Add the permission stuff for generic scsi when compiled as
