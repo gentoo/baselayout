@@ -6,6 +6,9 @@
     Tweak get_mount_fstab to only print the first mount point found and then 
     spit warning messages for extra matches.
 
+    Add an additional sanity check to the udev tarball usage.  Don't try to 
+    unpack an empty or non-existant tarball.
+
   12 Dec 2004; Martin Schlemmer <azarah@gentoo.org>:
 
     Add suport for using /sbin/udevsend from new udev-048 as hotplug multiplexer.
