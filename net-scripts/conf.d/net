@@ -1,3 +1,4 @@
 # This blank configuration will automatically use DHCP for any net.*
 # scripts in /etc/init.d.  To create a more complete configuration,
-# see /etc/conf.d/net.example and put your configuration in this file.
+# please review /etc/conf.d/net.example and save your configuration
+# in /etc/conf.d/net (this file :]!).
