@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+  01 Dec 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Refix and clean up the netmount script to kill processes #64034.
+
   01 Dec 2004; Roy Marples <uberlord@gentoo.org>:
 
     Documentation fixes regarding iwconfig and linux-wlan-ng

@@ -7,19 +7,14 @@ depend() {
 	local myneed="net"
 	local myuse=""
 
-	# Only have Portmap as a dependency if there is a nfs mount in fstab
+	# Only have Portmap as a dependency if there is a nfs mount in fstab 
 	# that should be mounted at boot time.  Also filter out comments.
-	local nfsmounts="$(awk '!/^#/ && $3 == "nfs" && $4 !~ /noauto/ { print $0 }' /etc/fstab)"
-	local nfs4mounts="$(awk '!/^#/ && $3 == "nfs4" && $4 !~ /noauto/ { print $0 }' /etc/fstab)"
+	local nfsmounts=$(awk '!/^#/ && ($3=="nfs" || $3=="nfs4") && $4 !~ /noauto/ { print $0 }' /etc/fstab)
 
-	if [ -n "${nfsmounts}${nfs4mounts}" ]
+	if [ -n "${nfsmounts}" ]
 	then
 		myneed="${myneed} portmap"
-		myuse="${myuse} nfs"
-	fi
-	if [ -n "${nfs4mounts}" ] && [ -x /sbin/idmapd ]
-	then
-		myneed="${myneed} idmapd"
+		myuse="${myuse} nfs nfsmount"
 	fi
 
 	need ${myneed}
@@ -32,12 +27,13 @@ start() {
 	# Only try to mount NFS filesystems if portmap was started.
 	# This is to fix "hang" problems for new users who do not
 	# add portmap to the default runlevel.
-	if [ -L ${svcdir}/started/portmap ]
+	if [ -L "${svcdir}/started/portmap" ]
 	then
 		rcfilesystems="${NET_FS_LIST// /,}"		# convert to comma-separated
 	else
 		rcfilesystems=" ${NET_FS_LIST} "
 		rcfilesystems=${rcfilesystems// nfs /}	# remove nfs
+		rcfilesystems=${rcfilesystems// nfs4 /}	# remove nfs4
 		rcfilesystems=${rcfilesystems# }		# remove front and
 		rcfilesystems=${rcfilesystems% }		#   back spaces
 		rcfilesystems=${rcfilesystems// /,}		# convert to comma-separated
@@ -57,9 +53,42 @@ start() {
 }
 
 stop() {
-    ebegin "Unmounting network filesystems"
-	umount -art ${NET_FS_LIST// /,}
-	eend $? "Failed to unmount filesystems"
+	local ret
+	ebegin "Unmounting network filesystems"
+	[ -z "$(umount -art ${NET_FS_LIST// /,} 2>&1)" ]
+	ret=$?
+	eend ${ret} "Failed to simply unmount filesystems"
+	[ ${ret} -eq 0 ] && return 0
+
+	# `umount -a` will fail if the filesystems are in use.
+	# Here we use fuser to kill off processes that are using 
+	# the filesystems so that we can unmount properly.
+	# We will gradually use harsher kill signals so that the 
+	# processes know we aren't screwing around here ;).
+	declare -a siglist=( "TERM" "KILL" "KILL" )
+	local retry=0
+	local remaining="go"
+
+	while [ -n "${remaining}" -a ${retry} -lt 3 ]
+	do
+		# Populate $remaining with a newline-delimited list of network 
+		# filesystems.  Mount points have spaces swapped for '\040' (see 
+		# fstab(5)) so we have to translate them back to spaces.
+		remaining="$(awk '$3 ~ /'${NET_FS_LIST// /|}'/ { if ($2 != "/") print $2 }' /proc/mounts | sort -r)"
+		# Since we have to worry about the spaces being quoted properly, 
+		# we'll use `set --` and then "$@" to get the correct result.
+		IFS=$'\n'
+		set -- ${remaining//\\040/ }
+		unset IFS
+		[ -z "${remaining}" ] && break
+
+		# try to unmount again
+		ebegin $'\t'"Unmounting network filesystems (retry #$((retry+1)))"
+		/bin/fuser -k -${siglist[$((retry++))]} -m "$@" &>/dev/null
+		sleep 5
+		umount "$@" &>/dev/null
+		eend $? $'\t'"Failed to unmount filesystems"
+	done
 }
 
 # vim:ts=4
