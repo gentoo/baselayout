@@ -10,6 +10,7 @@
     udhcpc now caches it's IP address and requests it the next time it starts
     if the address is not released
     udhcpc and dhclient no longer flush interfaces if we don't need too
+    ipppd module now looks for ipppd in /usr/sbin - fixes #73067
 
   02 Dec 2004; Mike Frysinger <vapier@gentoo.org>:
 

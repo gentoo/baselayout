@@ -1,5 +1,5 @@
 # ISDN (net-dialup/isdn4k-utils) module for net-scripts
-# Version 1.0.1
+# Version 1.0.2
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -23,7 +23,7 @@ ipppd_depend() {
 #
 # Returns 1 if isnd4k-utils is installed, otherwise 0
 ipppd_check_installed() {
-	[[ -x /sbin/ipppd ]] && return 0
+	[[ -x /usr/sbin/ipppd ]] && return 0
 	${1:-false} && eerror "For ISDN (ipppd) support, emerge net-dialup/isdn4k-utils"
 	return 1
 }
@@ -62,7 +62,7 @@ ipppd_pre_start() {
 	eval opts=\"\$\{ipppd_${ifvar}\}\"
 
 	einfo "Starting ipppd for ${iface}"
-	/sbin/ipppd ${opts} pidfile /var/run/ipppd-${iface}.pid file /etc/ppp/options.${iface} >${devnull}
+	/usr/sbin/ipppd ${opts} pidfile /var/run/ipppd-${iface}.pid file /etc/ppp/options.${iface} >${devnull}
 	eend $? || return $?
 
 	return 0
