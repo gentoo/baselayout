@@ -325,28 +325,38 @@ then
 	# we do this to temp mount, until we can get /var mounted ...
 	tsvcdir="/mnt/.init.d"
 
-	# Should we use tmpfs or a ramdisk for caching dependency and
-	# general initscript data?  Note that the 'gentoo=tmpfs' kernel
-	# option should override most settings ...
-	if get_bootparam "tmpfs" || \
-	   [ "${svcmount}" = "yes" -a "${svcfstype}" = "tmpfs" ]
-	then
-		check_statedir "${tsvcdir}"
-		
-		ebegin "Mounting tmpfs at ${tsvcdir}"
-		try mount -n -t tmpfs tmpfs "${tsvcdir}" \
-			-o rw,mode=0644,size="${svcsize}"k
-		eend 0
-		
-	elif get_bootparam "ramfs" || \
-	     [ "${svcmount}" = "yes" -a "${svcfstype}" = "ramfs" ]
+	# Should we use tmpfs/ramfs/ramdisk for caching dependency and
+	# general initscript data?  Note that the 'gentoo=<fs>' kernel
+	# option should override any other setting ...
+	for fs in tmpfs ramfs ramdisk
+	do
+		if get_bootparam "${fs}"
+		then
+			svcmount="yes"
+			svcfstype="${fs}"
+			break
+		fi
+	done
+	if [ "${svcmount}" == "yes" ]
 	then
 		check_statedir "${tsvcdir}"
 
-		ebegin "Mounting ramdisk 0 at ${tsvcdir}"
-		try dd if=/dev/zero of=/dev/ram0 bs=1k count="${svcsize}"
-		try /sbin/mke2fs -i 1024 -vm0 /dev/ram0 "${svcsize}"
-		try mount -n -t ext2 /dev/ram0 "${tsvcdir}" -o rw
+		ebegin "Mounting ${svcfstype} at ${tsvcdir}"
+		case "${svcfstype}" in
+		ramfs)
+			try mount -n -t ramfs ramfs "${tsvcdir}" \
+				-o rw,mode=0644,size="${svcsize}"k
+			;;
+		ramdisk)
+			try dd if=/dev/zero of=/dev/ram0 bs=1k count="${svcsize}"
+			try /sbin/mke2fs -i 1024 -vm0 /dev/ram0 "${svcsize}"
+			try mount -n -t ext2 /dev/ram0 "${tsvcdir}" -o rw
+			;;
+		tmpfs|*)
+			try mount -n -t tmpfs tmpfs "${tsvcdir}" \
+				-o rw,mode=0644,size="${svcsize}"k
+			;;
+		esac
 		eend 0
 	fi
 
