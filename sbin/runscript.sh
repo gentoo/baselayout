@@ -4,8 +4,12 @@
 # $Header$
 
 
-source /sbin/functions.sh
-source /sbin/rc-daemon.sh
+# Common functions
+[ "${RC_GOT_FUNCTIONS}" != "yes" ] && source /sbin/functions.sh
+# Functions to handle dependencies and services
+[ "${RC_GOT_SERVICES}" != "yes" ] && source /sbin/rc-services.sh
+# Functions to control daemons
+[ "${RC_GOT_DAEMON}" != "yes" ] && source /sbin/rc-daemon.sh
 
 # State variables
 svcpause="no"
@@ -24,12 +28,13 @@ mylevel="$(<"${svcdir}/softlevel")"
 
 
 # Set $IFACE to the name of the network interface if it is a 'net.*' script
-IFACE=""
-NETSERVICE=""
 if [ "${myservice%%.*}" = "net" -a "${myservice##*.}" != "${myservice}" ]
 then
 	IFACE="${myservice##*.}"
 	NETSERVICE="yes"
+else
+	IFACE=
+	NETSERVICE=
 fi
 		
 # Source configuration files.
@@ -50,6 +55,7 @@ fi
 [ "${myservice##*.}" != "${myservice}" ]  && source /etc/conf.d/net
 
 [ -e /etc/rc.conf ]                       && source /etc/rc.conf
+
 
 usage() {
 	local IFS="|"
@@ -80,13 +86,13 @@ status() {
 }
 			
 svc_stop() {
-	local x=""
-	local mydep=""
-	local mydeps=""
+	local x=
+	local mydep=
+	local mydeps=
 	local retval=0
-	local ordservice=""
+	local ordservice=
 	
-	if [ ! -L "${svcdir}/started/${myservice}" ]
+	if ! service_started "${myservice}"
 	then
 		if [ "${RC_QUIET_STDOUT}" != "yes" ]
 		then
@@ -98,7 +104,7 @@ svc_stop() {
 	fi
 
 	# Do not try to stop if it had already failed to do so on runlevel change
-	if [ -L "${svcdir}/failed/${myservice}" -a -d "${svcdir}/softscripts.new" ]
+	if runlevel_stop && [ -L "${svcdir}/failed/${myservice}" ]
 	then
 		exit 1
 	fi
@@ -106,78 +112,81 @@ svc_stop() {
 	# Remove symlink to prevent recursion
 	rm -f "${svcdir}/started/${myservice}"
 
-	if [ -L "/etc/init.d/boot/${myservice}" ]
+	if in_runlevel "${myservice}" "boot" && \
+	   [ "${SOFTLEVEL}" != "reboot" -a "${SOFTLEVEL}" != "shutdown" -a \
+	     "${SOFTLEVEL}" != "single" ]
 	then
 		ewarn "WARNING:  you are stopping a boot service."
 	fi
-	if [ "${NETSERVICE}" = "yes" ]
+	
+	if [ "${svcpause}" != "yes" ]
 	then
-		# A net.* service
-		if [ -L "/etc/runlevels/boot/${myservice}" -o \
-		     -L "/etc/runlevels/${mylevel}/${myservice}" ]
+		if [ "${NETSERVICE}" = "yes" ]
 		then
-			local netcount="$(ls -1 "${svcdir}"/started/net.* 2> /dev/null | \
-				grep -v 'net\.lo' | egrep -c "\/net\.[[:alnum:]]+$")"
-
-			# Only worry about net.* services if this is the last one running,
-			# or if RC_NET_STRICT_CHECKING is set ...
-			if [ "${netcount}" -lt 1 -o "${RC_NET_STRICT_CHECKING}" = "yes" ]
+			# A net.* service
+			if in_runlevel "${myservice}" "boot" || \
+			   in_runlevel "${myservice}" "${mylevel}"
 			then
-				mydeps="net"
+				local netcount="$(ls -1 "${svcdir}"/started/net.* 2> /dev/null | \
+					grep -v 'net\.lo' | egrep -c "\/net\.[[:alnum:]]+$")"
+
+				# Only worry about net.* services if this is the last one running,
+				# or if RC_NET_STRICT_CHECKING is set ...
+				if [ "${netcount}" -lt 1 -o "${RC_NET_STRICT_CHECKING}" = "yes" ]
+				then
+					mydeps="net"
+				fi
 			fi
+			
+			mydeps="${mydeps} ${myservice}"
+		else
+			mydeps="${myservice}"
 		fi
-		
-		mydeps="${mydeps} ${myservice}"
-	else
-		mydeps="${myservice}"
 	fi
-	if [ "${svcpause}" = "yes" ]
-	then
-		mydeps=""
-	fi
+
 	for mydep in ${mydeps}
 	do
-		# Do not stop a service if it 'use' the current sevice, or on rc change
-		# and it should be started 'after' this service ...
-		if [ -d "${svcdir}/need/${mydep}" ] || \
-		   ([ -d "${svcdir}/softscripts.new" -a -d "${svcdir}/after/${mydep}" ])
+		# If some service 'need' $mydep, stop it first; or if it is a runlevel change,
+		# first stop all services that is started 'after' $mydep.
+		if needsme "${mydep}" &>/dev/null || \
+		   (runlevel_stop && ibefore "${mydep}" &>/dev/null)
 		then
-			# On rc change, stop all services "after $myservice" first
-			if [ -d "${svcdir}/softscripts.new" ]
-			then
-				local servicelist="$(dolisting "${svcdir}/need/${mydep}/") \
-					$(dolisting "${svcdir}/after/${mydep}/")"
-			else
-				local servicelist="$(dolisting "${svcdir}/need/${mydep}/")"
-			fi
+			local servicelist="$(needsme "${mydep}")"
+
+			# On runlevel change, stop all services "after $mydep" first ...
+			runlevel_stop && servicelist="${servicelist} $(ibefore "${mydep}")"
+
 			for x in ${servicelist}
 			do
-				if [ ! -L "${x}" ]
+				# Make sure we have a relevant rc-script ...
+				if [ "${x}" != "net" -a ! -f "/etc/init.d/${x}" ]
 				then
 					continue
 				fi
-				if [ ! -L "${svcdir}/started/${x##*/}" ]
+				
+				# Service not currently running, continue
+				service_started "${x}" || continue
+				
+				if ibefore -t "${mydep}" "${x}" && [ -L "${svcdir}/softscripts.new/${x}" ]
 				then
-					# Service not currently running, continue
+					# Service do not 'need' $mydep, and is still present in
+					# new runlevel ...
 					continue
 				fi
-				if [ -L "${svcdir}/before/${x}/${mydep}" -a \
-				     -L "${svcdir}/softscripts.new/${x}" ]
-				then
-					continue
-				fi
-				"${x}" stop
+				
+				stop_service "${x}"
+				
 				if [ "$?" -ne 0 ]
 				then
 					# If we are halting the system, try and get it down as
 					# clean as possible, else do not stop our service if
 					# a dependent service did not stop.
-					if [ "${SOFTLEVEL}" != "reboot" -a \
-					     "${SOFTLEVEL}" != "shutdown" -a \
-						 -L "${svcdir}/need/${mydep}/${x}" ]
+					if needsme -t "${mydep}" "${x}" && \
+					   [ "${SOFTLEVEL}" != "reboot" -a "${SOFTLEVEL}" != "shutdown" ]
 					then
 						retval=1
 					fi
+					
 					break
 				fi
 			done
@@ -202,6 +211,7 @@ svc_stop() {
 		then
 			ln -snf "/etc/init.d/${myservice}" "${svcdir}/failed/${myservice}"
 		fi
+		
 		# If we are halting the system, do it as cleanly as possible
 		if [ "${SOFTLEVEL}" != "reboot" -a "${SOFTLEVEL}" != "shutdown" ]
 		then
@@ -215,15 +225,15 @@ svc_stop() {
 svc_start() {
 	local retval=0
 	local startfail="no"
-	local x=""
-	local y=""
-	local myserv=""
-	local ordservice=""
+	local x=
+	local y=
+	local myserv=
+	local ordservice=
 
-	if [ ! -L "${svcdir}/started/${myservice}" ]
+	if ! service_started "${myservice}"
 	then
 		# Do not try to start if i have done so already on runlevel change
-		if [ -L "${svcdir}/failed/${myservice}" -a -d "${svcdir}/softscripts.old" ]
+		if runlevel_start && [ -L "${svcdir}/failed/${myservice}" ]
 		then
 			exit 1
 		fi
@@ -232,7 +242,7 @@ svc_start() {
 		ln -snf "/etc/init.d/${myservice}" "${svcdir}/started/${myservice}"
 
 		# On rc change, start all services "before $myservice" first
-		if [ -d "${svcdir}/softscripts.old" ]
+		if runlevel_start
 		then
 			startupservices="$(ineed "${myservice}") \
 				$(valid_iuse "${myservice}") \
@@ -247,18 +257,19 @@ svc_start() {
 		do
 			if [ "${x}" = "net" -a "${NETSERVICE}" != "yes" ]
 			then
-				local netservlist="$(dolisting "/etc/runlevels/boot/net.*") \
+				local netservices="$(dolisting "/etc/runlevels/boot/net.*") \
 					$(dolisting "/etc/runlevels/${mylevel}/net.*")"
 					
-				for y in ${netservlist}
+				for y in ${netservices}
 				do
-					myserv="${y##*/}"
-					if [ ! -L "${svcdir}/started/${myserv}" ]
+					mynetservice="${y##*/}"
+					
+					if ! service_started "${mynetservice}"
 					then
-						/etc/init.d/"${myserv}" start
+						start_service "${mynetservice}"
 
 						# A 'need' dependency is critical for startup
-						if [ "$?" -ne 0 -a -L "${svcdir}/need/${x}/${myservice}" ]
+						if [ "$?" -ne 0 ] && ineed -t "${myservice}" "${x}"
 						then
 							local netcount="$(ls -1 ${svcdir}/started/net.* 2> /dev/null | \
 								grep -v 'net\.lo' | egrep -c "\/net\.[[:alnum:]]+$")"
@@ -276,12 +287,12 @@ svc_start() {
 				
 			elif [ "${x}" != "net" ]
 			then
-				if [ ! -L "${svcdir}/started/${x}" ]
+				if ! service_started "${x}"
 				then
-					/etc/init.d/"${x}" start
+					start_service "${x}"
 
 					# A 'need' dependacy is critical for startup
-					if [ "$?" -ne 0 -a -L "${svcdir}/need/${x}/${myservice}" ]
+					if [ "$?" -ne 0 ] && ineed -t "${myservice}" "${x}"
 					then
 						startfail="yes"
 					fi
@@ -321,6 +332,7 @@ svc_start() {
 		then
 			rm -f "${svcdir}/started/${myservice}"
 		fi
+		
 		return "${retval}"
 	else
 		if [ "${RC_QUIET_STDOUT}" != "yes" ]
@@ -333,7 +345,7 @@ svc_start() {
 }
 
 svc_restart() {
-	if [ -L "${svcdir}/started/${myservice}" ]
+	if service_started "${myservice}"
 	then
 		svc_stop || return "$?"
 		sleep 1
@@ -349,7 +361,7 @@ svc_status() {
 	# should thus be formatted in the custom status() function
 	# to work with the printed " * status:  foo".
 
-	if [ -L "${svcdir}/started/${myservice}" ]
+	if service_started "${myservice}"
 	then
 		if [ "${RC_QUIET_STDOUT}" != "yes" ]
 		then
@@ -385,181 +397,10 @@ then
 	opts="start stop restart"
 fi
 
-# does $1 depend on $2 ?
-dependon() {
-	if [ -L "${svcdir}/need/$2/$1" -o -L "${svcdir}/use/$2/$1" ]
-	then
-		return 0
-	else
-		return 1
-	fi
-}
-
-needsme() {
-	local x=""
-	if [ -d "${svcdir}/need/$1" ]
-	then
-		for x in $(dolisting "${svcdir}/need/$1/")
-		do
-			if [ ! -L "${x}" ]
-			then
-				continue
-			fi
-			echo "${x##*/}"
-		done
-	fi
-}
-
-usesme() {
-	local x=""
-	if [ -d "${svcdir}/use/$1" ]
-	then
-		for x in $(dolisting "${svcdir}/use/$1/")
-		do
-			if [ ! -L "${x}" ]
-			then
-				continue
-			fi
-			echo "${x##*/}"
-		done
-	fi
-}
-
-ineed() {
-	local x=""
-	local z=""
-	for x in $(dolisting "${svcdir}"/need/*/"$1")
-	do
-		if [ ! -L "${x}" ]
-		then
-			continue
-		fi
-		z="${x%/*}"
-		echo "${z##*/}"
-	done
-}
-
-# This will give all the use's of the service, even if not in current or boot
-# runlevels
-iuse() {
-    local x=""
-    local z=""
-    for x in $(dolisting "${svcdir}"/use/*/"$1")
-    do
-		if [ ! -L "${x}" ]
-		then
-		    continue
-		fi
-		z="${x%/*}"
-		echo "${z##*/}"
-    done
-}
-
-# This will only give the valid use's for the service (they must be in the boot
-# or current runlevel)
-valid_iuse() {
-	local x=""
-	local y=""
-	for x in $(iuse "$1")
-	do
-		if [ -e "/etc/runlevels/boot/${x}" -o \
-		     -e "/etc/runlevels/${mylevel}/${x}" ]
-		then
-			z="${x%/*}"
-			echo "${z##*/}"
-		fi
-	done
-}
-
-# List of services that should start before $1 on rc change
-iafter() {
-	local x=""
-	local z=""
-	for x in $(dolisting "${svcdir}"/after/*/"$1")
-	do
-		if [ ! -L ${x} ]
-		then
-			continue
-		fi
-		z="${x%/*}"
-		echo "${z##*/}"
-	done
-}
-
-# Valid services for current or boot rc level that should start
-# before $1
-valid_iafter() {
-	local x=""
-	local y=""
-	for x in $(iafter "$1")
-	do
-		if [ -e "/etc/runlevels/boot/${x}" -o \
-		     -e "/etc/runlevels/${mylevel}/${x}" ]
-		then
-			z="${x%/*}"
-			echo "${z##*/}"
-		fi
-	done
-}
-
-# List broken dependencies of type 'need'
-broken() {
-	local x=""
-	if [ -d "${svcdir}/broken/$1" ]
-	then
-		for x in $(dolisting "${svcdir}/broken/$1/")
-		do
-			if [ ! -f "${x}" ]
-			then
-				continue
-			fi
-			echo "${x##*/}"
-		done
-	fi
-}
-
-# Call this with "needsme", "ineed", "usesme", "iuse" or "broken" as first arg
-query() {
-	local deps=""
-	local x=""
-	install -d -m0755 "${svcdir}/depcheck/$$"
-	if [ "$1" = "ineed" -a ! -L "${svcdir}/started/${myservice}" ]
-	then
-		ewarn "WARNING:  \"${myservice}\" not running."
-		ewarn "          NEED info may not be accurate."
-	fi
-	if [ "$1" = "iuse" -a ! -L "${svcdir}/started/${myservice}" ]
-	then
-		ewarn "WARNING:  \"${myservice}\" not running."
-		ewarn "          USE info may not be accurate."
-	fi
-
-	deps="${myservice}"
-	while [ -n "${deps}" ]
-	do
-		deps="$($1 ${deps})"
-		for x in ${deps}
-		do
-			if [ ! -e "${svcdir}/depcheck/$$/${x}" ]
-			then
-				touch "${svcdir}/depcheck/$$/${x}"
-			fi
-		done
-	done
-	for x in $(dolisting "${svcdir}/depcheck/$$/")
-	do
-		if [ ! -e "${x}" ]
-		then
-			continue
-		fi
-		echo "${x##*/}"
-	done
-	rm -rf "${svcdir}/depcheck"
-}
-
 svc_homegrown() {
 	local arg="$1"
-	local x=""
+	local x=
+	
 	# Walk through the list of available options, looking for the
 	# requested one.
 	for x in ${opts}
@@ -570,19 +411,13 @@ svc_homegrown() {
 			then
 				# Run the homegrown function
 				"${x}"
+				
 				return $?
-			else
-				# This is a weak error message
-				ewarn "WARNING:  function \"${x}\" doesn't exist."
-				# Do not quote this ....
-				usage ${opts}
-				exit 1
 			fi
 		fi
 	done
-	# If we're here, then the function wasn't in $opts.  This is
-	# the same error message that used to be in the case statement
-	# before homegrown functions were supported.
+	
+	# If we're here, then the function wasn't in $opts.
 	eerror "ERROR:  wrong args. (  "${arg}" / $* )"
 	# Do not quote this either ...
 	usage ${opts}
@@ -618,13 +453,13 @@ do
 		svc_start
 		;;
 	needsme|ineed|usesme|iuse|broken)
-		query "${arg}"
+		list_depend_trace "${arg}"
 		;;
 	status)
 		svc_status
 		;;
 	zap)
-		if [ -e "${svcdir}/started/${myservice}" ]
+		if service_started "${myservice}"
 		then
 			einfo "Manually resetting ${myservice} to stopped state."
 			rm -f "${svcdir}/started/${myservice}"
@@ -634,8 +469,9 @@ do
 		svcrestart="yes"
 	
 		# Create a snapshot of started services
-		rm -rf "${svcdir}"/snapshot/*
-		cp -a "${svcdir}"/started/* "${svcdir}/snapshot/"
+		rm -rf "${svcdir}/snapshot/$$"
+		mkdir -p "${svcdir}/snapshot/$$"
+		cp -a "${svcdir}"/started/* "${svcdir}/snapshot/$$/"
 		
 		# Simple way to try and detect if the service use svc_{start,stop}
 		# to restart if it have a custom restart() funtion.
@@ -658,16 +494,21 @@ do
 		fi
 
 		# Restart dependencies as well
-		if [ -L "${svcdir}/started/${myservice}" ]
+		if service_started "${myservice}"
 		then
-			for x in $(dolisting "${svcdir}/snapshot/")
+			for x in $(dolisting "${svcdir}/snapshot/$$/")
 			do
-				if [ ! -L "${svcdir}/started/${x##*/}" ]
+				if ! service_started "${x##*/}"
 				then
-					"${x}" start
+					schedule_service_startup "${x##*/}"
 				fi
 			done
 		fi
+
+		# Wait for any services that may still be running ...
+		[ "${RC_PARALLEL_STARTUP}" = "yes" ] && wait
+				
+		rm -rf "${svcdir}/snapshot/$$"
 		svcrestart="no"
 		;;
 	pause)

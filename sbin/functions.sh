@@ -2,6 +2,9 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
 
+
+export RC_GOT_FUNCTIONS="yes"
+
 umask 022
 
 if [ -z "${EBUILD}" ]
@@ -41,6 +44,7 @@ RC_NOCOLOR="no"
 # Default values for rc system
 #
 RC_NET_STRICT_CHECKING="no"
+RC_PARALLEL_STARTUP="no"
 
 # Override defaults with user settings ...
 [ -f /etc/conf.d/rc ] && source /etc/conf.d/rc
@@ -54,14 +58,14 @@ getcols() {
 if [ -n "${EBUILD}" ] && [ "${*/depend}" = "$*" ]
 then
 	# Check user pref in portage
-    RC_NOCOLOR="`python -c 'import portage; print portage.settings["NOCOLOR"]' 2> /dev/null`"
+    RC_NOCOLOR="$(python -c 'import portage; print portage.settings["NOCOLOR"]' 2> /dev/null)"
 
 elif [ -n "${EBUILD}" ] && [ "${*/depend}" != "$*" ]
 then
 	# We do not want colors or stty to run during emerge depend
     RC_NOCOLOR="yes"
 	
-elif [ "`/bin/consoletype 2> /dev/null`" = "serial" ]
+elif [ "$(/bin/consoletype 2> /dev/null)" = "serial" ]
 then
 	# We do not want colors on serial terminals
 	RC_NOCOLOR="yes"
@@ -97,13 +101,13 @@ fi
 
 if [ "${RC_NOCOLOR}" = "yes" ]
 then
-	GOOD=""
-	WARN=""
-	BAD=""
-	NORMAL=""
+	GOOD=
+	WARN=
+	BAD=
+	NORMAL=
 
-	HILITE=""
-	BRACKET=""
+	HILITE=
+	BRACKET=
 else
 	GOOD=$'\e[32;01m'
 	WARN=$'\e[33;01m'
@@ -119,6 +123,9 @@ fi
 #    use the system logger to log a message
 #
 esyslog() {
+	local pri=
+	local tag=
+	
 	if [ -x /usr/bin/logger ]
 	then
 		pri="$1"
@@ -129,6 +136,8 @@ esyslog() {
 		
 		/usr/bin/logger -p "${pri}" -t "${tag}" -- "$*"
 	fi
+
+	return 0
 }
 
 # void einfo(char* message)
@@ -136,12 +145,12 @@ esyslog() {
 #    show an informative message (with a newline)
 #
 einfo() {
-	if [ "${RC_QUIET_STDOUT}" = "yes" ]
+	if [ "${RC_QUIET_STDOUT}" != "yes" ]
 	then
-		return
-	else
 		echo -e " ${GOOD}*${NORMAL} ${*}"
 	fi
+
+	return 0
 }
 
 # void einfon(char* message)
@@ -149,12 +158,12 @@ einfo() {
 #    show an informative message (without a newline)
 #
 einfon() {
-	if [ "${RC_QUIET_STDOUT}" = "yes" ]
+	if [ "${RC_QUIET_STDOUT}" != "yes" ]
 	then
-		return
-	else
 		echo -ne " ${GOOD}*${NORMAL} ${*}"
 	fi
+
+	return 0
 }
 
 # void ewarn(char* message)
@@ -171,6 +180,8 @@ ewarn() {
 
 	# Log warnings to system log
 	esyslog "daemon.warning" "rc-scripts" "${*}"
+
+	return 0
 }
 
 # void eerror(char* message)
@@ -187,6 +198,8 @@ eerror() {
 
 	# Log errors to system log
 	esyslog "daemon.err" "rc-scripts" "${*}"
+
+	return 0
 }
 
 # void ebegin(char* message)
@@ -194,10 +207,8 @@ eerror() {
 #    show a message indicating the start of a process
 #
 ebegin() {
-	if [ "${RC_QUIET_STDOUT}" = "yes" ]
+	if [ "${RC_QUIET_STDOUT}" != "yes" ]
 	then
-		return
-	else
 		if [ "${RC_NOCOLOR}" = "yes" ]
 		then
 			echo -ne " ${GOOD}*${NORMAL} ${*}..."
@@ -205,6 +216,8 @@ ebegin() {
 			echo -e " ${GOOD}*${NORMAL} ${*}..."
 		fi
 	fi
+
+	return 0
 }
 
 # void eend(int error, char* errstr)
@@ -213,6 +226,8 @@ ebegin() {
 #    if error, show errstr via eerror
 #
 eend() {
+	local retval=
+	
 	if [ "$#" -eq 0 ] || ([ -n "$1" ] && [ "$1" -eq 0 ])
 	then
 		if [ "${RC_QUIET_STDOUT}" != "yes" ]
@@ -220,7 +235,7 @@ eend() {
 			echo -e "${ENDCOL}  ${BRACKET}[ ${GOOD}ok${BRACKET} ]${NORMAL}"
 		fi
 	else
-		local retval="$1"
+		retval="$1"
 		if [ "$#" -ge 2 ]
 		then
 			shift
@@ -234,6 +249,8 @@ eend() {
 		fi
 		return ${retval}
 	fi
+
+	return 0
 }
 
 # void ewend(int error, char *warnstr)
@@ -242,6 +259,8 @@ eend() {
 #    if error, show warnstr via ewarn
 #
 ewend() {
+	local retval=
+	
 	if [ "$#" -eq 0 ] || ([ -n "$1" ] && [ "$1" -eq 0 ])
 	then
 		if [ "${RC_QUIET_STDOUT}" != "yes" ]
@@ -249,7 +268,7 @@ ewend() {
 			echo -e "${ENDCOL}  ${BRACKET}[ ${GOOD}ok${BRACKET} ]${NORMAL}"
 		fi
 	else
-		local retval="$1"
+		retval="$1"
 		if [ "$#" -ge 2 ]
 		then
 			shift
@@ -263,6 +282,8 @@ ewend() {
 		fi
 		return "${retval}"
 	fi
+
+	return 0
 }
 
 # bool wrap_rcscript(full_path_and_name_of_rc-script)
@@ -273,15 +294,18 @@ ewend() {
 #
 wrap_rcscript() {
 	local retval=1
+	local myservice="${1##*/}"
 
-	( echo "function test_script() {" ; cat "$1"; echo "}" ) > "${svcdir}/foo.sh"
+	( echo "function test_script() {" ; cat "$1"; echo "}" ) \
+		> "${svcdir}/${myservice}-$$"
 
-	if source "${svcdir}/foo.sh" &> /dev/null
+	if source "${svcdir}/${myservice}-$$" &> /dev/null
 	then
 		test_script &> /dev/null
 		retval=0
 	fi
-	rm -f "${svcdir}/foo.sh"
+	rm -f "${svcdir}/${myservice}-$$"
+	
 	return "${retval}"
 }
 
@@ -295,7 +319,7 @@ checkserver() {
 	# Only do check if 'gentoo=adelie' is given as kernel param
 	if get_bootparam "adelie"
 	then
-		[ "$(<${svcdir}/hostname)" = "(none)" ] || return 1
+		[ "$(< "${svcdir}/hostname")" = "(none)" ] || return 1
 	fi
 	
 	return 0
@@ -306,6 +330,10 @@ checkserver() {
 #   Initialize an Adelie node.
 #
 init_node() {
+	local DIR=
+	local SUBDIR=
+	local EMPTYDIR=
+	
 	ebegin "Importing local userspace on node"
 
 	try mount -t tmpfs none "${shmdir}"
@@ -326,7 +354,7 @@ init_node() {
 			find "${DIR}/" -type d > "${shmdir}/${DIR}.lst"
 		fi
 
-		for SUBDIR in $(<${shmdir}/${DIR}.lst)
+		for SUBDIR in $(< "${shmdir}/${DIR}.lst")
 		do
 			mkdir -p "${shmdir}/${SUBDIR}"
 			chmod --reference="${SUBDIR}" "${shmdir}/${SUBDIR}"
@@ -335,7 +363,7 @@ init_node() {
 
 		if [ -e "/etc/conf.d/exclude/${DIR}" ]
 		then
-			for EMPTYDIR in $(<"/etc/conf.d/exclude/${DIR}")
+			for EMPTYDIR in $(< "/etc/conf.d/exclude/${DIR}")
 			do
 				mkdir -p "${shmdir}/${EMPTYDIR}"
 				chmod --reference="${SUBDIR}" "${shmdir}/${SUBDIR}"
@@ -354,9 +382,12 @@ init_node() {
 
 	cp -f /etc/inittab.node /etc/inittab
 	[ -e /etc/fstab.node ] && cp -f /etc/fstab.node /etc/fstab
+	
 	killall -1 init
 
 	eend 0
+
+	return 0
 }
 
 # char *KV_major(string)
@@ -364,11 +395,15 @@ init_node() {
 #    Return the Major version part of given kernel version.
 #
 KV_major() {
+	local KV=
+	
 	[ -z "$1" ] && return 1
 
-	local KV="`echo $1 | \
-		awk '{ tmp = $0; gsub(/^[0-9\.]*/, "", tmp); sub(tmp, ""); print }'`"
+	KV="$(echo "$1" | \
+		awk '{ tmp = $0; gsub(/^[0-9\.]*/, "", tmp); sub(tmp, ""); print }')"
 	echo "${KV}" | awk -- 'BEGIN { FS = "." } { print $1 }'
+
+	return 0
 }
 
 # char *KV_minor(string)
@@ -376,11 +411,15 @@ KV_major() {
 #    Return the Minor version part of given kernel version.
 #
 KV_minor() {
+	local KV=
+	
 	[ -z "$1" ] && return 1
 
-	local KV="`echo $1 | \
-		awk '{ tmp = $0; gsub(/^[0-9\.]*/, "", tmp); sub(tmp, ""); print }'`"
+	KV="$(echo "$1" | \
+		awk '{ tmp = $0; gsub(/^[0-9\.]*/, "", tmp); sub(tmp, ""); print }')"
 	echo "${KV}" | awk -- 'BEGIN { FS = "." } { print $2 }'
+
+	return 0
 }
 
 # char *KV_micro(string)
@@ -388,11 +427,15 @@ KV_minor() {
 #    Return the Micro version part of given kernel version.
 #
 KV_micro() {
+	local KV=
+	
 	[ -z "$1" ] && return 1
 
-	local KV="`echo $1 | \
-		awk '{ tmp = $0; gsub(/^[0-9\.]*/, "", tmp); sub(tmp, ""); print }'`"
+	KV="$(echo "$1" | \
+		awk '{ tmp = $0; gsub(/^[0-9\.]*/, "", tmp); sub(tmp, ""); print }')"
 	echo "${KV}" | awk -- 'BEGIN { FS = "." } { print $3 }'
+
+	return 0
 }
 
 # int KV_to_int(string)
@@ -401,12 +444,17 @@ KV_micro() {
 #    for easy compairing or versions ...
 #
 KV_to_int() {
+	local KV_MAJOR=
+	local KV_MINOR=
+	local KV_MICRO=
+	local KV_int=
+	
 	[ -z "$1" ] && return 1
     
-	local KV_MAJOR="`KV_major "$1"`"
-	local KV_MINOR="`KV_minor "$1"`"
-	local KV_MICRO="`KV_micro "$1"`"
-	local KV_int="$((KV_MAJOR * 65536 + KV_MINOR * 256 + KV_MICRO))"
+	KV_MAJOR="$(KV_major "$1")"
+	KV_MINOR="$(KV_minor "$1")"
+	KV_MICRO="$(KV_micro "$1")"
+	KV_int="$((KV_MAJOR * 65536 + KV_MINOR * 256 + KV_MICRO))"
     
 	# We make version 2.2.0 the minimum version we will handle as
 	# a sanity check ... if its less, we fail ...
@@ -415,9 +463,9 @@ KV_to_int() {
 		echo "${KV_int}"
 
 		return 0
-	else
-		return 1
 	fi
+
+	return 1
 }   
 
 # int get_KV()
@@ -425,9 +473,9 @@ KV_to_int() {
 #    return the kernel version (major, minor and micro concated) as an integer
 #   
 get_KV() {
-	local KV="$(</proc/sys/kernel/osrelease)"
+	local KV="$(< /proc/sys/kernel/osrelease)"
 
-	echo "`KV_to_int ${KV}`"
+	echo "$(KV_to_int "${KV}")"
 
 	return $?
 }
@@ -439,32 +487,34 @@ get_KV() {
 #   EXAMPLE:  if get_bootparam "nodevfs" ; then ....
 #
 get_bootparam() {
-	local copt=""
-	local parms=""
+	local x=
+	local copt=
+	local parms=
 	local retval=1
 	
-	for copt in $(</proc/cmdline)
+	for copt in $(< /proc/cmdline)
 	do
 		if [ "${copt%=*}" = "gentoo" ]
 		then
-			params="`gawk -v PARAMS="${copt##*=}" '
+			params="$(gawk -v PARAMS="${copt##*=}" '
 				BEGIN { 
 					split(PARAMS, nodes, ",")
 					for (x in nodes)
 						print nodes[x]
-				}'`"
+				}')"
 			
 			# Parse gentoo option
 			for x in ${params}
 			do
 				if [ "${x}" = "$1" ]
 				then
-					echo YES
+#					echo "YES"
 					retval=0
 				fi
 			done
 		fi
 	done
+	
 	return ${retval}
 }
 
@@ -479,38 +529,36 @@ get_bootparam() {
 #          also, error checking is not that extensive ...
 #
 dolisting() {
-	local x=""
-	local y=""
-	local tmpstr=""
-	local mylist=""
+	local x=
+	local y=
+	local tmpstr=
+	local mylist=
 	local mypath="${*}"
 
 	if [ "${mypath%/\*}" != "${mypath}" ]
 	then
 		mypath="${mypath%/\*}"
 	fi
+	
 	for x in ${mypath}
 	do
-		if [ ! -e ${x} ]
+		[ ! -e "${x}" ] && continue
+		
+		if [ ! -d "${x}" ] && ( [ -L "${x}" -o -f "${x}" ] )
 		then
-			continue
-		fi
-		if [ ! -d ${x} ] && ( [ -L ${x} -o -f ${x} ] )
-		then
-			mylist="${mylist} `ls ${x} 2> /dev/null`"
+			mylist="${mylist} $(ls "${x}" 2> /dev/null)"
 		else
-			if [ "${x%/}" != "${x}" ]
-			then
-				x="${x%/}"
-			fi
-			cd ${x}
-			tmpstr="`ls`"
+			[ "${x%/}" != "${x}" ] && x="${x%/}"
+			
+			cd "${x}"; tmpstr="$(ls)"
+			
 			for y in ${tmpstr}
 			do
 				mylist="${mylist} ${x}/${y}"
 			done
 		fi
 	done
+	
 	echo "${mylist}"
 }
 
@@ -520,12 +568,16 @@ dolisting() {
 #
 save_options() {
 	local myopts="$1"
+	
 	shift
-	if [ ! -d ${svcdir}/options/${myservice} ]
+	if [ ! -d "${svcdir}/options/${myservice}" ]
 	then
-		install -d -m0755 ${svcdir}/options/${myservice}
+		install -d -m0755 "${svcdir}/options/${myservice}"
 	fi
-	echo "$*" > ${svcdir}/options/${myservice}/${myopts}
+	
+	echo "$*" > "${svcdir}/options/${myservice}/${myopts}"
+
+	return 0
 }
 
 # char *get_options(char *option)
@@ -534,10 +586,12 @@ save_options() {
 #    by calling the save_options function
 #
 get_options() {
-	if [ -f ${svcdir}/options/${myservice}/$1 ]
+	if [ -f "${svcdir}/options/${myservice}/$1" ]
 	then
-		cat ${svcdir}/options/${myservice}/$1
+		echo "$(< ${svcdir}/options/${myservice}/$1)"
 	fi
+
+	return 0
 }
 
 

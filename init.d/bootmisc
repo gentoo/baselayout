@@ -10,7 +10,7 @@ depend() {
 }
 
 start() {
-	if [ "${BOOT}" = "yes" ]
+	if [ "${SOFTLEVEL}" = "boot" ]
 	then
 		# Put a nologin file in /etc to prevent people from logging in before
 		# system startup is complete.

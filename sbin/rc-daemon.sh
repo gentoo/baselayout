@@ -1,14 +1,20 @@
 # Copyright 1999-2003 Gentoo Technologies, Inc.
 # Distributed under the terms of the GNU General Public License v2
+# Author: Martin Schlemmer <azarah@gentoo.org>
 # $Header$
 
-[ -z "${svcdir}" ] && source /sbin/functions.sh
+# RC functions to work with daemons (very alpha for now, and not finished)
 
-#stuff for getpids() and co
-declare -ax MASTER_PID=""
-declare -ax PID_LIST=""
-DAEMONS=""
-PID_FILES=""
+
+export RC_GOT_DAEMON="yes"
+
+[ "${RC_GOT_FUNCTIONS}" != "yes" ] && source /sbin/functions.sh
+
+# Stuff for getpids() and co
+declare -ax MASTER_PID=
+declare -ax PID_LIST=
+DAEMONS=
+PID_FILES=
 RC_RETRY_KILL="no"
 RC_RETRY_TIMEOUT=1
 RC_RETRY_COUNT=5
@@ -18,8 +24,8 @@ RC_FAIL_ON_ZOMBIE="no"
 #[ -f /etc/conf.d/rc ] && source /etc/conf.d/rc
 
 getpidfile() {
-	local x=""
-	local y=""
+	local x=
+	local y=
 	local count=0
 	local count2=0
 	
@@ -81,21 +87,21 @@ getpidfile() {
 # in the array $PID_LIST, with the master pids in $MASTER_PID.
 #
 getpids() {
-	local x=""
+	local x=
 	local count=0
-	local pidfile=""
+	local pidfile=
 
 	if [ -n "${DAEMONS}" ]
 	then
 		for x in ${DAEMONS}
 		do
-			MASTER_PID[${count}]=""
-			PID_LIST[${count}]=""
+			MASTER_PID[${count}]=
+			PID_LIST[${count}]=
 
 			pidfile="$(getpidfile ${x})"
 			if [ -n "${pidfile}" ]
 			then
-				MASTER_PID[${count}]="$(<${pidfile})"
+				MASTER_PID[${count}]="$(< ${pidfile})"
 			fi
 			if [ -n "$(pidof ${x})" ]
 			then
@@ -117,7 +123,7 @@ getpids() {
 #   3 - No pidfile, and no processes are running what so ever
 #
 checkpid() {
-	local x=""
+	local x=
 	local count=0
 
 	if [ "$#" -ne 1 -o -z "$1" -o -z "${DAEMONS}" -o \
@@ -155,9 +161,9 @@ checkpid() {
 
 start-single-daemon() {
 	local retval=0
-	local pidfile=""
+	local pidfile=
 	local pidretval=0
-	local daemon=""
+	local daemon=
 	local SSD="start-stop-daemon"
 
 	if [ "$(eval echo \${DAEMONS/$1/})" != "${DAEMONS}" ]
@@ -213,11 +219,11 @@ start-single-daemon() {
 #
 stop-single-daemon() {
 	local retval=0
-	local pidfile=""
+	local pidfile=
 	local pidretval=0
 	local killpidfile="no"
 	local failonzombie="no"
-	local daemon=""
+	local daemon=
 	local SSD="start-stop-daemon --stop --quiet"
 
 	for x in $*
@@ -319,13 +325,13 @@ stop-single-daemon() {
 #                      as specified by $RC_RETRY_COUNT
 #
 stop-daemons() {
-	local x=""
+	local x=
 	local count=0
 	local retval=0
 	local tmpretval=0
 	local pidretval=0
 	local retry="no"
-	local ssdargs=""
+	local ssdargs=
 
 	if [ -z "${DAEMONS}" ]
 	then

@@ -134,6 +134,12 @@ ${CYAN}Dependencies:${OFF}
       of a system logger depend on 'logger'.  This should make things much more
       generic.
 
+    ${GREEN}parallel${OFF}
+      This is not really a dependency type, but enable you to specify if a
+      service can start in parallel or not.  It takes one of two arguments,
+      either 'yes' or 'no', and if it is not specified, it is presumed that
+      it is set to 'yes'.
+
     Note that the 'need', 'use', 'before' and 'after' dependeny types can have '*'
     as argument.  Having:
 

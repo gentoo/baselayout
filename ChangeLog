@@ -2,12 +2,47 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
-* rc-scripts 1.4.3.7 (10 May 2003)
+* rc-scripts 1.4.3.7 (11 May 2003)
+
+  11 May 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Too many things to remember, so here is changes of note:
+    - More changes to gendepend.awk.  This basically modifies it to not use
+      symlinks in $svcdir/{need,use,before,after,provide} anymore, but rather
+      create a file that can be sourced.  Seems to speedup things nicely.
+    - Add /sbin/rc-services.sh.  This is basically a module to get dependency
+      info from the new $svcdir/deptree, and some other new service functions.
+    - Modify the whole works to *only* source all needed files once.  This
+      includes /sbin/{functions.sh,rc-services.sh,rc-daemon.sh}.  Also
+      rc-services.sh will only source $svcdir/deptree once.  /sbin/runscript.sh
+      is sourced more than once (actually each time a service is started or
+      stopped, but is is cut down much).  Also seems to speed things up again.
+    - Fix a long outstanding bug in gendepend.awk that caused the 'net'
+      dependency to not be actually used in shutdown, causing the services
+      needing it to be stoped before net.* services.
+    - Add the RC_PARALLEL_STARTUP variable, with schedule_service_startup() to
+      /sbin/rc-services.sh and /etc/conf.d/rc.  This is experimental parallel
+      startup of services, and seems to work nicely.  Only issues to date is
+      that printing of messages is not synced, and a race very intermittantly
+      that causes a service to be started when it was already scheduled.
+    - Add a new dependency type 'parallel' that can be used to control if a
+      service can be started in paralled or not.  Possible arguments is "yes"
+      or "no"; if it is not present, it is considered as "yes":
+
+      depend() {
+          parallel yes|no
+      }
+      
+      Modified cachedepend.awk, gendepend.awk and /sbin/rc-services.sh.
+    - Fix the 'single' runlevel to actually work properly, and without a
+      /etc/runlevels/single directory.
+    - Remove the BOOT variable, and update /sbin/rc to set SOFTLEVEL properly.
+      Fix /etc/init.d/{checkroot,bootmisc} to use SOFTLEVEL instead of BOOT.
 
   08 May 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Major rework of /lib/rcscript/awk/gendepend.awk, cleaning it up nicely,
-	and adding more sanity checks.
+    and adding more sanity checks.
 
   04 May 2003; Martin Schlemmer <azarah@gentoo.org>:
 
@@ -19,7 +54,7 @@
   29 Apr 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Change the root check back the way it was, else it breaks with non bash
-	shells;  modified /etc/profile.
+    shells;  modified /etc/profile.
 
   29 Apr 2003; Martin Schlemmer <azarah@gentoo.org>:
 

@@ -4,63 +4,67 @@
 # $Header$
 
 function print_start() {
-	print "source /sbin/functions.sh" >> (DEPCACHE)
-	print "" >> (DEPCACHE)
-	print "need() {" >> (DEPCACHE)
-	print "	echo \"NEED $*\"; return 0" >> (DEPCACHE)
-	print "}" >> (DEPCACHE)
-	print "" >> (DEPCACHE)
-	print "use() {" >> (DEPCACHE)
-	print "	echo \"USE $*\"; return 0" >> (DEPCACHE)
-	print "}" >> (DEPCACHE)
-	print "" >> (DEPCACHE)
-	print "before() {" >> (DEPCACHE)
-	print "	echo \"BEFORE $*\"; return 0" >> (DEPCACHE)
-	print "}" >> (DEPCACHE)
-	print "" >> (DEPCACHE)
-	print "after() {" >> (DEPCACHE)
-	print "	echo \"AFTER $*\"; return 0" >> (DEPCACHE)
-	print "}" >> (DEPCACHE)
-	print "" >> (DEPCACHE)
-	print "provide() {" >> (DEPCACHE)
-	print "	echo \"PROVIDE $*\"; return 0" >> (DEPCACHE)
-	print "}" >> (DEPCACHE)
-	print "" >> (DEPCACHE)
+	print "source /sbin/functions.sh" 
+	print "" 
+	print "need() {" 
+	print "	echo \"NEED $*\"; return 0" 
+	print "}" 
+	print "" 
+	print "use() {" 
+	print "	echo \"USE $*\"; return 0" 
+	print "}" 
+	print "" 
+	print "before() {" 
+	print "	echo \"BEFORE $*\"; return 0" 
+	print "}" 
+	print "" 
+	print "after() {" 
+	print "	echo \"AFTER $*\"; return 0" 
+	print "}" 
+	print "" 
+	print "provide() {" 
+	print "	echo \"PROVIDE $*\"; return 0" 
+	print "}" 
+	print "" 
+	print "parallel() {"
+	print "	echo \"PARALLEL $*\"; return 0"
+	print "}"
+	print ""
 }
 
 function print_header1() {
-	print "#*** " MYFILENAME " ***" >> (DEPCACHE)
-	print "" >> (DEPCACHE)
-	print "myservice=\"" MYFILENAME "\"" >> (DEPCACHE)
-	print "myservice=\"${myservice##*/}\"" >> (DEPCACHE)
-	print "echo \"RCSCRIPT ${myservice}\"" >> (DEPCACHE)
-	print "" >> (DEPCACHE)
+	print "#*** " MYFILENAME " ***" 
+	print "" 
+	print "myservice=\"" MYFILENAME "\"" 
+	print "myservice=\"${myservice##*/}\"" 
+	print "echo \"RCSCRIPT ${myservice}\"" 
+	print "" 
 }
 
 function print_header2() {
-	print "(" >> (DEPCACHE)
-	print "  # Get settings for rc-script ..." >> (DEPCACHE)
-	print "  [ -e /etc/conf.d/basic ]                 && source /etc/conf.d/basic" >> (DEPCACHE)
-	print "" >> (DEPCACHE)
-	print "  [ -e \"/etc/conf.d/${myservice}\" ]        && source \"/etc/conf.d/${myservice}\"" >> (DEPCACHE)
-	print "" >> (DEPCACHE)
-	print "  [ -e /etc/conf.d/net ]                   && \\" >> (DEPCACHE)
-	print "  [ \"${myservice%%.*}\" = \"net\" ]           && \\" >> (DEPCACHE)
-	print "  [ \"${myservice##*.}\" != \"${myservice}\" ] && source /etc/conf.d/net" >> (DEPCACHE)
-	print "" >> (DEPCACHE)
-	print "  [ -e /etc/rc.conf ]                      && source /etc/rc.conf" >> (DEPCACHE)
-	print "" >> (DEPCACHE)
-	print "  depend() {" >> (DEPCACHE)
-	print "    return 0" >> (DEPCACHE)
-	print "  }" >> (DEPCACHE)
-	print "" >> (DEPCACHE)
+	print "(" 
+	print "  # Get settings for rc-script ..." 
+	print "  [ -e /etc/conf.d/basic ]                 && source /etc/conf.d/basic" 
+	print "" 
+	print "  [ -e \"/etc/conf.d/${myservice}\" ]        && source \"/etc/conf.d/${myservice}\"" 
+	print "" 
+	print "  [ -e /etc/conf.d/net ]                   && \\" 
+	print "  [ \"${myservice%%.*}\" = \"net\" ]           && \\" 
+	print "  [ \"${myservice##*.}\" != \"${myservice}\" ] && source /etc/conf.d/net" 
+	print "" 
+	print "  [ -e /etc/rc.conf ]                      && source /etc/rc.conf" 
+	print "" 
+	print "  depend() {" 
+	print "    return 0" 
+	print "  }" 
+	print "" 
 }
 
 function print_end() {
-	print "" >> (DEPCACHE)
-	print "  depend" >> (DEPCACHE)
-	print ")" >> (DEPCACHE)
-	print "" >> (DEPCACHE)
+	print "" 
+	print "  depend" 
+	print ")" 
+	print "" 
 }
 
 BEGIN {
@@ -89,10 +93,6 @@ BEGIN {
 		eerror("No scripts to process!")
 		exit 1
 	}
-
-	DEPCACHE=SVCDIR "/depcache"
-
-	unlink(DEPCACHE)
 
 	print_start()
 
@@ -129,7 +129,7 @@ BEGIN {
 					GOTDEPEND = 1
 
 					print_header2()
-					print "  # Actual depend() function ..." >> (DEPCACHE)
+					print "  # Actual depend() function ..." 
 				}
 	
 				# We have the depend function...
@@ -145,7 +145,7 @@ BEGIN {
 					SBCOUNT += gsub(/{/, "{")
 		
 					# Print the depend() function
-					print "  " $0 >> (DEPCACHE)
+					print "  " $0 
 		
 					# If COUNT=0, and SBCOUNT>0, it means we have read
 					# all matching '{' and '}' for depend(), so stop.
@@ -172,8 +172,6 @@ BEGIN {
 		NEXTFILE = 0
 
 	}
-
-	close (DEPCACHE)
 }
 
 

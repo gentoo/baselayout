@@ -7,6 +7,11 @@
 # NOTE: most of these are not in use yet!!
 #
 
+# Set to "yes" if you want the rc system to try and start services
+# in parallel for slight speed improvement.
+
+RC_PARALLEL_STARTUP="no"
+
 # Set to "yes" if the default behaviour of at least one net.*
 # service starting beside net.lo is NOT enouth to consider
 # the 'net' dependency up and running.

@@ -9,12 +9,13 @@ source /sbin/functions.sh
 umask 022
 
 try() {
+	local errstr=
 	local retval=0
 	# This works fine in test, but real life booting, fails for mounting /proc
 	# if we only check $? for instance ...  We thus need to [ -n "${errstr}" ]
 	# as well.
-	local errstr
-	errstr="`(eval $*) 2>&1 >/dev/null`"
+	
+	errstr="$((eval $*) 2>&1 >/dev/null)"
 	retval=$?
 	if [ "${retval}" -ne 0 ] || \
 	   ([ "${*/mount/}" != "$*" -a -n "${errstr}" ])
@@ -33,6 +34,7 @@ try() {
 		einfo "Rebooting"
 		/sbin/reboot -f
 	fi
+	
 	return ${retval}
 }
 
@@ -73,11 +75,11 @@ then
 	echo -e " Copyright 2001-2003 Gentoo Technologies, Inc.; Distributed under the GPL"
 	echo
 
-	ebegin "Mounting proc at /proc"; \
-	try mount -n /proc; \
+	ebegin "Mounting proc at /proc"
+	try mount -n /proc
 	eend $?
 
-	if [ "$(get_KV)" -ge "$(KV_to_int '2.5.0')" -a -d /sys ]
+	if [ -d /sys -a "$(get_KV)" -ge "$(KV_to_int '2.5.0')" ]
 	then
 		ebegin "Mounting sysfs at /sys"
 		mount -t sysfs none /sys
@@ -90,14 +92,13 @@ then
 
 	# Check if the user disabled devfs
 	devfs="yes"
-	get_bootparam "nodevfs"
-	if [ "$?" -eq 0 ]
+	if get_bootparam "nodevfs"
 	then
 		devfs="no"
 	fi
 	
 	# Fix weird bug where there is a /dev/.devfsd in a unmounted /dev
-	mymounts="`awk '($3 == "devfs") { print "yes"; exit 0 }' /proc/mounts`"
+	mymounts="$(awk '($3 == "devfs") { print "yes"; exit 0 }' /proc/mounts)"
 	if [ -e "/dev/.devfsd" -a "${mymounts}" != "yes" ]
 	then
 		rm -f /dev/.devfsd
@@ -106,12 +107,12 @@ then
 	# With the new way, /dev can be mounted by the kernel ...
 	if [ "${devfs}" = "yes" -a ! -e "/dev/.devfsd" ]
 	then
-		mymounts="`awk '($2 == "devfs") { print "yes"; exit 0 }' /proc/filesystems`"
+		mymounts="$(awk '($2 == "devfs") { print "yes"; exit 0 }' /proc/filesystems)"
 		# Is devfs support compiled in?
 		if [ "${mymounts}" = "yes" ]
 		then
-			ebegin "Mounting devfs at /dev"; \
-			try mount -n -t devfs none /dev; \
+			ebegin "Mounting devfs at /dev"
+			try mount -n -t devfs none /dev
 			eend $?
 		else
 			clear
@@ -133,14 +134,14 @@ then
 	# From linux-2.5.68 we need to mount /dev/pts again ...
 	if [ "$(get_KV)" -ge "$(KV_to_int '2.5.68')" ]
 	then
-		have_devpts="`awk '($2 == "devpts") { print "yes"; exit 0 }' /proc/filesystems`"
-		mymounts="`awk '($3 == "devfs") { print "yes"; exit 0 }' /proc/mounts`"
+		have_devpts="$(awk '($2 == "devpts") { print "yes"; exit 0 }' /proc/filesystems)"
+		mymounts="$(awk '($3 == "devfs") { print "yes"; exit 0 }' /proc/mounts)"
 
 		if [ "${have_devpts}" = "yes" ]
 		then
 			# Only try to create /dev/pts if we have /dev mounted as devfs,
 			# else it might fail as / might be still mounted readonly.
-			if [ -e "/dev/.devfsd" -a "${mymounts}" = "yes" -a ! -d /dev/pts ]
+			if [ ! -d /dev/pts -a -e "/dev/.devfsd" -a "${mymounts}" = "yes" ]
 			then
 				# Make sure we have /dev/pts
 				mkdir -p /dev/pts &> /dev/null
@@ -148,15 +149,15 @@ then
 
 			if [ -d /dev/pts ]
 			then
-				ebegin "Mounting devpts at /dev/pts"; \
-				try mount -n -t devpts none /dev/pts; \
+				ebegin "Mounting devpts at /dev/pts"
+				try mount -n -t devpts none /dev/pts
 				eend $?
 			fi
 		fi
 	fi
 
 	# Need devfsd running now so that /dev/ram0 exists if we need it
-	mymounts="`awk '($3 == "devfs") { print "yes"; exit 0 }' /proc/mounts`"
+	mymounts="$(awk '($3 == "devfs") { print "yes"; exit 0 }' /proc/mounts)"
 	if [ "${devfs}" = "yes" -a -e "/dev/.devfsd" -a \
 	     "${mymounts}" = "yes" ]
 	then
@@ -175,7 +176,7 @@ then
 	if get_bootparam "tmpfs" || \
 	   [ "${svcmount}" = "yes" -a "${svcfstype}" = "tmpfs" ]
 	then
-		mkdir -p "${tsvcdir}"
+		mkdir -p "${tsvcdir}" &> /dev/null
 		
 		ebegin "Mounting tmpfs at ${tsvcdir}"
 		try mount -n -t tmpfs tmpfs "${tsvcdir}" \
@@ -200,7 +201,7 @@ then
 		
 		# Saving the kernel attributed hostname to a file for future
 		# initialisation selection: see /etc/init.d/switch.
-		echo "$(</proc/sys/kernel/hostname)" > "${svcdir}/hostname"
+		echo "$(< /proc/sys/kernel/hostname)" > "${svcdir}/hostname"
 
 		if checkserver
 		then
@@ -236,15 +237,27 @@ then
 	# the 'boot' runlevel is executed.  Now also needed by some stuff in
 	# the 'sysinit' runlevel ...
 	export BOOT="yes"
+	# I want to get rid of $BOOT, as SOFTLEVEL *should* be used instead ..
+	export SOFTLEVEL="boot"
 
+	start_critical_service() {
+		local retval=
+			
+		source "/etc/init.d/${x}" || error "Failed to source /etc/init.d/${x}"
+		retval=$?
+		[ "${retval}" -ne 0 ] && return "${retval}"
+			
+		start || eerror "Failed to start /etc/init.d/${x}"
+		retval=$?
+
+		return "${retval}"
+	}
+	
 	# We do not want to break compadibility, so we do not fully integrate
 	# these into /sbin/rc, but rather start them by hand ...
 	for x in checkroot hostname modules checkfs localmount
 	do
-		source "/etc/init.d/${x}" || error "Failed to source /etc/init.d/${x}"
-		start || eerror "Failed to start /etc/init.d/${x}"
-
-		if [ "$?" -ne 0 ]
+		if ! start_critical_service "${x}"
 		then
 			echo
 			eerror "One of more critical startup scripts failed to start!"
@@ -287,6 +300,8 @@ then
 	# $BOOT can be used by rc-scripts to test if it is the first time
 	# the 'boot' runlevel is executed
 	export BOOT="yes"
+	# I want to get rid of $BOOT, as SOFTLEVEL *should* be used instead ..
+	export SOFTLEVEL="boot"
 fi
 
 if [ "${argv1}" = "sysinit" ]
@@ -294,10 +309,14 @@ then
 	exit 0
 fi
 
+
+source /sbin/rc-services.sh
+source /sbin/rc-daemon.sh
+
 if [ -f "${svcdir}/softlevel" ]
 then
 	# Set OLDSOFTLEVEL if we had a valid SOFTLEVEL
-	export OLDSOFTLEVEL="`< ${svcdir}/softlevel`"
+	export OLDSOFTLEVEL="$(< ${svcdir}/softlevel)"
 else
 	export OLDSOFTLEVEL=
 fi
@@ -306,7 +325,7 @@ if [ -z "${argv1}" ]
 then
 	if [ -f "${svcdir}/softlevel" ]
 	then
-		export SOFTLEVEL="`< ${svcdir}/softlevel`"
+		export SOFTLEVEL="$(< ${svcdir}/softlevel)"
 	else
 		export SOFTLEVEL="boot"
 	fi
@@ -329,16 +348,18 @@ fi
 
 if [ "${SOFTLEVEL}" = "reboot" -o "${SOFTLEVEL}" = "shutdown" ]
 then
-	myscripts=""
+	myscripts=
 
-	export HALT="${SOFTLEVEL}"
+elif [ "${SOFTLEVEL}" = "single" ]
+then
+	myscripts="checkroot hostname modules checkfs localmount"
 	
 elif [ ! -d "/etc/runlevels/${SOFTLEVEL}" ]
 then
 	eerror "ERROR:  runlevel ${SOFTLEVEL} does not exist; exiting..."
 	exit 1
 else
-	myscripts=""
+	myscripts=
 	if [ "${SOFTLEVEL}" != "boot" ]
 	then
 		# Normal runlevels *include* boot scripts
@@ -348,12 +369,13 @@ else
 		# Non-normal runlevels don't include boot scripts as default
 		mylevels="$(dolisting "/etc/runlevels/${SOFTLEVEL}/")"
 	fi
+	
+	[ "${OLDSOFTLEVEL}" = "boot" -o "${OLDSOFTLEVEL}" = "single" ] \
+		&& /bin/dmesg -n 1
+	
 	for x in ${mylevels}
 	do
-		if [ -L "${x}" ]
-		then
-			myscripts="${myscripts} ${x##*/}"
-		fi
+		[ -L "${x}" ] && myscripts="${myscripts} ${x##*/}"
 	done
 fi
 
@@ -378,18 +400,22 @@ do
 done
 
 dep_stop() {
-	local x=""
-	local needsme=""
-	local myservice=""
-	local depservice=""
+	local x=
+	local dep=
+	local needsme=
+	local myservice=
+	local depservice=
 	
 	[ ! -L "$1" ] && continue
+	
 	if [ ! -e "$1" ]
 	then
 		# Remove dud symlinks
 		rm -f "$1"
+		
 		continue
 	fi
+	
 	myservice="${1##*/}"
 
 	# Candidate for zapping
@@ -406,40 +432,38 @@ dep_stop() {
 		     "${SOFTLEVEL}" != "single" ]
 		then
 			if [ -n "${OLDSOFTLEVEL}" ] && \
-			   [ ! -L "/etc/runlevels/${OLDSOFTLEVEL}/${myservice}" ]
+			   ! in_runlevel "${myservice}" "${OLDSOFTLEVEL}"
 			then
 				# This service is not in the previous runlevel, so
 				# do not stop it ...
-				break
+				continue
 			fi
 		fi
 
 		# Should not work for 'use'
-		if [ ! -d "${svcdir}/need/${myservice}" ]
+		if [ -z "$(needsme "${myservice}")" ]
 		then
 			# Nothing depends on me
-			if [ -L "${svcdir}/started/${myservice}" ]
-			then
-				"$1" stop
-			fi
+			stop_service "${myservice}"
 		else
 			# Something may depend on me
 			needsme=0
-			for dep in $(dolisting "${svcdir}/need/${myservice}/")
+			
+			for dep in $(needsme "${myservice}")
 			do
-				if [ -L "${svcdir}/softscripts.new/${dep##*/}" -a -e "${dep}" ]
+				if service_started "${dep}" && \
+				   [ -L "${svcdir}/softscripts.new/${dep}" ]
 				then
 					# This dep is valid
 					needsme=1
+					
 					break
 				fi
 			done
+			
 			if [ "${needsme}" -eq 0 ]
 			then
-				if [ -L "${svcdir}/started/${myservice}" ]
-				then
-					"$1" stop
-				fi
+				stop_service "${myservice}"
 			fi
 		fi
 	fi
@@ -471,6 +495,7 @@ then
 	else
 		source /etc/init.d/shutdown.sh
 	fi
+	
 	# Should never get here
 	exit 0
 fi
@@ -482,20 +507,14 @@ mv -f "${svcdir}/softscripts" "${svcdir}/softscripts.old"
 mv -f "${svcdir}/softscripts.new" "${svcdir}/softscripts"
 
 dep_start() {
-	local x=""
-	local myservice=""
-	local depservice=""
-	
-	if [ ! -L "$1" ]
-	then
-		continue
-	fi
-	# Only start a script if it isn't already running
+	local myservice=
+
+	[ ! -L "$1" ] && continue
+
 	myservice="${1##*/}"
-	if [ ! -L "${svcdir}/started/${myservice}" ]
-	then
-		"$1" start
-	fi
+	
+	# Only start a script if it isn't already running
+	service_started "${myservice}" || schedule_service_startup "${myservice}"
 }
 
 # Start scripts
@@ -503,6 +522,9 @@ for i in $(dolisting "${svcdir}/softscripts/")
 do
 	dep_start "${i}"
 done
+
+# Wait for any services that may still be running ...
+[ "${RC_PARALLEL_STARTUP}" = "yes" ] && wait
 
 # Clean the old runlevel
 rm -rf "${svcdir}/softscripts.old" &> /dev/null

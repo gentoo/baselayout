@@ -8,18 +8,49 @@ source /etc/init.d/functions.sh
 
 ebegin "Caching service dependencies"
 
-/bin/gawk -v SVCDIR="${svcdir}" \
-	-f /lib/rcscripts/awk/functions.awk \
-	-f /lib/rcscripts/awk/cachedepends.awk
+if [ ! -d "${svcdir}" ]
+then
+	if ! mkdir -p ${svcdir} 2>/dev/null
+	then
+		eerror " Could not create needed directory '${svcdir}'!"
+	fi
+fi
+
+for x in ${svcdir} softscripts snapshot options broken started
+do
+	if [ ! -d "${x}" ]
+	then
+		if ! mkdir -p ${svcdir}/${x} 2>/dev/null
+		then
+			eerror " Could not create needed directory '${svcdir}/${x}'!"
+		fi
+	fi
+done
+
+# Clean out the non volitile directories ...
+rm -rf ${svcdir}/{broken,snapshot}/*
 
 cd /etc/init.d
 
-bash ${svcdir}/depcache | \
+if [ "${RC_DEBUG}" = "yes" ]
+then
 	/bin/gawk -v SVCDIR="${svcdir}" \
-		-v DEPTYPES="${deptypes}" \
-		-v ORDTYPES="${ordtypes}" \
 		-f /lib/rcscripts/awk/functions.awk \
-		-f /lib/rcscripts/awk/gendepends.awk
+		-f /lib/rcscripts/awk/cachedepends.awk \
+		> "${svcdir}/depcache"
+fi
+
+/bin/gawk -v SVCDIR="${svcdir}" \
+	-f /lib/rcscripts/awk/functions.awk \
+	-f /lib/rcscripts/awk/cachedepends.awk \
+\
+| bash | \
+\
+/bin/gawk -v SVCDIR="${svcdir}" \
+	-v DEPTYPES="${deptypes}" \
+	-v ORDTYPES="${ordtypes}" \
+	-f /lib/rcscripts/awk/functions.awk \
+	-f /lib/rcscripts/awk/gendepends.awk
 
 eend $? "Failed to cache service dependencies"
 

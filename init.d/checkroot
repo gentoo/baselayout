@@ -59,7 +59,7 @@ start() {
 		fi
 	fi
 
-	if [ "${BOOT}" = "yes" ]
+	if [ "${SOFTLEVEL}" = "boot" ]
 	then
 		# Create /etc/mtab
 		grep -v 'rootfs' /proc/mounts > /etc/mtab
