@@ -6,6 +6,8 @@
 
     Add sshd user and group.  Updated /etc/passwd and /etc/group for this.
 
+    Update /etc/inputrc to resolve bug #2599.
+
   20 Jun 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Add /opt/bin to $PATH and $ROOTPATH, closing bug #3603.  Modified
