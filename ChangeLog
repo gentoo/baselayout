@@ -2,6 +2,10 @@
 # Copyright 2001 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  29 Oct 2001; init.d/netmount: umount -art doesn't seem to work, so 
+  I added some awk and grep magic to find all remote filesystems and 
+  umount them.
+  
   29 Oct 2001; Martin Schlemmer (azarah@gentoo.org)
   A fix for checkroot (missing "/"); it now actually checks the root
   filesystem.  Also, a localmount cleanliness fix.

@@ -6,14 +6,14 @@ depend() {
 
 start() {
 	ebegin "Mounting network filesystems"
-	mount -at nfs,ncpfs,smbfs 
+	mount -at coda,nfs,ncpfs,smbfs 
 	eend $? 
 }
 
 stop() {
 	ebegin "Unmounting network filesystems"
 	# umount -art $fstypes doesn't seem to work, so...
-	umount `/proc/mounts | awk '{ print $3 " " $2 }' | grep -E ^'nfs|ncpfs|smbfs' | awk 'BEGIN { ORS=" "} { print $2 }'`
+	umount `cat /proc/mounts | awk '{ print $3 " " $2 }' | grep -E ^'coda|nfs|ncpfs|smbfs' | awk 'BEGIN { ORS=" "} { print $2 }'`
 	eend $?
 }
 
