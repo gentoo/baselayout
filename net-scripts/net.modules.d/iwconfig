@@ -758,6 +758,7 @@ iwconfig_configure() {
 	fi
 	
 	iwconfig_defaults ${iface}
+	iwconfig_user_config ${iface}
 
 	eval ESSID=\"\$\{essid_${ifvar}\}\"
 

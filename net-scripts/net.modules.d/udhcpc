@@ -48,7 +48,7 @@ udhcpc_check_depends() {
 	local f
 
 	for f in interface_variable interface_device interface_is_up interface_get_address interface_module; do
-		[[ $( type -t ${f} ) == function ]] && continue
+		[[ $( type -t ${f} ) == "function" ]] && continue
 		eerror "udhcpc: missing required function ${f}\n"
 		return 1
 	done
@@ -61,7 +61,7 @@ udhcpc_check_depends() {
 # Returns a string spaced with possible user set
 # configuration variables
 udhcpc_get_vars() {
-	echo "udhcpc_${1} dhcp_${1}"
+	echo "udhcpc_$1 dhcp_$1 dns_$1"
 }
 
 # bool udhcpc_stop(char *iface)
@@ -69,13 +69,13 @@ udhcpc_get_vars() {
 # Stops udhcpc running on an interface
 # Always returns 0
 udhcpc_stop() {
-	local iface=${1} count release pidfile="/var/run/udhcpc-${1}.pid" dhcp
+	local iface=$1 count release pidfile="/var/run/udhcpc-${1}.pid" dhcp
 	
 	udhcpc_check_installed || return 0
 	[[ ! -f ${pidfile} ]] && return 0
 
 	ebegin "Stopping udhcpc on ${iface}"
-	local pid=$( cat ${pidfile} ) e=true
+	local pid=$( < ${pidfile} ) e=true
 
 	# Release the lease if told to
 	eval dhcp=\" \$\{dhcp_${ifvar}\} \"
@@ -105,16 +105,16 @@ udhcpc_stop() {
 #
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 udhcpc_start() {
-	local iface=${1} opts hostname pidfile="/var/run/udhcpc-${1}.pid"
+	local iface=$1 opts hostname pidfile="/var/run/udhcpc-${1}.pid"
 	local cachefile="/var/cache/udhcpc-${1}.cache" x
 
 	interface_exists ${iface} true || return 1
 
 	local ifvar=$( interface_variable ${iface} )
-	local script=$( udhcpc_get_script ) opts hostname=$( hostname )
+	local script=$( udhcpc_get_script ) opts hostname
 	eval opts=\"\$\{udhcpc_${ifvar}\}\"
 
-	if [[ ${opts} != *'--hostname=' ]]; then
+	if [[ ${opts} != *'--hostname='* ]]; then
 		hostname=$( hostname )
 		[[ -n ${hostname} && ${hostname} != "(none)" ]] && hostname="--hostname=${hostname}"
 	fi
@@ -130,7 +130,7 @@ udhcpc_start() {
 
 	# Try and load the cache if it exists
 	if [[ -f ${cachefile} && ${opts} != *'--request='* && ${opts} != *'-r '* ]]; then
-		x=$( cat ${cachefile} )
+		x=$( < ${cachefile} )
 		[[ -n ${x} ]] && opts="${opts} --request=${x}"
 	fi
 
