@@ -147,7 +147,7 @@ cache_depend() {
 			if [ "${dowrite}" -eq 0 ]
 			then
 				local mycount="$(echo ${myline} | grep --mmap -oe "{" | wc -l)"
-				bcount=$((bcount + mycount))
+				bcount=$(( $bcount + $mycount ))
 			fi
 			if [ "${dowrite}" -eq 0 ]
 			then
@@ -156,7 +156,7 @@ cache_depend() {
 			if [ "${dowrite}" -eq 0 ]
 			then
 				local mycount="$(echo ${myline} | grep --mmap -oe "}" | wc -l)"
-				ecount=$((ecount + mycount))
+				ecount=$(( $ecount + $mycount ))
 			fi
 			if [ "${myline/\}/}" != "${myline}" ] && \
 			   [ "${dowrite}" -eq 0 ] && [ "${bcount}" -eq "${ecount}" ]

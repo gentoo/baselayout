@@ -2,6 +2,9 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  22 Jul 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add the cyrus user to /etc/passwd.  Resolves bug #4100.
 
   21 Jul 2002; Martin Schlemmer <azarah@gentoo.org>:
 
@@ -11,7 +14,7 @@
     Add software RAID support to /etc/init.d/checkfs, thanks to
     Daniel Ahlberg <aliz@gentoo.org>.
 
-    Update the cache_rcscript() funtion in /sbin/depscan.sh not to
+    Update the cache_depend() funtion in /sbin/depscan.sh not to
     quit on any "}", but only on the one matching the first "{". This
     requires wc in /bin, so baselayout should depend on
     >=sys-apps/textutils-2.0.19-r2
