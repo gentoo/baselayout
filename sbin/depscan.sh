@@ -16,9 +16,9 @@ then
 	fi
 fi
 
-for x in ${svcdir} softscripts snapshot options started
+for x in softscripts snapshot options started
 do
-	if [ ! -d "${x}" ]
+	if [ ! -d "${svcdir}/${x}" ]
 	then
 		if ! mkdir -p -m 0755 "${svcdir}/${x}" 2>/dev/null
 		then

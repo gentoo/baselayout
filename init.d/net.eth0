@@ -271,8 +271,8 @@ stop() {
 	# Investigate current configuration instead.
 	local vlan
 	for vlan in $(ifconfig | grep -o "^${IFACE}\.[^ ]*"); do
-		iface_stop ${IFACE}.${vlan}
-		/sbin/vconfig rem ${IFACE} ${vlan} >${devnull}
+		iface_stop ${vlan}
+		/sbin/vconfig rem ${vlan} >${devnull}
 	done
 
 	iface_stop ${IFACE} || return 1  # always succeeds, btw
