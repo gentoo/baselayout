@@ -1,6 +1,12 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+  15 Dec 2004; Roy Marples <uberlord@gentoo.org>:
+
+     rc-status now reports stopping status
+     Updated documentation to point non-usb linux-wlan-ng users to use
+     hostap-driver instead
+
   13 Dec 2004; Martin Schlemmer <azarah@gentoo.org>:
 
     Tweak init.d/halt.sh to support new text based udev_db ('udevinfo -d' do
@@ -34,6 +40,7 @@
     fixed net.lo getting vlan config
     rc doesn't stop hotplugged devices when system is booting - fixes #61594
     thanks to Andreas Sundebo for the fix
+    rc-status now reports stopping
 
   08 Dec 2004; Roy Marples <uberlord@gentoo.org>:
 
