@@ -87,7 +87,7 @@ char *strcatpaths(const char *pathname1, const char *pathname2) {
 
 char *strndup(const char *str, size_t size) {
 	char *new_str = NULL;
-	size_t len = strlen(str);
+	size_t len;
 
 	if ((NULL == str) || (0 == strlen(str))) {
 		DBG_MSG("Invalid argument passed!\n");
@@ -95,10 +95,9 @@ char *strndup(const char *str, size_t size) {
 		return NULL;
 	}
 
-	/* We only want to cp max size chars */
-	if (len > size)
-		len = size;
-	
+	/* Check lenght of str without breaching the size limit */
+	for (len = 0;(len < size) && ('\0' != str[len]);len++);
+
 	new_str = malloc(len + 1);
 	if (NULL == new_str) {
 		DBG_MSG("Failed to allocate buffer!\n");

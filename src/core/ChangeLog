@@ -4,8 +4,13 @@
 
   17 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
 
+    misc.c: Fix overrun in strndup(), thanks to report from
+            Ned Ludd <solar@gentoo.org>.
+
+  17 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
+
     debug.h, misc.h, simple-regex.c: Print debug/errors to stderr, patch from
-                                     Ned Ludd <solar@gentoo.org>
+                                     Ned Ludd <solar@gentoo.org>.
 
   17 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
 
