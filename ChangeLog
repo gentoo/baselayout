@@ -5,6 +5,9 @@
 
     net.lo now supports fallback_route - fixes #75676
     due to bash limitations, only one fallback route is supported
+    
+    iproute2 now allows appends routes instead of adding them
+    this allows many default routes
 
   07 Feb 2005; Roy Marples <uberlord@gentoo.org>:
 

@@ -271,7 +271,7 @@ iproute2_post_start() {
 		x=${x//-A inet6}
 
 		einfo "${x}"
-		e=$( ip route add dev ${iface} ${x} 2>&1 )
+		e=$( ip route append dev ${iface} ${x} 2>&1 )
 		case "${e}" in
 			'RTNETLINK answers: File exists'|'')
 				eend 0
