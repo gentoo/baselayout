@@ -8,7 +8,7 @@
 # 02 Sep 2001 -- Removed "arch" stuff since I see no reason to have
 # support for varying CPU architectures on a single system.
 #
-# Updated by Aron Griffis <agriffis@gentoo.org> 
+# Updated by Aron Griffis <agriffis@gentoo.org>
 # 05 May 2004 -- handle --assume-kernel argument for livecd building
 
 CFGFILE="/etc/modules.conf"
@@ -27,13 +27,13 @@ source /sbin/functions.sh
 
 # Parse command-line
 FORCE=false
-KV=$(uname -r)
+ASSUME_KV=
 while [ -n "$1" ]; do
 	case "$1" in
-		force) 
+		force)
 			FORCE=true ;;
-		--assume-kernel=*) 
-			KV=${1#*=} ;;
+		--assume-kernel=*)
+			ASSUME_KV=${1#*=} ;;
 		*)
 			echo "Error: I don't understand $1" >&2
 			exit 1 ;;
@@ -42,6 +42,7 @@ while [ -n "$1" ]; do
 done
 
 # Set kernel version, either from --assume-kernel or uname -r
+KV=${ASSUME_KV:-$(uname -r)}
 if [[ $(KV_to_int ${KV}) -ge $(KV_to_int 2.5.48) ]]; then
 	KERNEL_2_5=true
 else
@@ -157,27 +158,40 @@ mv -f "${TMPFILE}" "${CFGFILE}"
 
 if [ -x /sbin/generate-modprobe.conf -a "${KERNEL_2_5}" = "true" ]
 then
-	if /sbin/generate-modprobe.conf --assume-kernel=${KV} >> "${TMPFILE2}" 2> /dev/null
+	# Make sure that generate-modprobe.conf can handle --assume-kernel
+	# if we were called with it.
+	if [[ -n ${ASSUME_KV} ]] && ! grep -qe --assume-kernel \
+		/sbin/generate-modprobe.conf
+	then
+		eerror "Error: modules-update called with --assume-kernel flag, but"
+		eerror "generate-modprobe.conf doesn't understand it.  You need to"
+		eerror "install >=module-init-tools-3.0-r2"
+		exit 3
+	fi
+	if /sbin/generate-modprobe.conf ${ASSUME_KV:+--assume-kernel=${KV}} \
+		>> "${TMPFILE2}" 2> /dev/null
 	then
 		mv -f "${TMPFILE2}" "${CFGFILE2}"
 	else
-		echo "Warning: could not generate ${CFGFILE2}!"
+		ewarn "Warning: could not generate ${CFGFILE2}!"
 		rm -f "${TMPFILE2}"
 	fi
 
 	if [ -f "${CFGFILE3}" ]
 	then
-		gawk '$0 !~ /^[[:space:]]*include/ { print $0 }' "${CFGFILE3}" > "${TMPFILE3}"
+		gawk '$0 !~ /^[[:space:]]*include/ { print $0 }' "${CFGFILE3}" \
+			> "${TMPFILE3}"
 		
 		export TESTING_MODPROBE_CONF="${TMPFILE3}"
-		if /sbin/generate-modprobe.conf --assume-kernel=${KV} >> "${TMPFILE4}" 2> /dev/null
+		if /sbin/generate-modprobe.conf ${ASSUME_KV:+--assume-kernel=${KV}} \
+			>> "${TMPFILE4}" 2> /dev/null
 		then
 			mv -f "${TMPFILE4}" "${CFGFILE4}"
 
 			echo >> "${CFGFILE4}"
 			echo "include /etc/modprobe.conf" >> "${CFGFILE4}"
 		else
-			echo "Warning: could not generate ${CFGFILE4}!"
+			ewarn "Warning: could not generate ${CFGFILE4}!"
 			rm -f "${TMPFILE4}"
 		fi
 		rm -f "${TMPFILE3}"
