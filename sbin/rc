@@ -160,7 +160,7 @@ then
 	else
 		unset mntcmd
 	fi
-	try mount -n ${mntcmd:--t proc none /proc}
+	try mount -n ${mntcmd:--t proc proc /proc}
 	eend $?
 
 	# Read off the kernel commandline to see if there's any special settings
@@ -179,7 +179,7 @@ then
 			else
 				unset mntcmd
 			fi
-			try mount -n ${mntcmd:--t sysfs none /sys}
+			try mount -n ${mntcmd:--t sysfs sysfs /sys}
 			eend $?
 		else
 			ewarn "No /sys to mount sysfs needed in 2.6 and later kernels!"
@@ -261,9 +261,9 @@ then
 				try mount -n ${mntcmd}
 			else
 				if egrep -qs tmpfs /proc/filesystems ; then
-					try mount -n -t tmpfs none /dev
+					try mount -n -t tmpfs udev /dev
 				else
-					try mount -n -t ramfs none /dev
+					try mount -n -t ramfs udev /dev
 				fi
 			fi
 			eend $?
@@ -302,7 +302,7 @@ then
 				if [ "${devfs_automounted}" = "no" ]
 				then
 					ebegin "Mounting devfs at /dev"
-					try mount -n -t devfs none /dev
+					try mount -n -t devfs devfs /dev
 					eend $?
 				else
 					ebegin "Kernel automatically mounted devfs at /dev"
@@ -369,7 +369,7 @@ then
 				else
 					unset mntcmd
 				fi
-				try mount -n ${mntcmd:--t devpts -o gid=5,mode=0620 none /dev/pts}
+				try mount -n ${mntcmd:--t devpts -o gid=5,mode=0620 devpts /dev/pts}
 				eend $?
 			fi
 		fi
@@ -473,7 +473,7 @@ then
 		ebegin "Mounting ${svcfstype} at ${svcdir}"
 		case "${svcfstype}" in
 		ramfs)
-			try mount -n -t ramfs ramfs "${svcdir}" \
+			try mount -n -t ramfs svcdir "${svcdir}" \
 				-o rw,mode=0644,size="${svcsize}"k
 			;;
 		ramdisk)
@@ -482,7 +482,7 @@ then
 			try mount -n -t ext2 /dev/ram0 "${svcdir}" -o rw
 			;;
 		tmpfs|*)
-			try mount -n -t tmpfs tmpfs "${svcdir}" \
+			try mount -n -t tmpfs svcdir "${svcdir}" \
 				-o rw,mode=0644,size="${svcsize}"k
 			;;
 		esac
