@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  02 Mar 2005; Roy Marples <uberlord@gentoo.org>:
+
+    net_service() now returns 1 for non net-services
+    fixes bug #83352
+
   02 Mar 2005; Aron Griffis <agriffis@gentoo.org>:
 
     Add requote() to functions.sh to help rc-daemon.sh

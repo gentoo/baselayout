@@ -265,8 +265,8 @@ svc_start() {
 	# Start dependencies, if any
 	for x in ${startupservices} ; do
 		if [[ ${x} == "net" ]] && [[ ${NETSERVICE} != "yes" ]] && ! is_net_up ; then
-			local netservices=$(dolisting "/etc/runlevels/${BOOTLEVEL}/net.*") \
-				$(dolisting "/etc/runlevels/${mylevel}/net.*")
+			local netservices="$(dolisting "/etc/runlevels/${BOOTLEVEL}/net.*") \
+				$(dolisting "/etc/runlevels/${mylevel}/net.*")"
 
 			for y in ${netservices} ; do
 				mynetservice=${y##*/}

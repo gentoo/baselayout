@@ -161,15 +161,8 @@ stop_daemon() {
 # Return the result of start_daemon or stop_daemon depending on
 # how we are called
 start-stop-daemon() {
-	local args ssdargs exeargs x
+	local args=$( requote "$@" ) ssdargs exeargs x
 	local exe name pidfile pid stopping nothing=false
-
-	# Ensure that we capture how we are called exactly
-	# Parameters may have spaces in them and we may
-	# have been called by eval
-	for x in "$@"; do
-		args="${args}'"${x}"' "
-	done
 
 	setup_daemon_vars
 
