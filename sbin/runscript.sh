@@ -279,37 +279,18 @@ svc_start() {
 		#link first to prevent possible recursion
 		ln -sf /etc/init.d/${myservice} ${svcdir}/started/${myservice}
 
-		#start anything that should be started before this service on
-		#runlevel change
 		if [ -d ${svcdir}/softscripts.old ]
 		then
-			local needstart=0
-			for x in $(dolisting ${svcdir}/after/*/${myservice})
-			do
-				if [ ! -L ${x} ]
-				then
-					continue
-				fi
-				ordservice="${x%/*}"
-				ordservice="${ordservice##*/}"
-				if [ ! -L ${svcdir}/softscripts.old/${ordservice} ] && \
-				   [ ! -L ${svcdir}/started/${ordservice} ] && \
-				   [ -L ${svcdir}/softscripts/${ordservice} ] && \
-				   [ ! -L ${svcdir}/failed/${ordservice} ] && \
-				   [ ! -L ${svcdir}/after/${myservice}/${ordservice} ] && \
-				   ! dependon ${ordservice} ${myservice} && \
-				   [ "${myservice}" != "${ordservice}" ]
-				then
-					#there are still service left that should be started before
-					#this one, so just fall though (they will start this one)
-					rm -f ${svcdir}/started/${myservice}
-					return 0
-				fi
-			done
+			startupservices="$(ineed ${myservice}) \
+				$(valid_iuse ${myservice}) \
+				$(valid_ibefore ${myservice})"
+		else
+			startupservices="$(ineed ${myservice}) \
+				$(valid_iuse ${myservice})"
 		fi
 
 		#start dependencies, if any
-		for x in $(ineed ${myservice}) $(valid_iuse ${myservice})
+		for x in ${startupservices}
 		do
 			if [ "${x}" = "net" ]
 			then
@@ -380,32 +361,6 @@ svc_start() {
 		if [ "${retval}" -ne 0 ] && [ -d ${svcdir}/failed ]
 		then
 			ln -sf /etc/init.d/${myservice} ${svcdir}/failed/${myservice}
-		fi
-
-		#start anything that should be started after this service
-		#on runlevel change
-		if [ -d ${svcdir}/softscripts.old ]
-		then
-			for x in $(dolisting ${svcdir}/before/*/${myservice})
-			do
-				if [ ! -L ${x} ]
-				then
-					continue
-				fi
-				ordservice="${x%/*}"
-				ordservice="${ordservice##*/}"
-				if [ ! -L ${svcdir}/softscripts.old/${ordservice} ] && \
-				   [ ! -L ${svcdir}/started/${ordservice} ] && \
-				   [ -L ${svcdir}/softscripts/${ordservice} ] && \
-				   [ ! -L ${svcdir}/failed/${ordservice} ] && \
-				   [ ! -L ${svcdir}/before/${myservice}/${ordservice} ] && \
-				   ! dependon ${myservice} ${ordservice} && \
-				   [ "${myservice}" != "${ordservice}" ]
-				then
-					#start service
-					/etc/init.d/${ordservice} start
-				fi
-			done
 		fi
 
 		#remove link if service didn't start; but only if we're not booting
@@ -516,6 +471,34 @@ valid_iuse() {
 	local x=""
 	local y=""
 	for x in $(iuse ${1})
+	do
+		if [ -e /etc/runlevels/boot/${x} ] || \
+		   [ -e /etc/runlevels/${mylevel}/${x} ]
+		then
+			z="${x%/*}"
+			echo "${z##*/}"
+		fi
+	done
+}
+
+ibefore() {
+	local x=""
+	local z=""
+	for x in $(dolisting ${svcdir}/after/*/${1})
+	do
+		if [ ! -L ${x} ]
+		then
+			continue
+		fi
+		z="${x%/*}"
+		echo "${z##*/}"
+	done
+}
+
+valid_ibefore() {
+	local x=""
+	local y=""
+	for x in $(ibefore ${1})
 	do
 		if [ -e /etc/runlevels/boot/${x} ] || \
 		   [ -e /etc/runlevels/${mylevel}/${x} ]

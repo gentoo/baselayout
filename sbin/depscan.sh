@@ -204,6 +204,7 @@ do
 		einfo "ERROR:  ${x} has syntax errors in it, please fix this before"
 		einfo "        trying to execute this script..."
 		einfo "NOTE:  the dependancies for this script has not been calculated!"
+		rm -f {svcdir}/cache/${x##*/}.depend
 		continue
 	}
 	depend
@@ -229,7 +230,7 @@ do
 		return 0
 	}
 	#we already warn about the error in the provide loop
-	wrap_rcscript "${svcdir}/cache/${myservice}.depend" || continue
+	source ${svcdir}/cache/${myservice}.depend
 	depend
 	if [ -n "${NEED}" ]
 	then
