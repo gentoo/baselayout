@@ -20,10 +20,10 @@ set -e
 export LC_COLLATE="C"
 
 depdir() {
-	dep="$(egrep '[[:space:]]*depfile' ${CFGFILE} | tail -n 1 | sed -e 's/depfile=//' -e 's,/[^/]*$,,')"
+	dep="`egrep '[[:space:]]*depfile' ${CFGFILE} | tail -n 1 | sed -e 's/depfile=//' -e 's,/[^/]*$,,'`"
 	if [ -z "${dep}" ]
 	then
-	    dep=/lib/modules/$(uname -r)
+	    dep=/lib/modules/`uname -r`
 	fi
 
 	echo ${dep}
@@ -45,7 +45,7 @@ then
 	fi
 fi
 
-if [ 0 -ne "$(id -u)" ]
+if [ 0 -ne "`id -u`" ]
 then
 	echo "You have to be root to do this."
 	exit 2
@@ -70,6 +70,8 @@ do
 	[ -d ${cfg} ] && continue
 
 	[ ! -r ${cfg} ] && continue
+
+	[ -n "`echo ${cfg} | awk '!/~$|\.bak$/ { print $0 }'`" ] || continue
 	
 	echo "### update-modules: start processing ${cfg}" >> ${TMPFILE}
 	
