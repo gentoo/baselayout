@@ -5,15 +5,15 @@
 .PP
 The \fI/etc/modules.autoload\fR
 file contains the names of kernel modules that are to be loaded at boot
-time, one per line. Arguments can be given in the same line as the module
-name. Comments begin with a `#', and everything on the line after them are
-ignored. This file is read by the \fI/etc/init.d/modules\fR initscript,
+time, one per line.  Arguments can be given on the same line as the module
+name.  Comments begin with a `#', and everything on the line after it is 
+ignored.  This file is read by the \fI/etc/init.d/modules\fR initscript,
 which is usually linked in the \fI/etc/runlevels/boot\fR directory.
 .SH "SEE ALSO"
 .BR modules-update (8),
 .BR modprobe (8),
 .BR modules.conf (5)
 .TP
-The \fI/usr/sbin/modules-update\fR script.
+The \fI/sbin/modules-update\fR script.
 .TP
 The files in \fI/etc/modules.d\fR.
