@@ -9,10 +9,10 @@ depend() {
 	local mydeps="net"
 	
 	#
-	# Only have Portmap as a dependency if there is a nfs mount in fstab.
+	# Only have Portmap as a dependency if there is a nfs mount in fstab
+	# that should be mounted at boot time.  Also filter out comments.
 	#
-	local nfsmounts="$(grep -v "^#" /etc/fstab | \
-		awk '$3 == "nfs" && $4 !~ /noauto/ { print $0 }')"
+	local nfsmounts="$(awk '!/^#/ && $3 == "nfs" && $4 !~ /noauto/ { print $0 }' /etc/fstab)"
 	
 	if [ -n "${nfsmounts}" ]
 	then
