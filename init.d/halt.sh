@@ -84,7 +84,7 @@ remaining="$(awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $1}' /proc/mo
 ebegin "Unmounting filesystems"
 # Awk should still be availible (allthough we should consider
 # moving it to /bin if problems arise)
-for x in $(awk '!/(^#|proc|devfs|tmpfs|^none|^\/dev\/root| \/ )/ {print $2}' /proc/mounts |sort -r)
+for x in $(awk '!/(^#|proc|devfs|tmpfs|^none|^\/dev\/root|[[:space:]]\/[[:space:]])/ {print $2}' /proc/mounts |sort -r)
 do
 	umount -f -r ${x} &>/dev/null
 done

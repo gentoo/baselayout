@@ -50,7 +50,7 @@ then
 	fi
 	shift
 	myscript=$1
-	if [ ! -e /etc/init.d/${myscript} ]
+	if [ ! -e "/etc/init.d/${myscript}" ]
 	then
 		eerror "$0: /etc/init.d/${myscript} not found; aborting."
 		exit 1
@@ -58,17 +58,17 @@ then
 	shift
 	for x in $*
 	do
-		if [ ! -e /etc/runlevels/${x} ]
+		if [ ! -e "/etc/runlevels/${x}" ]
 		then
 			ewarn "runlevel ${x} not found; skipping"
 			continue
 		fi
-		if [ -L /etc/runlevels/${x}/${myscript} ]
+		if [ -L "/etc/runlevels/${x}/${myscript}" ]
 		then
 			ewarn "${myscript} already installed in runlevel ${x}; skipping"
 			continue
 		fi
-		if [ ! -x /etc/init.d/${myscript} ]
+		if [ ! -x "/etc/init.d/${myscript}" ]
 		then
 			ewarn "${myscript} not executable; skipping"
 			continue
@@ -99,9 +99,9 @@ then
 	fi
 	for x in ${mylevels}
 	do
-		if [ -L /etc/runlevels/${x}/${myscript} ]
+		if [ -L "/etc/runlevels/${x}/${myscript}" ]
 		then
-			rm /etc/runlevels/${x}/${myscript}
+			rm -f /etc/runlevels/${x}/${myscript}
 			ebegin "${myscript} removed from runlevel ${x}"
 		else
 			ewarn "${myscript} not found in runlevel ${x}; skipping"

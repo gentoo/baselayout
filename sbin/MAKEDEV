@@ -258,6 +258,9 @@ do
 			sparc)
 				$0 $opts generic-sparc
 				;;
+			mips)
+				$0 $opts generic-mips
+				;;
 			*)
 				echo "$0: no support for generic-$arg" >&2
 				exit 1
@@ -331,6 +334,25 @@ do
 		makedev kbd  c 11 0 $cons
 		makedev sunmouse  c 10 6 $mouse
 		ln -sf sunmouse mouse
+		;;
+	generic-mips)
+		$0 $opts std
+		$0 $opts fd
+		$0 $opts fd0 fd1
+		$0 $opts hda hdb
+		$0 $opts sda sdb sdc sdd
+		$0 $opts scd0 scd1
+		$0 $opts st0 st1
+		$0 $opts sg
+		$0 $opts pty
+		$0 $opts console
+		$0 $opts ttyS0 ttyS1 ttyS2 ttyS3
+		$0 $opts lp
+		$0 $opts par
+		$0 $opts audio
+		$0 $opts fb
+		$0 $opts rtc
+		$0 $opts busmice
 		;;
 	local)
 		$0.local $opts

@@ -2,6 +2,20 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+* rc-scripts 1.4.2.6 (18 Dec 2002)
+
+  18 Dec 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add mips changes to sbin/MAKEDEV.  This should close bug #12329,
+    thanks to Nicholas Wourms <nwourms@netscape.net>.
+
+    Quote some tests in /sbin/rc-update to fix/avoid the problem
+    in bug #
+
+    Fix awk regex in /etc/init.d/halt.sh to fix bug #11795.
+
+    Update shell for postgres user, closing bug #12258.
+
   11 Dec 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix src/awk/genenviron.awk not to add duplicate entries, closing
