@@ -1,5 +1,5 @@
 #!/sbin/runscript
-# Copyright 1999-2004 Gentoo Foundation
+# Copyright 1999-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
 
@@ -8,22 +8,20 @@ depend() {
 }
 
 start() {
-	local myhost="$(/bin/hostname 2>/dev/null)"
+	local myhost=$(/bin/hostname 2>/dev/null)
 	local retval=0
 
 	# If the hostname is already set via the kernel, and /etc/hostname 
 	# isn't setup, then we shouldn't go reseting the configuration #38172.
-	if [ -z "${myhost}" ] || [ "${myhost}" = "(none)" ]
-	then
+	if [[ -z ${myhost} ]] || [[ ${myhost} == "(none)" ]] ; then
 		myhost="localhost"
 	fi
 
-	if [ -f /etc/hostname ]
-	then
+	if [[ -f /etc/hostname ]] ; then
 		ewarn "You should stop using /etc/hostname and use /etc/conf.d/hostname"
-		myhost="$(</etc/hostname)"
+		myhost=$(</etc/hostname)
 	else
-		myhost="${HOSTNAME}"
+		myhost=${HOSTNAME}
 	fi
 
 	ebegin "Setting hostname to ${myhost}"
@@ -31,10 +29,9 @@ start() {
 	retval=$?
 	eend ${retval} "Failed to set the hostname"
 
-	if [ "${retval}" -eq 0 ]
-	then
-		# setup $HOSTNAME, ignore errors in case /etc is readonly
-		echo "HOSTNAME=\"${myhost}\"" 2> /dev/null > /etc/env.d/01hostname
+	if [[ ${retval} -eq 0 ]] ; then
+		# setup $HOSTNAME, ignore errors in case /etc is readonly.
+		echo "HOSTNAME=\"${myhost}\"" 2>/dev/null > /etc/env.d/01hostname
 	fi
 
 	return ${retval}
