@@ -1,12 +1,27 @@
 #!/bin/bash
 export TMP="${TMP:-/tmp}"
-export V="1.6.8"
+export V="1.6.10"
 export DEST="${TMP}/rc-scripts-${V}"
+
+echo "Performing sanity checks ..."
+cvsfiles=$(cvs up 2>&1 | egrep -v '^(U|P)')
+if [[ -n ${cvsfiles} ]] ; then
+	echo "Refusing to package tarball until cvs is in sync:"
+	echo "$cvsfiles"
+	exit 1
+fi
+cvsfiles=$(find . -name '.#*')
+if [[ -n ${cvsfiles} ]] ; then
+	echo "Refusing to package tarball until these files are removed:"
+	echo "$cvsfiles"
+	exit 1
+fi
+
+echo "Creating tarball ..."
 rm -rf ${DEST}
 install -d -m0755 ${DEST}
 
-for x in bin etc init.d sbin src rc-lists man
-do
+for x in bin etc init.d sbin src rc-lists man ; do
 	cp -ax $x ${DEST}
 done
 
@@ -28,4 +43,4 @@ tar cjvf ${TMP}/rc-scripts-${V}.tar.bz2 rc-scripts-${V}
 rm -rf rc-scripts-${V}
 
 echo
-ls -l ${TMP}/rc-scripts-${V}.tar.bz2
+du -b ${TMP}/rc-scripts-${V}.tar.bz2
