@@ -646,8 +646,8 @@ is_uml_sys() {
 #
 get_mount_fstab() {
 	awk '$1 ~ "^#" { next }
-	     $2 == "'$*'" { if (found++ == 0) { print "-t "$3,"-o "$4,$1,$2 } }
-	     END { if (found > 1) { print "More than one entry for '$*' found in /etc/fstab!" > "/dev/stderr" } }
+	     $2 == "'$*'" { stab="-t "$3" -o "$4" "$1" "$2; }
+	     END { print stab; }
 	' /etc/fstab
 }
 
@@ -730,7 +730,7 @@ COLS=${COLUMNS:-0}		# bash's internal COLUMNS variable
 (( COLS == 0 )) && COLS=$(stty size 2>/dev/null | cut -d' ' -f2)
 (( COLS > 0 )) || (( COLS = 80 ))	# width of [ ok ] == 7
 if [[ ${RC_ENDCOL} == yes ]]; then
-	ENDCOL=$'\e[A\e['$(( COLS - 7 ))'G'
+	ENDCOL=$'\e[A\e['$(( COLS - 8 ))'C'
 else
 	ENDCOL=''
 fi
