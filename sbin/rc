@@ -148,7 +148,7 @@ then
 
 	echo
 	echo -e "${GOOD}Gentoo Linux${GENTOO_VERS}; ${BRACKET}http://www.gentoo.org/${NORMAL}"
-	echo -e " Copyright 1999-2004 Gentoo Foundation; Distributed under the GPLv2"
+	echo -e " Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2"
 	echo
 
 	check_statedir /proc
