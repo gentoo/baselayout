@@ -7,6 +7,15 @@
 # and should be called as such. This means that our init scripts
 # should work as is with zero modification :)
 
+# Actually, the above is a small as lie we have some init scripts which try to
+# get start-stop-daemon to launch a shell script. While this does work with
+# the start-stop-daemon program in /sbin, it does cause a problem for us
+# when we're testing for the daemon to be running. I (Roy Marples) view this
+# as behaviour by design as start-stop-daemon should not be used to run shell
+# scripts!
+# At the time of writing, the only culprit I know of is courier-imap.
+# There may be others!
+
 RC_GOT_DAEMON="yes"
 
 [[ ${RC_GOT_FUNCTIONS} != "yes" ]] && source /sbin/functions.sh
@@ -124,6 +133,21 @@ rc_kill_pid() {
 	return 1 
 }
 
+# char* pidof(char* cmd, ...)
+#
+# Returns a space seperated list of pids associated with the command
+# This is to handle the rpc.nfsd program which acts weird
+pidof() {
+	local arg args 
+	
+	for arg in "$@"; do
+		[[ ${arg##*/} == "rpc.nfsd" ]] && arg="${arg%/*}/nfsd"
+	        args="${args} '"${arg}"'"
+	done
+
+	eval /bin/pidof "${args}"
+}
+
 # bool is_daemon_running(char* cmd, char* pidfile)
 #
 # Returns 0 if the given daemon is running, otherwise 1
@@ -132,7 +156,7 @@ rc_kill_pid() {
 is_daemon_running() {
 	local cmd=$1 pidfile=$2 pids pid
 	
-	pids=$( /bin/pidof ${cmd} )
+	pids=$( pidof ${cmd} )
 	[[ -z ${pids} ]] && return 1
 	
 	[[ -s ${pidfile} ]] || return 0
@@ -140,7 +164,6 @@ is_daemon_running() {
 	read pid < ${pidfile}
 	pids=" ${pids} "
 	[[ ${pids// ${pid} } != ${pids} ]]
-	return $? 
 }
 
 # int rc_start_daemon(void)
@@ -186,7 +209,7 @@ rc_stop_daemon() {
 		if ! is_daemon_running ${cmd} ${pidfile} ; then
 			[[ ${RC_FAIL_ON_ZOMBIE} == "yes" ]] && return 1
 		fi
-		pids=$( /bin/pidof ${cmd} )
+		pids=$( pidof ${cmd} )
 	fi
 
 	if [[ -s ${pidfile} ]]; then
@@ -241,7 +264,6 @@ start-stop-daemon() {
 	else
 		rc_start_daemon
 	fi
-	return $?
 }
 
 # vim:ts=4
