@@ -8,7 +8,6 @@
     Fixes #73327 - thanks to Benoit Boissinot
 
     essidnet gets the essid itself instead of relying on ${ESSID}
-    
 
 * rc-scripts 1.6.7 (03 Dec 2004)
 
