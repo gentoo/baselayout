@@ -396,6 +396,7 @@ iwconfig_associate() {
 	fi
 
 	if ${IN_BACKGROUND}; then
+		mark
 		mark_service_inactive net.${iface}
 		export IN_BACKGROUND
 		/etc/init.d/net.${iface} start &
@@ -894,7 +895,9 @@ iwconfig_pre_start() {
 
 	if [[ ${background} == yes ]]; then
 		IN_BACKGROUND=true
-		iwconfig_configure ${iface} &>/dev/null || iwconfig_defaults ${iface} && interface_down ${iface} &
+		iwconfig_configure ${iface} &>/dev/null \
+		|| iwconfig_defaults ${iface} && interface_down ${iface} && mark_service_stopped net.${iface} \
+		&
 		go_background
 	fi
 

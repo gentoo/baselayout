@@ -6,7 +6,9 @@
     iwconfig now unsets wireless config and downs interface when backgrounding
     fails
     wpa_supplicant now supports backgrounding
-
+    removed is_in_fstab function and replaced with get_mount_fstab which
+    returns a mount command based on the contents of fstab. Resolves bugs
+    #70044 and #73762
 
   07 Dec 2004; Roy Marples <uberlord@gentoo.org>:
 
