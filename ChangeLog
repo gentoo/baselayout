@@ -6,6 +6,10 @@
 
     More bootsplash fixes, bug #21019 (comment #21).
 
+    Remove the killall5 stuff from /etc/init.d/halt.sh, as it messes with
+    bootsplash.  Add support to kill processes still using non-critical
+    mounts with fuser though.
+
   17 Oct 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Bootsplash fixes from Michael Aichler <micha@aichler.net>, (comment #15

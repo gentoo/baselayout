@@ -7,7 +7,7 @@
 if [ -n "`ps --no-heading -C 'devfsd'`" ]
 then
 	ebegin "Stopping devfsd"
-	killall -15 devfsd &> /dev/null
+	killall -15 devfsd &>/dev/null
 	eend $?
 elif [ ! -e /dev/.devfsd -a -e /dev/.udev ]
 then
@@ -18,28 +18,20 @@ then
 	eend 0
 fi
 
-ebegin "Sending all processes the TERM signal"
-killall5 -15 &> /dev/null
-eend $?
-sleep 5
-ebegin "Sending all processes the KILL signal"
-killall5 -9 &> /dev/null
-eend $?
-
 # Try to unmount all tmpfs filesystems not in use, else a deadlock may
 # occure, bug #13599.
-umount -at tmpfs &> /dev/null
+umount -at tmpfs &>/dev/null
 
-if [ -n "`swapon -s 2> /dev/null`" ]
+if [ -n "`swapon -s 2>/dev/null`" ]
 then
 	ebegin "Deactivating swap"
-	swapoff -a &> /dev/null
+	swapoff -a &>/dev/null
 	eend $?
 fi
 
 # Write a reboot record to /var/log/wtmp before unmounting
 
-halt -w &> /dev/null
+halt -w &>/dev/null
 
 # Unmounting should use /proc/mounts and work with/without devfsd running
 
@@ -62,18 +54,18 @@ remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mou
 		if [ "${retry}" -lt 3 ]
 		then
 			ebegin "Unmounting loopback filesystems (retry)"
-			umount -d ${remaining} &> /dev/null
+			umount -d ${remaining} &>/dev/null
 			eend $? "Failed to unmount filesystems this retry"
 		else
 			ebegin "Unmounting loopback filesystems"
-			umount -d ${remaining} &> /dev/null
+			umount -d ${remaining} &>/dev/null
 			eend $? "Failed to unmount filesystems"
 		fi
 		
 		remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts | sort -r`"
 		[ -z "${remaining}" ] && break
 		
-		/bin/fuser -k -m ${sig} ${remaining} &> /dev/null
+		/bin/fuser -k -m ${sig} ${remaining} &>/dev/null
 		sleep 5
 		retry=$((${retry} - 1))
 		sig=-9
@@ -102,7 +94,14 @@ do
 	   [ "${x}" != "/" -a "${x}" != "/dev" -a "${x}" != "/proc" -a \
 	     "${x}" != "/sys" ]
 	then
-		umount -f -r ${x} &> /dev/null
+		umount -f ${x} &>/dev/null || {
+		
+			# Kill processes still using this mount
+			/bin/fuser -k -m -9 "${x}" &>/dev/null
+			sleep 2
+			# Now try to unmount it again ...
+			umount -f -r ${x} &>/dev/null
+		}
 	fi
 done
 eend 0
@@ -112,7 +111,7 @@ if [ -x /sbin/vgchange ] && [ -f /etc/lvmtab -o -d /etc/lvm ] && \
    [ -d /proc/lvm  -o "`grep device-mapper /proc/misc 2>/dev/null`" ]
 then
 	ebegin "Shutting down the Logical Volume Manager"
-	/sbin/vgchange -a n > /dev/null
+	/sbin/vgchange -a n >/dev/null
 	eend $? "Failed to shut LVM down"
 fi
 
@@ -137,15 +136,17 @@ sync
 sleep 1
 if [ -n "${CDBOOT}" ]
 then
-	#LiveCD: don't unmount the read-only livecd loopback filesystem or all our commands will disappear
-	mount | cut -f1 -d" " | grep -v livecd | xargs umount -r -n -t  nodevfs,noproc,nosysfs,notmpfs &>/dev/null
+	# LiveCD: don't unmount the read-only livecd loopback filesystem
+	#         or all our commands will disappear
+	mount | cut -f1 -d" " | grep -v livecd | \
+		xargs umount -r -n -t  nodevfs,noproc,nosysfs,notmpfs &>/dev/null
 else
 	umount -a -r -n -t nodevfs,noproc,nosysfs,notmpfs &>/dev/null
 fi
 if [ "$?" -ne 0 ]
 then
 	killall5 -9  &> /dev/null
-	umount -a -r -n -l -d -f -t nodevfs,noproc,nosysfs &> /dev/null
+	umount -a -r -n -l -d -f -t nodevfs,noproc,nosysfs &>/dev/null
 	if [ "$?" -ne 0 ]
 	then
 		eend 1
@@ -171,5 +172,6 @@ then
 fi
 
 [ -f /etc/killpower ] && ups_kill_power
+
 
 # vim:ts=4
