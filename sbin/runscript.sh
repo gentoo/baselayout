@@ -14,7 +14,7 @@ svcrestart="no"
 myscript="$1"
 if [ -L "$1" ]
 then
-	myservice="$(readlink $1)"
+	myservice="$(readlink "$1")"
 else
 	myservice="$1"
 fi
@@ -240,7 +240,7 @@ svc_start() {
 		# Start dependencies, if any
 		for x in ${startupservices}
 		do
-			if [ "${x}" = "net" ]
+			if [ "${x}" = "net" -a "${NETSERVICE}" != "yes" ]
 			then
 				local netservlist="$(dolisting "/etc/runlevels/boot/net.*") \
 					$(dolisting "/etc/runlevels/${mylevel}/net.*")"
@@ -258,9 +258,9 @@ svc_start() {
 							local netcount="$(ls -1 ${svcdir}/started/net.* 2> /dev/null | \
 								grep -v 'net\.lo' | egrep -c "\/net\.[[:alnum:]]+$")"
 						
-							# Only worry about a net.* service if we do not have
-							# one up and running already, or if
-							# RC_NET_SCTRICT_CHECKING is set ....
+							# Only worry about a net.* service if we do not have one
+							# up and running already, or if RC_NET_SCTRICT_CHECKING
+							# is set ....
 							if [ "${netcount}" -lt 1 -o "${RC_NET_STRICT_CHECKING}" = "yes" ]
 							then
 								startfail="yes"
@@ -268,7 +268,9 @@ svc_start() {
 						fi
 					fi
 				done
-			else
+				
+			elif [ "${x}" != "net" ]
+			then
 				if [ ! -L "${svcdir}/started/${x}" ]
 				then
 					/etc/init.d/"${x}" start
