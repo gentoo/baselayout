@@ -641,7 +641,7 @@ dep_stop() {
 	local myservice="${1##*/}"
 	local depservice=
 
-	if ! service_started "${myservice}"
+	if service_stopped "${myservice}"
 	then
 		return 0
 	fi

@@ -105,7 +105,7 @@ svc_stop() {
 		fi
 	fi
 	
-	if ! service_started "${myservice}" && ! service_inactive "${myservice}"
+	if service_stopped "${myservice}" && ! service_inactive "${myservice}"
 	then
 		if [ "${RC_QUIET_STDOUT}" != "yes" ]
 		then
@@ -229,7 +229,7 @@ svc_stop() {
 		if [ "${SOFTLEVEL}" != "reboot" -a "${SOFTLEVEL}" != "shutdown" ]
 		then
 			mark_service_started "${myservice}"
-			was_inactive && mark_service_inactive "${myservice}"
+			${was_inactive} && mark_service_inactive "${myservice}"
 		fi
 	else
 		mark_service_stopped "${myservice}"
@@ -301,7 +301,7 @@ svc_start() {
 			do
 				mynetservice="${y##*/}"
 				
-				if ! service_started "${mynetservice}"
+				if service_stopped "${mynetservice}"
 				then
 					start_service "${mynetservice}"
 
@@ -321,7 +321,7 @@ svc_start() {
 			
 		elif [ "${x}" != "net" ]
 		then
-			if ! service_started "${x}"
+			if service_stopped "${x}"
 			then
 				start_service "${x}"
 
@@ -555,7 +555,7 @@ do
 		then
 			for x in $(dolisting "${svcdir}/snapshot/$$/")
 			do
-				if ! service_started "${x##*/}"
+				if service_stopped "${x##*/}"
 				then
 #					schedule_service_startup "${x##*/}"
 					start_service "${x##*/}"

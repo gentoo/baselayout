@@ -10,6 +10,10 @@
     macchanger no longer depends on macchanger if configuring a specific
     mac address
 
+    fix depstop for net-services when system is booting - should fix #61594
+    added service_stopped function to make reading code easier and trying
+    to avoid race conditions
+
   06 Dec 2004; Roy Marples <uberlord@gentoo.org>:
 
     macchanger defaults to setting the interface down, and then trying

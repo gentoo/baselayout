@@ -406,7 +406,7 @@ start_service() {
 	
 	[ -z "$1" ] && return 1
 	
-	if ! service_started "$1"
+	if service_stopped "$1"
 	then
 		splash "svc_start" "$1"
 			
@@ -616,6 +616,20 @@ service_stopping() {
 	fi
 
 	return 1
+}
+
+# bool service_stopped(service)
+#
+#   Returns true if 'service' is stopped
+#
+service_stopped() {
+	[ -z "$1" ] && return 1
+
+	service_starting "$1" && return 1
+	service_started "$1" && return 1
+	service_stopping "$1" && return 1
+
+	return 0
 }
 
 # bool mark_service_failed(service)
