@@ -2,6 +2,14 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  16 Sep 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add the permission stuff for generic scsi when compiled as
+    module, thanks to Bauno <bauno@inwind.it>.
+
+    Add support for /etc/devfs.d/ for additional devfs config
+    stuff .. idea from Denys Duchier <Denys.Duchier@ps.uni-sb.de>.
+
   11 Sep 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix small type-o from last changes to /etc/init.d/netmount.
