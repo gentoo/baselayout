@@ -683,8 +683,8 @@ x25-svc-port	1998/tcp			# cisco X.25 service (XOT)
 x25-svc-port	1998/udp
 tcp-id-port	1999/tcp			# cisco identification port
 tcp-id-port	1999/udp
-cisco-sccp	2000/tcp			# Cisco SCCP
-cisco-sccp	2000/udp
+cisco-sccp	2000/tcp	sieve		# Cisco SCCP
+cisco-sccp	2000/udp	sieve
 nfs		2049/tcp			# Network File System
 nfs		2049/udp
 rtcm-sc104	2101/tcp			# RTCM SC-104
