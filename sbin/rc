@@ -346,7 +346,7 @@ then
 	start_critical_service() {
 		local retval=
 			
-		source "/etc/init.d/${x}" || error "Failed to source /etc/init.d/${x}"
+		source "/etc/init.d/${x}" || eerror "Failed to source /etc/init.d/${x}"
 		retval=$?
 		[ "${retval}" -ne 0 ] && return "${retval}"
 			
