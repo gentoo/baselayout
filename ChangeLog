@@ -2,6 +2,13 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  24 April 2002; Donny Davies <woodchip@gentoo.org> rc.conf :
+
+    Remove NFSSERVER from rc.conf since it's now covered in /etc/conf.d/nfs
+    which is installed with the nfs-utils package.  Also tidied up some
+    really old, leftover junk like the non-supported stuff from rc5.
+    Closes #1754.
+
   23 April 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Remove creation of /var/run/utmpx from bootmisc again.  Seems
