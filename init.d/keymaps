@@ -17,6 +17,8 @@ checkconfig() {
 }
 
 start() {
+	local WINDOWKEYS_KEYMAP=
+	
 	checkconfig || return 1
 
 	# Force linux keycodes for PPC ...
@@ -37,15 +39,18 @@ start() {
 	# New kbd support ...
 	if [ -x /bin/loadkeys ]
 	then
-		[ -z "${EXTENDED_KEYMAP}" ] && local EXTENDED_KEYMAP="windowkeys"
+		[ "${SET_WINDOWKEYS}" = "yes" ] && WINDOWKEYS_KEYMAP="windowkeys"
 		
-		/bin/loadkeys -q ${EXTENDED_KEYMAP} ${KEYMAP} >/dev/null
+		/bin/loadkeys -q ${WINDOWKEYS_KEYMAP} ${KEYMAP} \
+		                 ${EXTENDED_KEYMAPS} >/dev/null
+		
 	# Old console-tools support ...
 	elif [ -x /usr/bin/loadkeys ]
 	then
-		[ -z "${EXTENDED_KEYMAP}" ] && local EXTENDED_KEYMAP="windowkeys.inc"
+		[ "${SET_WINDOWKEYS}" = "yes" ] && WINDOWKEYS_KEYMAP="windowkeys.inc"
 		
-		/usr/bin/loadkeys -q ${EXTENDED_KEYMAP} ${KEYMAP} >/dev/null
+		/usr/bin/loadkeys -q ${WINDOWKEYS_KEYMAP} ${KEYMAP} \
+		                     ${EXTENDED_KEYMAPS} >/dev/null
 	else
 		eend 1 "loadkeys executable not found"
 		return 1

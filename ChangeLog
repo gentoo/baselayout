@@ -22,6 +22,9 @@
     Fix /sbin/functions.sh to disable color printing if NOCOLOR is set to
 	"true" in /etc/make.conf, closing bug #24107.
 
+	Fix /etc/init.d/keymaps to be more non-x86 friendly, and also allow
+	more keymaps to be specified in /etc/rc.conf, bug #24084.
+
   15 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Add /bin/csh to /etc/shells.
