@@ -1,8 +1,7 @@
-This is the rc-scripts style manual.  It governs the 
-coding style of rc-scripts.  Everything here might as 
-well have been spoken by God.  If you find any issues, 
-please talk to base-system@gentoo.org or #gentoo-base 
-on irc.freenode.net.
+This is the rc-scripts style manual.  It governs the coding style 
+of rc-scripts.  Everything here might as well have been spoken by 
+God.  If you find any issues, please talk to base-system@gentoo.org 
+or #gentoo-base on irc.freenode.net.
 
 #############
 # VARIABLES #
@@ -11,23 +10,40 @@ on irc.freenode.net.
     Variables must always be enclosed by {}
       e.g. ${foo} ${bar}
 - Internal Bash Variables -
-    Do not use {} with internal variables
-      e.g. $@ $1 $IFS
+    Do not use {} with internal variables unless appropriate
+      e.g. case $1 in
+      e.g. foo=$IFS
+      e.g. echo "blah${1}123"
+- Assigning with Quotes -
+    When assigning to a variable from another variable or 
+    a subshell, you do not need quotes, bash handles it
+      e.g. foo=${bar}
+      e.g. foo=$(uname -a)
 
 #########
 # TESTS #
 #########
 - Brackets -
     Always use the [[ ... ]] form instead of [ ... ]
+- Equality -
+    Always use == form instead of = when testing equality.  Makes 
+    for saner looking code (we all love C, don't lie).
 - Quoting -
-    When dealing with strings, do not quote the variable
-    The [[ ... ]] handles spaces properly in variables
+    When dealing with strings, do not quote the LHS variable.
+    The [[ ... ]] handles spaces properly in variables.  You 
+    should always quote strings though.
       e.g. [[ ${foo} = "bar" ]]
+      e.g. [[ "foo" != "bar" ]]
+    The RHS variable needs to be quoted to prevent against accidental 
+    pattern matching (unless you want to match, of course).
+      e.g. [[ ${foo} = "${bar}" ]]
+    If foo=a-b and bar=a-* and ${bar} was not quoted, you would 
+    get a match!
 
 ###############
 # CODE BLOCKS #
 ###############
-- Loops -
+- Structure -
     Use the more compact form
       e.g. if ... ; then
       e.g. while ... ; do
