@@ -22,14 +22,14 @@ start() {
 		if [ -e /etc/sysctl.conf ]
 		then
 			ebegin "Configuring kernel parameters"
-			sysctl -p /etc/sysctl.conf &>/dev/null
+			/sbin/sysctl -p /etc/sysctl.conf &>/dev/null
 			eend 0
 		fi
 
-		if [ -x /usr/sbin/env-update ]
+		if [ -x /sbin/rc-envupdate.sh ]
 		then
 			ebegin "Updating environment"
-			rc-envupdate.sh >/dev/null
+			/sbin/rc-envupdate.sh >/dev/null
 			eend 0
 		fi
 
