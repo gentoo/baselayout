@@ -11,7 +11,7 @@ depend() {
 
 load_modules() {
 	local x=
-	local i=1
+	local i=0
 	local retval=0
 	local modules=
 	local modargs=
