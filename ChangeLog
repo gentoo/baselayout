@@ -6,6 +6,9 @@
 
     Cosmetic fixes for starting loopback interface
 
+    Spanky doesn't like the dots... disable them by default, but you
+    can set RC_DOT_PATTERN=' .' in /etc/conf.d/rc to get them back
+
 * rc-scripts 1.6.2 (13 Oct 2004)
 
   13 Oct 2004; Aron Griffis <agriffis@gentoo.org>:

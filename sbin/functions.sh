@@ -40,10 +40,12 @@ RC_PARALLEL_STARTUP="no"
 RC_USE_CONFIG_PROFILE="yes"
 
 # 
-# Default values for e-message indentation
+# Default values for e-message indentation and dots
 #
 RC_INDENTATION=''
 RC_DEFAULT_INDENT=3
+#RC_DOT_PATTERN=' .'
+RC_DOT_PATTERN=''
 
 # Override defaults with user settings ...
 [ -f /etc/conf.d/rc ] && source /etc/conf.d/rc
@@ -264,13 +266,14 @@ eerror() {
 #    show a message indicating the start of a process
 #
 ebegin() {
-	local msg dots
+	local msg="$*" dots spaces=${RC_DOT_PATTERN//?/ }
 	[[ ${RC_QUIET_STDOUT} == yes ]] && return 0
 
-	msg="$*"
-	dots=$(printf "%$(( COLS - 3 - ${#RC_INDENTATION} - ${#msg} - 7 ))s" '')
-	dots=${dots//  / .}
-	msg="${msg}${dots}"
+	if [[ -n ${RC_DOT_PATTERN} ]]; then
+		dots=$(printf "%$(( COLS - 3 - ${#RC_INDENTATION} - ${#msg} - 7 ))s" '')
+		dots=${dots//${spaces}/${RC_DOT_PATTERN}}
+		msg="${msg}${dots}"
+	fi
 	einfon "${msg}"
 	[[ ${RC_ENDCOL} == yes ]] && echo
 
