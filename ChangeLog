@@ -21,6 +21,9 @@
 
     Remove /etc/pam.d/{rexec,rlogin,rsh} as pam already install this.
 
+    Added $INPUTRC to /etc/profile, since too many people keep on bugging me,
+    and it seems it has fallen now to my discression.
+
 * rc-scripts 1.3.1 (23 Mar 2002)
 
   23 March 2002; Daniel Robbins <drobbins@gentoo.org>: init.d/net.eth0: fix for
