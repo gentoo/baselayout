@@ -140,27 +140,48 @@ livecd_fix_inittab() {
 	fi
 
 	# Comment out current getty settings
-	sed -i -e '/^c[0-9]/ s/^/#/' /etc/inittab	
+	sed -i -e '/^c[0-9]/ s/^/#/' /etc/inittab
 
-	# Sparc console workaround, kernel detects it automatically
-	if [ "${HOSTTYPE}" = "sparc" ]
+	# SPARC & HPPA console magic
+	if [ "${HOSTTYPE}" = "sparc" -o "${HOSTTYPE}" = "hppa" ]
 	then
-		mount -t openpromfs none /proc/openprom
-		LIVECD_CONSOLE=`dmesg|grep 'Console: ttyS'|cut -d ' ' -f 2`
-		if [ -n "${LIVECD_CONSOLE}" ]
+		# Mount openprom tree for user debugging purposes
+		if [ "${HOSTTYPE}" = "sparc" ]
 		then
-			LIVECD_CONSOLE_BAUD=`stty -F /dev/${LIVECD_CONSOLE} speed`
+			mount -t openpromfs none /proc/openprom
 		fi
-	fi
 
-	if [ "${LIVECD_CONSOLE}" = "tty0" -o "${LIVECD_CONSOLE}" = "" ]
-	then
-		for x in 1 2 3 4 5 6
-		do
-			echo "c${x}:12345:respawn:/sbin/mingetty --noclear --autologin root tty${x}" >> /etc/inittab
-		done	
+		# SPARC serial port A, HPPA mux / serial
+		if [ -c "/dev/tts/0" ]
+		then
+			LIVECD_CONSOLE_BAUD=`stty -F /dev/tts/0 speed`
+			echo "s0:12345:respawn:/sbin/agetty -nl /bin/bashlogin ${LIVECD_CONSOLE_BAUD} tts/0 vt100" >> /etc/inittab
+		fi
+		# HPPA software PDC console (K-models)
+		if [ -c "/dev/ttyB0" ]
+		then
+			LIVECD_CONSOLE_BAUD=`stty -F /dev/ttyB0 speed`
+			echo "b0:12345:respawn:/sbin/agetty -nl /bin/bashlogin ${LIVECD_CONSOLE_BAUD} ttyB0 vt100" >> /etc/inittab
+		fi
+		# FB / STI console
+		if [ -c "/dev/vc/1" ]
+		then
+			for x in 1 2 3 4 5 6
+			do
+				echo "c${x}:12345:respawn:/sbin/mingetty --noclear --autologin root tty${x}" >> /etc/inittab
+			done
+		fi
+	# The rest...
 	else
-		echo "c1:12345:respawn:/sbin/agetty -nl /bin/bash ${LIVECD_CONSOLE_BAUD} ${LIVECD_CONSOLE} vt100" >> /etc/inittab
+		if [ "${LIVECD_CONSOLE}" = "tty0" -o "${LIVECD_CONSOLE}" = "" ]
+		then
+			for x in 1 2 3 4 5 6
+			do
+				echo "c${x}:12345:respawn:/sbin/mingetty --noclear --autologin root tty${x}" >> /etc/inittab
+			done	
+		else
+			echo "c1:12345:respawn:/sbin/agetty -nl /bin/bashlogin ${LIVECD_CONSOLE_BAUD} ${LIVECD_CONSOLE} vt100" >> /etc/inittab
+		fi
 	fi
 	return 0
 }

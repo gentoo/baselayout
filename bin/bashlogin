@@ -1,0 +1,9 @@
+#!/bin/bash
+# 
+# This is only installed by baselayout when USE=livecd to enable
+# serial consoles for some architectures
+#
+
+cat /etc/motd 2>/dev/null
+cd /root
+exec -l /bin/bash

@@ -2,6 +2,13 @@
 # Copyright 2002-2004 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+* rc-scripts 1.4.13 (15 May 2004)
+
+  15 May 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Bump version to 1.4.13 to push out Gustavo's livecd serial console
+    fixes for sparc and hppa.
+
 * rc-scripts 1.4.12 (07 May 2004)
 
   10 May 2004; Aron Griffis <agriffis@gentoo.org>:
