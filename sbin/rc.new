@@ -1,0 +1,262 @@
+#!/bin/bash
+# Copyright 1999-2002 Gentoo Technologies, Inc.
+# Distributed under the terms of the GNU General Public License, v2 or later
+# $Header$
+
+trap ":" INT QUIT TSTP
+source /etc/init.d/functions.sh
+umask 022
+
+try() {
+	eval $*
+	if [ $? -ne 0 ]
+	then
+		echo -e "$ENDCOL$NORMAL[$BAD oops $NORMAL]"
+		echo
+		echo '!!! '"ERROR: the $1 command did not complete successfully."
+		echo '!!! '"(\" ${*} \")"
+		echo '!!! '"Since this is a critical task, startup cannot continue."
+		echo
+		/sbin/sulogin $CONSOLE
+		reboot -f
+		fi
+}
+
+#save $1
+argv1=$1
+
+#boot stuff goes here
+if [ "$RUNLEVEL" = "S" ] && [ "$argv1" = "boot" ]
+then
+	echo
+	echo -e "${GOOD}Gentoo Linux${GENTOO_VERS}; \e[34;01mhttp://www.gentoo.org${NORMAL}"
+	echo -e " Copyright 2001 Gentoo Technologies, Inc.; Distributed under the GPL"
+	echo
+
+	ebegin "Mounting /proc"
+	try mount -n /proc
+	eend $?
+	
+	devfs="yes"
+	for copt in `cat /proc/cmdline`
+	do
+		if [ "${copt%=*}" = "gentoo" ]
+		then
+			parms=${copt##*=}
+			#parse gentoo option
+			if [ "${parms/nodevfs//}" != "${parms}" ]
+			then
+				devfs="no"
+			fi
+		fi
+	done
+	
+	#with the new way, /dev can be mounted by the kernel ...
+	
+	if [ "$devfs" = "yes" ] && [ ! -e /dev/.devfsd ]
+	then
+		mymounts="`cat /proc/filesystems`"
+		#is devfs support compiled in?
+		if [ "${mymounts/devfs//}" != "${mymounts}" ]
+		then
+			ebegin "Mounting devfs at /dev"; try mount -n -t devfs none /dev; eend
+		else
+			clear
+			echo
+			einfo "The Gentoo Linux system initialization scripts have detected that your"
+			einfo "kernel has been compiled without DEVFS support.  Because Gentoo Linux"
+			einfo "has been designed to work with DEVFS, it is required that you compile"
+			einfo "support for it into your kernel.  Please read the 'Gentoo Linux from"
+			einfo "source (build) CD Installation Guide' at:"
+			echo
+			einfo "    http://www.gentoo.org/doc/build.html"
+			echo
+			einfo "for more information on how to do this."
+			echo
+			read -t 15 -p "(hit Enter to continue or wait 15 seconds...)"
+		fi
+	fi
+
+	#mount shm and do dep scan
+	
+	ebegin "Mounting tmpfs at /dev/shm"
+	try mount -n -t tmpfs tmpfs /dev/shm -o rw,mode=0644,size=4m
+	eend
+			
+	/etc/init.d/depscan.sh
+
+	if [ "$devfs" = "yes" ] && [ -e /dev/.devfsd ]
+	then
+		ebegin "Starting devfsd"; /sbin/devfsd /dev >/dev/null 2>&1; eend $?
+	fi
+
+	#swap needs to be activated *after* devfs has been mounted and *after*
+	#devfsd has been started, so that the fstab can be properly parsed
+
+	ebegin "Activating swap"
+	swapon -a
+	eend
+
+	#set the console loglevel to 1 for a cleaner boot
+	#the logger should anyhow dump the ring-0 buffer at start to the
+	#logs, and that with dmesg can be used to check for problems
+	
+	/bin/dmesg -n 1
+
+	#$BOOT can be used by rc-scripts to test if it is the first time
+	#the 'boot' runlevel is executed
+	
+	export BOOT="yes"
+	
+fi #boot ends here
+
+if [ -z "$argv1" ]
+then
+	export SOFTLEVEL="`cat /dev/shm/.init.d/softlevel`"
+else
+	export SOFTLEVEL=$argv1
+fi
+svcdir=/dev/shm/.init.d
+
+if [ "$SOFTLEVEL" = "reboot" ] || [ "$SOFTLEVEL" = "shutdown" ]
+then
+	myscripts=""
+elif [ ! -d /etc/runlevels/${SOFTLEVEL} ]
+then
+	echo "runlevel ${SOFTLEVEL} does not exist; exiting."
+	exit 1
+else
+	myscripts=""
+	if [ "$SOFTLEVEL" != "boot" ]
+	then
+		#normal runlevels *include* boot scripts
+		mylevels="/etc/runlevels/${SOFTLEVEL}/* /etc/runlevels/boot/*"
+	else
+		#non-normal runlevels don't include boot scripts as default
+		mylevels="/etc/runlevels/${SOFTLEVEL}/*"
+	fi
+	for x in $mylevels 
+	do
+		if [ -L $x ]
+		then
+			myscripts="$myscripts ${x##*/}"
+		fi
+	done
+fi
+
+#the softscripts dir contains all scripts that belong to the
+#runlevel specified in ${svcdir}/softlevel
+#it needs to be a new directory, else when stopping the services
+#and the old directory is not intact, things get broken
+
+install -d -m0755 ${svcdir}/softscripts.new
+
+for x in $myscripts
+do
+	if [ ! -e /etc/init.d/${x} ]
+	then
+		echo "skipping, /etc/init.d/${x} missing"
+		continue
+	fi
+	#the -f eliminates a warning if the symlink already exists, 
+	#which can happen if a service is in both the boot level and
+	#the current "normal" runlevel
+	ln -sf /etc/init.d/${x} ${svcdir}/softscripts.new/${x}
+done
+
+#stop services
+for i in ${svcdir}/started/*
+do
+	[ ! -L ${i} ] && continue
+	if [ ! -e ${i} ]
+	then
+		#remove dud symlinks
+		rm ${i}
+		continue
+	fi
+	myservice=${i##*/}
+	
+	if [ ! -L ${svcdir}/softscripts.new/${myservice} ]
+	then
+		#candidate for zapping
+		
+		if [ ! -d ${svcdir}/need/${myservice} ] && [ ! -d ${svcdir}/use/${myservice} ]
+		then
+			#nothing depends on me
+			${i} stop
+		else
+			#something may depend on me
+			needsme=0
+			for mytype in need use
+			do
+				for dep in ${svcdir}/${mytype}/${myservice}/*
+				do
+					if [ -e ${dep} ] && [ -L /${svcdir}/softscripts.new/${dep##*/} ]
+					then
+						#this dep is valid
+						needsme=1
+						break
+					fi
+				done
+			done
+			if [ $needsme -eq 0 ]
+			then
+				${i} stop
+			fi
+		fi
+	fi
+done
+
+# Only change softlevel AFTER all the services have been stopped,
+# else they will not get the depend's right (wrong SOFTLEVEL)
+
+echo $SOFTLEVEL > /dev/shm/.init.d/softlevel
+
+if [ "$SOFTLEVEL" = "reboot" ] || [ "$SOFTLEVEL" = "shutdown" ]
+then
+	source /etc/init.d/functions.sh
+	source /etc/init.d/halt.sh
+	if [ "$SOFTLEVEL" = "reboot" ]
+	then
+		source /etc/init.d/reboot.sh 
+	else
+		source /etc/init.d/shutdown.sh
+	fi
+fi
+
+#clean out directory to remove traces of previous runlevel
+#and make the new softscripts directory the current
+
+rm -rf ${svcdir}/softscripts
+mv ${svcdir}/softscripts.new/ ${svcdir}/softscripts
+
+#start scripts
+for i in ${svcdir}/softscripts/* 
+do
+	if [ ! -L $i ]
+	then
+		continue
+	fi
+	#only start a script if it isn't already running
+	if [ ! -L ${svcdir}/started/${i##*/} ]
+	then
+		$i start
+	fi
+done
+
+#depends gets newked, so update them
+#(this problem should be solved now, but i think it will be a good idea
+# to recreate the deps after a change in runlevel)
+
+/etc/init.d/depscan.sh >/dev/null 2>/dev/null
+
+#we want devfsd running after a change of runlevel (this is mostly if we return
+#from runlevel 'single')
+if [ "`cat /proc/mounts | grep '/dev devfs'`" ] && [ ! "`ps -A |grep devfsd`" ]
+then
+	/sbin/devfsd /dev >/dev/null 2>&1
+fi
+
+#if we were in the boot runlevel, it is done now ...
+[ -n "$BOOT" ] && unset BOOT
+
