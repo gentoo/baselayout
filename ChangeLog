@@ -1,6 +1,12 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+  13 Dec 2004; Martin Schlemmer <azarah@gentoo.org>:
+
+    Tweak init.d/halt.sh to support new text based udev_db ('udevinfo -d' do
+    not work anymore, and there is no space after '(S|N):').  Also check if
+    devices.tar.bz2 is empty before trying to create it, bug #71143.
+
   12 Dec 2004; Mike Frysinger <vapier@gentoo.org>:
 
     Tweak get_mount_fstab to only print the first mount point found and then 
