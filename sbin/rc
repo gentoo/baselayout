@@ -207,6 +207,7 @@ then
 		ebegin "Mounting ramfs at /dev"
 		try mount -n -t ramfs none /dev
 		eend $?
+		rc_splash "start"
 		ebegin "Configuring system to use udev"
 		einfo "  Populating /dev with device nodes..."
 		try tar -jxpf /lib/udev-state/devices.tar.bz2 -C /dev
@@ -218,6 +219,7 @@ then
 			ewarn "  Kernel was not compiled with hotplug support!"
 		fi
 		eend 0
+		rc_splash "start"
 		# Create problematic directories
 		mkdir -p /dev/{pts,shm}
 		# Same thing as /dev/.devfsd
@@ -272,6 +274,7 @@ then
 				ebegin "Mounting devpts at /dev/pts"
 				try mount -n -t devpts none /dev/pts
 				eend $?
+				rc_splash "start"
 			fi
 		fi
 	fi
@@ -295,6 +298,7 @@ then
 		ebegin "Starting irqbalance"
 		/sbin/irqbalance
 		eend $?
+		rc_splash "start"
 	fi
 
 	# Mount either a ramdisk or tmpfs if requested.

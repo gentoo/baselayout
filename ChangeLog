@@ -2,6 +2,8 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+* rc-scripts 1.4.3.11p1 (15 Sep 2003)
+
   15 Oct 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Initial bootsplash patch as from LiveCD's.
