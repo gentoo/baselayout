@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  11 Mar 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Prepend rc-daemon.sh functions with rc_ to avoid name conflicts
+
   11 Mar 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     Make sure the last test in init.d/modules do not bork the return

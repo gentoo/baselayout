@@ -21,10 +21,10 @@ RC_WAIT_ON_START="0.1"
 # Override default settings with user settings ...
 [[ -f /etc/conf.d/rc ]] && source /etc/conf.d/rc
 
-# void setup_daemon_vars(void)
+# void rc_setup_daemon_vars(void)
 #
 # Setup our vars based on the start-stop-daemon command
-setup_daemon_vars() {
+rc_setup_daemon_vars() {
 	local name
 	local -a sargs=( "${args%% \'--\' *}" )
 	local -a eargs=( "-- ${args##* \'--\' }" )
@@ -78,13 +78,13 @@ setup_daemon_vars() {
 	return 0
 }
 
-# bool try_kill_pid(int pid, char* signal, bool session)
+# bool rc_try_kill_pid(int pid, char* signal, bool session)
 #
 # Repeatedly kill the pid with the given signal until it dies
 # If session is true then we use tread pid as session and send it
 # via pkill
 # Returns 0 if successfuly otherwise 1
-try_kill_pid() {
+rc_try_kill_pid() {
 	local pid=$1 signal=${2:-TERM} session=${3:-false}  i s
 	
 	# We split RC_RETRY_TIMEOUT into tenths of seconds
@@ -109,17 +109,17 @@ try_kill_pid() {
 	return 1
 }
 
-# bool kill_pid(int pid, bool session)
+# bool rc_kill_pid(int pid, bool session)
 #
 # Kills the given pid/session
 # Returns 1 if we fail to kill the pid (if it's valid) otherwise 0
-kill_pid() {
+rc_kill_pid() {
 	local pid=$1 session=${2:-false}
 
-	try_kill_pid ${pid} ${signal} ${session} && return 0
+	rc_try_kill_pid ${pid} ${signal} ${session} && return 0
 
 	[[ ${RC_RETRY_KILL} == "yes" ]] \
-		&& try_kill_pid ${pid} KILL ${session} && return 0
+		&& rc_try_kill_pid ${pid} KILL ${session} && return 0
 
 	return 1 
 }
@@ -143,11 +143,11 @@ is_daemon_running() {
 	return $? 
 }
 
-# int start_daemon(void)
+# int rc_start_daemon(void)
 #
 # We don't do anyting fancy - just pass the given options
 # to start-stop-daemon and return the value
-start_daemon() {
+rc_start_daemon() {
 	local retval
 
 	eval /sbin/start-stop-daemon "${args}"
@@ -169,17 +169,17 @@ start_daemon() {
 	if [[ $( type -t stop ) == "function" ]]; then
 		stop >/dev/null # We don't want to echo ebegin/eend
 	elif [[ -n ${pidfile} ]]; then
-		stop_daemon
+		rc_stop_daemon
 	fi
 	return ${retval}
 }
 
-# bool stop_daemon(void)
+# bool rc_stop_daemon(void)
 #
 # Instead of calling start-stop-daemon we instead try and
 # kill the process ourselves and any children left over
 # Returns 0 if everything was successful otherwise 1
-stop_daemon() {
+rc_stop_daemon() {
 	local pid pids retval=0
 
 	if [[ -n ${cmd} ]]; then
@@ -204,7 +204,7 @@ stop_daemon() {
 			/bin/ps -p ${pid} &>/dev/null || return 1
 		fi
 
-		if kill_pid ${pid} false ; then
+		if rc_kill_pid ${pid} false ; then
 			# Remove the pidfile if the process didn't
 			[[ -f ${pidfile} ]] && /bin/rm -f ${pidfile}
 		else
@@ -212,7 +212,7 @@ stop_daemon() {
 		fi
 
 		if [[ ${RC_KILL_CHILDREN} == "yes" ]]; then
-			kill_pid ${pid} true || retval=1
+			rc_kill_pid ${pid} true || retval=1
 		fi
 	done
 	
@@ -228,7 +228,7 @@ start-stop-daemon() {
 	local args=$( requote "$@" )
 	local cmd pidfile pid stopping nothing=false signal=TERM
 
-	setup_daemon_vars
+	rc_setup_daemon_vars
 
 	# We pass --oknodo and --test directly to start-stop-daemon and return
 	if ${nothing}; then
@@ -237,9 +237,9 @@ start-stop-daemon() {
 	fi
 
 	if ${stopping}; then
-		stop_daemon 
+		rc_stop_daemon 
 	else
-		start_daemon
+		rc_start_daemon
 	fi
 	return $?
 }
