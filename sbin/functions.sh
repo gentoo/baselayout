@@ -577,7 +577,7 @@ else
 	then
 		# Check user pref in portage
 		RC_NOCOLOR="$(portageq envvar NOCOLOR 2>/dev/null)"
-		
+
 		[ "${RC_NOCOLOR}" = "true" ] && RC_NOCOLOR="yes"
 	else
 		# We do not want colors or stty to run during emerge depend
@@ -585,38 +585,34 @@ else
 	fi
 fi
 
+# Setup the $COLS variable so that all our calls to
+# eend line up the [ ok ] properly
+COLS="`stty size 2> /dev/null`"
+COLS="`getcols ${COLS}`"
+COLS=$((${COLS} - 7))
+if [ "${COLS:0:1}" == "-" ]
+then
+	# Sanity check ... with serial consoles and such,
+	# COLS may up being negative ...
+	COLS="80"
+fi
+ENDCOL=$'\e[A\e['${COLS}'G'
+if [ -n "${EBUILD}" ] && [ "${*/depend}" = "$*" ]
+then
+	stty cols 80 &>/dev/null
+	stty rows 25 &>/dev/null
+fi
+
+# Setup the colors so our messages all look pretty
 if [ "${RC_NOCOLOR}" = "yes" ]
 then
-	COLS="25 80"
-	COLS="`getcols ${COLS}`"
-	ENDCOL=
-	
 	GOOD=
 	WARN=
 	BAD=
 	NORMAL=
 	HILITE=
 	BRACKET=
-	
-	if [ -n "${EBUILD}" ] && [ "${*/depend}" = "$*" ]
-	then
-		stty cols 80 &>/dev/null
-		stty rows 25 &>/dev/null
-	fi
 else
-	COLS="`stty size 2> /dev/null`"
-	COLS="`getcols ${COLS}`"
-	COLS=$((${COLS} - 7))
-	if [ "${COLS:0:1}" == "-" ]
-	then
-		# Sanity check ... with serial consoles and such,
-		# COLS may up being negative ...
-		COLS="80"
-	fi
-	# Now, ${ENDCOL} will move us to the end of the
-	# column;  irregardless of character width
-	ENDCOL=$'\e[A\e['${COLS}'G'
-
 	GOOD=$'\e[32;01m'
 	WARN=$'\e[33;01m'
 	BAD=$'\e[31;01m'
