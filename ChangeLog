@@ -12,7 +12,7 @@
     Add 'TERM=Eterm' to /etc/DIR_COLORS, bug #23423.
 
     Add mdadm support to /etc/init.d/checkfs, bug #23437, many thanks
-	to Rex Walters <rw@pobox.com>.
+	to Wes Kurdziolek <wkurdzio@vtluug.org>.
 
     Rather use 'uname -r' to get kernel version, as else we need sysctl.
     This closes bug #23923, modified /etc/init.d/modules.
