@@ -10,8 +10,6 @@
   27 Jan 2003; Donny Davies <woodchip@gentoo.org>:
 
     Fix halt.sh by moving the nut UPS kill power stuff back into a function!
-    Az: the bad change:
-    http://cvs.gentoo.org/cgi-bin/viewcvs.cgi/gentoo-src/rc-scripts/init.d/halt.sh.diff?r1=1.18&r2=1.19
     Add fix from the wonderful analysis of Toby Dickenson
     <tdickenson@geminidataloggers.com> in #12947.
 
