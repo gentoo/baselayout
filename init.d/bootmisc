@@ -51,7 +51,7 @@ start() {
 			#
 			# Clean up any stale locks.
 			#
-			( find /var/lock -type f -print0 | xargs -0 rm )
+			( find /var/lock -type f -print0 | xargs -0 rm -f -- )
 			#
 			# Clean up /var/run and create /var/run/utmp so that we can login.
 			#
