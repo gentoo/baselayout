@@ -6,7 +6,8 @@
 
 depend() {
 
-	local mydeps="net"
+	local myneed="net"
+	local myuse=""
 	
 	#
 	# Only have Portmap as a dependency if there is a nfs mount in fstab
@@ -16,10 +17,12 @@ depend() {
 	
 	if [ -n "${nfsmounts}" ]
 	then
-		local mydeps="${mydeps} portmap"
+		local myneed="${myneed} portmap"
+		local myuse="${myuse} nfs"
 	fi
 
 	need ${mydeps}
+	use ${myuse}
 }
 
 start() {
