@@ -176,7 +176,7 @@ wpa_supplicant_pre_start() {
 		return 1
 	fi
 
-	local ctrl_dir=$( sed -e 's/ *#.*//g' -ne 's/^ctrl_interface=//p' ${cfgfile} )
+	local ctrl_dir=$( sed -ne 's/[ \t]*#.*//g;s/[ \t]*$//g;s/^ctrl_interface=//p' ${cfgfile} )
 	if [[ ${ctrl_dir} != "/var/run/wpa_supplicant" ]]; then
 		eerror "${cfgfile} must set"
 		eerror "  ctrl_interface=/var/run/wpa_supplicant"
