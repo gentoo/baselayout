@@ -39,7 +39,7 @@ start() {
 					sf_param="-C "
 				fi
 				
-				for x in 1 2 3 4 5 6 7 8 9 10
+				for x in $(seq 1 "${RC_TTY_NUMBER}")
 				do
 					# Using DEVFS ?
 					if [ -e /dev/.devfsd ] || \
@@ -66,7 +66,7 @@ start() {
 
 		if [ "${retval}" -eq 0 ]
 		then
-			for x in 1 2 3 4 5 6 7 8 9 10
+			for x in $(seq 1 "${RC_TTY_NUMBER}")
 			do
 				# Using DEVFS ?
 				if [ -e /dev/.devfsd ] || \

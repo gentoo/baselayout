@@ -10,7 +10,7 @@ depend() {
 
 start() {
 	ebegin "Enabling numlock on ttys"
-	for tty in $(seq 1 11)
+	for tty in $(seq 1 "${RC_TTY_NUMBER}")
 	do
 		if [ -e /dev/.devfsd ] || \
 		   [ -e /dev/.udev -a -d /dev/vc ]
@@ -25,7 +25,7 @@ start() {
 
 stop() {
 	ebegin "Disabling numlock on ttys"
-	for tty in $(seq 1 11)
+	for tty in $(seq 1 "${RC_TTY_NUMBER}")
 	do
 		if [ -e /dev/.devfsd ] || \
 		   [ -e /dev/.udev -a -d /dev/vc ]

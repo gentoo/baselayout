@@ -34,6 +34,7 @@ RC_NOCOLOR="no"
 #
 # Default values for rc system
 #
+RC_TTY_NUMBER=11
 RC_NET_STRICT_CHECKING="no"
 RC_PARALLEL_STARTUP="no"
 RC_USE_CONFIG_PROFILE="yes"

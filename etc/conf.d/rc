@@ -7,6 +7,12 @@
 # NOTE: most of these are not in use yet!!
 #
 
+
+# This is the amount of tty's used in most of the rc-scripts (like
+# consolefont, numlock, etc
+
+RC_TTY_NUMBER=11
+
 # Set to "yes" if you want the rc system to try and start services
 # in parallel for slight speed improvement.
 
