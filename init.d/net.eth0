@@ -198,7 +198,7 @@ iface_stop() {
 	for i in ${aliases} ${IFACE}; do
 
 		# Delete all the inet6 addresses for this interface
-		inet6="$(ifconfig ${i} | awk '$1 == "inet6" {print $2}')"
+		inet6="$(ifconfig ${i} | awk '$1 == "inet6" {print $3}')"
 		if [[ -n ${inet6} ]]; then
 			einfo "  Removing inet6 addresses"
 			for x in ${inet6}; do 
