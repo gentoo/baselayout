@@ -125,7 +125,6 @@ svc_start() {
 					fi
 				done
 			else	
-				echo "RUNSCRIPT: ${myservice} needs ${x}"
 				if [ ! -L ${svcdir}/started/${x} ]
 				then
 					/etc/init.d/${x} start
@@ -158,14 +157,6 @@ if [ "$opts" = "" ]
 then
 	opts="start stop restart"
 fi
-
-function einfo() {
-    echo -e "$HILITE${*}$NORMAL"
-    }
-
-function einfon() {
-    echo -ne "$HILITE${*}$NORMAL"
-    }
 
 try() {
 	eval $*

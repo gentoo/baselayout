@@ -5,6 +5,21 @@ source /etc/init.d/functions.sh
 export PATH=/sbin:/bin:/usr/sbin:/usr/bin
 umask 022
 
+try() {
+	eval $*
+	if [ $? -ne 0 ]
+	then
+		echo -e "$ENDCOL$NORMAL[$BAD oops $NORMAL]"
+		echo 
+		echo '!!! '"ERROR: the $1 command did not complete successfully."
+		echo '!!! '"(\" ${*} \")"
+		echo '!!! '"Since this is a critical task, startup cannot continue."
+		echo
+		/sbin/sulogin $CONSOLE
+		reboot -f
+	fi
+}
+
 mountshm() {
 	ebegin "Mounting tmpfs at /dev/shm"
 	try mount -n -t tmpfs tmpfs /dev/shm -o rw,mode=0644,size=4m

@@ -16,15 +16,23 @@ BAD=$'\e[31;01m'
 NORMAL=$'\e[0m'
 HILITE=$'\e[36;01m'
 
-function ebegin() {
+ebegin() {
     echo -e " ${GOOD}*${NORMAL} ${*}..."
-    }
+}
 
-function eerror() {
+eerror() {
     echo -e ">>$BAD ${*}$NORMAL"
-    }
+}
 
-function eend() {
+einfo() {
+    echo -e "$HILITE${*}$NORMAL"
+}
+
+einfon() {
+    echo -ne "$HILITE${*}$NORMAL"
+}
+
+eend() {
     if [ $# -eq 0 ] || [ $1 -eq 0 ] 
     then
         echo -e "$ENDCOL  \e[34;01m[ ${GOOD}ok \e[34;01m]${NORMAL}"
@@ -41,22 +49,4 @@ function eend() {
 		#extra spacing makes it easier to read
 		return $returnme
     fi
-    }
-
-
-try() {
-	eval $*
-	if [ $? -ne 0 ]
-	then
-		echo -e "$ENDCOL$NORMAL[$BAD oops $NORMAL]"
-		echo 
-		echo '!!! '"ERROR: the $1 command did not complete successfully."
-#		echo '!!! '"(\" ${*} \")"
-		echo '!!! '"Since this is a critical task, startup cannot continue."
-		echo
-		/sbin/sulogin $CONSOLE
-		reboot -f
-	fi
 }
-
-
