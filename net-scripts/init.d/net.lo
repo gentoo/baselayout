@@ -23,7 +23,7 @@ depend() {
 }
 
 # Define where our modules are
-[[ -z ${MODULES_DIR} ]] && MODULES_DIR=/lib/rcscripts/net.modules.d
+MODULES_DIR=/lib/rcscripts/net.modules.d
 
 # Load some functions shared between ourselves and our dhcp helpers
 source ${MODULES_DIR}/helpers.d/functions

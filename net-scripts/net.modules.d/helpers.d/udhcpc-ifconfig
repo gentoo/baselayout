@@ -50,8 +50,7 @@ done
 
 [[ ${action} == deconfig ]] && exit 0
 
-MODULES_DIR=$( grep '^[^#]*MODULES_DIR=*' /etc/conf.d/net 2>/dev/null | awk -F= '{ print $2 }' )
-MODULES_DIR=${MODULES_DIR:-/lib/rcscripts/net.modules.d}
+[[ -z ${MODULES_DIR} ]] && MODULES_DIR=/lib/rcscripts/net.modules.d
 
 if [[ ${action} == bound ]]; then
 	ip=( ${ip} )

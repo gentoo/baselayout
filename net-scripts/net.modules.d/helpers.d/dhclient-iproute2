@@ -5,8 +5,5 @@
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
 
-MODULES_DIR=$( grep '^[^#]*MODULES_DIR=*' /etc/conf.d/net 2>/dev/null | awk -F= '{ print $2 }' )
-MODULES_DIR=${MODULES_DIR:-/lib/rcscripts/net.modules.d}
-
-${MODULES_DIR}/helpers.d/dhclient-udhcpc-wrapper iproute2
+/lib/rcscripts/net.modules.d/helpers.d/dhclient-udhcpc-wrapper iproute2
 exit $?
