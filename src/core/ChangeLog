@@ -4,6 +4,11 @@
 
   17 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
 
+    debug.h: Remove the 'errno = ESPIPE' in DBG_MSG() for now, as it seems to
+             be fixed by the select() changes.
+
+  17 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
+
     parse.c: Disable write select() for now, as it is not needed.
 
   17 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:

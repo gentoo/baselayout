@@ -45,7 +45,8 @@
 		int old_errno = errno; \
 		/* Bit of a hack, as how we do things tend to cause seek
 		 * errors when reading the parent/child pipes */ \
-		if ((0 != errno) && (ESPIPE != errno)) { \
+		/* if ((0 != errno) && (ESPIPE != errno)) { */ \
+		if (0 != errno) { \
 			printf("DEBUG(1): in %s, function %s(), line %i:\n", \
 					__FILE__, __FUNCTION__, __LINE__); \
 			printf("DEBUG(2): " _format, ## _arg); \
