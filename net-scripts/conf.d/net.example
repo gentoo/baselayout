@@ -26,8 +26,7 @@
 # Ideally, you only use the modules setting when you have two or more
 # packages installed that supply the same service.
 #
-# In other words, you probably don't need to configure anything
-# here...
+# In other words, you probably should DO NOTHING HERE...
 
 # Prefer iproute2 over ifconfig
 #modules=( "iproute2" )
@@ -136,8 +135,8 @@
 # Regardless of which DHCP client you prefer, you configure them the
 # same way using one of following depending on which interface modules
 # you're using.
-#ipaddr_eth0=( "dhcp" )		# for iproute2
 #ifconfig_eth0=( "dhcp" )	# for ifconfig
+#ipaddr_eth0=( "dhcp" )		# for iproute2
 
 # For passing custom options to dhcpcd use something like the following.  This
 # example reduces the timeout for retrieving an address from 60 seconds (the
@@ -178,8 +177,8 @@
 
 # Then setup the interface for each VLAN using either iproute2 or ifconfig like
 # so
-#ipaddr_eth0_1=( "dhcp" )
-#ipaddr_eth0_2=( "172.16.2.1/23 brd 172.16.3.255" )
+#ifconfig_eth0_1=( "dhcp" )
+#ifconfig_eth0_2=( "172.16.2.1 netmask 255.255.254.0" )
 # This configures eth0_1 to use DHCP and eth0_2 for a static address
 
 #-----------------------------------------------------------------------------
@@ -190,6 +189,16 @@
 # configurations for them and take them down first!
 #slaves_bond0="eth2"
 #ipaddr_bond0=( "172.16.2.1/23 brd 172.16.3.255" )
+
+#-----------------------------------------------------------------------------
+# ADSL
+# For ADSL support, emerge net-dialup/rp-pppoe 
+# and edit /etc/ppp/pppoe.conf
+
+# Configure the interface to use ADSL with one of the following lines,
+# depending on whether you're using ifconfig (default) or iproute2.
+#ifconfig_eth0=( "adsl" )
+#ipaddr_eth0=( "adsl" )
 
 #-----------------------------------------------------------------------------
 # MAC changer
