@@ -113,7 +113,7 @@ cat <<EOHELP
 EOHELP
 echo -e "    ${GREEN}use${OFF}"
 cat <<EOHELP
-      This can be seen as optional services this service depend on, but is not
+      This can be seen as optional services this service depends on, but is not
       critical for it to start.  For any service in the 'use' line, it must
       be added to the 'boot' or current runlevel to be considered a valid
       'use' dependancy.
@@ -131,7 +131,7 @@ cat <<EOHELP
     that needs a system logger running.
     
     As of writing, the logger target will include sysklogd, syslog-ng and
-    metalog.  This can be overridden with the $SYSLOGGER variable, which
+    metalog.  This can be overridden with the \$SYSLOGGER variable, which
     can be set either in /etc/rc.conf or /etc/conf.d/basic.
 
 EOHELP

@@ -188,7 +188,7 @@ svc_start() {
 		#start service
 		if [ -d ${svcdir}/broken/${myservice} ] && [ $retval -eq 0 ]
 		then
-			eerror "Some services needed is missing.  Run './${myservice} broken'"
+			eerror "Some services needed are missing.  Run './${myservice} broken'"
 			eerror "for a list of those services.  \"${myservice}\" was not started."
 			retval=1
 		elif [ ! -d ${svcdir}/broken/${myservice} ] && [ $retval -eq 0 ]

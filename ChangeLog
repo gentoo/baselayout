@@ -2,6 +2,9 @@
 # Copyright 2001 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  30 Dec 2001; Martin Schlemmer (azarah@gentoo.org): Updated
+  /etc/init.d/checkfs to return 0 if the fs was successfully repaired.
+
   29 Dec 2001; Donny Davies (woodchip@gentoo.org):
     sort -t: -k3,3 -n /etc/passwd,group.  Ahhhh :))
 
