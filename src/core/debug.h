@@ -66,7 +66,7 @@
 		errno = old_errno; \
 		if (0 != errno) \
 		 	perror("ERROR"); \
-		exit(EXIT_FAILSTATUS); \
+		exit(EXIT_FAILURE); \
 	} while (0)
 
 #define NEG_FATAL_ERROR(_x) \

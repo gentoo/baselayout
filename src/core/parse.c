@@ -71,7 +71,7 @@ size_t parse_rcscript(char *scriptname, time_t mtime, char **data, size_t index)
 
 size_t parse_print_start(char **data, size_t index);
 size_t parse_print_header(char *scriptname, time_t mtime, char **data, size_t index);
-size_t parse_print_body(char **data, size_t index);
+size_t parse_print_body(char *scriptname, char **data, size_t index);
 size_t parse_print_end(char **data, size_t index);
 
 int get_rcscripts(void) {
@@ -298,7 +298,8 @@ size_t parse_rcscript(char *scriptname, time_t mtime, char **data, size_t index)
 			DBG_MSG("Got 'depend()' function.\n");
 
 			got_depend = 1;
-			write_count = parse_print_body(data, write_count);
+			write_count = parse_print_body(gbasename(scriptname),
+					data, write_count);
 			if (-1 == write_count) {
 				DBG_MSG("Failed to call parse_print_body()!\n");
 				goto error;
@@ -998,23 +999,54 @@ error:
 	return -1;
 }
 
-size_t parse_print_body(char **data, size_t index) {
+size_t parse_print_body(char *scriptname, char **data, size_t index) {
 	size_t write_count = index;
+	char *tmp_buf = NULL;
+	char *tmp_ptr;
+	char *base;
+	char *ext;
+
+	tmp_buf = strndup(scriptname, strlen(scriptname));
+	if (NULL == tmp_buf) {
+		DBG_MSG("Failed to allocate temporary buffer!\n");
+		goto error;
+	}
+
+	/*
+	 * Rather do the next block in C than bash, in case we want to
+	 * use ash or another shell in the place of bash
+	 */
+
+	/* bash: base="${myservice%%.*}" */
+	base = tmp_buf;
+	tmp_ptr = strchr(tmp_buf, '.');
+	if (NULL != tmp_ptr) {
+		tmp_ptr[0] = '\0';
+		tmp_ptr++;
+	} else {
+		tmp_ptr = tmp_buf;
+	}
+	/* bash: ext="${myservice##*.}" */
+	ext = strrchr(tmp_ptr, '.');
+	if (NULL == ext)
+		ext = tmp_ptr;
 	
 	PRINT_TO_BUFFER(data, write_count, error, "\n");
 	PRINT_TO_BUFFER(data, write_count, error, "  # Get settings for rc-script ...\n");
 	PRINT_TO_BUFFER(data, write_count, error, "  [ -e \"/etc/conf.d/${myservice}\" ] && \\\n");
-	PRINT_TO_BUFFER(data, write_count, error, "  	source \"/etc/conf.d/${myservice}\"\n");
+	PRINT_TO_BUFFER(data, write_count, error, "  	. \"/etc/conf.d/${myservice}\"\n");
 	PRINT_TO_BUFFER(data, write_count, error, "  [ -e /etc/conf.d/net ] && \\\n");
-	PRINT_TO_BUFFER(data, write_count, error, "  [ \"${myservice%%.*}\" = \"net\" ] && \\\n");
-	PRINT_TO_BUFFER(data, write_count, error, "  [ \"${myservice##*.}\" != \"${myservice}\" ] && \\\n");
-	PRINT_TO_BUFFER(data, write_count, error, "  	source /etc/conf.d/net\n");
-	PRINT_TO_BUFFER(data, write_count, error, "  [ -e /etc/rc.conf ] && source /etc/rc.conf\n\n");
+	PRINT_TO_BUFFER(data, write_count, error, "  [ \"%s\" = \"net\" ] && \\\n", base);
+	PRINT_TO_BUFFER(data, write_count, error, "  [ \"%s\" != \"${myservice}\" ] && \\\n", ext);
+	PRINT_TO_BUFFER(data, write_count, error, "  	. /etc/conf.d/net\n");
+	PRINT_TO_BUFFER(data, write_count, error, "  [ -e /etc/rc.conf ] && . /etc/rc.conf\n\n");
 	PRINT_TO_BUFFER(data, write_count, error, "  depend() {\n");
 	PRINT_TO_BUFFER(data, write_count, error, "    return 0\n");
 	PRINT_TO_BUFFER(data, write_count, error, "  }\n\n");
 	PRINT_TO_BUFFER(data, write_count, error, "  # Actual depend() function ...\n");
 
+	free(tmp_buf);
+	
 	return write_count;
 
 error:

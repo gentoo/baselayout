@@ -4,6 +4,12 @@
 
   17 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
 
+    debug.h: Replace invalid EXIT_FAILSTATUS with EXIT_FAILURE.
+    parse.c: Modify parse_print_body() to be more ash friendly - suggestions
+             from Ned Ludd <solar@gentoo.org>.
+
+  17 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
+
     debug.h: Remove the 'errno = ESPIPE' in DBG_MSG() for now, as it seems to
              be fixed by the select() changes.
 
