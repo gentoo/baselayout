@@ -14,10 +14,10 @@ svcdir="/mnt/.init.d"
 svcfstype="tmpfs"
 
 #size of $svcdir in KB
-svcsize=1024
+svcsize="1024"
 
 #tmpfs mount point for diskless nodes
-shmdir=/mnt/.shm
+shmdir="/mnt/.shm"
 
 #different types of dependancies
 deptypes="need use"
