@@ -2,6 +2,18 @@
 # Copyright 2001 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+* rc-scripts 1.2.8 (4 March 2002)
+
+  4 March 2002; Martin Schlemmer <azarah@gentoo.org>: add /etc/init.d/xdm,
+    /etc/X11/startDM.sh and updated /etc/inittab to fix the "dead key"
+    problem we had with xdm/gdm/kdm.  We should move them to the
+    xfree ebuild later on when things settles down.
+
+    Added some sanity checks to /sbin/rc, /etc/init.d/runscripts.sh.
+
+    Added a basic $PATH to /etc/init.d/functions.sh to fix a problem
+    where we had a invalid $PATH on boot in some cases.
+
 * rc-scripts 1.2.7 (3 March 2002)
 
   3 March 2002; Martin Schlemmer <azarah@gentoo.org>: fixed the problem

@@ -77,7 +77,9 @@ then
 	fi
 
 	# need devfsd running now so that /dev/ram0 exists if we need it
-	if [ "$devfs" = "yes" ] && [ -e /dev/.devfsd ]
+	mymounts="`cat /proc/mounts`"
+	if [ "$devfs" = "yes" ] && [ -e /dev/.devfsd ] && \
+	   [ "${mymounts/devfs//}" != "${mymounts}" ]
 	then
 		ebegin "Starting devfsd"; /sbin/devfsd /dev >/dev/null 2>&1; eend $?
 	fi
@@ -89,6 +91,11 @@ then
 	if [ $? -eq 0 ]
 	then
 		tmpfs="no"
+	fi
+
+	if [ ! -d $svcdir ]
+	then
+		mkdir -p $svcdir
 	fi
 	
 	if [ "$tmpfs" = "yes" ] ; then

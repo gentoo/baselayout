@@ -2,6 +2,8 @@
 # Distributed under the terms of the GNU General Public License, v2 or later
 # $Header$
 
+#setup a basic $PATH
+PATH="/bin:/sbin:/usr/bin:/usr/sbin:$PATH"
 
 #daemontools dir
 SVCDIR=/var/lib/supervise
