@@ -72,7 +72,8 @@ then
 		then
 			ewarn "${myscript} not executable; skipping"
 			continue
-		fi		ln -sf /etc/init.d/${myscript} /etc/runlevels/${x}/${myscript}
+		fi
+		ln -sf /etc/init.d/${myscript} /etc/runlevels/${x}/${myscript}
 		ebegin "${myscript} added to runlevel ${x}"
 	done
 elif [ "$1" = "del" ]

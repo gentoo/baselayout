@@ -47,7 +47,7 @@ parse_envd() {
 		VARLIST="$(/bin/cat ${svcdir}/varlist)"
 		local variable=""
 		local value=""
-		if [ -f ${x} ] || ([ -L ${x} -a -f $(/bin/readlink ${x}) ])
+		if [ -f ${x} ] || ([ -L ${x} ] && [ -f $(/bin/readlink ${x}) ])
 		then
 			(/bin/awk '!/^#|^\t+#/ { gsub ( /=/, "\t" ) ; print $0 }' ${x}) | \
 				while read -r variable value
@@ -79,7 +79,7 @@ parse_envd() {
 	do
 		source ${svcdir}/vardata
 		VARLIST="$(/bin/cat ${svcdir}/varlist)"
-		if [ -f ${x} ] || ([ -L ${x} -a -f $(/bin/readlink ${x}) ])
+		if [ -f ${x} ] || ([ -L ${x} ] && [ -f $(/bin/readlink ${x}) ])
 		then
 			(/bin/awk '!/^#|^\t+#/ { gsub ( /=/, "\t" ) ; print $0 }' ${x}) | \
 				while read -r variable value
