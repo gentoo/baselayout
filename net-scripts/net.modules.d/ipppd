@@ -56,7 +56,7 @@ ipppd_pre_start() {
 	[[ ${itype} != "ippp" && ${itype} != "isdn" ]] && return 0
 
 	# Check that the interface exists
-	! interface_exists ${iface} true && return 1
+	interface_exists ${iface} true || return 1
 
 	if ! clean_pidfile ${pidfile} ; then
 		ewarn "ipppd is already running on ${iface}"

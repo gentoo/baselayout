@@ -73,7 +73,7 @@ iptunnel_pre_start() {
 iptunnel_stop() {
 	local iface=${1}
 	
-	! interface_exists ${iface} && return 0
+	interface_exists ${iface} || return 0
 	[[ -z $( interface_tunnel show ${iface} 2>/dev/null ) ]] && return 0
 	
 	ebegin "Destroying tunnel ${iface}"

@@ -212,6 +212,8 @@ iproute2_iface_stop() {
 iproute2_add_address() {
 	local iface=${1} x
 
+	iproute2_exists ${iface} true || return 1
+
 	# Extract the config
 	local -a config=( "$@" )
 	config=( ${config[@]:1} )
