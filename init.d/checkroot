@@ -5,7 +5,7 @@ start() {
 	mount / -o remount,ro	
 	eend $?
 	ebegin "Checking root filesystem"
-	fsck -a
+	fsck -a /
 	if [ $? -eq 0 ]
 	then
 		eend 0

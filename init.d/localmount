@@ -11,7 +11,8 @@ start() {
 	eend $? 
 	if [ -z "`grep usbdevfs /proc/filesystems`" ]
 	then
-		modprobe usbcore
+		# >/dev/null to hide errors from non-USB users
+		modprobe usbcore >/dev/null 2>/dev/null
 	fi
 	if [ -n "`grep usbdevfs /proc/filesystems`" ] && [ -e /proc/bus/usb ] && [ ! -e /proc/bus/usb/devices ] 
 	then

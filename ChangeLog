@@ -1,5 +1,14 @@
-rc-scripts 1.1.7, released 18 Oct 2001
-======================================
+# ChangeLog for Gentoo Linux System Intialization ("rc") scripts 
+# Copyright 2001 Gentoo Technologies, Inc.; Distributed under the GPL
+# Written by Daniel Robbins (drobbins@gentoo.org)
+
+  29 Oct 2001; Martin Schlemmer (azarah@gentoo.org)
+  A fix for checkroot (missing "/"); it now actually checks the root
+  filesystem.  Also, a localmount cleanliness fix.
+
+* rc-scripts 1.1.7 (18 Oct 2001)
+
+[old changelog format follows]
 
 	*lots of scripts; woodchip
 	removed old rc5 scripts from cvs
