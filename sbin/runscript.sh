@@ -1,8 +1,7 @@
 #!/bin/bash
-# Copyright 1999-2003 Gentoo Technologies, Inc.
+# Copyright 1999-2004 Gentoo Technologies, Inc.
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
-
 
 # Common functions
 [ "${RC_GOT_FUNCTIONS}" != "yes" ] && source /sbin/functions.sh

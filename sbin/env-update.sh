@@ -1,9 +1,7 @@
 #!/bin/bash
-# Copyright 1999-2003 Gentoo Technologies, Inc.
+# Copyright 1999-2004 Gentoo Technologies, Inc.
 # Distributed under the terms of the GNU General Public License v2
-# Author:  Martin Schlemmer <azarah@gentoo.org>
 # $Header$
-
 
 source /etc/init.d/functions.sh
 

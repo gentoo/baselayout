@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright 1999-2003 Gentoo Technologies, Inc.
+# Copyright 1999-2004 Gentoo Technologies, Inc.
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
 
@@ -11,13 +11,11 @@
 #    LIVECD_CONSOLE_PARITY	-- console parity specified
 #    LIVECD_CONSOLE_DATABITS	-- console databits specified
 
-
 livecd_parse_opt() {
-        case "$1" in
-                *\=*)
-                        echo "$1" | cut -f2 -d=
-                ;;
-        esac
+	case "$1" in
+		*\=*)
+			echo "$1" | cut -f2 -d=;;
+	esac
 }
 
 livecd_console_settings() {
