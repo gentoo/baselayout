@@ -41,37 +41,59 @@ NORMAL=$'\e[0m'
 HILITE=$'\e[36;01m'
 
 ebegin() {
-	[ "${QUIET_STDOUT}" = "yes" ] && return
-	echo -e " ${GOOD}*${NORMAL} ${*}..."
+	if [ "${QUIET_STDOUT}" = "yes" ]
+	then
+		return
+	else
+		echo -e " ${GOOD}*${NORMAL} ${*}..."
+	fi
 }
 
 ewarn() {
-	[ "${QUIET_STDOUT}" = "yes" ] && return
-	echo -e " ${WARN}*${NORMAL} ${*}"
+	if [ "${QUIET_STDOUT}" = "yes" ]
+	then
+		echo " ${*}"
+	else
+		echo -e " ${WARN}*${NORMAL} ${*}"
+	fi
 }
 
 eerror() {
-	[ "${QUIET_STDOUT}" = "yes" ] && return
-	echo -e " ${BAD}*${NORMAL} ${*}"
+	if [ "${QUIET_STDOUT}" = "yes" ]
+	then
+		echo " ${*}" >/dev/stderr
+	else
+		echo -e " ${BAD}*${NORMAL} ${*}"
+	fi
 }
 
 einfo() {
-	[ "${QUIET_STDOUT}" = "yes" ] && return
-	echo -e " ${GOOD}*${NORMAL} ${*}"
+	if [ "${QUIET_STDOUT}" = "yes" ]
+	then
+		return
+	else
+		echo -e " ${GOOD}*${NORMAL} ${*}"
+	fi
 }
 
 einfon() {
-	[ "${QUIET_STDOUT}" = "yes" ] && return
-	echo -ne " ${GOOD}*${NORMAL} ${*}"
+	if [ "${QUIET_STDOUT}" = "yes" ]
+	then
+		return
+	else
+		echo -ne " ${GOOD}*${NORMAL} ${*}"
+	fi
 }
 
 # void eend(int error, char *errstr)
 #
 eend() {
-	[ "${QUIET_STDOUT}" = "yes" ] && return
 	if [ "$#" -eq 0 ] || [ "${1}" -eq 0 ]
 	then
-		echo -e "${ENDCOL}  \e[34;01m[ ${GOOD}ok \e[34;01m]${NORMAL}"
+		if [ "${QUIET_STDOUT}" != "yes" ]
+		then
+			echo -e "${ENDCOL}  \e[34;01m[ ${GOOD}ok \e[34;01m]${NORMAL}"
+		fi
 	else
 		local returnme="${1}"
 		if [ "$#" -ge 2 ]
@@ -79,9 +101,12 @@ eend() {
 			shift
 			eerror "${*}"
 		fi
-		echo -e "${ENDCOL}  \e[34;01m[ ${BAD}!! \e[34;01m]${NORMAL}"
-		echo
-		#extra spacing makes it easier to read
+		if [ "${QUIET_STDOUT}" != "yes" ]
+		then
+			echo -e "${ENDCOL}  \e[34;01m[ ${BAD}!! \e[34;01m]${NORMAL}"
+			#extra spacing makes it easier to read
+			echo
+		fi
 		return ${returnme}
 	fi
 }
@@ -89,10 +114,12 @@ eend() {
 # void ewend(int error, char *errstr)
 #
 ewend() {
-	[ "${QUIET_STDOUT}" = "yes" ] && return
 	if [ "$#" -eq 0 ] || [ "${1}" -eq 0 ]
 	then
-		echo -e "${ENDCOL}  \e[34;01m[ ${GOOD}ok \e[34;01m]${NORMAL}"
+		if [ "${QUIET_STDOUT}" != "yes" ]
+		then
+			echo -e "${ENDCOL}  \e[34;01m[ ${GOOD}ok \e[34;01m]${NORMAL}"
+		fi
 	else
 		local returnme="${1}"
 		if [ "$#" -ge 2 ]
@@ -100,9 +127,11 @@ ewend() {
 			shift
 			ewarn "${*}"
 		fi
-		echo -e "${ENDCOL}  \e[34;01m[ ${WARN}!! \e[34;01m]${NORMAL}"
-		echo
-		#extra spacing makes it easier to read
+		if [ "${QUIET_STDOUT}" != "yes" ]
+			echo -e "${ENDCOL}  \e[34;01m[ ${WARN}!! \e[34;01m]${NORMAL}"
+			#extra spacing makes it easier to read
+			echo
+		fi
 		return ${returnme}
 	fi
 }
