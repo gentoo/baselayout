@@ -28,6 +28,8 @@ RC_QUIET_STDOUT="no"
 
 # Should we use color?
 RC_NOCOLOR="no"
+# Can the terminal handle endcols?
+RC_ENDCOL="yes"
 
 #
 # Default values for rc system
@@ -229,11 +231,11 @@ eerror() {
 ebegin() {
 	if [ "${RC_QUIET_STDOUT}" != "yes" ]
 	then
-		if [ "${RC_NOCOLOR}" = "yes" ]
+		if [ "${RC_ENDCOL}" = "yes" ]
 		then
-			echo -ne " ${GOOD}*${NORMAL} ${*}..."
-		else
 			echo -e " ${GOOD}*${NORMAL} ${*}..."
+		else
+			echo -ne " ${GOOD}*${NORMAL} ${*}..."
 		fi
 	fi
 
@@ -567,8 +569,9 @@ then
 
 	if [ "$(/sbin/consoletype 2> /dev/null)" = "serial" ]
 	then
-		# We do not want colors on serial terminals
+		# We do not want colors/endcols on serial terminals
 		RC_NOCOLOR="yes"
+		RC_ENDCOL="no"
 	fi
 	
 	for arg in $*
@@ -596,25 +599,26 @@ else
 	else
 		# We do not want colors or stty to run during emerge depend
 		RC_NOCOLOR="yes"
+		RC_ENDCOL="yes"
 	fi
 fi
 
 # Setup the $COLS variable so that all our calls to
 # eend line up the [ ok ] properly
-COLS="`stty size 2> /dev/null`"
-COLS="`getcols ${COLS}`"
-COLS=$((${COLS} - 7))
-if [ "${COLS:0:1}" == "-" ]
-then
-	# Sanity check ... with serial consoles and such,
-	# COLS may up being negative ...
-	COLS="80"
-fi
-ENDCOL=$'\e[A\e['${COLS}'G'
-if [ -n "${EBUILD}" ] && [ "${*/depend}" = "$*" ]
-then
-	stty cols 80 &>/dev/null
-	stty rows 25 &>/dev/null
+if [ "${RC_ENDCOL}" == "yes" ] ; then
+	COLS="`stty size 2> /dev/null`"
+	COLS="`getcols ${COLS}`"
+	COLS=$((${COLS} - 7))
+
+	# Sanity check ...
+	if [ "${COLS:0:1}" == "-" ]
+	then
+		COLS="80"
+	fi
+
+	ENDCOL=$'\e[A\e['${COLS}'G'
+else
+	ENDCOL=""
 fi
 
 # Setup the colors so our messages all look pretty
@@ -634,6 +638,5 @@ else
 	HILITE=$'\e[36;01m'
 	BRACKET=$'\e[34;01m'
 fi
-
 
 # vim:ts=4
