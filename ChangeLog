@@ -2,6 +2,11 @@
 # Copyright 2001 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+* rc-scripts 1.2.4 (30 Dec 2001)
+
+  30 Dec 2001: Daniel Robbins (drobbins@gentoo.org): Changed default umask
+  back to 022 as it should be.
+
   30 Dec 2001; Martin Schlemmer (azarah@gentoo.org): Updated
   /etc/init.d/checkfs to return 0 if the fs was successfully repaired.
 
@@ -46,6 +51,9 @@
     Add a pause function to /etc/init.d/runscript.sh.  It will basically
     stop a service without stopping the services that depends on that
     service.
+
+  Add a pause function to /etc/init.d/runscript.sh.  It will basically stop a
+  service without stopping the services that depends on that service.
 
 * rc-scripts 1.2.3 (18 Dec 2001)
 
