@@ -1,24 +1,30 @@
 #!/bin/bash
 
-export SOFTLEVEL=$1
+if [ -z "$1" ]
+then
+	echo no 1
+	export SOFTLEVEL="`cat /dev/shm/.init.d/softlevel`"
+else
+	export SOFTLEVEL=$1
+fi
 svcdir=/dev/shm/.init.d
 
 if [ "$SOFTLEVEL" = "reboot" ] || [ "$SOFTLEVEL" = "shutdown" ]
 then
 	myscripts=""
-elif [ ! -d /etc/runlevels/${1} ]
+elif [ ! -d /etc/runlevels/${SOFTLEVEL} ]
 then
-	echo "runlevel ${1} does not exist; exiting."
+	echo "runlevel ${SOFTLEVEL} does not exist; exiting."
 	exit 1
 else
 	myscripts=""
 	if [ "$SOFTLEVEL" != "boot" ]
 	then
 		#normal runlevels *include* boot scripts
-		mylevels="/etc/runlevels/${1}/* /etc/runlevels/boot/*"
+		mylevels="/etc/runlevels/${SOFTLEVEL}/* /etc/runlevels/boot/*"
 	else
 		#non-normal runlevels don't include boot scripts as default
-		mylevels="/etc/runlevels/${1}/*"
+		mylevels="/etc/runlevels/${SOFTLEVEL}/*"
 	fi
 	for x in $mylevels 
 	do
