@@ -9,7 +9,7 @@ source /etc/init.d/functions.sh
 
 if [ `id -u` -ne 0 ]
 then
-	eerror "${0}: must be root."
+	eerror "$0: must be root."
 	exit 1
 fi
 

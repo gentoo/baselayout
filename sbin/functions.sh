@@ -43,7 +43,7 @@ RCFAILONZOMBIE="no"
 
 
 getcols() {
-	echo "${2}"
+	echo "$2"
 }
 
 COLS="$(stty size 2>/dev/null)"
@@ -64,8 +64,8 @@ HILITE=$'\e[36;01m'
 esyslog() {
 	if [ -x /usr/bin/logger ]
 	then
-		pri="${1}"
-		tag="${2}"
+		pri="$1"
+		tag="$2"
 		shift 2
 		/usr/bin/logger -p ${pri} -t ${tag} -- $*
 	fi
@@ -125,14 +125,14 @@ einfon() {
 # void eend(int error, char *errstr)
 #
 eend() {
-	if [ "$#" -eq 0 ] || [ -n "${1}" -a "${1}" -eq 0 ]
+	if [ "$#" -eq 0 ] || ([ -n "$1" ] && [ "$1" -eq 0 ])
 	then
 		if [ "${QUIET_STDOUT}" != "yes" ]
 		then
 			echo -e "${ENDCOL}  \e[34;01m[ ${GOOD}ok \e[34;01m]${NORMAL}"
 		fi
 	else
-		local returnme="${1}"
+		local returnme="$1"
 		if [ "$#" -ge 2 ]
 		then
 			shift
@@ -151,14 +151,14 @@ eend() {
 # void ewend(int error, char *errstr)
 #
 ewend() {
-	if [ "$#" -eq 0 ] || [ -n "${1}" -a "${1}" -eq 0 ]
+	if [ "$#" -eq 0 ] || ([ -n "$1" ] && [ "$1" -eq 0 ])
 	then
 		if [ "${QUIET_STDOUT}" != "yes" ]
 		then
 			echo -e "${ENDCOL}  \e[34;01m[ ${GOOD}ok \e[34;01m]${NORMAL}"
 		fi
 	else
-		local returnme="${1}"
+		local returnme="$1"
 		if [ "$#" -ge 2 ]
 		then
 			shift
@@ -181,7 +181,7 @@ ewend() {
 wrap_rcscript() {
 	local retval=1
 
-	( echo "function test_script() {" ; cat ${1}; echo "}" ) > ${svcdir}/foo.sh
+	( echo "function test_script() {" ; cat $1; echo "}" ) > ${svcdir}/foo.sh
 
 	if source ${svcdir}/foo.sh &>/dev/null
 	then
@@ -204,9 +204,9 @@ getpidfile() {
 	else
 		for x in ${DAEMON}
 		do
-			if [ "${x}" != "${1}" ]
+			if [ "${x}" != "$1" ]
 			then
-				count=$(($count + 1))
+				count=$((count + 1))
 				continue
 			fi
 			
@@ -222,7 +222,7 @@ getpidfile() {
 						return 0
 					fi
 					
-					count2=$((${count2} + 1))
+					count2=$((count2 + 1))
 				done
 				for y in ${PIDFILE}
 				do
@@ -244,7 +244,7 @@ getpidfile() {
 				fi
 			fi
 			
-			count=$((${count} + 1))
+			count=$((count + 1))
 		done
 	fi
 	
@@ -277,7 +277,7 @@ getpids() {
 				PIDLIST[${count}]="$(pidof ${x})"
 			fi
 			
-			count=$((${count} + 1))
+			count=$((count + 1))
 		done
 	fi
 
@@ -295,7 +295,7 @@ checkpid() {
 	local x=""
 	local count=0
 
-	if [ "$#" -ne 1 -o -z "${1}" -o -z "${DAEMON}" -o \
+	if [ "$#" -ne 1 -o -z "$1" -o -z "${DAEMON}" -o \
 	     "$(eval echo \${DAEMON/${1}/})" = "${DAEMON}" ]
 	then
 		return 3
@@ -305,9 +305,9 @@ checkpid() {
 
 	for x in ${DAEMON}
 	do
-		if [ "${x}" != "${1}" ]
+		if [ "${x}" != "$1" ]
 		then
-			count=$((${count} + 1))
+			count=$((count + 1))
 			continue
 		fi
 
@@ -322,7 +322,7 @@ checkpid() {
 			return 1
 		fi
 		
-		count=$((${count} + 1))
+		count=$((count + 1))
 	done
 	
 	return 0
@@ -423,7 +423,7 @@ stop-single-daemon() {
 		pidretval=$?
 		if [ "${pidretval}" -eq 0 -o "${pidretval}" -eq 1 ]
 		then
-			retval=$((${retval} + 1))
+			retval=$((retval + 1))
 		fi
 	fi
 	
@@ -498,16 +498,16 @@ stop-daemon() {
 				checkpid ${x}
 				pidretval=$?
 
-				count=$((${count} + 1))
+				count=$((count + 1))
 			done
 			
-			retval=$((${retval} + ${tmpretval}))
+			retval=$((retval + tmpretval))
 		done
 	else
 		for x in ${DAEMON}
 		do
 			stop-single-daemon ${ssdargs} ${x}
-			retval=$((${retval} + $?))
+			retval=$((retval + $?))
 		done
 	fi
 
@@ -594,13 +594,13 @@ dolisting() {
 #   save the settings ("optstring") for "option"
 #
 save_options() {
-	local myopts="${1}"
+	local myopts="$1"
 	shift
 	if [ ! -d ${svcdir}/options/${myservice} ]
 	then
 		install -d -m0755 ${svcdir}/options/${myservice}
 	fi
-	echo "${*}" > ${svcdir}/options/${myservice}/${myopts}
+	echo "$*" > ${svcdir}/options/${myservice}/${myopts}
 }
 
 # char *get_options(char *option)
@@ -609,9 +609,9 @@ save_options() {
 #   by calling the save_options function
 #
 get_options() {
-	if [ -f ${svcdir}/options/${myservice}/${1} ]
+	if [ -f ${svcdir}/options/${myservice}/$1 ]
 	then
-		cat ${svcdir}/options/${myservice}/${1}
+		cat ${svcdir}/options/${myservice}/$1
 	fi
 }
 

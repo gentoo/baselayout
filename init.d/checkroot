@@ -76,8 +76,11 @@ start() {
 			mount -f -t ext2 /dev/ram0 ${svcdir} -o rw &> /dev/null
 		fi
 
-		# POSIX shared memory support
-		mount -f /dev/shm &> /dev/null
+		if ! get_bootparam "notmpfs" && get_bootparam "ngpt"
+		then
+			# POSIX shared memory support
+			mount -f /dev/shm &> /dev/null
+		fi
 	fi
 }
 

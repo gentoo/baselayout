@@ -32,3 +32,6 @@ stop () {
 	start-stop-daemon --stop --quiet --pid /var/run/nscd.pid
 	eend $?
 }
+
+
+# vim:ts=4

@@ -11,27 +11,30 @@
 
 # Misc internal variables
 CMD_LINE=""
-FUNCT="${2}"
+FUNCT="$2"
 TEMPLATEDIR="/etc/ppp"
 
 checkconfig() {
 
-	if [ ! -x "`which pppd`" ] || [ ! -x "`which chat`" ] ; then
+	if [ ! -x "$(which pppd)" -o ! -x "$(which chat)" ]
+	then
 		eerror "pppd and chat needs to be installed"
 		return 1
 	fi
 
-	if [ -e "/var/run/ppp-${IFACE}.pid" ] && [ "${FUNCT}" = "start" ] ; then
+	if [ -e "/var/run/ppp-${IFACE}.pid" -a "${FUNCT}" = "start" ]
+	then
 		eerror "ppp0 is already up"
 		return 1
 	fi
 
-	if [ ! -e "/var/run/ppp-${IFACE}.pid" ] && [ "${FUNCT}" = "stop" ] ; then
-
+	if [ ! -e "/var/run/ppp-${IFACE}.pid" -a "${FUNCT}" = "stop" ]
+	then
 		eerror "ppp0 not up"
 		
 		# Do our own cleanup
-		if [ -L ${svcdir}/started/net.${IFACE} ] ; then
+		if [ -L ${svcdir}/started/net.${IFACE} ]
+		then
 			rm -f ${svcdir}/started/net.${IFACE}
 		fi
 
@@ -48,17 +51,19 @@ start() {
 	setup_cfg_files
 
 	ebegin "Bringing ${IFACE} up"
-	if [ -x "`which pppd`" ]; then
+	if [ -x "$(which pppd)" ]
+	then
 
-		if [ "${DEFROUTE}" = "yes" ] ; then
-			[ "`/sbin/route |grep default`" ] && route del default
+		if [ "${DEFROUTE}" = "yes" ]
+		then
+			[ -n "$(/sbin/route | egrep 'default')" ] && route del default
 		fi
 
 		/usr/sbin/pppd ${CMD_LINE} ${MODEMPORT} ${LINESPEED} \
 			ipparam ${IFACE} linkname ${IFACE} call ${PEER} \
 			noauth ${PPPOPTIONS}
-        fi
-        eend
+	fi
+	eend
 }
 
 stop() {
@@ -66,15 +71,17 @@ stop() {
 	checkconfig || return 1
 
 	ebegin "Bringing ${IFACE} down"
-	if [ -x "`which ifconfig`" ]; then
+	if [ -x "$(which ifconfig)" ]
+	then
 
-		if [ ! "`/sbin/ifconfig |grep ${IFACE}`" ] ; then
+		if [ -z "$(/sbin/ifconfig | egrep "${IFACE}")" ]
+		then
 			eerror "Interface seems to be down already"
 			return 1
 		fi
 		
 #		/sbin/ifconfig ${IFACE} down
-		kill "`cat /var/run/ppp-${IFACE}.pid |grep -v ${IFACE}`"
+		kill $(cat /var/run/ppp-${IFACE}.pid | egrep -v "${IFACE}")
 	fi
 	eend
 }
@@ -83,51 +90,63 @@ setup_cmd_line() {
 
 	CMD_LINE="lock"
 	
-	if [ "${DEBUG}" = "yes" ] ; then
+	if [ "${DEBUG}" = "yes" ]
+	then
 		CMD_LINE="${CMD_LINE} debug"
 	fi
 
-	if [ "${PERSIST}" = "yes" ] ; then
+	if [ "${PERSIST}" = "yes" ]
+	then
 		CMD_LINE="${CMD_LINE} persist holdoff ${RETRYTIMEOUT}"
 	fi
 
-	if [ "${DEFROUTE}" = "yes" ] ; then
+	if [ "${DEFROUTE}" = "yes" ]
+	then
 		CMD_LINE="${CMD_LINE} defaultroute"
 	fi
 
-	if [ "${HARDFLOWCTL}" = "yes" ] ; then
+	if [ "${HARDFLOWCTL}" = "yes" ]
+	then
 		CMD_LINE="${CMD_LINE} modem crtscts"
 	fi
 
-	if [ "${ESCAPECHARS}" = "yes" ] ; then
+	if [ "${ESCAPECHARS}" = "yes" ]
+	then
 		CMD_LINE="${CMD_LINE} asyncmap 00000000"
 	fi
 
-	if [ "${PEERDNS}" = "yes" ] ; then
+	if [ "${PEERDNS}" = "yes" ]
+	then
 		CMD_LINE="${CMD_LINE} usepeerdns"
 	fi
 
-	if [ -n "${IPADDR}${REMIP}" ] ; then
+	if [ -n "${IPADDR}${REMIP}" ]
+	then
 		CMD_LINE="${CMD_LINE} ${IPADDR}:${REMIP}"
 	fi
 
-	if [ -n "${NETMASK}" ] ; then
+	if [ -n "${NETMASK}" ]
+	then
 		CMD_LINE="${CMD_LINE} netmask ${NETMASK}"
 	fi
 
-	if [ -n "${MRU}" ] ; then
+	if [ -n "${MRU}" ]
+	then
 		CMD_LINE="${CMD_LINE} mru ${MRU}"
 	fi
 	
-	if [ -n "${MTU}" ] ; then
+	if [ -n "${MTU}" ]
+	then
 		CMD_LINE="${CMD_LINE} mtu ${MTU}"
 	fi
 	    
-	if [ -n "${USERNAME}" ] ; then
+	if [ -n "${USERNAME}" ]
+	then
 		CMD_LINE="${CMD_LINE} user ${USERNAME} remotename ${PEER}"
 	fi
 
-	if [ "${ONDEMAND}" = "yes" ] ; then
+	if [ "${ONDEMAND}" = "yes" ]
+	then
 		CMD_LINE="${CMD_LINE} demand ktune idle ${IDLETIMEOUT}"
 		CMD_LINE="${CMD_LINE} holdoff ${RETRYTIMEOUT}"
 	fi
@@ -135,8 +154,8 @@ setup_cmd_line() {
 
 setup_cfg_files() {
 
-	if [ "${AUTOCFGFILES}" = "yes" ] ; then
-
+	if [ "${AUTOCFGFILES}" = "yes" ]
+	then
 		# Setup the peers file
 		echo "connect '/usr/sbin/chat -v -f /etc/ppp/chat-${PEER}'" \
 			>/etc/ppp/peers/${PEER}
@@ -148,7 +167,8 @@ setup_cfg_files() {
 		chmod 600 /etc/ppp/pap-secrets
 
 		# Setup the chat file
-		if [ -n "${INITSTRING}" ] ; then
+		if [ -n "${INITSTRING}" ]
+		then
 			sed -e "9i\\'OK\' \'${INITSTRING}\'" \
 				-e "s:\$NUMBER:${NUMBER}:" \
 				${TEMPLATEDIR}/chat-default \
@@ -166,14 +186,14 @@ setup_cfg_files() {
 		chmod 700 /etc/ppp/ip-down
 
 		# Setup if-up and if-down
-		if [ -x ${FWSCRIPT} ] ; then
-		
+		if [ -x ${FWSCRIPT} ]
+		then
 			echo "${FWSCRIPT} start" >>/etc/ppp/ip-up
 			echo "${FWSCRIPT} stop" >>/etc/ppp/ip-down
 		fi
 
-		if [ "${PEERDNS}" = "yes" ] ; then
-			
+		if [ "${PEERDNS}" = "yes" ]
+		then
 			# ip-up: add the server supplied DNS entries to
 			# /etc/resolv.conf
 			echo "/bin/cp -f /etc/resolv.conf /etc/resolv.conf.old" \

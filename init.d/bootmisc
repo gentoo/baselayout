@@ -50,7 +50,7 @@ start() {
 			local daemon="${x##*/}"
 			daemon="${daemon%*.pid}"
 			# Do not remove pidfiles of already running daemons
-			if [ "$(ps -A | awk '{print $4}' | grep ${daemon})" != "${daemon}" ]
+			if [ "$(ps -A | awk '{print $4}' | egrep "${daemon}")" != "${daemon}" ]
 			then
 				if [ -f ${x} -o -L ${x} ]
 				then

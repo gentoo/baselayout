@@ -17,7 +17,7 @@ try() {
 	errstr="$((eval $*) 2>&1 >/dev/null)"
 	retval=$?
 	if [ "${retval}" -ne 0 ] || \
-	   ([ -n "$(echo $* | grep mount)" -a -n "${errstr}" ])
+	   ([ -n "$(echo $* | egrep 'mount')" -a -n "${errstr}" ])
 	then
 		echo -e "${ENDCOL}${NORMAL}[${BAD} oops ${NORMAL}]"
 		echo
@@ -34,7 +34,7 @@ try() {
 }
 
 # save $1
-argv1="${1}"
+argv1="$1"
 
 # first time boot stuff goes here
 if [ "${RUNLEVEL}" = "S" -a "${argv1}" = "boot" ]
@@ -251,11 +251,11 @@ dep_stop() {
 	local needsme=""
 	local myservice=""
 	local depservice=""
-	[ ! -L ${1} ] && continue
-	if [ ! -e ${1} ]
+	[ ! -L $1 ] && continue
+	if [ ! -e $1 ]
 	then
 		# remove dud symlinks
-		rm ${1}
+		rm $1
 		continue
 	fi
 	myservice="${1##*/}"
@@ -270,7 +270,7 @@ dep_stop() {
 			# nothing depends on me
 			if [ -L ${svcdir}/started/${myservice} ]
 			then
-				${1} stop
+				$1 stop
 			fi
 		else
 			# something may depend on me
@@ -288,7 +288,7 @@ dep_stop() {
 			then
 				if [ -L ${svcdir}/started/${myservice} ]
 				then
-					${1} stop
+					$1 stop
 				fi
 			fi
 		fi
@@ -330,7 +330,7 @@ dep_start() {
 	local x=""
 	local myservice=""
 	local depservice=""
-	if [ ! -L ${1} ]
+	if [ ! -L $1 ]
 	then
 		continue
 	fi
@@ -338,7 +338,7 @@ dep_start() {
 	myservice="${1##*/}"
 	if [ ! -L ${svcdir}/started/${myservice} ]
 	then
-		${1} start
+		$1 start
 	fi
 }
 
@@ -359,8 +359,8 @@ rm -rf ${svcdir}/softscripts.old &>/dev/null
 
 # we want devfsd running after a change of runlevel (this is mostly if we return
 # from runlevel 'single')
-if [ -z "$(ps -A | egrep "devfsd")" -a \
-     -n "$(cat /proc/mounts | egrep "/dev devfs")" ]
+if [ -z "$(ps -A | egrep 'devfsd')" -a \
+     -n "$(cat /proc/mounts | egrep '/dev devfs')" ]
 then
 	/sbin/devfsd /dev &>/dev/null
 fi

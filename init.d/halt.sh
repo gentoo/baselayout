@@ -11,7 +11,7 @@ swapoff -a &>/dev/null
 eend $?
 
 #we need to properly terminate devfsd to save the permissions
-if [ "$(ps -A |grep devfsd)" ]
+if [ "$(ps -A | egrep 'devfsd')" ]
 then
 	ebegin "Stopping devfsd"
 	killall -15 devfsd &>/dev/null
@@ -103,14 +103,6 @@ then
 	eend $? "Failed to shut LVM down"
 fi
 
-ups_kill_power() {
-	if [ -x /sbin/upsdrvctl ]
-	then
-		ewarn "Signalling ups driver(s) to kill the load!"
-		/sbin/upsdrvctl shutdown
-	fi
-}
-
 ebegin "Remounting remaining filesystems readonly"
 #get better results with a sync and sleep
 sync;sync
@@ -144,7 +136,11 @@ then
 	ewarn "A full fsck will be forced on next startup"
 fi
 
-[ -f /etc/killpower ] && ups_kill_power
+if [ -f /etc/killpower -a -x /sbin/upsdrvctl ]
+then
+	ewarn "Signalling ups driver(s) to kill the load!"
+	/sbin/upsdrvctl shutdown
+fi
 
 
 # vim:ts=4

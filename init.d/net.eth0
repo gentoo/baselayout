@@ -136,7 +136,7 @@ stop() {
 		done
 	fi
 
-	if [ "$(eval echo \$\{iface_${IFACE}\})" == "dhcp" ]
+	if [ "$(eval echo \$\{iface_${IFACE}\})" = "dhcp" ]
 	then
 		/sbin/dhcpcd -k ${IFACE} &>/dev/null
 	

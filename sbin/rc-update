@@ -6,7 +6,7 @@
 source /sbin/functions.sh
 if [ `id -u` -ne 0 ]
 then
-	eerror "${0}: must be root."
+	eerror "$0: must be root."
 	exit 1
 fi
 
@@ -52,7 +52,7 @@ then
 	myscript=$1
 	if [ ! -e /etc/init.d/${myscript} ]
 	then
-		eerror "${0}: /etc/init.d/${myscript} not found; aborting."
+		eerror "$0: /etc/init.d/${myscript} not found; aborting."
 		exit 1
 	fi
 	shift
@@ -76,7 +76,7 @@ then
 		ln -sf /etc/init.d/${myscript} /etc/runlevels/${x}/${myscript}
 		if [ "$?" -ne 0 ]
 		then
-			eerror "${0}: failed to add $1 to ${x}."
+			eerror "$0: failed to add $1 to ${x}."
 			exit 1
 		fi
 		ebegin "${myscript} added to runlevel ${x}"
@@ -85,7 +85,7 @@ elif [ "$1" = "del" ]
 then
 	if [ $# -lt 2 ]
 	then
-		eerror "${0}: at least one argument expected after \"del\"."
+		eerror "$0: at least one argument expected after \"del\"."
 		exit 1
 	fi
 	shift
@@ -114,3 +114,5 @@ fi
 /sbin/depscan.sh
 einfo "rc-update complete."
 
+
+# vim:ts=4

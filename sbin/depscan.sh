@@ -30,8 +30,8 @@ done
 
 #call: depend_dbadd dep_type service deps....
 depend_dbadd() {
-	local mytype="${1}"
-	local myservice="${2}"
+	local mytype="$1"
+	local myservice="$2"
 	local x=""
 	shift 2
 	for x in $*
@@ -103,7 +103,7 @@ depend_dbadd() {
 }
 
 check_rcscript() {
-	[ ! -e ${1} ] && return 1
+	[ ! -e $1 ] && return 1
 	
 	[ "${1##*.}" = "sh" ] && return 1
 	[ "${1##*.}" = "c" ] && return 1
@@ -113,7 +113,7 @@ check_rcscript() {
 	local shell=""
 	#print the first line of each script, filtering out spaces and tabs
 	(awk '/^#|^\t+#/ { gsub(/ /, "") ; gsub(/\t/, "") ; \
-		COUNT += 1 ; if (COUNT == 1) print $0 }' ${1}) | { read hash shell
+		COUNT += 1 ; if (COUNT == 1) print $0 }' $1) | { read hash shell
 		if [ "${hash}" = "#" -a "${shell}" = "/sbin/runscript" ]
 		then
 			return 0
@@ -124,7 +124,7 @@ check_rcscript() {
 }
 
 cache_depend() {
-	[ ! -e ${1} ] && return 1
+	[ ! -e $1 ] && return 1
 
 	#the cached file should not be empty
 	echo "echo foo >/dev/null 2>&1" > ${svcdir}/cache/${1##*/}.depend
@@ -134,7 +134,7 @@ cache_depend() {
 	local mycount=0
 	local count=0
 	#we do not want comments in our cache
-	(awk '!/^#|^\t+#/ { print $0 }' ${1}) | { while read myline
+	(awk '!/^#|^\t+#/ { print $0 }' $1) | { while read myline
 		do
 			if [ "${myline/depend*()/}" != "${myline}" ]
 			then
@@ -147,7 +147,7 @@ cache_depend() {
 				local mycount="$(echo ${myline} | \
 					awk '{ BNUM += gsub(/{/, "{") ; BNUM -= gsub(/}/, "}") } \
 					END { print BNUM }')"
-				count=$(( $count + $mycount ))
+				count=$((count + mycount))
 				
 				echo "${myline}" >> ${svcdir}/cache/${1##*/}.depend
 			fi
@@ -163,23 +163,23 @@ cache_depend() {
 }
 
 need() {
-	NEED="${*}"
+	NEED="$*"
 }
 
 use() {
-	USE="${*}"
+	USE="$*"
 }
 
 before() {
-	BEFORE="${*}"
+	BEFORE="$*"
 }
 
 after() {
-	AFTER="${*}"
+	AFTER="$*"
 }
 
 provide() {
-	PROVIDE="${*}"
+	PROVIDE="$*"
 }
 
 ebegin "Caching service dependencies"

@@ -10,12 +10,12 @@ source /sbin/functions.sh
 svcpause="no"
 svcrestart="no"
 
-myscript="${1}"
-if [ -L ${1} ]
+myscript="$1"
+if [ -L $1 ]
 then
-	myservice="$(readlink ${1})"
+	myservice="$(readlink $1)"
 else
-	myservice="${1}"
+	myservice="$1"
 fi
 
 myservice="${myservice##*/}"
@@ -341,7 +341,7 @@ fi
 
 # does $1 depend on $2 ?
 dependon() {
-	if [ -L ${svcdir}/need/${2}/${1} -o -L ${svcdir}/use/${2}/${1} ]
+	if [ -L ${svcdir}/need/$2/$1 -o -L ${svcdir}/use/$2/$1 ]
 	then
 		return 0
 	else
@@ -351,9 +351,9 @@ dependon() {
 
 needsme() {
 	local x=""
-	if [ -d ${svcdir}/need/${1} ]
+	if [ -d ${svcdir}/need/$1 ]
 	then
-		for x in $(dolisting ${svcdir}/need/${1}/)
+		for x in $(dolisting ${svcdir}/need/$1/)
 		do
 			if [ ! -L ${x} ]
 			then
@@ -366,9 +366,9 @@ needsme() {
 
 usesme() {
 	local x=""
-	if [ -d ${svcdir}/use/${1} ]
+	if [ -d ${svcdir}/use/$1 ]
 	then
-		for x in $(dolisting ${svcdir}/use/${1}/)
+		for x in $(dolisting ${svcdir}/use/$1/)
 		do
 			if [ ! -L ${x} ]
 			then
@@ -382,7 +382,7 @@ usesme() {
 ineed() {
 	local x=""
 	local z=""
-	for x in $(dolisting ${svcdir}/need/*/${1})
+	for x in $(dolisting ${svcdir}/need/*/$1)
 	do
 		if [ ! -L ${x} ]
 		then
@@ -398,7 +398,7 @@ ineed() {
 iuse() {
     local x=""
     local z=""
-    for x in $(dolisting ${svcdir}/use/*/${1})
+    for x in $(dolisting ${svcdir}/use/*/$1)
     do
 		if [ ! -L ${x} ]
 		then
@@ -414,7 +414,7 @@ iuse() {
 valid_iuse() {
 	local x=""
 	local y=""
-	for x in $(iuse ${1})
+	for x in $(iuse $1)
 	do
 		if [ -e /etc/runlevels/boot/${x} -o -e /etc/runlevels/${mylevel}/${x} ]
 		then
@@ -428,7 +428,7 @@ valid_iuse() {
 iafter() {
 	local x=""
 	local z=""
-	for x in $(dolisting ${svcdir}/after/*/${1})
+	for x in $(dolisting ${svcdir}/after/*/$1)
 	do
 		if [ ! -L ${x} ]
 		then
@@ -444,7 +444,7 @@ iafter() {
 valid_iafter() {
 	local x=""
 	local y=""
-	for x in $(iafter ${1})
+	for x in $(iafter $1)
 	do
 		if [ -e /etc/runlevels/boot/${x} -o -e /etc/runlevels/${mylevel}/${x} ]
 		then
@@ -457,9 +457,9 @@ valid_iafter() {
 #list broken dependancies of type 'need'
 broken() {
 	local x=""
-	if [ -d ${svcdir}/broken/${1} ]
+	if [ -d ${svcdir}/broken/$1 ]
 	then
-		for x in $(dolisting ${svcdir}/broken/${1}/)
+		for x in $(dolisting ${svcdir}/broken/$1/)
 		do
 			if [ ! -f ${x} ]
 			then
@@ -475,12 +475,12 @@ query() {
 	local deps=""
 	local x=""
 	install -d -m0755 ${svcdir}/depcheck/$$
-	if [ "${1}" = "ineed" -a ! -L ${svcdir}/started/${myservice} ]
+	if [ "$1" = "ineed" -a ! -L ${svcdir}/started/${myservice} ]
 	then
 		ewarn "WARNING:  \"${myservice}\" not running."
 		ewarn "          NEED info may not be accurate."
 	fi
-	if [ "${1}" = "iuse" -a ! -L ${svcdir}/started/${myservice} ]
+	if [ "$1" = "iuse" -a ! -L ${svcdir}/started/${myservice} ]
 	then
 		ewarn "WARNING:  \"${myservice}\" not running."
 		ewarn "          USE info may not be accurate."
@@ -489,7 +489,7 @@ query() {
 	deps="${myservice}"
 	while [ -n "${deps}" ]
 	do
-		deps="$(${1} ${deps})"
+		deps="$($1 ${deps})"
 		for x in ${deps}
 		do
 			if [ ! -e ${svcdir}/depcheck/$$/${x} ]
@@ -510,7 +510,7 @@ query() {
 }
 
 svc_homegrown() {
-	local arg="${1}"
+	local arg="$1"
 	local x=""
 	# Walk through the list of available options, looking for the
 	# requested one.
@@ -534,7 +534,7 @@ svc_homegrown() {
 	# If we're here, then the function wasn't in $opts.  This is
 	# the same error message that used to be in the case statement
 	# before homegrown functions were supported.
-	eerror "ERROR:  wrong args. (  $arg / $* )"
+	eerror "ERROR:  wrong args. (  ${arg} / $* )"
 	usage ${opts}
 	exit 1
 }
@@ -546,7 +546,7 @@ then
 	usage ${opts}
 	exit 1
 fi
-for arg in ${*}
+for arg in $*
 do
 	case ${arg} in
 	--quiet)
@@ -554,7 +554,7 @@ do
 		;;
 	esac
 done
-for arg in ${*}
+for arg in $*
 do
 	case ${arg} in
 	stop)

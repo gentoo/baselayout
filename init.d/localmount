@@ -15,12 +15,12 @@ start() {
 	eend $? "Some local filesystem failed to mount"
 
 	# Mount usbdevfs if kernel have support
-	if [ -z "$(grep usbdevfs /proc/filesystems)" ]
+	if [ -z "$(egrep 'usbdevfs' /proc/filesystems)" ]
 	then
 		# >/dev/null to hide errors from non-USB users
 		modprobe usbcore &>/dev/null
 	fi
-	if [ -n "$(grep usbdevfs /proc/filesystems)" ] && [ -e /proc/bus/usb ] && \
+	if [ -n "$(egrep 'usbdevfs' /proc/filesystems)" ] && [ -e /proc/bus/usb ] && \
 	   [ ! -e /proc/bus/usb/devices ]
 	then
 		ebegin "Mounting USB device filesystem"
