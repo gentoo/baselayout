@@ -42,9 +42,7 @@ start() {
 	/sbin/swapon -a &>/dev/null
 	eend 0
 
-	ebegin 'Running post_mount commands for dm-crypt'
 	dm-crypt-start
-	ewend $? 'Failed to run a post_mount command'
 }
 
 # Note: This function is exactly duplicated in localmount.  If you change it
@@ -54,6 +52,8 @@ dm-crypt-start() {
 	local mountline mount swap options pre_mount post_mount source
 
 	if [ -f /etc/conf.d/cryptfs ]; then
+		ebegin "Running post_mount commands for dm-crypt"
+
 		while read mountline; do
 			# skip comments and blank lines
 			[[ ${mountline}\# == \#* ]] && continue
@@ -86,6 +86,8 @@ dm-crypt-start() {
 
 		# If we have a mount queued up, then execute it
 		dm-crypt-execute
+
+		ewend ${cryptfs_status} "Failed to run a post_mount command"
 	fi
 
 	return ${cryptfs_status}

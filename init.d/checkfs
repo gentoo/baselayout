@@ -179,9 +179,7 @@ start() {
 		eend $? "Failed to setup the LVM"
 	fi
 
-	ebegin 'Setting up dm-crypt mappings'
 	dm-crypt-start
-	ewend $? 'Failed to setup a mapping or swap device'
 
 	if [ -f /fastboot -o -n "${CDBOOT}" ]
 	then
@@ -220,6 +218,8 @@ dm-crypt-start() {
 	local mountline mount swap options pre_mount post_mount source
 
 	if [ -f /etc/conf.d/cryptfs ]; then
+		ebegin "Setting up dm-crypt mappings"
+
 		while read mountline; do
 			# skip comments and blank lines
 			[[ ${mountline}\# == \#* ]] && continue
@@ -252,6 +252,8 @@ dm-crypt-start() {
 
 		# If we have a mount queued up, then execute it
 		dm-crypt-execute
+
+		ewend ${cryptfs_status} "Failed to setup dm-crypt devices"
 	fi
 
 	return ${cryptfs_status}

@@ -127,7 +127,7 @@ eend 0
 
 if [ -f /etc/conf.d/cryptfs ]
 then
-	ebegin "Removing dm-crypt mappings"
+	einfo "Removing dm-crypt mappings"
 
 	/bin/egrep "^(mount|swap)" /etc/conf.d/cryptfs | \
 	while read mountline
@@ -148,11 +148,9 @@ then
 			ewarn "Invalid line in /etc/conf.d/cryptfs: ${mountline}"
 		fi
 
-		einfo "Removing dm-crypt mapping for: ${target}"
-		if ! /bin/cryptsetup remove ${target}
-		then
-			ewarn "Failed to remove dm-crypt mapping for: ${target}"
-		fi
+		ebegin "Removing dm-crypt mapping for: ${target}"
+		/bin/cryptsetup remove ${target}
+		eend $? "Failed to remove dm-crypt mapping for: ${target}"
 	done
 fi
 
