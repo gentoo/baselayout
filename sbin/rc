@@ -76,18 +76,34 @@ then
 		fi
 	fi
 
-	#mount shm and do dep scan
-	
-	ebegin "Mounting tmpfs at /dev/shm"
-	try mount -n -t tmpfs tmpfs /dev/shm -o rw,mode=0644,size=4m
-	eend
-			
-	/etc/init.d/depscan.sh
-
+	# need devfsd running now so that /dev/ram0 exists if we need it
 	if [ "$devfs" = "yes" ] && [ -e /dev/.devfsd ]
 	then
 		ebegin "Starting devfsd"; /sbin/devfsd /dev >/dev/null 2>&1; eend $?
 	fi
+
+	#mount either a ramdisk or tmpfs and do dep scan
+
+	tmpfs="yes"
+	get_bootparam "notmpfs"
+	if [ $? -eq 0 ]
+	then
+		tmpfs="no"
+	fi
+	
+	if [ "$tmpfs" = "yes" ] ; then
+		ebegin "Mounting tmpfs at ${svcdir}"
+		try mount -n -t tmpfs tmpfs ${svcdir} -o rw,mode=0644,size=${svcsize}k
+		eend
+	else
+		ebegin "Mounting ramdisk 0 at ${svcdir}"
+		try dd if=/dev/zero of=/dev/ram0 bs=1k count=$svcsize
+		try mke2fs -vm0 /dev/ram0 $svcsize
+		try mount -n -t ext2 /dev/ram0 ${svcdir} -o rw
+		eend
+	fi
+			
+	/etc/init.d/depscan.sh
 
 	#swap needs to be activated *after* devfs has been mounted and *after*
 	#devfsd has been started, so that the fstab can be properly parsed
@@ -111,11 +127,10 @@ fi #boot ends here
 
 if [ -z "$argv1" ]
 then
-	export SOFTLEVEL="`cat /dev/shm/.init.d/softlevel`"
+	export SOFTLEVEL="`cat ${svcdir}/softlevel`"
 else
 	export SOFTLEVEL=$argv1
 fi
-svcdir=/dev/shm/.init.d
 
 if [ "$SOFTLEVEL" = "reboot" ] || [ "$SOFTLEVEL" = "shutdown" ]
 then
@@ -224,7 +239,7 @@ done
 # Only change softlevel AFTER all the services have been stopped,
 # else they will not get the depend's right (wrong SOFTLEVEL)
 
-echo $SOFTLEVEL > /dev/shm/.init.d/softlevel
+echo $SOFTLEVEL > ${svcdir}/softlevel
 
 if [ "$SOFTLEVEL" = "reboot" ] || [ "$SOFTLEVEL" = "shutdown" ]
 then

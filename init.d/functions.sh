@@ -6,7 +6,9 @@
 #daemontools dir
 SVCDIR=/var/lib/supervise
 #rc-scripts dir
-svcdir=/dev/shm/.init.d
+svcdir=/mnt/.init.d
+#size of $svcdir in KB
+svcsize=2048
 #different types of dependancies
 deptypes="need use"
 #different types of order deps

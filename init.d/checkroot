@@ -45,7 +45,16 @@ start() {
 			mount -f -t devfs none /dev
 		fi
 		
-		mount -f -t tmpfs tmpfs /dev/shm -o rw,mode=0644,size=4m
+		# should we mount a ramdisk or tmpfs?
+		get_bootparam "notmpfs"
+		if [ $? -ne 0 ] 
+		then
+			# using tmpfs
+			mount -f -t tmpfs tmpfs ${svcdir} -o rw,mode=0644,size=${svcsize}k
+		else
+			# using a ramdisk
+			mount -f -t ext2 /dev/ram0 ${svcdir} -o rw
+		fi
 	fi
 	
 	return

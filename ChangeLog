@@ -3,8 +3,12 @@
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
   27 Feb 2002; Martin Schlemmer <azarah@gentoo.org>: in some wierd cases,
-  a redundent /dev/.devfsd on a unmounted /dev can cause problems.  Fixed
-  this in /sbin/rc.
+    a redundent /dev/.devfsd on a unmounted /dev can cause problems.  Fixed
+    this in /sbin/rc.
+
+    Added the patches from Grant Goodyear (aka g2boojum) to enable us to
+    use a ramdisk to store the contents of ${svcdir}.  Updated /sbin/rc,
+    /etc/init.d/functions.sh and /etc/init.d/checkroot for this.
 
   26 Feb 2002; Martin Schlemmer <azarah@gentoo.org>: fix my brain dead
     update of the 25th.  It really should keep "gentoo=nodevfs" in mind.
