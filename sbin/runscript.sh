@@ -488,7 +488,7 @@ do
 			     -z "$(egrep 'svc_start' "/etc/init.d/${myservice}")" ]
 			then
 				echo
-				ewarn "Please use 'svc_stop; svc_start' and not 'start; stop' to"
+				ewarn "Please use 'svc_stop; svc_start' and not 'stop; start' to"
 				ewarn "restart the service in its custom 'restart()' function."
 				ewarn "Run ${myservice} without arguments for more info."
 				echo

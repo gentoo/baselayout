@@ -2,6 +2,11 @@
 # Copyright 2002-2004 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  09 Jul 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Fix bug 55576: swap words "start" and "stop" in runscript.sh error
+    message
+
 * rc-scripts 1.5.1 (28 Jun 2004)
 
   28 Jun 2004; Aron Griffis <agriffis@gentoo.org>:
