@@ -556,10 +556,6 @@ add_suffix() {
 	return 0
 }
 
-getcols() {
-	echo "$2"
-}
-
 if [ -z "${EBUILD}" ]
 then
 	# Setup a basic $PATH.  Just add system default to existing.
@@ -590,46 +586,35 @@ then
 	fi
 else
 	# Should we use colors ?
-	if [ "${*/depend}" = "$*" ]
-	then
+	if [[ $* != *depend* ]]; then
 		# Check user pref in portage
 		RC_NOCOLOR="$(portageq envvar NOCOLOR 2>/dev/null)"
-
 		[ "${RC_NOCOLOR}" = "true" ] && RC_NOCOLOR="yes"
 	else
 		# We do not want colors or stty to run during emerge depend
 		RC_NOCOLOR="yes"
-		RC_ENDCOL="yes"
+		RC_ENDCOL="no"
 	fi
 fi
 
-# Setup the $COLS variable so that all our calls to
-# eend line up the [ ok ] properly
+# Setup ENDCOL so that all our calls to eend line up the [ ok ]
 if [ "${RC_ENDCOL}" == "yes" ] ; then
-	COLS="`stty size 2> /dev/null`"
-	COLS="`getcols ${COLS}`"
-	COLS=$((${COLS} - 7))
-
-	# Sanity check ...
-	if [ "${COLS:0:1}" == "-" ]
-	then
-		COLS="80"
+	COLS=${COLUMNS:-0}		# bash's internal COLUMNS variable
+	(( COLS == 0 )) && COLS=$(stty size 2>/dev/null | cut -d' ' -f2)
+	(( COLS -= 7 ))			# width of [ ok ]
+	if (( COLS <= 0 )); then
+		# Sanity check ... with serial consoles and such,
+		# COLS may up being negative ...
+		(( COLS = 80 ))
 	fi
-
 	ENDCOL=$'\e[A\e['${COLS}'G'
 else
 	ENDCOL=""
 fi
 
 # Setup the colors so our messages all look pretty
-if [ "${RC_NOCOLOR}" = "yes" ]
-then
-	GOOD=
-	WARN=
-	BAD=
-	NORMAL=
-	HILITE=
-	BRACKET=
+if [ "${RC_NOCOLOR}" = "yes" ]; then
+	unset GOOD WARN BAD NORMAL HILITE BRACKET
 else
 	GOOD=$'\e[32;01m'
 	WARN=$'\e[33;01m'
