@@ -16,6 +16,9 @@
     with env.d/00basic.  Updated sbin/runscript.sh, etc/profile, 
     sbin/rc-help.sh, and src/awk/cachedepends.awk.
 
+    Run `find | xargs` instead of `find -exec`.  Much better performance 
+    this way, and busybox friendly #59732.
+
   15 Nov 2004; Roy Marples <uberlord@gentoo.org>:
 
     Added searchdomains_ESSID option to essidnet
