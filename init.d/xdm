@@ -16,9 +16,9 @@
 #  x:3:respawn:/etc/X11/startDM.sh
 #
 # and have /etc/X11/startDM.sh start the DM in -nodaemon mode if
-# a lock is present, else just fall through (with a big enouth)
+# a lock is present, else just fall through (with a big enouth
 # delay so that init will not "detect" a respawning process and 
-# halt if for some odd time.
+# halt if for some odd time).
 #
 # We then use /etc/init.d/xdm to control the presence of this
 # lock, and this should ensure that the getty's is always started
