@@ -747,6 +747,20 @@ is_older_than() {
 	return 1
 }
 
+# void requote()
+#
+#   Requotes params so they're suitable to be eval'd, just like this would:
+#   set -- 1 2 "3 4"
+#   /usr/bin/getopt -- '' "$@" | sed 's/^ -- //'
+#
+requote() {
+	local q=\'
+	set -- "${@//\'/$q\'$q}"	# quote inner instances of '
+	set -- "${@/#/$q}"			# add ' to start of each param
+	set -- "${@/%/$q}"			# add ' to end of each param
+	echo "$*"
+}
+
 
 ##############################################################################
 #                                                                            #
