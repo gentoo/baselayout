@@ -7,6 +7,9 @@
     Modify /etc/init.d/modules not to print the autoloading stuff if
     no modules should be loaded (resolving bug #26288), per request from
     Michael Frysinger <vapier@gentoo.org>.
+
+    Fix get_bootparam() in /sbin/functions.sh to check for existance of
+    the /proc/cmdline proc entry.
     
   10 Aug 2003; Martin Schlemmer <azarah@gentoo.org>:
 

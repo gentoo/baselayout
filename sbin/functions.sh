@@ -489,6 +489,8 @@ get_bootparam() {
 	local copt=
 	local parms=
 	local retval=1
+
+	[ ! -e "/proc/cmdline" ] && return 1
 	
 	for copt in $(< /proc/cmdline)
 	do
