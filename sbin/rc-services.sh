@@ -800,8 +800,9 @@ dependon() {
 #   (they must be in the boot or current runlevel)
 #
 valid_iuse() {
-	local x=
-	local y=
+	local x y
+	local mylevel=$(<"${svcdir}/softlevel")
+	# Cannot be SOFTLEVEL, as we need to know current runlevel
 
 	for x in $(iuse "$1")
 	do
@@ -822,7 +823,9 @@ valid_iuse() {
 #   before 'service'
 #
 valid_iafter() {
-	local x=
+	local x
+	local mylevel=$(<"${svcdir}/softlevel")
+	# Cannot be SOFTLEVEL, as we need to know current runlevel
 	
 	for x in $(iafter "$1")
 	do

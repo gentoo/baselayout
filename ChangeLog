@@ -4,6 +4,7 @@
   21 Mar 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix tracing for current service as list_depend_trace() was removed.
+    Fix mylevel not being set if valid_iuse(), etc is called from /sbin/rc.
 
   20 Mar 2005; Martin Schlemmer <azarah@gentoo.org>:
 
