@@ -81,7 +81,7 @@ function add_provide(service, provide)
 		
 	if (check_provide(provide)) {
 		# We cannot have more than one service Providing a virtual ...
-		ewarn(" Service '" get_provide(provide) "' already provide '" provide "'!;")
+		ewarn(" Service '" get_provide(provide) "' already provided by '" provide "'!;")
 		ewarn(" Not adding service '" service "'...")
 		# Do not fail here as we do have a service that resolves the virtual
 	} else {
@@ -89,7 +89,7 @@ function add_provide(service, provide)
 		if (check_service(service)) {
 			PROVIDE_LIST[provide] = service
 		} else {
-			eerror(" Cannot add provide '" provide "', as service '" service "' do not exist!")
+			eerror(" Cannot add provide '" provide "', as service '" service "' does not exist!")
 			return 0
 		}
 	}
