@@ -47,13 +47,12 @@ macchanger_check_depends() {
 # Configures the MAC address for iface 
 macchanger_pre_start() {
 	local iface=${1} mac opts
-
-	interface_exists ${iface} true || return 1
-
 	local ifvar=$( interface_variable ${1} )
 
 	eval mac=\"\$\{mac_${ifvar}\}\"
 	[[ -z ${mac} ]] && return 0
+
+	interface_exists ${iface} true || return 1
 
 	mac=$( echo ${mac} | tr '[:upper:]' '[:lower:]' )
 	case "${mac}" in

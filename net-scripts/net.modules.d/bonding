@@ -49,7 +49,7 @@ bonding_check_depends() {
 bonding_pre_start() {
 	local iface=${1} slaves s ifvar=$( interface_variable ${1} )
 
-	eval slaves=\"\$\{slaves_${ifvar}\}\"
+	eval slaves=\"\$\{slaves_${ifvar}\[@\]\}\"
 	[[ -z ${slaves} ]] && return 0
 
 	interface_exists ${iface} true || return 1
