@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright 1999-2002 Gentoo Technologies, Inc.
+# Copyright 1999-2003 Gentoo Technologies, Inc.
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
 
@@ -116,7 +116,7 @@ svc_stop() {
 
 			# Only worry about net.* services if this is the last one running,
 			# or if RC_NET_STRICT_CHECKING is set ...
-			if [ "${netcount}" -lt "1" -o "${RC_NET_STRICT_CHECKING}" = "yes" ]
+			if [ "${netcount}" -lt 1 -o "${RC_NET_STRICT_CHECKING}" = "yes" ]
 			then
 				mydeps="net"
 			fi
@@ -162,7 +162,7 @@ svc_stop() {
 					continue
 				fi
 				"${x}" stop
-				if [ "$?" -ne "0" ]
+				if [ "$?" -ne 0 ]
 				then
 					# If we are halting the system, try and get it down as
 					# clean as possible, else do not stop our service if
@@ -171,7 +171,7 @@ svc_stop() {
 					     "${SOFTLEVEL}" != "shutdown" -a \
 						 -L "${svcdir}/need/${mydep}/${x}" ]
 					then
-						retval="1"
+						retval=1
 					fi
 					break
 				fi
@@ -179,7 +179,7 @@ svc_stop() {
 		fi
 	done
 
-	if [ "${retval}" -ne "0" ]
+	if [ "${retval}" -ne 0 ]
 	then
 		eerror "ERROR:  problems stopping dependent services."
 		eerror "        \"${myservice}\" is still up."
@@ -189,7 +189,7 @@ svc_stop() {
 		retval="$?"
 	fi
 	
-	if [ "${retval}" -ne "0" ]
+	if [ "${retval}" -ne 0 ]
 	then
 		# Did we fail to stop? create symlink to stop multible attempts at
 		# runlevel change.  Note this is only used at runlevel change ...
@@ -253,7 +253,7 @@ svc_start() {
 						/etc/init.d/"${myserv}" start
 
 						# A 'need' dependancy is critical for startup
-						if [ "$?" -ne "0" -a -L "${svcdir}/need/${x}/${myservice}" ]
+						if [ "$?" -ne 0 -a -L "${svcdir}/need/${x}/${myservice}" ]
 						then
 							local netcount="$(ls -1 ${svcdir}/started/net.* 2> /dev/null | \
 								grep -v 'net\.lo' | egrep -c "\/net\.[[:alnum:]]+$")"
@@ -261,7 +261,7 @@ svc_start() {
 							# Only worry about a net.* service if we do not have
 							# one up and running already, or if
 							# RC_NET_SCTRICT_CHECKING is set ....
-							if [ "${netcount}" -lt "1" -o "${RC_NET_STRICT_CHECKING}" = "yes" ]
+							if [ "${netcount}" -lt 1 -o "${RC_NET_STRICT_CHECKING}" = "yes" ]
 							then
 								startfail="yes"
 							fi
@@ -274,7 +274,7 @@ svc_start() {
 					/etc/init.d/"${x}" start
 
 					# A 'need' dependacy is critical for startup
-					if [ "$?" -ne "0" -a -L "${svcdir}/need/${x}/${myservice}" ]
+					if [ "$?" -ne 0 -a -L "${svcdir}/need/${x}/${myservice}" ]
 					then
 						startfail="yes"
 					fi
@@ -286,17 +286,17 @@ svc_start() {
 		then
 			eerror "ERROR:  Problem starting needed services."
 			eerror "        \"${myservice}\" was not started."
-			retval="1"
+			retval=1
 		fi
 		
 		# Start service
-		if [ -d "${svcdir}/broken/${myservice}" -a "${retval}" -eq "0" ]
+		if [ -d "${svcdir}/broken/${myservice}" -a "${retval}" -eq 0 ]
 		then
 			eerror "ERROR:  Some services needed are missing.  Run"
 			eerror "        './${myservice} broken' for a list of those"
 			eerror "        services.  \"${myservice}\" was not started."
-			retval="1"
-		elif [ ! -d "${svcdir}/broken/${myservice}" -a "${retval}" -eq "0" ]
+			retval=1
+		elif [ ! -d "${svcdir}/broken/${myservice}" -a "${retval}" -eq 0 ]
 		then
 			start
 			retval="$?"
@@ -310,7 +310,7 @@ svc_start() {
 		# Remove link if service didn't start; but only if we're not booting
 		# if we're booting, we need to continue and do our best to get the
 		# system up.
-		if [ "${retval}" -ne "0" -a "${SOFTLEVEL}" != "boot" ]
+		if [ "${retval}" -ne 0 -a "${SOFTLEVEL}" != "boot" ]
 		then
 			rm -f "${svcdir}/started/${myservice}"
 		fi
@@ -569,7 +569,7 @@ svc_homegrown() {
 }
 
 shift
-if [ "$#" -lt "1" ]
+if [ "$#" -lt 1 ]
 then
 	eerror "ERROR:  not enough args."
 	usage ${opts}

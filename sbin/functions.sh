@@ -1,6 +1,8 @@
-# Copyright 1999-2002 Gentoo Technologies, Inc.
+# Copyright 1999-2003 Gentoo Technologies, Inc.
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
+
+umask 022
 
 # Setup a basic $PATH
 [ -z "${PATH}" ] && \
@@ -14,20 +16,15 @@
 # daemontools dir
 SVCDIR="/var/lib/supervise"
 
-# rc-scripts dir
-svcdir="/mnt/.init.d"
-
+# Check /etc/conf.d/rc for a description of these ...
+svcdir="/var/state/init.d"
+svcmount="no"
 svcfstype="tmpfs"
-
-# Size of $svcdir in KB
-svcsize="1024"
-
-# tmpfs mount point for diskless nodes
+svcsize=1024
 shmdir="/mnt/.shm"
 
 # Different types of dependancies
 deptypes="need use"
-
 # Different types of order deps
 ordtypes="before after"
 
@@ -183,7 +180,7 @@ ewend() {
 			#extra spacing makes it easier to read
 			echo
 		fi
-		return ${returnme}
+		return "${returnme}"
 	fi
 }
 
@@ -194,15 +191,15 @@ ewend() {
 wrap_rcscript() {
 	local retval=1
 
-	( echo "function test_script() {" ; cat $1; echo "}" ) > ${svcdir}/foo.sh
+	( echo "function test_script() {" ; cat "$1"; echo "}" ) > "${svcdir}/foo.sh"
 
-	if source ${svcdir}/foo.sh &>/dev/null
+	if source "${svcdir}/foo.sh" &> /dev/null
 	then
-		test_script &>/dev/null
+		test_script &> /dev/null
 		retval=0
 	fi
-	rm -f ${svcdir}/foo.sh
-	return ${retval}
+	rm -f "${svcdir}/foo.sh"
+	return "${retval}"
 }
 
 # int checkserver(void)
@@ -219,6 +216,64 @@ checkserver() {
 	fi
 	
 	return 0
+}
+
+# void init_node(void)
+#
+#   Initialize an Adelie node.
+#
+init_node() {
+	ebegin "Importing local userspace on node"
+
+	try mount -t tmpfs none "${shmdir}"
+
+	for DIR in /etc /var /root
+	do
+
+		if grep -q -v "^${DIR}[[:space:]]" /etc/exports
+		then
+			mount -o nolock -n server:"${DIR}" "${DIR}"
+		fi
+
+		if [ -e "/etc/conf.d/exclude/${DIR}" ]
+		then
+			find "${DIR}/" -type d | grep -v -f "/etc/conf.d/exclude/${DIR}" \
+				> "${shmdir}/${DIR}.lst"
+		else
+			find "${DIR}/" -type d > "${shmdir}/${DIR}.lst"
+		fi
+
+		for SUBDIR in `cat ${shmdir}/${DIR}.lst`
+		do
+			mkdir -p "${shmdir}/${SUBDIR}"
+			chmod --reference="${SUBDIR}" "${shmdir}/${SUBDIR}"
+			cp -dp "${SUBDIR}"/* "${shmdir}/${SUBDIR}" &> /dev/null
+		done
+
+		if [ -e "/etc/conf.d/exclude/${DIR}" ]
+		then
+			for EMPTYDIR in `cat "/etc/conf.d/exclude/${DIR}"`
+			do
+				mkdir -p "${shmdir}/${EMPTYDIR}"
+				chmod --reference="${SUBDIR}" "${shmdir}/${SUBDIR}"
+			done
+		fi
+
+		umount -n "${DIR}" > /dev/null
+		mount -n -o bind "${shmdir}/${DIR}" "${DIR}"
+	done
+
+	mkdir -p "${shmdir}/tmp"
+	chmod 0777 "${shmdir}/tmp"
+	mount -n -o bind "${shmdir}/tmp" /tmp
+
+	cat /proc/mounts > /etc/mtab
+
+	cp -f /etc/inittab.node /etc/inittab
+	[ -e /etc/fstab.node ] && cp -f /etc/fstab.node /etc/fstab
+	killall -1 init
+
+	eend 0
 }
 
 # int KV_to_int(string)
@@ -238,7 +293,7 @@ KV_to_int() {
     
 	# We make version 2.2.0 the minimum version we will handle as
 	# a sanity check ... if its less, we fail ...
-	if [ "${KV_int}" -ge "131584" ]
+	if [ "${KV_int}" -ge 131584 ]
 	then 
 		echo "${KV_int}"
 
@@ -264,26 +319,33 @@ get_KV() {
 #
 #   return 0 if gentoo=param was passed to the kernel
 #
-#   NOTE: you should always query the longer argument, for instance
-#         if you have 'nodevfs' and 'devfs', query 'nodevfs', or 
-#         results may be unpredictable.
-#
-#         if get_bootparam "nodevfs" -eq 0 ; then ....
+#   EXAMPLE:  if get_bootparam "nodevfs" ; then ....
 #
 get_bootparam() {
 	local copt=""
 	local parms=""
 	local retval=1
+	
 	for copt in `cat /proc/cmdline`
 	do
 		if [ "${copt%=*}" = "gentoo" ]
 		then
-			parms="${copt##*=}"
-			#parse gentoo option
-			if [ "`eval echo \${parms/${1}/}`" != "${parms}" ]
-			then
-				retval=0
-			fi
+			params="`gawk -v PARAMS="${copt##*=}" '
+				BEGIN { 
+					split(PARAMS, nodes, ",")
+					for (x in nodes)
+						print nodes[x]
+				}'`"
+			
+			# Parse gentoo option
+			for x in ${params}
+			do
+				if [ "${x}" = "$1" ]
+				then
+					echo YES
+					retval=0
+				fi
+			done
 		fi
 	done
 	return ${retval}

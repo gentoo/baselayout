@@ -1,6 +1,23 @@
 # ChangeLog for Gentoo Linux System Intialization ("rc") scripts 
-# Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
+# Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
+
+* rc-scripts 1.4.3.0 (07 Jan 2003)
+
+  07 Jan 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Too much to mention, but here are a few:
+    - Major rewrite of software RAID startup, based on Mandrake's, as
+      ours was pretty broken :(
+    - Redone /sbin/rc to work without the tmpfs/ramfs stat directory.
+      Much of /sbin/functions.sh and other scripts have been changed
+      to support this.
+    - Reworked /etc/inittab to support this.  Also moved critical
+      mounting of local filesystems to 'sysinit' function of /sbin/rc.
+    - Move state directory to /var/state/init.d/ ($svcdir).
+    - Move Adelie node init to /sbin/functions.sh to try and simplify
+      /sbin/rc a bit.
+    - Updated Copyright dates to 2003.
 
 * rc-scripts 1.4.2.8 (06 Jan 2003)
 

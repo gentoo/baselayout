@@ -1,4 +1,4 @@
-# Copyright 1999-2002 Gentoo Technologies, Inc.
+# Copyright 1999-2003 Gentoo Technologies, Inc.
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
 
@@ -15,7 +15,7 @@ then
 	eend $?
 
 	# We need to properly terminate devfsd to save the permissions
-	if [ "$(ps -A | egrep 'devfsd')" ]
+	if [ "`ps -A | grep 'devfsd'`" ]
 	then
 		ebegin "Stopping devfsd"
 		killall -15 devfsd &>/dev/null
@@ -45,7 +45,7 @@ halt -w &>/dev/null
 #
 # Unmount file systems, killing processes if we have to.
 # Unmount loopback stuff first
-remaining="$(awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $1}' /proc/mounts |sort -r)"
+remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $1}' /proc/mounts |sort -r`"
 [ -n "${remaining}" ] && {
 	sig=
 	retry=3
@@ -69,7 +69,7 @@ remaining="$(awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $1}' /proc/mo
 				eend $? "Failed to detach device ${dev}"
 			}
 		done
-		remaining="$(awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts |sort -r)"
+		remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts |sort -r`"
 		[ -z "${remaining}" ] && break
 		/bin/fuser -k -m ${sig} ${remaining} &>/dev/null
 		sleep 5
@@ -89,17 +89,6 @@ do
 	umount -f -r ${x} &>/dev/null
 done
 eend 0
-
-# Stop RAID
-if [ -x /sbin/raidstop -a -f /etc/raidtab -a -f /proc/mdstat ]
-then
-	ebegin "Stopping software RAID"
-	for x in $(grep -E "md[0-9]+[[:space:]]?: active raid" /proc/mdstat | awk -F ':' '{print $1}')
-	do
-		raidstop /dev/${x} >/dev/null
-	done
-	eend $? "Failed to stop software RAID"
-fi
 
 # Stop LVM
 if [ -x /sbin/vgchange -a -f /etc/lvmtab ] && [ -d /proc/lvm ]

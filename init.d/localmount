@@ -1,5 +1,5 @@
 #!/sbin/runscript
-# Copyright 1999-2002 Gentoo Technologies, Inc.
+# Copyright 1999-2003 Gentoo Technologies, Inc.
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
 
@@ -31,7 +31,7 @@ start() {
 	if [ -n "$(egrep "${USBFS}" /proc/filesystems)" ] && [ -e /proc/bus/usb ] && \
 	   [ ! -e /proc/bus/usb/devices ]
 	then
-		ebegin "Mounting USB device filesystem"
+		ebegin "Mounting USB device filesystem (${USBFS})"
 		mount -t ${USBFS} ${USBFS} /proc/bus/usb &>/dev/null
 		eend $? "Failed to mount USB device filesystem"
 	fi

@@ -1,5 +1,5 @@
 #!/sbin/runscript
-# Copyright 1999-2002 Gentoo Technologies, Inc.
+# Copyright 1999-2003 Gentoo Technologies, Inc.
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
 
@@ -34,6 +34,9 @@ start() {
 		else
 			eend 2 "Filesystem couldn't be fixed :("
 			/sbin/sulogin ${CONSOLE}
+			einfo "Unmounting filesystems"
+			/bin/mount -a -o remount,ro & >/dev/null
+			einfo "Rebooting"
 			/sbin/reboot -f
 		fi
 	fi
@@ -50,7 +53,7 @@ start() {
 
 	if [ "${BOOT}" = "yes" ]
 	then
-		# create /etc/mtab (done by forcing current mounted filesystems)
+		# Create /etc/mtab (done by forcing current mounted filesystems)
 		# NB:  this needs to be updated if our /sbin/rc mounts change ...
 		> /etc/mtab
 		mount -f -o rw / &> /dev/null
@@ -59,27 +62,25 @@ start() {
 		# Remove stale backups
 		rm -f /etc/mtab~ /etc/mtab~~
 		
-		# should /dev be mounted ?
+		# Should /dev be mounted ?
 		if ! get_bootparam "nodevfs" && [ -e /dev/.devfsd ]
 		then
 			mount -f -t devfs none /dev &> /dev/null
 		fi
 		
-		# should we mount a ramdisk or tmpfs?
-		if ! get_bootparam "notmpfs" 
+		# Should we mount a ramdisk or tmpfs?
+		if get_bootparam "tmpfs" || \
+		   [ "${svcmount}" = "yes" -a "${svcfstype}" = "tmpfs" ]
 		then
-			# using tmpfs
-			mount -f -t tmpfs tmpfs ${svcdir} \
-				-o rw,mode=0644,size=${svcsize}k &> /dev/null
-		else
-			# using a ramdisk
-			mount -f -t ext2 /dev/ram0 ${svcdir} -o rw &> /dev/null
-		fi
-
-		if ! get_bootparam "notmpfs" && get_bootparam "ngpt"
+			# Using tmpfs ...
+			mount -f -t tmpfs tmpfs "${svcdir}" \
+				-o rw,mode=0644,size="${svcsize}"k &> /dev/null
+			
+		elif get_bootparam "ramfs" || \
+		     [ "${svcmount}" = "yes" -a "${svcfstype}" = "ramfs" ]
 		then
-			# POSIX shared memory support
-			mount -f /dev/shm &> /dev/null
+			# Using a ramdisk ...
+			mount -f -t ext2 /dev/ram0 "${svcdir}" -o rw &> /dev/null
 		fi
 	fi
 }

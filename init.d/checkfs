@@ -1,5 +1,5 @@
 #!/sbin/runscript
-# Copyright 1999-2002 Gentoo Technologies, Inc.
+# Copyright 1999-2003 Gentoo Technologies, Inc.
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
 
@@ -28,22 +28,86 @@ start() {
 		eend $? "Failed to setup the LVM"
 	fi
 
-	# Start software raid
-	if [ -x /sbin/raidstart -a -f /etc/raidtab -a -f /proc/mdstat ]
+	# Start software raid.
+	# Sadly this is based on Mandrake's startup scripts, as nobody seems
+	# to want to fix our old one, and I do not use (or able to at present) raid ....
+	# NOTE:  You need a properly setup /etc/raidtab, and until sombody come up
+	#        with a *working* one, that is tested to work for all setups!
+	if [ -f /proc/mdstat -a -f /etc/raidtab ]
 	then
-		ebegin "Starting software RAID"
-		ACTIVE_RAID="`grep -E "md[0-9]+[[:space:]]?: active raid" /proc/mdstat | awk -F ':' '{print $1}'`"
-		if [ ! -z "${ACTIVE_RAID}" ]
+		ebegin "Starting up RAID devices: " 
+
+		local rc=0
+		local retval=0
+        
+		for i in `grep "^[^*]*raiddev" /etc/raidtab | awk '{print $2}'`
+		do
+			local raiddev="`basename ${i}`"
+			local raidstat="$(egrep "^${raiddev} : active" /proc/mdstat)"
+			
+			if [ -z "${raidstat}" ]
+			then
+				# First scan the /etc/fstab for the "noauto"-flag
+				# for this device. If found, skip the initialization
+				# for it to avoid dropping to a shell on errors.
+				# If not, try raidstart...if that fails then
+				# fall back to raidadd, raidrun.  If that
+				# also fails, then we drop to a shell
+				local retval=1
+				local noauto="$(egrep "^${i}" /etc/fstab | grep -c 'noauto')"
+
+				einfon "  Trying ${raiddev}..."
+
+				raiddev=""
+				
+				if [ "${noauto}" -gt 0 ]
+				then
+					retval=0
+					raiddev=" (skipped)"
+				fi
+				if [ "${retval}" -gt 0 -a -x /sbin/raidstart ]
+				then
+					/sbin/raidstart "${i}"
+					retval=$?
+				fi
+				if [ "${retval}" -gt 0 -a -x /sbin/raid0run ]
+				then
+					/sbin/raid0run "${i}"
+					retval=$?
+				fi
+				if [ "${retval}" -gt 0 -a -x /sbin/raidadd -a -x /sbin/raidrun ]
+				then
+					/sbin/raidadd "${i}"
+					/sbin/raidrun "${i}"
+					retval=$?
+				fi
+
+				echo "${raiddev}"
+				
+				if [ "${retval}" -gt 0 ]
+				then
+					rc=1
+					eend ${retval}
+				else
+					ewend ${retval}
+				fi
+			fi
+		done
+		
+		# A non-zero return means there were problems.
+		if [ "${rc}" -gt 0 ]
 		then
-			for x in $(grep -E "raiddev /dev/md[0-9]+" /etc/raidtab | \
-			           awk '{print $2}' | grep -v "`echo ${ACTIVE_RAID} | sed s'/[[:space:]]//g'`")
-			do
-				/sbin/raidstart /dev/${x}
-			done
-		else
-			/sbin/raidstart --all
+			echo
+			eerror "An error occurred during the RAID startup"
+			eerror "Dropping you to a shell; the system will reboot"
+			eerror "when you leave the shell."
+			echo; echo
+			/sbin/sulogin ${CONSOLE}
+			einfo "Unmounting filesystems"
+			/bin/mount -a -o remount,ro & >/dev/null
+			einfo "Rebooting"
+			/sbin/reboot -f
 		fi
-		eend $? "Failed to start software RAID"
 	fi
 
 	if [ -f /fastboot ]

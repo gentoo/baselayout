@@ -1,32 +1,32 @@
 #
-# inittab	This file describes how the INIT process should set up
-#		the system in a certain run-level.
+# /etc/inittab:  This file describes how the INIT process should set up
+#                the system in a certain run-level.
 #
-# Author:	Miquel van Smoorenburg, <miquels@cistron.nl>
-# Modified by:	Patrick J. Volkerding, <volkerdi@ftp.cdrom.com>
-# Modified by:	Daniel Robbins, <drobbins@gentoo.org>
+# Author:  Miquel van Smoorenburg, <miquels@cistron.nl>
+# Modified by:  Patrick J. Volkerding, <volkerdi@ftp.cdrom.com>
+# Modified by:  Daniel Robbins, <drobbins@gentoo.org>
+# Modified by:  Martin Schlemmer, <azarah@gentoo.org>
 #
 # $Header$
 
 #
 # Default runlevel.
-
 id:3:initdefault:
 
-# System initialization (runs when system boots).
-#DE:S12345:respawn:/sbin/devfsd /dev -fg
-# Script to run when going single user (runlevel 1).
-~~:S:wait:/sbin/sulogin
+# System initialization, mount local filesystems, etc.
+si::sysinit:/sbin/rc sysinit
 
-si:S:sysinit:/sbin/rc boot
+# Further system initialization, brings up the boot runlevel.
+rc::bootwait:/sbin/rc boot
+
 l0:0:wait:/sbin/rc shutdown 
-l1:1:wait:/sbin/rc single
+l1:S1:wait:/sbin/rc single
 l2:2:wait:/sbin/rc nonetwork
 l3:3:wait:/sbin/rc default
 l4:4:wait:/sbin/rc default
 l5:5:wait:/sbin/rc default
 l6:6:wait:/sbin/rc reboot
-z6:6:respawn:/sbin/sulogin
+#z6:6:respawn:/sbin/sulogin
 
 # TERMINALS
 c1:12345:respawn:/sbin/agetty 38400 tty1 linux

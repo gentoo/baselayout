@@ -48,12 +48,18 @@ RC_FAIL_ON_ZOMBIE="no"
  
 # rc-scripts dep-cache directory
 
-svcdir="/mnt/.init.d"
+svcdir="/var/state/init.d"
 
 
-# FS type that should be used for $svcdir.
-# Currently "tmpfs" and "ramfs" are supported, with
-# "tmpfs" the default.
+# Should we mount $svcdir as a tmpfs or ramfs for some speed
+# increase for slower machines, or for the more extreme setups ?
+
+svcmount="no"
+
+
+# FS type that should be used for $svcdir.  Note that you need
+# $svcmount above set to "yes" for this to work ...  Currently
+# "tmpfs" and "ramfs" are supported, with "tmpfs" the default.
 
 svcfstype="tmpfs"
 
