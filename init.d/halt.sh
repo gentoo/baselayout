@@ -113,5 +113,16 @@ else
 	eend 0
 fi
 
+# inform if there is a forced or skipped fsck
+if [ -f /fastboot ]
+then
+	echo
+	ewarn "Fsck will be skipped on next startup"
+elif [ -f /forcefsck ]
+then
+	echo
+	ewarn "A full fsck will be forced on next startup"
+fi
+
 
 # vim:ts=4

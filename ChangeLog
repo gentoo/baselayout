@@ -2,6 +2,15 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  27 Jul 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Updated /sbin/rc's way of checking for devfs support (now rather uses
+    awk, as it is more accurate).  Closes bug #5458.
+
+    Add the Redhat/Mandrake /forcefsck and /fastboot options to our checkroot
+    and checkfs.  Updated /etc/init.d/{checkroot,checkfs,halt.sh} for this.
+    Thanks goes to Chris PeBenito (bug #5570).
+
   27 Jul 2002; Nicholas Jones <carpaski@gentoo.org>:
     
     Added vpopmail user and group as 89:89

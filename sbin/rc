@@ -60,8 +60,8 @@ then
 	fi
 	
 	#fix wierd bug where there is a /dev/.devfsd in a unmounted /dev
-	mymounts="$(cat /proc/mounts)"
-	if [ -e /dev/.devfsd ] && [ "${mymounts/devfs//}" = "${mymounts}" ]
+	mymounts="$(awk '$3 ~ "devfs" { print $0 }' /proc/mounts)"
+	if [ -e /dev/.devfsd ] && [ -z "${mymounts}" ]
 	then
 		rm -f /dev/.devfsd &>/dev/null
 	fi
@@ -69,9 +69,9 @@ then
 	#with the new way, /dev can be mounted by the kernel ...
 	if [ "${devfs}" = "yes" ] && [ ! -e /dev/.devfsd ]
 	then
-		mymounts="$(cat /proc/filesystems)"
+		mymounts="$(awk '$2 ~ "devfs" { print $0 }' /proc/filesystems)"
 		#is devfs support compiled in?
-		if [ "${mymounts/devfs//}" != "${mymounts}" ]
+		if [ -n "${mymounts}" ]
 		then
 			ebegin "Mounting devfs at /dev"; \
 			try mount -n -t devfs none /dev; \
