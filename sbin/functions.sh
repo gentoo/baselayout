@@ -48,6 +48,7 @@ RC_NOCOLOR="no"
 #
 RC_NET_STRICT_CHECKING="no"
 RC_PARALLEL_STARTUP="no"
+RC_USE_CONFIG_PROFILE="yes"
 
 # Override defaults with user settings ...
 [ -f /etc/conf.d/rc ] && source /etc/conf.d/rc
@@ -132,40 +133,69 @@ fi
 #
 get_bootconfig() {
 	local copt=
-	BOOTLEVEL=
-	SOFTLEVEL=
+	local newbootlevel=
+	local newsoftlevel=
 	
-	for copt in $(cat /proc/cmdline)
+	for copt in $(< /proc/cmdline)
 	do
 		case "${copt%=*}" in
-			bootlevel)
-				BOOTLEVEL="${copt##*=}"
+			"bootlevel")
+				newbootlevel="${copt##*=}"
 				;;
-			softlevel)
-				SOFTLEVEL="${copt##*=}"
+			"softlevel")
+				newsoftlevel="${copt##*=}"
 				;;
 		esac
 	done
 
-	if [ -z "${BOOTLEVEL}" -o ! -d "/etc/runlevels/${BOOTLEVEL}" ]
+	if [ -n "${newbootlevel}" ]
 	then
-		if [ -n "${BOOTLEVEL}" ] && [ -L "/etc/runlevels/${BOOTLEVEL}" ]
-		then
-			continue
-		else
-			BOOTLEVEL="boot"
-		fi
+		export BOOTLEVEL="${newbootlevel}"
+	else
+		export BOOTLEVEL="boot"
 	fi
-
-	export BOOTLEVEL SOFTLEVEL
+	
+	if [ -n "${newsoftlevel}" ]
+	then
+		export DEFAULTLEVEL="${newsoftlevel}"
+	else
+		export DEFAULTLEVEL="default"
+	fi
 
 	return 0
 }
 
-if [ -z "${EBUILD}" -a -e "/proc/cmdline" ]
-then 
+setup_defaultlevels() {
 	get_bootconfig
-fi
+	
+	if get_bootparam "noconfigprofile"
+	then
+		export RC_USE_CONFIG_PROFILE="no"
+	
+	elif get_bootparam "configprofile"
+	then
+		export RC_USE_CONFIG_PROFILE="yes"
+	fi
+
+	if [ "${RC_USE_CONFIG_PROFILE}" = "yes" -a -n "${DEFAULTLEVEL}" ] && \
+	   [ -d "/etc/runlevels/${BOOTLEVEL}.${DEFAULTLEVEL}" -o \
+	     -L "/etc/runlevels/${BOOTLEVEL}.${DEFAULTLEVEL}" ]
+	then
+		export BOOTLEVEL="${BOOTLEVEL}.${DEFAULTLEVEL}"
+	fi
+									
+	if [ -z "${SOFTLEVEL}" ]
+	then
+		if [ -f "${svcdir}/softlevel" ]
+		then
+			export SOFTLEVEL="$(< ${svcdir}/softlevel)"
+		else
+			export SOFTLEVEL="${BOOTLEVEL}"
+		fi
+	fi
+
+	return 0
+}
 
 # void esyslog(char* priority, char* tag, char* message)
 #
@@ -562,7 +592,30 @@ get_options() {
 	return 0
 }
 
+# char *add_suffix(char * configfile)
+#
+#    Returns a config file name with the softlevel suffix
+#    appended to it.  For use with multi-config services.
+add_suffix () {
+	if [ "${RC_USE_CONFIG_PROFILE}" = "yes" -a -e "$1.${DEFAULTLEVEL}" ]
+	then
+		echo "$1.${DEFAULTLEVEL}"
+	else
+		echo "$1"
+	fi
+
+	return 0
+}
+
 set +a
+
+if [ -z "${EBUILD}" ]
+then
+	if [ -e "/proc/cmdline" ]
+	then
+		setup_defaultlevels
+	fi
+fi
 
 
 # vim:ts=4

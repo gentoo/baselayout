@@ -2,6 +2,20 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  28 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Rework changes for the Adelie project to support boot config profiles
+    better.  Added support for /etc/runlevels/LEVEL/.fake to specify which
+    runlevels should be marked started or stopped without executing the
+    script.  Renamed the /etc/runlevels/LEVEL/critical to ".critical" for
+    more uniformity.  Modified /sbin/rc, /sbin/functions.sh, /sbin/runscript.sh
+    for this.
+
+    Add better support for services that provide the "logger" virtual.  We
+    should really start the logger earlier, and stop it as late as possible.
+    Modified /sbin/rc, /lib/rcscripts/sh/rc-services.sh and gendepends.awk
+    for this.
+
   23 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     From Jean-Francois Richard <jean-francois@richard.name> and
@@ -20,10 +34,10 @@
     This touches /sbin/rc, /sbin/functions.sh, /sbin/runscript.sh and
     /etc/init.d/halt.sh.
 
-	I just changed the behaviour of 'softlevel' kernel command line argument
-	to not only add a suffix and some other cleanups.
+    I just changed the behaviour of 'softlevel' kernel command line argument
+    to not only add a suffix and some other cleanups.
 
-	Add support for irqbalance.
+    Add support for irqbalance.
 
   22 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:
 
@@ -37,21 +51,21 @@
   17 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Add vlan support to /etc/init.d/net.eth0, bug #15588, thanks to
-	Andy Dustman <andy-gentoo.54e552@dustman.net>.
+    Andy Dustman <andy-gentoo.54e552@dustman.net>.
 
     Add 'TERM=Eterm' to /etc/DIR_COLORS, bug #23423.
 
     Add mdadm support to /etc/init.d/checkfs, bug #23437, many thanks
-	to Wes Kurdziolek <wkurdzio@vtluug.org>.
+    to Wes Kurdziolek <wkurdzio@vtluug.org>.
 
     Rather use 'uname -r' to get kernel version, as else we need sysctl.
     This closes bug #23923, modified /etc/init.d/modules.
 
-	Fix a type-o in /etc/fstab, bug #23308.
+    Fix a type-o in /etc/fstab, bug #23308.
 
     Add support for the new 'O' agetty option to display the DNS domainname
-	in the issue file thanks to Marius Mauch <genone@genone.de>, bug #22275.
-	Updated /etc/issue and /etc/issue.logo for this.
+    in the issue file thanks to Marius Mauch <genone@genone.de>, bug #22275.
+    Updated /etc/issue and /etc/issue.logo for this.
 
   16 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:
 
@@ -62,19 +76,19 @@
     /etc/sysctl.conf, bug #24235 - thanks jochen <jochen.eisinger@gmx.de>.
 
     Fix /sbin/runscript.sh and /lib/rcscripts/awk/cachedepend.awk to work
-	with symlinks in /etc/init.d/, closing bug #24228.
+    with symlinks in /etc/init.d/, closing bug #24228.
 
-	Fix /etc/init.d/clock to work with UML, closing bug #24225 thanks to
-	John Mylchreest <johnm@gentoo.org>.
+    Fix /etc/init.d/clock to work with UML, closing bug #24225 thanks to
+    John Mylchreest <johnm@gentoo.org>.
 
     Fix hardcoded color escape sequence in /sbin/rc, closing bug #24109,
-	thanks to splite <splite-gentoo@sigint.cs.purdue.edu>.
+    thanks to splite <splite-gentoo@sigint.cs.purdue.edu>.
 
     Fix /sbin/functions.sh to disable color printing if NOCOLOR is set to
-	"true" in /etc/make.conf, closing bug #24107.
+    "true" in /etc/make.conf, closing bug #24107.
 
-	Fix /etc/init.d/keymaps to be more non-x86 friendly, and also allow
-	more keymaps to be specified in /etc/rc.conf, bug #24084.
+    Fix /etc/init.d/keymaps to be more non-x86 friendly, and also allow
+    more keymaps to be specified in /etc/rc.conf, bug #24084.
 
   15 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:
 

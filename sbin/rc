@@ -57,6 +57,27 @@ check_statedir() {
 			/sbin/reboot -f
 		fi
 	fi
+
+	return 0
+}
+
+get_critical_services() {
+	local x=
+	CRITICAL_SERVICES=
+	
+	if [ -f "/etc/runlevels/${BOOTLEVEL}/.critical" ]
+	then
+		for x in $(< /etc/runlevels/${BOOTLEVEL}/.critical)
+		do
+			CRITICAL_SERVICES="${CRITICAL_SERVICES} ${x##*/}"
+		done
+	else
+		CRITICAL_SERVICES="checkroot hostname modules checkfs localmount"
+	fi
+
+	export CRITICAL_SERVICES
+
+	return 0
 }
 
 # Save $1
@@ -217,16 +238,13 @@ then
 	# We set the forced softlevel from the kernel command line
 	# It needs to be run right after proc is mounted for the
 	# boot runlevel
-	get_bootconfig
+	setup_defaultlevels
 
 	# $BOOT can be used by rc-scripts to test if it is the first time
 	# the 'boot' runlevel is executed.  Now also needed by some stuff in
 	# the 'sysinit' runlevel ...
 	export BOOT="yes"
 	
-	# Set SOFTLEVEL in case something needs it ...
-	export SOFTLEVEL="${BOOTLEVEL}"
-
 	start_critical_service() {
 		local retval=
 			
@@ -239,17 +257,11 @@ then
 
 		return "${retval}"
 	}
-	
 
 	# We first try to find a locally defined list of critical services 
 	# for a particular runlevel.  If we cannot find it, we use the 
 	# defaults.
-	if [ -f /etc/runlevels/${BOOTLEVEL}/critical ]
-	then
-		CRITICAL_SERVICES="$(< /etc/runlevels/${BOOTLEVEL}/critical)"
-	else
-		CRITICAL_SERVICES="checkroot hostname modules checkfs localmount"
-	fi
+	get_critical_services
 
 	# We do not want to break compadibility, so we do not fully integrate
 	# these into /sbin/rc, but rather start them by hand ...
@@ -286,10 +298,15 @@ then
 
 	# Now that the dependency cache are up to date, make sure these
 	# are marked as started ...
-	for x in ${CRITICAL_SERVICES}
-	do
-		ln -snf "/etc/init.d/${x}" "${svcdir}/started/${x}"
-	done
+	(
+		# Needed for mark_service_started()
+		source "${svclib}/sh/rc-services.sh"
+		
+		for x in ${CRITICAL_SERVICES}
+		do
+			mark_service_started "${x}"
+		done
+	)
 fi # Sysinit ends here
 
 if [ "${RUNLEVEL}" = "S" -a "${argv1}" = "sysinit" ]
@@ -298,20 +315,19 @@ then
 
 elif [ "${RUNLEVEL}" = "S" -a "${argv1}" = "boot" ]
 then
-	get_bootconfig
+	setup_defaultlevels
 
-	if [ -n "${SOFTLEVEL}" ]
+	if [ -n "${DEFAULTLEVEL}" -a "${DEFAULTLEVEL}" != "default" ]
 	then
-		echo "${SOFTLEVEL}" > "${svcdir}/ksoftlevel"
+		# Setup our default runlevel runlevel that will be run
+		# the first time /sbin/rc is called with argv1 != sysinit|boot
+		echo "${DEFAULTLEVEL}" > "${svcdir}/ksoftlevel"
 	fi
 	
 	# $BOOT can be used by rc-scripts to test if it is the first time
 	# the 'boot' runlevel is executed
 	export BOOT="yes"
 	
-	# Set SOFTLEVEL so long as something may need it ...
-	export SOFTLEVEL="${BOOTLEVEL}"
-
 	# We reset argv1 to the bootlevel given on the kernel command line
 	# if there is one 
 	argv1="${BOOTLEVEL}"
@@ -365,7 +381,9 @@ then
 
 elif [ "${SOFTLEVEL}" = "single" ]
 then
-	myscripts="checkroot hostname modules checkfs localmount"
+	get_critical_services
+
+	myscripts="${CRITICAL_SERVICES}"
 	
 elif [ ! -d "/etc/runlevels/${SOFTLEVEL}" ]
 then
@@ -416,21 +434,19 @@ dep_stop() {
 	local x=
 	local dep=
 	local needsme=
-	local myservice=
+	local myservice="${1##*/}"
 	local depservice=
+
+	[ ! -L "${svcdir}/started/${myservice}" ] && continue
 	
-	[ ! -L "$1" ] && continue
-	
-	if [ ! -e "$1" ]
+	if [ ! -e "${svcdir}/started/${myservice}" ]
 	then
 		# Remove dud symlinks
-		rm -f "$1"
+		rm -f "${svcdir}/started/${myservice}"
 		
 		continue
 	fi
 	
-	myservice="${1##*/}"
-
 	# Candidate for zapping
 	if [ ! -L "${svcdir}/softscripts.new/${myservice}" ]
 	then
@@ -483,10 +499,60 @@ dep_stop() {
 }
 
 # Stop services
-for i in $(dolisting "${svcdir}/started/")
-do
-	dep_stop "${i}"
-done
+if [ "${SOFTLEVEL}" != "single" -a \
+     "${SOFTLEVEL}" != "reboot" -a \
+     "${SOFTLEVEL}" != "shutdown" ]
+then
+	for i in $(dolisting "${svcdir}/started/")
+	do
+		dep_stop "${i}"
+	done
+else
+	get_critical_services
+
+	is_critical_service() {
+		local x=
+		local myservice="${1##*/}"
+
+		for x in ${CRITICAL_SERVICES}
+		do
+			if [ "${myservice}" = "${x}" ]
+			then
+				return 0
+			fi
+		done
+
+		return 1
+	}
+	
+	# First stop non critical services
+	for i in $(dolisting "${svcdir}/started/")
+	do
+		if [ -n "${LOGGER_SERVICE}" ]
+		then
+			# Do not stop it if it depends on the logger
+			if query_before "${i##*/}" "${LOGGER_SERVICE}"
+			then
+				# Same if it is a critical service
+				is_critical_service "${i}" || dep_stop "${i}"
+			fi
+		else
+			is_critical_service "${i}" || dep_stop "${i}"
+		fi
+	done
+
+	# Now stop the logger if running
+	if [ -n "${LOGGER_SERVICE}" ]
+	then
+		service_started "${LOGGER_SERVICE}" && dep_stop "${LOGGER_SERVICE}"
+	fi
+
+	# Now stop the rest
+	for i in $(dolisting "${svcdir}/started/")
+	do
+		dep_stop "${i}"
+	done
+fi
 
 # Only change softlevel AFTER all the services have been stopped,
 # else they will not get the depend's right (wrong SOFTLEVEL)
@@ -520,18 +586,35 @@ mv -f "${svcdir}/softscripts" "${svcdir}/softscripts.old"
 mv -f "${svcdir}/softscripts.new" "${svcdir}/softscripts"
 
 dep_start() {
-	local myservice=
+	local myservice="${1##*/}"
 
-	[ ! -L "$1" ] && continue
+	[ ! -L "${svcdir}/softscripts/${myservice}" ] && continue
 
-	myservice="${1##*/}"
-	
 	# Only start a script if it isn't already running
 	service_started "${myservice}" || schedule_service_startup "${myservice}"
 }
 
+get_critical_services
+
+EXTRA_SOFTSCRIPTS="${CRITICAL_SERVICES}"
+
+if [ -n "${LOGGER_SERVICE}" -a -L "${svcdir}/softscripts/${LOGGER_SERVICE}" ]
+then
+	service_started "${LOGGER_SERVICE}" || \
+		EXTRA_SOFTSCRIPTS="${EXTRA_SOFTSCRIPTS} ${LOGGER_SERVICE}"
+fi
+
+if [ "${SOFTLEVEL}" != "${BOOTLEVEL}" ]
+then
+	for i in $(dolisting "/etc/runlevels/${BOOTLEVEL}/")
+	do
+		[ -L "${svcdir}/softscripts/${i##*/}" ] && \
+			EXTRA_SOFTSCRIPTS="${EXTRA_SOFTSCRIPTS} ${i##*/}"
+	done
+fi
+
 # Start scripts
-for i in $(dolisting "${svcdir}/softscripts/")
+for i in ${EXTRA_SOFTSCRIPTS} $(dolisting "${svcdir}/softscripts/")
 do
 	dep_start "${i}"
 done

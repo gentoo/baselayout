@@ -46,15 +46,14 @@ fi
 #     configuration, if the system administrator chose to put it
 #     there (if it exists).
 
-[ -e "/etc/conf.d/basic" ]                && source /etc/conf.d/basic
+[ -e "$(add_suffix /etc/conf.d/basic)" ]        && source "$(add_suffix /etc/conf.d/basic)"
 
-[ -e "/etc/conf.d/${myservice}" ]         && source "/etc/conf.d/${myservice}"
+[ -e "$(add_suffix /etc/conf.d/${myservice})" ] && source "$(add_suffix /etc/conf.d/${myservice})"
 
-[ -e "/etc/conf.d/net" ]                  && \
-[ "${myservice%%.*}" = "net" ]            && \
-[ "${myservice##*.}" != "${myservice}" ]  && source /etc/conf.d/net
+[ -e "$(add_suffix /etc/conf.d/net)" ]          && \
+[ "${NETSERVICE}" = "yes" ]                     && source "$(add_suffix /etc/conf.d/net)"
 
-[ -e "/etc/rc.conf" ]                     && source /etc/rc.conf
+[ -e "$(add_suffix /etc/rc.conf)" ]             && source "$(add_suffix /etc/rc.conf)"
 
 
 usage() {
@@ -104,7 +103,7 @@ svc_stop() {
 	fi
 
 	# Do not try to stop if it had already failed to do so on runlevel change
-	if runlevel_stop && service_failed "${myservice}"
+	if is_runlevel_stop && service_failed "${myservice}"
 	then
 		exit 1
 	fi
@@ -149,12 +148,12 @@ svc_stop() {
 		# If some service 'need' $mydep, stop it first; or if it is a runlevel change,
 		# first stop all services that is started 'after' $mydep.
 		if needsme "${mydep}" &>/dev/null || \
-		   (runlevel_stop && ibefore "${mydep}" &>/dev/null)
+		   (is_runlevel_stop && ibefore "${mydep}" &>/dev/null)
 		then
 			local servicelist="$(needsme "${mydep}")"
 
 			# On runlevel change, stop all services "after $mydep" first ...
-			runlevel_stop && servicelist="${servicelist} $(ibefore "${mydep}")"
+			is_runlevel_stop && servicelist="${servicelist} $(ibefore "${mydep}")"
 
 			for x in ${servicelist}
 			do
@@ -199,7 +198,7 @@ svc_stop() {
 		eerror "        \"${myservice}\" is still up."
 	else
 		# Now that deps are stopped, stop our service
-		stop
+		(filter_environ; stop)
 		retval="$?"
 	fi
 	
@@ -207,7 +206,7 @@ svc_stop() {
 	then
 		# Did we fail to stop? create symlink to stop multible attempts at
 		# runlevel change.  Note this is only used at runlevel change ...
-		if runlevel_stop
+		if is_runlevel_stop
 		then
 			mark_service_failed "${myservice}"
 		fi
@@ -233,7 +232,7 @@ svc_start() {
 	if ! service_started "${myservice}"
 	then
 		# Do not try to start if i have done so already on runlevel change
-		if runlevel_start && service_failed "${myservice}"
+		if is_runlevel_start && service_failed "${myservice}"
 		then
 			exit 1
 		fi
@@ -242,7 +241,7 @@ svc_start() {
 		mark_service_started "${myservice}"
 
 		# On rc change, start all services "before $myservice" first
-		if runlevel_start
+		if is_runlevel_start
 		then
 			startupservices="$(ineed "${myservice}") \
 				$(valid_iuse "${myservice}") \
@@ -316,11 +315,11 @@ svc_start() {
 			retval=1
 		elif [ "${retval}" -eq 0 ] && ! broken "${myservice}" &>/dev/null
 		then
-			start
+			(filter_environ; start)
 			retval="$?"
 		fi
 
-		if [ "${retval}" -ne 0 ] && runlevel_start
+		if [ "${retval}" -ne 0 ] && is_runlevel_start
 		then
 			mark_service_failed "${myservice}"
 		fi
@@ -410,7 +409,7 @@ svc_homegrown() {
 			if typeset -F "${x}" &>/dev/null
 			then
 				# Run the homegrown function
-				"${x}"
+				(filter_environ; "${x}")
 				
 				return $?
 			fi

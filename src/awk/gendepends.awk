@@ -451,6 +451,12 @@ END {
 		print "" >> (CACHEDTREE)
 	}
 
+	if (check_provide("logger"))
+		print "export LOGGER_SERVICE=\"" get_provide("logger") "\"" >> (CACHEDTREE)
+	else
+		print "export LOGGER_SERVICE=" >> (CACHEDTREE)
+					
+
 	close(CACHEDTREE)
 }
 

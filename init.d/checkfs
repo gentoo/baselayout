@@ -16,7 +16,7 @@ start() {
 	#
         if [ -f /sbin/evms_activate ]
 	then
-		ebegin "Activating EVMS22: "
+		ebegin "Activating EVMS2"
 		evms_activate
 		retval = $?	
 		eend ${retval}

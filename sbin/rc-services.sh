@@ -194,6 +194,38 @@ iparallel() {
 	return 0
 }
 
+# bool is_fake_service(service, runlevel)
+#
+#   Returns ture if 'service' is a fake service in 'runlevel'.
+#
+is_fake_service() {
+	local x=
+	local fake_services=
+
+	[ -z "$1" -o -z "$2" ] && return 1
+
+	if [ "$2" != "${BOOTLEVEL}" -a \
+	     -e "/etc/runlevels/${BOOTLEVEL}/.fake" ]
+	then
+		fake_services="$(< /etc/runlevels/${BOOTLEVEL}/.fake)"
+	fi
+
+	if [ -e "/etc/runlevels/$2/.fake" ]
+	then
+		fake_services="${fake_services} $(< /etc/runlevels/$2/.fake)"
+	fi
+
+	for x in ${fake_services}
+	do
+		if [ "$1" = "${x##*/}" ]
+		then
+			return 0
+		fi
+	done
+
+	return 1
+}
+
 # bool in_runlevel(service, runlevel)
 #
 #   Returns true if 'service' is in runlevel 'runlevel'.
@@ -206,26 +238,42 @@ in_runlevel() {
 	return 1
 }
 
-# bool runlevel_start()
+# bool is_runlevel_start()
 #
 #   Returns true if it is a runlevel change, and we are busy
 #   starting services.
 #
-runlevel_start() {
+is_runlevel_start() {
 	[ -d "${svcdir}/softscripts.old" ] && return 0
 
 	return 1
 }
 
-# bool runlevel_stop()
+# bool is_runlevel_stop()
 #
 #   Returns true if it is a runlevel change, and we are busy
 #   stopping services.
 #
-runlevel_stop() {
+is_runlevel_stop() {
 	[ -d "${svcdir}/softscripts.new" ] && return 0
 
 	return 1
+}
+
+# void filter_environ()
+#
+#   Tries to filter most of the dependency stuff from the environment
+#
+filter_environ() {
+	for x in $(declare -F)
+	do
+		if [ "${x/depinfo_}" != "${x}" ]
+		then
+			unset ${x/declare -f /}
+		fi
+	done
+
+	return 0
 }
 
 # int start_service(service)
@@ -237,9 +285,14 @@ start_service() {
 	
 	if ! service_started "$1"
 	then
-		(. /sbin/runscript.sh "/etc/init.d/$1" start)
+		if is_fake_service "$1" "${SOFTLEVEL}"
+		then
+			mark_service_started "$1"
+		else
+			(. /sbin/runscript.sh "/etc/init.d/$1" start)
 		
-		return $?
+			return $?
+		fi
 	fi
 
 	return 0
@@ -254,8 +307,25 @@ stop_service() {
 
 	if service_started "$1" 
 	then
+		if is_runlevel_stop
+		then
+			if is_fake_service "$1" "${OLDSOFTLEVEL}"
+			then
+				mark_service_stopped "$1"
+
+				return 0
+			fi
+		else
+			if is_fake_service "$1" "${SOFTLEVEL}"
+			then
+				mark_service_stopped "$1"
+
+				return 0
+			fi
+		fi
+
 		(. /sbin/runscript.sh "/etc/init.d/$1" stop)
-		
+	
 		return $?
 	fi
 
@@ -533,9 +603,16 @@ query_before() {
 
 	[ -z "$1" -o -z "$2" ] && return 1
 
-	for x in ineed iuse iafter
+	trace_depend "ineed" "$1" "list"
+
+	for x in $1 ${list}
 	do
-		trace_depend "${x}" "$1" "list"
+		trace_depend "iuse" "${x}" "list"
+	done
+
+	for x in $1 ${list}
+	do
+		trace_depend "iafter" "${x}" "list"
 	done
 
 	net_service "$2" && netservice="yes"
@@ -563,9 +640,16 @@ query_after() {
 
 	[ -z "$1" -o -z "$2" ] && return 1
 
-	for x in needsme usesme ibefore
+	trace_depend "needsme" "$1" "list"
+
+	for x in $1 ${list}
 	do
-		trace_depend "${x}" "$1" "list"
+		trace_depend "usesme" "${x}" "list"
+	done
+
+	for x in $1 ${list}
+	do
+		trace_depend "ibefore" "${x}" "list"
 	done
 
 	net_service "$2" && netservice="yes"
