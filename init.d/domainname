@@ -50,7 +50,7 @@ start() {
 		[ ! -f /etc/resolv.conf ] && touch /etc/resolv.conf
 		ebegin "Setting DNS domainname to ${mydnsdomain}"
 		gawk -v DOMAIN="${mydnsdomain}" \
-			'BEGIN { print "domain " DOMAIN }
+			'END { print "domain " DOMAIN }
 			 $0 !~ /^[[:space:]]*domain/ { print }' \
 			/etc/resolv.conf > /etc/resolv.conf.new
 		retval2=$?
