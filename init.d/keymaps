@@ -10,8 +10,13 @@ depend() {
 checkconfig() {
 	if [ -z "${KEYMAP}" ]
 	then
-		eerror "You need to setup \$KEYMAP in /etc/rc.conf first"
+		eerror "You need to setup KEYMAP in /etc/conf.d/keymaps first"
 		return 1
+	fi
+
+	# Make sure user isn't using rc.conf anymore
+	if grep -qs ^KEYMAP= /etc/rc.conf ; then
+		ewarn "KEYMAP should not be set in /etc/rc.conf but in /etc/conf.d/keymaps"
 	fi
 }
 
@@ -51,8 +56,11 @@ start() {
 	local termencoding="" termmsg=""
 	if [ "${UNICODE}" = "yes" ]
 	then
+		local dumpkey_opts=""
+		[ -n "${DUMPKEYS_CHARSET}" ] && dumpkey_opts="-c ${DUMPKEYS_CHARSET}"
+
 		/usr/bin/kbd_mode -u
-		dumpkeys | loadkeys --unicode
+		dumpkeys ${dumpkey_opts} | loadkeys --unicode
 		termencoding=$'\033%G'
 		termmsg="UTF-8"
 	else

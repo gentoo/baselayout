@@ -1,6 +1,13 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+  24 Nov 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Allow users to specify charset option to dumpkeys when using unicode 
+    in conf.d/keymaps #72225.  Also move all the init.d/keymap specific 
+    options out of rc.conf and into conf.d/keymaps and add some config 
+    checks to init.d/keymaps like the clock/hostname init.d scripts.
+
   24 Nov 2004; Roy Marples <uberlord@gentoo.org>:
 
     Ensure all net-scripts modules depend on interface_variable function
