@@ -117,17 +117,16 @@ kill_pid() {
 # If a pidfile is supplied, the pid inside it must match
 # a pid in the list of pidof ${cmd}
 is_daemon_running() {
-	local exe=$1 pidfile=$2 pids pid
+	local cmd=$1 pidfile=$2 pids pid
 	
-	pids=$( /bin/pidof ${exe} )
+	pids=$( /bin/pidof ${cmd} )
 	[[ -z ${pids} ]] && return 1
 	
 	if [[ -s ${pidfile} ]]; then
 		read pid < ${pidfile}
-		if [[ -n ${pid} ]]; then
-			[[ *" ${pid} "* == " ${pids} " ]]
-			return $?
-		fi
+		pids=" ${pids} "
+		[[ ${pids// ${pid} } == ${pids} ]] && return 1
+		return 0 
 	fi
 	return 0
 }
