@@ -41,3 +41,6 @@ alias cipher-17		rc5
 # Support for i2c and lm_sensors
 alias char-major-89    i2c-dev
 
+# Old nvidia support ...
+alias char-major-195 NVdriver 
+alias /dev/nvidiactl char-major-195 
