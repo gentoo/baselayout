@@ -180,6 +180,12 @@ then
 		
 		for DIR in /etc /var /root;
 		do
+
+			if grep -q -v "^${DIR}[[:space:]]" /etc/exports
+			then
+				mount -o nolock -n server:${DIR} ${DIR}
+			fi
+	
 			if [ -e /etc/conf.d/exclude/${DIR} ] 
 			then
 				find ${DIR} -type d | grep -v -f /etc/conf.d/exclude/${DIR} > ${shmdir}/${DIR}.lst
@@ -202,6 +208,8 @@ then
 					chmod --reference=${SUBDIR} ${shmdir}/${SUBDIR}
 				done
 			fi
+
+			umount -n ${DIR} > /dev/null
 			mount -n -o bind ${shmdir}/${DIR} ${DIR}
 		done
 		
@@ -209,9 +217,10 @@ then
 		chmod 0777 ${shmdir}/tmp
 		mount -n -o bind ${shmdir}/tmp /tmp
 		
-		> /etc/mtab
+		cat /proc/mounts > /etc/mtab
 		
 		cp -f /etc/inittab.node /etc/inittab
+		[ -e /etc/fstab.node ] && cp -f /etc/fstab.node /etc/fstab
 		killall -1 init
 		
 		eend 0
