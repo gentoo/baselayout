@@ -5,6 +5,8 @@
 
     Fix the test for device-mapper in checkfs #80206.
 
+    Change home of man to /usr/share/man.
+
 * rc-scripts 1.6.9 (30 Jan 2004)
 
   30 Jan 2004; Mike Frysinger <vapier@gentoo.org>:
