@@ -9,9 +9,7 @@
 	livecd_read_commandline
 
 # Reset pam_console permissions
-if [ -x /sbin/pam_console_apply ] \
-   && [ ! -c /dev/.devfsd ] \
-   && [ ! -c /dev/.udev ]
+if [ -x /sbin/pam_console_apply ] && [ ! -c /dev/.devfsd ]
 then
 	/sbin/pam_console_apply -r
 fi

@@ -11,7 +11,7 @@
 [ "${RC_GOT_DAEMON}" != "yes" ] && source "${svclib}/sh/rc-daemon.sh"
 
 # Fix bug 48595
-if [[ $(id -u) != 0 ]]; then
+if [[ ${EUID} != 0 ]] ; then
 	eerror "ERROR: must be root to run init scripts"
 	exit 1
 fi
