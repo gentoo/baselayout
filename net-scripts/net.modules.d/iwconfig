@@ -120,7 +120,7 @@ iwconfig_get_type() {
 #
 # Output how our wireless interface has been configured
 iwconfig_report() {
-	local iface=${1} mac mode m="as" essid i=0
+	local iface=${1} essid i=0
 
 	# We do this so that we get a 100% valid report
 	while true ; do
@@ -137,14 +137,11 @@ iwconfig_report() {
 
 	essid=${essid//\\\\/\\\\}
 	local mode=$( iwconfig_get_mode ${iface} )
-	if [[ ${mode} == managed ]]; then
-		m="to"
-		mac=$( iwconfig_get_ap_mac_address ${iface} )
-		mac=" at ${mac}"
-	fi
+	local mac=$( iwconfig_get_ap_mac_address ${iface} )
+	[[ -n ${mac} ]] && mac=" at ${mac}"
 	
 	eindent
-	einfo "${iface} connected ${m} \"${essid}\"${mac}"
+	einfo "${iface} connected to \"${essid}\"${mac}"
 	einfo "in ${mode} mode ${channel}${wep_status}"
 	eoutdent
 }
