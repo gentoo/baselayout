@@ -97,14 +97,6 @@ dhcpcd_start() {
 
 	interface_exists ${iface} true || return 1
 
-	local check=$( interface_device ${iface} )
-
-	# Check that iface was not brought up by the kernel ...
-	if [[ ${check} == ${iface} ]] && interface_is_up ${iface} true ; then
-		einfo "Keeping kernel configuration for ${iface}"
-		return 0
-	fi		
-
 	# Get our options
 	eval opts=\"\$\{dhcpcd_${ifvar}\}\"
 

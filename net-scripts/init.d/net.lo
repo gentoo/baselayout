@@ -1,6 +1,6 @@
 #!/sbin/runscript
 # net-scripts main code
-# Version 1.0.5
+# Version 1.0.6
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -686,15 +686,28 @@ run_start() {
 
 	# Don't let preup modify us
 	iface=${1}
-	local IFACE=${iface} IFVAR=${ifvar}
+	local IFACE=${iface} IFVAR=${ifvar} config
 
-	# Start the interface
-	if ! iface_start ${iface} ; then
-		interface_down ${iface}
-		eend 1
-		return 1
+	# If config is set to noop and the interface is up with an address
+	# then we don't start it
+	eval config=( \"\$\{config_${ifvar}\[@\]\}\" )
+	if [[ ${config[0]} == "noop" ]] && interface_is_up ${iface} true ; then
+		einfo "Keeping current configuration"
+		eend 0
+	else
+		# Remove noop from the config var
+		[[ ${config[0]} == "noop" ]] && eval "config_${ifvar}=( "\"\$\{config\[@\]:1\}\"" )"
+
+		# There may be existing ip address info - so we strip it
+		interface_del_addresses ${iface}
+
+		# Start the interface
+		if ! iface_start ${iface} ; then
+			interface_down ${iface}
+			eend 1
+			return 1
+		fi
 	fi
-
 
 	# Call user-defined postup function if it exists
 	if [[ $( type -t postup ) == function ]]; then

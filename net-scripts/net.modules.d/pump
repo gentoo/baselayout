@@ -97,13 +97,6 @@ pump_start() {
 
 	interface_exists ${iface} true || return 1
 
-	# Check that iface was not brought up by the kernel ...
-	local check=$( interface_device ${iface} )
-	if [[ ${check} == ${iface} ]] && interface_is_up ${iface} true ; then
-		einfo "Keeping kernel configuration for ${iface}"
-		return 0
-	fi
-
 	eval opts=\"\$\{pump_${ifvar}\}\"
 
 	# Map some generic options to pump

@@ -107,13 +107,6 @@ dhclient_start() {
 
 	interface_exists ${iface} true || return 1
 
-	# Check that iface was not brought up by the kernel ...
-	local check=$( interface_device ${iface} )
-	if [[ ${check} == ${iface} ]] && interface_is_up ${iface} true ; then
-		einfo "Keeping kernel configuration for ${iface}"
-		return 0
-	fi
-
 	local script=$( dhclient_get_script )
 
 	# Bring up DHCP for this interface (or alias)
