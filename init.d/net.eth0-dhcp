@@ -10,7 +10,7 @@ IFACE=${IFACE/-dhcp/}
 
 start() {
 	ebegin "Bringing ${IFACE} up using DHCP"
-	/sbin/dhcpcd $IFACE
+	/sbin/dhcpcd ${DHCPCD_OPTIONS} $IFACE
 
 	#enabling rp_filter causes wacky packets to be auto-dropped by 
 	#the kernel
