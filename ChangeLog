@@ -2,6 +2,13 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+* rc-scripts 1.4.2.2 (18 Nov 2002)
+
+  18 Nov 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add src/awk/genenviron.awk which is rc-envupdate.sh ported
+    to awk.  This is also much faster than its bash version.
+
 * rc-scripts 1.4.2.1 (18 Nov 2002)
 
   18 Nov 2002; Martin Schlemmer <azarah@gentoo.org>:
