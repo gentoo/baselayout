@@ -19,7 +19,7 @@ fi
 # For pcmcia users. note that pcmcia must be added to the same
 # runlevel as the net.* script that needs it.
 depend() {
-	use coldplug hotplug pcmcia usb isdn4linux
+	use coldplug hotplug pcmcia usb isdn4linux wlan
 }
 
 # Make some wrappers to fudge after/before/need/use depend flags.
@@ -53,12 +53,9 @@ sort() {
 # Setup class wrappers: interface_up -> iproute2_up, for example
 module_class_wrap() {
 	local mod=${1} x p=$( ${1}_provides )
-	[[ ${p} == ${mod} ]] && return
 
 	# Don't wrap functions if another module already has
-#	[[ $( type -t ${p}_provides ) == function ]] && return
-# When restarting a script, we may have the wrong functions wrapped
-# when we get around to starting up
+	[[ $( type -t ${p}_provides ) == function ]] && return
 
 	for x in $( typeset -f | grep -o ^${mod}_'[^ ]*' ); do
 		eval "${p}${x#${mod}}() { ${x} \"\$@\"; }"
@@ -389,14 +386,6 @@ get_type() {
 	echo ${1%%[0-9]*}
 }
 
-# bool interface_exists(char *interface)
-#
-# Returns 0 if the interface exists, otherwise 0
-interface_exists() {
-	grep "${1}:" /proc/net/dev &>/dev/null && return 0
-	return 1
-}
-
 # bool iface_start(char *interface)
 #
 # iface_start is called from start.  It's expected to start the base
@@ -558,46 +547,40 @@ iface_stop() {
 	return 0
 }
 
-# bool start(void)
+# bool run_start(char *iface)
 #
 # Brings up ${IFACE}.  Calls preup, iface_start, then postup.
 # Returns 0 (success) unless preup or iface_start returns 1 (failure).
 # Ignores the return value from postup.
 # We cannot check that the device exists ourselves as modules like
 # tuntap make create it.
-start() {
-	local x mod RC_INDENTATION=${RC_INDENTATION}	# so it will reset after function
-	local -a MODULES
+run_start() {
+	local iface=${1} x mod
 
-	einfo "Starting ${IFACE}"
-	eindent
-
-	modules_load ${IFACE} || { eend 1; return 1; }
-
-	if [[ ${IFACE} == lo ]]; then
-		ebegin "Bringing up ${IFACE}"
+	if [[ ${iface} == lo ]]; then
+		ebegin "Bringing up ${iface}"
 		interface_loopback_create
 		eend $?
 		return $?
 	fi
 
-	# We may not have a loaded module for ${IFACE}
+	# We may not have a loaded module for ${iface}
 	# Some users may have "alias natsemi eth0" in /etc/modules.d/foo
 	# so we can work with this
 	# However, if they do the same with eth1 and try to start it
 	# but eth0 has not been loaded then the module gets loaded as
 	# eth0.
 	# Not much we can do about this :(
-	! interface_exists ${IFACE} && /sbin/modprobe ${IFACE} &>/dev/null
+	! interface_exists ${iface} && /sbin/modprobe ${iface} &>/dev/null
 
 	# Call user-defined preup function if it exists
 	if [[ $( type -t preup ) == function ]]; then
 		einfo "Running preup function"
 		eindent
-		preup ${IFACE} ; x=$?
+		preup ${iface} ; x=$?
 		eoutdent
 		if [[ ${x} != 0 ]]; then
-			eerror "preup ${IFACE} failed"
+			eerror "preup ${iface} failed"
 			return 1
 		fi
 	fi
@@ -605,13 +588,13 @@ start() {
 	# pre Start any modules with
 	for mod in ${MODULES[@]}; do
 		if [[ $( type -t ${mod}_pre_start ) == function ]]; then
-			${mod}_pre_start ${IFACE} || { eend 1; return 1; }
+			${mod}_pre_start ${iface} || { eend 1; return 1; }
 		fi
 	done
 
 	# Start the interface
-	if ! iface_start ${IFACE} ; then
-		interface_down ${IFACE}
+	if ! iface_start ${iface} ; then
+		interface_down ${iface}
 		eend 1
 		return 1
 	fi
@@ -624,42 +607,25 @@ start() {
 	if [[ $( type -t postup ) == function ]]; then
 		einfo "Running postup function"
 		eindent
-		postup ${IFACE}
+		postup ${iface}
 		eoutdent
 	fi
 
 	return 0
 }
 
-# bool stop(void)
+# bool run_stop(char *iface) {
 #
-# Brings down ${IFACE}.  If predown call returns non-zero, then
+# Brings down ${iface}.  If predown call returns non-zero, then
 # stop returns non-zero to indicate failure bringing down device.
 # In all other cases stop returns 0 to indicate success.
-stop() {
-	local i mod RC_INDENTATION=${RC_INDENTATION}	# so it will reset after function
-	local -a MODULES mods
-
-	einfo "Stopping ${IFACE}"
-	eindent
-
-	# We make a list of all functions added by our modules
-	# as we need to remove them if we're restarting
-	local before=$( typeset -F )
-	modules_load ${IFACE} true || { eend 1; return 1; }
-	local after=$( typeset -F )
-	added_functions=$( diff -U0 -p <( echo "${before}" ) <( echo "${after}" ) 2>/dev/null | awk 'BEGIN { ORS = " "; } /+declare -f/ { print $3; }' )
-
-	# Reverse the module list for stopping
-	mods=( "${MODULES[@]}" )
-	for ((i = 0; i < ${#mods[@]}; i++)); do
-		MODULES[i]=${mods[((${#mods[@]} - i - 1))]}
-	done
+run_stop() {
+	local iface=${1} mod x
 
 	# Don't run any special shutdown functions for lo
-	if [[ ${IFACE} == lo ]]; then
-		ebegin "Shutting down ${IFACE}"
-		interface_iface_stop ${IFACE}
+	if [[ ${iface} == lo ]]; then
+		ebegin "Shutting down ${iface}"
+		interface_iface_stop ${iface}
 		eend $?
 		return 0
 	fi
@@ -668,20 +634,20 @@ stop() {
 	if [[ $( type -t predown ) == function ]]; then
 		einfo "Running predown function"
 		eindent
-		predown ${IFACE} ; x=$?
+		predown ${iface} ; x=$?
 		eoutdent
 		if [[ ${x} != 0 ]]; then
-			eend 1 "predown ${IFACE} failed"
+			eend 1 "predown ${iface} failed"
 			return 1
 		fi
 	elif is_net_fs /; then
-		eerror "root filesystem is network mounted -- can't stop ${IFACE}"
+		eerror "root filesystem is network mounted -- can't stop ${iface}"
 		return 1
 	fi
 
 	# pre Stop any modules
 	for mod in ${MODULES[@]}; do
-		[[ $( type -t ${mod}_pre_stop ) == function ]] && ${mod}_pre_stop ${IFACE}
+		[[ $( type -t ${mod}_pre_stop ) == function ]] && ${mod}_pre_stop ${iface}
 	done
 
 	iface_stop ${IFACE} || return 1  # always succeeds, btw
@@ -689,25 +655,74 @@ stop() {
 	# post Stop any modules
 	for mod in ${MODULES[@]}; do
 		# We have already taken down the interface, so no need to error
-		[[ $( type -t ${mod}_post_stop ) == function ]] && ${mod}_post_stop ${IFACE}
+		[[ $( type -t ${mod}_post_stop ) == function ]] && ${mod}_post_stop ${iface}
 	done
 
 	# Call user-defined postdown function if it exists
 	if [[ $( type -t postdown ) == function ]]; then
 		einfo "Running postdown function"
 		eindent
-		postdown ${IFACE}
+		postdown ${iface}
 		eoutdent
 	fi
 
 	return 0
 }
 
-restart() {
-	local added_functions
-	svc_stop
-	unset ${added_functions}
-	svc_start
+# bool run(char *iface, char *cmd)
+#
+# Main start/stop entry point
+# We load modules here and remove any functions that they
+# added as we may be called inside the same shell scope for another interface
+run() {
+	local iface=${1} cmd=${2} r=1 RC_INDENTATION=${RC_INDENTATION}	# so it will reset after function
+	local before="$( typeset -F )" allmods=false
+	local -a MODULES mods
+
+	eindent
+
+	[[ ${cmd} == "stop" ]] && allmods=true
+	if modules_load ${IFACE} ${allmods} ; then
+		if [[ ${cmd} == "stop" ]]; then
+			# Reverse the module list for stopping
+			mods=( "${MODULES[@]}" )
+			for ((i = 0; i < ${#mods[@]}; i++)); do
+				MODULES[i]=${mods[((${#mods[@]} - i - 1))]}
+			done
+
+			run_stop ${iface} && r=0
+		else
+			run_start ${iface} && r=0
+		fi
+	fi
+
+	# We need to remove added functions before we quit as other init
+	# scripts may be launching afterwards
+	unset $( diff -U0 -p <( echo "${before}" ) <( echo "$( typeset -F )" ) 2>/dev/null \
+		| awk 'BEGIN { ORS = " "; } /+declare -f/ { print $3; }' ) 2>/dev/null
+
+	return ${r}
+}
+
+# bool start(void)
+#
+# Start entry point so that we only have one function
+# which localises variables and unsets functions
+start() {
+
+	einfo "Starting ${IFACE}"
+	run ${IFACE} start
+	return $?
+}
+
+# bool stop(void)
+#
+# Stop entry point so that we only have one function
+# which localises variables and unsets functions
+stop() {
+	einfo "Stopping ${IFACE}"
+	run ${IFACE} stop
+	return $?
 }
 
 # vim:ts=4

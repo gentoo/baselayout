@@ -2,6 +2,24 @@
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  05 Nov 2004; Roy Marples <uberlord@gentoo.org>:
+
+    net-scripts/init.d/net.lo
+    - added use dependany on wlan incase we're using linux-wlan-ng drivers
+      fixes bug #64978
+    - moved start() to run_start() and stop() to run_stop()
+      created run() and new start()/stop() functions
+      this is so that we have one single entry point to localise variables
+      and to remove any added functions loaded by our modules
+    - removed redundant interface_exists() as it's provided by
+      ifconfig and/or iproute2
+
+    net-scripts/net.modules.d/ifconfig and iproute2
+    - added ifconfig_tunnel and iproute2_tunnel functions
+
+    addred gre/ipip tunnel support via the the tunnel module
+    - fixes bug #50765
+
   04 Nov 2004; Roy Marples <uberlord@gentoo.org>:
 
     net-scripts/net.modules.d/pump
@@ -17,7 +35,7 @@
     - we remove all added functions when restarting an interface
       this relies on the diff command being available
 
-    added isdn support via the new ipppd module
+    added isdn support via the new ipppd module - fixes bug #69035
 
     net-scripts/conf.d/net.example
     - added sample isdn setup

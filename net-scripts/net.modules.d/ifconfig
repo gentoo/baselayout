@@ -1,5 +1,5 @@
 # ifconfig module for net-scripts
-# Version 1.0.3
+# Version 1.0.4
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -8,6 +8,10 @@
 # Note that LC_ALL trumps LC_anything_else according to locale(7)
 ifconfig() {
 	LC_ALL=C /sbin/ifconfig "$@"
+}
+
+ifconfig_tunnel() {
+	LC_ALL=C /sbin/iptunnel "$@"
 }
 
 # void ifconfig_depend(void)
@@ -258,7 +262,7 @@ ifconfig_iface_stop() {
 	return 1
 }
 
-# bool ifconfig_iface_start(char *iface)
+# bool ifconfig_post_start(char *iface)
 #
 # Bring up iface using ifconfig utilities, called from iface_start
 #

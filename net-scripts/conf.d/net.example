@@ -211,7 +211,7 @@
 # This configures eth0_1 to use DHCP and eth0_2 for a static address
 
 #-----------------------------------------------------------------------------
-# Bonding (802.1q support)
+# Bonding
 # For link bonding/trunking emerge net-misc/ifenslave
 
 # If you are using any of the slave interfaces, it is important that you remove
@@ -288,7 +288,7 @@
 #tuntap_tap0="-u adm"
 
 #-----------------------------------------------------------------------------
-# Bridging
+# Bridging (802.1d)
 # For bridging support emerge net-misc/bridge-utils
 
 # To add interfaces to bridge br0
@@ -301,6 +301,20 @@
 
 # NOTE: This creates an interface called br0 - you can give the interface
 # any name you like
+
+#-----------------------------------------------------------------------------
+# Tunnelling
+# For GRE tunnels
+#iptunnel_vpn0="mode gre remote 207.170.82.1 key 0xffffffff ttl 255"
+
+# For IPIP tunnels
+#iptunnel_vpn0="mode ipip remote 207.170.82.2 ttl 255"
+
+# To configure the interface via ifconfig
+#ifconfig_vpn0=( "192.168.0.2 pointopoint 192.168.1.2" )
+
+# To configure the interface via iproute2
+#ipaddr_vpn0=( "192.168.0.2 peer 192.168.1.1" )
 
 ##############################################################################
 # ADVANCED CONFIGURATION
