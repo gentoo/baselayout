@@ -175,7 +175,7 @@ iface_stop() {
 	if [ "${iface_IFACE}" = "dhcp" ]
 	then
 		local count=0
-		while /sbin/dhcpcd -k ${IFACE} &>/dev/null && [ "${count}" -lt 9 ]
+		while /sbin/dhcpcd -z ${IFACE} &>/dev/null && [ "${count}" -lt 9 ]
 		do
 			# Give dhcpcd time to properly shutdown
 			sleep 1
