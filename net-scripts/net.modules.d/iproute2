@@ -241,7 +241,7 @@ iproute2_iface_stop() {
 # Adds an the specified address to the interface
 # returns 0 on success and non-zero on failure
 iproute2_add_address() {
-	local label=${1} iface=$( interface_device ${1} ) x
+	local label=${1} iface=${1%%:*} x
 
 	# Extract the config
 	local -a config=( "$@" )
@@ -249,14 +249,14 @@ iproute2_add_address() {
 
 	# If the address already exists then the following command
 	# will fail.  Catch the failure and be graceful
-	x=$( ip addr add dev ${iface} ${config} label ${label} 2>&1 )
+	x=$( ip addr add dev ${iface} label ${label} ${config} 2>&1 )
 	case "${x}" in
 		'RTNETLINK answers: File exists'|'') ;;
 		*) printf '%s\n' "${x}" >&2 ;;
 	esac
 
 	# Make sure the address was added
-	[[ $( ip addr show dev ${iface} ) == *${config%% *}* ]]
+	[[ $( ip addr show label ${label} ) == *${config%% *}* ]]
 	return $?
 }
 
@@ -268,7 +268,7 @@ iproute2_configure() {
 	local iface=$( interface_device ${1} )
 	! iproute2_exists ${iface} true && return 1
 
-	iproute2_add_address $@
+	iproute2_add_address "$@"
 	eend $? || return $?
 }
 
