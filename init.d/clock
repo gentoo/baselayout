@@ -9,89 +9,106 @@ depend() {
 	need localmount
 }
 
+setupopts() {
+	if grep -q 'UML' /proc/cpuinfo
+	then
+		TBLURB="UML"
+		return 0
+	elif [ "${CLOCK}" == "UTC" ]
+	then
+		myopts="--utc"
+		TBLURB="UTC"
+	else
+		myopts="--localtime"
+		TBLURB="Local Time"
+	fi
+	if [ "${SRM}" == "yes" ]
+	then
+		myopts="${myopts} --srm"
+	fi
+	if [ "${ARC}" == "arc" ]
+	then
+		myopts="${myopts} --arc"
+	fi
+	myopts="${myopts} ${CLOCK_OPTS}"
+}
+
 start() {
 	local myopts=""
 	local TBLURB=""
 	local errstr=""
+	local ret=0
+
 	if [ ! -f /etc/adjtime ]
 	then
 		echo "0.0 0 0.0" > /etc/adjtime
 	fi
-	if [ "${CLOCK}" = "UTC" ]
-	then
-		myopts="--utc"
-		TBLURB="[UTC]"
-	else
-		myopts="--localtime"
-		TBLURB="[Local Time]"
-	fi
 
-	if [ -n "$(grep 'UML' /proc/cpuinfo)" ]
+	setupopts
+
+	ebegin "Setting system clock to hardware clock [${TBLURB}]"
+	if [ "${CLOCK}" == "UML" ]
 	then
-		ebegin "Setting system clock to hardware clock ${TBLURB}"
-		eend 0 "Detected UML Environment; ignoring"
-		return 0
+		ret=0
 
 	elif [ -x /sbin/hwclock ]
 	then
-		ebegin "Setting system clock to hardware clock ${TBLURB}"
+		# hwclock does not return a fail status; need to check out
 		errstr="$(/sbin/hwclock --adjust ${myopts} 2>&1 >/dev/null)"
 		errstr="${errstr}$(/sbin/hwclock --hctosys ${myopts} 2>&1 >/dev/null)"
-		#hwclock do not return a fail status
+
 		if [ -n "${errstr}" ]
 		then
-			eend 1 "Failed to set system clock to hardware clock"
-			return 1
+			ret=1
 		else
-			eend 0
-			return 0
+			ret=0
 		fi
+		errstr="Failed to set system clock to hardware clock"
 	else
-		eend 1 "hwclock executable not found"
+		ret=1
+		errstr="/sbin/hwclock not found"
 	fi
+	eend ${ret} "${errstr}"
 }
 
 stop() {
-	local myopts=""
-	local TBLURB=""
-	local errstr=""
-
 	# Don't tweak hw clock on LiveCD halt
 	[ -n "${CDBOOT}" ] && return 0
 	
-	if [ "${CLOCK}" = "UTC" ]
-	then
-		myopts="--utc"
-		TBLURB="[UTC]"
-	else
-		myopts="--localtime"
-		TBLURB="[Local Time]"
-	fi
+	[ "${CLOCK_SYSTOHC}" != "yes" ] && return 0
 
-	if [ -n "$(grep 'UML' /proc/cpuinfo)" ]
+	local myopts=""
+	local TBLURB=""
+	local errstr=""
+	local ret=0
+
+	setupopts
+
+	ebegin "Syncing system clock to hardware clock [${TBLURB}]"
+	if [ "${CLOCK}" == "UML" ]
 	then
-		ebegin "Syncing hardware clock to system clock ${TBLURB}"
-		eend 0 "Detected UML Environment; ignoring"
-		return 0
+		ret=0
 		
 	elif [ -x /sbin/hwclock ]
 	then
-		ebegin "Syncing hardware clock to system clock ${TBLURB}"
 		errstr="$(/sbin/hwclock --systohc ${myopts} 2>&1 >/dev/null)"
+
 		if [ -n "${errstr}" ]
 		then
-			eend 1 "Failed to set hardware clock to system clock"
-			return 1
+			ret=1
 		else
-			eend 0
-			return 0
+			ret=0
 		fi
+		errstr="Failed to sync clocks"
 	else
-		eend 1 "hwclock executable not found"
+		ret=1
+		errstr="/sbin/hwclock not found"
 	fi
+	eend ${ret} "${errstr}"
 }
 
 save() {
+	CLOCK_SYSTOHC="yes"
 	stop
 }
 

@@ -1,0 +1,28 @@
+# Copyright 1999-2004 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header$
+
+# Set CLOCK to "UTC" if your system clock is set to UTC (also known as
+# Greenwich Mean Time).  If your clock is set to the local time, then 
+# set CLOCK to "local".
+
+CLOCK="UTC"
+
+# If you wish to pass any other arguements to hwclock during bootup, 
+# you may do so here.
+
+CLOCK_OPTS=""
+
+# If you want to sync the system clock to the hardware clock during 
+# shutdown, then say "yes" here.
+
+CLOCK_SYSTOHC="no"
+
+
+### ALPHA SPECIFIC OPTIONS ###
+
+# If your alpha uses the SRM console, set this to "yes".
+SRM="no"
+
+# If your alpha uses the ARC console, set this to "yes".
+ARC="no"
