@@ -63,6 +63,8 @@ then
 	# Check user pref in portage
     RC_NOCOLOR="$(python -c 'import portage; print portage.settings["NOCOLOR"]' 2> /dev/null)"
 
+	[ "${RC_NOCOLOR}" = "true" ] && RC_NOCOLOR="yes"
+
 elif [ -n "${EBUILD}" ] && [ "${*/depend}" != "$*" ]
 then
 	# We do not want colors or stty to run during emerge depend

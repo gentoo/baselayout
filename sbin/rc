@@ -71,7 +71,7 @@ then
 	PATH="/bin:/sbin:/usr/bin:/usr/sbin:${PATH}"
 
 	echo
-	echo -e "${GOOD}Gentoo Linux${GENTOO_VERS}; \e[34;01mhttp://www.gentoo.org/${NORMAL}"
+	echo -e "${GOOD}Gentoo Linux${GENTOO_VERS}; ${BRACKET}http://www.gentoo.org/${NORMAL}"
 	echo -e " Copyright 2001-2003 Gentoo Technologies, Inc.; Distributed under the GPL"
 	echo
 

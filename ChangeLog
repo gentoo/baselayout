@@ -16,6 +16,12 @@
 	Fix /etc/init.d/clock to work with UML, closing bug #24225 thanks to
 	John Mylchreest <johnm@gentoo.org>.
 
+    Fix hardcoded color escape sequence in /sbin/rc, closing bug #24109,
+	thanks to splite <splite-gentoo@sigint.cs.purdue.edu>.
+
+    Fix /sbin/functions.sh to disable color printing if NOCOLOR is set to
+	"true" in /etc/make.conf, closing bug #24107.
+
   15 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Add /bin/csh to /etc/shells.
