@@ -1,4 +1,4 @@
-# Copyright 1999-2004 Gentoo Foundation
+# Copyright 1999-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
 
@@ -615,7 +615,18 @@ is_net_fs() {
 #   EXAMPLE:  if is_uml_sys ; then ...
 #
 is_uml_sys() {
-	grep -q 'UML' /proc/cpuinfo &> /dev/null
+	grep -qs 'UML' /proc/cpuinfo
+	return $?
+}
+
+# bool is_vserver_sys()
+#
+#   return 0 if the currently running system is a Linux VServer
+#
+#   EXAMPLE:  if is_vserver_sys ; then ...
+#
+is_vserver_sys() {
+	grep -qs '^s_context:[[:space:]]*[1-9]' /proc/self/status
 	return $?
 }
 
@@ -702,16 +713,23 @@ else
 		RC_NOCOLOR="$(portageq envvar NOCOLOR 2>/dev/null)"
 		[ "${RC_NOCOLOR}" = "true" ] && RC_NOCOLOR="yes"
 	else
-		# We do not want colors or stty to run during emerge depend
+		# We do not want colors during emerge depend
 		RC_NOCOLOR="yes"
+		# No output is seen during emerge depend, so this is not needed.
 		RC_ENDCOL="no"
 	fi
 fi
 
-# Setup COLS and ENDCOL so eend can line up the [ ok ]
-COLS=${COLUMNS:-0}		# bash's internal COLUMNS variable
-(( COLS == 0 )) && COLS=$(stty size 2>/dev/null | cut -d' ' -f2)
-(( COLS > 0 )) || (( COLS = 80 ))	# width of [ ok ] == 7
+if [[ -n ${EBUILD} && $* != *depend* ]]; then
+	# We do not want stty to run during emerge depend
+	COLS=80
+else
+	# Setup COLS and ENDCOL so eend can line up the [ ok ]
+	COLS=${COLUMNS:-0}		# bash's internal COLUMNS variable
+	(( COLS == 0 )) && COLS=$(stty size 2>/dev/null | cut -d' ' -f2)
+	(( COLS > 0 )) || (( COLS = 80 ))	# width of [ ok ] == 7
+fi
+
 if [[ ${RC_ENDCOL} == yes ]]; then
 	ENDCOL=$'\e[A\e['$(( COLS - 7 ))'G'
 else
