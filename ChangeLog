@@ -2,6 +2,14 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  25 Dec 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix src/awk/genenviron.awk stripping *all* '=', closing
+    bug #8901.
+
+    Fix src/awk/genenviron.awk not seperating CONFIG_PROTECT with
+    spaces ...
+
 * rc-scripts 1.4.2.7 (24 Dec 2002)
 
   24 Dec 2002; Martin Schlemmer <azarah@gentoo.org>:

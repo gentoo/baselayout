@@ -72,7 +72,7 @@ BEGIN {
 					continue
 
 				# strip variable name and '=' from data
-				sub(/.*=/, "")
+				sub("^[[:space:]]*" envnode[1] "[[:space:]]*=", "")
 				# Strip all '"' and '\''
 				gsub(/\"/, "")
 				gsub(/\'/, "")
@@ -98,7 +98,12 @@ BEGIN {
 								NODUPS = 0
 						
 						if (NODUPS)
-							ENVTREE[envnode[1]] = ENVTREE[envnode[1]] ":" $0
+							# Once again, "CONFIG_PROTECT" and "CONFIG_PROTECT_MASK"
+							# are handled differently ...
+							if ((envnode[1] == "CONFIG_PROTECT") || (envnode[1] == "CONFIG_PROTECT_MASK"))
+								ENVTREE[envnode[1]] = ENVTREE[envnode[1]] " " $0
+							else
+								ENVTREE[envnode[1]] = ENVTREE[envnode[1]] ":" $0
 					} else
 						ENVTREE[envnode[1]] = $0
 				} else
