@@ -18,7 +18,7 @@ start() {
 	then
 		ebegin "Activating EVMS2"
 		evms_activate
-		retval = $?	
+		retval=$?	
 		eend ${retval}
 	fi
 	
