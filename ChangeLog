@@ -12,6 +12,8 @@
     Fixed modules-update to only do the /etc/modprobe.conf generation if we
     are actually running a 2.5+ kernel.
 
+    Add pop3 entries to /etc/services, bug #25501.
+
   29 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Tweak /etc/init.d/check{root,fs} to set retval after each fsck call,

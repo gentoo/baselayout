@@ -71,8 +71,12 @@ csnet-ns	105/udp		cso-ns
 #3com-tsmux	106/udp		poppassd
 rtelnet		107/tcp				# Remote Telnet
 rtelnet		107/udp
+pop2		109/tcp		pop-2	# POP version 2
+pop2		109/udp     pop-2
 pop-2		109/tcp		postoffice	# POP version 2
 pop-2		109/udp
+pop3		110/tcp		pop-3	# POP version 3
+pop3		110/udp		pop-3
 pop-3		110/tcp				# POP version 3
 pop-3		110/udp
 sunrpc		111/tcp		portmapper	# RPC 4.0 portmapper TCP
