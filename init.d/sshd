@@ -4,6 +4,10 @@
 PIDFILE=/var/run/sshd.pid
 EXE=/usr/sbin/sshd
 
+depend() {
+	need net
+}
+
 gen_keys() {
 	if [ ! -e /etc/ssh/ssh_host_key ] 
 	then
