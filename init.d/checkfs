@@ -11,6 +11,17 @@ depend() {
 start() {
 	local retval=0
 	
+	#
+	# EVMS2 summport for /usr, /var ....
+	#
+        if [ -f /sbin/evms_activate ]
+	then
+		ebegin "Activating EVMS22: "
+		evms_activate
+		retval = $?	
+		eend ${retval}
+	fi
+	
 	# LVM support for /usr, /home, /opt ....
 	# This should be done *before* checking local
 	# volumes, or they never get checked.

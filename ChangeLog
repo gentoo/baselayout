@@ -6,6 +6,9 @@
 
     Fix the /dev/root entry in /etc/mtab, bug #24916.
 
+    Add EVMS2 support, thanks to Mike Javorski <mike_javorski@bigfoot.com>,
+    bug #24064.
+
 * rc-scripts 1.4.3.9 (17 Jul 2003)
 
   17 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:
