@@ -534,7 +534,7 @@ iface_start() {
 			done
 
 			if ! ${x}; then
-				[[ $( type -t ${conf[0]}_check_intalled == function ) ]] && ${conf[0]}_check_installed true
+				[[ $( type -t ${conf[0]}_check_installed == function ) ]] && ${conf[0]}_check_installed true
 				eerror "No loaded modules provide \"${conf[0]}\" (${conf[0]}_start)"
 			else
 				eindent
