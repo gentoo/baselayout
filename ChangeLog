@@ -2,6 +2,8 @@
 # Copyright 2001 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+* rc-scripts 1.2.5 (20 Jan 2002)
+
   20 Jan 2002: Martin Schlemmer (azarah@gentoo.org): updated
   /etc/init.d/net.eth0 to 'use' pcmcia.
 
