@@ -8,6 +8,12 @@
     users.  Some don't want to use devfs/udev but rather just create 
     their own nodes.  Handles some issues with #44906 / #67276.
 
+    Move the utmp clearing code out of bootmisc and into /sbin/rc.  
+    The utmp log must be cleared while in the initial boot level 
+    (meaning inside /sbin/rc) because as soon as rc exists, init 
+    writes a 'boot' record (`who -b`) which would normally be lost 
+    when the bootmisc init.d script is run #61727.
+
   13 Oct 2004; Aron Griffis <agriffis@gentoo.org>:
 
     Cosmetic fixes for starting loopback interface

@@ -454,6 +454,15 @@ then
 		done
 	)
 
+	# Setup login records ... this has to be done here because when 
+	# we exit this runlevel, init will write a boot record to utmp
+	> /var/run/utmp
+	touch /var/log/wtmp
+	chgrp utmp /var/run/utmp /var/log/wtmp
+	chmod 0664 /var/run/utmp /var/log/wtmp
+	# Remove /var/run/utmpx (bug from the past)
+	rm -f /var/run/utmpx
+
 	exit 0
 fi # Sysinit ends here
 
