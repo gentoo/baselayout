@@ -78,11 +78,15 @@ start() {
 		# Create /etc/mtab
 		#
 
+		# Clear the existing mtab
 		> /etc/mtab
+
 		# Add the entry for / to mtab
 		mount -f /
-		# Make sure we do not have these in there
-		egrep -v '^(rootfs|/dev/root)' /proc/mounts >> /etc/mtab
+
+		# Don't list root more than once
+		awk '$2 != "/" {print}' /proc/mounts >> /etc/mtab
+
 		# Now make sure /etc/mtab have additional info (gid, etc) in there
 		for x in $(awk '{ print $2 }' /proc/mounts | uniq)
 		do

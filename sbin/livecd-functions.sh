@@ -162,7 +162,7 @@ livecd_fix_inittab() {
 			echo "c${x}:12345:respawn:/sbin/mingetty --noclear --autologin root tty${x}" >> /etc/inittab
 		done	
 	else
-		echo "c1:12345:respawn:/sbin/agetty ${LIVECD_CONSOLE_BAUD} ${LIVECD_CONSOLE} linux" >> /etc/inittab
+		echo "c1:12345:respawn:/sbin/agetty -ln /bin/bash ${LIVECD_CONSOLE_BAUD} ${LIVECD_CONSOLE} linux" >> /etc/inittab
 	fi
 	return 0
 }

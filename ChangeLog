@@ -2,7 +2,15 @@
 # Copyright 2002-2004 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
-* rc-scripts 1.4.4 (26 Feb 2004)
+* rc-scripts 1.4.5 (08 Apr 2004)
+
+  08 Apr 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Patch init.d/checkroot to list / (root) only once in mtab; see bug 38360.
+    Patch from Gustavoz to livecd-functions.sh to run bash instead of login on
+    serial consoles, necessary due to scrambled root passwords.
+
+* rc-scripts 1.4.4 (07 Apr 2004)
 
   07 Apr 2004; Aron Griffis <agriffis@gentoo.org>:
 
