@@ -49,12 +49,11 @@ if [ -n "${BASH_VERSION}" ]; then
 		# difference.
 		. /etc/bash/bashrc
 	else
-		export PS1='\u@\h \w \$ '
+		PS1='\u@\h \w \$ '
 	fi
 else
 	# Setup a bland default prompt.  Since this prompt should be useable
 	# on color and non-color terminals, as well as shells that don't
 	# understand sequences such as \h, don't put anything special in it.
 	PS1="`whoami`@`uname -n | cut -f1 -d.` \$ "
-	export PS1
 fi
