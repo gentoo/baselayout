@@ -73,7 +73,7 @@ setup_vars() {
 		eval aliases=( \$\{alias_$iface\} )
 		eval broadcasts=( \$\{broadcast_$iface\} )
 		eval netmasks=( \$\{netmask_$iface\} )
-		for ((i = 0; i -lt ${#aliases[@]}; i = i + 1)); do
+		for ((i = 0; i < ${#aliases[@]}; i = i + 1)); do
 			ifconfig_IFACE[i+1]="${aliases[i]} ${broadcasts[i]:+broadcast ${broadcasts[i]}} ${netmasks[i]:+netmask ${netmasks[i]}}"
 		done
 	fi
@@ -134,7 +134,7 @@ iface_start() {
 
 	if [[ ${#ifconfig_IFACE[@]} -gt 1 ]]; then
 		einfo "  Adding aliases"
-		for ((i = 1; i -lt ${#ifconfig_IFACE[@]}; i = i + 1)); do
+		for ((i = 1; i < ${#ifconfig_IFACE[@]}; i = i + 1)); do
 			ebegin "    ${IFACE}:${i} (${ifconfig_IFACE[i]%% *})"
 			ifconfig ${IFACE}:${i} ${ifconfig_IFACE[i]}
 			eend $?
@@ -143,7 +143,7 @@ iface_start() {
 
 	if [[ -n ${inet6_IFACE} ]]; then
 		einfo "  Adding inet6 addresses"
-		for ((i = 0; i -lt ${#inet6_IFACE[@]}; i = i + 1)); do
+		for ((i = 0; i < ${#inet6_IFACE[@]}; i = i + 1)); do
 			ebegin "    ${IFACE} inet6 add ${inet6_IFACE[i]}"
 			ifconfig ${IFACE} inet6 add ${inet6_IFACE[i]} >${devnull}
 			eend $?
@@ -153,7 +153,7 @@ iface_start() {
 	# Set static routes
 	if [[ -n ${routes_IFACE} ]]; then
 		einfo "  Adding routes"
-		for ((i = 0; i -lt ${#routes_IFACE[@]}; i = i + 1)); do
+		for ((i = 0; i < ${#routes_IFACE[@]}; i = i + 1)); do
 			ebegin "    ${routes_IFACE[i]}"
 			/sbin/route add ${routes_IFACE[i]}
 			eend $?
@@ -240,7 +240,7 @@ iface_stop() {
 		# Don't trust current configuration... investigate ourselves
 		if /sbin/dhcpcd -z ${i} &>${devnull}; then
 			ebegin "  Releasing DHCP lease for ${IFACE}"
-			for ((count = 0; count -lt 9; count = count + 1)); do
+			for ((count = 0; count < 9; count = count + 1)); do
 				/sbin/dhcpcd -z ${i} &>${devnull} || break
 				sleep 1
 			done
