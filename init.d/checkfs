@@ -12,6 +12,10 @@ start() {
 	# LVM support for /usr, /home, /opt ....
 	# This should be done *before* checking local
 	# volumes, or they never get checked.
+	
+	# Load LVM modules if needed
+	/sbin/modprobe -a lvm-mod &>/dev/null || :
+	
 	if [ -x /sbin/vgscan -a -d /proc/lvm ]
 	then
 		ebegin "Setting up the Logical Volume Manager"
