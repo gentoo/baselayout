@@ -18,6 +18,11 @@
     Remove changing group of /tmp/.{X,ICE}-unix, as it it not needed,
     bug #28861.
 
+    Apply a patch from Mike Frysinger <vapier@gentoo.org> for rc-status.
+    It now will work with runlevels named with any characters (other than
+    ones found in default bash IFS).  It also adds a few sanity/error
+    checks, bug #26432.
+
   14 Sep 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Change update-modules to modules-update in manpage, bug #28101.

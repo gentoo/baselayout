@@ -26,6 +26,7 @@
 
 # grab code from functions.sh so we don't have to reproduce it
 source /sbin/functions.sh
+runleveldir=/etc/runlevels
 let COLS="${COLS} - 7"
 
 # grab settings from conf.d/rc
@@ -47,9 +48,7 @@ do_opt() {
 			UNUSED=true
 			;;
 		--list|-l)
-			for runlvl in `ls /etc/runlevels` ; do
-				echo $runlvl
-			done
+			ls -1 ${runleveldir}
 			exit 0
 			;;
 		--help|-h|-*)
@@ -66,7 +65,7 @@ do_opt() {
 			;;
 	esac
 }
-for opt in $* ; do
+for opt in "$@" ; do
 	do_opt ${opt}
 	[ -n "$2" ] && shift
 done
@@ -75,7 +74,28 @@ done
 #  Find the current runlevel being queried.  This is either something supplied #
 #  on the command line, or pulled from softlevel                               #
 ################################################################################
-runlevel="$(<${svcdir}/softlevel)"
+if [ -z "${runlevel}" ] ; then
+	if [ -e "${svcdir}/softlevel" ] ; then
+		runlevel="$(<${svcdir}/softlevel)"
+	else
+		ewarn "Could not local current runlevel in ${svcdir}/softlevel"
+		if [ -d "${runleveldir}/single" ] ; then
+			runlevel=single
+		elif [ -d "${runleveldir}/default" ] ; then
+			runlevel=default
+		else
+			eerror "Your installation is probably broken ... please \`emerge baselayout\`"
+			exit 1
+		fi
+		ewarn "Assuming current runrevel is '${runlevel}'"
+	fi
+fi
+if [ ! -d "${runleveldir}/${runlevel}" ] ; then
+	eerror "${runlevel} is not a valid run level !"
+	eerror "Valid runlevels (obtained from \`rc-status --list\`):"
+	rc-status --list
+	exit 1
+fi
 
 ################################################################################
 # Build up a hash of the services associated with each run level.  In the most #
@@ -84,22 +104,21 @@ runlevel="$(<${svcdir}/softlevel)"
 # specified, we pull info about all of the services and filter for the ones    #
 # that don't appear in any runlevel.                                           #
 ################################################################################
-runlevelidxs=`ls /etc/runlevels`
+runlevelidxs=`ls ${runleveldir}`
 declare -a runlevels
 # For each directory in /etc/runlevels, do ...
 arridx=0
 for level in ${runlevelidxs} ; do
-	let "${level} = ${arridx}"
-	let "arridx += 1"
 	if [ "${level}" == "${runlevel}" ] || [ -n "${ALL}" ] ; then
-		runlevels[${!level}]=`ls /etc/runlevels/${level}`
+		runlevels[${arridx}]=`find ${runleveldir}/${level} -type l -printf '%f ' -maxdepth 1`
+		let "arridx += 1"
 	fi
 done
 
 # In case --all was specified, get a list of all the services set up in
 # /etc/init.d; services can be added, but not enabled, and we need to
 # identify these 'orphan' services.
-in_list () { #$1=list  $2=find
+in_list() { #$1=list  $2=find
 	for ele in $1 ; do
 		if [ "${ele}" == "$2" ] ; then
 			echo 1
@@ -111,14 +130,13 @@ in_list () { #$1=list  $2=find
 }
 if [ -n "${ALL}" ] ; then
 	unassigned=
-	for service in `ls -1 /etc/init.d | grep -v .sh$` ; do
+	for service in `ls -1 /etc/init.d | grep -v '\.sh$'` ; do
 		if [ $(in_list "${runlevels[*]}" "${service}") -eq 0 ] ; then
 			unassigned="${unassigned} ${service}"
 		fi
 	done
-	let "UNASSIGNED = ${arridx}"
-	runlevelidxs="UNASSIGNED ${runlevelidxs}"
-	runlevels[${UNASSIGNED}]="${unassigned}"
+	runlevelidxs="${runlevelidxs} UNASSIGNED"
+	runlevels[${arridx}]="${unassigned}"
 fi
 
 ################################################################################
@@ -137,28 +155,30 @@ fi
 #  service name and its status.                                                #
 ################################################################################
 # Define a helper method for printing the status of a service; '[ xxx ]'
-print_msg () {
+print_msg() {
 	printf "${BRACKET}[ $1%-7s ${BRACKET}]${NORMAL}\n" $2
 }
 
-#if --all wasnt specified, dont print everything
+# if --all wasnt specified, dont print everything
 [ -z "${ALL}" ] && runlevelidxs="${runlevel}"
 
+arridx=0
 for level in ${runlevelidxs} ; do
-	printf "Runlevel: ${HILITE}${level}${NORMAL}\n"
-	for service in ${runlevels[${!level}]} ; do
+	echo "Runlevel: ${HILITE}${level}${NORMAL}"
+	for service in ${runlevels[${arridx}]} ; do
 		printf "  %-${COLS}s" "${service}"
 		if [ $(in_list "${started}" "${service}") -eq 1 ] ; then
 			print_msg "${GOOD}" "started"
 		else
 			if [ -n "${failed}" ] && [ $(in_list "${failed}" "${service}") -eq 1 ] ; then
 				print_msg "${BAD}", "failed"
-			elif [ -n "${broken}" ] && [ $(in_list "${broken}" "${server}") -eq 1 ] ; then
+			elif [ -n "${broken}" ] && [ $(in_list "${broken}" "${service}") -eq 1 ] ; then
 				print_msg "${BAD}", "broken"
 			else
 				print_msg "${WARN}" "off"
 			fi
 		fi
 	done
+	let "arridx += 1"
 	[ -n "${UNUSED}" ] && exit 0
 done
