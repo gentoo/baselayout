@@ -1,0 +1,104 @@
+# Automatic Private IP Addressing (APIPA) module for net-scripts
+# Version 1.0.0
+# Copyright (c) 2004 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License V2
+# Contributed by Roy Marples (uberlord@gentoo.org)
+
+# bool apipa_check_installed(void)
+#
+# Returns 1 if ifenslave is installed, otherwise 0
+apipa_check_installed() {
+	[[ -x /sbin/arping || -x /usr/sbin/arping2 ]] && return 0
+	if ${1} ; then
+		eerror "For Automatic Private IP Addressing (APIPA) support"
+		eerror "emerge net-misc/iputils or net-analyzer/arping"
+	fi
+	return 1
+}
+
+# char* apipa_provides(void)
+#
+# Returns a string to change module definition for starting up
+apipa_provides() {
+	echo "apipa"
+}
+
+# void apipa_depend(void)
+#
+# Sets up the dependancies for the module
+apipa_depend() {
+	after dhcp
+	need interface
+}
+
+# bool apipa_check_depends(void)
+#
+# Checks to see if we have the needed functions
+apipa_check_depends() {
+	local f
+
+	for f in interface_exists interface_up; do
+		[[ $(type -t ${f}) == function ]] && continue
+		eerror "apipa: missing required function ${f}\n"
+		return 1
+	done
+
+	return 0
+}
+
+# bool address_exists(char *interface, char *address, int packets)
+#
+# Returns 0 if the address on the interface responds to an arping
+# 1 if not - packets defaults to 1
+# If neither arping (net-misc/iputils) or arping2 (net-analyzer/arping)
+# is installed then we return 1
+address_exists() {
+	local iface=${1} address=${2%%/*} packets=${3:-1}
+	
+	if [[ -x /sbin/arping ]]; then
+		/sbin/arping -D -f -c ${packets} -I ${iface} ${address} &>/dev/null || return 0
+	elif [[ -x /usr/sbin/arping2 ]]; then
+		/usr/sbin/arping2 -0 -c ${packets} -i ${iface} ${address} &>/dev/null && return 0
+	fi
+	return 1
+}
+
+# bool apipa_start(char *iface)
+#
+# Tries to locate an address in the 169.254.0.0 netmask 169.254.255.255 range
+apipa_start() {
+	local iface=${1} i1 i2 addr i=0
+
+	! interface_exists ${iface} true && return 1
+
+	ebegin "Searching for free addresses"
+	interface_up ${iface}
+
+	while [[ ${i} -lt 64516 ]]; do
+		(( i1=${RANDOM}%254 ))
+		(( i2=${RANDOM}%254 ))
+
+		addr="169.254.${i1}.${i2}"
+		if ! address_exists ${iface} ${addr} ; then
+			case $( interface_module ) in
+				ifconfig)
+					config_IFACE[i]="${addr} broadcast 169.254.255 netmask 255.255.0.0"
+					;;
+				iproute2)
+					config_IFACE[i]="${addr}/16 brd 169.254.255.255"
+					;;
+				*)
+					eerror "apipa: I don't know interface type $( interface_module )"
+					return 1
+			esac
+			(( label_counter-- ))
+			eend 0
+			return 0
+		fi
+
+		(( i++ ))
+	done
+
+	eend 1 "No free address found!"
+	return 1
+}

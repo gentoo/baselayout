@@ -86,7 +86,7 @@ module_class_wrap() {
 # Loads the defined handler and modules for the interface
 # Returns 0 on success, otherwise 1
 modules_load()  {
-	local iface=${1} all=${2:-false} i j k p e before after diffs mod
+	local iface=${1} all=${2:-false} i j k p e before beforefuncs after diffs mod
 	local loaded_interface changed_something tmp modnums missingdeps
 	local -a mods=( $( find /lib/rcscripts/net.modules.d/ -maxdepth 1 -type f | sort ) ) 
 	local -a umods		# user-specified modules
@@ -104,6 +104,7 @@ modules_load()  {
 	j=${#mods[@]}
 	loaded_interface=false
 	for (( i=0; i < j; i++ )); do
+		beforefuncs="$( typeset -F )"
 		if ! source ${mods[i]} ; then
 			eerror "${mods[i]##*/} failed a sanity check - will not load"
 			unset mods[i]
@@ -163,12 +164,16 @@ modules_load()  {
 			eerror "${mods[i]} modified functions: ${diffs}"
 			return 1
 		fi
-		before="${after}"
 
 		if ! ${mods[i]}_check_installed; then
 			unset mods[i]
+			# Remove added functions
+			unset $( diff -U0 -p <( echo "${beforefuncs}" ) <( echo "$( typeset -F )" ) 2>/dev/null \
+				| awk 'BEGIN { ORS = " "; } /+declare -f/ { print $3; }' ) 2>/dev/null
+			before=$( typeset -f )
 			continue
 		fi
+		before="${after}"
 
 		[[ -n ${mods[i]} && $( ${mods[i]}_provides ) == interface ]] && loaded_interface=true
 	done
@@ -440,6 +445,8 @@ iface_start() {
 	if [[ -z ${config_IFACE} ]]; then
 		if [[ $( type -t dhcp_start ) == function ]]; then
 			config_IFACE=( "dhcp" )
+			# If we have APIPA module installed we can default to it if DHCP fails
+			[[ $(type -t apipa_start) == function ]] && config_fallback_IFACE=( "apipa" )
 			warn=true
 		else
 			eerror "Cannot default to dhcp as there is no dhcp module loaded"
@@ -450,20 +457,19 @@ iface_start() {
 
 	einfo "Bringing up ${iface}"
 	eindent
-	for (( i=0; i < ${#config_IFACE[@]}; i++ )); do
-		(( label_counter++ ))
+	for (( label_counter=0; label_counter < ${#config_IFACE[@]}; label_counter++ )); do
 		# Set a label for the alias if $label_counter > 0
 		[[ ${label_counter} -eq 0 ]] && label=${iface} || label=${iface}:${label_counter}
 
 		# Null inet address
 		# We do this so we can have an inet6 only setup
-		[[ ${config_IFACE[i]} == "null" ]] && eend 0 && continue
+		[[ ${config_IFACE[label_counter]} == "null" ]] && eend 0 && continue
 
 		${warn} && ewarn "Configuration not set for ${iface} - assuming dhcp"
 
 		# We convert it to an array - this has the added
 		# bonus of trimming spaces!
-		conf=( ${config_IFACE[i]} )
+		conf=( ${config_IFACE[label_counter]} )
 		einfo "${label} ${conf[0]}"
 
 		# Do we have a function for our config?
@@ -490,18 +496,25 @@ iface_start() {
 		# We do this by testing if the 1st character is a digit
 		elif [[ ${conf[0]:0:1} == [[:digit:]] ]]; then
 			eindent
-			interface_configure ${label} ${conf[@]} ; x=$?
-			eoutdent
+			x=0
+			if [[ $(type -t address_exists ) == function ]]; then
+				if address_exists ${label} ${conf[0]} ; then
+					eerror "${conf[0]} already taken on ${label}"
+					x=1
+				fi
+			fi
+			[[ ${x} == 0 ]] && interface_configure ${label} ${conf[@]} ; x=$?
 			[[ ${x} == 0 ]] && continue
+			eoutdent
 		else
 			eerror "No loaded modules provide \"${conf[0]}\" (${conf[0]}_start)"
 		fi
 
-		if [[ -n ${config_fallback_IFACE[i]} ]]; then
+		if [[ -n ${config_fallback_IFACE[label_counter]} ]]; then
 			einfo "Trying fallback configuration"
-			config_IFACE[i]=${config_fallback_IFACE[i]}
-			config_fallback_IFACE[i]=''
-			(( i-- )) # since the loop will increment it
+			config_IFACE[label_counter]=${config_fallback_IFACE[label_counter]}
+			config_fallback_IFACE[label_counter]=''
+			(( label_counter-- )) # since the loop will increment it
 			continue
 		fi
 
