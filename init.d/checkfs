@@ -9,6 +9,17 @@ depend() {
 }
 
 start() {
+	# LVM support for /usr, /home, /opt ....
+	# This should be done *before* checking local
+	# volumes, or they never get checked.
+	if [ -x /sbin/vgchange -a -f /etc/lvmtab ]
+	then
+		ebegin "Setting up the Logical Volume Manager"
+		#still echo stderr for debugging
+		/sbin/vgscan && /sbin/vgchange -a y >/dev/null
+		eend $? "Failed to setup the LVM"
+	fi
+
 	ebegin "Checking all filesystems"
 	fsck -R -A -a
 	if [ "$?" -eq 0 ]

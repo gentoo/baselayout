@@ -9,15 +9,6 @@ depend() {
 }
 
 start() {
-	# LVM support for /usr, /home, /opt ....
-	if [ -x /sbin/vgchange -a -f /etc/lvmtab ]
-	then
-		ebegin "Setting up the Logical Volume Manager"
-		#still echo stderr for debugging
-		/sbin/vgscan && /sbin/vgchange -a y >/dev/null
-		eend $? "Failed to setup the LVM"
-	fi
-	
 	# Mount local filesystems in /etc/fstab.
 	ebegin "Mounting local filesystems"
 	mount -at nocoda,nonfs,noproc,noncpfs,nosmbfs,noshm >/dev/null

@@ -6,13 +6,16 @@ fi
 #077 would be more secure, but 022 is generally quite realistic
 umask 022
 
-if [ `/usr/bin/whoami` = 'root' ] ; then
-	if [ "$SHELL" = '/bin/bash' ] ; then
+if [ `/usr/bin/whoami` = 'root' ]
+then
+	if [ "$SHELL" = '/bin/bash' ] || [ "$SHELL" = '/bin/sh' ]
+	then
 		export PS1='\[\033[01;31m\]\h \[\033[01;34m\]\W \$ \[\033[00m\]'
 	fi
 	export PATH="/bin:/sbin:/usr/bin:/usr/sbin:${ROOTPATH}"
 else
-	if [ "$SHELL" = '/bin/bash' ] ; then
+	if [ "$SHELL" = '/bin/bash' ] || [ "$SHELL" = '/bin/sh' ]
+	then
 		export PS1='\[\033[01;32m\]\u@\h \[\033[01;34m\]\W \$ \[\033[00m\]'
 	fi
 	export PATH="/bin:/usr/bin:${PATH}"
