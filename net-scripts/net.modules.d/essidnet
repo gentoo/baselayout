@@ -99,7 +99,7 @@ essidnet_pre_start() {
 		done
 
 		eval x=\"\$\{mac_searchdomains_${mac}\}\"
-		[[ -z ${x} ]] && eval x=\"\$\{searchdomains_${mac}\}\"
+		[[ -z ${x} ]] && eval x=\"\$\{searchdomains_${essid}\}\"
 		[[ -n ${x} ]] && echo "search ${x}" >> /etc/resolv.conf
 	fi
 
