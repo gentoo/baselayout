@@ -37,6 +37,20 @@
 
 LIST_HEAD(service_info_list);
 
+/* Names for service types (service_type_t) in depend.h.
+ * Note that this should sync with service_type_t */
+char *service_type_names[] = {
+	"NEED",
+	"NEED_ME",
+	"USE",
+	"USE_ME",
+	"BEFORE",
+	"AFTER",
+	"BROKEN",
+	"PROVIDE",
+	NULL
+};
+
 int __service_resolve_dependency(char *servicename, char *dependency, service_type_t type);
 
 service_info_t *service_get_info(char *servicename) {

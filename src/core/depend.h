@@ -42,19 +42,9 @@ typedef enum {
 	ALL_SERVICE_TYPE_T
 } service_type_t;
 
-/* Names for above service types.
+/* Names for above service types (service_type_t).
  * Note that this should sync with above service_type_t */
-static char *service_type_names[] = {
-	"NEED",
-	"NEED_ME",
-	"USE",
-	"USE_ME",
-	"BEFORE",
-	"AFTER",
-	"BROKEN",
-	"PROVIDE",
-	NULL
-};
+extern char *service_type_names[];
 
 typedef struct {
 	struct list_head node;

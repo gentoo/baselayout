@@ -4,6 +4,12 @@
 
   16 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
 
+    depend.c, depend.h: Change service_type_names declaration in depend.h to
+                        extern and move the definition to depend.c to avoid
+                        warnings.
+
+  16 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
+
     Add README.
 
   16 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
