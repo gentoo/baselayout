@@ -12,6 +12,8 @@
     Give /var/run/utmp and /var/log/wtmp the proper permissions
     and ownership.  First steps in fixing bug #7630.
 
+    Change Raid stuff again in /etc/init.d/checkfs.
+
   26 Aug 2002; Donny Davies <woodchip@gentoo.org>:
 
     Give root a 'root' GECOS in /etc/passwd, was NULL before.

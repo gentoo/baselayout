@@ -85,10 +85,13 @@ done
 eend 0
 
 #stop RAID
-if [ -x /sbin/raidstart -a -f /etc/raidtab -a -f /proc/mdstat ]
+if [ -x /sbin/raidstop -a -f /etc/raidtab -a -f /proc/mdstat ]
 then
 	ebegin "Stopping software RAID"
-	raidstop -a
+	for x in $(grep -E "md[0-9]+[[:space:]]?: active raid" /proc/mdstat | awk -F ':' '{print $1}')
+	do
+		raidstop /dev/${x} >/dev/null
+	done
 	eend $? "Failed to stop software RAID"
 fi
 

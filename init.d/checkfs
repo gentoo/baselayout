@@ -32,8 +32,17 @@ start() {
 	if [ -x /sbin/raidstart -a -f /etc/raidtab -a -f /proc/mdstat ]
 	then
 		ebegin "Starting software RAID"
-		# still echo stderr for debugging
-		/sbin/raidstart --all >/dev/null
+		ACTIVE_RAID="`grep -E "md[0-9]+[[:space:]]?: active raid" /proc/mdstat | awk -F ':' '{print "/dev/"$1}'`"
+		if [ -n ${ACTIVE_RAID} ]
+		then
+			for x in $(grep -E "raiddev /dev/md[0-9]+" /etc/raidtab | \
+			           awk '{print $2}' | grep -v "`echo ${ACTIVE_RAID} | sed s'/[[:space:]]//g'`")
+			do
+				/sbin/raidstart ${x}
+			done
+		else
+			/sbin/raidstart --all
+		fi
 		eend $? "Failed to start software RAID"
 	fi
 
