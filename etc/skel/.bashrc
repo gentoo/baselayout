@@ -24,9 +24,7 @@ if [[ -f ~/.dir_colors ]]; then
 else
 	eval `dircolors -b /etc/DIR_COLORS`
 fi
-alias d="ls --color"
 alias ls="ls --color=auto"
-alias ll="ls --color -l"
 
 # Change the window title of X terminals 
 case $TERM in
