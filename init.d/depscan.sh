@@ -39,6 +39,7 @@ depend_dbadd() {
 			   [ ! -d ${svcdir}/provide/${x} ] && \
 			   [ "$x" != "net" ]
 			then
+				echo
 				einfo "need: can't find service \"${x}\" needed by \"${myservice}\"; continuing..."
 				
 				#$myservice is broken due to missing 'need' dependancies
@@ -64,7 +65,11 @@ depend_dbadd() {
 		if [ "$x" = "$myservice" ]
 		then
 			#dont work too well with the '*' use and need
-			#einfo "depend: service \"${x}\" can't depend on itself; continuing..."
+			if [ "$mytype" != "before" ] && [ "$mytype" != "after" ]
+			then
+				echo
+				einfo "depend: service \"${x}\" can't depend on itself; continuing..."
+			fi
 			continue
 		fi
 		
@@ -151,7 +156,13 @@ do
 		PROVIDE=""
 		return
 	}
-	source ${x}
+	wrap_rcscript ${x} || {
+		echo
+		einfo "${x} has syntax errors in it, please fix this before trying"
+		einfo "to execute this script..."
+		einfo "NOTE: the dependancies for this script has not been calculated!"
+		continue
+	}
 	depend
 	if [ -n "$PROVIDE" ]
 	then
@@ -178,7 +189,8 @@ do
 		AFTER=""
 		return
 	}
-	source ${x}
+	#we already warn about the error in the provide loop
+	wrap_rcscript ${x} || continue
 	depend
 	if [ -n "$NEED" ]
 	then
@@ -230,6 +242,7 @@ do
 done
 if [ $counter -ne 1 ] && [ "${x##*/}" != "net" ]
 then
+	echo
 	einfo "provide:  it usually is not a good idea to have more than one"
 	einfo "          service providing the same virtual service (${errstr})!"
 	cerror="yes"

@@ -8,7 +8,7 @@ SVCDIR=/var/lib/supervise
 #rc-scripts dir
 svcdir=/mnt/.init.d
 #size of $svcdir in KB
-svcsize=2048
+svcsize=1024
 #different types of dependancies
 deptypes="need use"
 #different types of order deps
@@ -88,6 +88,23 @@ ewend() {
 		#extra spacing makes it easier to read
 		return $returnme
 	fi
+}
+
+# bool wrap_rcscript(full_path_and_name_of_rc-script)
+#
+#   return 0 if the script have no syntax errors in it
+#
+wrap_rcscript() {
+	local retval=1
+
+	( echo "function test_script() {" ; cat $1 ; echo "}" ) > ${svcdir}/foo.sh
+
+	if source ${svcdir}/foo.sh >/dev/null 2>/dev/null
+	then
+		test_script
+		retval=0
+	fi
+	return $retval
 }
 
 # bool get_bootparam(param)

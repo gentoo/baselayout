@@ -2,6 +2,16 @@
 # Copyright 2001 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  1 Feb 2002; Martin Schlemmer <azarah@gentoo.org>: added a wrapper for
+    sourcing the rc-scripts to eliminate syntax errors.  Thanks to
+    Karl Trygve Kalleberg (aka karltk) for the idea.  Updated
+    /etc/init.d/depscan.sh, /etc/init.d/functions.sh and
+    /etc/init.d/runscript.sh for this (added wrap_rcscript() function).
+
+    Removed stopping of dependant services that have current service as
+    a 'use'dependancy ... should be less confusing now.
+    Updated /etc/init.d/runscript.sh for this.
+
   28 Feb 2002; Martin Schlemmer <azarah@gentoo.org>: add /etc/conf.d/local.start
   and /etc/conf.d/local.stop for adding any misc programs to startup.  This
   should pretty much have /etc/init.d/ static, except for baselayout updates,

@@ -6,7 +6,9 @@
 
 source /etc/init.d/functions.sh
 
+#state variables
 svcpause="no"
+svcrestart="no"
 
 myscript=${1}
 if [ -L $1 ]
@@ -69,8 +71,8 @@ restart() {
 svc_stop() {
 	local x
 	local stopfail="no"
-	local mydeps
 	local mydep
+	local mydeps
 	local retval
 	local depservice
 	if [ ! -L ${svcdir}/started/${myservice} ]
@@ -125,7 +127,8 @@ svc_stop() {
 	fi
 	for mydep in $mydeps
 	do
-		for mytype in ${deptypes/before/}
+		#do not stop a service if it 'use' the current sevice
+		for mytype in ${deptypes/use/}
 		do
 			if [ -d ${svcdir}/${mytype}/${mydep} ]
 			then
@@ -323,7 +326,11 @@ svc_restart() {
 	svc_start || return $?
 }
 
-source ${myscript}
+wrap_rcscript ${myscript} || {
+	einfo "${myscript} has syntax errors in it, not executing..."
+	exit 1
+}
+
 if [ "$opts" = "" ]
 then
 	opts="start stop restart"
@@ -510,6 +517,7 @@ do
 		fi
 		;;
 	restart)
+		svcrestart="yes"
 		#create a snapshot of started services
 		rm -rf ${svcdir}/snapshot/*
 		cp ${svcdir}/started/* ${svcdir}/snapshot/
@@ -543,6 +551,7 @@ do
 				fi
 			done
 		fi
+		svcrestart="no"
 		;;
 	pause)
 		svcpause="yes"
