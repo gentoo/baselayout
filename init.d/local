@@ -10,17 +10,27 @@ depend() {
 
 start() {
 	ebegin "Starting local"
-	# This is a good place to load any misc.
-	# programs on startup ( 1>&2 )
+
+	# Add any misc programs that should be started
+	# to /etc/conf.d/local.start
+	if [ -e /etc/conf.d/local.start ]
+	then
+		source /etc/conf.d/local.start
+	fi
+	
 	eend $? "Started local."
 }
 
 stop() {
 	ebegin "Stopping local"
-	# This is a good place to unload any misc.
-	# programs you started above.
-	# For example, if you are using OSS and have
-	# "/usr/local/bin/soundon" above, put
-	# "/usr/local/bin/soundoff" here.
+
+	# Add any misc programs that should be stopped
+	# to /etc/conf.d/local.stop
+
+	if [ -e /etc/conf.d/local.stop ]
+	then
+		source /etc/conf.d/local.stop
+	fi
+	
 	eend $? "Stopped local."
 }
