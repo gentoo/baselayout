@@ -2,6 +2,14 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  1 April 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add quotes to the "export INPUTRC=/etc/inputrc" line to resolve bug #1391.
+
+    Add a error message to /etc/init.d/consolefont, resolving bug #1415.
+
+    Add a bash check to the code that sets the prompt, fixing bug #1078.
+
 * rc-scripts 1.3.2 (24 Mar 2002)
 
   24 March 2002; Martin Schlemmer <azarah@gentoo.org>:

@@ -55,8 +55,10 @@ start() {
 				fi
 			fi
 		done
+		eend $retval "Failed to set user font"
+	else
+		eerror "You need to setup \$CONSOLEFONT in /etc/rc.conf first."
 	fi
-	eend $retval "Failed to set user font"
 	
 	return $retval
 }

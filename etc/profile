@@ -7,16 +7,20 @@ fi
 umask 022
 
 if [ `/usr/bin/whoami` = 'root' ] ; then
-	export PS1='\[\033[01;31m\]\h \[\033[01;34m\]\W \$ \[\033[00m\]'
-	export PATH=/bin:/sbin:/usr/bin:/usr/sbin:${ROOTPATH}
+	if [ "$SHELL" = '/bin/bash' ] ; then
+		export PS1='\[\033[01;31m\]\h \[\033[01;34m\]\W \$ \[\033[00m\]'
+	fi
+	export PATH="/bin:/sbin:/usr/bin:/usr/sbin:${ROOTPATH}"
 else
-	export PS1='\[\033[01;32m\]\u@\h \[\033[01;34m\]\W \$ \[\033[00m\]'
-	export PATH=/bin:/usr/bin:${PATH}
+	if [ "$SHELL" = '/bin/bash' ] ; then
+		export PS1='\[\033[01;32m\]\u@\h \[\033[01;34m\]\W \$ \[\033[00m\]'
+	fi
+	export PATH="/bin:/usr/bin:${PATH}"
 fi
 unset ROOTPATH
-export EDITOR=/usr/bin/nano
+export EDITOR="/usr/bin/nano"
 
 if [ -z "$INPUTRC" -a ! -f "$HOME/.inputrc" ]; then
-	export INPUTRC=/etc/inputrc
+	export INPUTRC="/etc/inputrc"
 fi
 
