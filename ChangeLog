@@ -2,36 +2,34 @@
 # Copyright 2001 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
-  17 Feb 2002: Martin Schlemmer (azarah@gentoo.org): more fixes to
-    'after' and 'before', updated /etc/init.d/runscript.sh for this.
-    This should fix services not getting started in the correct order
-    in a tight loop,  services getting stopped out of order, and some
-    other sanity checks.
+  17 Feb 2002: Daniel Robbins <drobbins@gentoo.org>: Made "xfs" the default
+  filesystem in /etc/fstab (from ReiserFS) and removed "notail" option (it's
+  just in a comment now)
 
-    Updated rc-script.sh for updated help.
+  17 Feb 2002: Martin Schlemmer (azarah@gentoo.org): more fixes to 'after' and
+  'before', updated /etc/init.d/runscript.sh for this.  This should fix
+  services not getting started in the correct order in a tight loop,  services
+  getting stopped out of order, and some other sanity checks.  Updated
+  rc-script.sh for updated help.
+  
+  15 Feb 2002: Martin Schlemmer (azarah@gentoo.org): update /etc/profile to
+  resolve bug #588.  Reimplemented things a bit, and added the 'after' type.
+  'before' and 'after' will only work currently for a change of runlevel.
+  Updated /etc/init.d/depscan.sh, /etc/init.d/runscript.sh and /sbin/rc for it.
 
-  15 Feb 2002: Martin Schlemmer (azarah@gentoo.org): update
-    /etc/profile to resolve bug #588.
+  13 Feb 2002: Martin Schlemmer (azarah@gentoo.org): add some more entries to
+  /etc/devfsd.conf to make alsa users life easier ...  thanks Tod.
 
-    Reimplemented things a bit, and added the 'after' type.  'before'
-    and 'after' will only work currently for a change of runlevel.
-    Updated /etc/init.d/depscan.sh, /etc/init.d/runscript.sh and
-    /sbin/rc for it.
-
-  13 Feb 2002: Martin Schlemmer (azarah@gentoo.org): add some more
-  entries to /etc/devfsd.conf to make alsa users life easier ...
-  thanks Tod.
-
-  12 Feb 2002: Martin Schlemmer (azarah@gentoo.org): Some more
-    cleanups to /etc/init.d/depscan.sh and /etc/init.d/runscript.sh.
+  12 Feb 2002: Martin Schlemmer (azarah@gentoo.org): Some more cleanups to
+  /etc/init.d/depscan.sh and /etc/init.d/runscript.sh.
 
     Fixed some services not starting again when restarting a service.
     Seems simple is still the best way.
 
     Fixed some other problems created with feature additions and cleanups.
 
-  11 Feb 2002: Martin Schlemmer (azarah@gentoo.org): General cleanups
-    to /etc/init.d/depscan.sh and /etc/init.d/runscript.sh.
+  11 Feb 2002: Martin Schlemmer (azarah@gentoo.org): General cleanups to
+  /etc/init.d/depscan.sh and /etc/init.d/runscript.sh.
 
     Added 'before *' to /etc/init.d/checkroot to make sure it gets
     started first.
