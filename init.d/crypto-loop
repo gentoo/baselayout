@@ -14,31 +14,26 @@ start() {
 	local status="0"
 
 	ebegin "Starting crypto loop devices"
-	
-	if [ -e ${loopconf} ]
-	then
+
+	if [[ -e ${loopconf} ]] ; then
 		egrep "^loop" ${loopconf} | \
-		while read loopline
-		do
+		while read loopline ; do
 			eval ${loopline}
-			
-			local configured="`awk -v MOUNT="${device}" \
-				'($2 == MOUNT) { print "yes" }' /proc/mounts`"
-		
-			if [ "${configured}" != "yes" ]
-			then
+
+			local configured=$(awk -v MOUNT="${device}" \
+				'($2 == MOUNT) { print "yes" }' /proc/mounts)
+
+			if [[ ${configured} != "yes" ]] ; then
 				einfo "  Loop ${loop} on device ${device} (cipher ${cipher}, key size ${keysize}): "
 
-				if [ -n "${hash}" ]
-				then
+				if [[ -n ${hash} ]] ; then
 					/usr/sbin/hashalot -n ${keysize} ${hash} </dev/tty|\
 					/sbin/losetup -p 0 -e ${cipher}-${keysize} ${loop} ${device} ${other}
 				else
 					/sbin/losetup -e ${cipher}-${keysize} ${loop} ${device} ${other}
 				fi
 
-				if [ $? -ne 0 ]
-				then
+				if [[ $? -ne 0 ]] ; then
 					ewarn "Failure configuring ${loop}.  Skipping."
 					status=1
 				fi
@@ -55,12 +50,11 @@ start() {
 
 stop() {
 	local status="0"
-	for loop in $(echo /dev/loop[0-9]); do
-		losetup ${loop} &>/dev/null
-		if [[ $? == 0 ]]; then
+	for loop in $(ls /dev/loop[0-9]) ; do
+		losetup ${loop} &> /dev/null
+		if [[ $? == 0 ]] ; then
 			umount ${loop} &>/dev/null
-			if ! /sbin/losetup -d ${loop} &>/dev/null
-			then
+			if ! /sbin/losetup -d ${loop} &> /dev/null ; then
 				ewarn "Failure deconfiguring ${loop}."
 				status=1
 			fi
