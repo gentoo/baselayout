@@ -6,6 +6,7 @@
 
 depend() {
 	need checkroot hostname
+	before bootmisc
 }
 
 checkconfig_nis() {
