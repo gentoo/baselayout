@@ -2,6 +2,10 @@
 # Copyright 2001 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  27 Jan 2002: Donny Davies (woodchip@gentoo.org): security fix to
+  /etc/pam.d/sshd,login,chsh: added pam_shells.so to the stack.
+  Fixed /etc/passwd,group for user/group mysql.
+
   27 Jan 2002: Martin Schlemmer (azarah@gentoo.org): added charset
   map file support to /etc/init.d/consolefont and the setting to
   /etc/rc.conf.

@@ -29,6 +29,7 @@ squid::31:squid
 gdm::32:gdm
 xfs::33:xfs
 named::40:named
+mysql:x:60:
 postgres::70:
 cdrw::80:
 users::100:games
