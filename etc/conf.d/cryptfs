@@ -1,3 +1,7 @@
+# Copyright 1999-2004 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header$
+
 # Note regarding the syntax of this file.  This file is *almost* bash,
 # but each line is evaluated separately.  Separate swaps/mounts can be
 # specified.  The init-script which reads this file assumes that a
@@ -8,14 +12,14 @@
 # way into unencrypted swap.
 # If no options are given, they will default to: -c aes -h sha1 -d /dev/urandom
 # If no makefs is given then mkswap will be assumed
-swap=crypt-swap
-source='/dev/main/swap'
+#swap=crypt-swap
+#source='/dev/main/swap'
 
 # Mounts
 # If no options are given, they will default to: -c aes -h sha1
 # No mkfs is run unless you specify a makefs option
-mount=crypt-tmp
-source='/dev/main/tmp'
-options='-d /dev/urandom'
-pre_mount='/sbin/mkreiserfs -f -f ${dev}'
-post_mount='chown root:root ${mount_point}; chmod 1777 ${mount_point}'
+#mount=crypt-tmp
+#source='/dev/main/tmp'
+#options='-d /dev/urandom'
+#pre_mount='/sbin/mkreiserfs -f -f ${dev}'
+#post_mount='chown root:root ${mount_point}; chmod 1777 ${mount_point}'
