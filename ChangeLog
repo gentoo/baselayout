@@ -17,6 +17,9 @@
     This way users have an 'after-boot' log of their dmesg saved 
     somewhere useful #55421.
 
+    Added the 'eend' back to depscan.sh since the script starts with a 
+    call to 'ebegin' #59694.
+
   04 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
 
     More (I mean a LOT more) services.  This takes care of #44458, 

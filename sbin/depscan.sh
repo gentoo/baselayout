@@ -50,7 +50,7 @@ bash "${svcdir}/depcache" | \
 	-f /lib/rcscripts/awk/gendepends.awk || \
 	retval=1
 
-#eend ${retval} "Failed to cache service dependencies"
+eend ${retval} "Failed to cache service dependencies"
 
 exit ${retval}
 
