@@ -54,7 +54,7 @@ if [[ ${cur} != "${ip} ${subnet}" || ${action} == deconfig ]]; then
 
 	# Remove all addresses
 	while ifconfig ${interface} | grep -q -m1 -o 'inet addr:[^ ]*' ; do
-		ifconfig ${interface} 0
+		ifconfig ${interface} 0.0.0.0 || break
 	done
 
 	# Remove IPv6 addresses

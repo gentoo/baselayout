@@ -3,7 +3,8 @@
 
   06 Jan 2004; Roy Marples <uberlord@gentoo.org>:
 
-    ifconfig now deletes addresses using 0.0.0.0 for uclibc - fixes #76846
+    ifconfig, udhcpc-ifconfig now deletes addresses using 0.0.0.0 for uclibc
+    - fixes #76846
 
   04 Jan 2005; Roy Marples <uberlord@gentoo.org>:
 
