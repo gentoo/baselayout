@@ -30,7 +30,7 @@ tuntap_depend() {
 # Returns 1 if tuntap is installed, otherwise 0
 tuntap_check_installed() {
 	[[ -x /usr/bin/tunctl ]] && return 0
-	[[ ${1} == true ]] && eerror "For TunTap support, emerge sys-apps/usermode-utilities"
+	${1} && eerror "For TunTap support, emerge sys-apps/usermode-utilities"
 	return 1
 }
 
@@ -47,6 +47,18 @@ tuntap_check_depends() {
 	done
 
 	return 0
+}
+
+# bool tuntap_check_kernel(void)
+#
+# Checks to see if the tun is present - if not try and load it
+# Returns 1 if there is a problem
+tuntap_check_kernel() {
+	[[ -a /dev/net/tun ]] && return 0
+	/sbin/modprobe tun && sleep 1
+	[[ -a /dev/net/tun ]] && return 0
+	eerror "TUN/TAP support is not present in this kernel"
+	return 1
 }
 
 # char* tuntap_get_vars(char *interface)
@@ -68,6 +80,8 @@ tuntap_pre_start() {
 	# but for simplicity in the config we require either
 	# tun or tap
 	[[ ${itype} != "tun" && ${itype} != "tap" ]] && return 0
+
+	tuntap_check_kernel || return 1
 
 	# Get our options
 	eval opts=\"\$\{tunctl_${iface}\}\"

@@ -31,7 +31,7 @@ bridge_depend() {
 # Returns 1 if bridge is installed, otherwise 0
 bridge_check_installed() {
 	[[ -x /sbin/brctl ]] && return 0
-	[[ ${1} == true ]] && eerror "For bridge support, emerge net-misc/bridge-utils"
+	${1} && eerror "For bridge support, emerge net-misc/bridge-utils"
 	return 1
 }
 
@@ -85,13 +85,18 @@ bridge_pre_start() {
 
 	[[ -z ${ports} ]] && return 0
 
+	einfo "hi"
 	# Destroy the bridge if it exists
 	bridge_stop ${iface}
 
 	ebegin "Creating bridge ${iface}"
 	e=$( brctl addbr ${iface} 2>&1 )
 	if [[ -n ${e} ]]; then
-		eend 1 "${e}"
+		if [[ ${e} == "br_add_bridge: Package not installed" ]]; then
+			eend 1 "Bridging (802.1d) support is not present in this kernel"
+		else
+			eend 1 "${e}"
+		fi
 		return 1
 	fi
 

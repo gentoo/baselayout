@@ -1,10 +1,10 @@
 ##############################################################################
 # QUICK-START
 #
-# The quickest start is if you want to use DHCP.  In that case,
-# everything should work out of the box, no configuration necessary,
-# though the startup script will warn you that you haven't specified
-# anything.
+# The quickest start is if you want to use DHCP and if that fails then APIPA.
+# In that case, everything should work out of the box, no configuration
+# necessary, though the startup script will warn you that you haven't
+# specified anything.
 #
 # If you want to use a static address or use DHCP explicitly, jump
 # down to the section labelled IFCONFIG.
@@ -195,6 +195,17 @@
 # To stop DHCP from overwritting NTP /etc/ntp.conf use the below settings
 # peer_ntp="no"
 # peer_ntp_eth0="no"
+
+#-----------------------------------------------------------------------------
+# Automatic Private IP Addressing (APIPA)
+# For APIPA support, emerge net-misc/iputils or net-analyzer/arping
+
+# APIPA is a module that tries to find a free address in the range
+# 169.254.0.0-169.254.255.255 by arping a random address in that range on the
+# interface. If no reply is found then we assign that address to the interface
+
+# This is only useful for LANs where there is no DHCP server and you don't
+# connect directly to the internet.
 
 #-----------------------------------------------------------------------------
 # VLAN (802.1q support)

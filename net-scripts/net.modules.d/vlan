@@ -15,7 +15,7 @@ vconfig() {
 # Returns 1 if vconfig is installed, otherwise 0
 vlan_check_installed() {
 	[[ -x /sbin/vconfig ]] && return 0
-	[[ ${1} == true ]] && eerror "For VLAN (802.1q) support, emerge net-misc/vconfig"
+	${1} && eerror "For VLAN (802.1q) support, emerge net-misc/vconfig"
 	return 1
 }
 
@@ -34,7 +34,6 @@ vlan_depend() {
 	before dhcp
 	need interface
 }
-
 
 # bool vlan_check_depends(void)
 #
@@ -64,8 +63,19 @@ vlan_get_vars() {
 # Fetch the configured vlans for an interface.  Outputs a space
 # separated list on stdout.  For example "eth0.1 eth0.2 eth0.3"
 vlan_get_vlans() {
-	cat /proc/net/vlan/config \
-		| awk -v iface=${1} 'BEGIN { ORS = " "; } $5==iface { print $1 }'
+	awk -v iface=${1} 'BEGIN { ORS = " "; } $5==iface { print $1 }' /proc/net/vlan/config 2>/dev/null
+}
+
+# bool vlan_check_kernel(void)
+#
+# Checks to see if the 802.1q module is present - if not try and load it
+# Returns 1 if there is a problem
+vlan_check_kernel() {
+	[[ -d /proc/net/vlan ]] && return 0
+	/sbin/modprobe 8021q &>/dev/null
+	[[ -d /proc/net/vlan ]] && return 0
+	eerror "VLAN (802.1q) support is not present in this kernel"
+	return 1
 }
 
 #bool vlan_pre_start(char *iface)
@@ -77,6 +87,8 @@ vlan_pre_start() {
 
 	eval opts=( \"\$\{vconfig_${ifvar}\[@\]\}\" )
 	[[ -z ${opts} ]] && return 0
+
+	vlan_check_kernel || return 1
 
 	for (( i=0; i<${#opts[@]}; i++ )); do
 		if [[ ${opts[i]} == set_name_type* ]]; then
@@ -108,6 +120,10 @@ vlan_post_start() {
 	# BACKWARD COMPATIBILITY: check for old vlan variable name
 	eval vlans_old=\"\$\{iface_${iface}_vlans\}\"
 	[[ -n ${vlans_old} && -z ${vlans} ]] && vlans=${vlans_old}
+
+	[[ -z ${vlans} ]] && return 0
+
+	vlan_check_kernel || return 1
 
 	# Start vlans for this interface
 	for vlan in ${vlans}; do

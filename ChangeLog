@@ -2,6 +2,13 @@
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  15 Nov 2004; Roy Marples <uberlord@gentoo.org>:
+
+    Documented APIPA module in net.example
+    Added kernel checking for vlan - fixes #70829
+    Added kernel checking for bonding, bridging and tuntap
+    Added iproute2 support to the APIPA module
+
   13 Nov 2004; Mike Frysinger <vapier@gentoo.org>:
 
     Update the svcdir mounting #69595.  Instead of mounting in /mnt 

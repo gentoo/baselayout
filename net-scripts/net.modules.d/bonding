@@ -9,7 +9,7 @@
 # Returns 1 if ifenslave is installed, otherwise 0
 bonding_check_installed() {
 	[[ -x /sbin/ifenslave ]] && return 0
-	[[ ${1} == true ]] && eerror "For link aggregation (bonding) support, emerge net-misc/ifenslave"
+	${1} && eerror "For link aggregation (bonding) support, emerge net-misc/ifenslave"
 	return 1
 }
 
@@ -54,7 +54,7 @@ bonding_pre_start() {
 
 	! interface_exists ${iface} true && return 1
 
-	if [[ -n "${iface/bond*/}" ]]; then
+	if [[ ! -f /proc/net/bonding/${iface} ]]; then
 		eerror "${iface} is not capable of bonding"
 		return 1
 	fi
@@ -98,7 +98,7 @@ bonding_pre_stop() {
 	bonding_check_installed || return 0
 
 	# return silently if this is not a bonding interface
-	[[ -n "${iface/bond*/}" ]] && return 0
+	[[ ! -f /proc/net/bonding/${iface} ]] && return 0
 
 	# don't trust the config, get the active list instead
 	slaves=$( awk '/^Slave Interface:/ { printf $3" " }' /proc/net/bonding/${iface} )
