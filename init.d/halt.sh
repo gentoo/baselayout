@@ -55,7 +55,7 @@ halt -w &>/dev/null
 # Unmount loopback stuff first
 # Use `umount -d` to detach the loopback device
 remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts | \
-            sort -r | grep -v '/mnt/livecd'`"
+            sort -r | grep -v '/newroot' | grep -v '/mnt/livecd'`"
 [ -n "${remaining}" ] && {
 	sig=
 	retry=3
@@ -74,7 +74,7 @@ remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mou
 		fi
 		
 		remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts | \
-		            sort -r | | grep -v '/mnt/livecd'`"
+		            sort -r | grep -v '/newroot' | grep -v '/mnt/livecd'`"
 		[ -z "${remaining}" ] && break
 		
 		/bin/fuser -k -m ${sig} ${remaining} &>/dev/null
@@ -100,7 +100,7 @@ do
 
 	# Do not umount these if we are booting off a livecd
 	if [ -n "${CDBOOT}" ] && \
-	   [ "${x}" != "/mnt/cdrom" -a "${x}" != "/mnt/livecd" ]
+	   [ "${x}" = "/mnt/cdrom" -o "${x}" = "/mnt/livecd" ]
 	then
 		continue
 	fi

@@ -2,7 +2,12 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
-  02 Feb 2004; Martin Schlemmer <azarah@gentoo.org>:
+  08 Feb 2004; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix wrong logic in /etc/init.d/halt.sh which did not umount all mounts
+    _but_ /mnt/cdrom and /mnt/livecd.
+
+  06 Feb 2004; Martin Schlemmer <azarah@gentoo.org>:
 
    Tweak livecd support changes and add some more to hopefully sort out
    last issues, with help from Brad House <brad_mssw@gentoo.org>.
