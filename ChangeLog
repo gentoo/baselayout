@@ -2,6 +2,12 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  25 April 2002; Martin Schlemmer <azarah@gentoo.org>:
+  
+    Remove the "-net" from the line setting the default gateway
+	in /etc/init.d/net.eth0.  Thanks to Peter W. Michaleas for
+	noting this.
+
   24 April 2002; Donny Davies <woodchip@gentoo.org> rc.conf :
 
     Remove NFSSERVER from rc.conf since it's now covered in /etc/conf.d/nfs

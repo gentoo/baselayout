@@ -60,7 +60,7 @@ start() {
 	if [ -n "${gateway}" ] && [ "${gateway%/*}" = "${IFACE}" ]
 	then
 		ebegin "  Setting default gateway"
-		/sbin/route add -net default gw ${gateway#*/} dev ${gateway%/*} \
+		/sbin/route add default gw ${gateway#*/} dev ${gateway%/*} \
 			netmask 0.0.0.0 metric 1 >/dev/null || {
 			
 			local error=$?
