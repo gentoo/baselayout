@@ -2,6 +2,13 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  18 Feb 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update /sbin/modules-update to generate /etc/modprobe.devfs from
+    /etc/modules.devfs.  This along with the devfs-hack.patch in the latest
+    module-init-tools-0.9.9 should get rid of many of the warnings/errors
+    with devfs, and makes it work a bit better.
+
   17 Feb 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix /etc/inputrc for dvorak keyboard layout, bug #2599 again.
