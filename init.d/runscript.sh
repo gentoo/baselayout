@@ -19,15 +19,26 @@ fi
 myservice=${myservice##*/}
 mylevel=`cat ${svcdir}/softlevel`
 
+
+#set $IFACE to the name of the network interface if it is a 'net.*' script
+IFACE=""
+if [ "${myservice%%.*}" = "net" ] && [ "${myservice##*.}" != "$myservice" ]
+then
+	IFACE="${myservice##*.}"
+fi
+		
 # Source configuration files.
 # (1) Source /etc/conf.d/basic to get common configuration.
 # (2) Source /etc/conf.d/${myservice} to get initscript-specific
 #     configuration (if it exists).
-# (3) Source /etc/rc.conf to pick up potentially overriding
+# (3) Source /etc/conf.d/net if it is a net.* service
+# (4) Source /etc/rc.conf to pick up potentially overriding
 #     configuration, if the system administrator chose to put it
 #     there (if it exists).
 [ -e /etc/conf.d/basic ]	&& source /etc/conf.d/basic
 [ -e /etc/conf.d/${myservice} ] && source /etc/conf.d/${myservice}
+[ -e /etc/conf.d/net ] && [ "${myservice%%.*}" = "net" ] && \
+	[ "${myservice##*.}" != "$myservice" ] && source /etc/conf.d/net
 [ -e /etc/rc.conf ]		&& source /etc/rc.conf
 
 usage() {
@@ -35,7 +46,7 @@ usage() {
 	myline="Usage: ${myservice} {$*"
 	echo
 	eerror "${myline}}"
-	ewarn "       ${myservice} without arguments for full help"
+	eerror "       ${myservice} without arguments for full help"
 }
 
 stop() {
@@ -50,7 +61,7 @@ start() {
 }
 
 restart() {
-	svc_restart || return 1
+	svc_restart || return $?
 }
 			
 svc_stop() {
@@ -215,9 +226,9 @@ svc_start() {
 }
 
 svc_restart() {
-	svc_stop || return 1
+	svc_stop || return $?
 	sleep 1
-	svc_start || return 1
+	svc_start || return $?
 }
 
 source ${myscript}

@@ -3,25 +3,36 @@
 # Distributed under the terms of the GNU General Public License, v2 or later
 # $Header$
 
-
-IFACE=${1##*.}
-#IFACE should now be set to the name of the interface (grabbed from the name of
-#this script)
-
-#Configure the following settings:
-IPNUM=192.168.1.7
-BCAST=192.168.1.255
-NMASK=255.255.255.0
-NETWK=192.168.1.0
-GTWAY=192.168.1.1
-
-#You can also add additional network commands to the two functions below, such as
-#firewall settings or additional routing commands.
+checkconfig() {
+	if [ -z "`eval echo \$\{iface_${IFACE}\}`" ]
+	then
+		eerror "Please check that /etc/conf.d/net have \$iface_$IFACE set"
+		return 1
+	fi
+}
 
 start() {
+	checkconfig || return 1
 	ebegin "Bringing ${IFACE} up"
-	/sbin/ifconfig $IFACE $IPNUM broadcast $BCAST netmask $NMASK
-	[ $GTWAY ] && /sbin/route add -net default gw $GTWAY netmask 0.0.0.0 metric 1
+	if [ "`eval echo \$\{iface_${IFACE}\}`" != "dhcp" ]
+	then
+		eval /sbin/ifconfig $IFACE \$iface_$IFACE || return $?
+	else
+		eval /sbin/dhcpcd \$\{dhcpcd_${IFACE}\} $IFACE || return $?
+	fi
+
+	if [ -n "`eval echo \$\{alias_${IFACE}\}`" ]
+	then
+		local x=""
+		local num=0
+		for x in `eval echo \$\{alias_${IFACE}\}`
+		do
+			/sbin/ifconfig ${IFACE}:${num} $x
+			num=$((num + 1))
+		done
+	fi
+	
+	[ -n "$gateway" ] && /sbin/route add -net default gw $gateway netmask 0.0.0.0 metric 1
 
 	#enabling rp_filter causes wacky packets to be auto-dropped by
 	#the kernel
