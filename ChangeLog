@@ -2,6 +2,8 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+* rc-scripts 1.4.1.2 (5 Nov 2002)
+
   4 Nov 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Change /etc/init.d/clock to depend on localmount again, fixing
