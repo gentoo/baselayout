@@ -58,18 +58,20 @@ bonding_pre_start() {
 		eerror "${iface} is not capable of bonding"
 		return 1
 	fi
+
+	ebegin "Adding slaves to ${iface}"
+	eindent
+	einfo "${slaves}"
 	
-	# must force the slaves to a particular state before adding them
+	# Check that our slaves exist
 	for s in ${slaves}; do
-		# If the interface does not exist, it may be because another
-		# module needs to create it
-		net_start ${s} || continue
-
-		if ! interface_exists ${s} ; then
-			ewarn "interface ${s} does not exist"
-			continue
-		fi
-
+		interface_exists ${s} && continue
+		ewarn "interface ${s} does not exist"
+		return 1
+	done
+	
+	# Must force the slaves to a particular state before adding them
+	for s in ${slaves}; do
 		interface_del_addresses ${s}
 		interface_up ${s}
 	done
@@ -78,9 +80,6 @@ bonding_pre_start() {
 	interface_up ${iface}
 
 	# finally add in slaves
-	ebegin "Adding slaves to ${iface}"
-	eindent
-	einfo "${slaves}"
 	eoutdent
 	/sbin/ifenslave ${iface} ${slaves} >${devnull}
 	eend $?
@@ -113,7 +112,10 @@ bonding_pre_stop() {
 
 	# reset all slaves
 	for s in ${slaves}; do
-		net_stop ${s}
+		if interface_exists ${s} ; then
+			interface_del_addresses ${s}
+			interface_down ${s}
+		fi
 	done
 
 	eend 0

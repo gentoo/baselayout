@@ -20,6 +20,11 @@ fi
 # runlevel as the net.* script that needs it.
 depend() {
 	use coldplug hotplug pcmcia usb isdn4linux wlan
+
+	# Load any custom depend functions for the given interface
+	# For example, br0 may need eth0 and eth1
+	local iface=${myservice##*.}
+	[[ $( type -t depend_${iface} ) == "function" ]] && depend_${iface}
 }
 
 # Define where our modules are
@@ -55,49 +60,6 @@ installed() {
 
 sort() {
 	LC_ALL=C /bin/sort "$@"
-}
-
-# bool net_start(char *iface)
-#
-# Starts a net.${iface} if required
-# This is used by bridge and bond modules as the interfaces
-# they need may have to be created
-net_start() {
-	local iface=$1 service=net.$1 retval
-
-	service_started ${service} && return 0
-
-	if [[ ! -x /etc/init.d/${service} ]]; then
-		interface_exists ${iface} && return 0
-		eerror "/etc/init.d/${service} does not exist"
-		eerror "Cannot start ${iface}"
-		return 1
-	fi
-
-	echo
-	/etc/init.d/${service} start
-	return $?
-}
-
-# bool net_stop(char *iface)
-#
-# Stops a net.${iface} if required
-net_stop() {
-	local iface=$1 service=net.$1
-
-	service_stopped && return 0
-
-	if [[ ! -x /etc/init.d/${service} ]]; then
-		if interface_exists ${iface} ; then
-			interface_del_addresses ${iface}
-			interface_down ${iface}
-		fi
-		return 0
-	fi
-
-	echo
-	/etc/init.d/${service} stop
-	return $?
 }
 
 # void module_class_wrap(char *module, char *provides)
