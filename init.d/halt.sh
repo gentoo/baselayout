@@ -3,6 +3,12 @@
 # $Header$
 
 
+# Check to see if this is a livecd, if it is read the commandline
+# this mainly makes sure $CDBOOT is defined if it's a livecd
+[ -f "/sbin/livecd-functions.sh" ] && \
+	source /sbin/livecd-functions.sh && \
+	livecd_read_commandline
+
 # Reset pam_console permissions
 [ -x /sbin/pam_console_apply -a ! -c /dev/.devfsd ] && \
 	/sbin/pam_console_apply -r
@@ -48,7 +54,8 @@ halt -w &>/dev/null
 # Unmount file systems, killing processes if we have to.
 # Unmount loopback stuff first
 # Use `umount -d` to detach the loopback device
-remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts | sort -r`"
+remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts | \
+            sort -r | grep -v '/mnt/livecd'`"
 [ -n "${remaining}" ] && {
 	sig=
 	retry=3
@@ -66,7 +73,8 @@ remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mou
 			eend $? "Failed to unmount filesystems"
 		fi
 		
-		remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts | sort -r`"
+		remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts | \
+		            sort -r | | grep -v '/mnt/livecd'`"
 		[ -z "${remaining}" ] && break
 		
 		/bin/fuser -k -m ${sig} ${remaining} &>/dev/null
@@ -89,13 +97,20 @@ no_unmounts="`mount | awk '{ if (($5 ~ /^(proc|sysfs|devfs|tmpfs|usb(dev)?fs)$/)
 for x in `awk '{ print $2 }' /proc/mounts | sort -r | uniq`
 do
 	do_unmount="yes"
+
+	# Do not umount these if we are booting off a livecd
+	if [ -n "${CDBOOT}" ] && \
+	   [ "${x}" != "/mnt/cdrom" -a "${x}" != "/mnt/livecd" ]
+	then
+		continue
+	fi
 	
 	for y in ${no_unmounts}
 	do
 		[ "${x}" = "${y}" ] && do_unmount="no"
 	done
 	
-	if [ "${do_unmount}" = "yes" -a "${x}" != "/mnt/livecd" ]
+	if [ "${do_unmount}" = "yes" ]
 	then
 		umount ${x} &>/dev/null || {
 		

@@ -82,9 +82,12 @@ start() {
 		return 1
 	fi
 	
-	ebegin "Calculating module dependencies"
-	/sbin/modules-update &>/dev/null
-	eend $? "Failed to calculate dependencies"
+	if [ -z "${CDBOOT}" ]
+	then
+		ebegin "Calculating module dependencies"
+		/sbin/modules-update &>/dev/null
+		eend $? "Failed to calculate dependencies"
+	fi
 
 	if [ -f /etc/modules.autoload -a ! -L /etc/modules.autoload ]
 	then

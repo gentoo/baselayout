@@ -14,7 +14,7 @@ start() {
 	#
 	# EVMS2 summport for /usr, /var ....
 	#
-	if [ -f /sbin/evms_activate ]
+	if [ -z "${CDBOOT}" -a -f /sbin/evms_activate ]
 	then
 		ebegin "Activating EVMS2"
 		evms_activate
@@ -29,7 +29,7 @@ start() {
 	# NOTE: Add needed modules for LVM or RAID, etc
 	#       to /etc/modules.autoload if needed
 	
-	if [ -x /sbin/vgscan ] && \
+	if [ -z "${CDBOOT}" -a -x /sbin/vgscan ] && \
 	   [ -d /proc/lvm -o "$(grep device-mapper /proc/misc 2>/dev/null)" ]
 	then
 		ebegin "Setting up the Logical Volume Manager"
@@ -48,7 +48,7 @@ start() {
 	# properly configured /etc/mdadm.conf for mdadm usage. Devices in
 	# /etc/mdadm.conf are initialized first, so any duplicate devices in
 	# /etc/raidtab will not get initialized.
-	if [ -f /proc/mdstat ]
+	if [ -z "${CDBOOT}" -a -f /proc/mdstat ]
 	then
 		local mdadm_devices=
 		local raidtools_devices=

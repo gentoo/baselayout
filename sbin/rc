@@ -168,7 +168,7 @@ then
 	# Read off the kernel commandline to see if there's any special settings
 	# especially check to see if we need to set the  CDBOOT environment variable
 	# Note: /proc MUST be mounted
-	livecd_read_commandline
+	[ -f /sbin/livecd-functions.sh ] && livecd_read_commandline
 
 	if [ -d /sys -a "$(get_KV)" -ge "$(KV_to_int '2.6.0')" ]
 	then
@@ -418,7 +418,7 @@ then
 	fi
 
 	# If booting off CD, we want to update inittab before setting the runlevel
-	if [ "${CDBOOT}" != "" ]
+	if [ -f "/sbin/livecd-functions.sh" -a -n "${CDBOOT}" ]
 	then
 		ebegin "Updating inittab"
 		livecd_fix_inittab

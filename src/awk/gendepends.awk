@@ -466,14 +466,14 @@ END {
 		print "" >> (CACHEDTREE)
 	}
 
-	print "export RC_DEPEND_TREE" >> (CACHEDTREE)
-	print "export RC_GOT_DEPTREE_INFO=\"yes\"" >> (CACHEDTREE)
+	# Do not export these, as we want them local
+	print "RC_GOT_DEPTREE_INFO=\"yes\"" >> (CACHEDTREE)
 	print "" >> (CACHEDTREE)
 
 	if (check_provide("logger"))
-		print "export LOGGER_SERVICE=\"" get_provide("logger") "\"" >> (CACHEDTREE)
+		print "LOGGER_SERVICE=\"" get_provide("logger") "\"" >> (CACHEDTREE)
 	else
-		print "export LOGGER_SERVICE=" >> (CACHEDTREE)
+		print "LOGGER_SERVICE=" >> (CACHEDTREE)
 		
 	close(CACHEDTREE)
 }
