@@ -12,6 +12,8 @@
 
     Disable cryptfs by default in the conf.d file.  Also cleanup 
     the output generated in localmount/checkfs/halt.sh for dm-crypt.
+    Add an extra check so that cryptfs is only run when the conf.d
+    file exists as well as /bin/cryptsetup.
 
   29 Sep 2004; Mike Frysinger <vapier@gentoo.org>:
 

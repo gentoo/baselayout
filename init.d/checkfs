@@ -217,7 +217,7 @@ dm-crypt-start() {
 	local cryptfs_status=0 
 	local mountline mount swap options pre_mount post_mount source
 
-	if [ -f /etc/conf.d/cryptfs ]; then
+	if [ -f /etc/conf.d/cryptfs ] && [ -x /bin/cryptsetup ]; then
 		ebegin "Setting up dm-crypt mappings"
 
 		while read mountline; do

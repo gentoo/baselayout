@@ -125,7 +125,7 @@ eend 0
 
 # Try to remove any dm-crypt mappings
 
-if [ -f /etc/conf.d/cryptfs ]
+if [ -f /etc/conf.d/cryptfs ] && [ -x /bin/cryptsetup ]
 then
 	einfo "Removing dm-crypt mappings"
 
