@@ -1,19 +1,24 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
-  31 Jan 2004; Roy Marples <uberlord@gentoo.org>:
+  02 Feb 2005; Roy Marples <uberlord@gentoo.org>:
+
+    wpa_supplicant and iwconfig now loop for 5 seconds if essid is
+    not returned straight away
+
+  31 Jan 2005; Roy Marples <uberlord@gentoo.org>:
 
     removed warning from ifconfig
     dnsdomainname overriding works again - fixes #80174
 
-  17 Jan 2004; Roy Marples <uberlord@gentoo.org>:
+  17 Jan 2005; Roy Marples <uberlord@gentoo.org>:
 
     net.lo changed logic to read "only fail if no configuration parameters
     work, bring interface down and abort". Fixes #78092
     all modules should now check interface existance correctly - fixes #76385
     wpa_supplicant now works with EAP - fixes #78367
 
-  13 Jan 2004; Roy Marples <uberlord@gentoo.org>:
+  13 Jan 2005; Roy Marples <uberlord@gentoo.org>:
 
     wpa_supplicant forces ctrl_interface to /var/run/wpa_supplicant
     and removes stale directories
@@ -21,23 +26,23 @@
     net dependancies corrected in runscript.sh - fixes #77839
     allow pure IPv6 addresses - fixes #73844
 
-  12 Jan 2004; Roy Marples <uberlord@gentoo.org>:
+  12 Jan 2005; Roy Marples <uberlord@gentoo.org>:
 
     net.lo now ignores dot files when loading modules
     ipppd module now stops correctly - fixes #73067 again
 
-  11 Jan 2004; Roy Marples <uberlord@gentoo.org>:
+  11 Jan 2005; Roy Marples <uberlord@gentoo.org>:
 
     added "noop" config parameter which means take no action if the interface
     is up and has an address configured, otherwise continue
     addresses are now removed when starting an interface - fixes #77111
 
-  06 Jan 2004; Roy Marples <uberlord@gentoo.org>:
+  06 Jan 2005; Roy Marples <uberlord@gentoo.org>:
 
     ifconfig, udhcpc-ifconfig now deletes addresses using 0.0.0.0 for uclibc
     - fixes #76846
 
-  05 Jan 2004; Roy Marples <uberlord@gentoo.org>:
+  05 Jan 2005; Roy Marples <uberlord@gentoo.org>:
 
     dhcpcd and udhcpc now run via the eval statement so quotes can be used
     in options. Fixes #74053 - thanks to Evan Buswell

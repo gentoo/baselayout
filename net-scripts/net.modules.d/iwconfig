@@ -91,7 +91,18 @@ iwconfig_get_essid() {
 	# Too many users are having with iwgetid atm :/
 	# iwgetid -r
 
-	iwconfig ${1} 2>${devnull} | awk -F\" '/ESSID/ {print $2}'
+	local i essid
+
+	for (( i=0; i<5; i++ )); do
+		essid=$( iwconfig $1 2>/dev/null | awk -F\" '/ESSID/ {print $2}' )
+		if [[ -n ${essid} ]]; then
+			echo ${essid}
+			return 0
+		fi
+		sleep 1
+	done
+
+	return 1
 }
 
 # char* iwconfig_get_ap_mac_address(char *interface)
