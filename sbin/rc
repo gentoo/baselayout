@@ -231,7 +231,7 @@ then
 			ebegin "Configuring system to use udev"
 			if [ "${RC_DEVICE_TARBALL}" = "yes" ]
 			then
-				einfo "  Populating /dev with device nodes..."
+				einfo "  Populating /dev with device nodes ..."
 				try tar -jxpf /lib/udev-state/devices.tar.bz2 -C /dev
 			fi
 			populate_udev
@@ -241,9 +241,9 @@ then
 			then
 				if [ -x /sbin/hotplug ]
 				then
-					einfo "  Using /sbin/hotplug for udev management..."
+					einfo "  Using /sbin/hotplug for udev management ..."
 				else
-					einfo "  Setting /sbin/udev as hotplug agent..."
+					einfo "  Setting /sbin/udev as hotplug agent ..."
 					echo "/sbin/udev" > /proc/sys/kernel/hotplug
 				fi
 			fi
@@ -296,7 +296,7 @@ then
 			echo
 			einfo "Thanks for using Gentoo! :)"
 			echo
-			read -t 15 -p "(hit Enter to continue or wait 15 seconds...)"
+			read -t 15 -p "(hit Enter to continue or wait 15 seconds ...)"
 		fi
 	fi
 
@@ -585,7 +585,7 @@ then
 	
 elif [ ! -d "/etc/runlevels/${SOFTLEVEL}" ]
 then
-	eerror "ERROR:  runlevel ${SOFTLEVEL} does not exist; exiting..."
+	eerror "ERROR:  runlevel ${SOFTLEVEL} does not exist; exiting ..."
 	exit 1
 else
 	myscripts=
@@ -619,7 +619,7 @@ for x in ${myscripts}
 do
 	if [ ! -e "/etc/init.d/${x}" ]
 	then
-		ewarn "WARNING:  /etc/init.d/${x} missing; skipping..."
+		ewarn "WARNING:  /etc/init.d/${x} missing; skipping ..."
 		continue
 	fi
 	# The -f eliminates a warning if the symlink already exists,
