@@ -78,4 +78,4 @@ strip: $(TARGETS)
 	$(STRIP) -s --remove-section=.note --remove-section=.comment $(TARGETS)
 
 clean:
-	rm -f *.o $(TARGETS)
+	rm -f *.o $(TARGETS) $(CHECK_TARGETS)

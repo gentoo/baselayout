@@ -2,6 +2,10 @@
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 # $Header$
 
+12 Mar 2005 Martin Schlemmer <azarah@gentoo.org>
+
+        * Makefile: Also remove the tests in the clean target.
+
 11 Mar 2005 Martin Schlemmer <azarah@gentoo.org>
 
         * test-regex.c: Add a few strings and patterns.  Enable tests to
