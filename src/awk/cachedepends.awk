@@ -143,6 +143,11 @@ BEGIN {
 					# This is just to verify that we have started with
 					# the body of depend()
 					SBCOUNT += gsub(/{/, "{")
+
+					# Make sure depend() contain something, else bash
+					# errors out (empty function).
+					if ((SBCOUNT > 0) && (COUNT == 0))
+						print "  \treturn 0"
 		
 					# Print the depend() function
 					print "  " $0 

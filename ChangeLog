@@ -2,6 +2,14 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+* rc-scripts 1.4.3.8p1 (21 May 2003)
+
+  21 May 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Last fix I did not use the modified 'myservice', but used $1 again,
+    causing the network dependencies to bork.  I did not notice this
+    as I have net.eth0 in default runlevel.
+
 * rc-scripts 1.4.3.8 (20 May 2003)
 
   20 May 2003; Martin Schlemmer <azarah@gentoo.org>:

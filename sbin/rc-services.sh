@@ -7,6 +7,8 @@
 # RC Dependency and misc service functions
 
 
+set -a
+
 RC_GOT_SERVICES="yes"
 
 [ "${RC_GOT_FUNCTIONS}" != "yes" ] && source /sbin/functions.sh
@@ -28,12 +30,12 @@ fi
 #   Set the Dependency variables to contain data for 'service'
 #
 get_dep_info() {
-	local myservice=
+	local myservice="$1"
 	
 	# net.* services cause declare -x to bork
-	myservice="${1//\./}"
+	myservice="${myservice//\./DOT}"
 	# foo-bar services cause declare -x to bork
-	myservice="${1//-/_}"
+	myservice="${myservice//-/DASH}"
 	
 	[ -z "$1" ] && return 1
 
@@ -43,8 +45,7 @@ get_dep_info() {
 	# If no 'depinfo_$1' function exist, then we have problems.
 	if [ -z "$(declare -F "depinfo_${myservice}")" ]
 	then
-		eerror "Could not get dependency info for \"$1\"!"
-		exit 1
+		return 1
 	fi
 
 	"depinfo_${myservice}"
@@ -72,9 +73,15 @@ check_dependency() {
 	then
 		[ -z "$3" -o -z "$4" ] && return 1
 
-		get_dep_info "$3" &>/dev/null || return 1
+		get_dep_info "$3" &>/dev/null || {
+			eerror "Could not get dependency info for \"$3\"!" > /dev/stderr
+			return 1
+		}
 	else
-		get_dep_info "$2" &>/dev/null || return 1
+		get_dep_info "$2" &>/dev/null || {
+			eerror "Could not get dependency info for \"$2\"!" > /dev/stderr
+			return 1
+		}
 	fi
 
 	# Do we have valid info for 'deptype' ?
@@ -573,6 +580,8 @@ query_after() {
 
 	return 1
 }
+
+set +a
 
 
 # vim:ts=4

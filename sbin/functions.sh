@@ -3,6 +3,8 @@
 # $Header$
 
 
+set -a
+
 RC_GOT_FUNCTIONS="yes"
 
 umask 022
@@ -594,6 +596,8 @@ get_options() {
 
 	return 0
 }
+
+set +a
 
 
 # vim:ts=4
