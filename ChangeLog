@@ -14,6 +14,9 @@
     Added a basic $PATH to /etc/init.d/functions.sh to fix a problem
     where we had a invalid $PATH on boot in some cases.
 
+    Updated /etc/init.d/keymap and /etc/init.d/consolefont to work with
+    the new sys-apps/kbd package.
+
 * rc-scripts 1.2.7 (3 March 2002)
 
   3 March 2002; Martin Schlemmer <azarah@gentoo.org>: fixed the problem

@@ -18,7 +18,7 @@ checkconfig() {
 start() {
 	checkconfig || return 1
 	ebegin "Loading key mappings"
-	/usr/bin/loadkeys -q ${KEYMAP} windowkeys.inc
+	/bin/loadkeys -q ${KEYMAP} windowkeys
 	eend $? "Error loading key mappings"
 	return
 }

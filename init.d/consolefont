@@ -10,7 +10,7 @@ depend() {
 
 start() {
 	if [ -n "$CONSOLEFONT" ] ; then
-		if [ -x /usr/bin/consolechars ] ; then
+		if [ -x /usr/bin/setfont ] ; then
 			local param x
 			if [ -n "$CONSOLETRANSLATION" ] ; then
 				param="-m ${CONSOLETRANSALTION}"
@@ -19,10 +19,10 @@ start() {
 			do
 				if [ -e /dev/.devfsd ]
 				then
-					/usr/bin/consolechars -f ${CONSOLEFONT} ${param} \
+					/usr/bin/setfont ${CONSOLEFONT} ${param} \
 						--tty=/dev/vc/${x}
 				else
-					/usr/bin/consolechars -f ${CONSOLEFONT} ${param} \
+					/usr/bin/setfont ${CONSOLEFONT} ${param} \
 						--tty=/dev/tty${x}
 				fi
 			done
