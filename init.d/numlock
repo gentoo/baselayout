@@ -9,6 +9,7 @@ depend() {
 
 start() {
 	ebegin "Enabling numlock on ttys"
+	local dev
 	[[ -d /dev/vc ]] \
 		&& dev=/dev/vc/ \
 		|| dev=/dev/tty
@@ -20,6 +21,7 @@ start() {
 
 stop() {
 	ebegin "Disabling numlock on ttys"
+	local dev
 	[[ -d /dev/vc ]] \
 		&& dev=/dev/vc/ \
 		|| dev=/dev/tty
