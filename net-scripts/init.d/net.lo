@@ -83,7 +83,7 @@ modules_load()
 		e=false
 		for p in check_installed provides check_depends depend; do
 			[[ $( type -t ${mods[i]}_${p} ) == function ]] && continue
-			eerror "  ${mods[i]} does not support the required function ${p}\n"
+			eerror "  ${mods[i]} does not support the required function ${p}"
 			e=true
 		done
 		${e} && return 1
