@@ -127,10 +127,16 @@ dhclient_start() {
 	fi
 
 	eval opts=\"\$\{dhclient_${ifvar}\}\"
-	local x=$( dhclient ${opts} -sf ${script} -pf ${pidfile} -q ${iface} )
+	local x=$( dhclient ${opts} -1 -sf ${script} -pf ${pidfile} -q ${iface} )
 	# We just check the last 5 letters
 	[[ ${x:${#x} - 5:5} == bound ]]
-	eend $? || return 1
+	if [[ $? != 0 ]]; then
+		# We need to kill the process if we fail
+		kill -s TERM $( cat ${pidfile} ) 2>/dev/null
+		eend 1
+		return 1
+	fi
+	eend 0
 
 	# DHCP succeeded, show address retrieved
 	local addr=$( interface_get_address ${iface} )

@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+  05 Dec 2004; Roy Marples <uberlord@gentoo.org>:
+
+    dhclient now kill it's process if it failed to get a lease on startup
+    all dhclient responses are now handled correctly
+
   04 Dec 2004; Roy Marples <uberlord@gentoo.org>:
 
     fixed dhclient-ifconfig to look for dhclient-udhcpc-wrapper in the correct
