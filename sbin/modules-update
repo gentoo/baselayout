@@ -20,6 +20,7 @@ CFGFILE="/etc/modules.conf"
 TMPFILE="${CFGFILE}.$$"
 CFGFILE2="/etc/modprobe.conf"
 TMPFILE2="${CFGFILE2}.$$"
+TMPFILE2B="${CFGFILE2}B.$$"
 CFGFILE3="/etc/modules.devfs"
 TMPFILE3="${CFGFILE3}.$$"
 CFGFILE4="/etc/modprobe.devfs"
@@ -54,6 +55,9 @@ else
 	KERNEL_2_6=false
 fi
 
+# Check if $CONF is valid
+[[ ! -r ${CONF} ]] && CONF=
+
 set -e
 
 # Reset the sorting order since we depend on it
@@ -74,6 +78,12 @@ fi
 for x in ${CFGFILES} ; do
 	if [[ -f ${x} ]] ; then
 		if ! sed -ne 1p "${x}" | egrep -q "^${HEADER}" ; then
+			# Do not bother if its modutils config file, and we
+			# have a 2.6 kernel without modprobe.old
+			[[ ${x} == "${CFGFILE}" ]] && ${KERNEL_2_6} && \
+			! type -p modprobe.old > /dev/null && \
+				 continue
+			
 			echo "Error: the current ${x} is not automatically generated."
 
 			if $FORCE ; then
@@ -110,29 +120,45 @@ if [[ -x /sbin/generate-modprobe.conf ]] && ${KERNEL_2_6} ; then
 	fi
 fi
 
-for cfg in "${MODDIR}"/* "${CONF}" ; do
-	[[ -d ${cfg} ]] && continue
+generate_config() {
+	local cfg=
+	local conf="$1"
+	local moddir="$2"
+	local tmpfile="$3"
+	local do_mprobe="$4"
+	
+	for cfg in "${moddir}"/* "${conf}" ; do
+		[[ -d ${cfg} ]] && continue
 
-	[[ ! -r ${cfg} ]] && continue
+		[[ ! -r ${cfg} ]] && continue
 
-	# Skip backup and RCS files; fixes bug 20597 (07 May 2004 agriffis)
-	[[ ${cfg} == *~ || ${cfg} == *.bak || ${cfg} == *,v ]] && continue
+		# Skip backup and RCS files; fixes bug 20597 (07 May 2004 agriffis)
+		[[ ${cfg} == *~ || ${cfg} == *.bak || ${cfg} == *,v ]] && continue
 
-	echo "### modules-update: start processing ${cfg}" >> "${TMPFILE}"
+		[[ ${do_mprobe} -eq 1 && -e "/etc/modprobe.d/${x##*/}" ]] && continue
 
-	if [[ -x ${cfg} ]] ; then
-		# $cfg can be executable; nice touch, Wichert! :)
-		"${cfg}" >> "${TMPFILE}"
-	else
-		cat "${cfg}" >> "${TMPFILE}"
-	fi
+		echo "### modules-update: start processing ${cfg}" >> "${tmpfile}"
 
-	echo >> "${TMPFILE}"
-	echo "### modules-update: end processing ${cfg}" >> "${TMPFILE}"
-	echo >> "${TMPFILE}"
-done
+		if [[ -x ${cfg} ]] ; then
+			# $cfg can be executable; nice touch, Wichert! :)
+			"${cfg}" >> "${tmpfile}"
+		else
+			cat "${cfg}" >> "${tmpfile}"
+		fi
 
-mv -f "${TMPFILE}" "${CFGFILE}"
+		echo >> "${tmpfile}"
+		echo "### modules-update: end processing ${cfg}" >> "${tmpfile}"
+		echo >> "${tmpfile}"
+	done
+
+	return 0
+}
+
+if [[ -f ${CFGFILE} ]] || ! ${KERNEL_2_6} ; then
+	generate_config "${CONF}" "${MODDIR}" "${TMPFILE}" 0
+
+	mv -f "${TMPFILE}" "${CFGFILE}"
+fi
 
 if [[ -x /sbin/generate-modprobe.conf ]] && ${KERNEL_2_6} ; then
 	# Make sure that generate-modprobe.conf can handle --assume-kernel
@@ -150,15 +176,38 @@ if [[ -x /sbin/generate-modprobe.conf ]] && ${KERNEL_2_6} ; then
 	then
 		mv -f "${TMPFILE2}" "${CFGFILE2}"
 	else
-		ewarn "Warning: could not generate ${CFGFILE2}!"
+
+		#
+		# If we made it here, it means either generate-modprobe.conf 
+		# bombed on us, or the user doesn't have modutils installed.
+		# If the latter is true, then we should generate modprobe.conf 
+		# ourselves with any old files laying around in /etc/modules.d.
+		#
 		rm -f "${TMPFILE2}"
+		if type -p modprobe.old > /dev/null ; then
+			ewarn "Warning: could not generate ${CFGFILE2}!"
+		else
+			rm -f "${CFGFILE}"
+			echo "${FULLHEADER/modules.d/modprobe.d}" > "${TMPFILE2B}"
+			generate_config "${CONF}" "${MODDIR}" "${TMPFILE2}" 1
+			export TESTING_MODPROBE_CONF="${TMPFILE2}"
+			if /sbin/generate-modprobe.conf ${ASSUME_KV:+--assume-kernel=${KV}} \
+				 >> "${TMPFILE2B}" 2> /dev/null
+			then
+				mv -f "${TMPFILE2B}" "${CFGFILE2}"
+			else
+				ewarn "Warning: could not generate ${CFGFILE2}!"
+				rm -f "${TMPFILE2B}"
+			fi
+			rm -f "${TMPFILE2}"
+		fi
 	fi
 
 	if [[ -f ${CFGFILE3} ]] ; then
 		gawk '$0 !~ /^[[:space:]]*include/ { print $0 }' "${CFGFILE3}" \
 			> "${TMPFILE3}"
 
-		export TESTING_MODPROBE_CONF=${TMPFILE3}
+		export TESTING_MODPROBE_CONF="${TMPFILE3}"
 		if /sbin/generate-modprobe.conf ${ASSUME_KV:+--assume-kernel=${KV}} \
 			>> "${TMPFILE4}" 2> /dev/null
 		then
