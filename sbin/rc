@@ -120,7 +120,8 @@ then
 	#mount either a ramdisk or tmpfs and do dep scan
 	
 	#should we use tmpfs or a ramdisk ?
-	if ! get_bootparam "notmpfs"
+	if ! get_bootparam "notmpfs" && \
+	   ( [ "${svcfstype}" = "tmpfs" ] || [ "${svcfstype}" != "ramfs" ] )
 	then
 		ebegin "Mounting tmpfs at ${svcdir}"; \
 		try mount -n -t tmpfs tmpfs ${svcdir} \

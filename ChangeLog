@@ -2,7 +2,14 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+* rc-scripts 1.3.6 (17 Jul 2002)
+
   17 Jul 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add logging functionality to the rc-scripts, thanks to Alexander Holler,
+    bug #4037 for the basic idea.  Updated /sbin/functions.sh for this.
+
+  16 Jul 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Add additional entries to /etc/services to support cyrus-imapd, thanks
     to raker@gentoo.org.

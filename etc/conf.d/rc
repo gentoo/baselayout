@@ -1,0 +1,60 @@
+# Copyright 1999-2002 Gentoo Technologies, Inc.
+# Distributed under the terms of the GNU General Public License, v2 or later
+# $Header$
+
+#
+# Global config file for the Gentoo RC System
+#
+# NOTE: most of these are not in use yet!!
+#
+
+# Set to "yes" if stop-daemon() should always retry killing the
+# service if it fails the first time.
+
+RCRETRYKILL="yes"
+
+
+# Set the amount of seconds stop-daemon() should wait between
+# retries.  $RCRETRYKILL should be set to "yes".
+
+RCRETRYTIMEOUT=1
+
+
+# Set the amount of times stop-daemon() should try to kill
+# a service before giving up.  $RCRETRYKILL should be set to "yes".
+
+RCRETRYCOUNT=5
+
+
+# Set to "yes" if stop-daemon() should fail if the service
+# is marked as started, but not actually running on stop.
+
+RCFAILONZOMBIE="no"
+
+
+
+#
+# Internal configuration variables
+#
+# NB:  These are for advanced users, and you should really
+#      know what you are doing before changing them!
+#
+
+ 
+# rc-scripts dep-cache directory
+
+svcdir="/mnt/.init.d"
+
+
+# FS type that should be used for $svcdir.
+# Currently "tmpfs" and "ramfs" are supported, with
+# "tmpfs" the default.
+
+svcfstype="tmpfs"
+
+
+# Size of $svcdir in KB
+
+svcsize=1024
+
+

@@ -11,6 +11,8 @@ SVCDIR="/var/lib/supervise"
 #rc-scripts dir
 svcdir="/mnt/.init.d"
 
+svcfstype="tmpfs"
+
 #size of $svcdir in KB
 svcsize=1024
 
@@ -59,6 +61,16 @@ NORMAL=$'\e[0m'
 
 HILITE=$'\e[36;01m'
 
+esyslog() {
+	if [ -x /usr/bin/logger ]
+	then
+		pri="${1}"
+		tag="${2}"
+		shift 2
+		/usr/bin/logger -p ${pri} -t ${tag} -- $*
+	fi
+}
+
 ebegin() {
 	if [ "${QUIET_STDOUT}" = "yes" ]
 	then
@@ -75,6 +87,9 @@ ewarn() {
 	else
 		echo -e " ${WARN}*${NORMAL} ${*}"
 	fi
+
+	# Log warnings to system log
+	esyslog "daemon.warning" "rc-scripts" "${*}"
 }
 
 eerror() {
@@ -84,6 +99,9 @@ eerror() {
 	else
 		echo -e " ${BAD}*${NORMAL} ${*}"
 	fi
+
+	# Log errors to system log
+	esyslog "daemon.err" "rc-scripts" "${*}"
 }
 
 einfo() {
@@ -233,6 +251,10 @@ getpidfile() {
 	return 1
 }
 
+#
+# Simple funtion to return the pids of all the daemons in $DAEMON
+# in the array $PIDLIST, with the master pids in $MASTERPID.
+#
 getpids() {
 	local x=""
 	local count=0
@@ -309,6 +331,15 @@ checkpid() {
 	return 0
 }
 
+#
+# Stop a single daemon.  This is mainly used by stop-daemon().
+# It takes the following arguments:
+#
+#    --kill-pidfile    If the pidfile exists, remove it.
+#
+#    --fail-zombie     If the process was not running, exit with
+#                      a fail status.  Default is to exit cleanly.
+#
 stop-single-daemon() {
 	local retval=0
 	local pidfile=""
@@ -402,6 +433,20 @@ stop-single-daemon() {
 	return ${retval}
 }
 
+#
+# Should be used to stop daemons in rc-scripts.  It will
+# stop all the daemons in $DAEMON.  The following arguments
+# are supported:
+#
+#    --kill-pidfile    Remove the pidfile if it exists (after
+#                      daemon is stopped)
+#
+#    --fail-zombie     If the process is not running, exit with
+#                      a fail status (default is to exit cleanly).
+#
+#    --retry           If not sucessfull, retry the number of times
+#                      as specified by $RCRETRYCOUNT
+#
 stop-daemon() {
 	local x=""
 	local count=0
