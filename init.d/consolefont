@@ -50,7 +50,7 @@ start() {
 						retval=$?
 					else
 						/bin/setfont ${CONSOLEFONT} ${param} \
-							-${sf_param}/dev/tty${x} >/dev/null
+							${sf_param}/dev/tty${x} >/dev/null
 						retval=$?
 					fi
 				done

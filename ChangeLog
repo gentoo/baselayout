@@ -8,6 +8,9 @@
     are used in scripts such as consolefonts, numlock, etc.  This should
     close bug #39863.
 
+    Fix type-o in /etc/init.d/consolefont, bug #40938, thanks to patch from
+    Cory Tusar <ctusar@adelphia.net>.
+
   09 Feb 2004; Martin Schlemmer <azarah@gentoo.org>:
 
     Add SELinux modifications to /sbin/runscript.  This allows runscript to
