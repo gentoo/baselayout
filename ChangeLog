@@ -1,3 +1,6 @@
+	*init.d/modules
+	Now correctly looks at /etc/modules.autoload
+
 rc-scripts-1.1.6, released 15 Sep 2001
 ======================================
 
