@@ -33,6 +33,7 @@ mysql:x:60:
 postgres::70:
 cdrw::80:
 apache::81:
+nut::84:
 usb::85:
 vpopmail:x:89:
 users::100:games

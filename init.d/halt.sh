@@ -92,6 +92,14 @@ then
 	eend $? "Failed to shut LVM down"
 fi
 
+ups_kill_power() {
+	if [ -x /sbin/upsdrvctl ]
+	then
+		ewarn "Signalling ups driver(s) to kill the load!"
+		/sbin/upsdrvctl shutdown
+	fi
+}
+
 ebegin "Remounting remaining filesystems readonly"
 #get better results with a sync and sleep
 sync;sync
@@ -105,6 +113,7 @@ then
 	then
 		eend 1
 		sync; sync
+		[ -f /etc/killpower ] && ups_kill_power
 		/sbin/sulogin -t 10 /dev/console
 	else
 		eend 0
@@ -124,5 +133,6 @@ then
 	ewarn "A full fsck will be forced on next startup"
 fi
 
+[ -f /etc/killpower ] && ups_kill_power
 
 # vim:ts=4

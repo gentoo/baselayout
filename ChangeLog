@@ -2,6 +2,11 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+   3 Aug 2002; Donny Davies <woodchip@gentoo.org>:
+
+    Added UPS shutdown support for nut to halt.sh.
+    Added nut user/group as uid/gid 84.
+
   27 Jul 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Updated /sbin/rc's way of checking for devfs support (now rather uses
