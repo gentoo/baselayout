@@ -1,7 +1,7 @@
 # /etc/fstab: static file system information.
 # $Header$
 #
-# noatime turns of atimes for increased performance (atimes normally aren't
+# noatime turns off atimes for increased performance (atimes normally aren't
 # needed; notail increases performance of ReiserFS (at the expense of storage
 # efficiency).  It's safe to drop the noatime options if you want and to 
 # switch between notail and tail freely.
