@@ -181,10 +181,9 @@ ${CYAN}'net' Dependency and 'net.*' Services:${OFF}
     A few examples are the /etc/init.d/net.eth0 and /etc/init.d/net.lo services.
 
 ${CYAN}Configuration files:${OFF}
-    There are three files which will be sourced for possible configuration by
+    There are two files which will be sourced for possible configuration by
     the rc-scripts.  They are (sourced from top to bottom):
 
-    /etc/conf.d/basic
     /etc/conf.d/${myservice}
     /etc/rc.conf
 

@@ -43,15 +43,12 @@ else
 fi
 		
 # Source configuration files.
-# (1) Source /etc/conf.d/basic to get common configuration.
-# (2) Source /etc/conf.d/${myservice} to get initscript-specific
+# (1) Source /etc/conf.d/${myservice} to get initscript-specific
 #     configuration (if it exists).
-# (3) Source /etc/conf.d/net if it is a net.* service
-# (4) Source /etc/rc.conf to pick up potentially overriding
+# (2) Source /etc/conf.d/net if it is a net.* service
+# (3) Source /etc/rc.conf to pick up potentially overriding
 #     configuration, if the system administrator chose to put it
 #     there (if it exists).
-
-[ -e "$(add_suffix /etc/conf.d/basic)" ]        && source "$(add_suffix /etc/conf.d/basic)"
 
 [ -e "$(add_suffix /etc/conf.d/${myservice})" ] && source "$(add_suffix /etc/conf.d/${myservice})"
 

@@ -31,7 +31,6 @@ unset ROOTPATH
 
 # Extract the value of EDITOR
 [ -z "$EDITOR" ] && EDITOR="`. /etc/rc.conf 2>/dev/null; echo $EDITOR`"
-[ -z "$EDITOR" ] && EDITOR="`. /etc/conf.d/basic 2>/dev/null; echo $EDITOR`"
 [ -z "$EDITOR" ] && EDITOR="/bin/nano"
 export EDITOR
 

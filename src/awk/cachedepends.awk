@@ -45,7 +45,6 @@ function print_header1(mtime) {
 function print_header2(mtime) {
 	print "(" >> TMPCACHE
 	print "  # Get settings for rc-script ..." >> TMPCACHE
-	print "  [ -e /etc/conf.d/basic ]                 && source /etc/conf.d/basic" >> TMPCACHE
 	print "" >> TMPCACHE
 	print "  [ -e \"/etc/conf.d/${myservice}\" ]        && source \"/etc/conf.d/${myservice}\"" >> TMPCACHE
 	print "" >> TMPCACHE
