@@ -133,22 +133,15 @@ iwconfig_get_type() {
 iwconfig_report() {
 	local iface=${1} essid i=0 mac m="to"
 
-	# We do this so that we get a 100% valid report
-	while true ; do
-		essid=$( iwconfig_get_essid ${iface} )
-		[[ -n ${essid} ]] && break
-		sleep 1
-		(( i++ ))
-		[[ ${i} -eq 5 ]] && break
-	done
+	essid=$( iwconfig_get_essid ${iface} )
 
 	local wep_status=$( iwconfig_get_wep_status ${iface} )
-	local channel=$( iwgetid --channel 2>${devnull} | awk '{print $3}' )
+	local channel=$( iwgetid --channel 2>/dev/null | cut -d: -f2 )
 	[[ -n ${channel} ]] && channel="on channel ${channel} "
 
 	essid=${essid//\\\\/\\\\}
 	local mode=$( iwconfig_get_mode ${iface} )
-	if [[ ${mode} == master ]]; then
+	if [[ ${mode} == "master" ]]; then
 		m="as"
 	else
 		mac=$( iwconfig_get_ap_mac_address ${iface} )
