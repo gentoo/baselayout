@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
 	}
 	myargs[new] = (char *) 0;
 	if (argc < 3) {
-		execv("/sbin/rc-help.sh",myargs);
+		execv("/lib/rcscripts/sh/rc-help.sh",myargs);
 		exit(1);
 	}
 	if (execv("/sbin/runscript.sh",myargs) < 0)

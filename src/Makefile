@@ -9,8 +9,8 @@ LD = gcc
 CFLAGS = -Wall -O2
 DESTDIR =
 
-BIN_TARGETS = consoletype
-SBIN_TARGETS = runscript start-stop-daemon
+BIN_TARGETS =
+SBIN_TARGETS = consoletype runscript start-stop-daemon
 
 TARGET = $(BIN_TARGETS) $(SBIN_TARGETS)
 
@@ -31,7 +31,7 @@ start-stop-daemon: start-stop-daemon.o
 install: $(TARGET)
 	install -m 0755 -d $(DESTDIR)/bin
 	install -m 0755 -d $(DESTDIR)/sbin
-	install -m 0755 $(BIN_TARGETS) $(DESTDIR)/bin
+#	install -m 0755 $(BIN_TARGETS) $(DESTDIR)/bin
 	install -m 0755 $(SBIN_TARGETS) $(DESTDIR)/sbin
 
 clean:

@@ -20,6 +20,7 @@ SVCDIR="/var/lib/supervise"
 
 # Check /etc/conf.d/rc for a description of these ...
 svcdir="/var/lib/init.d"
+svclib="/lib/rcscripts"
 svcmount="no"
 svcfstype="tmpfs"
 svcsize=1024
@@ -65,7 +66,7 @@ then
 	# We do not want colors or stty to run during emerge depend
     RC_NOCOLOR="yes"
 	
-elif [ "$(/bin/consoletype 2> /dev/null)" = "serial" ]
+elif [ "$(/sbin/consoletype 2> /dev/null)" = "serial" ]
 then
 	# We do not want colors on serial terminals
 	RC_NOCOLOR="yes"

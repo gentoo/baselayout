@@ -7,9 +7,9 @@
 # Common functions
 [ "${RC_GOT_FUNCTIONS}" != "yes" ] && source /sbin/functions.sh
 # Functions to handle dependencies and services
-[ "${RC_GOT_SERVICES}" != "yes" ] && source /sbin/rc-services.sh
+[ "${RC_GOT_SERVICES}" != "yes" ] && source "${svclib}/sh/rc-services.sh"
 # Functions to control daemons
-[ "${RC_GOT_DAEMON}" != "yes" ] && source /sbin/rc-daemon.sh
+[ "${RC_GOT_DAEMON}" != "yes" ] && source "${svclib}/sh/rc-daemon.sh"
 
 # State variables
 svcpause="no"
@@ -104,13 +104,13 @@ svc_stop() {
 	fi
 
 	# Do not try to stop if it had already failed to do so on runlevel change
-	if runlevel_stop && [ -L "${svcdir}/failed/${myservice}" ]
+	if runlevel_stop && service_failed "${myservice}"
 	then
 		exit 1
 	fi
 
 	# Remove symlink to prevent recursion
-	rm -f "${svcdir}/started/${myservice}"
+	mark_service_stopped "${myservice}"
 
 	if in_runlevel "${myservice}" "boot" && \
 	   [ "${SOFTLEVEL}" != "reboot" -a "${SOFTLEVEL}" != "shutdown" -a \
@@ -207,15 +207,15 @@ svc_stop() {
 	then
 		# Did we fail to stop? create symlink to stop multible attempts at
 		# runlevel change.  Note this is only used at runlevel change ...
-		if [ -d "${svcdir}/failed" ]
+		if runlevel_stop
 		then
-			ln -snf "/etc/init.d/${myservice}" "${svcdir}/failed/${myservice}"
+			mark_service_failed "${myservice}"
 		fi
 		
 		# If we are halting the system, do it as cleanly as possible
 		if [ "${SOFTLEVEL}" != "reboot" -a "${SOFTLEVEL}" != "shutdown" ]
 		then
-			ln -snf "/etc/init.d/${myservice}" "${svcdir}/started/${myservice}"
+			mark_service_started "${myservice}"
 		fi
 	fi
 
@@ -233,13 +233,13 @@ svc_start() {
 	if ! service_started "${myservice}"
 	then
 		# Do not try to start if i have done so already on runlevel change
-		if runlevel_start && [ -L "${svcdir}/failed/${myservice}" ]
+		if runlevel_start && service_failed "${myservice}"
 		then
 			exit 1
 		fi
 	
 		# Link first to prevent possible recursion
-		ln -snf "/etc/init.d/${myservice}" "${svcdir}/started/${myservice}"
+		mark_service_started "${myservice}"
 
 		# On rc change, start all services "before $myservice" first
 		if runlevel_start
@@ -308,21 +308,21 @@ svc_start() {
 		fi
 		
 		# Start service
-		if [ -d "${svcdir}/broken/${myservice}" -a "${retval}" -eq 0 ]
+		if [ "${retval}" -eq 0 ] && broken "${myservice}" &>/dev/null
 		then
 			eerror "ERROR:  Some services needed are missing.  Run"
 			eerror "        './${myservice} broken' for a list of those"
 			eerror "        services.  \"${myservice}\" was not started."
 			retval=1
-		elif [ ! -d "${svcdir}/broken/${myservice}" -a "${retval}" -eq 0 ]
+		elif [ "${retval}" -eq 0 ] && ! broken "${myservice}" &>/dev/null
 		then
 			start
 			retval="$?"
 		fi
 
-		if [ "${retval}" -ne 0 -a -d "${svcdir}/failed" ]
+		if [ "${retval}" -ne 0 ] && runlevel_start
 		then
-			ln -snf "/etc/init.d/${myservice}" "${svcdir}/failed/${myservice}"
+			mark_service_failed "${myservice}"
 		fi
 
 		# Remove link if service didn't start; but only if we're not booting
@@ -330,7 +330,7 @@ svc_start() {
 		# system up.
 		if [ "${retval}" -ne 0 -a "${SOFTLEVEL}" != "boot" ]
 		then
-			rm -f "${svcdir}/started/${myservice}"
+			mark_service_stopped "${myservice}"
 		fi
 		
 		return "${retval}"
@@ -462,7 +462,7 @@ do
 		if service_started "${myservice}"
 		then
 			einfo "Manually resetting ${myservice} to stopped state."
-			rm -f "${svcdir}/started/${myservice}"
+			mark_service_stopped "${myservice}"
 		fi
 		;;
 	restart)

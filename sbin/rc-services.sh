@@ -10,7 +10,8 @@
 export RC_GOT_SERVICES="yes"
 
 [ "${RC_GOT_FUNCTIONS}" != "yes" ] && source /sbin/functions.sh
-[ "${RC_GOT_DEPTREE_INFO}" != "yes" ] && source "${svcdir}/deptree"
+[ "${RC_GOT_DEPTREE_INFO}" != "yes" -a -f "${svcdir}/deptree" ] \
+	&& source "${svcdir}/deptree"
 
 if [ "${RC_GOT_DEPTREE_INFO}" != "yes" ]
 then
@@ -149,6 +150,17 @@ iafter() {
 	return $?
 }
 
+# Same as for check_dependency, except 'deptype' is set to
+# 'broken'.  It will return all the services that 'service1'
+# NEED, but are not present.
+broken() {
+	[ -z "$1" ] && return 1
+
+	check_dependency broken $*
+	
+	return $?
+}
+
 # bool iparallel(service)
 #
 #   Returns true if the service can be started in parallel.
@@ -162,21 +174,6 @@ iparallel() {
 	fi
 
 	return 0
-}
-
-# bool service_started(service)
-#
-#   Returns true if 'service' is started
-#
-service_started() {
-	[ -z "$1" ] && return 1
-	
-	if [ -L "${svcdir}/started/$1" ]
-	then
-		return 0
-	fi
-
-	return 1
 }
 
 # bool in_runlevel(service, runlevel)
@@ -218,18 +215,13 @@ runlevel_stop() {
 #   Start 'service' if it is not already running.
 #
 start_service() {
-	local retval=0
-	
 	[ -z "$1" ] && return 1
 	
 	if ! service_started "$1"
 	then
 		(. /sbin/runscript.sh "/etc/init.d/$1" start)
-		retval=$?
 		
-		wait
-		
-		return "${retval}"
+		return $?
 	fi
 
 	return 0
@@ -240,21 +232,87 @@ start_service() {
 #   Stop 'service' if it is not already running.
 #
 stop_service() {
-	local retval=0
-	
 	[ -z "$1" ] && return 1
 
 	if service_started "$1" 
 	then
 		(. /sbin/runscript.sh "/etc/init.d/$1" stop)
-		retval=$?
 		
-		wait
-		
-		return "${retval}"
+		return $?
 	fi
 
 	return 0
+}
+
+# bool mark_service_started(service)
+#
+#   Mark 'service' as started.
+#
+mark_service_started() {
+	[ -z "$1" ] && return 1
+
+	ln -snf "/etc/init.d/$1" "${svcdir}/started/$1"
+
+	return $?
+}
+
+# bool mark_service_stopped(service)
+#
+#   Mark 'service' as stopped.
+#
+mark_service_stopped() {
+	[ -z "$1" ] && return 1
+
+	rm -f "${svcdir}/started/$1"
+
+	return $?
+}
+
+# bool service_started(service)
+#
+#   Returns true if 'service' is started
+#
+service_started() {
+	[ -z "$1" ] && return 1
+
+	if [ -L "${svcdir}/started/$1" ]
+	then
+		return 0
+	fi
+
+	return 1
+}
+
+# bool mark_service_failed(service)
+#
+#   Mark service as failed for current runlevel.  Note that
+#   this is only valid on runlevel change ...
+#
+mark_service_failed() {
+	[ -z "$1" ] && return 1
+
+	if [ -d "${svcdir}/failed" ]
+	then
+		ln -snf "/etc/init.d/$1" "${svcdir}/failed/$1"
+		return $?
+	fi
+
+	return 1
+}
+
+# bool service_failed(service)
+#
+#   Return true if 'service' have failed during this runlevel.
+#
+service_failed() {
+	[ -z "$1" ] && return 1
+	
+	if [ -L "${svcdir}/failed/$1" ]
+	then
+		return 0
+	fi
+
+	return 1
 }
 
 # void schedule_service_startup(service)
@@ -263,6 +321,7 @@ stop_service() {
 #
 schedule_service_startup() {
 	local count=0
+	local current_job=
 
 	if [ "${RC_PARALLEL_STARTUP}" = "yes" ]
 	then
@@ -272,9 +331,16 @@ schedule_service_startup() {
 		then
 			if [ "$(jobs | grep -c "Running")" -eq 1 ]
 			then
+				if [ -n "$(jobs)" ]
+				then
+					current_job="$(jobs | awk '/Running/ { print $4}')"
+				else
+					current_job=
+				fi
+				
 				# Wait if we cannot start this service with the already running
 				# one (running one might start this one ...).
-				query_before "$1" "$(jobs | awk '/Running/ { print $4}')" && wait
+				query_before "$1" "${current_job}" && wait
 
 			elif [ "$(jobs | grep -c "Running")" -ge 2 ]
 			then
@@ -286,9 +352,16 @@ schedule_service_startup() {
 					count="$(jobs | grep -c "Running")"
 				done
 
+				if [ -n "$(jobs)" ]
+				then
+					current_job="$(jobs | awk '/Running/ { print $4}')"
+				else
+					current_job=
+				fi
+
 				# Wait if we cannot start this service with the already running
 				# one (running one might start this one ...).
-				query_before "$1" "$(jobs | awk '/Running/ { print $4}')" && wait
+				query_before "$1" "${current_job}" && wait
 			fi
 		fi
 
@@ -367,30 +440,10 @@ valid_iafter() {
 	return 0
 }
 
-# List broken dependencies of type 'need'
-broken() {
-	local x=
-	
-	if [ -d "${svcdir}/broken/$1" ]
-	then
-		for x in $(dolisting "${svcdir}/broken/$1/")
-		do
-			[ ! -f "${x}" ] && continue
-			
-			echo "${x##*/}"
-		done
-	fi
-
-	return 0
-}
-
-# void trace_depend(deptype, service)
+# void trace_depend(deptype, service, deplist)
 #
 #   Trace the dependency tree of 'service' for type 'deptype', and
-#   modify QSERVICE_LIST with the info.
-#
-#   NOTE:  You should 'declare -x QSERVICE_LIST=' in the function
-#          that calls this one ...
+#   modify 'deplist' with the info.
 #
 trace_depend() {
 	local deps=
@@ -398,22 +451,22 @@ trace_depend() {
 	local y=
 	local add=
 
-	[ -z "$1" -o -z "$2" ] && return 1
+	[ -z "$1" -o -z "$2" -o -z "$3" ] && return 1
 	
 	# Build the list of services that 'deptype' on this one
 	for x in $("$1" "$2")
 	do
 		add="yes"
 		
-		for y in ${QSERVICE_LIST}
+		for y in $(eval echo "\${$3}")
 		do
 			[ "${x}" = "${y}" ] && add="no"
 		done
 
-		[ "${add}" = "yes" ] && export QSERVICE_LIST="${QSERVICE_LIST} ${x}"
+		[ "${add}" = "yes" ] && eval $(echo "$3=\"\${$3} ${x}\"")
 		
 		# Recurse to build a complete list ...
-		trace_depend "$1" "${x}"
+		trace_depend "$1" "${x}" "$3"
 	done
 
 	return 0
@@ -426,13 +479,13 @@ trace_depend() {
 #
 list_depend_trace() {
 	local x=
-	declare -x QSERVICE_LIST=
+	local list=
 
 	[ -z "$1" ] && return 1
 	
-	trace_depend "$1" "${myservice}"
+	trace_depend "$1" "${myservice}" "list"
 
-	for x in ${QSERVICE_LIST}
+	for x in ${list}
 	do
 		echo "${x}"
 	done
@@ -447,16 +500,16 @@ list_depend_trace() {
 #
 query_before() {
 	local x=
-	declare -x QSERVICE_LIST=
+	local list=
 
 	[ -z "$1" -o -z "$2" ] && return 1
 
 	for x in ineed iuse iafter
 	do
-		trace_depend "${x}" "$1"
+		trace_depend "${x}" "$1" "list"
 	done
 	
-	for x in ${QSERVICE_LIST}
+	for x in ${list}
 	do
 		[ "${x}" = "$2" ] && return 0
 	done
@@ -471,16 +524,16 @@ query_before() {
 #
 query_after() {
 	local x=
-	declare -x QSERVICE_LIST=
+	local list=
 
 	[ -z "$1" -o -z "$2" ] && return 1
 
 	for x in needsme usesme ibefore
 	do
-		trace_depend "${x}" "$1"
+		trace_depend "${x}" "$1" "list"
 	done
 
-	for x in ${QSERVICE_LIST}
+	for x in ${list}
 	do
 		[ "${x}" = "$2" ] && return 0
 	done

@@ -310,8 +310,8 @@ then
 fi
 
 
-source /sbin/rc-services.sh
-source /sbin/rc-daemon.sh
+source "${svclib}/sh/rc-services.sh"
+source "${svclib}/sh/rc-daemon.sh"
 
 if [ -f "${svcdir}/softlevel" ]
 then

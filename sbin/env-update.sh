@@ -14,7 +14,7 @@ then
 fi
 
 usage() {
-echo "usage: rc-envupdate.sh
+echo "usage: env-update.sh
 
 note:
       This utility generates /etc/profile.env and /etc/csh.env

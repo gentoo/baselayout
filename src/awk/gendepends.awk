@@ -123,6 +123,10 @@ function check_provide(provide)
 	return 0
 }
 
+# bool add_parallel(service, parallel)
+#
+#   Add 'yes' or 'no' to the parallel modifier of 'service'.
+#
 function add_parallel(service, parallel,    sindex)
 {
 	if ((parallel != "yes") && (parallel != "no")) {
@@ -211,10 +215,7 @@ function resolve_depend(type, service, deplist,    x, deparray)
 				ewarn(" Can't find service '" deparray[x] "' needed by '" service "';  continuing...")
 
 				# service is broken due to missing 'need' dependencies
-				assert(dosystem("mkdir -p " SVCDIR "/broken/" service),
-				       "system(mkdir -p " SVCDIR "/broken/" service ")")
-				assert(dosystem("touch " SVCDIR "/broken/" service "/" deparray[x]),
-				       "system(touch " SVCDIR "/broken/" service "/" deparray[x] ")")
+				add_db_entry(service, BROKEN, deparray[x])
 
 				continue
 			}
@@ -241,10 +242,6 @@ function resolve_depend(type, service, deplist,    x, deparray)
 				if (check_depend(service, NEED, deparray[x]) ||
 				    check_depend(service, USE, deparray[x]))
 					continue
-
-				# Do not all circular ordering
-				if (check_depend(service, AFTER, deparray[x]))
-					continue
 			}
 			
 			if (type == AFTER) {
@@ -252,10 +249,20 @@ function resolve_depend(type, service, deplist,    x, deparray)
 				if (check_depend(deparray[x], NEED, service) ||
 				    check_depend(deparray[x], USE, service))
 					continue
-				
-				# Do not all circular ordering
-				if (check_depend(service, BEFORE, deparray[x]))
+			}
+
+			if ((type == BEFORE) || (type == AFTER)) {
+				# Do not add circular ordering
+				if ((check_depend(deparray[x], type, service)) &&
+				    (!((service,deparray[x]) in CIRCULAR_DEPEND)) &&
+					(!((deparray[x],service) in CIRCULAR_DEPEND))) {
+					ewarn(" Services '" service "' and '" deparray[x] "' have circular")
+					ewarn(" dependency of type '" TYPE_NAMES[type] "';  continuing...")
+					
+					CIRCULAR_DEPEND[service,deparray[x]] = "yes"
+					
 					continue
+				}
 			}
 
 			# NEED override USE (service USE deparray[x])
@@ -294,8 +301,9 @@ BEGIN {
 	USEME = 5
 	BEFORE = 6
 	AFTER = 7
-	PROVIDE = 8
-	PARALLEL = 9
+	BROKEN = 8
+	PROVIDE = 9
+	PARALLEL = 10
 	RC_NUMBER = 0
 
 	TYPE_NAMES[NEED] = "ineed"
@@ -304,6 +312,7 @@ BEGIN {
 	TYPE_NAMES[USEME] = "usesme"
 	TYPE_NAMES[BEFORE] = "ibefore"
 	TYPE_NAMES[AFTER] = "iafter"
+	TYPE_NAMES[BROKEN] = "broken"
 	TYPE_NAMES[PROVIDE] = "provide"
 	TYPE_NAMES[PARALLEL] = "parallel"
 
@@ -407,7 +416,7 @@ END {
 		print "depinfo_" DEPTREE[x,NAME] "() {" >> (CACHEDTREE)
 		print "    export rc_name=\"" DEPTREE[x,NAME] "\"" >> (CACHEDTREE)
 
-		for (y = 2; y <= 7; y++) {
+		for (y = 2; y <= 8; y++) {
 
 			if ((x,y) in RESOLVED_DEPTREE) {
 			
