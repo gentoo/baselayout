@@ -1,7 +1,7 @@
 ##############################################################################
 # QUICK-START
 #
-# The quickest start is if you want to use DHCP and if that fails then APIPA.
+# The quickest start is if you want to use DHCP.
 # In that case, everything should work out of the box, no configuration
 # necessary, though the startup script will warn you that you haven't
 # specified anything.
@@ -142,24 +142,28 @@
 # pre/post user functions below - although it's probably only really
 # usefull in the postup() function
 #
-# If you're using a supplicant which controls wireless configuration but you
-# still want to configure network settings per ESSID associated with then you
-# need to explictally state you don't want wireless
-#modules=( "!wireless" )
+# If you're using a supplicant or daemon to control wireless configuration
+# then you need to disable the iwconfig module like so
+#modules=( "!iwconfig" )
 
 #-----------------------------------------------------------------------------
 # DHCP
-# DHCP can be provided by dhcpcd (default), dhclient, udhcpc or pump
+# DHCP can be provided by dhcpcd, dhclient, udhcpc or pump
 #
 # dhcpcd:   emerge net-misc/dhcpcd
-# dhclient: emerge net-misc/dhcp   and modules=( "dhclient" ) above
-# udhcp:    emerge net-misc/udhcp  and modules=( "udhcp" ) above
-# pump:     emerge net-misc/pump   and modules=( "pump" ) above
+# dhclient: emerge net-misc/dhcp
+# udhcpc:   emerge net-misc/udhcp
+# pump:     emerge net-misc/pump
+
+# If you have more than one DHCP client installed, you need to specify which
+# one to use - otherwise we default to dhcpcd if available
+#modules=( "pump" ) # to select pump over dhcpcd
 #
 # Notes:
-# - all clients except for dhclient send the current hostname to the DHCP
-#   server by default
+# - dhcpcd, udhcpc and pump send the current hostname
+#   to the DHCP server by default
 # - pump does not support NIS
+# - dhcpcd does not daemonize when the lease time is infinite
 
 # Regardless of which DHCP client you prefer, you configure them the
 # same way using one of following depending on which interface modules
@@ -206,6 +210,8 @@
 
 # This is only useful for LANs where there is no DHCP server and you don't
 # connect directly to the internet.
+#ifconfig_eth0=( "dhcp" )
+#ifconfig_fallback_eth0=( "apipa" )
 
 #-----------------------------------------------------------------------------
 # VLAN (802.1q support)

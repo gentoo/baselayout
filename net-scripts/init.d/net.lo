@@ -27,22 +27,22 @@ depend() {
 after() {
 	local x="$*"
 	[[ $# -gt 1 ]] && x=$( echo -e "${x// /\n}" | sort | xargs )
-	eval "${MODULES[i]}_after() { echo \"$x\"; }"
+	eval "${MODULE}_after() { echo \"$x\"; }"
 }
 before() {
 	local x="$*"
 	[[ $# -gt 1 ]] && x=$( echo -e "${x// /\n}" | sort | xargs )
-	eval "${MODULES[i]}_before() { echo \"$x\"; }"
+	eval "${MODULE}_before() { echo \"$x\"; }"
 }
 need() {
 	local x="$*"
 	[[ $# -gt 1 ]] && x=$( echo -e "${x// /\n}" | sort | xargs )
-	eval "${MODULES[i]}_need() { echo \"$x\"; }"
+	eval "${MODULE}_need() { echo \"$x\"; }"
 }
 use() {
 	local x="$*"
 	[[ $# -gt 1 ]] && x=$( echo -e "${x// /\n}" | sort | xargs )
-	eval "${MODULES[i]}_use() { echo \"$x\"; }"
+	eval "${MODULE}_use() { echo \"$x\"; }"
 }
 
 sort() {
@@ -85,7 +85,7 @@ module_class_wrap() {
 #
 # Does the minimum checking on a module - even when forcing
 module_load_minimum() {
-	local f=${1} mod=${1##*/}
+	local f=${1} MODULE=${1##*/}
 
 	if [[ ! -f ${f} ]]; then
 		eerror "${f} does not exist"
@@ -93,15 +93,18 @@ module_load_minimum() {
 	fi
 
 	if ! source ${f} ; then
-		eerror "${mod} failed a sanity check"
+		eerror "${MODULE} failed a sanity check"
 		return 1
 	fi
 
 	for f in check_installed provides check_depends depend; do
-		[[ $( type -t ${mod}_${f} ) == function ]] && continue
-		eerror "${mod} does not support the required function ${f}"
+		[[ $( type -t ${MODULE}_${f} ) == function ]] && continue
+		eerror "${MODULE} does not support the required function ${f}"
 		return 1
 	done
+
+	# Wrap our before/after/need/use functions
+	${MODULE}_depend
 
 	return 0
 }
@@ -130,6 +133,7 @@ modules_load_auto() {
 		module_load_minimum ${MODULES[i]} || unload=true
 		MODULES[i]=${MODULES[i]##*/}
 		! ${unload} && ${MODULES[i]}_check_installed || unload=true
+
 		if [[ ${MODULES[i]} == interface ]]; then
 			eerror "interface is a reserved name - cannot load a module called interface"
 			unload=true
@@ -142,9 +146,6 @@ modules_load_auto() {
 			before="$( typeset -f )"
 			continue
 		fi
-
-		# Wrap our before/after/need/use functions
-		${MODULES[i]}_depend
 		
 		# Double check that we've only *added* to the function list, not
 		# replaced.  This is as much protection for devs as for users ;-)
@@ -223,8 +224,8 @@ modules_check_use() {
 
 # bool modules_check_user(void)
 modules_check_user() {
-	local -a umods
-	local i j k l npref
+	local -a umods modprovides
+	local i j k l npref nmods
 
 	# Has the interface got any specific modules?
 	eval umods=( \"\$\{modules_${iface}\[@\]\}\" )
@@ -236,6 +237,13 @@ modules_check_user() {
 	npref=3
 	umods=( "${umods[@]}" "ifconfig" "dhcpcd" "iwconfig" )
 
+	# We assign modprovides so we don't shell out as much because it's expensive on CPU.
+	# Have to check for blank MODULE in loops though
+	nmods=${#MODULES[@]}
+	for (( i=0; i<${nmods}; i++ )); do
+		modprovides[i]=$( ${MODULES[i]}_provides )
+	done
+
 	# First we strip any modules that conflict from user settings
 	# So if the user specifies pump then we don't use dhcpcd
 	for (( i=0; i<${#umods[@]}; i++ )); do
@@ -246,16 +254,14 @@ modules_check_user() {
 		[[ ${umods[i]} == dhcp ]] && continue
 
 		# We remove any modules we explicitly don't want
-		if [[ ${umods[i]:0:1} == ! ]]; then
-			k=${#MODULES[@]}
-			for (( j=0; j<k; j++ )); do
-				if [[ ${umods[i]:1} == ${MODULES[j]} || ${umods[i]:1} == $( ${MODULES[j]}_provides ) ]]; then
+		if [[ ${umods[i]} == !* ]]; then
+			for (( j=0; j<${nmods}; j++ )); do
+				[[ -z ${MODULES[j]} ]] && continue
+				if [[ ${umods[i]:1} == ${MODULES[j]} || ${umods[i]:1} == ${modprovides[j]} ]]; then
 					# We may need to setup a class wrapper for it even though
 					# we don't use it directly
 					${MODULES[j]}_check_installed && module_class_wrap ${MODULES[j]}
-					k=-1
 					unset MODULES[j]
-					MODULES=( "${MODULES[@]}" )
 					break
 				fi
 			done
@@ -281,35 +287,32 @@ modules_check_user() {
 			${umods[i]}_check_installed false || continue
 		fi
 
-		k=${#MODULES[@]}
 		mod=$( ${umods[i]}_provides )
-		for (( j=0; j<k; j++ )); do
-			if [[ $( ${MODULES[j]}_provides ) == ${mod} && ${umods[i]} != ${MODULES[j]} ]]; then
+		for (( j=0; j<${nmods}; j++ )); do
+			[[ -z ${MODULES[j]} ]] && continue
+			if [[ ${modprovides[j]} == ${mod} && ${umods[i]} != ${MODULES[j]} ]]; then
 				# We don't have a match - now ensure that we still provide an alternative.
 				# This is to handle our preferred modules.
-				for (( l=0; l<k; l++ )); do
+				for (( l=0; l<${nmods}; l++ )); do
 					[[ ${l} -eq ${j} || -z ${MODULES[l]} ]] && continue
-					if [[ $( ${MODULES[l]}_provides ) == ${mod} ]]; then
+					if [[ ${modprovides[l]} == ${mod} ]]; then
 						unset MODULES[j]
 						break
 					fi
 				done
 			fi
 		done
-
-		MODULES=( "${MODULES[@]}" )
 	done
 
 	# Then we strip conflicting modules.
 	# We only need to do this for 3rd party modules that conflict with
 	# our own modules and the preferred list AND the user modules
 	# list doesn't specify a preference.
-	k=${#MODULES[@]}
-	for (( i=0; i<k-1; i++ )); do
+	for (( i=0; i<${nmods}-1; i++ )); do
 		[[ -z ${MODULES[i]} ]] && continue			
-		for (( j=i+1; j < k; j++)); do
+		for (( j=i+1; j<${nmods}; j++)); do
 			[[ -z ${MODULES[j]} ]] && continue
-			[[ $( ${MODULES[i]}_provides ) == $( ${MODULES[j]}_provides ) ]] && unset MODULES[j]
+			[[ ${modprovides[i]} == ${modprovides[j]} ]] && unset MODULES[j]
 		done
 	done
 
@@ -320,49 +323,50 @@ modules_check_user() {
 # void modules_sort(void)
 
 modules_sort() {
-	local -a modnums sort_history
+	local -a modnums sort_history modprovides modafter modbefore
 	local i j k p changed_something
 
 	# Sort our modules
 	# We do this by assigning numbers to each module
+	# We also assign modprovides, modbefore and modafter so we don't
+	# shell out as much because it's expensive on CPU.
 	modnums=()
 	for (( i=0; i<${#MODULES[@]}; i++ )); do
 		modnums[i]=${i}
+		modprovides[i]=$( ${MODULES[i]}_provides )
+		[[ $( type -t ${MODULE[i]}_after ) == function ]] && modafter[i]=$( ${MODULE[i]}_after )
+		[[ $( type -t ${MODULE[i]}_before ) == function ]] && modbefore[i]=$( ${MODULE[i]}_after )
 	done
-
+	
 	# Then we swap numbers based on and after/before flags
 	# until we don't swap anymore. The sort_history array prevents
 	# the possibility of an infinite loop
 	sort_history[0]="${modnums[*]}"
 	for (( k=1; 1; k++ )); do
 		changed_something=false
-		for (( i=0; i < ${#MODULES[@]}; i++ )); do
-			if [[ $( type -t ${MODULES[i]}_after ) == function ]]; then
-				for p in $( ${MODULES[i]}_after ); do
-					for (( j=0; j < ${#MODULES[@]}; j++ )); do
-						[[ ${p} != ${MODULES[j]} && ${p} != $( ${MODULES[j]}_provides ) ]] && continue
-						if [[ ${modnums[i]} -lt ${modnums[j]} ]]; then
-							tmp=${modnums[i]}
-							modnums[i]=${modnums[j]}
-							modnums[j]=${tmp}
-							changed_something=true
-						fi
-					done
+		for (( i=0; i<${#MODULES[@]}; i++ )); do
+			for p in ${modafter[i]}; do
+				for (( j=0; j<${#MODULES[@]}; j++ )); do
+					[[ ${p} != ${MODULES[j]} && ${p} != ${modprovides[j]} ]] && continue
+					if [[ ${modnums[i]} -lt ${modnums[j]} ]]; then
+						tmp=${modnums[i]}
+						modnums[i]=${modnums[j]}
+						modnums[j]=${tmp}
+						changed_something=true
+					fi
 				done
-			fi
-			if [[ $( type -t ${MODULES[i]}_before ) == function ]]; then
-				for p in $( ${MODULES[i]}_before ); do
-					for (( j=0; j < ${#MODULES[@]}; j++ )); do
-						[[ ${p} != ${MODULES[j]} && ${p} != $( ${MODULES[j]}_provides ) ]] && continue
-						if [[ ${modnums[i]} -gt ${modnums[j]} ]]; then
-							tmp=${modnums[i]}
-							modnums[i]=${modnums[j]}
-							modnums[j]=${tmp}
-							changed_something=true
-						fi
-					done
+			done
+			for p in ${modbefore[i]}; do
+				for (( j=0; j<${#MODULES[@]}; j++ )); do
+					[[ ${p} != ${MODULES[j]} && ${p} != ${modprovides[j]} ]] && continue
+					if [[ ${modnums[i]} -gt ${modnums[j]} ]]; then
+						tmp=${modnums[i]}
+						modnums[i]=${modnums[j]}
+						modnums[j]=${tmp}
+						changed_something=true
+					fi
 				done
-			fi
+			done
 		done
 		${changed_something} || break
 
@@ -429,6 +433,7 @@ modules_load()  {
 	local iface=${1} starting=${2:-true} mod p=false i j
 	local -a x
 	local RC_INDENTATION=${RC_INDENTATION}	# so it will reset after function
+	local -a MODULE_PROVIDES
 
 	if [[ ${iface} == lo ]]; then
 		# We force lo to only use these modules for a major speed boost
@@ -529,8 +534,6 @@ iface_start() {
 	if [[ -z ${config_IFACE} ]]; then
 		if [[ $( type -t dhcp_start ) == function ]]; then
 			config_IFACE=( "dhcp" )
-			# If we have APIPA module installed we can default to it if DHCP fails
-			[[ $(type -t apipa_start) == function ]] && config_fallback_IFACE=( "apipa" )
 			warn=true
 		else
 			eerror "Cannot default to dhcp as there is no dhcp module loaded"
