@@ -2,6 +2,12 @@
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  09 Oct 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Remove init.d/net.eth0 net.lo and net.ppp0.  The first two are
+    provided now by net-scripts and net.ppp0 is shipped in
+    net-dialup/ppp
+
   09 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
 
     If the hostname has already been set via the kernel/dhcp, don't 
