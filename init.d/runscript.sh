@@ -15,6 +15,7 @@ fi
 myservice=${myservice##*/}
 mylevel=`cat ${svcdir}/softlevel`
 
+[ -e /etc/conf.d/${myservice} ] && . /etc/conf.d/${myservice}
 
 usage() {
 	export IFS="|"
