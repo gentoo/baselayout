@@ -40,7 +40,7 @@ mountshm() {
 
 if [ $$ -ne 1 ]
 then
-	exec /sbin/init.orig $*
+	exec /sbin/init.system $*
 fi
 
 
@@ -115,5 +115,5 @@ eend
 #Now that swap has been activated, we can calculate a reasonable size limit
 #for /dev/shm so that it doesn't exhaust VM if filled.
 
-exec /sbin/init.orig $*
+exec /sbin/init.system $*
 #rename to init.system
