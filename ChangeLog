@@ -1,6 +1,8 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+* rc-scripts 1.7.0 (10 Mar 2005)
+
   09 Mar 2005; Roy Marples <uberlord@gentoo.org>:
 
     changed from $( cat ${file} ) to $( < ${file ) in net-scripts
@@ -167,7 +169,7 @@
     Add support for loopback dm-crypt by Dylan Carlson #73598 and for gpg 
     dm-crypt by Lars Strojny #75659.
 
-    Update crypto-loop to newer util-linux #40874 by jochen / Jürgen Hötzel
+    Update crypto-loop to newer util-linux #40874 by jochen / JÃ¼rgen HÃ¶tzel
 
   27 Jan 2005; Roy Marples <uberlord@gentoo.org>:
 
@@ -1335,7 +1337,7 @@
 
     Fix bug 47218 (net.eth0 broken for vlans) with patch provided by
     Andy Dustman.  Fix bug 47250 (depscan.sh fails to create
-    /var/lib/init.d/* directories) with patch from Terje Bergström
+    /var/lib/init.d/* directories) with patch from Terje BergstrÃ¶m
 
 * rc-scripts 1.4.6 (08 Apr 2004)
 
@@ -2959,7 +2961,7 @@
   11 Apr 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Update /etc/skel/.bash_profile to make it tcsh compadible.
-    Thanks to Väinö Järvelä for this fix.
+    Thanks to VÃ¤inÃ¶ JÃ¤rvelÃ¤ for this fix.
 
     Update /etc/profile to also set the PS? variables if $SHELL
     is set to /bin/sh.  This should make prompt colours in
