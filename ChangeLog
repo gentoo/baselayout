@@ -2,6 +2,11 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+   6 Aug 2002; Dan Armak <danarmak@gentoo.org>:
+   
+    Correct the comments in rc.conf about the XSESSION variable: it should
+    be set to "kde-<version>" not "KDE". Closes bug #5948.
+
    5 Aug 2002; Martin Schlemmer <azarah@gentoo.org>:
 
      Fix the 'Usage' line in the help to return the correct options for
