@@ -1,6 +1,15 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+  19 Nov 2004; Roy Marples <uberlord@gentoo.org>:
+    tests for hostname (none) when sending hostname via dhcpcd, udhpc or pump
+    udhcpc now does correct signal handling so we can release leases and
+    terminate cleanly
+    Improved pump process detection
+    Rewrote udhcpc helper scripts around udhcpc and wrapped dhclient to udhcpc
+    scripts. This makes things much saner as udhcpc is much saner - also fixed
+    essidnet and ipv6 local link for them.
+
   17 Nov 2004; Roy Marples <uberlord@gentoo.org>:
     Fixed invalid variable handling in bonding and vlan - bug #71419
     apipa now brings the interface up before testing if address exists

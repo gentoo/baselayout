@@ -1,5 +1,5 @@
 # udhcpc (net-misc/udhcp) module for net-scripts
-# Version 1.0.3
+# Version 1.0.4
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -30,7 +30,7 @@ udhcpc_depend() {
 # Returns 1 if udhcpc is installed, otherwise 0
 udhcpc_check_installed() {
 	[[ -x /sbin/udhcpc ]] && return 0
-	[[ ${1} == true ]] && eerror "For DHCP (udhcpc) support, emerge net-misc/udhcp"
+	${1} && eerror "For DHCP (udhcpc) support, emerge net-misc/udhcp"
 	return 1
 }
 
@@ -67,41 +67,32 @@ udhcpc_get_vars() {
 
 # bool udhcpc_stop(char *iface)
 #
-# Stop DHCP on an interface by calling udhcpc -z $iface
-#
-# Returns 0 (true) when a DHCP address dropped
-# otherwise return 1
+# Stops udhcpc running on an interface
+# Always returns 0
 udhcpc_stop() {
-	local iface=${1} count script=$( udhcpc_get_script )
+	local iface=${1} count
 	
-	udhcpc_check_installed || return 1
+	udhcpc_check_installed || return 0
 
 	# We check for a udhcpc process first as if we attempt to release
 	# an interface for which udhcpc has obtained an IP in the past
 	# it causes a "RELEASE" event anyway.
-	local r=$( ps -fC udhcpc | awk "/--interface=${iface}/" | awk '{print $2}' )
+	local r=$( ps --no-heading -fC udhcpc | awk "/--interface=${iface}/" | awk '{print $2}' )
 	[[ -z ${r} ]] && return 1
 
 	ebegin "Releasing DHCP lease for ${iface}"
-	local pid addr i
+	local pid e=true
 	for pid in ${r}; do
-		kill -s SIGUSR2 ${pid}
-# Current portage version does not process SIGUSR2 properly
-# so we don't use this code atm
-#		i=0
-#		while (( i < 30 )); do
-#			addr=$( interface_get_address ${iface} )
-#			[[ -z ${addr} ]] && break
-#			(( i++ ))
-#			sleep 1
-#		done
-		# For some reason we have no mech of removing the process, so
-		# we have to kill it
-		kill -s KILL ${pid} &>/dev/null
+		kill -s USR2 ${pid} &>/dev/null
+		kill -s TERM ${pid} &>/dev/null
+
+		# udhcp-0.9.8-r3 and earlier do not process signals correctly
+		# so we need to kill them off
+		ps -p ${pid} &>/dev/null || continue
+		kill -s KILL ${pid} &>/dev/null || e=false
 	done
 
-	r=$( ps -fC udhcpc | awk "/--interface=${iface}/ {print \$1}")
-	[[ -z ${r} ]]
+	${e}
 	eend $?
 
 	return 0
@@ -114,9 +105,8 @@ udhcpc_stop() {
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 udhcpc_start() {
 	local iface=${1} opts hostname
-	local ifvar=$( interface_variable ${iface} )
 
-	! interface_exists ${iface} true && return 1
+	interface_exists ${iface} true || return 1
 
 	# Check that iface was not brought up by the kernel ...
 	local check=$( interface_device ${iface} )
@@ -125,16 +115,15 @@ udhcpc_start() {
 		return 0
 	fi
 
-	local script=$( udhcpc_get_script )
-
+	local ifvar=$( interface_variable ${iface} )
+	local script=$( udhcpc_get_script ) opts hostname=$( hostname )
 	eval opts=\"\$\{udhcpc_${ifvar}\}\"
-	hostname=$( hostname )
-	[[ -n ${hostname} ]] && hostname="--hostname=${hostname%%.*}"
+	[[ -n ${hostname} && ${hostname} != "(none)" ]] && hostname="--hostname=${hostname%%.*}"
 
 	# Bring up DHCP for this interface (or alias)
 	local r=$( udhcpc ${hostname} ${opts} --script=${script} --now --interface=${iface} )
 	# We just check the last 5 letters
-	[[ ${r:((${#r} - 5)):5} == BOUND ]]
+	[[ ${r:((${#r} - 5)):5} == bound ]]
 	eend $? "udhcpc recieved a ${r}" || return 1
 
 	# DHCP succeeded, show address retrieved

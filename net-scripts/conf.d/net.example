@@ -160,13 +160,16 @@
 
 # If you have more than one DHCP client installed, you need to specify which
 # one to use - otherwise we default to dhcpcd if available
-#modules=( "pump" ) # to select pump over dhcpcd
+#modules=( "udhcpc" ) # to select udhcpc over dhcpcd
 #
 # Notes:
 # - dhcpcd, udhcpc and pump send the current hostname
 #   to the DHCP server by default
-# - pump does not support NIS
 # - dhcpcd does not daemonize when the lease time is infinite
+# - dhcpcd can take a long time to get leases sometimes
+# - udhcp-0.9.3-r3 and earlier does not support getting NTP servers 
+# - dhclient does not support getting NTP servers 
+# - pump does not support getting NIS servers
 
 # Regardless of which DHCP client you prefer, you configure them the
 # same way using one of following depending on which interface modules

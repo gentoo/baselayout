@@ -245,8 +245,8 @@ ifconfig_iface_stop() {
 	# will try to bring it up with an address of "down" which
 	# fails.  Do some double-checking before returning error
 	# status
-	ifconfig_down ${1} && return 0
 	ifconfig_is_up $1 || return 0
+	ifconfig_down ${1} && return 0
 
 	# It is sometimes impossible to transition an alias from the
 	# UP state... particularly if the alias has no address.  So

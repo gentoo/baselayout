@@ -30,7 +30,7 @@ dhcpcd_depend() {
 # Returns 1 if dhcpcd is installed, otherwise 0
 dhcpcd_check_installed() {
 	[[ -x /sbin/dhcpcd ]] && return 0
-	[[ ${1} == true ]] && eerror "For DHCP (dhcpcd) support, emerge net-misc/dhcpcd"
+	${1} && eerror "For DHCP (dhcpcd) support, emerge net-misc/dhcpcd"
 	return 1
 }
 
@@ -66,10 +66,8 @@ dhcpcd_get_vars() {
 dhcpcd_stop() {
 	local iface=${1} count
 	
-	dhcpcd_check_installed || return 1
-	if ! dhcpcd -z ${iface} &>${devnull}; then
-		return 1
-	fi
+	dhcpcd_check_installed || return 0
+	dhcpcd -z ${iface} &>${devnull} || return 0
 
 	ebegin "Releasing DHCP lease for ${iface}"
 	for ((count = 0; count < 9; count = count + 1)); do
@@ -82,7 +80,7 @@ dhcpcd_stop() {
 	# Remove stale PID file
 	[[ -f /var/run/dhcpcd-${iface}.pid ]] && rm -f /var/run/dhcpcd-${iface}.pid
 
-	return 0  # we did *attempt* to stop dhcp
+	return 0
 }
 
 # bool dhcpcd_start(char *iface)
@@ -94,7 +92,7 @@ dhcpcd_start() {
 	local iface=${1} opts hostname
 	local ifvar=$( interface_variable ${iface} )
 
-	! interface_exists ${iface} true && return 1
+	interface_exists ${iface} true || return 1
 
 	local check=$( interface_device ${iface} )
 
@@ -125,7 +123,7 @@ dhcpcd_start() {
 
 	# We transmit the hostname by default	
 	hostname=$( hostname )
-	[[ -n ${hostname} ]] && opts="-h ${hostname%%.*} ${opts}"
+	[[ -n ${hostname} && ${hostname} != "(none)" ]] && opts="-h ${hostname%%.*} ${opts}"
 
 	# Bring up DHCP for this interface (or alias)
 	ebegin "Running dhcpcd"

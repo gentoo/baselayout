@@ -1,9 +1,56 @@
 #!/bin/sh
 # udhcpc ifconfig module for net-scripts
-# Version 1.0.3
+# Version 1.0.0
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
 
-/lib/rcscripts/net.modules.d/helpers.d/udhcpc-dhclient-wrapper ifconfig ${1}
-exit $?
+action=${1}
+echo ${action}
+
+case "${action}" in
+	bound|renew|deconfig|nak)
+		# We handle these actions
+		;;
+	*)
+		echo "We don't handle that action"
+		exit 1
+		;;
+esac
+
+[[ ${action} == nak ]] && exit 0
+
+# Reset all addresses
+/sbin/ifconfig ${interface}:0- inet 0 &>/dev/null
+/sbin/ifconfig ${interface} 0
+
+# Remove IPv6 addresses
+x="$(ifconfig ${iface} | awk '$1=="inet6" && $4!="Scope:Link" {print $3}')"
+for i in ${x}; do
+	/sbin/ifconfig ${interface} inet6 del ${i} &>/dev/null
+done
+
+/sbin/ifconfig ${interface} up &>/dev/null
+
+[[ ${action} == deconfig ]] && exit 0
+
+if [[ ${action} == bound ]]; then
+	ip=( ${ip} )
+	subnet=( ${subnet} )
+	broadcast=( ${broadcast} )
+	for (( i=0; i<${#ip[@]}; i++ )); do
+		[[ ${i} -eq 0 ]] && l=${interface} || l=${interface}:${i}
+		/sbin/ifconfig ${l} inet ${ip[i]} netmask ${subnet[i]} broadcast ${broadcast[i]}
+	done
+
+	for r in ${router}; do
+		/sbin/route add default gw ${r} dev ${interface}
+	done
+fi
+
+# Set our module to udhcpc if it's not set
+[[ -z ${module} ]] && module=udhcpc
+source /lib/rcscripts/net.modules.d/helpers.d/config-system
+config_system
+
+exit 0

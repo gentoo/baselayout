@@ -1,0 +1,46 @@
+#!/bin/sh
+# dhclient udhcpc wrapper for net-scripts
+# Version 1.0.0
+# Copyright (c) 2004 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License V2
+# Contributed by Roy Marples (uberlord@gentoo.org)
+
+# Instead of writing new functions for dhclient, we simply map their variables
+# over to udhcpc style ones and call those scripts!
+
+iface_type=${1}
+
+case "${reason}" in
+	BOUND) action=bound ;;
+	RENEW) action=renew ;;
+	RELEASE|PREINIT) action=deconfig ;;
+esac
+
+if [[ -z ${action} ]]; then
+	echo "dhclient sent an unknown action ${reason}!"
+	exit 1
+fi
+
+export ip=${new_ip_address} ${alias_ip_address}
+export subnet=${new_subnet_mask} ${alias_subnet_mask}
+export broadcast=${new_broadcast_address} ${alias_broadcast_address}
+routers=( ${new_routers} )
+export router=${routers[0]}
+export new_routers=${router}
+
+export hostname=${new_hostname}
+
+export domain=${new_domain_name}
+export dns=${new_domain_name_servers}
+export new_domain_name=${domain}
+
+export ntpsrv=${new_domain_name_servers}
+
+export nisdomain=${new_nis_domain}
+export nissrv=${new_nis_servers}
+
+export module=dhclient
+
+# Execute the dhclient script and exit with it's code
+/lib/rcscripts/net.modules.d/helpers.d/udhcpc-${iface_type} ${action}
+exit $?

@@ -1,51 +1,9 @@
 #!/bin/sh
 # dhclient ifconfig module for net-scripts
-# Version 1.0.3
+# Version 1.0.4
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
 
-echo ${reason}
-
-# We don't handle these reasons
-[[ ${reason} == MEDIUM || ${reason} == ARPCHECK || ${reason} == ARPSEND ]] && exit 0
-
-[[ ${reason} == FAIL || ${reason} == TIMEOUT ]] && exit 1
-
-/sbin/ifconfig ${interface}:0- inet 0
-/sbin/ifconfig ${interface} 0 down
-/sbin/ifconfig ${interface} up
-
-[[ ${reason} == EXPIRE || ${reason} == FAIL || ${reason} == RELEASE || ${reason} == STOP ]] && exit 0
-
-# Check that we can handle the reason
-[[ ${reason} != BOUND && ${reason} != RENEW && ${reason} != REBIND && ${reason} != REBOOT ]] && exit 0
-
-# Set our module to dhclient if it's not set
-[[ -z ${module} ]] && module=dhclient
-source /lib/rcscripts/net.modules.d/helpers.d/config-system
-
-if [[ -z ${old_ip_address} || ${old_ip_address} != ${new_ip_address} || \
-	${reason} == BOUND || ${reason} == REBOOT ]]; then
-
-	/sbin/ifconfig ${interface} inet ${new_ip_address} netmask ${new_subnet_mask} broadcast ${new_broadcast_address}
-	for router in ${new_routers}; do
-		/sbin/route add default gw ${router}
-	done
-	if [[ -n ${new_static_routes} ]]; then
-		set -- ${new_static_routes}
-		while [[ $# -gt 1 ]]; do
-			/sbin/route add ${1} ${2}
-			shift; shift
-		done
-	fi
-fi
-
-if [[ ${new_ip_address} != ${alias_ip_address} && -n ${alias_ip_address} ]]; then
-	/sbin/ifconfig ${interface}:0- inet 0
-	/sbin/ifconfig ${interface}:0 inet ${alias_ip_address} netmask ${alias_subnet_mask}
-	/sbin/route add -host ${alias_ip_address} ${interface}:0
-fi
-
-config_system
-exit 0
+/lib/rcscripts/net.modules.d/helpers.d/dhclient-udhcpc-wrapper ifconfig
+exit $?

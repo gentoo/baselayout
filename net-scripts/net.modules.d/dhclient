@@ -1,5 +1,5 @@
 # DHCP (net-misc/dhcp) module for net-scripts
-# Version 1.0.3
+# Version 1.0.4
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -30,7 +30,7 @@ dhclient_depend() {
 # Returns 1 if dhclient is installed, otherwise 0
 dhclient_check_installed() {
 	[[ -x /sbin/dhclient ]] && return 0
-	[[ ${1} == true ]] && eerror "For DHCP (dhclient) support, emerge net-misc/dhcp"
+	${1} && eerror "For DHCP (dhclient) support, emerge net-misc/dhcp"
 	return 1
 }
 
@@ -67,31 +67,25 @@ dhclient_get_vars() {
 
 # bool dhclient_stop(char *iface)
 #
-# Stop DHCP on an interface by calling dhclient -z $iface
-#
-# Returns 0 (true) when a DHCP address dropped
-# otherwise return 1
+# Stop dhclient on an interface
+# Always returns 0
 dhclient_stop() {
-	local iface=${1} count script=$( dhclient_get_script )
+	local iface=${1} count
 	
-	dhclient_check_installed || return 1
+	dhclient_check_installed || return 0
 
 	# We check for a dhclient process first as if we attempt to release
 	# an interface for which dhclient has obtained an IP in the past
 	# it causes a "RELEASE" event anyway.
 	local r=$( ps -fC dhclient | awk "/-q ${iface}/ {print 1}")
-	[[ -z ${r} ]] && return 1
+	[[ -z ${r} ]] && return 0
+
+	local script=$( dhclient_get_script )
 
 	ebegin "Releasing DHCP lease for ${iface}"
 	r=$( dhclient -sf ${script} -r ${iface} -q )
-	[[ -z ${r} ]] && return 1
-
-	if [[ ${r} == RELEASE ]]; then
-		eend 0
-	else
-		ewarn "dhclient returned a ${r}"
-		eend 1
-	fi
+	[[ ${r} == deconfig ]]
+	eend $? "dhclient returned a ${r}"
 	return 0
 }
 
@@ -104,7 +98,7 @@ dhclient_start() {
 	local iface=${1} opts
 	local ifvar=$( interface_variable ${iface} )
 
-	! interface_exists ${iface} true && return 1
+	interface_exists ${iface} true || return 1
 
 	# Check that iface was not brought up by the kernel ...
 	local check=$( interface_device ${iface} )
@@ -120,7 +114,7 @@ dhclient_start() {
 	eval opts=\"\$\{dhclient_${ifvar}\}\"
 	local r=$( dhclient ${opts} -sf ${script} -q ${iface} )
 	# We just check the last 5 letters
-	[[ ${r:${#r} - 5:5} == BOUND ]]
+	[[ ${r:${#r} - 5:5} == bound ]]
 	eend $? "dhclient returned a ${r}" || return 1
 
 	# DHCP succeeded, show address retrieved

@@ -1,5 +1,5 @@
 # Pump module for net-scripts
-# Version 1.0.3
+# Version 1.0.4
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -30,7 +30,7 @@ pump_depend() {
 # Returns 1 if pump is installed, otherwise 0
 pump_check_installed() {
 	[[ -x /sbin/pump ]] && return 0
-	[[ ${1} == true ]] && eerror "For DHCP (pump) support, emerge net-misc/pump"
+	${1} && eerror "For DHCP (pump) support, emerge net-misc/pump"
 	return 1
 }
 
@@ -61,17 +61,15 @@ pump_get_vars() {
 #
 # Stop pump on an interface by calling pumpcd -z $iface
 #
-# Returns 0 (true) when a dhcp address dropped
-# otherwise return 1
+# Always returns 0
 pump_stop() {
 	local iface=${1} count e
 	
-	pump_check_installed || return 1
+	pump_check_installed || return 0
 
 	# We check for a pump process first as querying for status
 	# causes pump to spawn a process
-	e=$( ps -C pump | grep pump )
-	[[ -z ${e} ]] && return 1
+	ps -C pump &>/dev/null || return 0
 
 	e=$( pump --status --interface ${iface} 2>${devnull} | grep ${iface})
 	[[ -z ${e} ]] && return 1
@@ -98,7 +96,7 @@ pump_start() {
 	local iface=${1} opts hostname
 	local ifvar=$( interface_variable ${iface} )
 
-	! interface_exists ${iface} true && return 1
+	interface_exists ${iface} true || return 1
 
 	# Check that iface was not brought up by the kernel ...
 	local check=$( interface_device ${iface} )
@@ -116,7 +114,7 @@ pump_start() {
 
 	# We transmit the hostname by default	
 	hostname=$( hostname )
-	[[ -n ${hostname} ]] && opts="--hostname=${hostname%%.*} ${opts}"
+	[[ -n ${hostname} && ${hostname} != "(none)" ]] && opts="--hostname=${hostname%%.*} ${opts}"
 
 	# Bring up DHCP for this interface (or alias)
 	ebegin "Running pump"

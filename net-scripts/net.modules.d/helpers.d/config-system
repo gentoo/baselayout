@@ -1,5 +1,5 @@
 # config-system module for net-scripts
-# Version 1.0.2
+# Version 1.0.3
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -7,18 +7,23 @@
 source /etc/conf.d/net
 
 get_wireless_vars() {
+	netdir=/lib/rcscripts/net.modules.d
+
 	# Check that wireless has not already been configured
 	[[ $(type -t wireless_check_extensions) == function ]] && return
 
 	# Check we can actually load the file
 	# and our calling dhcp module
-	[[ ! -f /etc/net.modules.d/wireless && ! -f /etc/net.modules.d/${module} ]] && return
+	[[ ! -f ${netdir}/iwconfig || ! -f ${netdir}/essidnet || ! -f ${netdir}/${module} ]] && return
 
 	# Setup the devnull var as we probably aren't being called via net.lo
 	[[ -z ${devnull} ]] && local devnull=/dev/stderr
 
-	source /etc/net.modules.d/wireless
-	source /etc/net.modules.d/${module}
+	source ${netdir}/iwconfig
+	local x
+	for x in $( typeset -f | grep -o ^iwconfig_'[^ ]*' ); do
+		eval "wireless${x#iwconfig}() { ${x} \"\$@\"; }"
+	done
 
 	# Check we are installed
 	wireless_check_installed || return
@@ -27,17 +32,13 @@ get_wireless_vars() {
 	wireless_check_extensions ${interface} || return
 
 	# Wait until we get a valid ESSID
-	local i=0
-	while true ; do
-		ESSID=$( wireless_get_essid ${interface} )
-		[[ -n ${ESSID} ]] && break
-		sleep 1
-		(( i++ ))
-		[[ ${i} -eq 5 ]] && return
-	done
+	ESSID=$( wireless_get_essid ${interface} )
 
 	local -a MODULES=( "${module}" )
-	wireless_map_essid_vars ${interface}
+	source ${netdir}/${module}
+	source ${netdir}/essidnet
+
+	essidnet_pre_start ${interface}
 }
 
 # This routine configures the local host for non-ip and routing info
@@ -48,10 +49,8 @@ config_system() {
 	# For example peer_dns_ESSID becomes peer_dns_eth0
 	get_wireless_vars
 
-        local current_hostname=$( hostname ) peer
-        if [[ -n ${new_host_name} ]] && [[ -z ${current_hostname} || ${current_hostname} != ${new_host_name} ]]; then
-                hostname ${new_host_name} >/dev/null
-	fi
+	local x=$( hostname ) peer
+	[[ -n ${hostname} && ${x} != ${hostname} ]] && hostname ${new_host_name} >/dev/null
 
 	local ifvar=${interface//:/_}
 	ifvar=${ifvar//./_}
@@ -60,15 +59,34 @@ config_system() {
 	[[ -z ${peer} ]] && eval peer=\"\$\{peer_dns\}\"
 	peer=${peer:-yes}
 
-	if [[ ${peer} != no ]] && [[ -n ${new_domain_name} || -n ${new_domain_name_servers} ]]; then
+	if [[ ${peer} != no ]] && [[ -n ${domain} || -n ${dns} ]]; then
 		[[ -f /etc/resolv.conf ]] && mv /etc/resolv.conf /etc/resolv.conf.sv
 
 		echo "# generated automatically by net-scripts" > /etc/resolv.conf
 		chmod 644 /etc/resolv.conf
-		[[ -n ${new_domain_name} ]] && echo "domain ${new_domain_name}" >> /etc/resolv.conf
+		[[ -n ${domain} ]] && echo "domain ${domain}" >> /etc/resolv.conf
 
-		for x in ${new_domain_name_servers}; do
+		for x in ${dns}; do
 			echo "nameserver ${x}" >>/etc/resolv.conf
+		done
+	fi
+
+	eval peer=\"\$\{peer_ntp_${ifvar}\}\"
+	[[ -z ${peer} ]] && eval peer=\"\$\{peer_ntp\}\"
+	peer=${peer:-yes}
+
+	if [[ ${peer} != no && -n ${ntpsrv} ]]; then
+		[[ -f /etc/ntp.conf ]] && mv /etc/ntp.conf /etc/ntp.conf.sv
+		echo "# generated automatically by net-scripts" > /etc/ntp.conf
+		chmod 644 /etc/ntp.conf
+
+		echo "restrict default noquery notrust nomodify" >> /etc/ntp.conf
+		echo "restrict 127.0.0.1" >> /etc/ntp.conf
+		echo "driftfile /var/lib/ntp/ntp.drift" >> /etc/ntp.conf
+
+		for x in ${ntpsrv}; do
+			echo "restrict ${x} nomodify notrap noquery" >> /etc/ntp.conf
+			echo "server ${x}" >> /etc/ntp.conf
 		done
 	fi
 
@@ -76,41 +94,24 @@ config_system() {
 	[[ -z ${peer} ]] && eval peer=\"\$\{peer_nis\}\"
 	peer=${peer:-yes}
 
-	if [[ ${peer} != no ]] && [[ -n ${new_nis_domain} || -n ${new_nis_servers} ]]; then
+	if [[ ${peer} != no ]] && [[ -n ${nisdomain} || -n ${nissrv} ]]; then
 		[[ -f /etc/yp.conf ]] && mv /etc/yp.conf /etc/yp.conf.sv
 		echo "# generated automatically by net-scripts" > /etc/yp.conf
 		chmod 644 /etc/yp.conf
-		if [[ -n ${new_nis_domain} ]]; then
-			hostname -y ${new_nis_domain}
-			if [[ -n ${new_nis_servers} ]]; then
-				for x in ${new_nis_servers}; do
-					echo "domain ${new_nis_domain} server ${x}" >> /etc/yp.conf
+		if [[ -n ${nisdomain} ]]; then
+			hostname -y ${nisdomain}
+			if [[ -n ${nissrv} ]]; then
+				for x in ${nissrv}; do
+					echo "domain ${nisdomain} server ${x}" >> /etc/yp.conf
 				done
 			else
-				echo "domain $new_nis_domain broadcast" >> /etc/yp.conf
+				echo "domain ${nisdomain} broadcast" >> /etc/yp.conf
 			fi
 		else
-			for x in ${new_nis_servers}; do
+			for x in ${nissrv}; do
 				echo "ypserver ${x}" >> /etc/yp.conf
 			done
 		fi
 	fi
 
-	eval peer=\"\$\{peer_ntp_${ifvar}\}\"
-	[[ -z ${peer} ]] && eval peer=\"\$\{peer_ntp\}\"
-	peer=${peer:-yes}
-
-	if [[ ${peer} != no && -n ${new_ntp_servers} ]]; then
-		[[ -f /etc/ntp.conf ]] && mv /etc/ntp.conf /etc/ntp.conf.sv
-		echo "# generated automatically by net-scripts" > /etc/ntp.conf
-		echo "restrict default noquery notrust nomodify" >> /etc/ntp.conf
-		echo "restrict 127.0.0.1" >> /etc/ntp.conf
-		echo "driftfile /var/lib/ntp/ntp.drift" >> /etc/ntp.conf
-		chmod 644 /etc/ntp.conf
-
-		for x in ${new_ntp_servers}; do
-			echo "restrict ${x} nomodify notrap noquery" >> /etc/ntp.conf
-			echo "server ${x}" >> /etc/ntp.conf
-		done
-	fi
 }
