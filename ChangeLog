@@ -10,6 +10,10 @@
     Bootsplash coded did not play nice with boot profiles, so I fixed that
     as well.  Some other style tweaks.
 
+    Fix /sbin/MAKEDEV to use 'user:group' form, and not depriciated '.'.
+    Also changed the permissions on tty's, ibcs and scanner devices
+    to 0660.
+
 * rc-scripts 1.4.3.11p2 (14 Sep 2003)
 
   14 Oct 2003; Martin Schlemmer <azarah@gentoo.org>:

@@ -14,7 +14,7 @@ RCSID='$Id$'
 private="  root root   0600"
  system="  root root   0660"
    kmem="  root kmem   0640"
-    tty="  root tty    0666"
+    tty="  root tty    0660"	# Perms was 0666
    cons="  root tty    0600"
     vcs="  root root   0600"
 dialout="  root dialout 0660"
@@ -29,8 +29,8 @@ printer="  root lp     0660"
   audio="  root audio  0660"
   video="  root video  0660"
      fb="  root video  0620"
-  ibcs2="  root root   0666"
-scanner="  root root   0666"
+  ibcs2="  root root   0660"	# Perms was 0666
+scanner="  root root   0660"	# Perms was 0666
    coda="  root root   0600"
   ipsec="  root root   0200"
 readable="  root root   0444"
@@ -1307,7 +1307,7 @@ do
 	dac960.[0-7])
 		[ -d rd ] || {
 			mkdir rd
-			chown root.root rd
+			chown root:root rd
 			chmod 755 rd
 		}
 		unit=`suffix $arg dac960.`
@@ -1334,7 +1334,7 @@ do
 	ataraid.[0-7])
 		[ -d ataraid ] || {
 			mkdir ataraid
-			chown root.root ataraid
+			chown root:root ataraid
 			chmod 755 ataraid
 		}
                 unit=`suffix $arg ataraid.`
@@ -1356,7 +1356,7 @@ do
 	ida.[0-7])
 		[ -d ida ] || {
 			mkdir ida
-			chown root.root ida
+			chown root:root ida
 			chmod 755 ida
 		}
 		unit=`suffix $arg ida.`
@@ -1382,7 +1382,7 @@ do
 	cciss.[0-7])
 		[ -d cciss ] || {
 			mkdir cciss
-			chown root.root cciss
+			chown root:root cciss
 			chmod 755 cciss
 		}
 		unit=`suffix $arg cciss.`
