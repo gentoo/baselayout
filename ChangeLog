@@ -11,6 +11,8 @@
     and checkfs.  Updated /etc/init.d/{checkroot,checkfs,halt.sh} for this.
     Thanks goes to Chris PeBenito (bug #5570).
 
+    Changed most daemons to use /bin/false as shell.  Should close bug #5388.
+
   27 Jul 2002; Nicholas Jones <carpaski@gentoo.org>:
     
     Added vpopmail user and group as 89:89
