@@ -15,7 +15,7 @@ fi
 # For pcmcia users. note that pcmcia must be added to the same
 # runlevel as the net.* script that needs it.
 depend() {
-	use hotplug pcmcia
+	use hotplug pcmcia bridge
 }
 
 # Fix bug 50039 (init.d/net.eth0 localization)
