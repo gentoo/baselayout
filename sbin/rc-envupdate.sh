@@ -75,7 +75,14 @@ parse_envd() {
 				then
 					if [ -n "$(eval echo \${$variable})" ]
 					then
-						eval ${variable}\="\${$variable}:\${value}"
+						# $KDEDIR should be set only to the highest env.d
+						# files's value ....
+						if [ "${variable}" != "KDEDIR" ]
+						then
+							eval ${variable}\="\${$variable}:\${value}"
+						else
+							eval ${variable}\="\${value}"
+						fi
 					else
 						eval ${variable}\="\${value}"
 					fi

@@ -2,6 +2,16 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  6 May 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fixed /sbin/rc-envupdate.sh to only use the $KDEDIR of the highest
+	/etc/env.d/ file.
+
+  5 May 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add /etc/DIR_COLORS as it is no longer shipped with fileutils,
+    and is needed for some fixes.
+
   28 April 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Update /etc/rc.conf to be more clear and state that you should
