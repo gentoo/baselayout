@@ -29,6 +29,8 @@
     Don't run depscan.sh in rc-update anymore since the cache files don't 
     depend on runlevels (which is all that rc-update modifies).
 
+    Add unicode support to keymaps/consolefont #32111 and UML support #29707.
+
   16 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
 
     Update the default fstab /dev/shm mount to include the nodev, nosuid, 

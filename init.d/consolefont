@@ -5,86 +5,70 @@
 
 depend() {
 	need localmount
+	need keymaps    # sets up terminal encoding scheme
 	after hotplug
 }
 
 start() {
+	if grep -q 'UML' /proc/cpuinfo
+	then
+		ebegin "Setting user font"
+		eend 0
+		return 0
+	elif [ -z "${CONSOLEFONT}" ]
+	then
+		ebegin "Using the default console font"
+		eend 0
+		return 0
+	fi
+
 	local x=
 	local param=
 	local sf_param=
 	local retval=1
 	
-	if [ -n "${CONSOLEFONT}" ]
+	# Get additional parameters
+	if [ -n "${CONSOLETRANSLATION}" ]
 	then
-		# Getting additional parameters, ie consoletranslation
-		if [ -n "${CONSOLETRANSLATION}" ]
-		then
-			param="-m ${CONSOLETRANSLATION}"
-		fi
-		
-		# Actually setting font
-		if [ -x /bin/setfont ]
-		then
-			ebegin "Setting user font"
+		param="-m ${CONSOLETRANSLATION}"
+	fi
 
-			# We patched setfont to have --tty support ...
-			if [ -n "`setfont --help 2>&1 | grep -e '--tty'`" -o \
-			     -n "`setfont --help 2>&1 | grep -e '-C'`" ]
+	# Set the console font
+	local errmsg=""
+	ebegin "Setting user font"
+	if [ -x /bin/setfont ]
+	then
+		# We patched setfont to have --tty support ...
+		if [ -n "`setfont --help 2>&1 | grep -e '--tty'`" -o \
+		     -n "`setfont --help 2>&1 | grep -e '-C'`" ]
+		then
+			if [ -n "`setfont --help 2>&1 | grep -e '--tty'`" ]
 			then
-				if [ -n "`setfont --help 2>&1 | grep -e '--tty'`" ]
-				then
-					sf_param="--tty="
-				else
-					sf_param="-C "
-				fi
-				
-				for x in $(seq 1 "${RC_TTY_NUMBER}")
-				do
-					# Using DEVFS ?
-					if [ -e /dev/.devfsd ] || \
-					   [ -e /dev/.udev -a -d /dev/vc ]
-					then
-						/bin/setfont ${CONSOLEFONT} ${param} \
-							${sf_param}/dev/vc/${x} >/dev/null
-						retval=$?
-					else
-						/bin/setfont ${CONSOLEFONT} ${param} \
-							${sf_param}/dev/tty${x} >/dev/null
-						retval=$?
-					fi
-				done
+				sf_param="--tty="
 			else
-				/bin/setfont ${CONSOLEFONT} ${param} >/dev/null
-				retval=$?
+				sf_param="-C "
 			fi
-		else
-			# No console program installed!
-			eend 1 "The setfont executable was not found"
-			return 1
-		fi
+			local ttydev=
+			[ -d /dev/vc ] \
+				&& ttydev=/dev/vc/ \
+				|| ttydev=/dev/tty
 
-		if [ "${retval}" -eq 0 ]
-		then
 			for x in $(seq 1 "${RC_TTY_NUMBER}")
 			do
-				# Using DEVFS ?
-				if [ -e /dev/.devfsd ] || \
-				   [ -e /dev/.udev -a -d /dev/vc ]
-				then
-					echo -ne "\033(K" >/dev/vc/${x}
-				else
-					echo -ne "\033(K" >/dev/tty${x}
-				fi
+				/bin/setfont ${CONSOLEFONT} ${param} \
+					${sf_param}/${ttydev}${x} >/dev/null
+				retval=$?
 			done
+		else
+			/bin/setfont ${CONSOLEFONT} ${param} >/dev/null
+			retval=$?
 		fi
-		
-		eend ${retval} "Failed to set user font"
+		errmsg="Failed to set user font"
 	else
-		ebegin "Using the default console font"
-		eend 0
+		retval=1
+		errmsg="/bin/setfont not found"
 	fi
-	
-	return ${retval}
+	eend ${retval} "${errmsg}"
 }
 
 
