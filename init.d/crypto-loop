@@ -36,12 +36,13 @@ start() {
 			else
 				ewarn "  Loop ${loop} on device ${device} are already configured"
 			fi
-		done 
+		done
 	fi
 	ewend ${status} "Failed to start some loop devices."
 
 	# We do not fail if some loop devices did not start ...
 	return 0
 }
+
 
 # vim:ts=4

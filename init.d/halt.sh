@@ -18,7 +18,7 @@ then
 	ebegin "Stopping devfsd"
 	killall -15 devfsd &>/dev/null
 	eend $?
-elif [ ! -e /dev/.devfsd -a -e /dev/.udev -a "${RC_DEVICE_TARBALL}" = "yes" ] 
+elif [ ! -e /dev/.devfsd -a -e /dev/.udev -a "${RC_DEVICE_TARBALL}" = "yes" ]
 then
 	ebegin "Saving device nodes"
 	cd /dev
@@ -58,7 +58,7 @@ remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mou
 [ -n "${remaining}" ] && {
 	sig=
 	retry=3
-	
+
 	while [ -n "${remaining}" -a "${retry}" -gt 0 ]
 	do
 		if [ "${retry}" -lt 3 ]
@@ -71,7 +71,7 @@ remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mou
 			umount -d ${remaining} &>/dev/null
 			eend $? "Failed to unmount filesystems"
 		fi
-		
+
 		remaining="`awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts | \
 		            sort -r | grep -v '/newroot' | grep -v '/mnt/livecd'`"
 		[ -z "${remaining}" ] && break
@@ -103,12 +103,12 @@ do
 	then
 		continue
 	fi
-	
+
 	for y in ${no_unmounts}
 	do
 		[ "${x}" = "${y}" ] && do_unmount="no"
 	done
-	
+
 	if [ "${do_unmount}" = "yes" ]
 	then
 		umount "${x}" &>/dev/null || {
@@ -127,7 +127,7 @@ eend 0
 
 if [ -f /etc/conf.d/cryptfs ]
 then
-    ebegin "Removing dm-crypt mappings"
+	ebegin "Removing dm-crypt mappings"
 
 	/bin/egrep "^(mount|swap)" /etc/conf.d/cryptfs | \
 	while read mountline
@@ -181,7 +181,7 @@ ups_kill_power() {
 mount_readonly() {
 	local x=
 	local retval=0
-	
+
 	for x in `awk '$1 != "none" { print $2 }' /proc/mounts | sort -r`
 	do
 		# ${x} needs to be quoted to handle octal sequences such as

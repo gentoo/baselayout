@@ -65,7 +65,7 @@ if [[ -f /sbin/ip ]]; then
 
 	# void get_aliases_rev(char *interface)
 	#
-	# Fetch the list of aliases for an interface.  
+	# Fetch the list of aliases for an interface.
 	# Outputs a space-separated list on stdout, in reverse order, for
 	# example "eth0:2 eth0:1"
 	get_aliases_rev() {
@@ -85,7 +85,7 @@ if [[ -f /sbin/ip ]]; then
 			| awk '$1=="inet6" {print $2}')"
 		if [[ -n ${inet6} ]]; then
 			einfo "  Removing inet6 addresses"
-			for x in ${inet6}; do 
+			for x in ${inet6}; do
 				einfo "    ${iface} inet6 del ${x}"
 				ip addr del ${x} dev ${iface%%:*} label ${iface}
 				eend $?
@@ -141,7 +141,7 @@ else
 
 	# void get_aliases_rev(char *interface)
 	#
-	# Fetch the list of aliases for an interface.  
+	# Fetch the list of aliases for an interface.
 	# Outputs a space-separated list on stdout, in reverse order, for
 	# example "eth0:2 eth0:1"
 	get_aliases_rev() {
@@ -159,7 +159,7 @@ else
 		inet6="$(ifconfig ${iface} | awk '$1=="inet6" {print $3}')"
 		if [[ -n ${inet6} ]]; then
 			einfo "  Removing inet6 addresses"
-			for x in ${inet6}; do 
+			for x in ${inet6}; do
 				einfo "    ${iface} inet6 del ${x}"
 				ifconfig ${iface} inet6 del ${x}
 				eend $?
@@ -546,7 +546,7 @@ iface_start() {
 	# These variables are set by setup_vars.  They are declared local here so
 	# that they're cleared each time iface_start is called from the start
 	# function
-	local status_IFACE vlans_IFACE dhcpcd_IFACE 
+	local status_IFACE vlans_IFACE dhcpcd_IFACE
 	local -a ifconfig_IFACE routes_IFACE inet6_IFACE iproute_IFACE ipaddr_IFACE
 	setup_vars ${iface} || return 1
 
@@ -631,8 +631,8 @@ iface_stop() {
 	[[ -n ${aliases} ]] && need_begin=true
 
 	# Stop aliases before primary interface.
-	# Note this must be done in reverse order, since ifconfig eth0:1 
-	# will remove eth0:2, etc.  It might be sufficient to simply remove 
+	# Note this must be done in reverse order, since ifconfig eth0:1
+	# will remove eth0:2, etc.  It might be sufficient to simply remove
 	# the base interface but we're being safe here.
 	for i in ${aliases} ${iface}; do
 		# Delete all the inet6 addresses for this alias

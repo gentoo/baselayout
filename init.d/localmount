@@ -23,7 +23,7 @@ start() {
 	# Check what USB fs the kernel support.  Currently
 	# 2.5+ kernels, and later 2.4 kernels have 'usbfs',
 	# while older kernels have 'usbdevfs'.
-	local usbfs="$(grep -Fow usbfs /proc/filesystems || 
+	local usbfs="$(grep -Fow usbfs /proc/filesystems ||
 		grep -Fow usbdevfs /proc/filesystems)"
 
 	if [ -n "${usbfs}" ] && \
@@ -56,7 +56,7 @@ start() {
 			post_mount=
 
 			eval ${mountline}
- 
+
 			target=${mount}
 
 			! /bin/cryptsetup status ${target}|egrep '\<active:' > /dev/null

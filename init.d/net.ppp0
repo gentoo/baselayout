@@ -126,12 +126,12 @@ setup_cmd_line() {
 	then
 		CMD_LINE="${CMD_LINE} mru ${MRU}"
 	fi
-	
+
 	if [ -n "${MTU}" ]
 	then
 		CMD_LINE="${CMD_LINE} mtu ${MTU}"
 	fi
-	    
+
 	if [ -n "${USERNAME}" ]
 	then
 		CMD_LINE="${CMD_LINE} user ${USERNAME} remotename ${PEER}"
@@ -198,7 +198,7 @@ setup_cfg_files() {
 			# ip-down: restore original /etc/resolv.conf
 			echo "/bin/mv -f /etc/resolv.conf.old /etc/resolv.conf" \
 				>>/etc/ppp/ip-down
-			echo "chmod 640 /etc/resolv.conf" >>/etc/ppp/ip-down 
+			echo "chmod 640 /etc/resolv.conf" >>/etc/ppp/ip-down
 		fi
 
 		echo "[ -f /etc/ppp/ip-up.local ] && . /etc/ppp/ip-up.local" \

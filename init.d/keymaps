@@ -17,7 +17,7 @@ checkconfig() {
 
 start() {
 	local WINDOWKEYS_KEYMAP=
-	
+
 	checkconfig || return 1
 
 	# Force linux keycodes for PPC ...
@@ -25,9 +25,9 @@ start() {
 	then
 		echo 1 > /proc/sys/dev/mac_hid/keyboard_sends_linux_keycodes
 	fi
-	
+
 	ebegin "Loading key mappings"
-	
+
 	# Enable unicode ...
 	set -- ${KEYMAP}
 	if [ "$1" = "-u" ]
@@ -35,7 +35,7 @@ start() {
 		/usr/bin/kbd_mode -u
 		KEYMAP="${KEYMAP/-u}"
 	fi
-	
+
 	# New kbd support ...
 	if [ -x /bin/loadkeys ]
 	then

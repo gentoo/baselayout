@@ -1,6 +1,6 @@
 #!/sbin/runscript
 # Copyright 1999-2004 Gentoo Foundation
-# Distributed under the terms of the GNU General Public License v2 
+# Distributed under the terms of the GNU General Public License v2
 # $Header$
 
 # This only set what /bin/hostname returns.  If you need to setup NIS, meaning
