@@ -100,6 +100,19 @@ then
 	eend $? "Failed to shut LVM down"
 fi
 
+# This is a function because its used twice below this line as:
+#   [ -f /etc/killpower ] && ups_kill_power
+ups_kill_power() {
+	if [ -x /sbin/upsdrvctl ]
+	then
+		ewarn "Signalling ups driver(s) to kill the load!"
+		/sbin/upsdrvctl shutdown
+		ewarn "Halt system and wait for the UPS to kill our power"
+		/sbin/halt -id
+		while [ 1 ]; do sleep 60; done
+	fi
+}
+
 ebegin "Remounting remaining filesystems readonly"
 # Get better results with a sync and sleep
 sync;sync
@@ -135,11 +148,6 @@ then
 	ewarn "A full fsck will be forced on next startup"
 fi
 
-if [ -f /etc/killpower -a -x /sbin/upsdrvctl ]
-then
-	ewarn "Signalling ups driver(s) to kill the load!"
-	/sbin/upsdrvctl shutdown
-fi
-
+[ -f /etc/killpower ] && ups_kill_power
 
 # vim:ts=4
