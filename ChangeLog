@@ -2,6 +2,12 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  09 Feb 2004; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add SELinux modifications to /sbin/runscript.  This allows runscript to
+    make sure it is running in the right domain.  Patch done by
+    Chris PeBenito <pebenito@gentoo.org>.
+
 * rc-scripts 1.4.3.13 (08 Feb 2004)
 
   08 Feb 2004; Martin Schlemmer <azarah@gentoo.org>:

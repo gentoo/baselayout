@@ -23,7 +23,7 @@ consoletype: consoletype.o
 	$(LD) -o $@ $^
 
 runscript: runscript.o
-	$(LD) -o $@ $^
+	$(LD) -o $@ $^ -ldl
 
 start-stop-daemon: start-stop-daemon.o
 	$(LD) -o $@ $^
