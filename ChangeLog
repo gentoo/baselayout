@@ -2,6 +2,11 @@
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  30 Sep 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Disable cryptfs by default in the conf.d file.  Also cleanup 
+    the output generated in localmount/checkfs/halt.sh for dm-crypt.
+
   29 Sep 2004; Mike Frysinger <vapier@gentoo.org>:
 
     Let glibc install nscd since different versions of glibc will 
