@@ -2,6 +2,25 @@
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  03 Nov 2004; Roy Marples <uberlord@gentoo.org>:
+
+    net-scripts/init.d/net.lo
+    - fixed !module when it's not installed
+    - we can now specify null inet addresses in the config
+      this allows a pure inet6 setup
+
+    net-scripts/net.modules.d/ifconfig
+    - changed IPv6 to inet6 in output of adding inet6 addresses
+    - just output inet6 address removed, not eth0 del foo
+
+    net-scripts/net.modules.d/iproute2
+    - fix deletion of non-link addresses - fixes bug #65417 (again)
+    - handle inet6 addresses like ifconfig - fixes more bug #65417
+
+    net-scripts/conf.d/net.example
+    - noted that inet6 addresses do not create aliases
+    - added examples of assigning inet6 addresses
+
   02 Nov 2004; Roy Marples <uberlord@gentoo.org>:
 
     net-scripts/conf.d/net.example

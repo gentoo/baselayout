@@ -1,5 +1,5 @@
 # iproute2 module for net-scripts
-# Version 1.0.2
+# Version 1.0.3
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -158,25 +158,32 @@ iproute2_del_addresses() {
 	local inet inet6 label=${1} iface=$( get_device ${1} ) x e
 	local report=${2:-false}
 
-	inet="$(ip addr show ${iface} label ${label} \
-		| awk '$1=="inet" {print $2}')"
+	inet="$( ip addr show ${iface} label ${label} \
+		| awk '$1=="inet" {print $2}' )"
 	if [[ -n ${inet} ]]; then
-		e=$(ip addr del ${inet} dev ${iface} label ${label} 2>&1)
+		e=$( ip addr del ${inet} dev ${iface} label ${label} 2>&1 )
 		case "${x}" in
 			'RTNETLINK answers: Invalid argument'|'') ;;
 			*) printf '%s\n' "${e}" >&2 ;;
 		esac
 	fi
 
-	inet6="$(ip addr show ${iface} label ${label} \
-		scope global scope site scope host \
-		| awk '$1=="inet6" {print $2}')"
-	[[ -z ${inet6} ]] && return 1
+	inet6="$( ip addr show ${iface} label ${label} \
+		scope host \
+		| awk '$1=="inet6" {print $2}' )"
+	inet6="${inet6} $( ip addr show ${iface} label ${label} \
+		scope global \
+		| awk '$1=="inet6" {print $2}' )"
+	inet6="${inet6} $( ip addr show ${iface} label ${label} \
+		scope site \
+		| awk '$1=="inet6" {print $2}' )"
+
+	[[ -z ${inet6} || ${inet6} == "  " ]] && return 1
 
 	${report} && einfo "Removing inet6 addresses"
 	eindent
 	for x in ${inet6}; do 
-		${report} && einfo "${iface} inet6 del ${x}"
+		${report} && einfo "${x}"
 		e=$( ip addr del ${x} dev ${iface} label $label} 2>&1 )
 		case "${e}" in
 			'RTNETLINK answers: Invalid argument'|'') ;;
@@ -192,14 +199,14 @@ iproute2_del_addresses() {
 # Returns a string spaced with possible user set
 # configuration variables
 iproute2_get_vars() {
-	echo "ipaddr_${1} ipaddr_fallback_${1} iproute_${1}"
+	echo "ipaddr_${1} ipaddr_fallback_${1} iproute_${1} inet6_${1}"
 }
 
 # void iproute2_local_vars(void)
 #
 # Returns a string command to localise variables
 iproute2_local_vars() {
-	echo "local -a config_IFACE iproute_IFACE config_fallback_IFACE"
+	echo "local -a config_IFACE iproute_IFACE config_fallback_IFACE inet6_IFACE"
 }
 
 # bool iproute2_setup_vars(char *iface)
@@ -208,8 +215,9 @@ iproute2_local_vars() {
 # The following variables are set, which should be declared local by
 # the calling routine.
 #       config_IFACE			(array of ipaddr lines)
-#       config_fallback_IFACE 	(fallback config if a module fails)
+#       config_fallback_IFACE 		(fallback config if a module fails)
 #       iproute_IFACE			(array of route lines)
+#       inet6_IFACE			(array of inet6 lines)
 #
 # Returns 0 (true) if variables are set successfully, non-zero
 # otherwise
@@ -220,6 +228,12 @@ iproute2_setup_vars() {
 	eval config_IFACE=( \"\$\{ipaddr_${iface}\[@\]\}\" )
 	eval config_fallback_IFACE=( \"\$\{ipaddr_fallback_${iface}\[@\]\}\" )
 	eval iproute_IFACE=( \"\$\{iproute_${iface}\[@\]\}\" )
+	eval inet6_IFACE=( \"\$\{inet6_$iface\[@\]\}\" )
+
+	# BACKWARD COMPATIBILITY: check for space-separated inet6 addresses
+	if [[ ${#inet6_IFACE[@]} == 1 && ${inet6_IFACE} == *' '* ]]; then
+		inet6_IFACE=( ${inet6_IFACE} )
+	fi
 }
 
 # bool iproute2_iface_stop(char *interface)
@@ -238,14 +252,12 @@ iproute2_iface_stop() {
 	return 0
 }
 
-# bool iproute2_confgiure(char *interface, char *options ...)
+# bool iproute2_add_address(char *interface, char *options ...)
 #
-# Starts the interface
-# Returns 0 on success, otherwise 1
-iproute2_configure() {
-	local label=${1} iface=$( get_device ${1} )
-
-	! iproute2_exists ${iface} true && return 1
+# Adds an the specified address to the interface
+# returns 0 on success and non-zero on failure
+iproute2_add_address() {
+	local label=${1} iface=$( get_device ${1} ) x
 
 	# Extract the config
 	local -a config=( "$@" )
@@ -253,20 +265,27 @@ iproute2_configure() {
 
 	# If the address already exists then the following command
 	# will fail.  Catch the failure and be graceful
-	x=$(ip addr add dev ${iface} ${config} label ${label} 2>&1)
+	x=$( ip addr add dev ${iface} ${config} label ${label} 2>&1 )
 	case "${x}" in
 		'RTNETLINK answers: File exists'|'') ;;
 		*) printf '%s\n' "${x}" >&2 ;;
 	esac
 
 	# Make sure the address was added
-	if [[ $(ip addr show dev ${iface}) == *${config%% *}* ]]; then
-		eend 0
-	else
-		eend 1
-		# Return failure if it's not an alias
-		[[ ${i} -eq 0 ]] && return 1
-	fi
+	[[ $( ip addr show dev ${iface} ) == *${config%% *}* ]]
+	return $?
+}
+
+# bool iproute2_configure(char *interface, char *options ...)
+#
+# Starts the interface
+# Returns 0 on success, otherwise 1
+iproute2_configure() {
+	local iface=$( get_device ${1} )
+	! iproute2_exists ${iface} true && return 1
+
+	iproute2_add_address $@
+	eend $? || return $?
 }
 
 # bool iproute2_post_start(char *interface)
@@ -278,6 +297,18 @@ iproute2_post_start() {
 
 	# Make sure interface is marked UP
 	iproute2_up ${iface}
+
+	# Add IPv6 addresses
+	if [[ -n ${inet6_IFACE} ]]; then
+		einfo "Adding inet6 addresses"
+		eindent
+		for ((i = 0; i < ${#inet6_IFACE[@]}; i = i + 1)); do
+			ebegin "${inet6_IFACE[i]}"
+			iproute2_add_address ${iface} ${inet6_IFACE[i]}
+			eend $?
+		done
+		eoutdent
+	fi
 
 	[[ -z ${iproute_IFACE} ]] && return 0
 

@@ -223,7 +223,7 @@ modules_load()  {
 						break
 					fi
 				done
-				[[ ${k} == -1 ]] && continue
+				continue
 			fi
 
 			if [[ $( type -t ${umods[i]}_provides ) != function ]]; then
@@ -396,7 +396,7 @@ interface_exists() {
 # VLAN interfaces (for example eth0.0, eth0.1).  VLAN setup is accomplished by
 # calling itself recursively.
 iface_start() {
-	local iface=${1} mod i label label_counter=-1 x conf warn=false
+	local iface=${1} mod i label label_counter=-1 x conf warn=false inet6
 	local RC_INDENTATION=${RC_INDENTATION}	# so it will reset after function
 
 	# Localise and initialise variables
@@ -430,6 +430,9 @@ iface_start() {
 		(( label_counter++ ))
 		# Set a label for the alias if $label_counter > 0
 		[[ ${label_counter} -eq 0 ]] && label=${iface} || label=${iface}:${label_counter}
+
+		# Null inet address
+		[[ ${config_IFACE[i]} == "null" ]] && continue
 
 		${warn} && ewarn "Configuration not set for ${iface} - assuming dhcp"
 

@@ -1,5 +1,5 @@
 # ifconfig module for net-scripts
-# Version 1.0.2
+# Version 1.0.3
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -156,7 +156,7 @@ ifconfig_del_addresses() {
 
 	${report} && einfo "Removing inet6 addresses"
 	for x in ${inet6}; do
-		${report} && einfo "${iface} inet6 del ${x}"
+		${report} && einfo "${x}"
 		ifconfig ${iface} inet6 del ${x}
 	done
 
@@ -188,7 +188,7 @@ ifconfig_local_vars() {
 #       config_IFACE			(array of ifconfig lines, replaces iface_IFACE)
 #       routes_IFACE			(array of route lines)
 #       inet6_IFACE			(array of inet6 lines)
-#       config_fallback_IFACE 	(fallback ifconfig if a module fails)
+#       config_fallback_IFACE 		(fallback ifconfig if a module fails)
 #
 # Returns 0 (true) if variables are set successfully, non-zero
 # otherwise
@@ -274,11 +274,11 @@ ifconfig_post_start() {
 
 	# Add IPv6 addresses
 	if [[ -n ${inet6_IFACE} ]]; then
-		einfo "Adding IPv6 addresses"
+		einfo "Adding inet6 addresses"
 		eindent
 		for ((i = 0; i < ${#inet6_IFACE[@]}; i = i + 1)); do
 			ebegin "${inet6_IFACE[i]}"
-			ifconfig ${iface} inet6 add ${inet6_IFACE[i]} >${devnull}
+			ifconfig ${iface} inet6 add ${inet6_IFACE[i]} &>${devnull}
 			eend $?
 		done
 		eoutdent
@@ -290,7 +290,7 @@ ifconfig_post_start() {
 		eindent
 		for ((i = 0; i < ${#routes_IFACE[@]}; i = i + 1)); do
 			ebegin "${routes_IFACE[i]}"
-			/sbin/route add ${routes_IFACE[i]}
+			/sbin/route add ${routes_IFACE[i]} &>${devnull}
 			eend $?
 		done
 		eoutdent
@@ -306,6 +306,7 @@ ifconfig_post_start() {
 ifconfig_configure() {
 	local iface=$( get_device ${1} )
 	! ifconfig_exists ${iface} true && return 1
+
 	ifconfig $@ &>${devnull}
 	eend $?
 	return $?
