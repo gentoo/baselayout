@@ -1,5 +1,5 @@
 # Interface bonding module for net-scripts
-# Version 1.0.1
+# Version 1.0.2
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -61,15 +61,20 @@ bonding_post_start() {
 	
 	# must force the slaves to a particular state before adding them
 	for s in ${slaves}; do
-		interface del_addresses ${s}
-		interface up ${s}
+		interface_del_addresses ${s}
+		interface_up ${s}
 	done
 
 	# now force the master to up
-	interface up ${iface}
+	interface_up ${iface}
 
 	# finally add in slaves
-	/sbin/ifenslave ${iface} ${slaves} &>${devnull}
+	ebegin "Adding slaves to ${iface}"
+	eindent
+	einfo "${slaves}"
+	eoutdent
+	/sbin/ifenslave ${iface} ${slaves} >${devnull}
+	eend $?
 
 	return 0 #important
 }
@@ -87,17 +92,20 @@ bonding_pre_stop() {
 	[[ -n "${iface/bond*/}" ]] && return 0
 
 	# don't trust the config, get the active list instead
-	slaves=$(awk '/^Slave Interface:/ { printf $3" " }' /proc/net/bonding/${iface})
-	[[ -n ${slaves} ]] && return 0
+	slaves=$( awk '/^Slave Interface:/ { printf $3" " }' /proc/net/bonding/${iface} )
+	[[ -z ${slaves} ]] && return 0
 
 	# remove all slaves
-	echo /sbin/ifenslave -d ${iface} ${slaves}
+	einfo "Removing slaves from ${iface}"
+	eindent
+	einfo "${slaves}"
+	eoutdent
 	/sbin/ifenslave -d ${IFACE} ${slaves_IFACE} &>${devnull}
 
 	# reset all slaves
 	for s in ${slaves}; do
-		interface del_addresses ${s}
-		interface down ${s}
+		interface_del_addresses ${s}
+		interface_down ${s}
 	done
 
 	return 0
