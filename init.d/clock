@@ -10,7 +10,7 @@ depend() {
 }
 
 setupopts() {
-	if grep -q 'UML' /proc/cpuinfo
+	if is_uml_sys
 	then
 		TBLURB="UML"
 		return 0

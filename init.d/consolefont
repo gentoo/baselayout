@@ -10,7 +10,7 @@ depend() {
 }
 
 start() {
-	if grep -q 'UML' /proc/cpuinfo
+	if is_uml_sys
 	then
 		ebegin "Setting user font"
 		eend 0

@@ -2,6 +2,11 @@
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  21 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Merge all of the UML checks into one function, is_uml_sys(), 
+    which is now in functions.sh.
+
   18 Oct 2004; Aron Griffis <agriffis@gentoo.org>:
 
     Add v-e-commands (veinfo, vbegin, etc) to sbin/functions.sh that

@@ -689,4 +689,15 @@ is_net_fs() {
 	return $?
 }
 
+# bool is_uml_sys()
+#
+#   return 0 if the currently running system is User Mode Linux
+#
+#   EXAMPLE:  if is_uml_sys ; then ...
+#
+is_uml_sys() {
+	grep -q 'UML' /proc/cpuinfo &> /dev/null
+	return $?
+}
+
 # vim:ts=4
