@@ -251,7 +251,7 @@ cvt () {
 			pts)	;;
 			ttyS)	echo ttyS0 ttyS1 ttyS2 ttyS3 ;;
 			ttyI)	echo ttyI0 ttyI1 ttyI2 ttyI3 ;;
-			ircomm|irlpt)	irda ;;
+			ircomm|irlpt)	echo irda ;;
 			ppp)    echo ppp ;;
 			usb)    echo usb ;;
 			lvm)    ;; # taken care of by LVM userspace tools

@@ -2,6 +2,10 @@
 # Copyright 2002-2004 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  19 Feb 2004; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix irda type-o in /sbin/MAKEDEV, thanks to Tobias Sager <moixa@gmx.ch>.
+
   15 Feb 2004; Martin Schlemmer <azarah@gentoo.org>:
 
     Add RC_TTY_NUMBER to /etc/conf.d/rc to configure how many tty devices
