@@ -50,6 +50,9 @@ setup_daemon_vars() {
 			--pid=*)
 				pidfile=${sargs[i]##--pid=}
 				;;
+			-s|--signal)
+				[[ ${i} -lt ${j} ]] && signal=${sargs[i+1]}
+				;;
 			-t|--test|-o|--oknodo)
 				nothing=true
 				;;
@@ -97,7 +100,7 @@ try_kill_pid() {
 kill_pid() {
 	local pid=$1 session=${2:-false}
 
-	try_kill_pid ${pid} TERM ${session} && return 0
+	try_kill_pid ${pid} ${signal} ${session} && return 0
 
 	[[ ${RC_RETRY_KILL} == "yes" ]] \
 		&& try_kill_pid ${pid} KILL ${session} && return 0
@@ -178,7 +181,7 @@ stop_daemon() {
 # how we are called
 start-stop-daemon() {
 	local args=$( requote "$@" ) ssdargs exeargs x
-	local exe name pidfile pid stopping nothing=false
+	local exe name pidfile pid stopping nothing=false signal=TERM
 
 	setup_daemon_vars
 
