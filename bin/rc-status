@@ -57,12 +57,15 @@ do_opt() {
 			ALL=true
 			SERVICELIST=true
 			;;
+		--nocolor)
+			;;
 		--help|-h|-*)
-			echo "USAGE: $0 [--all | --list | --unused | --servicelist | <runlevel>]"
+			echo "USAGE: $0 [--all | --list | --unused | --servicelist | --nocolor | <runlevel>]"
 			echo "  --all           -a  Show services at all run levels"
 			echo "  --list          -l  Show list of run levels"
 			echo "  --unused        -u  Show services not assigned to any run level"
 			echo "  --servicelist   -s  Show service list"
+			echo "  --nocolor           Monochrome output only"
 			echo "  <runlevel>      Show services assigned to <runlevel>"
 			echo "If no arguments are supplied, shows services for current run level."
 			exit 0
