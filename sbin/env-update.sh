@@ -22,12 +22,14 @@ note:
 "
 	exit 1
 }
-		
+
+export SVCDIR="${svcdir}"
+
 if [ "$#" -ne 0 ]
 then
 	usage
 else
-	/bin/gawk -v SVCDIR="${svcdir}" \
+	/bin/gawk \
 		-f /lib/rcscripts/awk/functions.awk \
 		-f /lib/rcscripts/awk/genenviron.awk
 fi

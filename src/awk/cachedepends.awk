@@ -71,6 +71,13 @@ BEGIN {
 
 	extension("/lib/rcscripts/filefuncs.so", "dlload")
 
+	# Get our environment variables
+	SVCDIR = ENVIRON["SVCDIR"]
+	if (SVCDIR == "") {
+		eerror("Could not get SVCDIR!")
+		exit 1
+	}
+
 	pipe = "ls /etc/init.d/*"
 	while ((pipe | getline tmpstring) > 0)
 		scripts = scripts " " tmpstring

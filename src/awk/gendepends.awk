@@ -323,6 +323,17 @@ BEGIN {
 	TYPE_NAMES[PROVIDE] = "provide"
 	TYPE_NAMES[PARALLEL] = "parallel"
 
+	# Get our environment variables
+	SVCDIR = ENVIRON["SVCDIR"]
+	if (SVCDIR == "") {
+		eerror("Could not get SVCDIR!")
+		exit 1
+	}
+
+	# There we do not really use yet
+	DEPTYPES = ENVIRON["DEPTYPES"]
+	ORDTYPES = ENVIRON["ORDTYPES"]
+
 	CACHEDTREE = SVCDIR "/deptree"
 
 	assert(dosystem("rm -f " CACHEDTREE ), "system(rm -f " CACHEDTREE ")")

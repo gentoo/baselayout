@@ -31,19 +31,22 @@ done
 rm -rf ${svcdir}/dep{cache,tree} ${svcdir}/{broken,snapshot}/*
 
 retval=0
+SVCDIR="${svcdir}"
+DEPTYPES="${deptypes}"
+ORDTYPES="${ordtypes}"
+
+export SVCDIR DEPTYPES ORDTYPES
 
 cd /etc/init.d
 
-/bin/gawk -v SVCDIR="${svcdir}" \
+/bin/gawk \
 	-f /lib/rcscripts/awk/functions.awk \
 	-f /lib/rcscripts/awk/cachedepends.awk || \
 	retval=1
 
 bash "${svcdir}/depcache" | \
 \
-/bin/gawk -v SVCDIR="${svcdir}" \
-	-v DEPTYPES="${deptypes}" \
-	-v ORDTYPES="${ordtypes}" \
+/bin/gawk \
 	-f /lib/rcscripts/awk/functions.awk \
 	-f /lib/rcscripts/awk/gendepends.awk || \
 	retval=1
