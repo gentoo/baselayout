@@ -14,3 +14,11 @@
 /dev/cdroms/cdrom0	/mnt/cdrom	iso9660		noauto,ro		0 0
 proc			/proc		proc		defaults		0 0
 
+# glibc 2.2 and above expects tmpfs to be mounted at /dev/shm for
+# POSIX shared memory (shm_open, shm_unlink). Adding the following
+# line to /etc/fstab should take care of this:
+# (tmpfs is a dynamically expandable/shrinkable ramdisk, and will use almost no
+#  memory if not populated with files)
+
+#tmpfs			/dev/shm	tmpfs		defaults		0 0
+

@@ -22,7 +22,7 @@ done
 depend_dbadd() {
 	local mytype=$1
 	local myservice=$2
-	local x
+	local x=[]
 	shift 2
 	for x in $*
 	do
@@ -94,7 +94,8 @@ check_rcscript() {
 	[ "${1##*.}" = "c" ] && return 1
 
 	local IFS='!'
-	local hash shell
+	local hash=[]
+	local shell=[]
 	(cat $1) | { read hash shell
         	if [ "$hash" = "#" ] && [ "$shell" = "/sbin/runscript" ]
 		then
@@ -109,8 +110,7 @@ cache_depend() {
 	[ ! -e $1 ] && return 1
 
 	#the cached file should not be empty
-	echo '#!/bin/bash' > ${svcdir}/cache/${1##*/}.depend
-	echo 'echo foo >/dev/null 2>/dev/null' >> ${svcdir}/cache/${1##*/}.depend
+	echo 'echo foo >/dev/null 2>/dev/null' > ${svcdir}/cache/${1##*/}.depend
 
 	local myline=[]
 	local dowrite=1

@@ -2,6 +2,8 @@
 # Copyright 2001 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+* rc-scripts 1.2.7 (3 March 2002)
+
   3 March 2002; Martin Schlemmer <azarah@gentoo.org>: fixed the problem
     of rc-scripts trying to start/stop a service multiple times if it
     fails to do so.  Updated /etc/init.d/runscript.sh and /sbin/rc for
@@ -14,6 +16,11 @@
     Added caching of the "depend() { need foo; } " lines, and updated
     /etc/init.d/depscan.sh to touch the actual files less.  This should
     speedup dependancy caching a lot, especially on slow machines.
+
+    Updated /etc/passwd to have users with no shell defined, use /bin/false
+    for security.
+
+    Update /etc/fstab to mention /dev/shm since we dont mount it anymore.
 
   1 March 2002; Martin Schlemmer <azarah@gentoo.org>: added a wrapper for
     sourcing the rc-scripts to eliminate syntax errors.  Thanks to
