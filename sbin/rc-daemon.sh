@@ -16,6 +16,7 @@ RC_RETRY_TIMEOUT=1
 RC_RETRY_COUNT=5
 RC_FAIL_ON_ZOMBIE="no"
 RC_KILL_CHILDREN="no"
+RC_WAIT_ON_START="0.1"
 
 # Override default settings with user settings ...
 [[ -f /etc/conf.d/rc ]] && source /etc/conf.d/rc
@@ -24,6 +25,7 @@ RC_KILL_CHILDREN="no"
 #
 # Setup our vars based on the start-stop-daemon command
 setup_daemon_vars() {
+	local name
 	local -a sargs=( "${args%% -- *}" )
 	exeargs="-- ${args##* -- }"
 
@@ -42,7 +44,7 @@ setup_daemon_vars() {
 				[[ ${i} -lt ${j} ]] && name=${sargs[i+1]}
 				;;
 			-x|--exec|-a|--startas)
-				[[ ${i} -lt ${j} ]] && exe=${sargs[i+1]}
+				[[ ${i} -lt ${j} ]] && cmd=${sargs[i+1]}
 				;;
 			-p|--pidfile)
 				[[ ${i} -lt ${j} ]] && pidfile=${sargs[i+1]}
@@ -60,6 +62,7 @@ setup_daemon_vars() {
 	done
 
 	ssdargs="${sargs[@]}"
+	[[ -z ${cmd} ]] && cmd=${name}
 }
 
 # bool try_kill_pid(int pid, char* signal, bool session)
@@ -74,7 +77,7 @@ try_kill_pid() {
 	# We split RC_RETRY_TIMEOUT into tenths of seconds
 	# So we return as fast as possible
 	(( s=${RC_RETRY_TIMEOUT}/10 ))
-	
+
 	for (( i=0; i<RC_RETRY_COUNT*10; i++ )); do
 		if ${session} ; then
 			if [[ -x /usr/bin/pkill ]]; then
@@ -108,13 +111,56 @@ kill_pid() {
 	return 1 
 }
 
+# bool is_daemon_running(char* cmd, char* pidfile)
+#
+# Returns 0 if the given daemon is running, otherwise 1
+# If a pidfile is supplied, the pid inside it must match
+# a pid in the list of pidof ${cmd}
+is_daemon_running() {
+	local exe=$1 pidfile=$2 pids pid
+	
+	pids=$( /bin/pidof ${exe} )
+	[[ -z ${pids} ]] && return 1
+	
+	if [[ -s ${pidfile} ]]; then
+		read pid < ${pidfile}
+		if [[ -n ${pid} ]]; then
+			[[ *" ${pid} "* == " ${pids} " ]]
+			return $?
+		fi
+	fi
+	return 0
+}
+
 # int start_daemon(void)
 #
 # We don't do anyting fancy - just pass the given options
 # to start-stop-daemon and return the value
 start_daemon() {
+	local retval
+	
 	eval /sbin/start-stop-daemon "${args}"
-	return $?
+	retval=$?
+
+	[[ ${retval} != 0 ]] && return ${retval}
+	[[ ${RC_WAIT_ON_START} == 0 ]] && return ${retval}
+
+	# We pause for RC_WAIT_ON_START seconds and then
+	# check if the daemon is still running - this is mainly
+	# to handle daemons who launch and then fail due to invalid
+	# configuration files
+	LC_ALL=C /bin/sleep ${RC_WAIT_ON_START}
+	is_daemon_running ${cmd} ${pidfile}
+	retval=$?
+	[[ ${retval} == 0 ]] && return 0
+	
+	# Stop if we can to clean things up
+	if [[ $( type -t stop ) == "function" ]]; then
+		stop >/dev/null # We don't want to echo ebegin/eend
+	elif [[ -n ${pidfile} ]]; then
+		stop_daemon
+	fi
+	return ${retval}
 }
 
 # bool stop_daemon(void)
@@ -123,38 +169,23 @@ start_daemon() {
 # kill the process ourselves and any children left over
 # Returns 0 if everything was successful otherwise 1
 stop_daemon() {
-	local pid pids retval=0 cmd
-	
-	[[ -s ${pidfile} ]] && read pid < ${pidfile}
-	
-	if [[ -n ${exe} ]]; then
-		cmd=${exe}
-	else
-		cmd=${name}
-	fi
-	[[ -n ${cmd} ]] && pids=$( /bin/pidof ${exe} )
+	local pid pids retval=0
 
-	# If we're given nothing to kill, then return
-	# based on RC_FAIL_ON_ZOMBIE
-	if [[ -z ${pid} && -z ${pids} ]]; then
-		[[ ${RC_FAIL_ON_ZOMBIE} != "yes" ]]
-		return $?
-	fi
-
-	# If we're given an executable, then test to see if the given pid
-	# is of the executable running
-	if [[ -n ${pidfile} && -n ${cmd} ]]; then
-		if [[ -z ${pid} || -z ${pids} || " ${pids} " != *" ${pid} "* ]]; then
-			eerror "pid ${pid} does not match any runnings pid(s) for"
-			eerror "   ${cmd}"
-			return 1
+	if [[ -n ${cmd} ]]; then
+		if ! is_daemon_running ${cmd} ${pidfile} ; then
+			[[ ${RC_FAIL_ON_ZOMBIE} == "yes" ]] && return 1
 		fi
+		pids=$( /bin/pidof ${cmd} )
 	fi
 
-	# Only stop the pid we are given
-	[[ -n ${pid} ]] && pids=${pid}
+	if [[ -s ${pidfile} ]]; then
+		read pid < ${pidfile}
+		# Check that the given program is actually running the pid
+		[[ -n ${pids} && " ${pids} " != *" ${pid} "* ]] && return 1
+		pids=${pid}
+	fi
 
-	for pid in "${pids}"; do
+	for pid in ${pids}; do
 		if [[ ${RC_FAIL_ON_ZOMBIE} == "yes" ]]; then
 			/bin/ps -p ${pid} &>/dev/null || return 1
 		fi
@@ -181,7 +212,7 @@ stop_daemon() {
 # how we are called
 start-stop-daemon() {
 	local args=$( requote "$@" ) ssdargs exeargs x
-	local exe name pidfile pid stopping nothing=false signal=TERM
+	local cmd pidfile pid stopping nothing=false signal=TERM
 
 	setup_daemon_vars
 

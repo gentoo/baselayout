@@ -88,6 +88,12 @@ RC_FAIL_ON_ZOMBIE="no"
 RC_KILL_CHILDREN="yes"
 
 
+# Set the amount of seconds start_daemon() waits after starting
+# the daemon to check it is still running. If it's not then we
+# try and stop any children if possible.
+RC_WAIT_ON_START="0.1"
+
+
 #
 # Internal configuration variables
 #
