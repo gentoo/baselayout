@@ -18,6 +18,18 @@
     Fix a typeo in /etc/init.d/checkroot that caused 'umount -a' to output
     noise if we exited a recovery console.
 
+    Fix /etc/init.d/hostname using /usr/bin/cut, closing bug #17175, thanks
+    to Bobby Bingham <uhmmmm@columbus.rr.com> for noticing this.
+
+    Bring down default gateway before adding new one .. this fixes issues
+    where eth0/whatever was brought up by kernel.  Changed /etc/init.d/net.eth0
+    for this, closing bug #17164.  Thanks to nth <y.lesaint@free.fr> for the
+    fix.
+
+    Fix /etc/init.d/modules to call modprobe with -q .. this fix issues where
+    it fails for module-init-tools if the module is already loaded.  This
+    closes bug #17163, thanks to nth <y.lesaint@free.fr>.
+
 * rc-scripts 1.4.3.3 (09 March 2003)
 
   09 March 2003; Martin Schlemmer <azarah@gentoo.org>:

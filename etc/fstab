@@ -15,7 +15,7 @@
 /dev/cdroms/cdrom0	/mnt/cdrom	iso9660		noauto,ro		0 0
 
 # NOTE: The next line is critical for boot!
-proc			/proc		none		defaults		0 0
+none			/proc		proc		defaults		0 0
 
 # glibc 2.2 and above expects tmpfs to be mounted at /dev/shm for
 # POSIX shared memory (shm_open, shm_unlink). 
@@ -23,5 +23,5 @@ proc			/proc		none		defaults		0 0
 #  use almost no memory if not populated with files)
 # Adding the following line to /etc/fstab should take care of this:
 
-tmpfs			/dev/shm	none		defaults		0 0
+none			/dev/shm	tmpfs		defaults		0 0
 
