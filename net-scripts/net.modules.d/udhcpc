@@ -103,10 +103,10 @@ udhcpc_start() {
 
 	interface_exists ${iface} true || return 1
 
-	local ifvar=${iface//[![:word:]]/_} opts hostname=$( hostname )
+	local ifvar=${iface//[![:word:]]/_} opts hostname
 	eval opts=\"\$\{udhcpc_${ifvar}\}\"
 
-	if [[ ${opts} != *'--hostname=' ]]; then
+	if [[ ${opts} != *'--hostname='* ]]; then
 		hostname=$( hostname )
 		[[ -n ${hostname} && ${hostname} != "(none)" ]] && opts="${opts} --hostname=${hostname}"
 	fi

@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  21 Mar 2005; Roy Marples <uberlord@gentoo.org>:
+  
+    udhcpc now checks for custom hostname correctly
+
   21 Mar 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix tracing for current service as list_depend_trace() was removed.
