@@ -1,5 +1,5 @@
 #!/sbin/runscript
-# Copyright 1999-2004 Gentoo Foundation
+# Copyright 1999-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
 
@@ -9,30 +9,24 @@ depend() {
 
 start() {
 	ebegin "Enabling numlock on ttys"
-	for tty in $(seq 1 "${RC_TTY_NUMBER}")
-	do
-		if [ -e /dev/.devfsd ] || \
-		   [ -e /dev/.udev -a -d /dev/vc ]
-		then
-			setleds -D +num < /dev/vc/${tty} &>/dev/null
-		else
-			setleds -D +num < /dev/tty${tty} &>/dev/null
-		fi
+	local dev
+	[[ -d /dev/vc ]] \
+		&& dev=/dev/vc/ \
+		|| dev=/dev/tty
+	for tty in $(seq 1 "${RC_TTY_NUMBER}") ; do
+		setleds -D +num < ${dev}${tty} &> /dev/null
 	done
 	eend $? "Failed to enable numlock"
 }
 
 stop() {
 	ebegin "Disabling numlock on ttys"
-	for tty in $(seq 1 "${RC_TTY_NUMBER}")
-	do
-		if [ -e /dev/.devfsd ] || \
-		   [ -e /dev/.udev -a -d /dev/vc ]
-		then
-			setleds -D -num < /dev/vc/${tty} &>/dev/null
-		else
-			setleds -D -num < /dev/tty${tty} &>/dev/null
-		fi
+	local dev
+	[[ -d /dev/vc ]] \
+		&& dev=/dev/vc/ \
+		|| dev=/dev/tty
+	for tty in $(seq 1 "${RC_TTY_NUMBER}") ; do
+		setleds -D -num < ${dev}${tty} &> /dev/null
 	done
 	eend $? "Failed to disable numlock"
 }

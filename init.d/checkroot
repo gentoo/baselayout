@@ -1,5 +1,5 @@
 #!/sbin/runscript
-# Copyright 1999-2004 Gentoo Foundation
+# Copyright 1999-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
 
@@ -10,28 +10,25 @@ depend() {
 start() {
 	local retval=0
 	
-	if [ ! -f /fastboot -a -z "${CDBOOT}" ]
-	then
+	if [[ ! -f /fastboot && -z ${CDBOOT} ]] ; then
 		ebegin "Remounting root filesystem read-only (if necessary)"
 		mount -n -o remount,ro / &>/dev/null
 		eend $?
 
-		if [ -f /forcefsck ] || get_bootparam "forcefsck"
-		then
+		if [[ -f /forcefsck ]] || get_bootparam "forcefsck" ; then
 			ebegin "Checking root filesystem (full fsck forced)"
 			fsck -C -a -f /
 			# /forcefsck isn't deleted because checkfs needs it.
 			# it'll be deleted in that script.
 			retval=$?
 		else
-			if ! is_net_fs /
-			then
+			if ! is_net_fs / ; then
 				# Obey the fs_passno setting for / (see fstab(5))
 				# - find the / entry
 				# - make sure we have 6 fields
 				# - see if fs_passno is something other than 0
-				if [ -n "$(awk '($1 ~ /^\// && $2 == "/" \
-				                && NF == 6 && $6 != 0) { print }' /etc/fstab)" ]
+				if [[ -n $(awk '($1 ~ /^\// && $2 == "/" \
+				                && NF == 6 && $6 != 0) { print }' /etc/fstab) ]]
 				then
 					ebegin "Checking root filesystem"
 					fsck -C -T -a /
@@ -46,14 +43,11 @@ start() {
 			fi
 		fi
 
-		if [ "${retval}" -eq 0 ]
-		then
+		if [[ ${retval} -eq 0 ]] ; then
 			eend 0
-		elif [ "${retval}" -eq 1 ]
-		then
+		elif [[ ${retval} -eq 1 ]] ; then
 			ewend 1 "Filesystem repaired"
-		elif [ "${retval}" -eq 2 -o "${retval}" -eq 3 ]
-		then
+		elif [[ ${retval} -eq 2 || ${retval} -eq 3 ]] ; then
 			ewend 1 "Filesystem repaired, but reboot needed!"
 			echo -ne "\a"; sleep 1; echo -ne "\a"; sleep 1
 			echo -ne "\a"; sleep 1; echo -ne "\a"; sleep 1

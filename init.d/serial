@@ -1,5 +1,5 @@
 #!/sbin/runscript
-# Copyright 1999-2004 Gentoo Foundation
+# Copyright 1999-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
 
@@ -8,42 +8,32 @@ depend() {
 }
 
 moduleinserted() {
-	local res="$(grep 'serial' /proc/modules | cut -f1 -d" ")"
-	if [ "${res}" ]
-	then
-		if [ "${res}" = "serial" ]
-		then
-			return 1
-		fi
-	fi
+	local res=$(grep 'serial' /proc/modules | cut -f1 -d" ")
+	[[ ${res} == "serial" ]] && return 1
 }
 
 setports() {
 	#if serial module exists, and it's not inserted, insert it permanently
-	if [ -f /lib/modules/$(uname -r)/misc/serial.o ]
-	then
-		moduleinserted;
-		if [ "$?" -eq 0 ]
-		then
+	if [[ -f /lib/modules/$(uname -r)/misc/serial.o ]] ; then
+		moduleinserted
+		if [[ $? -eq 0 ]] ; then
 			/sbin/insmod serial 1>&2
 		fi
 	fi
 
-	if [ -e /etc/serial.conf ]
-	then
+	if [[ -e /etc/serial.conf ]] ; then
 		grep -v "^#\|^ \|^$" /etc/serial.conf | while read device args
-			do
-				ebegin "Setting $device to $args"
-				${SETSERIAL} -b $device $args 1>&2
-				if [ "$?" -gt 0 ]
-				then
-					eend 1 "Error setting serial port $device $args"
-					no_errs=0
-				else
-					eend 0
-					done="${done} /dev/$1"
-				fi
-			done
+		do
+			ebegin "Setting $device to $args"
+			${SETSERIAL} -b $device $args 1>&2
+			if [[ $? -gt 0 ]] ; then
+				eend 1 "Error setting serial port $device $args"
+				no_errs=0
+			else
+				eend 0
+				done="${done} /dev/$1"
+			fi
+		done
 	fi
 }
 
@@ -54,5 +44,6 @@ start() {
 	setports
 	return
 }
+
 
 # vim:ts=4
