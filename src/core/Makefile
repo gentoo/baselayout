@@ -22,8 +22,10 @@ EXTRA_CFLAGS = -DLEGACY_DEPSCAN
 STRIP = strip
 
 DEPSCAN = depscan
+TEST_REGEX = test-regex
 
 TARGETS = $(DEPSCAN)
+CHECK_TARGETS = $(TEST_REGEX)
 
 all: $(TARGETS)
 
@@ -59,10 +61,18 @@ endif
 $(DEPSCAN): $(OBJS) $(DEPSCAN).o
 	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -o $@ $^
 
+$(TEST_REGEX): $(TEST_REGEX).o simple-regex.o
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -o $@ $^
+
 $(OBJS): $(HEADERS)
 
 .c.o:
 	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -c -o $@ $<
+
+check: $(CHECK_TARGETS)
+	@for x in $^; do \
+		./$${x} || exit 1; \
+	done
 
 strip: $(TARGETS)
 	$(STRIP) -s --remove-section=.note --remove-section=.comment $(TARGETS)

@@ -495,7 +495,7 @@ int __match_wildcard(regex_data_t *regex_data, int (*match_func)(regex_data_t *r
 	char r_wildcard[3];
 	size_t count = 0;
 	size_t r_count = 0;
-	int match = 0;
+	int is_match = 0;
 	int retval;
 
 	CHECK_REGEX_DATA_P(regex_data, exit);
@@ -518,34 +518,38 @@ int __match_wildcard(regex_data_t *regex_data, int (*match_func)(regex_data_t *r
 		case '*':
 		case '?':
 			/* '*' and '?' always matches */
-			match = 1;
+			is_match = 1;
 		case '+':
 			/* We need to match all of them */
 			do {
 				/* If we have at least one match for '+', or none
-				 * for '*' or '?', check if we have a word match.  We do
-				 * this because a word weights more than a wildcard */
-				if (((count > 0) || (r_wildcard[1] == '*') ||
-				     (r_wildcard[1] == '?')) && (strlen(wildcard_p) > 2))
+				 * for '*' or '?', check if we have a word or list match.
+				 * We do this because a word weights more than a wildcard */
+				if ((strlen(wildcard_p) > 2) && ((count > 0) ||
+				     (r_wildcard[1] == '*') || (r_wildcard[1] == '?')))
 				{
 					regex_data_t tmp_data2;
+#if 0
+					printf("data_p = %s, wildcard_p = %s\n", data_p, wildcard_p);
+#endif
 					
-					FILL_REGEX_DATA(tmp_data2, data_p,
-							&wildcard_p[2]);
-					retval = match_word(&tmp_data2);
+					FILL_REGEX_DATA(tmp_data2, data_p, &wildcard_p[2]);
+					retval = match(&tmp_data2);
 					if (-1 == retval)
 						goto error;
-					
+						
 					if (/* '.' might be a special case ... */
 					    /* (wildcard_p[2] != '.') && */
-					    (REGEX_MATCH(tmp_data2)))
+					    (REGEX_MATCH(tmp_data2) &&
+					     (REGEX_FULL_MATCH == tmp_data2.match))) {
 						goto exit;
+					}
 				}
 
 				if (REGEX_MATCH(tmp_data)) {
 					data_p += tmp_data.count;
 					count += tmp_data.count;
-					match = 1;
+					is_match = 1;
 					
 					FILL_REGEX_DATA(tmp_data, data_p, (char *)regex);
 					retval = match_func(&tmp_data);
@@ -564,7 +568,7 @@ int __match_wildcard(regex_data_t *regex_data, int (*match_func)(regex_data_t *r
 exit:
 	/* Fill in our structure */
 	/* We can still have a match ('*' and '?'), although count == 0 */
-	if ((0 == count) && (0 == match))
+	if ((0 == count) && (0 == is_match))
 		regex_data->match = REGEX_NO_MATCH;
 	else if (strlen(regex_data->data) == count)
 		regex_data->match = REGEX_FULL_MATCH;
@@ -647,7 +651,9 @@ int __match(regex_data_t *regex_data) {
 	CHECK_REGEX_DATA_P(regex_data, failed);
 
 	while (strlen(regex_p) > 0) {
-		//printf("data_p = '%s', regex_p = '%s'\n", data_p, regex_p);
+#if 0
+		printf("data_p = '%s', regex_p = '%s'\n", data_p, regex_p);
+#endif
 		
 		FILL_REGEX_DATA(tmp_data, data_p, regex_p);
 		retval = match_list(&tmp_data);

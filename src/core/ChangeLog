@@ -4,6 +4,12 @@
 
 10 Mar 2005 Martin Schlemmer <azarah@gentoo.org>
 
+        * test-regex.c: New file
+        * Makefile: Add check target to compile and run tests
+        * simple-regex.c (__match_wildcard): Get recursion right so that we
+        do not match a wildcard _and_ inc data_p if there are still other
+        wildcards (?, *) that could match.
+
         * Makefile
         * depend.c
         * simple-regex.c: Override the debug/warning CFLAGS.  Kill a few
