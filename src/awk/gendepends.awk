@@ -21,7 +21,11 @@ BEGIN {
 	TYPENAMES[PROVIDE] = "provide"
 
 	if (!isdir(SVCDIR))
-		mktree(SVCDIR, 0755)
+		if (!mktree(SVCDIR, 0755)) {
+			
+			eerror("Could not create needed directories!")
+			exit 1
+		}
 
 	svcdirs = "softscripts snapshot options broken started provide "
 	svcdirs = svcdirs " " DEPTYPES " " ORDTYPES
@@ -32,8 +36,7 @@ BEGIN {
 
 		if (!isdir(SVCDIR "/" svcdirnodes[x])) {
 
-			ret = mktree(SVCDIR "/" svcdirnodes[x], 0755)
-			if (ret < 0) {
+			if (!mktree(SVCDIR "/" svcdirnodes[x], 0755)) {
 			
 				eerror("Could not create needed directories!")
 				exit 1
@@ -207,6 +210,30 @@ function mktree(pathname, mode,   x, max, ret, data, pathnodes, tmppath)
 	return 1
 }
 
+# symlink() wrapper that normalize return codes ...
+function dosymlink(oldpath, newpath, 	ret)
+{
+	ret = 0
+
+	ret = symlink(oldpath, newpath)
+	if (ret < 0)
+		return 0
+	else
+		return 1
+}
+
+# assert --- assert that a condition is true. Otherwise exit.
+# This is from the gawk info manual.
+function assert(condition, string)
+{
+	if (! condition) {
+		printf("%s:%d: assertion failed: %s\n",
+		        FILENAME, FNR, string) > "/dev/stderr"
+		_assert_exit = 1
+		exit 1
+	}
+}
+
 function check_service(name, 	x)
 {
 	for (x = 1;x <= RCNUMBER;x++) {
@@ -246,7 +273,8 @@ function depend_dbadd(type, service, deplist, 	x, deparray)
 
 				# service is broken due to missing 'need' dependancies
 				if (!isdir(SVCDIR "/broken/" service))
-					mktree(SVCDIR "/broken/" service, 0755)
+					assert(mktree(SVCDIR "/broken/" service, 0755),
+					       "mktree(" SVCDIR "/broken/" service ", 0755)")
 				if (!isfile(SVCDIR "/broken/" service "/" deparray[x]))
 					system("touch " SVCDIR "/broken/" service "/" deparray[x])
 
@@ -278,9 +306,11 @@ function depend_dbadd(type, service, deplist, 	x, deparray)
 		    ((type == NEED) || (type == USE) || (type == PROVIDE))) {
 
 			if (!isdir(SVCDIR "/" TYPENAMES[type] "/" deparray[x]))
-				mktree(SVCDIR "/" TYPENAMES[type] "/" deparray[x], 0755)
+				assert(mktree(SVCDIR "/" TYPENAMES[type] "/" deparray[x], 0755),
+				       "mktree(" SVCDIR "/" TYPENAMES[type] "/" deparray[x] ", 0755)")
 			if (!islink(SVCDIR "/" TYPENAMES[type] "/" deparray[x] "/" service))
-				symlink("/etc/init.d/" service, SVCDIR "/" TYPENAMES[type] "/" deparray[x] "/" service)
+				assert(dosymlink("/etc/init.d/" service, SVCDIR "/" TYPENAMES[type] "/" deparray[x] "/" service),
+				       "dosymlink(/etc/init.d/" service ", " SVCDIR "/" TYPENAMES[type] "/" deparray[x] "/" service")")
 		}
 	}
 }

@@ -69,6 +69,10 @@ function print_end() {
 			print_header()
 		} else
 			nextfile
+
+		# Do not process scripts, source or backup files
+		if (FILENAME ~ /((\.(sh|c|bak))|\~)$/)
+			nextfile
 	}
 
 	# Filter out comments and only process if its a rcscript
@@ -103,6 +107,8 @@ function print_end() {
 				SBCOUNT = 0
 
 				print_end()
+
+				nextfile
 			}
 		}
 	}
