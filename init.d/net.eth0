@@ -6,7 +6,7 @@
 checkconfig() {
 	if [ -z "`eval echo \$\{iface_${IFACE}\}`" ]
 	then
-		eerror "Please check that /etc/conf.d/net have \$iface_$IFACE set"
+		eerror "Please make sure that /etc/conf.d/net has \$iface_$IFACE set"
 		return 1
 	fi
 }
