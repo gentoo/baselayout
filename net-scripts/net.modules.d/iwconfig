@@ -212,7 +212,7 @@ iwconfig_setup_specific() {
 	fi
 
 	key=$( iwconfig_get_wep_key )
-	e=$( eval "iwconfig ${iface} key ${key} 2>&1" )
+	e=$( eval "iwconfig ${iface} key [1] key ${key} 2>&1" )
 	if [[ -n ${e} && ${key} != off ]]; then
 		e=$( get_essid_var ${essid} )
 		ewarn "${iface} does not support setting keys"
@@ -342,7 +342,7 @@ iwconfig_associate() {
 			key="off"
 			vewarn "\"${dessid}\" is not WEP enabled - ignoring setting"
 		fi
-		e=$( eval "iwconfig ${iface} key ${key} 2>&1" )
+		e=$( eval "iwconfig ${iface} key [1] key ${key} 2>&1" )
 		if [[ -n ${e} && ${key} != off ]]; then
 			ewarn "${iface} does not support setting keys"
 			ewarn "or the parameter \"mac_key_${ESSIDVAR}\" or \"key_${ESSIDVAR}\" is incorrect"
@@ -669,7 +669,7 @@ iwconfig_defaults() {
 	iwconfig ${iface} frag off &>/dev/null
 	iwconfig ${iface} power off &>/dev/null
 	iwconfig ${iface} txpower auto &>/dev/null
-	iwconfig ${iface} key off &>/dev/null
+	iwconfig ${iface} key [1] off &>/dev/null
 
 	# We need to set the essid to any as some drivers won't
 	# scan correctly if they are already set to an ESSID
