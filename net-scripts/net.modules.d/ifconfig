@@ -203,10 +203,9 @@ ifconfig_setup_vars() {
 		# We don't add the old gateway if one has been set in routes_IFACE
 		local gw=false
 		for i in "${routes_IFACE[@]}"; do
-			if [[ "default gw " == "${i:0:11}" ]]; then
-				gw=true
-				break
-			fi
+			[[ ${i} != "*default gw*" ]] && continue
+			gw=true
+			break
 		done
 		${gw} && routes_IFACE=( "${routes_IFACE[@]}" "default gw ${gateway#*/}" )
 	fi
@@ -225,7 +224,7 @@ ifconfig_setup_vars() {
 		eval aliases=( \$\{alias_${ifvar}\} )
 		eval broadcasts=( \$\{broadcast_${ifvar}\} )
 		eval netmasks=( \$\{netmask_${ifvar}\} )
-		for ((i = 0; i < ${#aliases[@]}; i = i + 1)); do
+		for (( i=0; i<${#aliases[@]}; i++ )); do
 			config_IFACE[i+1]="${aliases[i]} ${broadcasts[i]:+broadcast ${broadcasts[i]}} ${netmasks[i]:+netmask ${netmasks[i]}}"
 		done
 	fi
@@ -266,7 +265,7 @@ ifconfig_iface_stop() {
 # fail, the routine should still return success to indicate that
 # net.eth0 was successful
 ifconfig_post_start() {
-	local iface=${1} i
+	local iface=${1} x
 
 	# Make sure interface is marked UP
 	ifconfig_up ${iface}
@@ -275,9 +274,9 @@ ifconfig_post_start() {
 	if [[ -n ${inet6_IFACE} ]]; then
 		einfo "Adding inet6 addresses"
 		eindent
-		for ((i = 0; i < ${#inet6_IFACE[@]}; i = i + 1)); do
-			ebegin "${inet6_IFACE[i]}"
-			ifconfig ${iface} inet6 add ${inet6_IFACE[i]} &>${devnull}
+		for x in "${inet6_IFACE[@]}"; do
+			ebegin "${x}"
+			ifconfig ${iface} inet6 add ${x} &>${devnull}
 			eend $?
 		done
 		eoutdent
@@ -288,9 +287,13 @@ ifconfig_post_start() {
 	# Add routes for this interface, might even include default gw
 	einfo "Adding routes"
 	eindent
-	for ((i = 0; i < ${#routes_IFACE[@]}; i = i + 1)); do
-		ebegin "${routes_IFACE[i]}"
-		/sbin/route add ${routes_IFACE[i]} &>${devnull}
+	for x in "${routes_IFACE[@]}"; do
+		ebegin "${x}"
+		if [[ ${x} == *:* && ${x} != *'-A inet6'* ]]; then
+			/sbin/route add -A inet6 ${x} &>${devnull}
+		else
+			/sbin/route add ${x} &>${devnull}
+		fi
 		eend $?
 	done
 	eoutdent

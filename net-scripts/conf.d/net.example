@@ -76,9 +76,10 @@
 # This is just like setting the gateway config option in the old-style iface
 # config, but allows one to add custom routes.  This should not be needed if
 # you are obtaining an address via DHCP since the default route should be set
-# automatically.
+# automatically. This example also uses an IPv6 address we added above.
 #routes_eth0=(
 #	"default gw 192.168.0.1"
+#	"default gw 4321:0:1:2:3:4:567:89ab"
 #)
 
 # If a specified module fails (like dhcp - see below), you can specify a fallback like so
@@ -116,9 +117,11 @@
 #ipaddr_eth0=( "null" )
 
 # The following will set up the default gateway. You can also pass advanced
-# route configs via this option.
+# route configs via this option. This example also uses an IPv6 address we
+# added above.
 #iproute_eth0=(
 #	"default via 192.168.0.1"
+#	"default via 4321:0:1:2:3:4:567:89ab"
 #)
 
 # If a specified module fails (like dhcp - see below), you can specify a fallback like so

@@ -6,6 +6,9 @@
     apipa now brings the interface up before testing if address exists
     Updated bonding documentation - bug #71419
     Fixed iproute2 adding addresses for vlans - bug #71419
+    ifconfig handle inet6 routing automatically - bug #33310
+    ifconfig - fixed old gateway + gateway in routes conflict
+    iproute2 cleaned up some functions
 
   16 Nov 2004; Roy Marples <uberlord@gentoo.org>:
 

@@ -26,7 +26,7 @@ iproute2_depend() {
 # Returns 1 if iproute2 is installed, otherwise 0
 iproute2_check_installed() {
 	[[ -x /sbin/ip ]] && return 0
-	[[ ${1} == true ]] && eerror "For iproute2 support, emerge sys-apps/iproute2"
+	${1} && eerror "For iproute2 support, emerge sys-apps/iproute2"
 	return 1
 }
 
@@ -53,7 +53,7 @@ iproute2_check_depends() {
 	local f
 
 	for f in interface_device; do
-		[[ $(type -t ${f}) == function ]] && continue
+		[[ $( type -t ${f} ) == function ]] && continue
 		eerror "iproute2: missing required function ${f}\n"
 		return 1
 	done
@@ -251,13 +251,15 @@ iproute2_add_address() {
 	# will fail.  Catch the failure and be graceful
 	x=$( ip addr add dev ${iface} label ${label} ${config} 2>&1 )
 	case "${x}" in
-		'RTNETLINK answers: File exists'|'') ;;
-		*) printf '%s\n' "${x}" >&2 ;;
+		'RTNETLINK answers: File exists'|'')
+			eend 0
+			return 0
+			;;
+		*)
+			printf '%s\n' "${x}" >&2
+			eend 1
+			return 1
 	esac
-
-	# Make sure the address was added
-	[[ $( ip addr show label ${label} ) == *${config%% *}* ]]
-	return $?
 }
 
 # bool iproute2_configure(char *interface, char *options ...)
@@ -277,7 +279,7 @@ iproute2_configure() {
 # Runs any post_start stuff on our interface and adds routes
 # Always returns 0
 iproute2_post_start() {
-	local iface=${1} i x
+	local iface=${1} x e
 
 	# Make sure interface is marked UP
 	iproute2_up ${iface}
@@ -286,9 +288,9 @@ iproute2_post_start() {
 	if [[ -n ${inet6_IFACE} ]]; then
 		einfo "Adding inet6 addresses"
 		eindent
-		for ((i = 0; i < ${#inet6_IFACE[@]}; i = i + 1)); do
-			ebegin "${inet6_IFACE[i]}"
-			iproute2_add_address ${iface} ${inet6_IFACE[i]}
+		for x in "${inet6_IFACE[@]}"; do
+			ebegin "${x}"
+			iproute2_add_address ${iface} ${x}
 			eend $?
 		done
 		eoutdent
@@ -299,14 +301,17 @@ iproute2_post_start() {
 	# Set routes with ip route -- this might also include default route
 	einfo "Adding routes"
 	eindent
-	for ((i = 0; i < ${#iproute_IFACE[@]}; i = i + 1)); do
-		einfo "${iproute_IFACE[i]}"
-		x=$( ip route add dev ${iface} ${iproute_IFACE[i]} 2>&1 )
-		case "${x}" in
-			'RTNETLINK answers: File exists'|'') ;;
-			*) printf '%s\n' "${x}" >&2 ;;
+	for x in "${iproute_IFACE[@]}"; do
+		einfo "${x}"
+		e=$( ip route add dev ${iface} ${x} 2>&1 )
+		case "${e}" in
+			'RTNETLINK answers: File exists'|'')
+				eend 0
+				;;
+			*) printf '%s\n' "${e}" >&2
+				eend 1
+				;;
 		esac
-		eend $?
 	done
 	eoutdent
 
