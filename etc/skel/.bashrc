@@ -18,8 +18,12 @@ fi
 # though this example doesn't produce any.  Do setup for
 # command-line interactivity.
 
-# colors for ls, etc.
-eval `dircolors -b /etc/DIR_COLORS`
+# colors for ls, etc.  Prefer ~/.dir_colors #64489
+if [[ -f ~/.dir_colors ]]; then
+	eval `dircolors -b ~/.dir_colors`
+else
+	eval `dircolors -b /etc/DIR_COLORS`
+fi
 alias d="ls --color"
 alias ls="ls --color=auto"
 alias ll="ls --color -l"

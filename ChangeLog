@@ -2,6 +2,10 @@
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  29 Sep 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Prefer ~/.dir_colors over /etc/DIR_COLORS when it exists #64489
+
   27 Sep 2004; Aron Griffis <agriffis@gentoo.org>:
 
     Clear the screen in .bash_logout #32330
