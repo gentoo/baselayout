@@ -82,7 +82,7 @@ wpa_supplicant_get_ap_mac_address() {
 # Note that just because we are associated does not mean we are using the
 # correct encryption keys
 wpa_supplicant_associated() {
-	local -a status=( $( wpa_cli -iath0 status | awk -F= '/^key_mgmt|^wpa_state|^decision/ { print $2 }' ) )
+	local -a status=( $( wpa_cli -i${iface} status | awk -F= '/^key_mgmt|^wpa_state|^decision/ { print $2 }' ) )
 
 	if [[ ${status[0]} == NONE ]]; then
 		[[ ${status[1]} == ASSOCIATED ]]
@@ -102,6 +102,10 @@ wpa_supplicant_pre_start() {
 	# We only work on wirelesss interfaces
 	wpa_supplicant_check_extensions ${iface} || return 0
 
+	# Kill off any existing wpa_supplicant on this interface
+	# This is so we can re-read the configuration file
+	wpa_supplicant_post_stop ${iface}
+
 	ebegin "Starting wpa_supplicant on ${iface}"
 
 	if [[ ! -f ${cfgfile} ]]; then
@@ -112,10 +116,6 @@ wpa_supplicant_pre_start() {
 	ifvar=$( interface_variable ${1} )
 	eval opts=\" \$\{wpa_supplicant_${ifvar}\}\"
 	[[ ${opts} != *' -D'* ]] && ewarn "wpa_supplicant_${ifvar} does not define a driver"
-
-	# Kill off any existing wpa_supplicant on this interface
-	local pid=$( ps --no-headers -fC wpa_supplicant 2>/dev/null | awk '/-i'${iface}'/ { print $2 }' )
-	[[ -n ${pid} ]] && kill -s TERM ${pid}
 	
 	if ! wpa_supplicant ${opts} -B -c/etc/wpa_supplicant.conf -i${iface} ; then
 		eend 1
@@ -143,7 +143,7 @@ wpa_supplicant_pre_start() {
 
 	# Set ESSID for essidnet and report
 	ESSID=$( wpa_supplicant_get_essid ${iface} )
-	local -a status=( "$( wpa_cli -iath0 status | awk -F= '/^bssid|^pairwise_cipher|^key_mgmt/ { print $2 }' )" )
+	local -a status=( "$( wpa_cli -i${iface} status | awk -F= '/^bssid|^pairwise_cipher|^key_mgmt/ { print $2 }' )" )
 	local mac=$( echo ${status[0]} | tr '[:lower:]' '[:upper:]' )
 	einfo "${iface} connected to \"${ESSID//\\\\/\\\\}\" at ${mac}"
 
