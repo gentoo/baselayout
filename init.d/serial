@@ -15,7 +15,7 @@ moduleinserted() {
 setports() {
 	#if serial module exists, and it's not inserted, insert it permanently
 	if [[ -f /lib/modules/$(uname -r)/misc/serial.o ]] ; then
-		moduleinserted;
+		moduleinserted
 		if [[ $? -eq 0 ]] ; then
 			/sbin/insmod serial 1>&2
 		fi
@@ -44,5 +44,6 @@ start() {
 	setports
 	return
 }
+
 
 # vim:ts=4
