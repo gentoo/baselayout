@@ -7,6 +7,9 @@
    Tweak livecd support changes and add some more to hopefully sort out
    last issues, with help from Brad House <brad_mssw@gentoo.org>.
 
+   Add code to generate /dev/fd, /dev/std* and /dev/core to /sbin/rc,
+   bug #37349.
+
 * rc-scripts 1.4.3.12p3 (21 Jan 2004)
 
   19 Jan 2004; Martin Schlemmer <azarah@gentoo.org>:

@@ -117,6 +117,14 @@ populate_udev() {
 
 	unset ACTION DEVPATH UDEV_NO_SLEEP
 
+	# Not provided by sysfs but needed
+	ln -snf /proc/self/fd /dev/fd
+	ln -snf fd/0 /dev/stdin
+	ln -snf fd/1 /dev/stdout
+	ln -snf fd/2 /dev/stderr
+	ln -snf /proc/kcore /dev/core
+	ln -snf /proc/asound/oss/sndstat /dev/sndstat
+
 	return 0
 }
 
