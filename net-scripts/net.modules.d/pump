@@ -7,7 +7,7 @@
 # Fix any potential localisation problems
 # Note that LC_ALL trumps LC_anything_else according to locale(7)
 pump() {
-        LC_ALL=C /sbin/pump "$@"
+	LC_ALL=C /sbin/pump "$@"
 }
 
 # char* pump_provides(void)

@@ -51,10 +51,10 @@ adsl_local_vars() {
 adsl_setup_vars() {
 	local iface=${1}
 
-        # Decide which configuration to use.  Hopefully there is an
-        # interface-specific one
-        adsl_cfgfile_IFACE=/etc/ppp/pppoe-${iface}.conf
-        [[ -f ${adsl_cfgfile_IFACE} ]] || adsl_cfgfile_IFACE=/etc/ppp/pppoe.conf
+	# Decide which configuration to use.  Hopefully there is an
+	# interface-specific one
+	adsl_cfgfile_IFACE=/etc/ppp/pppoe-${iface}.conf
+	[[ -f ${adsl_cfgfile_IFACE} ]] || adsl_cfgfile_IFACE=/etc/ppp/pppoe.conf
 
 	if [[ ! -f ${adsl_cfgfile_IFACE} ]]; then
 		eerror "no pppoe.conf file found!"

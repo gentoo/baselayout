@@ -39,7 +39,7 @@ iproute2_provides() {
 # This is needed by dhclient as we run different scripts
 # based on the interface
 iproute2_module() {
-        echo "iproute2"
+	echo "iproute2"
 }
 
 # bool iproute2_check_depends(void)
@@ -169,7 +169,7 @@ iproute2_del_addresses() {
 # Returns a string spaced with possible user set
 # configuration variables
 iproute2_get_vars() {
-        echo "ipaddr_${1} ipaddr_fallback_${1} iproute_${1}"
+	echo "ipaddr_${1} ipaddr_fallback_${1} iproute_${1}"
 }
 
 # void ifconfig_local_vars(void)
@@ -193,10 +193,10 @@ iproute2_local_vars() {
 iproute2_setup_vars() {
 	local iface="${1//./_}"
 
-        # iproute2-style config vars
-        eval config_IFACE=( \"\$\{ipaddr_${iface}\[@\]\}\" )
-        eval config_fallback_IFACE=( \"\$\{ipaddr_fallback_${iface}\[@\]\}\" )
-        eval iproute_IFACE=( \"\$\{iproute_${iface}\[@\]\}\" )
+	# iproute2-style config vars
+	eval config_IFACE=( \"\$\{ipaddr_${iface}\[@\]\}\" )
+	eval config_fallback_IFACE=( \"\$\{ipaddr_fallback_${iface}\[@\]\}\" )
+	eval iproute_IFACE=( \"\$\{iproute_${iface}\[@\]\}\" )
 }
 
 # void iproute2_iface_stop(char *interface)

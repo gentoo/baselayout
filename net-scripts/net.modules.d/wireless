@@ -177,22 +177,22 @@ wireless_user_config() {
 
 	# Apply the user configuration
 	eval conf=\"\$\{iwconfig_${iface}\}\"
-        if [[ -n ${conf} ]]; then
-                e=$( iwconfig ${iface} ${conf} 2>&1 )
+	if [[ -n ${conf} ]]; then
+		e=$( iwconfig ${iface} ${conf} 2>&1 )
 		if [[ -n ${e} ]]; then
 			ewarn "  ${iface} does not support the following configuration commands"
 			ewarn "    \"${conf}\""
 		fi
-        fi
+	fi
 
 	eval conf=\"\$\{iwpriv_${iface}\}\"
-        if [[ -n ${conf} ]]; then
+	if [[ -n ${conf} ]]; then
 		e=$( iwpriv ${iface} ${conf} 2>&1 )
 		if [[ -n ${e} ]]; then
 			ewarn "  ${iface} does not support the following private ioctls"
 			ewarn "    \"${conf}\""
 		fi
-        fi
+	fi
 }
 
 # void wireless_setup_iface(char *iface)
@@ -258,15 +258,15 @@ wireless_setup_specific() {
 	fi
 	dessid=${ESSID//\\\\/\\\\}
 
-        # We only change the mode if it's not the same
-        local cur_mode=$( wireless_get_mode ${iface} )
-        if [[ ${cur_mode} != ${mode} ]]; then
-                e=$( iwconfig ${iface} mode ${mode} 2>&1 )
-                if [[ -n ${e} ]]; then
-                        eerror "${iface} does not support setting the mode to \"${mode}\""
-                        return 1
-                fi
-        fi
+	# We only change the mode if it's not the same
+	local cur_mode=$( wireless_get_mode ${iface} )
+	if [[ ${cur_mode} != ${mode} ]]; then
+		e=$( iwconfig ${iface} mode ${mode} 2>&1 )
+		if [[ -n ${e} ]]; then
+			eerror "${iface} does not support setting the mode to \"${mode}\""
+			return 1
+		fi
+	fi
 
 	key=$( wireless_get_wep_key )
 	e=$( iwconfig ${iface} key ${key} 2>&1 )
@@ -903,7 +903,7 @@ wireless_post_stop() {
 		wasup=false
 	fi
 
-        if wireless_check_extensions ${iface} ; then
+	if wireless_check_extensions ${iface} ; then
 		# Set the ESSID var for use in any postdown functions
 		ESSID=$( iwconfig ${iface} | awk -F\" '/ESSID/ {print $2}' )
 

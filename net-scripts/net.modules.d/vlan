@@ -50,7 +50,7 @@ vlan_check_depends() {
 # Returns a string spaced with possible user set
 # configuration variables
 vlan_get_vars() {
-        echo "vlans_${1} iface_${1}_vlans"
+	echo "vlans_${1} iface_${1}_vlans"
 }
 
 # bool vlan_post_start(char *iface)
