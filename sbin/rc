@@ -83,6 +83,10 @@ populate_udev() {
 	ln -snf /proc/kcore /dev/core
 	ln -snf /proc/asound/oss/sndstat /dev/sndstat
 
+	# Create nodes that udev can't
+	[ -x /sbin/dmsetup ] && /sbin/dmsetup mknodes &> /dev/null
+	[ -x /sbin/lvm ] && /sbin/lvm vgscan -P --mknodes --ignorelockingfailure &> /dev/null
+
 	# Create problematic directories
 	mkdir -p /dev/{pts,shm}
 

@@ -179,6 +179,70 @@ start() {
 		eend $? "Failed to setup the LVM"
 	fi
 
+
+	ebegin 'Setting up dm-crypt mappings'
+    
+	if [ -f /etc/conf.d/cryptfs ]
+	then
+		cryptfs_status=0
+
+		/bin/egrep '^(mount|swap)' /etc/conf.d/cryptfs | \
+		while read mountline
+		do
+			mount=
+			swap=
+			options=
+			pre_mount=
+
+			eval ${mountline}
+ 
+			if [ -n "${mount}" ]
+			then
+				target=${mount}
+				[ -z "${options}" ] && options='-c aes -h sha1'
+			elif [ -n "${swap}" ]
+			then
+				target=${swap}
+				[ -z "${options}" ] && options='-c aes -h sha1 -d /dev/urandom'
+			else
+				ewarn "Invalid line in /etc/conf.d/cryptomount: ${mountline}"
+			fi
+
+			! /bin/cryptsetup status ${target}|egrep '\<active:' > /dev/null
+			configured=$?
+ 
+			if [ ${configured} -eq 0 ]
+			then
+				einfo "dm-crypt map ${target}"
+				if ! /bin/cryptsetup ${options} create ${target} ${source} >/dev/console </dev/console
+				then
+					ewarn "Failure configuring ${target}"
+					cryptfs_status=1
+				else
+					if [ -n "${swap}" ]
+					then
+						[ -z "${pre_mount}" ] && pre_mount='mkswap ${dev}'
+					fi
+
+					if [ -n "${pre_mount}" ]
+					then
+						dev="/dev/mapper/${target}"
+						einfo "  Running pre_mount commands on: ${target}"
+						if ! eval "${pre_mount}" > /dev/null
+						then
+							ewarn "Failed to run pre_mount commands on: ${target}"
+							cryptfs_status=1
+						fi
+					fi
+				fi
+			else
+				ewarn "dm-crypt mapping ${target} is already configured"
+				cryptfs_status=1
+			fi
+		done 
+	fi
+	ewend ${cryptfs_status} 'Failed to setup a mapping or swap device.'
+
 	if [ -f /fastboot -o -n "${CDBOOT}" ]
 	then
 		rm -f /fastboot

@@ -41,6 +41,48 @@ start() {
 	ebegin "Activating (possibly) more swap"
 	/sbin/swapon -a &>/dev/null
 	eend 0
+
+	# Run any post_mount commands for cryptfs
+
+	if [ -f /etc/conf.d/cryptfs ]
+	then
+		ebegin "Running post_mount commands for cryptfs"
+
+		/bin/egrep "^mount" /etc/conf.d/cryptfs | \
+		while read mountline
+		do
+			mount=
+			mount_point=
+			post_mount=
+
+			eval ${mountline}
+ 
+			target=${mount}
+
+			! /bin/cryptsetup status ${target}|egrep '\<active:' > /dev/null
+			configured=$?
+
+			if [ ${configured} -eq 1 ]
+			then
+				mount_point=`/bin/awk "/\/dev\/mapper\/${target}/ { print \\$2 }" /proc/mounts`
+				if [ -n "${mount_point}" ]
+				then
+					if [ -n "${post_mount}" ]
+					then
+						if ! eval "${post_mount}" > /dev/null
+						then
+							ewarn "Failed to run post_mount commands on: ${target}"
+						fi
+					fi
+				else
+					ewarn "Failed to find mount point to ${target}. Skipping"
+				fi
+			else
+				ewarn "Target ${target} wasn't mapped, skipping"
+			fi
+
+		done
+	fi
 }
 
 

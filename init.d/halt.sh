@@ -123,6 +123,39 @@ do
 done
 eend 0
 
+# Try to remove any dm-crypt mappings
+
+if [ -f /etc/conf.d/cryptfs ]
+then
+    ebegin "Removing dm-crypt mappings"
+
+	/bin/egrep "^(mount|swap)" /etc/conf.d/cryptfs | \
+	while read mountline
+	do
+		mount=
+		swap=
+		target=
+
+		eval ${mountline}
+
+		if [ -n "${mount}" ]
+		then
+			target=${mount}
+		elif [ -n "${swap}" ]
+		then
+			target=${swap}
+		else
+			ewarn "Invalid line in /etc/conf.d/cryptfs: ${mountline}"
+		fi
+
+		einfo "Removing dm-crypt mapping for: ${target}"
+		if ! /bin/cryptsetup remove ${target}
+		then
+			ewarn "Failed to remove dm-crypt mapping for: ${target}"
+		fi
+	done
+fi
+
 # Stop LVM
 if [ -x /sbin/vgchange ] && [ -f /etc/lvmtab -o -d /etc/lvm ] && \
    [ -d /proc/lvm  -o "`grep device-mapper /proc/misc 2>/dev/null`" ]
