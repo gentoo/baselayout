@@ -2,6 +2,11 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  13 May 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Change the homes of user "at" and "cron" in /etc/passwd, as
+    they moved to /var/spool/cron...
+
 * rc-scripts 1.3.5 (12 May 2002)
 
   12 May 2002; Martin Schlemmer <azarah@gentoo.org>:
