@@ -24,10 +24,35 @@ elif [ ! -e /dev/.devfsd -a -e /dev/.udev \
        -a "${RC_DEVICE_TARBALL}" = "yes" -a -z "${CDBOOT}" ]
 then
 	ebegin "Saving device nodes"
-	cd /dev
-	try tar -jclpf "/tmp/devices-$$.tar.bz2" *
-	try mv -f "/tmp/devices-$$.tar.bz2" /lib/udev-state/devices.tar.bz2
-	eend 0
+	# Handle our temp files
+	devices_udev="`mktemp /tmp/devices.udev.XXXXXX`"
+	devices_real="`mktemp /tmp/devices.real.XXXXXX`"
+	device_tarball="`mktemp /tmp/devices-XXXXXX`"
+	
+	if [ -z "${devices_udev}" -o -z "${devices_real}" -o \
+	     -z "${device_tarball}" ]
+	then
+		eend 1 "Could not create temporary files!"
+	else
+		cd /dev
+		# Find all devices
+		find . -xdev -type b -or -type c -or -type l | cut -d/ -f2- > \
+			"${devices_real}"
+		# Figure out what udev created
+		udevinfo -d | awk '/^N|S: ..*/ { i=1; while (i++<NF) { print $i}}' > \
+			"${devices_udev}"
+		# These ones we also do not want in there
+		for x in MAKEDEV core fd initctl pts shm sndstat stderr stdin stdout
+		do
+			echo "${x}" >> "${devices_udev}"
+		done
+		# Now only tarball those not created by udev
+		try tar -jclpf "${device_tarball}" \
+		        `fgrep -x -v -f "${devices_udev}" < "${devices_real}"`
+		try mv -f "${device_tarball}" /lib/udev-state/devices.tar.bz2
+		try rm -f "${devices_udev}" "${devices_real}"
+		eend 0
+	fi
 fi
 
 # Try to unmount all tmpfs filesystems not in use, else a deadlock may

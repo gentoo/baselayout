@@ -2,6 +2,10 @@
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  28 Oct 2004; Martin Schlemmer <azarah@gentoo.org>:
+
+    Only add files not managed by udev to device tarball, bug #57110.
+
   28 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
 
     Revert pam_console_apply udev check in bootmisc/halt.sh since 
