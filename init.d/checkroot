@@ -23,7 +23,7 @@ start() {
 			# /forcefsck isn't deleted because checkfs needs it.
 			# it'll be deleted in that script.
 		else
-			fsck -a /
+			fsck -C -a /
 		fi
 		if [ "$?" -eq 0 ]
 		then

@@ -121,7 +121,7 @@ start() {
 			fsck -C -R -A -a -f
 			rm -f /forcefsck
 		else
-			fsck -R -A -a
+			fsck -C -R -A -a
 		fi
 		if [ "$?" -eq 0 ]
 		then
