@@ -1,7 +1,6 @@
 #!/bin/bash
 
 source /etc/init.d/functions.sh
-source /etc/rc.conf
 svcdir=/dev/shm/.init.d
 
 myscript=${1}
@@ -15,7 +14,16 @@ fi
 myservice=${myservice##*/}
 mylevel=`cat ${svcdir}/softlevel`
 
-[ -e /etc/conf.d/${myservice} ] && . /etc/conf.d/${myservice}
+# Source configuration files.
+# (1) Source /etc/conf.d/basic to get common configuration.
+# (2) Source /etc/conf.d/${myservice} to get initscript-specific
+#     configuration (if it exists).
+# (3) Source /etc/rc.conf to pick up potentially overriding
+#     configuration, if the system administrator chose to put it
+#     there (if it exists).
+[ -e /etc/conf.d/basic ]        && source /etc/conf.d/basic
+[ -e /etc/conf.d/${myservice} ] && source /etc/conf.d/${myservice}
+[ -e /etc/rc.conf ]             && source /etc/rc.conf
 
 usage() {
 	export IFS="|"
@@ -25,7 +33,7 @@ usage() {
 
 stop() {
 	#return success so the symlink gets removed
-	return
+	return 0
 }
 
 start() {
@@ -36,10 +44,9 @@ start() {
 
 svc_stop() {
 	local x
-	local stopfail
+	local stopfail="no"
 	local mydeps
 	local mydep
-	stopfail="no"
 	if [ ! -L ${svcdir}/started/${myservice} ]
 	then
 		einfo "${myservice} has not yet been started."
@@ -234,6 +241,32 @@ query() {
 	rm -rf ${svcdir}/depcheck/$$
 }
 
+svc_homegrown() {
+	local arg="$1" x
+	# Walk through the list of available options, looking for the
+	# requested one.
+	for x in $opts; do
+		if [ $x = "$arg" ]; then
+			if typeset -F $x &>/dev/null; then
+				# Run the homegrown function
+                $x
+                return $?
+			else
+				# This is a weak error message
+				echo "Function $x doesn't exist."
+				usage $opts
+				exit 1
+			fi
+		fi
+	done
+	# If we're here, then the function wasn't in $opts.  This is
+	# the same error message that used to be in the case statement
+	# before homegrown functions were supported.
+	echo "wrong args. (  $arg / $* )"
+	usage $opts
+	exit 1
+}
+
 shift
 if [ $# -lt 1 ]
 then
@@ -271,11 +304,10 @@ do
 		svc_start
 		;;
 	*)
-		echo "wrong args. (  $arg / $* )"
-		usage $opts
-		exit 1
+		# Allow for homegrown functions
+		svc_homegrown $arg
 		;;
 	esac
 done
 
-
+# vim:ts=4
