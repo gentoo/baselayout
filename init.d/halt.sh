@@ -90,11 +90,11 @@ then
 	eend $?
 fi
 
+ebegin "Remounting remaining filesystems readonly"
+#get better results with a sync and sleep
 sync;sync
 sleep 2
-
-ebegin "Remounting remaining filesystems readonly"
-umount -a -r -t nodevfs,noproc,notmpfs > /dev/null 2>/dev/null
+umount -a -r -t noproc,notmpfs > /dev/null 2>/dev/null
 if [ "$?" -ne 0 ]
 then
 	umount -a -r -f > /dev/null 2>/dev/null
