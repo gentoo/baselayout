@@ -6,42 +6,45 @@ depend() {
 
 
 start() {
-	# Put a nologin file in /etc to prevent people from logging in before
-	# system startup is complete.
-	if [ "$DELAYLOGIN" = "yes" ]
+	if [ "$BOOT" = "yes" ]
 	then
-		echo "System bootup in progress - please wait" > /etc/nologin
-		cp /etc/nologin /etc/nologin.boot
+		# Put a nologin file in /etc to prevent people from logging in before
+		# system startup is complete.
+		if [ "$DELAYLOGIN" = "yes" ]
+		then
+			echo "System bootup in progress - please wait" > /etc/nologin
+			cp /etc/nologin /etc/nologin.boot
+		fi
+
+		#
+		# Clean up any stale locks.
+		#
+		ebegin "Cleaning /var/lock, /var/run"
+		( cd /var/lock && find . -type f -exec rm -f -- {} \; 1>&2 )
+		#
+		# Clean up /var/run and create /var/run/utmp so that we can login.
+		#
+		( cd /var/run && \
+			find . ! -type d ! -name utmp ! -name innd.pid ! -name random-seed \
+			-exec rm -f -- {} \; 1>&2 )
+		: > /var/run/utmp
+		eend 0
+
+		#
+		# Clean up /tmp directory
+		#
+		ebegin "Cleaning /tmp directory"
+		rm -f /tmp/.X*-lock
+		rm -f /tmp/esrv*
+		rm -f /tmp/kio*
+		rm -f /tmp/jpsock.*
+		rm -rf /tmp/.esd*
+		rm -rf /tmp/orbit-*
+		rm -rf /tmp/ssh-*
+		rm -rf /tmp/ksocket-*
+		rm -rf /tmp/.*-unix
+		eend 0
 	fi
-
-	#
-	# Clean up any stale locks.
-	#
-	ebegin "Cleaning /var/lock, /var/run"
-	( cd /var/lock && find . -type f -exec rm -f -- {} \; 1>&2 )
-	#
-	# Clean up /var/run and create /var/run/utmp so that we can login.
-	#
-	( cd /var/run && \
-		find . ! -type d ! -name utmp ! -name innd.pid ! -name random-seed \
-		-exec rm -f -- {} \; 1>&2 )
-	: > /var/run/utmp
-	eend 0
-
-	#
-	# Clean up /tmp directory
-	#
-	ebegin "Cleaning /tmp directory"
-	rm -f /tmp/.X*-lock
-	rm -f /tmp/esrv*
-	rm -f /tmp/kio*
-	rm -f /tmp/jpsock.*
-	rm -rf /tmp/.esd*
-	rm -rf /tmp/orbit-*
-	rm -rf /tmp/ssh-*
-	rm -rf /tmp/ksocket-*
-	rm -rf /tmp/.*-unix
-	eend 0
 
 	#
 	# Check for /etc/resolv.conf, and create if missing
