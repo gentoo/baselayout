@@ -19,7 +19,7 @@
 
   18 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
 
-    Add shfs to our list of net filesystems #61452.
+    Add shfs to our list of net filesystems #61452.  Also add afs/nfs4.
 
     Add a '-u' parameter to depscan.sh to allow for updates only when 
     the config files have changed.  With /sbin/rc using this, we speed 
