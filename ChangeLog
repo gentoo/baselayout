@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+  10 Feb 2005; Roy Marples <uberlord@gentoo.org>:
+
+    net.lo now supports fallback_route - fixes #75676
+    due to bash limitations, only one fallback route is supported
+
   07 Feb 2005; Roy Marples <uberlord@gentoo.org>:
 
     netmask2cidr now works correctly - fixes #81119
