@@ -2,6 +2,27 @@
 # Copyright 2002-2003 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  06 April 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Hopefully get the serial support sane again.  Added /bin/consoletype
+	from Redhat to check for serial console.  This should resolve bug
+	#18329 partly.
+
+	Add the --nocolor option to suppress the use of colors.
+
+	Change the 'status' option to return true if the service is running,
+	and false if stopped.  This is only if the '--quiet' flag was also
+	given.
+
+	Change the start and stop options not to output or return false if
+	the '--quiet' flag was given.
+
+	Redirect stderr for consolechars in /etc/init.d/consolefont to /dev/null
+	as well, fixing bug #18344.
+
+	Optimize $EDITOR extraction in /etc/profile closing bug #18614, thanks to
+	Aron Griffis <agriffis@gentoo.org>.
+
   30 March 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix bug #18329 ... $COLS was not setup properly for serial console.

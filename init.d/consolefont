@@ -34,11 +34,11 @@ start() {
 				if [ -e /dev/.devfsd ]
 				then
 					/usr/bin/consolechars -f ${CONSOLEFONT} ${param} \
-						--tty=/dev/vc/${x} >/dev/null
-					retval=$?
+						--tty=/dev/vc/${x} &>/dev/null
+					retval=$
 				else
 					/usr/bin/consolechars -f ${CONSOLEFONT} ${param} \
-						--tty=/dev/tty${x} >/dev/null
+						--tty=/dev/tty${x} &>/dev/null
 					retval=$?
 				fi
 			done

@@ -88,8 +88,13 @@ svc_stop() {
 	
 	if [ ! -L "${svcdir}/started/${myservice}" ]
 	then
-		eerror "ERROR:  \"${myservice}\" has not yet been started."
-		return 1
+		if [ "${RC_QUIET_STDOUT}" != "yes" ]
+		then
+			eerror "ERROR:  \"${myservice}\" has not yet been started."
+			return 1
+		else
+			return 0
+		fi
 	fi
 
 	# Do not try to stop if it had already failed to do so on runlevel change
@@ -318,7 +323,11 @@ svc_start() {
 		fi
 		return "${retval}"
 	else
-		ewarn "WARNING:  \"${myservice}\" has already been started."
+		if [ "${RC_QUIET_STDOUT}" != "yes" ]
+		then
+			ewarn "WARNING:  \"${myservice}\" has already been started."
+		fi
+		
 		return 0
 	fi
 }
@@ -342,9 +351,19 @@ svc_status() {
 
 	if [ -L "${svcdir}/started/${myservice}" ]
 	then
-		einfo "status:  started"
+		if [ "${RC_QUIET_STDOUT}" != "yes" ]
+		then
+			einfo "status:  started"
+		else
+			return 0
+		fi
 	else
-		eerror "status:  stopped"
+		if [ "${RC_QUIET_STDOUT}" != "yes" ]
+		then
+			eerror "status:  stopped"
+		else
+			return 1
+		fi
 	fi
 
 	status
@@ -581,8 +600,12 @@ for arg in $*
 do
 	case "${arg}" in
 	--quiet)
-		QUIET_STDOUT="yes"
+		RC_QUIET_STDOUT="yes"
 		;;
+# We check this in functions.sh ...
+#	--nocolor)
+#		RC_NOCOLOR="yes"
+#		;;
 	esac
 done
 for arg in $*
@@ -652,7 +675,7 @@ do
 		svc_stop
 		svcpause="no"
 		;;
-	--quiet)
+	--quiet|--nocolor)
 		;;
 	*)
 		# Allow for homegrown functions

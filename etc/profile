@@ -31,34 +31,8 @@ then
 fi
 
 # Extract the value of EDITOR
-get_editor() {
-	[ ! -f "$1" ] && return
-	
-	local editor="`gawk '
-		/^[[:space:]]*EDITOR[[:space:]]*=/ {
-
-			sub(/^[[:space:]]*EDITOR[[:space:]]*=/, "")
-			EDITOR = $0
-		}
-		
-		END { print EDITOR }
-	' $1`"
-
-	bash -c "eval echo $editor"
-}
-
-if [ -f /etc/rc.conf -a -n "`get_editor /etc/rc.conf`" ]
-then
-	export EDITOR="`get_editor /etc/rc.conf`"
-
-elif [ -f /etc/conf.d/basic -a -n "`get_editor /etc/conf.d/basic`" ]
-then
-	export EDITOR="`get_editor /etc/conf.d/basic`"
-
-else
-	export EDITOR="/bin/nano"
-fi
-
-# We do not need this floating around
-unset get_editor
+[ -z "$EDITOR" ] && EDITOR="`. /etc/rc.conf; echo $EDITOR`" 2>/dev/null
+[ -z "$EDITOR" ] && EDITOR="`. /etc/conf.d/basic; echo $EDITOR`" 2>/dev/null
+[ -z "$EDITOR" ] && EDITOR="/bin/nano"
+export EDITOR
 

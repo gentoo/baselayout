@@ -32,7 +32,10 @@ ordtypes="before after"
 #
 
 # Dont output to stdout?
-QUIET_STDOUT="no"
+RC_QUIET_STDOUT="no"
+
+# Should we use color?
+RC_NOCOLOR="no"
 
 #
 # Default values for rc system
@@ -47,32 +50,52 @@ getcols() {
 	echo "$2"
 }
 
-if [ -n "${EBUILD}" ] && [ "${*/depend}" != "$*" ]
-then
-	COLS="48 80"
-else
-	COLS="`stty size 2> /dev/null`"
-fi
-if [ "${COLS}" = "0 0" ]
-then
-	# Fix for serial tty (bug #11557)
-	COLS="24 80"
-	stty cols 80 &>/dev/null
-	stty rows 24 &>/dev/null
-fi
-
-COLS="`getcols ${COLS}`"
-COLS=$((${COLS} -7))
-ENDCOL=$'\e[A\e['${COLS}'G'
-# Now, ${ENDCOL} will move us to the end of the column;
-# irregardless of character width
-
-# Now setup colors for easy reading
+# Should we use colors ?
 if [ -n "${EBUILD}" ] && [ "${*/depend}" = "$*" ]
 then
-	NOCOLOR="`python -c 'import portage; print portage.settings["NOCOLOR"]' 2> /dev/null`"
+	# Check user pref in portage
+    RC_NOCOLOR="`python -c 'import portage; print portage.settings["NOCOLOR"]' 2> /dev/null`"
+
+elif [ -n "${EBUILD}" ] && [ "${*/depend}" != "$*" ]
+then
+	# We do not want colors or stty to run during emerge depend
+    RC_NOCOLOR="yes"
+	
+elif [ "`/bin/consoletype 2> /dev/null`" = "serial" ]
+then
+	# We do not want colors on serial terminals
+	RC_NOCOLOR="yes"
+else
+	# Lastly check if the user disabled it with --nocolor argument
+	for arg in $*
+	do
+		case "${arg}" in
+			--nocolor)
+				RC_NOCOLOR="yes"
+				;;
+		esac
+	done
 fi
-if [ -n "${EBUILD}" ] && [ "${*/depend}" = "$*" ] && [ "${NOCOLOR}" = "true" ]
+
+if [ "${RC_NOCOLOR}" = "yes" ]
+then
+	COLS="25 80"
+	ENDCOL=
+
+	if [ -n "${EBUILD}" ] && [ "${*/depend}" = "$*" ]
+	then
+		stty cols 80 &>/dev/null
+		stty rows 25 &>/dev/null
+	fi
+else
+	COLS="`stty size 2> /dev/null`"
+	COLS="`getcols ${COLS}`"
+	COLS=$((${COLS} - 7))
+	ENDCOL=$'\e[A\e['${COLS}'G'    # Now, ${ENDCOL} will move us to the end of the
+	                               # column;  irregardless of character width
+fi
+
+if [ "${RC_NOCOLOR}" = "yes" ]
 then
 	GOOD=""
 	WARN=""
@@ -100,8 +123,10 @@ esyslog() {
 	then
 		pri="$1"
 		tag="$2"
+		
 		shift 2
 		[ -z "$*" ] && return 0
+		
 		/usr/bin/logger -p "${pri}" -t "${tag}" -- "$*"
 	fi
 }
@@ -111,7 +136,7 @@ esyslog() {
 #    show an informative message (with a newline)
 #
 einfo() {
-	if [ "${QUIET_STDOUT}" = "yes" ]
+	if [ "${RC_QUIET_STDOUT}" = "yes" ]
 	then
 		return
 	else
@@ -124,7 +149,7 @@ einfo() {
 #    show an informative message (without a newline)
 #
 einfon() {
-	if [ "${QUIET_STDOUT}" = "yes" ]
+	if [ "${RC_QUIET_STDOUT}" = "yes" ]
 	then
 		return
 	else
@@ -137,7 +162,7 @@ einfon() {
 #    show a warning message + log it
 #
 ewarn() {
-	if [ "${QUIET_STDOUT}" = "yes" ]
+	if [ "${RC_QUIET_STDOUT}" = "yes" ]
 	then
 		echo " ${*}"
 	else
@@ -153,7 +178,7 @@ ewarn() {
 #    show an error message + log it
 #
 eerror() {
-	if [ "${QUIET_STDOUT}" = "yes" ]
+	if [ "${RC_QUIET_STDOUT}" = "yes" ]
 	then
 		echo " ${*}" >/dev/stderr
 	else
@@ -169,11 +194,16 @@ eerror() {
 #    show a message indicating the start of a process
 #
 ebegin() {
-	if [ "${QUIET_STDOUT}" = "yes" ]
+	if [ "${RC_QUIET_STDOUT}" = "yes" ]
 	then
 		return
 	else
-		echo -e " ${GOOD}*${NORMAL} ${*}..."
+		if [ "${RC_NOCOLOR}" = "yes" ]
+		then
+			echo -ne " ${GOOD}*${NORMAL} ${*}..."
+		else
+			echo -e " ${GOOD}*${NORMAL} ${*}..."
+		fi
 	fi
 }
 
@@ -185,24 +215,24 @@ ebegin() {
 eend() {
 	if [ "$#" -eq 0 ] || ([ -n "$1" ] && [ "$1" -eq 0 ])
 	then
-		if [ "${QUIET_STDOUT}" != "yes" ]
+		if [ "${RC_QUIET_STDOUT}" != "yes" ]
 		then
 			echo -e "${ENDCOL}  ${BRACKET}[ ${GOOD}ok${BRACKET} ]${NORMAL}"
 		fi
 	else
-		local returnme="$1"
+		local retval="$1"
 		if [ "$#" -ge 2 ]
 		then
 			shift
 			eerror "${*}"
 		fi
-		if [ "${QUIET_STDOUT}" != "yes" ]
+		if [ "${RC_QUIET_STDOUT}" != "yes" ]
 		then
 			echo -e "${ENDCOL}  ${BRACKET}[ ${BAD}!!${BRACKET} ]${NORMAL}"
 			# extra spacing makes it easier to read
 			echo
 		fi
-		return ${returnme}
+		return ${retval}
 	fi
 }
 
@@ -214,24 +244,24 @@ eend() {
 ewend() {
 	if [ "$#" -eq 0 ] || ([ -n "$1" ] && [ "$1" -eq 0 ])
 	then
-		if [ "${QUIET_STDOUT}" != "yes" ]
+		if [ "${RC_QUIET_STDOUT}" != "yes" ]
 		then
 			echo -e "${ENDCOL}  ${BRACKET}[ ${GOOD}ok${BRACKET} ]${NORMAL}"
 		fi
 	else
-		local returnme="$1"
+		local retval="$1"
 		if [ "$#" -ge 2 ]
 		then
 			shift
 			ewarn "${*}"
 		fi
-		if [ "${QUIET_STDOUT}" != "yes" ]
+		if [ "${RC_QUIET_STDOUT}" != "yes" ]
 		then
 			echo -e "${ENDCOL}  ${BRACKET}[ ${WARN}!!${BRACKET} ]${NORMAL}"
 			# extra spacing makes it easier to read
 			echo
 		fi
-		return "${returnme}"
+		return "${retval}"
 	fi
 }
 

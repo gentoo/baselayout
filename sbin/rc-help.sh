@@ -25,7 +25,7 @@ echo
 echo -e "${GREEN}Gentoo Linux RC-Scripts; ${BLUE}http://www.gentoo.org/${OFF}"
 echo -e " Copyright 2001-2003 Gentoo Technologies, Inc.; Distributed under the GPL"
 echo
-echo -e "Usage: ${CYAN}${myservice}${OFF} [ ${GREEN}options${OFF} ]"
+echo -e "Usage: ${CYAN}${myservice}${OFF} < ${GREEN}flags${OFF} > [ ${GREEN}options${OFF} ]"
 echo
 echo -e "${CYAN}Options:${OFF}"
 echo -e "    ${GREEN}start${OFF}"
@@ -69,6 +69,9 @@ cat <<EOHELP
       Prints "status:  started" if the service is running, else it
       prints "status:  stopped".
 
+      Note that if the '--quiet' flag is given, it will return true if the
+      service is running, else false.
+
 EOHELP
 echo -e "    ${GREEN}ineed|iuse${OFF}"
 cat <<EOHELP
@@ -86,6 +89,20 @@ echo -e "    ${GREEN}broken${OFF}"
 cat <<EOHELP
       List the missing or broken dependencies of type 'need' this service
       depends on.
+
+EOHELP
+echo -e "${CYAN}Flags:${OFF}"
+echo -e "    ${GREEN}--quiet${OFF}"
+cat <<EOHELP
+      Suppress output to stdout, except if:
+
+      1) It is a warning, then output to stdout
+      2) It is an error, then output to stderr
+
+EOHELP
+echo -e "    ${GREEN}--nocolor${OFF}"
+cat <<EOHELP
+      Suppress the use of colors.
 
 EOHELP
 echo -e "${CYAN}Dependencies:${OFF}"

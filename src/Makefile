@@ -1,17 +1,40 @@
+# Copyright 1999-2003 Gentoo Technologies, Inc.
+# Distributed under the terms of the GNU General Public License v2
+# Author:  Martin Schlemmer <azarah@gentoo.org>
+# $Header$
+
 CC = gcc
 LD = gcc
 
-TARGETS = filefuncs.so
+CFLAGS = -Wall -O2
+DESTDIR =
 
-all: $(TARGETS)
+BIN_TARGETS = consoletype
+SBIN_TARGETS = runscript start-stop-daemon
 
-filefuncs.o: filefuncs.c
-	$(CC) -shared -Wall -DHAVE_CONFIG_H -c -O -fPIC -I/usr/include/awk $^
+TARGET = $(BIN_TARGETS) $(SBIN_TARGETS)
 
-filefuncs.so: filefuncs.o
-	$(LD) -o $@ -shared $^
+all: $(TARGET)
+
+.o:
+	$(CC) $(CFLAGS) -c $^
+
+consoletype: consoletype.o
+	$(LD) -o $@ $^
+
+runscript: runscript.o
+	$(LD) -o $@ $^
+
+start-stop-daemon: start-stop-daemon.o
+	$(LD) -o $@ $^
+
+install: $(TARGET)
+	install -m 0755 -d $(DESTDIR)/bin
+	install -m 0755 -d $(DESTDIR)/sbin
+	install -m 0755 $(BIN_TARGETS) $(DESTDIR)/bin
+	install -m 0755 $(SBIN_TARGETS) $(DESTDIR)/sbin
 
 clean:
-	rm -f $(TARGETS)
+	rm -f $(TARGET)
 	rm -f *.o *~ core
 
