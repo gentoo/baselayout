@@ -2,7 +2,6 @@
 
 if [ -z "$1" ]
 then
-	echo no 1
 	export SOFTLEVEL="`cat /dev/shm/.init.d/softlevel`"
 else
 	export SOFTLEVEL=$1
@@ -144,4 +143,7 @@ if [ "`cat /proc/mounts | grep '/dev devfs'`" ] && [ ! "`ps -A |grep devfsd`" ]
 then
 	/sbin/devfsd /dev >/dev/null 2>&1
 fi
+
+#if we were in the boot runlevel, it is done now ...
+[ -n "$BOOT" ] && unset BOOT
 

@@ -63,6 +63,13 @@ fi
 
 #mount shm and do dep scan	
 mountshm 
+
+#in theory /dev/shm/.init should not exist if the system had not
+#executed the boot runlevel.  if tmpfs support is not enabled in the
+#kernel, things will get pretty broken anyhow, so we wont worry about
+#this for now. (we need to check for this before running depscan.sh...)
+[ ! -d /dev/shm/.init.d ] && export BOOT="yes"
+
 /etc/init.d/depscan.sh
 
 if [ "$devfs" = "yes" ] && [ -e /dev/.devfsd ]
