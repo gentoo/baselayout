@@ -665,17 +665,46 @@ reverse_list() {
 		done
 }
 
+# void start_addon(addon)
+#
+#   Starts addon.
+#
+start_addon() {
+		local addon=$1
+
+		[[ -z ${addon} ]] && return 0
+		
+		[[ -r ${svclib}/addons/${addon}-start.sh ]] && \
+				source "${svclib}/addons/${addon}-start.sh"
+
+		return 0
+}
+
 # void start_volumes()
 #
 #   Starts all volumes in RC_VOLUME_ORDER.
 #
 start_volumes() {
 		local x=
-		
+
 		for x in ${RC_VOLUME_ORDER}; do
-				[[ -r ${svclib}/addons/${x}-start.sh ]] && \
-					source "${svclib}/addons/${x}-start.sh"
+				start_addon "${x}"
 		done
+
+		return 0
+}
+
+# void stop_addon(addon)
+#
+#   Stops addon.
+#
+stop_addon() {
+		local addon=$1
+
+		[[ -z ${addon} ]] && return 0
+		
+		[[ -r ${svclib}/addons/${addon}-stop.sh ]] && \
+				source "${svclib}/addons/${addon}-stop.sh"
 
 		return 0
 }
@@ -688,8 +717,7 @@ stop_volumes() {
 		local x=
 
 		for x in $(reverse_list ${RC_VOLUME_ORDER}); do
-				[[ -r ${svclib}/addons/${x}-stop.sh ]] && \
-					source "${svclib}/addons/${x}-stop.sh"
+				stop_addon "${x}"
 		done
 
 		return 0
