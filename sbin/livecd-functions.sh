@@ -4,12 +4,12 @@
 # $Header$
 
 # Global Variables:
-#    CDBOOT                  -- is booting off CD
-#    LIVECD_CONSOLE          -- console that is specified to kernel commandline
-#                            -- (ttyS0, tty1, etc). Only defined if passed to kernel
-#    LIVECD_CONSOLE_BAUD     -- console baudrate specified
-#    LIVECD_CONSOLE_PARITY   -- console parity specified
-#    LIVECD_CONSOLE_DATABITS -- console databits specified
+#    CDBOOT			-- is booting off CD
+#    LIVECD_CONSOLE		-- console that is specified to kernel commandline 
+#				-- (ttyS0, tty1, etc). Only defined if passed to kernel
+#    LIVECD_CONSOLE_BAUD	-- console baudrate specified
+#    LIVECD_CONSOLE_PARITY	-- console parity specified
+#    LIVECD_CONSOLE_DATABITS	-- console databits specified
 
 livecd_parse_opt() {
 	case "$1" in
@@ -42,6 +42,9 @@ livecd_console_settings() {
 		14400*)
 			LIVECD_CONSOLE_BAUD=14400
 		;;
+		19200*)
+			LIVECD_CONSOLE_BAUD=19200
+		;;
 		28800*)
 			LIVECD_CONSOLE_BAUD=28800
 		;;
@@ -59,7 +62,7 @@ livecd_console_settings() {
 	then
 		# If it's a virtual console, set baud to 38400, if it's a serial
 		# console, set it to 9600 (by default anyhow)
-		case ${LIVECD_CONSOLE} in
+		case ${LIVECD_CONSOLE} in 
 			tty[0-9])
 				LIVECD_CONSOLE_BAUD=38400
 			;;
@@ -93,7 +96,7 @@ livecd_console_settings() {
 
 
 livecd_read_commandline() {
-	local CMDLINE
+        local CMDLINE
 
 # Line to be used for testing only. The formatting of the console=
 # prompt can be found in /usr/src/linux/Documentation/serial-console.txt
@@ -105,6 +108,10 @@ livecd_read_commandline() {
 	do
 		case "${x}" in
 			cdroot)
+				CDBOOT="yes"
+				export CDBOOT
+			;;
+			cdroot\=*)
 				CDBOOT="yes"
 				export CDBOOT
 			;;

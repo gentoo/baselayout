@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  25 Feb 2005; Chris Gianelloni <wolf31o2@gentoo.org>
+  sbin/livecd-functions.sh:
+  Updated livecd-functions.sh to match what we are using on the LiveCD.
+
   25 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix init.d/checkfs, init.d/localmount and init.d/halt.sh to call
