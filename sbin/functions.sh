@@ -2,35 +2,41 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
 
-#setup a basic $PATH
+# Setup a basic $PATH
 [ -z "${PATH}" ] && \
 	PATH="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/sbin"
 
-#daemontools dir
+# Make sure that /sbin and /usr/sbin are in $PATH
+[ "${PATH/^\/sbin:}" = "${PATH}" -a "${PATH/:\/sbin:}" = "${PATH}" ] && \
+	PATH="/sbin:${PATH}"
+[ "${PATH/^\/usr\/sbin:}" = "${PATH}" -a "${PATH/:\/usr\/sbin:}" = "${PATH}" ] && \
+	PATH="/usr/sbin:${PATH}"
+
+# daemontools dir
 SVCDIR="/var/lib/supervise"
 
-#rc-scripts dir
+# rc-scripts dir
 svcdir="/mnt/.init.d"
 
 svcfstype="tmpfs"
 
-#size of $svcdir in KB
+# Size of $svcdir in KB
 svcsize="1024"
 
-#tmpfs mount point for diskless nodes
+# tmpfs mount point for diskless nodes
 shmdir="/mnt/.shm"
 
-#different types of dependancies
+# Different types of dependancies
 deptypes="need use"
 
-#different types of order deps
+# Different types of order deps
 ordtypes="before after"
 
 #
 # Internal variables
 #
 
-#dont output to stdout?
+# Dont output to stdout?
 QUIET_STDOUT="no"
 
 #
@@ -58,8 +64,8 @@ else
 fi
 COLS=$((${COLS} -7))
 ENDCOL=$'\e[A\e['${COLS}'G'
-#now, ${ENDCOL} will move us to the end of the column;
-#irregardless of character width
+# Now, ${ENDCOL} will move us to the end of the column;
+# irregardless of character width
 
 NORMAL="\033[0m"
 GOOD=$'\e[32;01m'
