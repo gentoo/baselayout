@@ -8,6 +8,9 @@
     Punt the consolefont related variables from rc.conf since they've 
     been moved to conf.d/consolefont.
 
+    Import some VServer support from #55973.  For now, just add the 
+    detection function to functions.sh and support in init.d/clock.
+
   07 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix /sbin/functions.sh not to run stty during 'emerge depend'.

@@ -625,7 +625,18 @@ is_net_fs() {
 #   EXAMPLE:  if is_uml_sys ; then ...
 #
 is_uml_sys() {
-	grep -q 'UML' /proc/cpuinfo &> /dev/null
+	grep -qs 'UML' /proc/cpuinfo
+	return $?
+}
+
+# bool is_vserver_sys()
+#
+#   return 0 if the currently running system is a Linux VServer
+#   
+#   EXAMPLE:  if is_vserver_sys ; then ...                                    
+#
+is_vserver_sys() {
+	grep -qs '^s_context:[[:space:]]*[1-9]' /proc/self/status
 	return $?
 }
 
