@@ -6,10 +6,10 @@
 [ -z "${PATH}" ] && PATH="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/sbin"
 
 #daemontools dir
-SVCDIR=/var/lib/supervise
+SVCDIR="/var/lib/supervise"
 
 #rc-scripts dir
-svcdir=/mnt/.init.d
+svcdir="/mnt/.init.d"
 
 #size of $svcdir in KB
 svcsize=1024
@@ -20,17 +20,36 @@ deptypes="need use"
 #different types of order deps
 ordtypes="before after"
 
+#
+# Internal variables
+#
+
+#dont output to stdout?
 QUIET_STDOUT="no"
+
+#stuff for getpids() and co
+declare -ax MASTERPID=""
+declare -ax PIDLIST=""
+DAEMON=""
+PIDFILE=""
+RCRETRYKILL="no"
+RCRETRYTIMEOUT=1
+RCRETRYCOUNT=5
+RCFAILONZOMBIE="no"
+
+[ -f /etc/conf.d/rc ] && source /etc/conf.d/rc
+
 
 getcols() {
 	echo "${2}"
 }
 
-COLS="$(stty size)"
+COLS="$(stty size 2>/dev/null)"
 COLS="$(getcols $COLS)"
 COLS=$((${COLS} -7))
 ENDCOL=$'\e[A\e['${COLS}'G'
-#now, ${ENDCOL} will move us to the end of the column; irregardless of character width
+#now, ${ENDCOL} will move us to the end of the column;
+#irregardless of character width
 
 NORMAL="\033[0m"
 GOOD=$'\e[32;01m'
@@ -152,6 +171,305 @@ wrap_rcscript() {
 		retval=0
 	fi
 	rm -f ${svcdir}/foo.sh
+	return ${retval}
+}
+
+getpidfile() {
+	local x=""
+	local y=""
+	local count=0
+	local count2=0
+	
+	if [ "$#" -ne 1 ] || [ -z "${DAEMON}" ]
+	then
+		return 1
+	else
+		for x in ${DAEMON}
+		do
+			if [ "${x}" != "${1}" ]
+			then
+				count=$(($count + 1))
+				continue
+			fi
+			
+			if [ -n "${PIDFILE}" ]
+			then
+				count2=0
+				
+				for y in ${PIDFILE}
+				do
+					if [ "${count}" -eq "${count2}" ] && [ -f ${y} ]
+					then
+						echo "${y}"
+						return 0
+					fi
+					
+					count2=$((${count2} + 1))
+				done
+				for y in ${PIDFILE}
+				do
+					if [ "$(eval echo \${y/${x}/})" != "${y}" ] && [ -f ${y} ]
+					then
+						echo "${y}"
+						return 0
+					fi
+				done
+			else
+				if [ -f /var/run/${x}.pid ]
+				then
+					echo "/var/run/${x}.pid"
+					return 0
+				elif [ -f /var/run/${myservice}/${x}.pid ]
+				then
+					echo "/var/run/${myservice}/${x}.pid"
+					return 0
+				fi
+			fi
+			
+			count=$((${count} + 1))
+		done
+	fi
+	
+	return 1
+}
+
+getpids() {
+	local x=""
+	local count=0
+	local pidfile=""
+
+	if [ -n "${DAEMON}" ]
+	then
+		for x in ${DAEMON}
+		do
+			MASTERPID[${count}]=""
+			PIDLIST[${count}]=""
+
+			pidfile="$(getpidfile ${x})"
+			if [ -n "${pidfile}" ]
+			then
+				MASTERPID[${count}]="$(cat ${pidfile})"
+			fi
+			if [ -n "$(pidof ${x})" ]
+			then
+				PIDLIST[${count}]="$(pidof ${x})"
+			fi
+			
+			count=$((${count} + 1))
+		done
+	fi
+
+	return 0
+}
+
+#
+# Return status:
+#   0 - Everything looks ok, or rc-script do not start any daemons
+#   1 - Master pid is dead, but other processes are running
+#   2 - Master pid and all others (if any), are dead
+#   3 - No pidfile, and no processes are running what so ever
+#
+checkpid() {
+	local x=""
+	local count=0
+
+	if [ "$#" -ne 1 ] || [ -z "${1}" ] || [ -z "${DAEMON}" ] || \
+	   [ "$(eval echo \${DAEMON/${1}/})" == "${DAEMON}" ]
+	then
+		return 3
+	fi
+
+	getpids
+
+	for x in ${DAEMON}
+	do
+		if [ "${x}" != "${1}" ]
+		then
+			count=$((${count} + 1))
+			continue
+		fi
+
+		if [ -z "${PIDLIST[${count}]}" ] && \
+		   [ -n "${MASTERPID[${count}]}" ]
+		then
+			return 2
+		elif [ -z "${PIDLIST[${count}]}" ] && \
+		     [ -z "${MASTERPID[${count}]}" ]
+		then
+			return 3
+		elif [ -n "${MASTERPID[${count}]}" ] && \
+		     [ ! -d /proc/${MASTERPID[${count}]} ]
+		then
+			return 1
+		fi
+		
+		count=$((${count} + 1))
+	done
+	
+	return 0
+}
+
+stop-single-daemon() {
+	local retval=0
+	local pidfile=""
+	local pidretval=0
+	local killpidfile="no"
+	local failonzombie="no"
+	local daemon=""
+	local SSD="start-stop-daemon --stop --quiet"
+
+	for x in $*
+	do
+		case ${x} in
+			--kill-pidfile)
+				killpidfile="yes"
+				;;
+			--fail-zombie)
+				failonzombie="yes"
+				;;
+			*)
+				if [ "$(eval echo \${DAEMON/${x}/})" != "${DAEMON}" ]
+				then
+					if [ -n "${daemon}" ]
+					then
+						return 1
+					fi
+					
+					daemon="${x}"
+				fi
+				;;
+		esac
+	done
+
+	if [ -z "${DAEMON}" ] || [ "$#" -lt 1 ] || [ -z "${daemon}" ]
+	then
+		return 1
+	else
+		checkpid ${daemon}
+		pidretval=$?
+		if [ "${pidretval}" -eq 0 ]
+		then
+			pidfile="$(getpidfile ${daemon})"
+			if [ -n "${pidfile}" ]
+			then
+				${SSD} --pidfile ${pidfile}
+				retval=$?
+			else
+				${SSD} --name ${daemon}
+				retval=$?
+			fi
+		elif [ "${pidretval}" -eq 1 ]
+		then
+			${SSD} --name ${daemon}
+			retval=$?
+		elif [ "${pidretval}" -eq 2 ]
+		then
+			if [ "${RCFAILONZOMBIE}" = "yes" ] || [ "${failonzombie}" = "yes" ]
+			then
+				retval=1
+			fi
+		elif [ "${pidretval}" -eq 3 ]
+		then
+			if [ "${RCFAILONZOMBIE}" = "yes" ] || [ "${failonzombie}" = "yes" ]
+			then
+				retval=1
+			fi
+		fi
+	fi
+
+	#only delete the pidfile if the daemon is dead
+	if [ "${killpidfile}" = "yes" ]
+	then
+		checkpid ${daemon}
+		pidretval=$?
+		if [ "${pidretval}" -eq 2 ] || [ "${pidretval}" -eq 3 ]
+		then
+			rm -f $(getpidfile ${x})
+		fi
+	fi
+
+	#final sanity check
+	if [ "${retval}" -eq 0 ]
+	then
+		checkpid ${daemon}
+		pidretval=$?
+		if [ "${pidretval}" -eq 0 ] || [ "${pidretval}" -eq 1 ]
+		then
+			retval=$((${retval} + 1))
+		fi
+	fi
+	
+	return ${retval}
+}
+
+stop-daemon() {
+	local x=""
+	local count=0
+	local retval=0
+	local tmpretval=0
+	local pidretval=0
+	local retry="no"
+	local ssdargs=""
+
+	if [ -z "${DAEMON}" ]
+	then
+		return 0
+	fi
+
+	for x in $*
+	do
+		case ${x} in
+			--kill-pidfile)
+				ssdargs="${ssdargs} --kill-pidfile"
+				;;
+			--fail-zombie)
+				ssdargs="${ssdargs} --fail-zombie"
+				;;
+			--retry)
+				retry="yes"
+				;;
+			*)
+				eerror "  ERROR: invalid argument to stop-daemon()!"
+				return 1
+				;;
+		esac
+	done
+
+	if [ "${retry}" = "yes" ] || [ "${RCRETRYKILL}" = "yes" ]
+	then
+		for x in ${DAEMON}
+		do
+			count=0
+			pidretval=0
+		
+			while ([ "${pidretval}" -eq 0 ] || \
+			       [ "${pidretval}" -eq 1 ]) && \
+				  [ "${count}" -lt "${RCRETRYCOUNT}" ]
+			do
+				if [ "${count}" -ne 0 ] && [ -n "${RCRETRYTIMEOUT}" ]
+				then
+					sleep ${RCRETRYTIMEOUT}
+				fi
+
+				stop-single-daemon ${ssdargs} ${x}
+				tmpretval=$?
+
+				checkpid ${x}
+				pidretval=$?
+
+				count=$((${count} + 1))
+			done
+			
+			retval=$((${retval} + ${tmpretval}))
+		done
+	else
+		for x in ${DAEMON}
+		do
+			stop-single-daemon ${ssdargs} ${x}
+			retval=$((${retval} + $?))
+		done
+	fi
+
 	return ${retval}
 }
 

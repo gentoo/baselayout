@@ -2,8 +2,8 @@
 # Distributed under the terms of the GNU General Public License, v2 or later
 # $Header$
 
-PATH=/usr/local/bin
-ROOTPATH=/usr/local/bin
+PATH=/usr/local/bin:/opt/bin
+ROOTPATH=/usr/local/bin:/opt/bin
 LDPATH=/usr/local/lib
 MANPATH=/usr/share/man:/usr/local/share/man
 INFODIR=/usr/share/info

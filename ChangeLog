@@ -2,6 +2,19 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  20 Jun 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add /opt/bin to $PATH and $ROOTPATH, closing bug #3603.  Modified
+    /etc/env.d/00basic for this.
+
+    Add some new daemon stop and pid detection stuff to /sbin/functions.sh.
+    Nothing official, but I spent enouth time on it not to want to loose it :)
+
+    Fixed a bug in /sbin/functions.sh that caused rc-scripts run as cron jobs
+    to give output to stderr.  This was caused by a call to "stty", which when
+    run without a attatched terminal, have this effect.  Basically just pipe
+    stderr to /dev/null.
+
   5 Jun 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Add /usr/local/share/man to $MANPATH (/etc/env.d/00basic), resolving
