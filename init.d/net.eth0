@@ -32,8 +32,7 @@ setup_env() {
 	dhcpcd_IFACE="$(eval echo \$\{dhcpcd_${iface}\})"
 	inet6_IFACE="$(eval echo \$\{inet6_${iface}\})"
 	alias_IFACE="$(eval echo \$\{alias_${iface}\})"
-	status_IFACE="$(ifconfig | gawk -v IFACE="${iface}" '/Link/ { if ($1 == IFACE) print "up" }')"
-	carrier_IFACE="$(ifconfig | gawk -v IFACE="${iface}" '/RUNNING/ { if ($1 == IFACE) print "running" }')"
+	status_IFACE="$(ifconfig | gawk -v IFACE="${iface}" '$0 ~ /Link/ { if ($1 == IFACE) print "up" }')"
 	vlans="$(eval echo \$\{iface_${IFACE}_vlans\})"
 }
 
@@ -62,8 +61,15 @@ iface_start() {
 		# Check that eth0 was not brough up by the kernel ...
 		if [ "${status_IFACE}" != "up" ]
 		then
+			# The interface has to be up before we can check
+			# that it has a carrier ...
+			/sbin/ifconfig ${IFACE} up >/dev/null || {
+				retval=$?
+				eend ${retval} "Failed to bring ${IFACE} up"
+				return ${retval}
+			}
 			# Check that the interface has a carrier
-			if [ "${carrier_IFACE}" = "running" ]
+			if ifconfig ${IFACE} | grep -qc 'RUNNING' &>/dev/null
 			then
 				/sbin/dhcpcd ${dhcpcd_IFACE} ${IFACE} >/dev/null || {
 					retval=$?
