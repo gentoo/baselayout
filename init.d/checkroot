@@ -44,6 +44,9 @@ start() {
 		mount -f -o rw / &>/dev/null
 		mount -f /proc &>/dev/null
 
+		# Remove stale backups
+		rm -f /etc/mtab~ /etc/mtab~~
+		
 		# should /dev be mounted ?
 		if ! get_bootparam "nodevfs" && [ -e /dev/.devfsd ]
 		then

@@ -12,12 +12,28 @@ start() {
 	# LVM support for /usr, /home, /opt ....
 	# This should be done *before* checking local
 	# volumes, or they never get checked.
-	if [ -x /sbin/vgchange -a -f /etc/lvmtab ] && ! [ -d /proc/lvm ]
+	if [ -x /sbin/vgscan -a -d /proc/lvm ]
 	then
 		ebegin "Setting up the Logical Volume Manager"
 		#still echo stderr for debugging
-		/sbin/vgscan >/dev/null && /sbin/vgchange -a y >/dev/null
+		/sbin/vgscan >/dev/null 
+		if [ "$?" -eq 0 ] && [ -x /sbin/vgchange -a -f /etc/lvmtab ]
+		then
+			/sbin/vgchange -a y >/dev/null
+		fi
 		eend $? "Failed to setup the LVM"
+	fi
+
+	# Start software raid
+	if [ -x /sbin/raidstart ] && [ -f /etc/raidtab ] && [ -f /proc/mdstat ]
+	then
+		if [ `grep "persistent-superblock" /etc/raidtab | awk '{print $2}'` == 0 ]
+		then
+			ebegin "Starting software RAID"
+			# still echo stderr for debugging
+			/sbin/raidstart --all >/dev/null
+			eend $? "Failed to start software RAID"
+		fi
 	fi
 
 	ebegin "Checking all filesystems"
