@@ -9,6 +9,3 @@ eval `dircolors -b /etc/DIR_COLORS`
 alias d="ls --color"
 alias ls="ls --color=auto"
 alias ll="ls --color -l"
-
-## uncomment the following line to activate bash-completion
-#[ -f /etc/profile.d/bash-completion ] && source /etc/profile.d/bash-completion
