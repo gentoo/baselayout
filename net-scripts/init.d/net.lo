@@ -679,11 +679,10 @@ run_start() {
 	# but eth0 has not been loaded then the module gets loaded as
 	# eth0.
 	# Not much we can do about this :(
+	# Also, we cannot error here as some modules - such as bridge
+	# create interfaces
 	if ! interface_exists ${iface} ; then
-		if ! /sbin/modprobe ${iface} &>/dev/null ; then
-			eerror "${iface} does not exist"
-			return 1
-		fi
+		/sbin/modprobe ${iface} &>/dev/null
 	fi
 
 	# Setup variables for pre/post to use
