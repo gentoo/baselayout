@@ -25,7 +25,11 @@ start() {
 			# it'll be deleted in that script.
 			retval=$?
 		else
-			fsck -C -T -a /
+			if mount -vf -o remount / | \
+				awk '{ if ($5 !~ /coda|nfs|ncpfs|smbfs|cifs/) exit 0; else exit 1; }'
+			then
+				fsck -C -T -a /
+			fi
 			retval=$?
 		fi
 		if [ "${retval}" -eq 0 ]

@@ -4,7 +4,8 @@
 
   03 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
 
-    Add support for NFSv4 from #25106 to the netmount script.
+    Add support for NFSv4 from #25106 to the netmount script.  Don't 
+    try to fsck / if the root is a remote filesystem (like NFS) #36624.
 
   02 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
 
