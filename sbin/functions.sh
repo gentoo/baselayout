@@ -27,7 +27,7 @@ ordtypes="before after"
 RC_QUIET_STDOUT="no"
 
 # Should we use color?
-RC_NOCOLOR="no"
+RC_NOCOLOR="${RC_NOCOLOR:-no}"
 # Can the terminal handle endcols?
 RC_ENDCOL="yes"
 

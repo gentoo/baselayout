@@ -22,6 +22,10 @@
 
     Add selinux update from Chris PeBenito for src/runscript.c #64019.
 
+    Add more quoting to rc-help.sh to fix some non-critical errors.  
+    Make rc-help.sh respect the value of RC_NOCOLOR.  Allow RC_NOCOLOR 
+    in functions.sh to be set via the environment.
+
   04 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
 
     More (I mean a LOT more) services.  This takes care of #44458, 
