@@ -30,10 +30,10 @@ start() {
 	   [ -e /proc/bus/usb -a ! -e /proc/bus/usb/devices ]
 	then
 		ebegin "Mounting USB device filesystem (${usbfs})"
-		# Fetch usb gid from /etc/group; fixes bug 35860
-		usbgid=$(awk -F: '/^usb:/{print $3; exit}' /etc/group)
-		mount -t ${usbfs} ${usbgid:+-o devmode=0664,devgid=$usbgid} \
-			none /proc/bus/usb &>/dev/null
+#		# Fetch usb gid from /etc/group; fixes bug 35860
+#		usbgid=$(awk -F: '/^usb:/{print $3; exit}' /etc/group)
+#		mount -t ${usbfs} ${usbgid:+-o devmode=0664,devgid=$usbgid} \
+		mount -t ${usbfs} none /proc/bus/usb &>/dev/null
 		eend $? "Failed to mount USB device filesystem"
 	fi
 
