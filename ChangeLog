@@ -2,6 +2,11 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  23 April 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Remove creation of /var/run/utmpx from bootmisc again.  Seems
+    other people have wierd problems.
+
 * rc-scripts 1.3.4 (21 April 2002)
 
   21 April 2002; Martin Schlemmer <azarah@gentoo.org>:

@@ -45,8 +45,8 @@ start() {
 			find . ! -type d ! -name utmp ! -name innd.pid ! -name random-seed \
 			-exec rm -f -- {} \; 1>&2 )
 		: > /var/run/utmp
-		#create /var/run/utmpx to fix newgrp segfaulting.
-		ln -s ../log/wtmp /var/run/utmpx
+		#remove /var/run/utmpx
+		rm -f /var/run/utmpx
 		#create the .keep to stop portage from removing /var/lock
 		>/var/lock/.keep
 		eend 0
