@@ -24,11 +24,20 @@ $if mode=emacs
 "\e[6~": history-search-forward
 "\e[3~": delete-char
 "\e[2~": quoted-insert
+
+# gnome-terminal (escape + arrow key)
 "\e[5C": forward-word
 "\e[5D": backward-word
+# konsole / xterm / rxvt (escape + arrow key)
+"\e\e[C": forward-word
+"\e\e[D": backward-word
+# aterm / eterm (control + arrow key)
+"\eOc": forward-word
+"\eOd": backward-word
 
-# for rxvt
+$if term=rxvt
 "\e[8~": end-of-line
+$endif
 
 # for non RH/Debian xterm, can't hurt for RH/Debian xterm
 "\eOH": beginning-of-line
