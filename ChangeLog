@@ -246,7 +246,7 @@
     a fs_passno setting of 0 when dealing with / #39212.  Change 
     default / filesystem type to ext3 instead of xfs #42670.
 
-    Re-order the arguements to mount to match POSIX requirements #66225.
+    Re-order the arguments to mount to match POSIX requirements #66225.
 
     Don't pipe swapon in localmount to /dev/null and ignore return 
     codes anymore.  A swapon that works shows no output #39834.

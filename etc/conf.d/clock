@@ -8,7 +8,7 @@
 
 CLOCK="UTC"
 
-# If you wish to pass any other arguements to hwclock during bootup, 
+# If you wish to pass any other arguments to hwclock during bootup, 
 # you may do so here.
 
 CLOCK_OPTS=""
