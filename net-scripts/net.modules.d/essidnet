@@ -99,8 +99,8 @@ essidnet_pre_start() {
 		done
 
 		eval x=\"\$\{mac_searchdomains_${mac}\}\"
-		[[ -z ${x} ]] && eval x=\"\$\{mac_searchdomains_${mac}\}\"
-		[[ -n ${x} ]] && echo "search ${i}" >> /etc/resolv.conf
+		[[ -z ${x} ]] && eval x=\"\$\{searchdomains_${mac}\}\"
+		[[ -n ${x} ]] && echo "search ${x}" >> /etc/resolv.conf
 	fi
 
 	# Backwards compat for old gateway var

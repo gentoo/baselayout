@@ -251,10 +251,10 @@ ifconfig_post_start() {
 	# BACKWARD COMPATIBILITY: set the default gateway
 	if [[ ${gateway} == ${iface}/* ]]; then
 		# We don't add the old gateway if one has been set in routes_IFACE
-		local gw=false
+		local gw=true
 		for x in "${routes[@]}"; do
 			[[ ${x} != "*default gw*" ]] && continue
-			gw=true
+			gw=false
 			break
 		done
 		${gw} && routes=( "${routes[@]}" "default gw ${gateway#*/}" )
