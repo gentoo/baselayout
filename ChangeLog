@@ -10,7 +10,8 @@
   Start-stop-daemon is moved here from sysvinit by the way.  There is stuff
   in this ChangeLog that needs to be removed! Like the changes to hosts,
   profile.  /etc/{passwd,group} have minor UID and GID type fixes for
-  users ftp, postgres, xfs.
+  users ftp, postgres, xfs.  Tweaked tarball.sh to not include CVS
+  directories.
 
   29 Nov 2001; Donny Davies (woodchip@gentoo.org): Added a man directory
   to rc-scripts.  Checked in two manpages there, one for modules.autoload.5
