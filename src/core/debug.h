@@ -29,9 +29,9 @@
 # define DBG_MSG(_format, _arg...) \
 	do { \
 		int old_errno = errno; \
-		printf("DEBUG(1): in %s, function %s(), line %i:\n", __FILE__, \
+		fprintf(stderr, "DEBUG(1): in %s, function %s(), line %i:\n", __FILE__, \
 				__FUNCTION__, __LINE__); \
-		printf("DEBUG(2): " _format, ## _arg); \
+		fprintf(stderr, "DEBUG(2): " _format, ## _arg); \
 		errno = old_errno; \
 		if (0 != errno) { \
 			perror("DEBUG(3)"); \
@@ -47,9 +47,9 @@
 		 * errors when reading the parent/child pipes */ \
 		/* if ((0 != errno) && (ESPIPE != errno)) { */ \
 		if (0 != errno) { \
-			printf("DEBUG(1): in %s, function %s(), line %i:\n", \
+			fprintf(stderr, "DEBUG(1): in %s, function %s(), line %i:\n", \
 					__FILE__, __FUNCTION__, __LINE__); \
-			printf("DEBUG(2): " _format, ## _arg); \
+			fprintf(stderr, "DEBUG(2): " _format, ## _arg); \
 			errno = old_errno; \
 			perror("DEBUG(3)"); \
 			/* perror() for some reason sets errno to ESPIPE */ \
@@ -61,7 +61,7 @@
 #define FATAL_ERROR() \
 	do { \
 		int old_errno = errno; \
-		printf("ERROR: file '%s', function '%s', line %i.\n", \
+		fprintf(stderr, "ERROR: file '%s', function '%s', line %i.\n", \
 			__FILE__, __FUNCTION__, __LINE__); \
 		errno = old_errno; \
 		if (0 != errno) \

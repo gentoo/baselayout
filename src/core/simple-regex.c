@@ -812,7 +812,7 @@ int main() {
 
 	rcscript = fopen("acpid", "r");
 	if (NULL == rcscript) {
-		printf("Error opening file!\n");
+		printf("%s", "Error opening file!");
 		return 1;
 	}
 
@@ -833,10 +833,10 @@ int main() {
 					printf("match: '%s', %i\n", tmp_data.where, tmp_data.count);
 				
 			} else {
-				printf("No match\n");
+				printf("%s", "No match\n");
 			}
 		} else {
-			printf("Error during match\n");
+			printf("%s", "Error during match\n");
 		}
 	}
 

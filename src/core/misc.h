@@ -46,7 +46,7 @@
 #define EERROR(_args...) \
 	do { \
 		int old_errno = errno; \
-		printf(" \033[31;01m*\033[0m " _args); \
+		fprintf(stderr, " \033[31;01m*\033[0m " _args); \
 		errno = old_errno; \
 	} while (0)
 

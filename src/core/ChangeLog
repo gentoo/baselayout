@@ -4,6 +4,11 @@
 
   17 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
 
+    debug.h, misc.h, simple-regex.c: Print debug/errors to stderr, patch from
+                                     Ned Ludd <solar@gentoo.org>
+
+  17 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
+
     debug.h: Replace invalid EXIT_FAILSTATUS with EXIT_FAILURE.
     parse.c: Modify parse_print_body() to be more ash friendly - suggestions
              from Ned Ludd <solar@gentoo.org>.
