@@ -27,7 +27,13 @@ start() {
 		TBLURB="[Local Time]"
 	fi
 
-	if [ -x /sbin/hwclock ]
+	if [ -n "$(grep 'UML' /proc/cpuinfo)" ]
+	then
+		ebegin "Setting system clock to hardware clock ${TBLURB}"
+		eend 0 "Detected UML Environment; ignoring"
+		return 0
+
+	elif [ -x /sbin/hwclock ]
 	then
 		ebegin "Setting system clock to hardware clock ${TBLURB}"
 		errstr="$(/sbin/hwclock --adjust ${myopts} 2>&1 >/dev/null)"
@@ -59,7 +65,13 @@ stop() {
 		TBLURB="[Local Time]"
 	fi
 
-	if [ -x /sbin/hwclock ]
+	if [ -n "$(grep 'UML' /proc/cpuinfo)" ]
+	then
+		ebegin "Syncing hardware clock to system clock ${TBLURB}"
+		eend 0 "Detected UML Environment; ignoring"
+		return 0
+		
+	elif [ -x /sbin/hwclock ]
 	then
 		ebegin "Syncing hardware clock to system clock ${TBLURB}"
 		errstr="$(/sbin/hwclock --systohc ${myopts} 2>&1 >/dev/null)"

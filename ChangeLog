@@ -10,6 +10,12 @@
     Fix /etc/init.d/net.eth0 to not set rp_filter if already set via
     /etc/sysctl.conf, bug #24235 - thanks jochen <jochen.eisinger@gmx.de>.
 
+    Fix /sbin/runscript.sh and /lib/rcscripts/awk/cachedepend.awk to work
+	with symlinks in /etc/init.d/, closing bug #24228.
+
+	Fix /etc/init.d/clock to work with UML, closing bug #24225 thanks to
+	John Mylchreest <johnm@gentoo.org>.
+
   15 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:
 
     Add /bin/csh to /etc/shells.

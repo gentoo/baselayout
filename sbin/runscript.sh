@@ -16,7 +16,7 @@ svcpause="no"
 svcrestart="no"
 
 myscript="$1"
-if [ -L "$1" ]
+if [ -L "$1" -a "${1%/*}" != "/etc/init.d" ]
 then
 	myservice="$(readlink "$1")"
 else

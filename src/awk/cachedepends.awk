@@ -81,7 +81,7 @@ BEGIN {
 	# Make sure that its a file we are working with,
 	# and do not process scripts, source or backup files.
 	for (x in TMPRCSCRIPTS)
-		if ((isfile(TMPRCSCRIPTS[x])) &&
+		if (((isfile(TMPRCSCRIPTS[x])) || (islink(TMPRCSCRIPTS[x]))) &&
 		    (TMPRCSCRIPTS[x] !~ /((\.(sh|c|bak))|\~)$/)) {
 
 			RCCOUNT++
