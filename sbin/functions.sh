@@ -609,6 +609,43 @@ add_suffix() {
 	return 0
 }
 
+# Network filesystems list for common use in rc-scripts.
+# This variable is used in is_net_fs and other places such as
+# localmount.
+NET_FS_LIST="afs cifs coda ncpfs nfs nfs4 shfs smbfs"
+
+# bool is_net_fs(path)
+#
+#   return 0 if path is the mountpoint of a networked filesystem
+#
+#   EXAMPLE:  if is_net_fs / ; then ...
+#
+is_net_fs() {
+	local fstype=$(mount -o remount -fv "$1" | awk '{print $(NF-1)}')
+	[[ " ${NET_FS_LIST} " == *" ${fstype} "* ]]
+	return $?
+}
+
+# bool is_uml_sys()
+#
+#   return 0 if the currently running system is User Mode Linux
+#
+#   EXAMPLE:  if is_uml_sys ; then ...
+#
+is_uml_sys() {
+	grep -q 'UML' /proc/cpuinfo &> /dev/null
+	return $?
+}
+
+
+##############################################################################
+#                                                                            #
+# This should be the last code in here, please add all functions above!!     #
+#                                                                            #
+# *** START LAST CODE ***                                                    #
+#                                                                            #
+##############################################################################
+
 if [ -z "${EBUILD}" ]
 then
 	# Setup a basic $PATH.  Just add system default to existing.
@@ -672,32 +709,13 @@ else
 	BRACKET=$'\e[34;01m'
 fi
 
-# Network filesystems list for common use in rc-scripts.
-# This variable is used in is_net_fs and other places such as
-# localmount.
-NET_FS_LIST="afs cifs coda ncpfs nfs nfs4 shfs smbfs"
+##############################################################################
+#                                                                            #
+# *** END LAST CODE ***                                                      #
+#                                                                            #
+# This should be the last code in here, please add all functions above!!     #
+#                                                                            #
+##############################################################################
 
-# bool is_net_fs(path)
-#
-#   return 0 if path is the mountpoint of a networked filesystem
-#
-#   EXAMPLE:  if is_net_fs / ; then ...
-#
-is_net_fs() {
-	local fstype=$(mount -o remount -fv "$1" | awk '{print $(NF-1)}')
-	[[ " ${NET_FS_LIST} " == *" ${fstype} "* ]]
-	return $?
-}
-
-# bool is_uml_sys()
-#
-#   return 0 if the currently running system is User Mode Linux
-#
-#   EXAMPLE:  if is_uml_sys ; then ...
-#
-is_uml_sys() {
-	grep -q 'UML' /proc/cpuinfo &> /dev/null
-	return $?
-}
 
 # vim:ts=4
