@@ -23,6 +23,8 @@
     Make sure the clock init script runs right after checkroot so 
     that timestamps are synchronized asap #68133.
 
+    Accept '-nc' as a short option to '--nocolor' #64736.
+
   26 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
 
     Don't use -A with fsck to respect the fs_passno since it'll try 
