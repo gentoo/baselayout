@@ -10,7 +10,7 @@ ebegin "Caching service dependencies"
 
 if [ ! -d "${svcdir}" ]
 then
-	if ! install -d -m0755 "${svcdir}" 2>/dev/null
+	if ! mkdir -p -m 0755 "${svcdir}" 2>/dev/null
 	then
 		eerror " Could not create needed directory '${svcdir}'!"
 	fi
@@ -20,7 +20,7 @@ for x in ${svcdir} softscripts snapshot options started
 do
 	if [ ! -d "${x}" ]
 	then
-		if ! install -d -m0755 "${svcdir}/${x}" 2>/dev/null
+		if ! mkdir -p -m 0755 "${svcdir}/${x}" 2>/dev/null
 		then
 			eerror " Could not create needed directory '${svcdir}/${x}'!"
 		fi

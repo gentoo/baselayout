@@ -699,7 +699,7 @@ save_options() {
 	shift
 	if [ ! -d "${svcdir}/options/${myservice}" ]
 	then
-		install -d -m0755 "${svcdir}/options/${myservice}"
+		mkdir -p -m 0755 "${svcdir}/options/${myservice}"
 	fi
 	
 	echo "$*" > "${svcdir}/options/${myservice}/${myopts}"

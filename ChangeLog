@@ -10,6 +10,10 @@
     Update /etc/init.d/consolefont to use newer kbd.  Should also close
     bug #39864.
 
+    Fix /sbin/depscan.sh, /sbin/functions.sh and /sbin/rc to use mkdir rather
+    than install, as newer versions of install is located in /usr/bin.  This
+    closes bug #39648.
+
   06 Feb 2004; Martin Schlemmer <azarah@gentoo.org>:
 
    Tweak livecd support changes and add some more to hopefully sort out

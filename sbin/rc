@@ -524,7 +524,7 @@ rc_splash_calc
 # For keeping a list of services that fails during boot/halt
 if [ ! -d "${svcdir}/failed" ]
 then
-	install -d -m0755 "${svcdir}/failed"
+	mkdir -p -m 0755 "${svcdir}/failed"
 else
 	rm -rf "${svcdir}"/failed/*
 fi
@@ -569,7 +569,7 @@ fi
 # It needs to be a new directory, else when stopping the services
 # and the old directory is not intact, things get broken
 
-install -d -m0755 "${svcdir}/softscripts.new"
+mkdir -p -m 0755 "${svcdir}/softscripts.new"
 
 for x in ${myscripts}
 do
