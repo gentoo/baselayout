@@ -21,10 +21,10 @@ start() {
 	(cat /etc/modules.autoload; echo) | # make sure there is a LF at the end
 	while read module args
 	do
-		case "  $module" in
+		case "$module" in
 			\#*|"") continue ;;
 		esac
-		ebegin "Loading module $module"
+		ebegin "  Loading module $module"
 		modprobe $module $args >/dev/null 2>&1
 		eend $?
 	done
