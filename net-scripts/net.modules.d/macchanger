@@ -13,6 +13,13 @@ macchanger_provides() {
 	echo "macchanger"
 }
 
+# char* macchanger_before(void)
+#
+# Returns a space seperated array of modules this module should be loaded before
+macchanger_before() {
+	echo "interface"
+}
+
 # bool macchanger_check_installed(void)
 #
 # Returns 1 if macchanger is installed, otherwise 0
@@ -22,13 +29,6 @@ macchanger_check_installed() {
 	return 1
 }
 
-# int macchanger_priority(void)
-#
-# Returns the priority of the module - lower is more important
-macchanger_priority() {
-	echo 0
-}
-
 # bool macchanger_check_depends(void)
 #
 # Checks to see if we have the necessary package installed
@@ -36,7 +36,7 @@ macchanger_priority() {
 macchanger_check_depends() {
 	local e
 
-	[[ function != $(typeset -f interface_get_address) ]] && e=interface_get_address
+	[[ -z ${e} && function != $( type -t interface_get_mac_address ) ]] && e=interface_get_mac_address
 	[[ -z ${e} ]] && return 0
 
 	eerror "macchanger: interface is missing the required function ${e}\n"

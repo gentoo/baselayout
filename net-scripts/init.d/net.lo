@@ -22,12 +22,60 @@ depend() {
 	use hotplug pcmcia usb bridge
 }
 
+# void modules_sort_before(void)
+#
+# Sorts our modules array based on the "before" array
+modules_sort_before() {
+	local i up j k p
+
+	# Now we sort the modules by before/after arrays
+	for ((i = ${#MODULES[@]} - 1; i >= 0; i--)); do
+		[[ function != $( type -t ${MODULES[i]}_before ) ]] && continue
+		for up in $( ${MODULES[i]}_before | sort ); do
+			for ((j = 0; j < i; j ++)); do
+				[[ ${up} != ${MODULES[j]} && ${up} != $( ${MODULES[j]}_provides ) ]] && continue
+				p=${MODULES[i]}
+				for ((k = i; k > j; k--)); do
+					MODULES[k]=${MODULES[k - 1]}
+				done
+				MODULES[j]=${p}
+				modules_sort_before
+			done
+		done
+	done
+	return 0
+}
+
+# void modules_sort_after(void)
+#
+# Sorts our modules array based on the "after" array
+modules_sort_after() {
+	local i up j k p
+
+	for ((i = 0; i < ${#MODULES[@]}; i++)); do
+		[[ function != $( type -t ${MODULES[i]}_after ) ]] && continue
+		for up in $( ${MODULES[i]}_after | sort -r ); do
+			for ((j = ${#MODULES[@]} - 1; j >= i; j --)); do
+				[[ ${up} != ${MODULES[j]} && ${up} != $( ${MODULES[j]}_provides ) ]] && continue
+				p=${MODULES[i]}
+				for ((k = i; k < j; k++)); do
+					MODULES[k]=${MODULES[k + 1]}
+				done
+				MODULES[j]=${p}
+				modules_sort_after
+				return 1
+			done
+		done
+	done
+	return 0
+}
+
 # bool modules_load(char *iface, bool all)
 #
 # Loads the defined handler and modules for the interface
 # Returns 0 on success, otherwise 1
 modules_load() {
-	local iface=${1} all=${2} i j p um e before after diffs
+	local iface=${1} all=${2:-false} i j p um e before after diffs
 	local -a mods=( $( find /etc/net.modules.d/ -type f | sort ) ) umods
 
 	[[ lo != ${iface} ]] && ebegin "Loading networking scripts"
@@ -35,21 +83,29 @@ modules_load() {
 	# Each of these sources into the global namespace, so it's
 	# important that module functions and variables are prefixed with
 	# the module name, for example iproute2_
-	before=$(typeset -f)
+	before=$( typeset -f )
 	for ((i = 0; i < ${#mods[@]}; i++ )); do
 		source ${mods[i]} || {
-			eerror "${mods[i]##*/} failed a sanity check - aborting"
-			return 1
+ 			eerror "${mods[i]##*/} failed a sanity check - will not load"
+ 			unset mods[i]
+ 			continue
 		}
 		mods[i]=${mods[i]##*/}
+
+ 		if [[ interface == ${mods[i]} ]]; then
+ 			eerror "interface is a reserved name - cannot load a module called interface"
+ 			return 1
+ 		fi
+
 		for e in check_installed provides check_depends; do
 			[[ function == $(type -t ${mods[i]}_${e}) ]] && continue
 			eerror "${mods[i]} does not support the required function ${e}"
 			return 1
 		done
+
 		# Double check that we've only *added* to the function list, not
 		# replaced.  This is as much protection for devs as for users ;-)
-		after=$(typeset -f)
+		after=$( typeset -f )
 		if [[ ${#after} -lt ${#before} ]]; then
 			# Thought diffutils is in the profiles, don't depend that it will exist
 			diffs=$(diff <(echo "${before}") <(echo "${after}") 2>/dev/null | \
@@ -60,6 +116,8 @@ modules_load() {
 		fi
 		before="${after}"
 	done
+ 	# Squash the array
+ 	mods=( "${mods[@]}" )
 
 	# We need this to be in a separate loop
 	for ((i = 0; i < ${#mods[@]}; i++ )); do
@@ -68,77 +126,68 @@ modules_load() {
 	# Squash the array
 	mods=( "${mods[@]}" )
 
-	if [[ true != ${all} ]]; then
+	if ${all}; then
 		# Has the interface got any specific modules?
 		eval umods=( \"\$\{modules_${iface}\[@\]\}\" )
 
 		# If not then has a global setting been made?
 		[[ -z ${umods} ]] && eval umods=( \"\$\{modules\[@\]\}\" )
 
+		umods=( "${umods[@]}" "ifconfig" "dhcpcd" )
+
 		# First we strip any modules that conflict from user settings
 		# So if the user specifies pump then we don't use dhcpcd
-		for um in ${umods[@]}; do
-			[[ function != $( type -t ${um}_provides ) ]] && {
-				eerror "${um} is not a valid module (missing provides)"
+		for ((i = 0; j < ${#umods[@]}; i++ )); do
+			[[ function != $( type -t ${umods[i]}_provides ) ]] && {
+				eerror "${umods[i]} is not a valid module (missing provides)"
 				return 1
 			}
-			up=$( ${um}_provides )
-			for ((i = 0; i < ${#mods[@]}; i++ )); do
-				p=$( ${mods[i]}_provides )
-				if [[ ${up} == ${p} && ${um} != ${mods[i]} ]]; then
-					# Sanity check.  Make sure umods doesn't
-					# contain this module as well!  (Luser error)
-					if [[ " ${umods[*]} " == *" ${mods[i]} "* ]]; then
-						eerror "conflicting modules: ${um} and ${mods[i]}"
-						return 1
-					fi
-					unset mods[i]
+			[[ " ${mods[*]} " != *" ${umods[i]} "* ]] && ewarn "xx"
+			for ((j = 0; j < ${#mods[@]}; j++ )); do
+				[[ function != $( type -t ${mods[j]}_provides ) ]] && continue
+				if [[ $( ${mods[j]}_provides ) == $( ${umods[i]}_provides ) && ${umods[i]} != ${mods[j]} ]]; then
+					unset mods[j]
+					mods=( "${mods[@]}" )
+					break;
 				fi
 			done
-			# Squash the array
+		done
+	
+		# Then we strip conflicting modules
+		for ((i = 0; i < ${#mods[@]} - 1; i++)); do
+			for ((j = i + 1; j < ${#mods[@]}; j++ )); do
+				[[ $( ${mods[i]}_provides ) == $( ${mods[j]}_provides ) ]] && unset mods[j]
+			done
 			mods=( "${mods[@]}" )
 		done
 	fi
 
-	# Then we strip conflicting modules, preferring those toward the front
-	for ((i = 0; i < ${#mods[@]} - 1; i++)); do
-		p=$( ${mods[i]}_provides )
-		for ((j = i + 1; j < ${#mods[@]}; j++)); do
-			up=$( ${mods[j]}_provides )
-			[[ ${p} == ${up} ]] && unset mods[j]
-		done
-	done
-	# Squash the array
-	mods=( "${mods[@]}" )
-
 	# Setup class wrappers: interface_up -> iproute2_up, for example
-	for ((i = 0; i < ${#mods[@]}; i++)); do
-		p=$( ${mods[i]}_provides )
-		for j in $(typeset -f | awk -v m="${mods[i]}" '$0==m" ()"{print $1}'); do
-			eval "${p}_${j#${mods[i]}_}() { ${j} \"\$@\" }"
+	for i in ${mods[@]}; do
+		p=$( ${i}_provides )
+		[[ ${p} == ${i} ]] && continue;
+		for j in $(typeset -f | grep -o ^${i}_'[^ ]*' ); do
+			eval "${p}${j#${i}}() { ${j} \"\$@\"; }"
 		done
-	done
-
-	# Move interface module to the front (purely aesthetic)
-	for ((i = 0; i < ${#mods[@]}; i++)); do
-		[[ interface != $( ${mods[i]}_provides ) ]] && continue
-		mods=( "${mods[i]}" "${mods[@]}" )
-		unset mods[i+1]
-		break
 	done
 
 	MODULES=( "${mods[@]}" )
+	# Our sort routine is a bit slow - but it works :)
+	while [[ true ]]; do
+		modules_sort_before && modules_sort_after && break
+	done
+
 	[[ lo != ${iface} ]] && einfo "  modules: ${MODULES[@]}"
 
 	# Ensure that all modules have what they need
-	# from either other modules or the system.
+	# from either other modules or the system
 	for i in ${MODULES[@]}; do
 		${i}_check_depends || return 1
 		e=$( ${i}_provides )
-		[[ lo != ${iface} && ${e} != ${i} ]] && einfo "    ${i} provides ${e}"
+		if [[ true != ${all} && lo != ${iface} && ${e} != ${i} ]]; then
+			einfo "    ${i} provides ${e}"
+		fi
 	done
-
-	return 0
 }
 
 # char* get_device(char *iface)
@@ -190,15 +239,6 @@ iface_start() {
 		conf=( ${config_IFACE[i]} )
 		einfo "  ${label} ${conf[0]}"
 		
-		# Remap module provides to functions
-		for mod in ${MODULES[@]}; do
-			x=$( ${mod}_provides )
-			if [[ ${x} == ${conf[0]} ]]; then
-				conf[0]=${mod}
-				break;
-			fi
-		done
-
 		# Do we have a function for our config?
 		if [[ function == $( type -t ${conf[0]}_start ) ]]; then
 			${conf[0]}_start ${label} && continue
@@ -223,7 +263,7 @@ iface_start() {
 			continue
 		fi
 
-		interface iface_start ${label} ${conf[@]} && continue
+		interface_configure ${label} ${conf[@]} && continue
 		# Only return failure if it was the first address for the interface
 		[[ ${i} -eq 0 ]] && return 1
 	done
@@ -263,7 +303,7 @@ iface_stop() {
 
 	# Collect list of aliases for this interface.
 	# List will be in reverse order.
-	aliases=$( interface get_aliases_rev ${iface} )
+	aliases=$( interface_get_aliases_rev ${iface} )
 	[[ -n ${aliases} ]] && need_begin=true
 
 	# Stop aliases before primary interface.
@@ -277,12 +317,12 @@ iface_stop() {
 		done
 
 		# Delete all the addresses for this alias
-		interface del_addresses ${i}
+		interface_del_addresses ${i}
 		# && need_begin=true
 
 		# Do final shut down of this alias
 		${need_begin} && einfo "  Stopping ${i}"
-		interface iface_stop ${i}
+		interface_iface_stop ${i}
 		eend $?
 	done
 
@@ -295,7 +335,7 @@ iface_stop() {
 # Returns 0 (success) unless preup or iface_start returns 1 (failure).
 # Ignores the return value from postup.
 start() {
-	local mod IFMOD
+	local mod
 	local -a MODULES
 
 	modules_load ${IFACE}
@@ -347,10 +387,10 @@ start() {
 # stop returns non-zero to indicate failure bringing down device.
 # In all other cases stop returns 0 to indicate success.
 stop() {
-	local mod IFMOD
+	local mod
 	local -a MODULES
 
-	modules_load ${IFACE} all || return 1
+	modules_load ${IFACE} true || return 1
 
 	# Call user-defined predown function if it exists
 	if [[ lo != ${IFACE} && function == $(type -t predown) ]]; then

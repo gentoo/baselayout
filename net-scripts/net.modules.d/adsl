@@ -13,6 +13,13 @@ adsl_provides() {
 	echo "adsl"
 }
 
+# char* adsl_after(void)
+#
+# Returns a space seperated array of modules this module should be loaded after
+adsl_after() {
+	echo "interface dhcp"
+}
+
 # bool adsl_check_installed(void)
 #
 # Returns 1 if rp-pppoe is installed, otherwise 0

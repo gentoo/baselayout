@@ -22,6 +22,20 @@ vlan_provides() {
 	echo "vlan"
 }
 
+# char* adsl_before(void)
+#
+# Returns a space seperated array of modules this module should be loaded before
+vlan_before() {
+	echo "dhcp"
+}
+
+# char* vlan_after(void)
+#
+# Returns a space seperated array of modules this module should be loaded after
+vlan_after() {
+	echo "interface"
+}
+
 # bool vlan_check_depends(void)
 #
 # Checks to see if we have the necessary package installed
@@ -29,7 +43,7 @@ vlan_provides() {
 vlan_check_depends() {
 	local e
 
-	interface_provides get_vlans || e="get_vlans"
+	[[ -z ${e} && function != $( type -t interface_get_vlans ) ]] && e=interface_get_vlans
 	if [[ -n ${e} ]]; then
 		eerror "vlan: interface is missing the required function ${e}\n"
 		return 1
@@ -39,7 +53,7 @@ vlan_check_depends() {
 	[[ -z ${e} && function != $( type -t iface_stop ) ]] && e="iface_stop"
 	[[ -z ${e} ]] && return 0
 
-	eerror "vlan: net.eth0 is missing the required function ${e}\n"
+	eerror "vlan: net.lo is missing the required function ${e}\n"
 	return 1
 }
 
@@ -109,7 +123,7 @@ vlan_pre_stop() {
 
 	vlan_check_installed || return 0
 
-	for vlan in $( interface get_vlans ${iface} ); do
+	for vlan in $( interface_get_vlans ${iface} ); do
 		einfo "Removing VLAN ${vlan##*.} from ${iface}"
 		iface_stop ${vlan}
 		/sbin/vconfig rem ${vlan} >${devnull}

@@ -19,6 +19,13 @@ dhcpcd_provides() {
 	echo "dhcp"
 }
 
+# char* dhcpcd_after(void)
+#
+# Returns a space seperated array of modules this module should be loaded after
+dhcpcd_after() {
+	echo "interface"
+}
+
 # bool dhcpcd_check_installed(void)
 #
 # Returns 1 if dhcpcd is installed, otherwise 0
@@ -35,8 +42,13 @@ dhcpcd_check_installed() {
 dhcpcd_check_depends() {
 	local e
 
-	[[ function != $(typeset -f interface_get_status) ]] && e=interface_get_status
-	[[ function != $(typeset -f interface_get_address) ]] && e=interface_get_address
+	if [[ function != $( type -t get_device ) ]]; then
+		eerror "dhcpcd: net.lo is missing the required function get_device\n"
+		return 1
+	fi		
+
+	[[ -z ${e} && function != $( type -t interface_get_status ) ]] && e=interface_get_address
+	[[ -z ${e} && function != $( type -t interface_get_address ) ]] && e=interface_get_address
 	[[ -z ${e} ]] && return 0
 
 	eerror "dhcpcd: interface is missing the required function ${e}\n"

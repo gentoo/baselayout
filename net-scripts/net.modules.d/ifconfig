@@ -248,11 +248,11 @@ ifconfig_post_start() {
 	return 0
 }
 
-# bool ifconfig_iface_start(char *iface, char *options ...)
+# bool ifconfig_configure(char *iface, char *options ...)
 #
 # Starts the interface with the given options
 # Returns the value of the ifconfig command
-ifconfig_iface_start() {
+ifconfig_configure() {
 	ifconfig $@ &>${devnull}
 	eend $?
 	return $?

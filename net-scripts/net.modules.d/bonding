@@ -22,6 +22,13 @@ bonding_provides() {
 	echo "bonding"
 }
 
+# char* bonding_after(void)
+#
+# Returns a space seperated array of modules this module should be loaded after
+bonding_after() {
+	echo "interface vlan"
+}
+
 # bool bonding_check_depends(void)
 #
 # Checks to see if we have the necessary package installed
@@ -29,9 +36,9 @@ bonding_provides() {
 bonding_check_depends() {
 	local e
 
-	interface_provides up || e="up"
-	interface_provides down || e="down"
-	interface_provides del_addresses || e="del_addresses"
+	[[ -z ${e} && function != $( type -t interface_up ) ]] && e=interface_up
+	[[ -z ${e} && function != $( type -t interface_down ) ]] && e=interface_up
+	[[ -z ${e} && function != $( type -t interface_del_address ) ]] && e=interface_del_address
 	[[ -z ${e} ]] && return 0
 
 	eerror "bonding: interface is missing the required function ${e}\n"

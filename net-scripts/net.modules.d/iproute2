@@ -34,9 +34,9 @@ iproute2_provides() {
 iproute2_check_depends() {
 	local e
 
-	[[ -z ${e} && $(type -t get_device) != function ]] && e="get_device"
+	[[ -z ${e} && function != $( type -t get_device ) ]] && e="get_device"
 	[[ -z ${e} ]] && return 0
-	eerror "iproute2: net.eth0 is missing the required function ${e}\n"
+	eerror "iproute2: net.lo is missing the required function ${e}\n"
 	return 1	
 }
 
@@ -197,11 +197,11 @@ iproute2_iface_stop() {
 	[[ ${label} == ${iface} ]] && iproute2_down ${iface}
 }
 
-# bool iproute2_iface_start(char *interface, char *options ...)
+# bool iproute2_confgiure(char *interface, char *options ...)
 #
 # Starts the interface
 # Returns 0 on success, otherwise 1
-iproute2_iface_start() {
+iproute2_configure() {
 	local label=${1} iface=$(get_device ${1})
 
 	# Extract the config

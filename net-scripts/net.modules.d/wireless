@@ -35,6 +35,20 @@ wireless_provides() {
 	echo "wireless"
 }
 
+# char* wireless_before(void)
+#
+# Returns a space seperated array of modules this module should be loaded before
+wireless_before() {
+	echo "interface"
+}
+
+# char* wireless_after(void)
+#
+# Returns a space seperated array of modules this module should be loaded before
+wireless_after() {
+	echo "macchanger"
+}
+
 # bool wireless_check_depends(void)
 #
 # Checks to see if we have the necessary package installed
@@ -42,8 +56,8 @@ wireless_provides() {
 wireless_check_depends() {
 	local e
 
-	interface_provides up || e="up"
-	interface_provides down || e="down"
+	[[ -z ${e} && function != $( type -t interface_up ) ]] && e=interface_up
+	[[ -z ${e} && function != $( type -t interface_down ) ]] && e=interface_up
 	[[ -z ${e} ]] && return 0
 
 	eerror "wireless: interface is missing the required function ${e}\n"
@@ -73,12 +87,21 @@ wireless_wep_status() {
 	echo "(WEP ${wep_status})"
 }
 
-# char* get_essid(char *iface)
+# char* wireless_get_essid(char *iface)
 #
 # Gets the current ESSID of the iface
-get_essid() {
+wireless_get_essid() {
 	iwconfig ${1} 2>${devnull} | awk -F\" '/ESSID/ {print $2}'
 }
+
+# char* wireless_get_ap_mac_address(char *interface)
+#
+# Returns the MAC address of the Access Point
+# the interface is connected to
+wireless_get_ap_mac_address() {
+	iwconfig ${1} 2>${devnull}| grep -m1 -o 'Access Point: [^ ]*' | cut -d" " -f3
+}
+
 
 # void wireless_report(char *interface)
 #
@@ -93,9 +116,9 @@ wireless_report() {
 	channel=${channel//[![:digit:]]/}	
 
 	local wep_status=$( wireless_wep_status ${iface} )
-	local essid=$( get_essid ${iface} )
+	local essid=$( wireless_get_essid ${iface} )
 	essid=${essid//\\\\/\\\\}
-	local mac=$( get_ap_mac_address ${iface} )
+	local mac=$( wireless_get_ap_mac_address ${iface} )
 	local mode=$( iwgetid -m ${iface} | awk -F: '{print $2}' | tr '[:upper:]' '[:lower:]' )
 	local m="as"
 	[[ managed == ${mode} ]] && m="to"
@@ -104,28 +127,20 @@ wireless_report() {
 	einfo "    in ${mode} mode on channel ${channel} ${wep_status}"
 }
 
-# char* get_essid_var(void)
+# char* wireless_get_essid_var(void)
 #
 # Formats the essid so it can be used by bash variables
 # Basically it replaces any non alphanumeric character with a _ symbol
-get_essid_var() {
+wireless_get_essid_var() {
 	echo ${ESSID//[![:word:]]/_}
 }
 
-# char* get_ap_mac_address(char *interface)
-#
-# Returns the MAC address of the Access Point
-# the interface is connected to
-get_ap_mac_address() {
-	iwconfig ${1} 2>${devnull}| grep -m1 -o 'Access Point: [^ ]*' | cut -d" " -f3
-}
-
-# char* get_wep_key(char *mac_address)
+# char* wireless_get_wep_key(char *mac_address)
 #
 # Returns the configured WEP key for the given mac address
 # or the given ESSID. The mac address setting takes precendence
-get_wep_key() {
-	local mac=${1} essid=$( get_essid_var ) key
+wireless_get_wep_key() {
+	local mac=${1} essid=$( wireless_get_essid_var ) key
 	eval key=\"\${mac_key_${mac//:/}\}\"
 	[[ -z ${key} ]] && eval key=\"\${key_${essid}\}\"
 	key=${key:-off}
@@ -166,8 +181,8 @@ wireless_user_config() {
 # of the AP connected to. MAC configuration takes precedence
 wireless_setup_iface() {
 	local iface=${1}
-	local mod func evars evar vars x i mvars mac=$( get_ap_mac_address ${iface} )
-	local essid=$( get_essid_var )
+	local mod func evars evar vars x i mvars mac=$( wireless_get_ap_mac_address ${iface} )
+	local essid=$( wireless_get_essid_var )
 	mac=${mac//:/}
 
 	for mod in ${MODULES[@]}; do
@@ -223,7 +238,7 @@ wireless_setup_specific() {
 		return 1
 	fi
 
-	key=$( get_wep_key )
+	key=$( wireless_get_wep_key )
 	e=$( iwconfig ${iface} key ${key} 2>&1 )
 	if [[ -n ${e} && off != ${key} ]]; then
 		e=$( get_essid_var ${essid} )
@@ -260,7 +275,7 @@ wireless_setup_specific() {
 # Returns true if the AP MAC address is valid or not
 wireless_associate_mac() {
 	# Checks if a MAC address has been assigned
-	local mac=$( get_ap_mac_address ${1} )
+	local mac=$( wireless_get_ap_mac_address ${1} )
 	[[ -n ${mac} && FF:FF:FF:FF:FF:FF != ${mac} && 44:44:44:44:44:44 != ${mac} && 00:00:00:00:00:00 != ${mac} ]] && return 0
 	return 1
 }
@@ -324,7 +339,7 @@ wireless_wait_for_association() {
 # so we can fail gracefully without even trying to connect
 wireless_associate() {
 	local iface=${1} mac=${2} wep_required=${3} w="(WEP Disabled)"
-	local dessid=${ESSID//\\\\/\\\\} key=$( get_wep_key ${mac} )
+	local dessid=${ESSID//\\\\/\\\\} key=$( wireless_get_wep_key ${mac} )
 	wep_required=${wep_required:-"off"}
 
 	if [[ any == ${ESSID} ]]; then
@@ -341,7 +356,7 @@ wireless_associate() {
 		fi
 		e=$( iwconfig ${iface} key ${key} 2>&1 )
 		if [[ -n ${e} && off != ${key} ]]; then
-			e=$( get_essid_var ${essid} )
+			e=$( wireless_get_essid_var ${essid} )
 			ewarn "  ${iface} does not support setting keys"
 			ewarn "  or the parameter \"mac_key_${e}\" or \"key_${e}\" is incorrect"
 			return 1
@@ -352,8 +367,6 @@ wireless_associate() {
 	e=$( iwconfig ${iface} essid "${ESSID}" 2>&1 )
 	[[ -n ${e} && any != ${essid} ]] \
 		&& ewarn "  ${iface} does not support setting ESSID to \"${dessid}\""
-
-	interface up ${iface}
 
 	ebegin "  Connecting to \"${ESSID//\\\\//}\" ${w}"
 	wireless_wait_for_association ${iface} || {
@@ -398,7 +411,6 @@ wireless_scan() {
 	fi
 
 	einfo "  Scanning for access points"
-	interface up ${iface}
 
 	# Sleep if required
 	eval x=\"\$\{sleep_scan_${iface}\}\"
@@ -701,7 +713,7 @@ wireless_configure() {
 	local -a essid_APs mac_APs enc_APs
 
 	# We need to bring the interface up to apply stuff
-	interface up ${iface}
+	interface_up ${iface}
 	wireless_defaults ${iface}
 
 	eval ESSID=\"\$\{essid_${iface}\}\"
@@ -819,7 +831,7 @@ wireless_pre_start() {
 
 	# We take the interface back down even if we connect OK otherwise
 	# DHCP won't work
-	interface down ${iface}
+	interface_down ${iface}
 
 	return ${r}
 }
