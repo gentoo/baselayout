@@ -1,6 +1,16 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  01 Apr 2005; Roy Marples <uberlord@gentoo.org>:
+
+    RC_DAEMON_syslog_ng allows syslog-ng to be started with the specified
+    launcher - like valgrind or strace. Handy for debugging/auditing.
+    Thanks to Rob Holland for the idea.
+
+    Stopped setting ESSID in predown functions in iwconfig and wpa_supplicant
+    as there is no guarantee that the current ESSID is the one we started with
+    Also, we may not have an ESSID at all...
+
   29 Mar 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Move /etc/bash/bashrc to /etc/bashrc.

@@ -244,27 +244,6 @@
 # since there's nothing to do if it indicates failure.
 
 #preassociate() {
-##############################################################################
-# ADVANCED CONFIGURATION
-# 
-# Four functions can be defined which will be called surrounding the
-# start/stop operations.  The functions are called with the interface
-# name first so that one function can control multiple adapters.
-#
-# The return values for the preup and predown functions should be 0
-# (success) to indicate that configuration or deconfiguration of the
-# interface can continue.  If preup returns a non-zero value, then
-# interface configuration will be aborted.  If predown returns a
-# non-zero value, then the interface will not be allowed to continue
-# deconfiguration.
-#
-# The return values for the postup and postdown functions are ignored
-# since there's nothing to do if they indicate failure.
-#
-# ${ESSID} is set to the exact ESSID of the AP you're connecting to
-# ${ESSIDVAR} is ${ESSID} converted to variable name bash allows
-
-#preassociate() {
 #	# The below adds two configuration variables leap_user_ESSID
 #	# and leap_pass_ESSID. When they are both confiugred for the ESSID
 #	# being connected to then we run the CISCO LEAP script

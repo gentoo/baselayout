@@ -94,6 +94,19 @@ RC_KILL_CHILDREN="yes"
 RC_WAIT_ON_START="0.1"
 
 
+# Some daemons are started and stopped via start_stop_daemon.
+# We can change launch them through other daemons here, for example valgrind.
+# This is only useful for serious debugging of the daemon
+# Note non alphanumeric chars in the script name need to be changed to _
+# This is shown in the below example.
+# WARNING: If the script's "stop" function does not supply a PID file then
+# all processes using the same daemon will be killed.
+#RC_DAEMON_syslog_ng="/usr/bin/valgrind --tool=memcheck --log-file=/tmp/valgrind.syslog-ng"
+
+# strace needs to be prefixed with --background as it does not detach when
+# it's following
+#RC_DAEMON_syslog_ng="--background /usr/sbin/strace -f -o /tmp/strace.syslog-ng"
+
 #
 # Internal configuration variables
 #
