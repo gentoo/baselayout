@@ -2,6 +2,10 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  27 Jul 2002; Nicholas Jones <carpaski@gentoo.org>:
+    
+    Added vpopmail user and group as 89:89
+
   22 Jul 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Add the cyrus user to /etc/passwd.  Resolves bug #4100.
