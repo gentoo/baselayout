@@ -2,6 +2,8 @@
 # Copyright 2002 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+* rc-scripts 1.4.1.1 (28 Oct 2002)
+
   28 Oct 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix /sbin/update-modules not to include backup files.  Closes
