@@ -5,6 +5,8 @@
 # Author:	Miquel van Smoorenburg, <miquels@cistron.nl>
 # Modified by:	Patrick J. Volkerding, <volkerdi@ftp.cdrom.com>
 # Modified by:	Daniel Robbins, <drobbins@gentoo.org>
+#
+# $Header$
 
 #
 # Default runlevel.

@@ -1,3 +1,7 @@
+# Copyright 1999-2002 Gentoo Technologies, Inc.
+# Distributed under the terms of the GNU General Public License, v2 or later
+# $Header$
+
 # This is a good place to unload any misc.
 # programs you started above.
 # For example, if you are using OSS and have
