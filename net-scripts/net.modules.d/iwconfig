@@ -240,6 +240,13 @@ iwconfig_setup_specific() {
 	iwconfig_user_config ${iface}
 	iwconfig_report ${iface}
 
+	if ${IN_BACKGROUND}; then
+		mark_service_inactive net.${iface}
+		export IN_BACKGROUND
+		/etc/init.d/net.${iface} start &
+		exit 0
+	fi
+
 	return 0
 }
 
@@ -386,6 +393,13 @@ iwconfig_associate() {
 		postassociate ${iface}
 		eoutdent
 		ESSID=${essidx} ESSIDVAR=${essidvarx}
+	fi
+
+	if ${IN_BACKGROUND}; then
+		mark_service_inactive net.${iface}
+		export IN_BACKGROUND
+		/etc/init.d/net.${iface} start &
+		exit 0
 	fi
 
 	return 0
@@ -735,20 +749,6 @@ iwconfig_strip_associated() {
 iwconfig_configure() {
 	local iface=${1} test x e ifvar=$( interface_variable ${1} )
 	local -a essid_APs mac_APs enc_APs
-
-	# We need to bring the interface up to apply stuff
-	interface_up ${iface}
-
-	# Are we a proper IEEE device?
-	# Most devices reutrn IEEE 802.11b/g - but intel cards return IEEE in lower case
-	# and RA cards return RAPCI or similar which really sucks :(
-	# For the time being, we will test prism54 not loading firmware which reports
-	# NOT READY!
-	x=$( iwconfig_get_type ${iface} )
-	if [[ ${x} == "NOT READY!" ]]; then
-		eerror "Looks like there was a probem loading the firmware for ${iface}"
-		return 1
-	fi
 	
 	iwconfig_defaults ${iface}
 
@@ -837,6 +837,12 @@ iwconfig_configure() {
 		return $?
 	fi
 
+	if ${IN_BACKGROUND}; then
+		export IN_BACKGROUND
+		/etc/init.d/net.${iface} stop &
+		exit 0
+	fi
+
 	eerror ${e}
 	return 1
 }
@@ -848,6 +854,10 @@ iwconfig_configure() {
 # If they are then we configue wireless
 iwconfig_pre_start() {
 	local iface=${1} r=0 local wasup=true
+
+	# We don't configure wireless if we're being called
+	# the background
+	${IN_BACKGROUND} && return 0
 
 	interface_exists ${iface} || return 0
 
@@ -865,8 +875,28 @@ iwconfig_pre_start() {
 
 	einfo "Configuring wireless network for ${iface}"
 
+	# We need to bring the interface up to apply stuff
+	interface_up ${iface}
+
+	# Are we a proper IEEE device?
+	# Most devices reutrn IEEE 802.11b/g - but intel cards return IEEE in lower case
+	# and RA cards return RAPCI or similar which really sucks :(
+	# For the time being, we will test prism54 not loading firmware which reports
+	# NOT READY!
+	x=$( iwconfig_get_type ${iface} )
+	if [[ ${x} == "NOT READY!" ]]; then
+		eerror "Looks like there was a probem loading the firmware for ${iface}"
+		return 1
+	fi
+
 	# Setup IFS incase parent script has modified it
 	local IFS=$' '$'\n'$'\t'
+
+	if [[ ${background} == yes ]]; then
+		IN_BACKGROUND=true
+		iwconfig_configure ${iface} &>/dev/null &
+		go_background
+	fi
 
 	iwconfig_configure ${iface} && return 0
 

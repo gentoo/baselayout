@@ -82,7 +82,7 @@ wpa_supplicant_get_ap_mac_address() {
 # Note that just because we are associated does not mean we are using the
 # correct encryption keys
 wpa_supplicant_associated() {
-	local -a status=( $( wpa_cli -i${iface} status | awk -F= '/^key_mgmt|^wpa_state|^decision/ { print $2 }' ) )
+	local -a status=( $( wpa_cli -i${1} status | awk -F= '/^key_mgmt|^wpa_state|^decision/ { print $2 }' ) )
 
 	if [[ ${status[0]} == NONE ]]; then
 		[[ ${status[1]} == ASSOCIATED ]]

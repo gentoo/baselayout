@@ -1,6 +1,6 @@
 #!/sbin/runscript
 # net-scripts main code
-# Version 1.0.5
+# Version 1.0.6
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -775,6 +775,7 @@ run() {
 	local iface=${1} cmd=${2} r=1 RC_INDENTATION=${RC_INDENTATION}	# so it will reset after function
 	local before starting=true
 	local -a MODULES mods
+	local IN_BACKGROUND=${IN_BACKGROUND:-false}
 
 	eindent
 

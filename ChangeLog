@@ -1,6 +1,12 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+  07 Dec 2004; Roy Marples <uberlord@gentoo.org>:
+
+    essidnet - fixed setting up search domains
+    ifconfig now reads the old gateway variable correctly - fixes #73607
+    iwconfig now supports backgrounding
+
   06 Dec 2004; Roy Marples <uberlord@gentoo.org>:
 
     macchanger defaults to setting the interface down, and then trying

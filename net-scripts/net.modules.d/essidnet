@@ -1,5 +1,5 @@
 # essidnet module for net-scripts
-# Version 1.0.3
+# Version 1.0.4
 # Copyright (c) 2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License V2
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -99,8 +99,8 @@ essidnet_pre_start() {
 		done
 
 		eval x=\"\$\{mac_searchdomains_${mac}\}\"
-		[[ -z ${x} ]] && eval x=\"\$\{mac_searchdomains_${mac}\}\"
-		[[ -n ${x} ]] && echo "search ${i}" >> /etc/resolv.conf
+		[[ -z ${x} ]] && eval x=\"\$\{searchdomains_${mac}\}\"
+		[[ -n ${x} ]] && echo "search ${x}" >> /etc/resolv.conf
 	fi
 
 	# Backwards compat for old gateway var
