@@ -22,7 +22,7 @@ start() {
 		if [ -e /etc/sysctl.conf ]
 		then
 			ebegin "Configuring kernel parameters"
-			sysctl -p /etc/sysctl.conf
+			sysctl -p /etc/sysctl.conf > /dev/null
 			eend 0
 		fi
 

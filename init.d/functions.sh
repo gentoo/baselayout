@@ -9,6 +9,8 @@ SVCDIR=/var/lib/supervise
 svcdir=/dev/shm/.init.d
 #different types of dependancies
 deptypes="need use"
+#different types of order deps
+ordtypes="before after"
 
 getcols() {
 	echo $2
@@ -85,3 +87,24 @@ ewend() {
 		return $returnme
 	fi
 }
+
+save_options() {
+	local myopts=$1
+	shift
+
+	if [ ! -d ${svcdir}/options/${myservice} ]
+	then
+		install -d -m0755 ${svcdir}/options/${myservice}
+	fi
+	echo $* > ${svcdir}/options/${myservice}/${myopts}
+}
+
+get_options() {
+	if [ -f ${svcdir}/options/${myservice}/$1 ]
+	then
+		cat ${svcdir}/options/${myservice}/$1
+	fi
+}
+
+
+# vim:ts=4

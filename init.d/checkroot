@@ -4,6 +4,10 @@
 # $Header$
 
 
+depend() {
+	before *
+}
+
 start() {
 	ebegin "Remounting root filesystem read-only (if necessary)"
 	mount / -o remount,ro

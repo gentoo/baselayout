@@ -4,6 +4,10 @@
 # $Header$
 
 
+depend() {
+	use *
+}
+
 start() {
 	ebegin "Starting local"
 	# This is a good place to load any misc.

@@ -116,7 +116,44 @@ cat <<EOHELP
       This can be seen as optional services this service depends on, but is not
       critical for it to start.  For any service in the 'use' line, it must
       be added to the 'boot' or current runlevel to be considered a valid
-      'use' dependancy.
+      'use' dependancy.  It can also be used to determine startup order.
+
+EOHELP
+echo -e "    ${GREEN}before${OFF}"
+cat <<EOHELP
+      This, together with the 'use' dependancy type, can be used to control
+      startup order.  All services listed with 'before' will get started after
+      the service.
+      
+EOHELP
+echo -e "    ${GREEN}provide${OFF}"
+cat <<EOHELP
+      This is not really a dependancy type, but rather enable you to create
+      virtual services.  This is usefull if there is more than one version of
+      a specific service type, like system loggers or crons for instance.  Just
+      have each system logger provide 'logger', and make all services in need
+      of a system logger depend on 'logger'.  This should make things much more
+      generic.
+
+EOHELP
+cat <<EOHELP
+    Note that the 'need', 'use' and 'before' dependany types can have '*' as
+    argument.  Having:
+
+    depend() {
+    	before *
+    }
+
+    will make the service be the first to start in the current runlevel, and:
+    
+    depend() {
+    	use *
+    }
+    
+    will make the service the last to start.
+    
+    You should however be carefull how you use this,  as I really will not 
+    recommend using it with the 'need' dependancy type ... you have been warned!
 
 EOHELP
 echo -e "${CYAN}'net' Dependancy and 'net.*' Services:${OFF}"
@@ -136,22 +173,6 @@ cat <<EOHELP
     2.  It is part of the current runlevel
 
     A few examples is the /etc/init.d/net.eth0 and /etc/init.d/net.lo services.
-
-EOHELP
-echo -e "${CYAN}'logger' Dependancy:${OFF}"
-cat <<EOHELP
-    Example:
-
-    depend() {
-        use logger
-    }
-
-    This is a special dependancy of type 'use'.  It can be used for any service
-    that needs a system logger running.
-    
-    As of writing, the logger target will include sysklogd, syslog-ng and
-    metalog.  This can be overridden with the \$SYSLOGGER variable, which
-    can be set either in /etc/rc.conf or /etc/conf.d/basic.
 
 EOHELP
 echo -e "${CYAN}Configuration files:${OFF}"

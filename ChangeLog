@@ -2,6 +2,56 @@
 # Copyright 2001 Gentoo Technologies, Inc.; Distributed under the GPL
 # Written by Daniel Robbins (drobbins@gentoo.org)
 
+  15 Feb 2002: Martin Schlemmer (azarah@gentoo.org): update
+  /etc/profile to resolve bug #588.
+
+  13 Feb 2002: Martin Schlemmer (azarah@gentoo.org): add some more
+  entries to /etc/devfsd.conf to make alsa users life easier ...
+  thanks Tod.
+
+  12 Feb 2002: Martin Schlemmer (azarah@gentoo.org): Some more
+    cleanups to /etc/init.d/depscan.sh and /etc/init.d/runscript.sh.
+
+    Fixed some services not starting again when restarting a service.
+    Seems simple is still the best way.
+
+    Fixed some other problems created with feature additions and cleanups.
+
+  11 Feb 2002: Martin Schlemmer (azarah@gentoo.org): General cleanups
+    to /etc/init.d/depscan.sh and /etc/init.d/runscript.sh.
+
+    Added 'before *' to /etc/init.d/checkroot to make sure it gets
+    started first.
+
+    Added 'use *' to /etc/init.d/local to make sure it gets started
+    last.
+
+  10 Feb 2002: Martin Schlemmer (azarah@gentoo.org): Fixed /sbin/rc
+    to stop a service on change of runlevel if it is in 'use' by
+    another service.
+
+    Added the 'provide' depend type for creating virtual services.
+    Updated /etc/init.d/depscan.sh for this.
+
+    Added the 'before' depend type.  This is more for changing the
+    order services start in.  Updated /etc/init.d/depscan.sh and
+    /etc/init.d/functions.sh for this.
+
+    Updated /etc/init.d/depscan.sh to work with '*' as argument for
+    dependancy types.  This can be used with 'use' and 'before' to
+    start a script last or first respectively.
+
+    Added save_options() and get_options() to /etc/init.d/functions.sh
+    for saving misc settings between startup/shutdown.  Updated
+    /etc/init.d/net.eth0 to use these and properly down virtual
+    interfaces.
+
+  6 Feb 2002: Martin Schlemmer (azarah@gentoo.org): updated both
+  /etc/init.d/bootmisc and /etc/init.d/keymaps to be quiet on no
+  errors.
+
+* rc-scripts 1.2.6 (6 Feb 2002)
+
   2 Feb 2002: Martin Schlemmer (azarah@gentoo.org): updated /etc/net.eth0
   to specify the gateway device via the $gateway variable (something like
   gateway="eth0/192.168.0.1").

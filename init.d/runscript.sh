@@ -22,9 +22,11 @@ mylevel=`cat ${svcdir}/softlevel`
 
 #set $IFACE to the name of the network interface if it is a 'net.*' script
 IFACE=""
+NETSERVICE=""
 if [ "${myservice%%.*}" = "net" ] && [ "${myservice##*.}" != "$myservice" ]
 then
 	IFACE="${myservice##*.}"
+	NETSERVICE="yes"
 fi
 		
 # Source configuration files.
@@ -42,7 +44,7 @@ fi
 [ -e /etc/rc.conf ]		&& source /etc/rc.conf
 
 usage() {
-	export IFS="|"
+	local IFS="|"
 	myline="Usage: ${myservice} {$*"
 	echo
 	eerror "${myline}}"
@@ -78,7 +80,7 @@ svc_stop() {
 	then
 		einfo "Warning: you are stopping a boot service."
 	fi
-	if [ "${myservice##*.}" != "$myservice" ]
+	if [ "$NETSERVICE" = "yes" ]
 	then
 		#net.* service
 		if [ -L /etc/runlevels/boot/${myservice} ] || [ -L /etc/runlevels/${mylevel}/${myservice} ]
@@ -96,7 +98,7 @@ svc_stop() {
 	fi
 	for mydep in $mydeps
 	do
-		for mytype in ${deptypes}
+		for mytype in ${deptypes/before/}
 		do
 			if [ -d ${svcdir}/${mytype}/${mydep} ]
 			then
@@ -109,12 +111,6 @@ svc_stop() {
 					if [ ! -L ${svcdir}/started/${x##*/} ]
 					then
 						#service not currently running, continue
-					# This breaks the need's, and since they do not get
-					# regenerated, things will break when the services
-					# gets started again.  We should keep the need's and
-					# use's (when actually official) intact at all time
-					# anyhow.
-					#	rm ${x}
 						continue
 					fi
 					${x} stop
@@ -122,12 +118,9 @@ svc_stop() {
 					then
 						stopfail="yes"
 						break
-					# See above.  The need's and use's needs to stay intact.
-					#else
-					#	rm ${x}
 					fi
 				done
-				if [ "$stopfail" = "yes" ]
+				if [ "$stopfail" = "yes" ] && [ -L ${svcdir}/need/${mydep}/${x} ]
 				then
 					eerror "Problems stopping dependent services.  \"${myservice}\" still up."
 					exit 1
@@ -427,11 +420,11 @@ do
 		then
 			if [ -z "`grep svc_stop /etc/init.d/${myservice}`" ] || [ -z "`grep svc_start /etc/init.d/${myservice}`" ]
 			then
-#				echo
-#				einfo "Please use 'svc_stop; svc_start' and not 'start; stop' to restart the service"
-#				einfo "in the custom 'restart()' function.  Run ${myservice} without arguments for"
-#				einfo "more info."
-#				echo
+				echo
+				einfo "Please use 'svc_stop; svc_start' and not 'start; stop' to restart the service"
+				einfo "in the custom 'restart()' function.  Run ${myservice} without arguments for"
+				einfo "more info."
+				echo
 				svc_restart
 			else
 				restart
@@ -440,27 +433,14 @@ do
 			restart
 		fi
 
-		if [ "${myservice%%.*}" = "net" ] && [ "${myservice##*.}" != "$myservice" ]
-		then
-			depservice="net"
-		else
-			depservice="$myservice"
-		fi
-			
 		#restart dependancies as well
 		if [ -L ${svcdir}/started/${myservice} ]
 		then
-			for mytype in ${deptypes}
+			for x in ${svcdir}/snapshot/*
 			do
-				if [ -d ${svcdir}/${mytype}/${depservice} ]
+				if [ ! -L ${svcdir}/started/${x##*/} ]
 				then
-					for x in ${svcdir}/snapshot/*
-					do
-						if [ -L ${svcdir}/${mytype}/${depservice}/${x##*/} ] && [ ! -L ${svcdir}/started/${x##*/} ]
-						then
-							${svcdir}/${mytype}/${depservice}/${x##*/} start
-						fi
-					done
+					${x} start
 				fi
 			done
 		fi
@@ -476,5 +456,6 @@ do
 		;;
 	esac
 done
+
 
 # vim:ts=4

@@ -3,7 +3,7 @@
 # Distributed under the terms of the GNU General Public License, v2 or later
 # $Header$
 
-trap ":" INT QUIT TSTP
+#trap ":" INT QUIT TSTP
 source /etc/init.d/functions.sh
 umask 022
 
@@ -164,30 +164,42 @@ do
 	ln -sf /etc/init.d/${x} ${svcdir}/softscripts.new/${x}
 done
 
-#stop services
-for i in ${svcdir}/started/*
-do
-	[ ! -L ${i} ] && continue
-	if [ ! -e ${i} ]
+dep_stop() {
+	local x
+	local needsme
+	local myservice
+	local depservice
+	[ ! -L ${1} ] && continue
+	if [ ! -e ${1} ]
 	then
 		#remove dud symlinks
-		rm ${i}
+		rm ${1}
 		continue
 	fi
-	myservice=${i##*/}
+	myservice=${1##*/}
 	
 	if [ ! -L ${svcdir}/softscripts.new/${myservice} ]
 	then
 		#candidate for zapping
-		
-		if [ ! -d ${svcdir}/need/${myservice} ] && [ ! -d ${svcdir}/use/${myservice} ]
+
+		#should not work for 'use'
+		if [ ! -d ${svcdir}/need/${myservice} ] #&& [ ! -d ${svcdir}/use/${myservice} ]
 		then
+			for x in ${svcdir}/after/*/${myservice}
+			do
+				depservice=${x%/*}
+				dep_stop ${svcdir}/softscripts/${depservice##*/}
+			done
+		
 			#nothing depends on me
-			${i} stop
+			if [ -L ${svcdir}/started/${myservice} ]
+			then
+				${1} stop
+			fi
 		else
 			#something may depend on me
 			needsme=0
-			for mytype in need use
+			for mytype in need #use
 			do
 				for dep in ${svcdir}/${mytype}/${myservice}/*
 				do
@@ -201,10 +213,25 @@ do
 			done
 			if [ $needsme -eq 0 ]
 			then
-				${i} stop
+				for x in ${svcdir}/after/*/${myservice}
+				do
+					depservice=${x%/*}
+					dep_stop ${svcdir}/softscripts/${depservice##*/}
+				done
+			
+				if [ -L ${svcdir}/started/${myservice} ]
+				then
+					${1} stop
+				fi
 			fi
 		fi
 	fi
+}
+
+#stop services
+for i in ${svcdir}/started/*
+do
+	dep_stop $i
 done
 
 # Only change softlevel AFTER all the services have been stopped,
@@ -230,18 +257,31 @@ fi
 rm -rf ${svcdir}/softscripts
 mv ${svcdir}/softscripts.new/ ${svcdir}/softscripts
 
-#start scripts
-for i in ${svcdir}/softscripts/* 
-do
-	if [ ! -L $i ]
+dep_start() {
+	local x
+	local myservice
+	local depservice
+	if [ ! -L $1 ]
 	then
 		continue
 	fi
 	#only start a script if it isn't already running
-	if [ ! -L ${svcdir}/started/${i##*/} ]
+	myservice=${1##*/}
+	if [ ! -L ${svcdir}/started/${myservice} ]
 	then
-		$i start
+		for x in ${svcdir}/before/*/${myservice}
+		do
+			depservice=${x%/*}
+			dep_start ${svcdir}/softscripts/${depservice##*/}
+		done
+	
+		$1 start
 	fi
+}
+#start scripts
+for i in ${svcdir}/softscripts/*
+do
+	dep_start $i
 done
 
 #depends gets newked, so update them
