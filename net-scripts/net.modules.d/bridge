@@ -80,7 +80,7 @@ bridge_get_ports() {
 bridge_pre_start() {
 	local iface=${1} ports i e x ifvar=$( interface_variable ${1} )
 	local -a opts
-	eval ports=\"\$\{bridge_${ifvar}\}\"
+	eval ports=\"\$\{bridge_${ifvar}\[@\]\}\"
 
 	[[ -z ${ports} ]] && return 0
 
