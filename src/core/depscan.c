@@ -27,6 +27,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include "debug.h"
 #include "depend.h"
@@ -172,6 +174,11 @@ int main() {
 
 	/* Make sure we do not run into locale issues */
 	setlocale (LC_ALL, "C");
+
+	if (0 != getuid()) {
+		EERROR("Must be root!\n");
+		exit(EXIT_FAILURE);
+	}
 
 	EINFO("Caching service dependencies ...\n");
 	

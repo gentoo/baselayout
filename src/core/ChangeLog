@@ -4,6 +4,10 @@
 
   16 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
 
+    depscan.c: Add uid check and quit if user is not root.
+
+  16 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
+
     depend.c, depend.h: Change service_type_names declaration in depend.h to
                         extern and move the definition to depend.c to avoid
                         warnings.
