@@ -508,6 +508,18 @@ iface_start() {
 		interface_get_old_config ${iface} || return 1
 	fi
 
+	# Handle "noop" correctly
+	if [[ ${config[0]} == "noop" ]]; then
+		if interface_is_up ${iface} true ; then
+			einfo "Keeping current configuration for ${iface}"
+			eend 0
+			return 0
+		fi
+
+		# Remove noop from the config var
+		config=( "${config[@]:1}" )
+	fi
+
 	# Provide a default of DHCP if no configuration is set
 	if [[ -z ${config} ]]; then
 		if [[ $( type -t dhcp_start ) == function ]]; then
@@ -525,7 +537,8 @@ iface_start() {
 	for (( config_counter=0; config_counter<${#config[@]}; config_counter++ )); do
 		# Null inet address
 		# We do this so we can have an inet6 only setup
-		[[ ${config[config_counter]} == "null" ]] && eend 0 && continue
+		[[ ${config[config_counter]} == "null" \
+		|| ${config[config_counter]} == "noop" ]] && eend 0 && continue
 
 		${warn} && ewarn "Configuration not set for ${iface} - assuming dhcp"
 		warn=false
@@ -705,7 +718,7 @@ run_start() {
 	# then we don't start it
 	eval config=( \"\$\{config_${ifvar}\[@\]\}\" )
 	if [[ ${config[0]} == "noop" ]] && interface_is_up ${iface} true ; then
-		einfo "Keeping current configuration"
+		einfo "Keeping current configuration for ${iface}"
 		eend 0
 	else
 		# Remove noop from the config var
@@ -720,13 +733,6 @@ run_start() {
 			eend 1
 			return 1
 		fi
-	fi
-
-	# Start the interface
-	if ! iface_start ${iface} ; then
-		interface_down ${iface}
-		eend 1
-		return 1
 	fi
 
 
