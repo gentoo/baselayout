@@ -10,13 +10,15 @@
 #
 # Returns the CIDR of a given netmask
 netmask2cidr() {
-	local binary="" i
+	local binary="" i bin
 
 	for i in ${1//./ }; do
+		bin=""
 		while [[ ${i} != 0 ]]; do
-			binary=$[${i}%2]${binary}
+			bin=$[${i}%2]${bin}
 			(( i=i>>1 ))
 		done
+		binary="${binary}${bin}"
 	done
 	binary=${binary%%0*}
 	echo ${#binary}

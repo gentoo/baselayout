@@ -1,7 +1,12 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
-  06 Feb 2004; Mike Frysinger <vapier@gentoo.org>:
+  07 Feb 2005; Roy Marples <uberlord@gentoo.org>:
+
+    netmask2cidr now works correctly - fixes #81119
+    Thanks to Benoit Boissinot for the patch
+
+  06 Feb 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Remove the apache user and let apache ebuilds handle it #77738.
 
