@@ -106,7 +106,7 @@ wpa_supplicant_kill() {
 	fi
 
 	# If wpa_supplicant exits uncleanly, we need to remove the stale dir
-	[[ -d /var/run/wpa_supplicant/${iface} ]] && rm -f /var/run/wpa_supplicant/${iface}
+	[[ -S /var/run/wpa_supplicant/${iface} ]] && rm -f /var/run/wpa_supplicant/${iface}
 }
 
 # bool wpa_supplicant_associate(char *interface)
