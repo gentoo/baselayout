@@ -22,9 +22,9 @@ umask 022
 # This way the evaluation can be short-circuited and calling whoami is
 # avoided.
 if [ "$EUID" = 0 ] || [ "`/bin/whoami`" = 'root' ]; then
-	PATH="/bin:/sbin:/usr/bin:/usr/sbin:${ROOTPATH}"
+	PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${ROOTPATH}"
 else
-	PATH="/bin:/usr/bin:${PATH}"
+	PATH="/usr/local/bin:/usr/bin:/bin:${PATH}"
 fi
 export PATH
 unset ROOTPATH
