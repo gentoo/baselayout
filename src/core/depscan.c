@@ -180,8 +180,6 @@ int main() {
 		exit(EXIT_FAILURE);
 	}
 
-	EINFO("Caching service dependencies ...\n");
-	
 	svcdir = get_cnf_entry(RC_CONFD_FILE_NAME, SVCDIR_CONFIG_ENTRY);
 	if (NULL == svcdir) {
 		EERROR("Failed to get config entry '%s'!\n",
@@ -225,6 +223,7 @@ int main() {
 	}
 
 	if (-1 == check_rcscripts_mtime(cachefile)) {
+		EINFO("Caching service dependencies ...\n");
 		DBG_MSG("Regenerating cache file '%s'.\n", cachefile);
 
 		datasize = generate_stage2(&data);

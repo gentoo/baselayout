@@ -4,6 +4,11 @@
 
   17 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
 
+    depscan.c: Only print EINFO msg if we actually update the cache.
+    parse.c: Rename write_output() macro to PRINT_TO_BUFFER().
+
+  17 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
+
     parse.c, parse.h: Rewrote large parts of generate_stage[12]() and their
                       machanics to use select() when writing to the pipes.
                       This fixes a buffering issue where too much data would
