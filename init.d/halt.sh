@@ -168,10 +168,10 @@ done
 eend 0
 
 # Try to remove any dm-crypt mappings
-stop-addon dm-crypt
+stop_addon dm-crypt
 
 # Stop LVM, etc
-stop-volumes
+stop_volumes
 
 # This is a function because its used twice below
 ups_kill_power() {

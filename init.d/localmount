@@ -42,7 +42,7 @@ start() {
 	eend $?
 
 	# Start dm-crypt mappings, if any
-	start-addon dm-crypt
+	start_addon dm-crypt
 }
 
 

@@ -12,10 +12,10 @@ start() {
 
 	# Start RAID/LVM/EVMS/DM volumes for /usr, /var, etc.
 	# NOTE: this should be done *before* mounting anything
-	[[ -n ${CDBOOT} ]] && start-volumes
+	[[ -n ${CDBOOT} ]] && start_volumes
 
 	# Setup dm-crypt mappings if any
-	start-addon dm-crypt
+	start_addon dm-crypt
 
 	if [[ -f /fastboot ]] || [[ -n ${CDBOOT} ]] ; then
 		rm -f /fastboot
