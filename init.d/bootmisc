@@ -4,7 +4,8 @@
 # $Header$
 
 depend() {
-	need clock localmount hostname
+	use clock hostname
+	need localmount
 	before logger
 }
 
