@@ -112,7 +112,6 @@ do
 	if [ "${do_unmount}" = "yes" ]
 	then
 		umount "${x}" &>/dev/null || {
-		
 			# Kill processes still using this mount
 			/bin/fuser -k -m -9 "${x}" &>/dev/null
 			sleep 2

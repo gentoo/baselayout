@@ -13,7 +13,7 @@ start() {
 	if [ ! -f /fastboot -a -z "${CDBOOT}" ]
 	then
 		ebegin "Remounting root filesystem read-only (if necessary)"
-		mount / -n -o remount,ro &>/dev/null
+		mount -n -o remount,ro / &>/dev/null
 		eend $?
 
 		ebegin "Checking root filesystem"
@@ -62,7 +62,7 @@ start() {
 			awk '{ if ($6 ~ /rw/) exit 0; else exit 1; }'
 	then
 		ebegin "Remounting root filesystem read/write"
-		mount / -n -o remount,rw &>/dev/null
+		mount -n -o remount,rw / &>/dev/null
 		if [ "$?" -ne 0 ]
 		then
 			eend 2 "Root filesystem could not be mounted read/write :("
