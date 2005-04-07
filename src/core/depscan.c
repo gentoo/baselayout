@@ -23,11 +23,15 @@
  */
 
 #include <errno.h>
-#include <locale.h>
+#ifndef __KLIBC__
+# include <locale.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <unistd.h>
 
 #include "debug.h"
@@ -67,7 +71,7 @@ int create_directory(const char *name) {
 	if (!is_dir(name, 0)) {
 		if (exists(name)) {
 			/* Remove it if not a directory */
-			if (-1 == remove(name)) {
+			if (-1 == unlink(name)) {
 				DBG_MSG("Failed to remove '%s'!\n", name);
 				return -1;
 			}
@@ -173,7 +177,9 @@ int main() {
 	int datasize = 0;
 
 	/* Make sure we do not run into locale issues */
+#ifndef __KLIBC__
 	setlocale (LC_ALL, "C");
+#endif
 
 	if (0 != getuid()) {
 		EERROR("Must be root!\n");
@@ -245,7 +251,12 @@ int main() {
 			exit(EXIT_FAILURE);
 		}
 
+#ifndef __KLIBC__
 		tmp_cachefile_fd = mkstemp(tmp_cachefile);
+#else
+		/* FIXME: Need to add a mkstemp implementation for klibc */
+		tmp_cachefile_fd = open(tmp_cachefile, O_CREAT | O_TRUNC | O_RDWR, 0600);
+#endif
 		if (-1 == tmp_cachefile_fd) {
 			EERROR("Could not open temporary file for writing!\n");
 			exit(EXIT_FAILURE);
@@ -259,16 +270,16 @@ int main() {
 		write_legacy_stage3(cachefile_fd);
 		fclose(cachefile_fd);
 
-		if ((-1 == remove(cachefile)) && (exists(cachefile))) {
+		if ((-1 == unlink(cachefile)) && (exists(cachefile))) {
 			EERROR("Could not remove '%s'!\n", cachefile);
-			remove(tmp_cachefile);
+			unlink(tmp_cachefile);
 			exit(EXIT_FAILURE);
 		}
 
 		if (-1 == rename(tmp_cachefile, cachefile)) {
 			EERROR("Could not move temporary file to '%s'!\n",
 					cachefile);
-			remove(tmp_cachefile);
+			unlink(tmp_cachefile);
 			exit(EXIT_FAILURE);
 		}
 	}

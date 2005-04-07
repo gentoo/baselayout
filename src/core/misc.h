@@ -265,6 +265,9 @@ int is_dir(const char *pathname, int follow_link);
 time_t get_mtime(const char *pathname, int follow_link);
 
 /* The following functions return 0 on success, or -1 with errno set on error. */
+#ifdef __KLIBC__
+int remove(const char *pathname);
+#endif
 int mktree(const char *pathname, mode_t mode);
 int rmtree(const char *pathname);
 

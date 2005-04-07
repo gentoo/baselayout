@@ -220,6 +220,25 @@ time_t get_mtime(const char *pathname, int follow_link) {
 	return 0;
 }
 
+#ifdef __KLIBC__
+int remove(const char *pathname) {
+	int retval;
+	
+	if ((NULL == pathname) || (0 == strlen(pathname))) {
+		DBG_MSG("Invalid argument passed!\n");
+		errno = EINVAL;
+		return -1;
+	}
+
+	if (is_dir(pathname, 0))
+		retval = rmdir(pathname);
+	else
+		retval = unlink(pathname);
+
+	return retval;
+}
+#endif
+
 int mktree(const char *pathname, mode_t mode) {
 	char *temp_name = NULL;
 	char *temp_token = NULL;

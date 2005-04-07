@@ -45,6 +45,8 @@ char *test_data[] = {
 	"ab", "a?[ab]*b+", "1",
 	"aaaaaaaaaaaaaaaaaaaaaaa", "a*b", "0",
 	"aaaaaaaaabaaabbaaaaaa", "a*b+a*b*ba+", "1",
+	"ababababab", "a.*", "1",
+	"baaaaaaaab", "a*", "0",
 	NULL
 };
 

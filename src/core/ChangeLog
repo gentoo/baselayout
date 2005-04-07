@@ -2,6 +2,15 @@
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 # $Header$
 
+07 Apr 2005 Martin Schlemmer <azarah@gentoo.org>
+
+        * test-regex.c: Add two more tests.
+
+        * depscan.c
+        * misc.c
+        * misc.h: Add basic klibc support.  I need to add a mkstemp
+        implementation to get it done properly.
+
 12 Mar 2005 Martin Schlemmer <azarah@gentoo.org>
 
         * Makefile: Also remove the tests in the clean target.
