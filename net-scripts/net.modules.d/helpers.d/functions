@@ -77,7 +77,7 @@ interface_type() {
 #
 # Returns a bash variable name based on the interface
 interface_variable() {
-	echo ${1//[![:word:]]/_}
+	LC_ALL=C echo ${1//[![:word:]]/_}
 }
 
 # bool clean_pidfile(char *file)

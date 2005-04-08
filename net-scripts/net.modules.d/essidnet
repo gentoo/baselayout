@@ -61,7 +61,8 @@ essidnet_pre_start() {
 
 	local mod func evars evar vars x i mvars mac=$( wireless_get_ap_mac_address ${iface} )
 	local ESSID=$( wireless_get_essid ${iface} )
-	local essid=${ESSID//[![:word:]]/_}
+	local essid
+	LC_ALL=C essid=${ESSID//[![:word:]]/_}
 	mac=${mac//:/}
 
 	vebegin "Configuring ${iface} for \"${ESSID//\\\\/\\\\}\"" 2>/dev/null

@@ -205,7 +205,7 @@ iwconfig_setup_specific() {
 		return 1
 	fi
 	dessid=${ESSID//\\\\/\\\\}
-	ESSIDVAR=${ESSID//[![:word:]]/_}
+	LC_ALL=C ESSIDVAR=${ESSID//[![:word:]]/_}
 
 	# We only change the mode if it's not the same
 	local cur_mode=$( iwconfig_get_mode ${iface} )
@@ -330,7 +330,7 @@ iwconfig_associate() {
 		dessid="any"
 		unset ESSIDVAR
 	else
-		ESSIDVAR=${ESSID//[![:word:]]/_}
+		LC_ALL=C ESSIDVAR=${ESSID//[![:word:]]/_}
 		key=$( iwconfig_get_wep_key ${mac} )
 		if [[ ${wep_required} == yes && ${key} == off ]]; then
 			vewarn "WEP key is not set for \"${dessid}\" - not connecting"
@@ -764,7 +764,7 @@ iwconfig_configure() {
 
 	# Setup ad-hoc mode?
 	x=$( eval echo \$\{mode_${ifvar}\} | tr '[:upper:]' '[:lower:]' )
-	x=${x:-auto}
+	x=${x:-managed}
 	if [[ ${x} == ad-hoc || ${x} == master ]]; then
 		iwconfig_setup_specific ${iface} ${x}
 		return $?
@@ -780,7 +780,7 @@ iwconfig_configure() {
 	local cur_mode=$( iwconfig_get_mode ${iface} )
 	if [[ ${cur_mode} != ${x} ]]; then
 		e=$( iwconfig ${iface} mode ${x} 2>&1 )
-		if [[ -n ${e} && ${x} != auto ]]; then
+		if [[ -n ${e} && ${x} != managed ]]; then
 			eerror "${iface} does not support setting the mode to \"${x}\""
 			return 1
 		fi
@@ -793,7 +793,6 @@ iwconfig_configure() {
 	if [[ -n ${ESSID} ]]; then
 		iwconfig_associate ${iface} && return 0
 		[[ ${ESSID} == any ]] && iwconfig_force_preferred ${iface} && return 0
-
 		eval ESSID=\"\$\{adhoc_essid_${ifvar}\}\"
 		if [[ -n ${ESSID} ]]; then
 			iwconfig_setup_specific ${iface} ad-hoc
