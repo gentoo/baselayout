@@ -6,7 +6,7 @@
     added a bash_variable to functions.sh which converts the given string
     into a variable that bash can use - fixes #88175
 
-    net scripts can only launch if we're not in ${BOOTLEVEL}
+    net scripts can only launch if we're not in ${BOOTLEVEL} - fixes #78495
 
   01 Apr 2005; Roy Marples <uberlord@gentoo.org>:
 
