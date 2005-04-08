@@ -61,8 +61,8 @@ dhclient_get_vars() {
 # Stop dhclient on an interface
 # Always returns 0
 dhclient_stop() {
-	local iface=${1} dhcp release ifvar=${1//[![:word:]]/_}
-	local pidfile="/var/run/dhclient-${1}.pid"
+	local iface=$1 dhcp release
+	local pidfile="/var/run/dhclient-$1.pid"
 	
 	dhclient_check_installed || return 0
 	[[ ! -f ${pidfile} ]] && return 0
@@ -72,6 +72,7 @@ dhclient_stop() {
 	# it causes a "RELEASE" event anyway.
 	local pid=$( < ${pidfile} )
 
+	local ifvar=$( bash_variable ${iface} )
 	eval dhcp=\" \$\{dhcp_${ifvar}\} \"
 
 	ebegin "Stopping dhclient on ${iface}"
@@ -96,7 +97,7 @@ dhclient_stop() {
 #
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 dhclient_start() {
-	local iface=$1 opts ifvar=${1//[![:word:]]/_}
+	local iface=$1 opts ifvar=$( bash_variable $1 )
 	local pidfile="/var/run/dhclient-$1.pid"
 
 	interface_exists ${iface} true || return 1

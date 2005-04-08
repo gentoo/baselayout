@@ -148,3 +148,10 @@ if [[ $( type -t mark_service_inactive ) != "function" ]]; then
 		return $?
 	}
 fi
+
+if [[ $( type -t bash_variable ) != "function" ]]; then
+	bash_variable() {
+		local argv="$@"
+		LC_ALL=C echo "${argv//[![:word:]]/_}"
+	}
+fi

@@ -47,7 +47,7 @@ bonding_check_depends() {
 #
 # Bonds the interface
 bonding_pre_start() {
-	local iface=$1 slaves s ifvar=${1//[![:word:]]/_}
+	local iface=$1 slaves s ifvar=$( bash_variable $1 )
 
 	eval slaves=\"\$\{slaves_${ifvar}\[@\]\}\"
 	[[ -z ${slaves} ]] && return 0

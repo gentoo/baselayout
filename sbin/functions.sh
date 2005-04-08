@@ -747,6 +747,16 @@ is_older_than() {
 	return 1
 }
 
+# char* bash_variable(char *variable)
+#
+#   Turns the given variable into something that bash can use
+#   Basically replaces anything not a-z,A-Z into a _
+#
+bash_variable() {
+	local args="$@"
+	LC_ALL=C echo "${args//[![:word:]]/_}"
+}
+
 # void requote()
 #
 #   Requotes params so they're suitable to be eval'd, just like this would:

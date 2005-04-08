@@ -1,6 +1,13 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  08 Apr 2005; Roy Marples <uberlord@gentoo.org>:
+
+    added a bash_variable to functions.sh which converts the given string
+    into a variable that bash can use - fixes #88175
+
+    net scripts can only launch if we're not in ${BOOTLEVEL}
+
   01 Apr 2005; Roy Marples <uberlord@gentoo.org>:
 
     RC_DAEMON_syslog_ng allows syslog-ng to be started with the specified

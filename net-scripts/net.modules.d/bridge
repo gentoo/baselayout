@@ -68,7 +68,7 @@ bridge_get_ports() {
 #
 # #set up bridge
 bridge_pre_start() {
-	local iface=$1 ports i e x ifvar=${1//[![:word:]]/_}
+	local iface=$1 ports i e x ifvar=$( bash_variable $1 )
 	local -a opts
 	eval ports=\"\$\{bridge_${ifvar}\[@\]\}\"
 

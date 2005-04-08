@@ -62,7 +62,6 @@ udhcpc_get_vars() {
 # Return 1 if we fail to stop udhcpc (if it's running) otherwise 0
 udhcpc_stop() {
 	local iface=$1 count release pidfile="/var/run/udhcpc-$1.pid" dhcp
-	local ifvar=${1//[![:word:]]/_}
 
 	udhcpc_check_installed || return 0
 	[[ ! -f ${pidfile} ]] && return 0
@@ -70,6 +69,7 @@ udhcpc_stop() {
 	ebegin "Stopping udhcpc on ${iface}"
 	local pid=$( < ${pidfile} ) e=true
 
+	local ifvar=$( bash_variable ${iface} )
 	# Release the lease if told to
 	eval dhcp=\" \$\{dhcp_${ifvar}\} \"
 	if [[ ${dhcp} == *' release '* ]]; then
@@ -103,7 +103,7 @@ udhcpc_start() {
 
 	interface_exists ${iface} true || return 1
 
-	local ifvar=${iface//[![:word:]]/_} opts hostname
+	local ifvar=$( bash_variable ${iface} ) opts hostname
 	eval opts=\"\$\{udhcpc_${ifvar}\}\"
 
 	if [[ ${opts} != *'--hostname='* ]]; then

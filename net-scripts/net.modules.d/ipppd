@@ -49,8 +49,8 @@ ipppd_check_depends() {
 #
 # Returns 0 (true) when successful, non-zero otherwise
 ipppd_pre_start() {
-	local iface=$1 opts itype=$( interface_type ${1} )
-	local ifvar=${1//[![:word:]]/_} pidfile="/var/run/ipppd-${iface}.pid"
+	local iface=$1 opts itype=$( interface_type $1 )
+	local pidfile="/var/run/ipppd-${iface}.pid"
 
 	# Check that we are a valid isdn interface
 	[[ ${itype} != "ippp" && ${itype} != "isdn" ]] && return 0
@@ -63,7 +63,8 @@ ipppd_pre_start() {
 		eend 0
 		return 0
 	fi
-
+	
+	local ifvar=$( bash_variable ${iface} )
 	# Might or might not be set in conf.d/net
 	eval opts=\"\$\{ipppd_${ifvar}\}\"
 
@@ -79,7 +80,7 @@ ipppd_pre_start() {
 # Stop isdn on an interface
 # Returns 0 (true) when successful, non-zero otherwise
 ipppd_stop() {
-	local iface=${1} pidfile="/var/run/ipppd-${1}.pid"
+	local iface=$1 pidfile="/var/run/ipppd-${1}.pid"
 
 	ipppd_check_installed || return 0
 	[[ ! -f ${pidfile} ]] && return 0

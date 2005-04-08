@@ -39,7 +39,7 @@ adsl_check_depends() {
 #
 # Checks to see if the ADSL script has been created or not
 adsl_setup_vars() {
-	local iface=${1}
+	local iface=$1
 
 	# Decide which configuration to use.  Hopefully there is an
 	# interface-specific one
@@ -61,7 +61,7 @@ adsl_setup_vars() {
 #
 # Returns 0 (true) when successful, non-zero otherwise
 adsl_start() {
-	local iface=${1} user ifvar=${1//[![:word:]]/_} cfgfile
+	local iface=$1 user ifvar=$( bash_variable $1 ) cfgfile
 
 	adsl_setup_vars ${iface} || return 1
 
@@ -75,8 +75,7 @@ adsl_start() {
 		echo "PIDFILE=/var/run/adsl-${iface}.pid"; \
 		[[ -n ${user} ]] && echo "USER=${user}") \
 		>${devnull}
-	eend $? || return $?
-	return 0
+	eend $?
 }
 
 # bool adsl_stop(char *iface)
@@ -97,5 +96,4 @@ adsl_stop() {
 		echo "ETH=${iface}"; echo "PIDFILE=/var/run/adsl-${iface}.pid") \
 		>${devnull}
 	eend $?
-	return $?
 }

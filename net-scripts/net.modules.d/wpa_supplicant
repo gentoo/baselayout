@@ -126,7 +126,7 @@ wpa_supplicant_kill() {
 # Returns 0 if wpa_supplicant associates and authenticates to an AP
 # otherwise, 1
 wpa_supplicant_associate() {
-	local iface=$1 ifvar=${1//[![:word:]]/_} timeout i
+	local iface=$1 ifvar=$( bash_variable $1 ) timeout i
 
 	eval timeout=\"\$\{wpa_timeout_${ifvar}:-60\}\"
 	for (( i=0; i<${timeout}; i++ )); do
@@ -158,7 +158,7 @@ wpa_supplicant_pre_start() {
 	# the background
 	${IN_BACKGROUND} && return 0
 
-	local iface=$1 opts ifvar=${1//[![:word:]]/_} timeout
+	local iface=$1 opts timeout
 	local cfgfile="/etc/wpa_supplicant.conf"
 
 	# We only work on wirelesss interfaces
@@ -184,6 +184,7 @@ wpa_supplicant_pre_start() {
 		return 1
 	fi
 
+	local ifvar=$( bash_variable ${iface} )
 	eval opts=\" \$\{wpa_supplicant_${ifvar}\}\"
 	[[ ${opts} != *' -D'* ]] && ewarn "wpa_supplicant_${ifvar} does not define a driver"
 	

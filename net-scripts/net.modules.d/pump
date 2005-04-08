@@ -91,7 +91,7 @@ pump_stop() {
 # Returns 0 (true) when a dhcp address is obtained, otherwise
 # the return value from pump
 pump_start() {
-	local iface=$1 opts hostname dhcp ifvar=${1//[![:word:]]/_}
+	local iface=$1 opts hostname dhcp ifvar=$( bash_variable $1 )
 
 	interface_exists ${iface} true || return 1
 

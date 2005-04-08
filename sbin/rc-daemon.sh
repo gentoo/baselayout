@@ -96,11 +96,16 @@ rc_setup_daemon_vars() {
 		else
 			args="--start"
 		fi
-		${quiet} && args="${args} --quiet"
-		if [[ ${d[0]:0:1} == "-" ]]; then
-			args="${args} ${d[0]}"
-			d=( "${d[@]:1}" )
-		fi
+
+		# Add -- or - arguments as s-s-d options
+		j=${#d[@]}
+		for (( i=0; i<j; i++ )); do
+			[[ ${d[i]:0:1} != "-" ]] && break
+			args="${args} ${d[i]}"
+			unset d[i]
+		done
+		d=$( "${d[@]}" )
+		
 		eval args=\"${args} --exec '${d[0]}' -- ${d[@]:1} '${cmd}' ${eargs[@]}\"
 		! ${stopping} && cmd=${d[0]}
 	fi

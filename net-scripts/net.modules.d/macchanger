@@ -48,7 +48,7 @@ macchanger_pre_start() {
 	# We don't change MAC addresses from background
 	${IN_BACKGROUND} && return 0
 
-	local iface=$1 mac opts ifvar=${1//[![:word:]]/_}
+	local iface=$1 mac opts ifvar=$( bash_variable $1 )
 
 	eval mac=\"\$\{mac_${ifvar}\}\"
 	[[ -z ${mac} ]] && return 0

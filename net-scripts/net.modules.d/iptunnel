@@ -53,7 +53,7 @@ iptunnel_get_vars() {
 #
 # Create the device, give it the right perms
 iptunnel_pre_start() {
-	local iface=$1 opts ifvar=${1//[![:word:]]/_}
+	local iface=$1 opts ifvar=$( bash_variable $1 )
 
 	# Get our options
 	eval opts=\"\$\{iptunnel_${ifvar}\}\"

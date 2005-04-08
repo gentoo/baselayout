@@ -73,7 +73,7 @@ tuntap_get_vars() {
 #
 # Create the device, give it the right perms
 tuntap_pre_start() {
-	local iface=$1 opts ifvar=${1//[![:word:]]/_}
+	local iface=$1 opts ifvar=$( bash_variable $1 )
 	local itype=$( interface_type ${iface} )
 
 	# Check that we are a valid tun/tap interface
@@ -109,5 +109,5 @@ tuntap_stop() {
 		interface_exists ${iface} || einfo "Destroyed Tun/Tap interface ${iface}"
 	fi
 
-	return $?
+	return 0 
 }

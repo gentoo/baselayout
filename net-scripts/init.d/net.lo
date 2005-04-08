@@ -475,7 +475,7 @@ iface_start() {
 	local iface=$1 mod config_counter=-1 x warn=false config_worked=false
 	local RC_INDENTATION=${RC_INDENTATION}	# so it will reset after function
 	local -a config fallback fallback_route conf
-	local ifvar=${1//[![:word:]]/_}
+	local ifvar=$( bash_variable $1 )
 
 	# pre Start any modules with
 	for mod in ${MODULES[@]}; do
@@ -655,7 +655,7 @@ iface_stop() {
 # We cannot check that the device exists ourselves as modules like
 # tuntap make create it.
 run_start() {
-	local iface=$1 IFVAR=${1//[![:word:]]/_} x
+	local iface=$1 IFVAR=$( bash_variable $1 ) x
 
 	# We do this so users can specify additional addresses for lo if they
 	# need too - additional routes too
@@ -729,7 +729,7 @@ run_start() {
 # stop returns non-zero to indicate failure bringing down device.
 # In all other cases stop returns 0 to indicate success.
 run_stop() {
-	local iface=$1 IFVAR=${1//[![:word:]]/_} x
+	local iface=$1 IFVAR=$( bash_variable "$1" ) x
 
 	# Call user-defined predown function if it exists
 	if [[ $( type -t predown ) == "function" ]]; then

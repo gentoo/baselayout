@@ -165,7 +165,7 @@ iwconfig_get_wep_key() {
 #
 # Applies the user configuration to the interface
 iwconfig_user_config() {
-	local iface=$1 conf e ifvar=${1//[![:word:]]/_}
+	local iface=$1 conf e ifvar=$( bash_variable $1 )
 
 	# Apply the user configuration
 	eval conf=\"\$\{iwconfig_${ifvar}\}\"
@@ -191,7 +191,7 @@ iwconfig_user_config() {
 #
 # Sets up our wireless interface to operate in ad-hoc or master mode
 iwconfig_setup_specific() {
-	local iface=$1 mode=$2 channel key dessid e ifvar=${1//[![:word:]]/_}
+	local iface=$1 mode=$2 channel key dessid e ifvar=$( bash_variable "$1" )
 
 	if [[ -z ${ESSID} ]]; then
 		eerror "${iface} requires an ESSID to be set to operate in ${mode} mode"
@@ -199,7 +199,7 @@ iwconfig_setup_specific() {
 		return 1
 	fi
 	dessid=${ESSID//\\\\/\\\\}
-	ESSIDVAR=${ESSID//[![:word:]]/_}
+	ESSIDVAR=$( bash_variable "${ESSID}" )
 
 	# We only change the mode if it's not the same
 	local cur_mode=$( iwconfig_get_mode ${iface} )
@@ -278,7 +278,7 @@ iwconfig_associate_quality() {
 #
 # Returns true if the interface has associated with an Access Point
 iwconfig_test_associated() {
-	local iface=$1 test ifvar=${1//[![:word:]]/_}
+	local iface=$1 test ifvar=$( bash_variable $1 )
 	# Some drivers don't set MAC to a bogus value when assocation is lost/fails
 	# whereas they do set link quality to 0
 
@@ -304,7 +304,7 @@ iwconfig_test_associated() {
 # Waits for a configured ammount of time until
 # we are assocaited with an Access Point
 iwconfig_wait_for_association() {
-	local iface=$1 i=0 wait ifvar=${1//[![:word:]]/_}
+	local iface=$1 i=0 wait ifvar=$( bash_variable $1 )
 	eval wait=\"\$\{sleep_associate_${ifvar}\}\"
 	wait=${wait:-10}
 
@@ -332,7 +332,7 @@ iwconfig_associate() {
 		dessid="any"
 		unset ESSIDVAR
 	else
-		ESSIDVAR=${ESSID//[![:word:]]/_}
+		ESSIDVAR=$( bash_variable "${ESSID}" )
 		key=$( iwconfig_get_wep_key ${mac} )
 		if [[ ${wep_required} == yes && ${key} == off ]]; then
 			vewarn "WEP key is not set for \"${dessid}\" - not connecting"
@@ -410,7 +410,7 @@ iwconfig_associate() {
 #
 # Fills 3 arrays with information from a wireless scan
 iwconfig_scan() {
-	local iface=$1 e mode x ifvar=${1//[![:word:]]/_}
+	local iface=$1 e mode x ifvar=$( bash_variable $1 )
 
 	# First, we may need to change mode to scan in
 	mode=$( eval echo \$\{scan_mode_${ifvar}\} | tr '[:upper:]' '[:lower:]' )
@@ -725,7 +725,7 @@ iwconfig_strip_associated() {
 # Once we're connected we show a report and then configure any interface
 # variables for the ESSID
 iwconfig_configure() {
-	local iface=$1 test x e ifvar=${1//[![:word:]]/_}
+	local iface=$1 test x e ifvar=$( bash_variable $1 )
 	local -a essid_APs mac_APs enc_APs
 	
 	iwconfig_defaults ${iface}

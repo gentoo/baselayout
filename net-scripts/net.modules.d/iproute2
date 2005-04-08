@@ -160,7 +160,7 @@ iproute2_get_vars() {
 #
 # Returns config and config_fallback for the given interface
 iproute2_get_old_config() {
-	local ifvar=${1//[![:word:]]/_} inet6
+	local ifvar=$( bash_variable $1 ) inet6
 
 	# iproute2-style config vars
 	eval config=( \"\$\{ipaddr_${ifvar}\[@\]\}\" )
@@ -235,7 +235,7 @@ iproute2_add_address() {
 # Runs any post_start stuff on our interface and adds routes
 # Always returns 0
 iproute2_post_start() {
-	local iface=$1 ifvar=${1//[![:word:]]/_} routes e r
+	local iface=$1 ifvar=$( bash_variable $1 ) routes e r
 
 	# Make sure interface is marked UP
 	iproute2_up ${iface}

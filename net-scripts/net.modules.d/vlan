@@ -81,7 +81,7 @@ vlan_check_kernel() {
 #
 # Setup vconfig
 vlan_pre_start() {
-	local iface=$1 opts i x e ifvar=${1//[![:word:]]/_}
+	local iface=$1 opts i x e ifvar=$( bash_variable $1 )
 
 	eval opts=( \"\$\{vconfig_${ifvar}\[@\]\}\" )
 	[[ -z ${opts} ]] && return 0
@@ -111,7 +111,7 @@ vlan_pre_start() {
 #
 # Always returns 0 (true) 
 vlan_post_start() {
-	local iface=$1 vlan vlans vlans_old e ifname ifvar=${1//[![:word:]]/_}
+	local iface=$1 vlan vlans vlans_old e ifname ifvar=$( bash_variable $1 )
 
 	eval vlans=\"\$\{vlans_${ifvar}\}\"
 
