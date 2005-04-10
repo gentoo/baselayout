@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  09 Apr 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Have the 'status' function return 0/1 based upon the status of the 
+    init script #88319 by Josh Nichols.
+
   08 Apr 2005; Roy Marples <uberlord@gentoo.org>:
 
     added a bash_variable to functions.sh which converts the given string
