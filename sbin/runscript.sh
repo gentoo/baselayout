@@ -327,22 +327,20 @@ svc_status() {
 	# as an generic means to detect status.  Any other output
 	# should thus be formatted in the custom status() function
 	# to work with the printed " * status:  foo".
+	local efunc="" state=""
 
 	if service_started "${myservice}" ; then
-		if [[ ${RC_QUIET_STDOUT} != "yes" ]] ; then
-			einfo "status:  started"
-		else
-			return 0
-		fi
+		efunc="einfo"
+		state="started"
 	else
-		if [[ ${RC_QUIET_STDOUT} != "yes" ]] ; then
-			eerror "status:  stopped"
-		else
-			return 1
-		fi
+		efunc="eerror"
+		state="stopped"
 	fi
+	[[ ${RC_QUIET_STDOUT} != "yes" ]] \
+		&& ${efunc} "status:  ${state}"
 
 	status
+	[[ ${efunc} != "eerror" ]]
 }
 
 rcscript_errors=$(wrap_rcscript "${myscript}" 2>&1) || {
