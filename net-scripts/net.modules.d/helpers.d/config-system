@@ -71,7 +71,7 @@ config_system() {
 	# For example dhcp_dns_ESSID becomes dhcp_dns_eth0
 	get_wireless_vars
 
-	local dhcp ifvar=${interface//[![:word:]]/_}
+	local dhcp ifvar=$( bash_variable ${interface} )
 	if need_hostname ; then
 		[[ -n ${hostname} ]] && hostname ${hostname} >/dev/null
 	fi
