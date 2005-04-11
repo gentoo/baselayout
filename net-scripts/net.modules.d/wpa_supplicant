@@ -93,7 +93,6 @@ wpa_supplicant_get_ap_mac_address() {
 # correct encryption keys
 wpa_supplicant_associated() {
 	local -a status=( "$( wpa_cli -i$1 status | sed -ne 's/^\(key_mgmt\|wpa_state\|EAP state\)=\([^=]\+\).*/\U\2/p' )" )
-	
 
 	case ${status[0]} in
 		"NONE")			[[ ${status[1]} == "ASSOCIATED" ]] ;;
@@ -175,6 +174,14 @@ wpa_supplicant_pre_start() {
 	# This is so we can re-read the configuration file and clean any stale
 	# directories
 	wpa_supplicant_kill ${iface} true
+
+	# If wireless-tools is installed, try and apply our user config
+	# This is needed for some drivers - such as hostap because they start
+	# the card in Master mode which causes problems with wpa_supplicant.
+	if [[ $( type -t iwconfig_defaults ) == "function" ]]; then
+		iwconfig_defaults ${iface}
+		iwconfig_user_config ${iface}
+	fi	
 
 	ebegin "Starting wpa_supplicant on ${iface}"
 

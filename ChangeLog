@@ -10,6 +10,9 @@
     and reload it in their pre_stops so that ${ESSID} and ${ESSIDVAR} can be
     used in users custom postdown functions
 
+    wpa_supplicant now calls iwconfig_defaults and iwconfig_user_config
+    if available - fixes #88703
+
   09 Apr 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Have the 'status' function return 0/1 based upon the status of the 
