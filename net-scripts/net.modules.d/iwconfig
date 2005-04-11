@@ -105,7 +105,7 @@ iwconfig_get_essid() {
 # Returns the MAC address of the Access Point
 # the interface is connected to
 iwconfig_get_ap_mac_address() {
-	iwgetid --ap $1 2>${devnull} | sed -ne 's/^.*Cell: .*\<\(..:..:..:..:..:..\)\>.*/\U\1/p'
+	iwgetid --ap $1 | sed -ne 's/^.*Cell: .*\<\(..:..:..:..:..:..\)\>.*/\U\1/p'
 }
 
 # char* iwconfig_get_mode(char *interface)
@@ -838,6 +838,7 @@ iwconfig_pre_start() {
 	# the background
 	${IN_BACKGROUND} && return 0
 
+	save_options "ESSID" ""
 	interface_exists ${iface} || return 0
 
 	if ! iwconfig_check_extensions ${iface} ; then
@@ -874,16 +875,32 @@ iwconfig_pre_start() {
 	if [[ ${background} == yes ]]; then
 		IN_BACKGROUND=true
 		iwconfig_configure ${iface} &>/dev/null \
-		|| iwconfig_defaults ${iface} && interface_down ${iface} && mark_service_stopped net.${iface} \
+			&& save_options "ESSID" "${ESSID}" \
+			|| iwconfig_defaults ${iface} \
+				&& interface_down ${iface} \
+				&& mark_service_stopped net.${iface} \
 		&
 		go_background
 	fi
 
-	iwconfig_configure ${iface} && return 0
+	if iwconfig_configure ${iface} ; then
+		save_options "ESSID" "${ESSID}"
+		return 0
+	fi
 
 	eerror "Failed to configure wireless for ${iface}"
 	iwconfig_defaults ${iface}
-	unset ESSID
+	unset ESSID ESSIDVAR
 	interface_down ${iface}
 	return 1
+}
+
+# bool iwconfig_pre_stop(char *iface)
+#
+# Gets the last set ESSID if we have one
+# We don't query for the current ESSID as it may have changed to another
+# one
+iwconfig_pre_stop() {
+	ESSID=$( get_options "ESSID" )
+	ESSIDVAR=$( bash_variable "${ESSID}" )
 }

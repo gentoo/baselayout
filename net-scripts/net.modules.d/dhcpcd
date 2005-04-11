@@ -80,7 +80,7 @@ dhcpcd_stop() {
 		signal="TERM"
 	fi
 
-	kill -s ${signal} ${pid} &>${devnull}
+	kill -s ${signal} ${pid} &>/dev/null 
 	process_finished ${pid} dhcpcd
 	eend $? "timed out"
 	return $?

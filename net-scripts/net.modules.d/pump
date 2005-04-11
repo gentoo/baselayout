@@ -70,12 +70,12 @@ pump_stop() {
 	# causes pump to spawn a process
 	pidof pump &>/dev/null || return 0
 
-	e=$( pump --status --interface ${iface} 2>${devnull} | grep ${iface} )
+	e=$( pump --status --interface ${iface} 2>/dev/null | grep ${iface} )
 	[[ -z ${e} ]] && return 1
 	
 	ebegin "Stopping pump on ${iface}"
 	for ((count = 0; count < 9; count = count + 1)); do
-		e=$( pump --release --interface ${iface} 2>${devnull} )
+		e=$( pump --release --interface ${iface} 2>/dev/null )
 		[[ -z ${e} ]] && break
 		sleep 1
 	done
@@ -110,7 +110,7 @@ pump_start() {
 
 	# Bring up DHCP for this interface (or alias)
 	ebegin "Running pump"
-	pump ${opts} --win-client-ident --interface ${iface} 2>${devnull}
+	pump ${opts} --win-client-ident --interface ${iface}
 	eend $? || return $?
 
 	# pump succeeded, show address retrieved
@@ -120,7 +120,7 @@ pump_start() {
 	eval peer=\"\$\{dhcp_ntp_${iface}\}\"
 	[[ -z ${peer} ]] && eval peer=\"\$\{dhcp_ntp\}\"
 	if [[ ${peer} != "no" ]]; then
-		export ntpsrv=$( pump -i ${iface} --status 2>/dev/null | sed -ne 's/^.*Ntpservers: //p' )
+		export ntpsrv=$( pump -i ${iface} --status | sed -ne 's/^.*Ntpservers: //p' )
 		source ${MODULES_DIR}/helpers.d/config-system
 		config_system
 	fi

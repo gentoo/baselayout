@@ -60,7 +60,7 @@ iptunnel_pre_start() {
 	[[ -z ${opts} ]] && return 0
 
 	ebegin "Creating tunnel ${iface}"
-	interface_tunnel add ${iface} ${opts} >${devnull}
+	interface_tunnel add ${iface} ${opts}
 	eend $?
 	return $?
 
@@ -76,7 +76,7 @@ iptunnel_stop() {
 	[[ -z $( interface_tunnel show ${iface} 2>/dev/null ) ]] && return 0
 	
 	ebegin "Destroying tunnel ${iface}"
-	interface_tunnel del ${iface} >${devnull}
+	interface_tunnel del ${iface}
 	eend $?
 	return $?
 }

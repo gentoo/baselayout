@@ -76,14 +76,14 @@ iproute2_exists() {
 #
 # provides a generic interface for bringing interfaces up
 iproute2_up() {
-	ip link set up dev $1 &>${devnull}
+	ip link set up dev $1
 }
 
 # void iproute2_down(char *interface)
 #
 # provides a generic interface for bringing interfaces up
 iproute2_down() {
-	ip link set down dev $1 &>${devnull}
+	ip link set down dev $1
 }
 
 # bool ifproute2_is_up(char *iface, bool withaddress)
@@ -94,7 +94,7 @@ iproute2_down() {
 iproute2_is_up() {
 	local check="\<UP\>" addr=${2:-false}
 	${addr} && check="${check}.*inet "
-	ip addr show $1 2>${devnull} | grep -Eq "${check}" && return 0
+	ip addr show $1 | grep -Eq "${check}" && return 0
 	return 1
 }
 
@@ -104,7 +104,7 @@ iproute2_is_up() {
 iproute2_set_flag() {
 	local enable=$3 opt="on"
 	${enable} || opt="off"
-	ip link set $1 $2 ${opt} &>${devnull}
+	ip link set $1 $2 ${opt}
 }
 
 # void iproute2_get_address(char *interface)
@@ -112,14 +112,16 @@ iproute2_set_flag() {
 # Fetch the address retrieved by DHCP.  If successful, echoes the
 # address on stdout, otherwise echoes nothing.
 iproute2_get_address() {
-	ip -family inet addr show $1 2>${devnull} | sed -ne 's/.*inet \([^ ]*\).*/\1/p'
+	ip -family inet addr show $1 \
+		| sed -ne 's/.*inet \([^ ]*\).*/\1/p'
 }
 
 # void iproute2_get_mac_address(char *interface)
 #
 # Fetch the mac address assingned to the network card
 iproute2_get_mac_address() {
-	ip link show $1 2>${devnull} | sed -ne 's/^.*\<\(..:..:..:..:..:..\)\>.*/\U\1/p'
+	ip link show $1 \
+		| sed -ne 's/^.*\<\(..:..:..:..:..:..\)\>.*/\U\1/p'
 }
 
 # void iproute2_set_mac_address(char *interface, char *mac)

@@ -69,7 +69,7 @@ ipppd_pre_start() {
 	eval opts=\"\$\{ipppd_${ifvar}\}\"
 
 	einfo "Starting ipppd for ${iface}"
-	/usr/sbin/ipppd ${opts} pidfile ${pidfile} file /etc/ppp/options.${iface} >${devnull}
+	/usr/sbin/ipppd ${opts} pidfile ${pidfile} file /etc/ppp/options.${iface} >/dev/null
 	eend $? || return $?
 
 	return 0

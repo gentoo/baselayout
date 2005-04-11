@@ -154,7 +154,7 @@ vlan_pre_stop() {
 	for vlan in $( vlan_get_vlans ${iface} ); do
 		einfo "Removing VLAN ${vlan##*.} from ${iface}"
 		iface_stop ${vlan}
-		vconfig rem ${vlan} >${devnull}
+		vconfig rem ${vlan}
 	done
 
 	return 0

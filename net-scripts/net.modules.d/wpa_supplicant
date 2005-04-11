@@ -67,7 +67,7 @@ wpa_supplicant_get_essid() {
 	local i essid
 
 	for (( i=0; i<5; i++ )); do
-		essid=$( wpa_cli -i$1 status 2>/dev/null | sed -ne 's/^ssid=//p' )
+		essid=$( wpa_cli -i$1 status | sed -ne 's/^ssid=//p' )
 		if [[ -n ${essid} ]]; then
 			echo ${essid}
 			return 0
@@ -83,7 +83,7 @@ wpa_supplicant_get_essid() {
 # Returns the MAC address of the Access Point
 # the interface is connected to
 wpa_supplicant_get_ap_mac_address() {
-	wpa_cli -i$1 status 2>/dev/null | sed -ne 's/^bssid=\([^=]\+\).*/\U\1/p'
+	wpa_cli -i$1 status | sed -ne 's/^bssid=\([^=]\+\).*/\U\1/p'
 }
 
 # bool wpa_supplicant_associated(char *interface)
@@ -154,13 +154,20 @@ wpa_supplicant_associate() {
 # Start wpa_supplicant on an interface and wait for association
 # Returns 0 (true) when successful, non-zero otherwise
 wpa_supplicant_pre_start() {
-	# We don't configure wireless if we're being called from
-	# the background
-	${IN_BACKGROUND} && return 0
-
 	local iface=$1 opts timeout
 	local cfgfile="/etc/wpa_supplicant.conf"
 
+	# We don't configure wireless if we're being called from
+	# the background
+	if ${IN_BACKGROUND} ; then
+	        ESSID=$( wpa_supplicant_get_essid $1 )
+		ESSIDVAR=$( bash_variable "${ESSID}" )
+		save_options "ESSID" "${ESSID}"
+		return 0
+	fi
+
+	save_options "ESSID" ""
+	
 	# We only work on wirelesss interfaces
 	wpa_supplicant_check_extensions ${iface} || return 0
 
@@ -218,6 +225,9 @@ wpa_supplicant_pre_start() {
 
 	# Set ESSID for essidnet and report
 	ESSID=$( wpa_supplicant_get_essid ${iface} )
+	ESSIDVAR=$( bash_variable "${ESSID}" )
+	save_options "ESSID" "${ESSID}"
+	
 	local -a status=( "$( wpa_cli -i${iface} status | sed -ne 's/^\(bssid\|pairwise_cipher\|key_mgmt\)=\([^=]\+\).*/\U\2/p' | tr '[:lower:]' '[:upper:]' )" )
 	einfo "${iface} connected to \"${ESSID//\\\\/\\\\}\" at ${status[0]}"
 
@@ -234,6 +244,16 @@ wpa_supplicant_pre_start() {
 
 	return 0
 }
+
+# bool wpa_supplicant_pre_stop(char *iface)
+#
+# Gets the last set ESSID if we have one
+# We don't query for the current ESSID as it may have changed to another
+# one
+wpa_supplicant_pre_stop() {
+        ESSID=$( get_options "ESSID" )
+	ESSIDVAR=$( bash_variable "${ESSID}" )
+}	
 
 # bool wpa_supplicant_post_stop(char *iface)
 #

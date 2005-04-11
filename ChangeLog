@@ -1,6 +1,15 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  11 Apr 2005; Roy Marples <uberlord@gentoo.org>:
+
+    removed ${devnull} from net.lo and net-script modules
+    updated all modules not to re-direct stderr where appropriate
+
+    iwconfig and wpa_supplicant now save their current ESSID via save_options
+    and reload it in their pre_stops so that ${ESSID} and ${ESSIDVAR} can be
+    used in users custom postdown functions
+
   09 Apr 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Have the 'status' function return 0/1 based upon the status of the 

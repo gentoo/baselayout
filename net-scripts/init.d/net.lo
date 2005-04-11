@@ -9,13 +9,6 @@
 
 #NB: Config is in /etc/conf.d/net
 
-if [[ -n ${NET_DEBUG} ]]; then
-	set -x
-	devnull=/dev/stderr
-else
-	devnull=/dev/null
-fi
-
 # For pcmcia users. note that pcmcia must be added to the same
 # runlevel as the net.* script that needs it.
 depend() {

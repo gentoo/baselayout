@@ -71,14 +71,14 @@ ifconfig_exists() {
 #
 # provides a generic interface for bringing interfaces up
 ifconfig_up() {
-	ifconfig $1 up &>${devnull}
+	ifconfig $1 up
 }
 
 # void ifconfig_down(char *iface)
 #
 # provides a generic interface for bringing interfaces down
 ifconfig_down() {
-	ifconfig $1 down &>${devnull}
+	ifconfig $1 down
 }
 
 # bool ifconfig_is_up(char *iface, bool withaddress)
@@ -89,7 +89,7 @@ ifconfig_down() {
 ifconfig_is_up() {
 	local check="\<UP\>" addr=${2:-false}
 	${addr} && check="\<inet addr:.*${check}"
-	ifconfig $1 2>${devnull} | grep -Eq "${check}" && return 0
+	ifconfig $1 | grep -Eq "${check}" && return 0
 	return 1
 }
 
@@ -99,7 +99,7 @@ ifconfig_is_up() {
 ifconfig_set_flag() {
 	local iface=${1} flag=${2} enable=${3}
 	${enable} || flag="-${flag}"
-	ifconfig ${iface} ${flag} &>${devnull}
+	ifconfig ${iface} ${flag}
 }
 
 # void ifconfig_get_address(char *interface)
@@ -159,7 +159,7 @@ ifconfig_del_addresses() {
 	
 	# Remove IPv6 addresses
 	for i in $( ifconfig ${iface} | sed -ne 's/^.*inet6 addr: \([^ ]*\) Scope:[^L].*/\1/p' ) ; do
-		/sbin/ifconfig ${interface} inet6 del ${i} &>/dev/null
+		/sbin/ifconfig ${interface} inet6 del ${i}
 	done
 
 	return 0
@@ -279,11 +279,11 @@ ifconfig_post_start() {
 
 		# Support adding IPv6 addresses easily
 		if [[ ${x} == *:* && ${x} != *'-A inet6'* ]]; then
-			route add -A inet6 ${x} dev ${iface} &>/dev/null
+			route add -A inet6 ${x} dev ${iface}
 		else
 			# We do this so we don't have to specify host or net
 			# in our config
-			route add ${x} dev ${iface} &>/dev/null
+			route add ${x} dev ${iface} 
 		fi
 		eend $?
 	done
@@ -323,7 +323,7 @@ ifconfig_add_address() {
 		config=( "${config[@]//peer/pointtopoint}" )
 	fi
 
-	ifconfig ${iface} ${config[@]} &>${devnull}
+	ifconfig ${iface} ${config[@]}
 	return $?
 }
 
