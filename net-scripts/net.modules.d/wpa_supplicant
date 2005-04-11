@@ -159,6 +159,14 @@ wpa_supplicant_pre_start() {
 	# directories
 	wpa_supplicant_kill ${iface} true
 
+        # If wireless-tools is installed, try and apply our user config
+	# This is needed for some drivers - such as hostap because they start
+	# the card in Master mode which causes problems with wpa_supplicant.
+	if [[ $( type -t iwconfig_defaults ) == "function" ]]; then
+		iwconfig_defaults ${iface}
+		iwconfig_user_config ${iface}
+	fi
+
 	ebegin "Starting wpa_supplicant on ${iface}"
 
 	if [[ ! -f ${cfgfile} ]]; then
