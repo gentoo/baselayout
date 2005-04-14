@@ -25,9 +25,16 @@ iproute2_depend() {
 #
 # Returns 1 if iproute2 is installed, otherwise 0
 iproute2_check_installed() {
-	[[ -x /sbin/ip ]] && return 0
-	${1:-false} && eerror "For iproute2 support, emerge sys-apps/iproute2"
-	return 1
+	local report=${1:-false} installed=0
+	if [[ ! -x /sbin/ip ]]; then
+		installed=1
+		${report} && eerror "For iproute2 support, emerge sys-apps/iproute2"
+	fi
+	if [[ ! -e /proc/net/netlink ]]; then
+		installed=1
+		${report} && eerror "iproute2 requires NetLink enabled in the kernel"
+	fi
+	return ${installed} 
 }
 
 # char* iproute2_provides(void)
@@ -228,8 +235,14 @@ iproute2_add_address() {
 	# This is required for IPv6 addresses
 	iproute2_up ${iface}
 
-	ip addr add dev ${iface} ${config[@]}
-	return $?
+	# Some kernels like to apply lo with an address when they are brought up
+	if [[ ${iface} == "lo" && ${config[@]} == "127.0.0.1/8 brd 127.255.255.255 scope host" ]]; then
+		ip addr add dev ${iface} ${config[@]} 2>/dev/null
+		return 0
+	else
+		ip addr add dev ${iface} ${config[@]}
+		return $?
+	fi
 }
 
 # bool iproute2_post_start(char *interface)

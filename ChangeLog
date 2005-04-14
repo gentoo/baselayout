@@ -1,6 +1,19 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  14 Apr 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Fixed ifconfig and iproute2 erroring from new lo code - fixes #88006
+
+    If /proc/net/netlink does not exist then iproute2 will fail the
+    check_installed function with an appropriate error - Thanks to
+    Jeremy Huddleston for the patch.
+
+    If /proc/net/packet does not exist then wpa_supplicant will fail
+    check_installed function with an appropriate error
+
+    Background fixes for net.lo, udhcpc and wpa_supplicant
+
   11 Apr 2005; Roy Marples <uberlord@gentoo.org>:
 
     removed ${devnull} from net.lo and net-script modules

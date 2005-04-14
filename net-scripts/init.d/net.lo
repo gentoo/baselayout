@@ -626,9 +626,11 @@ iface_stop() {
 		interface_del_addresses ${i}
 
 		# Do final shut down of this alias
-		ebegin "Shutting down ${i}"
-		interface_iface_stop ${i}
-		eend $?
+		if ! ${IN_BACKGROUND}; then
+			ebegin "Shutting down ${i}"
+			interface_iface_stop ${i}
+			eend $?
+		fi
 	done
 
 	# post Stop any modules
@@ -762,6 +764,9 @@ run() {
 	local before starting=true
 	local -a MODULES mods
 	local IN_BACKGROUND=${IN_BACKGROUND:-false}
+
+	# No point in backgrounding if we're already there ...
+	${IN_BACKGROUND} && background=false
 
 	eindent
 

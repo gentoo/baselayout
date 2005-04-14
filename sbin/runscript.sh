@@ -221,7 +221,13 @@ svc_stop() {
 			${was_inactive} && mark_service_inactive "${myservice}"
 		fi
 	else
-		mark_service_stopped "${myservice}"
+		# If we're stopped from a daemon that sets ${IN_BACKGROUND} such as
+		# wpa_monitor when we mark as inactive instead of taking the down
+		if ${IN_BACKGROUND:-false} ; then
+			mark_service_inactive "${myservice}"
+		else
+			mark_service_stopped "${myservice}"
+		fi
 	fi
 
 	return "${retval}"

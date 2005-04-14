@@ -142,7 +142,6 @@ ifconfig_get_aliases_rev() {
 # (false) if there were no addresses to remove.
 ifconfig_del_addresses() {
 	local iface=$1 i
-
 	# We don't remove addresses from aliases
 	[[ ${iface} == *:* ]] && return 0
 
@@ -156,12 +155,11 @@ ifconfig_del_addresses() {
 	while ifconfig ${iface} | grep -q -m1 -o 'inet addr:[^ ]*' ; do
 		ifconfig ${iface} 0.0.0.0 || break
 	done
-	
+
 	# Remove IPv6 addresses
 	for i in $( ifconfig ${iface} | sed -ne 's/^.*inet6 addr: \([^ ]*\) Scope:[^L].*/\1/p' ) ; do
-		/sbin/ifconfig ${interface} inet6 del ${i}
+		/sbin/ifconfig ${iface} inet6 del ${i}
 	done
-
 	return 0
 }
 
@@ -323,8 +321,14 @@ ifconfig_add_address() {
 		config=( "${config[@]//peer/pointtopoint}" )
 	fi
 
-	ifconfig ${iface} ${config[@]}
-	return $?
+	# Some kernels like to apply lo with an address when they are brought up
+	if [[ ${iface} == "lo" || ${config[@]} == "127.0.0.1/8 broadcast 127.255.255.255" ]]; then
+		ifconfig ${iface} ${config[@]} 2>/dev/null
+		return 0
+	else
+		ifconfig ${iface} ${config[@]}
+		return $?
+	fi
 }
 
 # void ifconfig_default_route(char* interface, char* gateway_ip)
