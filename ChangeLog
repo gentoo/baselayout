@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  14 Apr 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Do not kill udevd in /sbin/rc, as it is apparently evil.
+
   14 Apr 2005; Roy Marples <uberlord@gentoo.org>:
 
     Fixed ifconfig and iproute2 erroring from new lo code - fixes #88006

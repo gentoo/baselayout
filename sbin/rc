@@ -87,8 +87,6 @@ udev_version() {
 }
 
 populate_udev() {
-	# Make sure we do not have udevd from initramfs running
-	killall -q udevd
 	# Now populate /dev
 	/sbin/udevstart
 
