@@ -47,6 +47,7 @@
 #define FIELD_PROVIDE	"PROVIDE"
 #define FIELD_PARALLEL	"PARALLEL"
 #define FIELD_MTIME	"MTIME"
+#define FIELD_FAILED	"FAILED"
 
 typedef struct {
 	struct list_head node;

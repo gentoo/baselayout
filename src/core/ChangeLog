@@ -2,6 +2,13 @@
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 # $Header$
 
+14 Apr 2005 Martin Schlemmer <azarah@gentoo.org>
+
+        * parse.c,
+        * parse.h: Do not try to extract the depend() function from the
+        scripts, but rather source the whole file.  This way we can detect
+        syntax errors, etc.  Little bit slower, but not much.
+
 07 Apr 2005 Martin Schlemmer <azarah@gentoo.org>
 
         * test-regex.c: Add two more tests.

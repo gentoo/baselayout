@@ -232,9 +232,6 @@ size_t parse_rcscript(char *scriptname, time_t mtime, char **data, size_t index)
 	size_t lenght;
 	int count;
 	int current = 0;
-	int got_depend = 0;
-	int brace_count = 0;
-	int depend_started = 0;
 
 	if ((NULL == scriptname) || (0 == strlen(scriptname))) {
 		DBG_MSG("Invalid argument passed!\n");
@@ -297,50 +294,28 @@ size_t parse_rcscript(char *scriptname, time_t mtime, char **data, size_t index)
 		if (REGEX_MATCH(tmp_data)) {
 			DBG_MSG("Got 'depend()' function.\n");
 
-			got_depend = 1;
 			write_count = parse_print_body(gbasename(scriptname),
 					data, write_count);
 			if (-1 == write_count) {
 				DBG_MSG("Failed to call parse_print_body()!\n");
 				goto error;
 			}
-		}
 
-		/* We have the depend function... */
-		if (1 == got_depend) {
-			/* Basic theory is that brace_count will be 0 when we
-			 * have matching '{' and '}'
-			 * FIXME:  This can fail for some cases */
-			COUNT_CHAR_UP(tmp_buf, '{', brace_count);
-			COUNT_CHAR_DN(tmp_buf, '}', brace_count);
-
-			/* This is just to verify that we have started with
-			 * the body of 'depend()' */
-			COUNT_CHAR_UP(tmp_buf, '{', depend_started);
-
-			/* Make sure depend() contain something, else bash
-			 * errors out (empty function). */
-			if ((depend_started > 0) && (0 == brace_count))
-				PRINT_TO_BUFFER(data, write_count, error,
-						"  \treturn 0\n");
-
-			/* Print the depend() function */
+			/* Need to have the 'source', as parse_cache() checks for
+			 * second arg */
 			PRINT_TO_BUFFER(data, write_count, error,
-					"  %s\n", tmp_buf);
-
-			/* If COUNT=0, and SBCOUNT>0, it means we have read
-			 * all matching '{' and '}' for depend(), so stop. */
-			if ((depend_started > 0) && (0 == brace_count)) {
-				write_count = parse_print_end(data, write_count);
-				if (-1 == write_count) {
-					DBG_MSG("Failed to call parse_print_end()!\n");
-					goto error;
-				}
-
-				/* Make sure this is the last loop */
-				current += lenght;
-				goto _continue;
+				"  . \"%s\" >/dev/null 2>&1 || echo \"FAILED source\"\n",
+				scriptname);
+			
+			write_count = parse_print_end(data, write_count);
+			if (-1 == write_count) {
+				DBG_MSG("Failed to call parse_print_end()!\n");
+				goto error;
 			}
+
+			/* Make sure this is the last loop */
+			current += lenght;
+			goto _continue;
 		}
 	
 _continue:
@@ -444,6 +419,7 @@ size_t generate_stage2(char **data) {
 			"bash",
 			"--noprofile",
 			"--norc",
+			"--",
 			NULL
 		};
 
@@ -519,6 +495,12 @@ size_t generate_stage2(char **data) {
 			DBG_MSG("Failed to generate stage1!\n");
 			goto error_c_p_side;
 		}
+
+#if 0
+		int tmp_fd = open("bar", O_CREAT | O_TRUNC | O_RDWR, 0600);
+		write(tmp_fd, stage1_data, stage1_write_count);
+		close(tmp_fd);
+#endif
 
 		/* Do setup for select() */
 		tv.tv_sec = 0;		/* We do not want to wait for select() */
@@ -838,6 +820,19 @@ int parse_cache(const char *data, size_t lenght) {
 			goto error;
 		}
 
+		if (0 == strcmp(token, FIELD_FAILED)) {
+			EWARN("'%s' has syntax errors, please correct!\n", rc_name);
+			/* FIXME: Need to think about what to do syntax BROKEN
+			 * services */
+			retval = service_add_dependency(rc_name, rc_name, BROKEN);
+			if (-1 == retval) {
+				DBG_MSG("Failed to add dependency '%s' to service '%s', type '%s'!\n",
+						token, rc_name, field);
+				goto error;
+			}
+			goto _continue;
+		}
+
 		if (0 == strcmp(token, FIELD_NEED)) {
 			type = NEED;
 			goto have_dep_field;
@@ -964,8 +959,8 @@ error:
 size_t parse_print_start(char **data, size_t index) {
 	size_t write_count = index;
 	
-	PRINT_TO_BUFFER(data, write_count, error, "source /sbin/functions.sh\n\n");
-	PRINT_TO_BUFFER(data, write_count, error, "set -e\n\n");
+	PRINT_TO_BUFFER(data, write_count, error, ". /sbin/functions.sh\n\n");
+//	PRINT_TO_BUFFER(data, write_count, error, "set -e\n\n");
 	PRINT_TO_BUFFER(data, write_count, error, "need() {\n");
 	PRINT_TO_BUFFER(data, write_count, error, " [ -n \"$*\" ] && echo \"NEED $*\"; return 0\n");
 	PRINT_TO_BUFFER(data, write_count, error, "}\n\n");
