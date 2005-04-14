@@ -234,15 +234,21 @@ int main() {
 
 		datasize = generate_stage2(&data);
 		if (-1 == datasize) {
-			EERROR("Failed to generate stage1!\n");
+			EERROR("Failed to generate stage2!\n");
 			exit(EXIT_FAILURE);
 		}
 		
 		if (-1 == parse_cache(data, datasize)) {
-			EERROR("Failed to generate stage2!\n");
+			EERROR("Failed to parse stage2 output!\n");
 			free(data);
 			exit(EXIT_FAILURE);
 		}
+
+#if 0
+		tmp_cachefile_fd = open("foo", O_CREAT | O_TRUNC | O_RDWR, 0600);
+		write(tmp_cachefile_fd, data, datasize);
+		close(tmp_cachefile_fd);
+#endif
 
 		free(data);
 

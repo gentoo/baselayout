@@ -4,6 +4,9 @@
 
 14 Apr 2005 Martin Schlemmer <azarah@gentoo.org>
 
+        * depscan.c: Update error comments for stage name changes some time
+        back.
+
         * parse.c,
         * parse.h: Do not try to extract the depend() function from the
         scripts, but rather source the whole file.  This way we can detect
