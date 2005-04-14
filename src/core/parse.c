@@ -959,7 +959,8 @@ error:
 size_t parse_print_start(char **data, size_t index) {
 	size_t write_count = index;
 	
-	PRINT_TO_BUFFER(data, write_count, error, ". /sbin/functions.sh\n\n");
+	PRINT_TO_BUFFER(data, write_count, error, ". /sbin/functions.sh\n");
+	PRINT_TO_BUFFER(data, write_count, error, "[ -e /etc/rc.conf ] && . /etc/rc.conf\n\n");
 //	PRINT_TO_BUFFER(data, write_count, error, "set -e\n\n");
 	PRINT_TO_BUFFER(data, write_count, error, "need() {\n");
 	PRINT_TO_BUFFER(data, write_count, error, " [ -n \"$*\" ] && echo \"NEED $*\"; return 0\n");
@@ -1040,7 +1041,6 @@ size_t parse_print_body(char *scriptname, char **data, size_t index) {
 	PRINT_TO_BUFFER(data, write_count, error, "  [ \"%s\" = \"net\" ] && \\\n", base);
 	PRINT_TO_BUFFER(data, write_count, error, "  [ \"%s\" != \"${myservice}\" ] && \\\n", ext);
 	PRINT_TO_BUFFER(data, write_count, error, "  	. /etc/conf.d/net\n");
-	PRINT_TO_BUFFER(data, write_count, error, "  [ -e /etc/rc.conf ] && . /etc/rc.conf\n\n");
 	PRINT_TO_BUFFER(data, write_count, error, "  depend() {\n");
 	PRINT_TO_BUFFER(data, write_count, error, "    return 0\n");
 	PRINT_TO_BUFFER(data, write_count, error, "  }\n\n");
