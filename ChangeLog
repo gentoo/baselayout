@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  15 Apr 2005; Chris Gianelloni <wolf31o2@gentoo.org> -bin/bashlogin,
+  -sbin/livecd-functions.sh:
+  Removed sbin/livecd-functions.sh and bin/bashlogin as they are only used in
+  release building, and they have been moved to livecd-tools.
+
   14 Apr 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     Do not kill udevd in /sbin/rc, as it is apparently evil.
