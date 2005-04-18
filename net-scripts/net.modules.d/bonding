@@ -100,7 +100,7 @@ bonding_pre_stop() {
 	[[ ! -f /proc/net/bonding/${iface} ]] && return 0
 
 	# don't trust the config, get the active list instead
-	slaves=$( sed -ne 's/^Slave Interface: //p' /proc/net/bonding/${iface} )
+	slaves=$( sed -n -e 's/^Slave Interface: //p' /proc/net/bonding/${iface} )
 	[[ -z ${slaves} ]] && return 0
 
 	# remove all slaves

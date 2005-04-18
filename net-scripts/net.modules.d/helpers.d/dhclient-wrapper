@@ -8,8 +8,6 @@
 # Instead of writing new functions for dhclient, we simply map their variables
 # over to udhcpc style ones and call those scripts!
 
-iface_type=$1
-
 case "${reason}" in
 	BOUND|REBOOT|REBIND) action="bound" ;;
 	RENEW) action="renew" ;;
@@ -22,24 +20,20 @@ if [[ -z ${action} ]]; then
 	exit 1
 fi
 
-export ip=${new_ip_address}
-export subnet=${new_subnet_mask} 
-export broadcast=${new_broadcast_address}
-routers=( ${new_routers} )
-export router=${routers[0]}
-export new_routers=${router}
+export ip="${new_ip_address}"
+export subnet="${new_subnet_mask}"
+export broadcast="${new_broadcast_address}"
+routers=( "${new_routers}" )
+export router="${routers[0]}"
 
-export hostname=${new_hostname}
+export hostname="${new_hostname}"
 
-export domain=${new_domain_name}
-export dns=${new_domain_name_servers}
-export new_domain_name=${domain}
+export dns_domain_${interface}="${new_domain_name}"
+export dns_servers_${interface}="${new_domain_name_servers}"
 
-export ntpsrv=${new_domain_name_servers}
+export ntp_servers_${interface}="${new_domain_name_servers}"
 
-export nisdomain=${new_nis_domain}
-export nissrv=${new_nis_servers}
+export nis_domain_${interface}="${new_nis_domain}"
+export nis_servers_${interface}="${new_nis_servers}"
 
-# Execute the dhclient script and exit with it's code
 /lib/rcscripts/net.modules.d/helpers.d/dhcp ${action}
-exit $?

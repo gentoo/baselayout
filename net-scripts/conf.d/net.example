@@ -12,6 +12,20 @@
 # If you want to do anything more fancy, you should take the time to
 # read through the rest of this file.
 
+##############################################################################
+# DEFAULTS
+#
+# auto_interface="yes"
+# Set this to no to stop trying to best guess your network setup and choose
+# the best interface to use by default
+
+# When it's set to yes, we
+#     default to DHCP
+#     calculate a metric based on what interfaces are up and type
+#     select the interface (use it's resolv.conf, ntp.conf and yp.conf that
+#                           were created when it became active)
+# otherwise we
+#     default to NULL
 
 ##############################################################################
 # MODULES
@@ -357,8 +371,25 @@
 #iptunnel_vpn0="mode ipip remote 207.170.82.2 ttl 255"
 
 # To configure the interface
-#config_vpn0=( "192.168.0.2 pointopoint 192.168.1.2" )		# ifconfig style
-#config_vpn0=( "192.168.0.2 peer 192.168.1.1" )			# iproute2 style
+#config_vpn0=( "192.168.0.2 pointopoint 192.168.1.2" )	# ifconfig style
+#config_vpn0=( "192.168.0.2 peer 192.168.1.1" )		# iproute2 style
+
+#-----------------------------------------------------------------------------
+# System
+# For configuring system specifics such as domain, dns, ntp and nis servers
+# It's rare that you would need todo this, but you can anyway.
+# This is most benefit to wireless users who don't use DHCP so they can change
+# their configs based on ESSID. See wireless.example for more details
+
+# To use dns settings such as these, dns_servers_eth0 must be set!
+# dns_domain_eth0="your.domain"
+# dns_servers_eth0="192.168.0.2 192.168.0.3"
+# dns_search_domains_eth0="this.domain that.domain"
+
+# ntp_servers_eth0="192.168.0.2 192.168.0.3"
+
+# nis_domain_eth0="domain"
+# nis_servers_eth0="192.168.0.2 192.168.0.3"
 
 ##############################################################################
 # ADVANCED CONFIGURATION

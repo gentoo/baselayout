@@ -105,7 +105,7 @@ tuntap_stop() {
 
 	# tunctl doesn't always error on on tun/tap
 	# interfaces (mainly aliases, etc)
-	if tunctl -d ${iface} &>${devnull} ; then
+	if tunctl -d ${iface} &>/dev/null ; then
 		interface_exists ${iface} || einfo "Destroyed Tun/Tap interface ${iface}"
 	fi
 

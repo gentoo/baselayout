@@ -23,8 +23,9 @@ depend() {
 # Define where our modules are
 MODULES_DIR=/lib/rcscripts/net.modules.d
 
-# Default to turn off backgrounding
-background=${background:-no}
+# Some defaults
+background=${background:-"no"}
+auto_interface=${auto_interface:-"yes"}
 
 # Load some functions shared between ourselves and our dhcp helpers
 source ${MODULES_DIR}/helpers.d/functions
@@ -465,7 +466,7 @@ modules_load()  {
 # VLAN interfaces (for example eth0.0, eth0.1).  VLAN setup is accomplished by
 # calling itself recursively.
 iface_start() {
-	local iface=$1 mod config_counter=-1 x warn=false config_worked=false
+	local iface=$1 mod config_counter=-1 x config_worked=false
 	local RC_INDENTATION=${RC_INDENTATION}	# so it will reset after function
 	local -a config fallback fallback_route conf
 	local ifvar=$( bash_variable $1 )
@@ -499,15 +500,21 @@ iface_start() {
 		config=( "${config[@]:1}" )
 	fi
 
-	# Provide a default of DHCP if no configuration is set
+	# Provide a default of DHCP if no configuration is set and we're auto
+	# Otherwise a default of NULL
 	if [[ -z ${config} ]]; then
-		if [[ $( type -t dhcp_start ) == function ]]; then
-			config=( "dhcp" )
-			warn=true
+		if [[ ${auto_interface} == "yes" ]]; then
+			if [[ $( type -t dhcp_start ) == "function" ]]; then
+				config=( "dhcp" )
+				ewarn "Configuration not set for ${iface} - assuming dhcp"
+			else
+				eerror "Cannot default to dhcp as there is no dhcp module loaded"
+				eerror "No configuration for ${iface}"
+				return 1
+			fi
 		else
-			eerror "Cannot default to dhcp as there is no dhcp module loaded"
-			eerror "No configuration for ${iface}"
-			return 1
+			config=( "null" )
+			ewarn "Configuration not set for ${iface} - assuming null"
 		fi
 	fi
 
@@ -520,11 +527,6 @@ iface_start() {
 			eend 0
 			config_worked=true
 			continue
-		fi
-
-		if ${warn}; then
-			ewarn "Configuration not set for ${iface} - assuming dhcp"
-			warn=false
 		fi
 
 		# We convert it to an array - this has the added
@@ -656,8 +658,19 @@ run_start() {
 	# need too - additional routes too
 	# However, no extra modules are loaded as they are just not needed
 	if [[ ${iface} == "lo" ]]; then
+		metric_lo=0
 		config_lo=( "127.0.0.1/8 brd 127.255.255.255" "${config_lo[@]}" )
 		routes_lo=( "127.0.0.0/8" "${routes_lo[@]}" )
+	fi
+
+	# Try and work out a metric for the interface if we're on auto
+	eval x=\"\$\{metric_${IFVAR}\}\"
+	if [[ -z ${x} ]]; then
+		if [[ ${auto_interface} == "yes" ]]; then
+			eval "metric_${IFVAR}=\""$( calculate_metric ${iface} )"\""
+		else
+			eval "metric_${IFVAR}=0"
+		fi
 	fi
 
 	# We may not have a loaded module for ${iface}
@@ -766,6 +779,7 @@ run() {
 	local IN_BACKGROUND=${IN_BACKGROUND:-false}
 
 	# No point in backgrounding if we're already there ...
+	# This is also required so we can select the "best" interface
 	${IN_BACKGROUND} && background=false
 
 	eindent
@@ -786,8 +800,19 @@ run() {
 			done
 
 			run_stop ${iface} && r=0
+			remove_state ${iface}
 		else
 			run_start ${iface} && r=0
+			save_state ${iface}
+		fi
+	fi
+
+	# Only apply best state if we're on auto
+	if [[ ${r} == 0 && ${auto_interface} == "yes" ]]; then
+		local best_iface=$( select_best_interface )
+		if [[ -n ${best_iface} ]]; then
+			einfo "Selecting best interface: ${best_iface}"
+			apply_state "${best_iface}"
 		fi
 	fi
 
@@ -807,7 +832,6 @@ run() {
 start() {
 	einfo "Starting ${IFACE}"
 	run ${IFACE} start
-	return $?
 }
 
 # bool stop(void)
@@ -817,7 +841,6 @@ start() {
 stop() {
 	einfo "Stopping ${IFACE}"
 	run ${IFACE} stop
-	return $?
 }
 
 # bool restart(void)

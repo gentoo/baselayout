@@ -1,6 +1,28 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  18 Apr 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Changed "sed -ne" to "sed -n -e" for portability.
+    
+    Added auto_interface (default yes).
+    if auto_interface is yes then we
+       *) default to dhcp
+       *) automatically calculate a metric (this may need work)
+       *) select the best interface based on metric
+          (restore resolv.conf, ntp.conf and yp.conf we have saved)
+    otherwise we
+       *) default to null
+
+    wpa_supplicant no longer kills itself when we're not stopping the interface
+    it's running on.
+
+    wpa_supplicant now uses wpa_monitor (yet to be released) if available.
+
+    Added a new module called system which enables the definition of domain
+    name, dns servers, ntp servers, nis domain and nis servers per interface.
+    essidnet and dhcp helpers have been re-coded around this module.
+
   15 Apr 2005; Chris Gianelloni <wolf31o2@gentoo.org> -bin/bashlogin,
   -sbin/livecd-functions.sh:
   Removed sbin/livecd-functions.sh and bin/bashlogin as they are only used in

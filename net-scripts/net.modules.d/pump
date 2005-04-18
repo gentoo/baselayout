@@ -120,9 +120,8 @@ pump_start() {
 	eval peer=\"\$\{dhcp_ntp_${iface}\}\"
 	[[ -z ${peer} ]] && eval peer=\"\$\{dhcp_ntp\}\"
 	if [[ ${peer} != "no" ]]; then
-		export ntpsrv=$( pump -i ${iface} --status | sed -ne 's/^.*Ntpservers: //p' )
-		source ${MODULES_DIR}/helpers.d/config-system
-		config_system
+		eval ntp_servers_${ifvar}=$( pump -i ${iface} --status | sed -n -e 's/^.*Ntpservers: //p' )
+		system_ntp
 	fi
 
 	return 0

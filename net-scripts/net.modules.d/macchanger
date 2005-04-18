@@ -101,12 +101,12 @@ macchanger_pre_start() {
 	# The interface needs to be up for macchanger to work most of the time
 	interface_down ${iface}
 
-	mac=$( /sbin/macchanger ${opts} ${iface} | sed -ne 's/^Faked MAC:.*\<\(..:..:..:..:..:..\)\>.*/\U\1/p' )
+	mac=$( /sbin/macchanger ${opts} ${iface} | sed -n -e 's/^Faked MAC:.*\<\(..:..:..:..:..:..\)\>.*/\U\1/p' )
 
 	# Sometimes the interface needs to be up ....
 	if [[ -z ${mac} ]]; then
 		interface_up ${iface}
-		mac=$( /sbin/macchanger ${opts} ${iface} | sed -ne 's/^Faked MAC:.*\<\(..:..:..:..:..:..\)\>.*/\U\1/p' )
+		mac=$( /sbin/macchanger ${opts} ${iface} | sed -n -e 's/^Faked MAC:.*\<\(..:..:..:..:..:..\)\>.*/\U\1/p' )
 	fi
 
 	if [[ -z ${mac} ]]; then

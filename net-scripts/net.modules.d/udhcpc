@@ -127,12 +127,12 @@ udhcpc_start() {
 	fi
 
 	if [[ ${background} == "yes" ]]; then
-		eval "udhcpc ${opts} --script=${MODULES_DIR}/helpers.d/dhcp --pidfile=${pidfile} --interface=${iface}" &>/dev/null &
+		eval "udhcpc ${opts} --script=${MODULES_DIR}/helpers.d/udhcpc-wrapper --pidfile=${pidfile} --interface=${iface}" &>/dev/null &
 		eend 0
 		go_background
 	fi
 
-	x=$( eval "udhcpc ${opts} --now --script=${MODULES_DIR}/helpers.d/dhcp --pidfile=${pidfile} --interface=${iface}" )
+	x=$( eval "udhcpc ${opts} --now --script=${MODULES_DIR}/helpers.d/udhcpc-wrapper --pidfile=${pidfile} --interface=${iface}" )
 	# We just check the last 5 letters
 	[[ ${x:((${#x} - 5)):5} == "bound" ]]
 	eend $? || return 1

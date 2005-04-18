@@ -76,7 +76,7 @@ iwconfig_get_wep_status() {
 
 	if [[ -n ${key} ]]; then
 		status="enabled"
-		mode=" - $( iwconfig $1 | sed -ne 's/^.*Security mode:\(.*[^ ]\).*/\1/p' )"
+		mode=" - $( iwconfig $1 | sed -n -e 's/^.*Security mode:\(.*[^ ]\).*/\1/p' )"
 	fi
 	
 	echo "(WEP ${status}${mode})"
@@ -89,7 +89,7 @@ iwconfig_get_essid() {
 	local i essid
 
 	for (( i=0; i<5; i++ )); do
-		essid=$( iwgetid $1 2>/dev/null | sed -ne 's/^.*ESSID:"\(.*\)"$/\1/p' )
+		essid=$( iwgetid $1 2>/dev/null | sed -n -e 's/^.*ESSID:"\(.*\)"$/\1/p' )
 		if [[ -n ${essid} ]]; then
 			echo ${essid}
 			return 0
@@ -105,21 +105,21 @@ iwconfig_get_essid() {
 # Returns the MAC address of the Access Point
 # the interface is connected to
 iwconfig_get_ap_mac_address() {
-	iwgetid --ap $1 | sed -ne 's/^.*Cell: .*\<\(..:..:..:..:..:..\)\>.*/\U\1/p'
+	iwgetid --ap $1 | sed -n -e 's/^.*Cell: .*\<\(..:..:..:..:..:..\)\>.*/\U\1/p'
 }
 
 # char* iwconfig_get_mode(char *interface)
 #
 # Returns the wireless mode in lower case
 iwconfig_get_mode() {
-	iwgetid --mode $1 | sed -ne 's/^.*Mode:\(.*\)/\L\1/p'
+	iwgetid --mode $1 | sed -n -e 's/^.*Mode:\(.*\)/\L\1/p'
 }
 
 # char* iwconfig_get_type(char *interface)
 #
 # Returns the type of interface - the IEEE part
 iwconfig_get_type() {
-	iwconfig $1 | sed -ne 's/^'$1' *\([^ ]* [^ ]*\).*/\1/p'
+	iwconfig $1 | sed -n -e 's/^'$1' *\([^ ]* [^ ]*\).*/\1/p'
 }
 
 # void iwconfig_report(char *interface)
@@ -269,7 +269,7 @@ iwconfig_associate_mac() {
 #
 # Returns true if the link quality is not 0 or 0.
 iwconfig_associate_quality() {
-	local quality=$( sed -ne 's/^.*'$1': *[0-9]* *\([0-9]*\).*/\1/p' )
+	local quality=$( sed -n -e 's/^.*'$1': *[0-9]* *\([0-9]*\).*/\1/p' )
 	[[ ${quality} != 0 ]]
 	return $?
 }

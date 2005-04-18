@@ -74,7 +74,7 @@ wpa_supplicant_get_essid() {
 	local i essid
 
 	for (( i=0; i<5; i++ )); do
-		essid=$( wpa_cli -i$1 status | sed -ne 's/^ssid=//p' )
+		essid=$( wpa_cli -i$1 status | sed -n -e 's/^ssid=//p' )
 		if [[ -n ${essid} ]]; then
 			echo ${essid}
 			return 0
@@ -90,7 +90,7 @@ wpa_supplicant_get_essid() {
 # Returns the MAC address of the Access Point
 # the interface is connected to
 wpa_supplicant_get_ap_mac_address() {
-	wpa_cli -i$1 status | sed -ne 's/^bssid=\([^=]\+\).*/\U\1/p'
+	wpa_cli -i$1 status | sed -n -e 's/^bssid=\([^=]\+\).*/\U\1/p'
 }
 
 # bool wpa_supplicant_associated(char *interface)
@@ -99,7 +99,7 @@ wpa_supplicant_get_ap_mac_address() {
 # Note that just because we are associated does not mean we are using the
 # correct encryption keys
 wpa_supplicant_associated() {
-	local -a status=( "$( wpa_cli -i$1 status | sed -ne 's/^\(key_mgmt\|wpa_state\|EAP state\)=\([^=]\+\).*/\U\2/p' )" )
+	local -a status=( "$( wpa_cli -i$1 status | sed -n -e 's/^\(key_mgmt\|wpa_state\|EAP state\)=\([^=]\+\).*/\U\2/p' )" )
 
 	case ${status[0]} in
 		"NONE")			[[ ${status[1]} == "ASSOCIATED" ]] ;;
@@ -115,7 +115,7 @@ wpa_supplicant_associated() {
 # Kills any existing wpa_supplicant process on the interface
 wpa_supplicant_kill() {
 	local iface=$1 report=${2:-false}
-	local pid=$( pidof /usr/sbin/wpa_supplicant )
+	local pid=$( pgrep -f "^/usr/sbin/wpa_supplicant .* -i${iface}[ ]*$" )
 
 	if [[ -n ${pid} ]]; then
 		${report} && ebegin "Stopping wpa_supplicant on ${iface}"
@@ -202,7 +202,7 @@ wpa_supplicant_pre_start() {
 		return 1
 	fi
 
-	local ctrl_dir=$( sed -ne 's/[ \t]*#.*//g;s/[ \t]*$//g;s/^ctrl_interface=//p' ${cfgfile} )
+	local ctrl_dir=$( sed -n -e 's/[ \t]*#.*//g;s/[ \t]*$//g;s/^ctrl_interface=//p' ${cfgfile} )
 	if [[ ${ctrl_dir} != "/var/run/wpa_supplicant" ]]; then
 		eerror "${cfgfile} must set"
 		eerror "  ctrl_interface=/var/run/wpa_supplicant"
@@ -253,7 +253,7 @@ wpa_supplicant_pre_start() {
 	ESSIDVAR=$( bash_variable "${ESSID}" )
 	save_options "ESSID" "${ESSID}"
 	
-	local -a status=( "$( wpa_cli -i${iface} status | sed -ne 's/^\(bssid\|pairwise_cipher\|key_mgmt\)=\([^=]\+\).*/\U\2/p' | tr '[:lower:]' '[:upper:]' )" )
+	local -a status=( "$( wpa_cli -i${iface} status | sed -n -e 's/^\(bssid\|pairwise_cipher\|key_mgmt\)=\([^=]\+\).*/\U\2/p' | tr '[:lower:]' '[:upper:]' )" )
 	einfo "${iface} connected to \"${ESSID//\\\\/\\\\}\" at ${status[0]}"
 
 	if [[ ${status[2]} == "NONE" ]]; then

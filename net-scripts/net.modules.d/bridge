@@ -61,7 +61,7 @@ bridge_get_vars() {
 #
 # Returns the interfaces added to the given bridge
 bridge_get_ports() {
-	brctl show 2>/dev/null | sed -ne '/^'$1'/,/^\S/ { /^\('$1'\|\t\)/s/^.*\t//p }'
+	brctl show 2>/dev/null | sed -n -e '/^'$1'/,/^\S/ { /^\('$1'\|\t\)/s/^.*\t//p }'
 }
 
 # bool bridge_start(char *iface)

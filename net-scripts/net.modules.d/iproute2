@@ -120,7 +120,7 @@ iproute2_set_flag() {
 # address on stdout, otherwise echoes nothing.
 iproute2_get_address() {
 	ip -family inet addr show $1 \
-		| sed -ne 's/.*inet \([^ ]*\).*/\1/p'
+		| sed -n -e 's/.*inet \([^ ]*\).*/\1/p'
 }
 
 # void iproute2_get_mac_address(char *interface)
@@ -128,7 +128,7 @@ iproute2_get_address() {
 # Fetch the mac address assingned to the network card
 iproute2_get_mac_address() {
 	ip link show $1 \
-		| sed -ne 's/^.*\<\(..:..:..:..:..:..\)\>.*/\U\1/p'
+		| sed -n -e 's/^.*\<\(..:..:..:..:..:..\)\>.*/\U\1/p'
 }
 
 # void iproute2_set_mac_address(char *interface, char *mac)
@@ -162,7 +162,7 @@ iproute2_del_addresses() {
 # Returns a string spaced with possible user set
 # configuration variables
 iproute2_get_vars() {
-	echo "config_$1 routes_$1 fallback_$1 ipaddr_$1 ipaddr_fallback_$1 iproute_$1 inet6_$1"
+	echo "config_$1 routes_$1 fallback_$1 metric_$1 ipaddr_$1 ipaddr_fallback_$1 iproute_$1 inet6_$1"
 }
 
 # bool iproute2_get_old_config(char *iface)
@@ -250,12 +250,13 @@ iproute2_add_address() {
 # Runs any post_start stuff on our interface and adds routes
 # Always returns 0
 iproute2_post_start() {
-	local iface=$1 ifvar=$( bash_variable $1 ) routes e r
+	local iface=$1 ifvar=$( bash_variable $1 ) routes e r metric m
 
 	# Make sure interface is marked UP
 	iproute2_up ${iface}
 
 	eval routes=( \"\$\{routes_${ifvar}\[@\]\}\" )
+	eval metric=\"\$\{metric_${ifvar}\:-0}\"
 
 	# Test for old style ipaddr variable
 	if [[ -z ${routes} ]]; then
@@ -276,7 +277,12 @@ iproute2_post_start() {
 		x=${x//-net}
 		[[ ${x} == *'-host'* ]] && x="${x//-host} scope host"
 
-		ip route append ${x} dev ${iface}
+		# Add a metric if we don't have one
+		if [[ ${x// metric } == ${x} ]]; then
+			ip route append ${x} metric ${metric} dev ${iface}
+		else
+			ip route append ${x} dev ${iface}
+		fi
 		eend $?
 	done
 	eoutdent
@@ -284,11 +290,13 @@ iproute2_post_start() {
 	return 0
 }
 
-# void iproute2_default_route(char* interface, char* gateway_ip)
+# void iproute2_default_route(char* interface, char* gateway_ip, int metric)
 #
-# Force default route to the specified gateway, optionaly on
+# Force default route to the specified gateway, optionally on
 # the given interface
 iproute2_default_route() {
-	ip route change default via $2 metric 0 dev $1 2>/dev/null \
-	|| ip route append default via $2 metric 0 dev $1 2>/dev/null
+	local metric=${3:-0}
+	
+	ip route change default via $2 metric ${metric} dev $1 2>/dev/null \
+	|| ip route append default via $2 metric ${metric} dev $1 2>/dev/null
 }

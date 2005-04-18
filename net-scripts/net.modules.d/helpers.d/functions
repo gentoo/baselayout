@@ -4,7 +4,122 @@
 
 # Contributed by Roy Marples (uberlord@gentoo.org)
 
-[[ -z ${devnull} ]] && devnull=/dev/null
+# char* interface_device(char *iface)
+#
+# Gets the base device of the interface
+# Can handle eth0:1 and eth0.1
+# Which returns eth0 in this case
+interface_device() {
+	local dev=${1%%.*}
+	[[ ${dev} == ${1} ]] && dev=${1%%:*}
+	echo ${dev}
+}
+
+# char* interface_type(char* iface)
+#
+# Returns the base type of the interface
+# eth, ippp, etc
+interface_type() {
+	echo ${1%%[0-9]*}
+}
+
+# void save_state(char *interface)
+#
+# Saves state information regarding the interface
+save_state() {
+        local iface="$1"
+        local d="${svcdir}/state/${iface}"
+
+        [[ ! -d ${d} ]] && mkdir -p "${d}"
+        cp -a /etc/resolv.conf /etc/ntp.conf /etc/yp.conf "${d}" 2>/dev/null
+}
+
+# void remove_state(char *interface)
+#
+# Removes state information regarding the interface
+remove_state() {
+        local d="${svcdir}/state/$1"
+
+        [[ -d "${d}" ]] && rm -Rf "${d}"
+}
+
+# void apply_state(char *interface)
+#
+# Apply's state information about the interface to the system
+#
+apply_state() {
+	local iface
+	if [[ -z $1 ]]; then
+		iface=$( select_best_interface )
+		[[ -z ${iface} ]] && return
+	else
+		iface="$1"
+	fi
+
+	local d="${svcdir}/state/${iface}"
+	[[ -d ${d} ]] && cp -aR ${d}/* /etc
+}
+
+# char* select_best_interface() {
+#
+# Selects the best interface to apply state information to
+# This is currently based on routing metrics
+select_best_interface() {
+	awk '$2=="00000000" { print $7, $1 }' /proc/net/route | sort -n | head -n 1 | cut -d' ' -f2
+}
+
+# int calculate_metric(char *interface)
+#
+# Calculates the best metric for the interface
+# The Linux kernel does not use this at the moment, but we use it so that
+# default routes remain and we can work out the "best" interface
+calculate_metric() {
+	local iface="$1" exclude='$1!="Iface" && $1!="lo"'
+
+	# Have we already got a metric?
+	local m=$( awk '$1=="'${iface}'" && $2=="00000000" { print $7 }' /proc/net/route )
+	if [[ -n ${m} ]]; then
+		echo ${m}
+		return 0
+	fi
+	
+	local itype=$( interface_type "${iface}" ) x i
+	
+	# If we're not a wireless device then exclude wireless from the
+	# routing table so we stay < 1000
+	if [[ -e /proc/net/wireless ]]; then
+		if ! grep -q "${iface}: " /proc/net/wireless ; then
+			local i=$( sed -n -e 's/^ *\(.*\):.*/\1/p' /proc/net/wireless )
+			for x in ${i} ; do
+				exclude="${exclude} && "'$1'"!=\"${x}\""
+			done
+		fi
+	fi
+
+	# Exclude ppp and ippp as well
+	local ix="ppp|ippp"
+	[[ ${itype} == "ppp" ]] && ix="ippp"
+	[[ ${itype} == "ippp" ]] && ix="ppp"
+	i=$( sed -n -e 's/^[ ]*\('${ix}'[0-9]*\):.*$/\1/p' /proc/net/dev )
+	for x in ${i} ; do
+		exclude="${exclude} && "'$1'"!=\"${x}\""
+	done
+
+	local m=$( awk "${exclude} { print "'$7'" }" /proc/net/route | sort -rn | head -n 1 | cut -d' ' -f2 )
+	m=${m:--1}
+	(( m ++ ))
+
+	# If we're a wireless device then add 1000 so that wired interfaces take preference
+	if [[ -e /proc/net/wireless ]]; then
+		grep -q "${iface}:" /proc/net/wireless && (( m+= 1000 ))
+	fi
+	
+	# If we're a ppp device then we add 2000 for ISDN, otherwise 3000
+	[[ ${itype} == "ippp" ]] && (( m+= 2000 ))
+	[[ ${itype} == "ppp" ]] && (( m+= 3000 ))
+
+	echo ${m}
+}
 
 # int netmask2cidr(char *netmask)
 #
@@ -56,25 +171,6 @@ cidr2netmask() {
 	echo ${netmask:1}
 }
 
-# char* interface_device(char *iface)
-#
-# Gets the base device of the interface
-# Can handle eth0:1 and eth0.1
-# Which returns eth0 in this case
-interface_device() {
-	local dev=${1%%.*}
-	[[ ${dev} == ${1} ]] && dev=${1%%:*}
-	echo ${dev}
-}
-
-# char* interface_type(char* iface)
-#
-# Returns the base type of the interface
-# eth, ippp, etc
-interface_type() {
-	echo ${1%%[0-9]*}
-}
-
 # bool clean_pidfile(char *file)
 #
 # Removes the given pidfile if the process is not running
@@ -103,7 +199,7 @@ process_finished() {
 	local i pid=$1 cmd=$2 secs=${3:-9}
 
 	for (( i=0; i<secs; i++ )); do
-		ps -p ${pid} | grep -q ${cmd} || return 0
+		ps -p ${pid} 2>/dev/null | grep -q ${cmd} || return 0
 		sleep 1
 	done
 

@@ -62,7 +62,7 @@ vlan_get_vars() {
 # Fetch the configured vlans for an interface.  Outputs a space
 # separated list on stdout.  For example "eth0.1 eth0.2 eth0.3"
 vlan_get_vlans() {
-	 sed -ne 's/^\(.*[0-9]\) \(.* \) .*'$1'$/\1/p' /proc/net/vlan/config 2>/dev/null
+	 sed -n -e 's/^\(.*[0-9]\) \(.* \) .*'$1'$/\1/p' /proc/net/vlan/config 2>/dev/null
 }
 
 # bool vlan_check_kernel(void)
@@ -134,7 +134,7 @@ vlan_post_start() {
 		eend 0
 
 		# We need to work out the interface name of our new vlan id
-		ifname=$( sed -ne 's/^\(.*[0-9] \) *| '${vlan}' *| .*'${iface}'$/\1/p' /proc/net/vlan/config )
+		ifname=$( sed -n -e 's/^\(.*[0-9] \) *| '${vlan}' *| .*'${iface}'$/\1/p' /proc/net/vlan/config )
 		iface_start ${ifname}
 	done
 
