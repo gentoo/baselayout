@@ -227,9 +227,10 @@ wpa_supplicant_pre_start() {
 		return 1
 	fi
 
+	# If wpa_monitor is available then we background regardless
 	if [[ -x /usr/sbin/wpa_monitor ]]; then
 		ebegin "Starting wpa_monitor on ${iface}"
-		/usr/sbin/wpa_monitor -i${iface}
+		/usr/sbin/wpa_monitor -a/usr/sbin/wpa_monitor.action -i${iface}
 		eend $?
 		go_background
 	fi
