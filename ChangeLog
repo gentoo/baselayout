@@ -1,6 +1,8 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+* rc-scripts 1.7.1 (19 Apr 2005)
+
   18 Apr 2005; Roy Marples <uberlord@gentoo.org>:
 
     Changed "sed -ne" to "sed -n -e" for portability.
