@@ -1,6 +1,6 @@
 #!/bin/bash
 export TMP="${TMP:-/tmp}"
-export V="1.6.10"
+export V="1.6.11"
 export DEST="${TMP}/rc-scripts-${V}"
 
 if [[ $1 != "-f" ]] ; then

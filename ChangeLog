@@ -1,6 +1,8 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+* rc-scripts-1.6.11 (20 Apr 2005)
+
   13 Mar 2005; Roy Marples <uberlord@gentoo.org>:
 
     fixed typo in iwconfig - fixes #84999 thanks to Jérémie Delente
