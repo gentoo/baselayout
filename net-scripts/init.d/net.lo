@@ -199,7 +199,7 @@ modules_check_user() {
 				if [[ ${umods[i]:1} == ${MODULES[j]} || ${umods[i]:1} == ${PROVIDES[j]} ]]; then
 					# We may need to setup a class wrapper for it even though
 					# we don't use it directly
-					${MODULES[j]}_check_installed && module_class_wrap ${MODULES[j]} ${PROVIDES[j]}
+					${MODULES[j]}_check_installed && function_wrap ${MODULES[j]} ${PROVIDES[j]}
 					unset MODULES[j]
 					unset PROVIDES[j]
 					break

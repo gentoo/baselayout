@@ -241,7 +241,8 @@ ifconfig_iface_stop() {
 # fail, the routine should still return success to indicate that
 # net.eth0 was successful
 ifconfig_post_start() {
-	local iface=$1 ifvar=$( bash_variable $1 ) routes x
+	local iface=$1 ifvar=$( bash_variable $1 ) routes x metric
+	eval metric=\"\$\{metric_${ifvar}\}\"
 
 	# Make sure interface is marked UP
 	ifconfig_up ${iface}
@@ -270,19 +271,18 @@ ifconfig_post_start() {
 
 		# Support iproute2 style routes
 		x="${x//via/gw} "
-		x=${x//scope * / }
+		x="${x//scope * / }"
 		
 		# Assume we're a net device unless told otherwise
 		[[ " ${x} " != *' -net '* && " ${x} " != *' -host '* ]] && x="-net ${x}"
 
 		# Support adding IPv6 addresses easily
-		if [[ ${x} == *:* && ${x} != *'-A inet6'* ]]; then
-			route add -A inet6 ${x} dev ${iface}
-		else
-			# We do this so we don't have to specify host or net
-			# in our config
-			route add ${x} dev ${iface} 
-		fi
+		[[ ${x} == *:* && ${x} != *'-A inet6'* ]] && x="-A inet6 ${x}"
+
+		# Add a metric if we don't have one
+		[[ ${x} != *' metric '* ]] && x="${x} metric ${metric}"
+		
+		route add ${x} dev ${iface} 
 		eend $?
 	done
 	eoutdent
@@ -294,7 +294,7 @@ ifconfig_post_start() {
 #
 # Adds the given address to the interface
 ifconfig_add_address() {
-	local iface=$1 i=0
+	local iface=$1 i=0 r e
 
 	ifconfig_exists ${iface} true || return 1
 
@@ -324,11 +324,45 @@ ifconfig_add_address() {
 	# Some kernels like to apply lo with an address when they are brought up
 	if [[ ${iface} == "lo" || ${config[@]} == "127.0.0.1/8 broadcast 127.255.255.255" ]]; then
 		ifconfig ${iface} ${config[@]} 2>/dev/null
-		return 0
+		r=0
 	else
-		ifconfig ${iface} ${config[@]}
-		return $?
+		e=$( ifconfig ${iface} ${config[@]} 2>&1 )
+		r=$?
+		[[ ${r} != 0 ]] && echo "${e}" > /dev/stderr
 	fi
+
+	[[ ${r} != 0 ]] && return ${r}
+
+	local metric ifvar=$( bash_variable ${iface} )
+	# Remove the newly added route and replace with our metric
+	eval metric=\"\$\{metric_${ifvar}\}\"
+	[[ ${metric} == 0 || ${auto_interface} != "yes" ]] && return ${r}
+
+	local ip=${config[0]} netmask
+	local cidr=${ip##*/}
+	ip=${ip%%/*}
+
+	if [[ -n ${cidr} && ${cidr} != ${ip} ]]; then
+		netmask=$( cidr2netmask ${cidr} )
+	else
+		for (( i=1; i<${#config[@]}-1; i++ )); do
+			if [[ ${config[i]} == "netmask" ]]; then
+				netmask=${config[i+1]}
+				cidr=$( netmask2cidr ${netmask} )
+				break
+			fi
+		done
+	fi
+
+	[[ -z ${netmask} ]] && return ${r}
+	echo ${netmask}
+	
+	local network=$( ip_network ${ip} ${netmask} )
+
+        route del -net ${network}/${cidr} dev ${iface}
+        route add -net ${network}/${cidr} metric ${metric} dev ${iface}
+
+        return ${r}
 }
 
 # void ifconfig_default_route(char* interface, char* gateway_ip, int metric)

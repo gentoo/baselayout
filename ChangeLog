@@ -1,6 +1,13 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  22 Apr 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Address network routes now get metrics applied as well
+    (ie a route automatically added when an address is added)
+
+    net.lo no longer errors when exlcuding modules who are installed
+
 * rc-scripts 1.7.1 (19 Apr 2005)
 
   18 Apr 2005; Roy Marples <uberlord@gentoo.org>:

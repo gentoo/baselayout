@@ -90,6 +90,7 @@ if [[ -z ${metric} ]]; then
 	else
 		metric=0
 	fi
+	eval metric_${ifvar}="${metric}"
 fi
 
 # Configure our IP address

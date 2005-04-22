@@ -171,6 +171,36 @@ cidr2netmask() {
 	echo ${netmask:1}
 }
 
+# char* ip_network(char *ip, char *netmask)
+#
+# Returns the network of the ip address
+# ip can be 192.168.0.51/24
+# or
+# ip can be 192.168.0.51 and netmask is 255.255.255.0
+ip_network() {
+	local ip=$1 mask=$2 i network x
+
+	# If we didn't get parameter 2 then assume we have a CIDR
+	if [[ -z ${mask} ]]; then
+		mask=${ip##*/}
+		[[ -z ${mask} || ${mask} == ${ip} ]] && return 1
+		mask=$( cidr2netmask ${mask} )
+		ip=${ip%%/*}
+	fi
+
+	ip=( ${ip//./ } )
+	mask=( ${mask//./ } )
+
+	for (( i=0; i<4; i++ )); do
+		(( x=ip[i] & mask[i] ))
+		network="${network}${x}"
+		[[ ${i} -lt 3 ]] && network="${network}."
+	done
+
+	echo "${network}"
+}
+
+
 # bool clean_pidfile(char *file)
 #
 # Removes the given pidfile if the process is not running

@@ -236,13 +236,30 @@ iproute2_add_address() {
 	iproute2_up ${iface}
 
 	# Some kernels like to apply lo with an address when they are brought up
+	local r
 	if [[ ${iface} == "lo" && ${config[@]} == "127.0.0.1/8 brd 127.255.255.255 scope host" ]]; then
 		ip addr add dev ${iface} ${config[@]} 2>/dev/null
-		return 0
+		r=0
 	else
 		ip addr add dev ${iface} ${config[@]}
-		return $?
+		r=$?
 	fi
+
+	local metric ifvar=$( bash_variable ${iface} )
+	# Remove the newly added route and replace with our metric
+	eval metric=\"\$\{metric_${ifvar}\}\"
+	[[ ${metric} == 0 || ${auto_interface} != "yes" ]] && return ${r}
+	
+	local network=$( ip_network ${config[0]} )
+	[[ -z ${network} ]] && return ${r}
+
+	local cidr=${config[0]}
+	cidr=${cidr##*/}
+	
+	ip route del ${network}/${cidr} dev ${iface}
+	ip route add ${network}/${cidr} metric ${metric} dev ${iface}
+	
+	return ${r}
 }
 
 # bool iproute2_post_start(char *interface)
@@ -278,11 +295,9 @@ iproute2_post_start() {
 		[[ ${x} == *'-host'* ]] && x="${x//-host} scope host"
 
 		# Add a metric if we don't have one
-		if [[ ${x// metric } == ${x} ]]; then
-			ip route append ${x} metric ${metric} dev ${iface}
-		else
-			ip route append ${x} dev ${iface}
-		fi
+		[[ ${x} != *' metric '* ]] && x="${x} metric ${metric}"
+	
+		ip route append ${x} dev ${iface}
 		eend $?
 	done
 	eoutdent
@@ -296,7 +311,7 @@ iproute2_post_start() {
 # the given interface
 iproute2_default_route() {
 	local metric=${3:-0}
-	
+
 	ip route change default via $2 metric ${metric} dev $1 2>/dev/null \
 	|| ip route append default via $2 metric ${metric} dev $1 2>/dev/null
 }
