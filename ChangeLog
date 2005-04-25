@@ -1,6 +1,12 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  25 Apr 2005; Roy Marples <uberlord@gentoo.org>:
+
+    iproute2 now handles mtu the same way as ifconfig - fixes #90242
+
+    net.lo no longer errors when using postdown and postup functions
+
   22 Apr 2005; Roy Marples <uberlord@gentoo.org>:
 
     Address network routes now get metrics applied as well

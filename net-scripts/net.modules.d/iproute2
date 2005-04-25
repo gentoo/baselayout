@@ -220,8 +220,11 @@ iproute2_add_address() {
 		case ${config[x]} in
 			netmask)
 				config[0]="${config[0]}/$( netmask2cidr ${config[x+1]} )"
-				unset config[x]
-				unset config[x+1]
+				unset config[x] config[x+1]
+				;;
+			mtu)
+				ip link set mtu ${config[x+1]} dev ${iface}
+				unset config[x] config[x+1]
 				;;
 		esac
 	done

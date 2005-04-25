@@ -724,7 +724,7 @@ run_start() {
 	if [[ $( type -t postup ) == "function" ]]; then
 		einfo "Running postup function"
 		eindent
-		$( postup ${iface} )
+		x=$( postup ${iface} ; echo $? )
 		eoutdent
 	fi
 
@@ -760,7 +760,7 @@ run_stop() {
 	if [[ $( type -t postdown ) == "function" ]]; then
 		einfo "Running postdown function"
 		eindent
-		$( postdown ${iface} )
+		x=$( postdown ${iface} ; echo $? )
 		eoutdent
 	fi
 
