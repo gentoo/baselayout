@@ -1,6 +1,12 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  26 Apr 2005; Roy Marples <uberlord@gentoo.org>:
+
+    wpa_supplicant now supports wpa_supplicant-0.4.0
+
+    iwconfig downs and ups the interface after a scan
+
   25 Apr 2005; Roy Marples <uberlord@gentoo.org>:
 
     iproute2 now handles mtu the same way as ifconfig - fixes #90242

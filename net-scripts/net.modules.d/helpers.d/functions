@@ -10,9 +10,9 @@
 # Can handle eth0:1 and eth0.1
 # Which returns eth0 in this case
 interface_device() {
-	local dev=${1%%.*}
-	[[ ${dev} == ${1} ]] && dev=${1%%:*}
-	echo ${dev}
+	local dev="${1%%.*}"
+	[[ ${dev} == $1 ]] && dev="${1%%:*}"
+	echo "${dev}"
 }
 
 # char* interface_type(char* iface)
@@ -20,7 +20,7 @@ interface_device() {
 # Returns the base type of the interface
 # eth, ippp, etc
 interface_type() {
-	echo ${1%%[0-9]*}
+	echo "${1%%[0-9]*}"
 }
 
 # void save_state(char *interface)
@@ -79,7 +79,7 @@ calculate_metric() {
 	# Have we already got a metric?
 	local m=$( awk '$1=="'${iface}'" && $2=="00000000" { print $7 }' /proc/net/route )
 	if [[ -n ${m} ]]; then
-		echo ${m}
+		echo "${m}"
 		return 0
 	fi
 	
@@ -106,7 +106,7 @@ calculate_metric() {
 	done
 
 	local m=$( awk "${exclude} { print "'$7'" }" /proc/net/route | sort -rn | head -n 1 | cut -d' ' -f2 )
-	m=${m:--1}
+	m="${m:--1}"
 	(( m ++ ))
 
 	# If we're a wireless device then add 1000 so that wired interfaces take preference
@@ -135,15 +135,15 @@ netmask2cidr() {
 		done
 		binary="${binary}${bin}"
 	done
-	binary=${binary%%0*}
-	echo ${#binary}
+	binary="${binary%%0*}"
+	echo "${#binary}"
 }
 
 # char* netmask2cidr(int cidr)
 #
 # Returns the netmask of a given CIDR
 cidr2netmask() {
-	local cidr=${1} netmask="" done=0 i sum=0 cur=128
+	local cidr="$1" netmask="" done=0 i sum=0 cur=128
 	local octets frac
 
 	(( octets=cidr/8 ))
@@ -168,7 +168,7 @@ cidr2netmask() {
 		done
 	fi
 
-	echo ${netmask:1}
+	echo "${netmask:1}"
 }
 
 # char* ip_network(char *ip, char *netmask)
@@ -178,14 +178,14 @@ cidr2netmask() {
 # or
 # ip can be 192.168.0.51 and netmask is 255.255.255.0
 ip_network() {
-	local ip=$1 mask=$2 i network x
+	local ip="$1" mask="$2" i network x
 
 	# If we didn't get parameter 2 then assume we have a CIDR
 	if [[ -z ${mask} ]]; then
-		mask=${ip##*/}
+		mask="${ip##*/}"
 		[[ -z ${mask} || ${mask} == ${ip} ]] && return 1
 		mask=$( cidr2netmask ${mask} )
-		ip=${ip%%/*}
+		ip="${ip%%/*}"
 	fi
 
 	ip=( ${ip//./ } )
@@ -206,14 +206,14 @@ ip_network() {
 # Removes the given pidfile if the process is not running
 # Returns 1 if the process is still running otherwise 0
 clean_pidfile() {
-	local pidfile=${1}
+	local pidfile="$1"
 
 	[[ ! -f ${pidfile} ]] && return 0
 	local pid=$( < ${pidfile} )
 
 	if [[ -n ${pid} ]]; then
-		local cmd=${pidfile##*/}
-		cmd=${cmd%%-*}
+		local cmd="${pidfile##*/}"
+		cmd="${cmd%%-*}"
 		ps -p ${pid} 2>/dev/null | grep -q ${cmd} && return 1
 	fi
 
@@ -226,7 +226,7 @@ clean_pidfile() {
 # We wait for 10 seconds until the command ${cmd}
 # stops running on the process ${pid}
 process_finished() {
-	local i pid=$1 cmd=$2 secs=${3:-9}
+	local i pid="$1" cmd="$2" secs="${3:-9}"
 
 	for (( i=0; i<secs; i++ )); do
 		ps -p ${pid} 2>/dev/null | grep -q ${cmd} || return 0
@@ -243,7 +243,7 @@ process_finished() {
 function_wrap() {
 	local i
 
-	[[ $( type -t ${2}_provides ) == function ]] && return
+	[[ $( type -t ${2}_provides ) == "function" ]] && return
 
 	for i in $( typeset -f | grep -o ^${1}_'[^ ]*' ); do
 		eval "${2}${i#${1}}() { ${i} \"\$@\"; }"

@@ -98,6 +98,7 @@ wpa_supplicant_get_ap_mac_address() {
 # Returns 0 if we're associated correctly or 1 if not
 # Note that just because we are associated does not mean we are using the
 # correct encryption keys
+# We only need this for wpa_supplicant-0.3.x
 wpa_supplicant_associated() {
 	local -a status=( "$( wpa_cli -i$1 status | sed -n -e 's/^\(key_mgmt\|wpa_state\|EAP state\)=\([^=]\+\).*/\U\2/p' )" )
 
@@ -115,21 +116,35 @@ wpa_supplicant_associated() {
 # Kills any existing wpa_supplicant process on the interface
 wpa_supplicant_kill() {
 	local iface=$1 report=${2:-false}
-	local pid=$( pgrep -f "^/usr/sbin/wpa_supplicant .* -i${iface}[ ]*$" )
-
-	if [[ -n ${pid} ]]; then
+	local pidfile="/var/run/wpa_supplicant-${iface}.pid"
+	
+	if ! clean_pidfile ${pidfile} ; then
 		${report} && ebegin "Stopping wpa_supplicant on ${iface}"
-		kill -s TERM ${pid}
-		${report} && eend 0
+		start-stop-daemon --stop --exec /usr/sbin/wpa_supplicant \
+			--pidfile ${pidfile}
+		${report} && eend $?
+	else
+		# Support wpa_supplicant-0.3.x
+		local pid=$( pgrep -f "^/usr/sbin/wpa_supplicant .* -i${iface}[ ]*$" )
+		if [[ -n ${pid} ]]; then
+			${report} && ebegin "Stopping wpa_supplicant on ${iface}"
+			kill -s TERM ${pid}
+			${report} && eend 0
+		fi
 	fi
-
+	
 	# If wpa_supplicant exits uncleanly, we need to remove the stale dir
 	[[ -S /var/run/wpa_supplicant/${iface} ]] \
 		&& rm -f /var/run/wpa_supplicant/${iface}
 
-	[[ -x /usr/sbin/wpa_monitor ]] && \
-		start-stop-daemon --stop --exec /usr/sbin/wpa_monitor \
-			--pidfile /var/run/wpa_monitor-${iface}.pid
+	# wpa_cli should close itself down cleanly, but just incase ...
+	pidfile="/var/run/wpa_cli-${iface}.pid"
+	if ! clean_pidfile ${pidfile} ; then
+		${report} && ebegin "Stopping wpa_cli on ${iface}"
+		start-stop-daemon --stop --exec /usr/bin/wpa_cli \
+			--pidfile ${pidfile} 
+		${report} && eend $?
+	fi
 }
 
 # bool wpa_supplicant_associate(char *interface)
@@ -165,8 +180,9 @@ wpa_supplicant_associate() {
 # Start wpa_supplicant on an interface and wait for association
 # Returns 0 (true) when successful, non-zero otherwise
 wpa_supplicant_pre_start() {
-	local iface=$1 opts timeout
+	local iface=$1 opts timeout action
 	local cfgfile="/etc/wpa_supplicant.conf"
+	local actfile="/usr/sbin/wpa_cli.action"
 
 	# We don't configure wireless if we're being called from
 	# the background
@@ -217,21 +233,27 @@ wpa_supplicant_pre_start() {
 	# Some drivers require the interface to be up
 	interface_up ${iface}
 
-	if ! wpa_supplicant ${opts} -B -c/etc/wpa_supplicant.conf -i${iface} ; then
-		eend 1
-		return 1
+	version=$( wpa_cli -v | sed -n -e 's/wpa_cli v//p' )
+	version=( ${version//./ } )
+	(( version = version[0] * 1000 + version[1] * 100 + version[2] ))
+	# wpa_supplicant 0.4.0 and greater supports wpa_cli actions
+	if [[ ${version} -gt 399 && -x ${actfile} ]]; then
+		opts="${opts} -W -P/var/run/wpa_supplicant-${iface}.pid"
+		action=true
 	fi
 
-	if ! wpa_cli -i${iface} status &>/dev/null ; then
-		eend 1 "wpa_supplicant has exited unexpectedly"
-		return 1
-	fi
+	start-stop-daemon --start --exec /usr/sbin/wpa_supplicant \
+		-- ${opts} -B -c/etc/wpa_supplicant.conf -i${iface}
+	eend $? || return 1
 
-	# If wpa_monitor is available then we background regardless
-	if [[ -x /usr/sbin/wpa_monitor ]]; then
-		ebegin "Starting wpa_monitor on ${iface}"
-		/usr/sbin/wpa_monitor -a/usr/sbin/wpa_monitor.action -i${iface}
-		eend $?
+# Starting wpa_supplication-0.4.0, we can get wpa_cli to
+	# start/stop our scripts from wpa_supplicant messages
+	if [[ ${action} ]]; then
+		ebegin "Starting wpa_cli on ${iface}"
+		start-stop-daemon --start --exec /usr/bin/wpa_cli \
+			-- -a${actfile} -i${iface} \
+			-P/var/run/wpa_cli-${iface}.pid -B
+		eend $? || return 1
 		go_background
 	fi
 

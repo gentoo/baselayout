@@ -492,6 +492,10 @@ iwconfig_scan() {
 		fi
 	fi
 
+	# HUP the interface as some drivers/cards need it
+	interface_down ${iface}
+	interface_up ${iface}
+
 	# Change back mode if needed
 	x=$( eval echo \$\{mode_${ifvar}\} | tr '[:upper:]' '[:lower:]' )
 	x=${x:-auto}
