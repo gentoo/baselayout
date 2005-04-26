@@ -442,6 +442,10 @@ iwconfig_scan() {
 	x=${x:-auto}
 	[[ ${mode} != ${x} ]] && iwconfig ${iface} mode ${x} &>/dev/null
 
+	# HUP the interface as some drivers/cards need it
+	interface_down ${iface}
+	interface_up ${iface}			
+
 	if [[ -z ${scan} ]]; then
 		ewarn "${iface} does not support scanning"
 		eval x=\"\$\{adhoc_essid_${ifvar}\}\"
