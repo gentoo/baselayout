@@ -124,7 +124,7 @@ dhclient_start() {
 	[[ ${x:${#x} - 5:5} == "bound" ]]
 	if [[ $? != 0 ]]; then
 		# We need to kill the process if we fail
-		kill -s TERM $( < ${pidfile} ) 2>/dev/null
+		[[ -e ${pidfile} ]] && kill -s TERM $( < ${pidfile} ) 2>/dev/null
 		eend 1
 		return 1
 	fi
