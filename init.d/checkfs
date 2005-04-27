@@ -288,7 +288,7 @@ EOF
 			done
 			eend $retval
 		else
-			einfo "You have to install app-crypt/gpg first"
+			einfo "You have to install app-crypt/gnupg first"
 		fi
 	fi
 	if [[ $? != 0 ]] ; then
