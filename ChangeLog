@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  27 Apr 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Ignore trailing comments in module files #88553.
+
   26 Apr 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Sync special var's with portage's env-update.sh and ours #88819.

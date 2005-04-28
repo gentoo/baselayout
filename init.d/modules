@@ -30,13 +30,15 @@ load_modules() {
 				MODULES = $1
 			else
 				MODULES = MODULES " " $1
-			
+
 			# Not the greatest method to remove $1 from $0, but it works
 			sub(/^[[:space:]]*[^[:space:]]*[[:space:]]*/, "")
+			# Trim trailing comments on the line
+			sub(/#.*$/, "")
 			ARGS[COUNT] = $0
 			COUNT++
 		}
-		
+
 		END {
 			# 'eval' will make sure these are set to proper bash variables
 			print "modcount=" COUNT
