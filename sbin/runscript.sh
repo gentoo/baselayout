@@ -28,6 +28,7 @@ else
 fi
 
 myservice=${myservice##*/}
+export SVCNAME=${myservice}
 mylevel=$(<"${svcdir}/softlevel")
 
 

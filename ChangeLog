@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  28 Apr 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Export the 'service name' for init scripts #86348.
+
   28 Apr 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     If no /etc/modules.conf exist, do not 'touch' it, but create a new
