@@ -822,7 +822,7 @@ else
 	fi
 fi
 
-if [[ -n ${EBUILD} && $* != *depend* ]]; then
+if [[ -n ${EBUILD} && $* = *depend* ]]; then
 	# We do not want stty to run during emerge depend
 	COLS=80
 else
