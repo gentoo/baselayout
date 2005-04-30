@@ -20,7 +20,8 @@ if [[ -n $(ps --no-heading -C 'devfsd') ]]; then
 	killall -15 devfsd &>/dev/null
 	eend $?
 elif [[ ! -e /dev/.devfsd && -e /dev/.udev && -z ${CDBOOT} && \
-        ${RC_DEVICE_TARBALL} == "yes" ]]; then
+        ${RC_DEVICE_TARBALL} == "yes" ]] && \
+		touch /lib/udev-state/devices.tar.bz2 2>/dev/null ; then
 	ebegin "Saving device nodes"
 	# Handle our temp files
 	devices_udev=$(mktemp /tmp/devices.udev.XXXXXX)

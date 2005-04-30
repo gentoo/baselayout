@@ -3,6 +3,11 @@
 
   30 Apr 2005; Martin Schlemmer <azarah@gentoo.org>:
 
+    Do not create the udev devices.tar.bz2 if we do not have write permissions
+    for /.  Request by Donnie (spyderous) for boxes with / on NFS.
+
+  30 Apr 2005; Martin Schlemmer <azarah@gentoo.org>:
+
     Fixor column/color logic for when used in portage.
 
   29 Apr 2005; Mike Frysinger <vapier@gentoo.org>:
