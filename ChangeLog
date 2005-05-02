@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  02 May 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Fix user function hooks for echoing to stdout and protecting our vars
+
   30 Apr 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     Do not create the udev devices.tar.bz2 if we do not have write permissions

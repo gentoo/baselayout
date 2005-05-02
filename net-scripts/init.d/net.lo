@@ -690,7 +690,8 @@ run_start() {
 	if [[ $( type -t preup ) == "function" ]]; then
 		einfo "Running preup function"
 		eindent
-		x=$( preup ${iface} ; echo $? )
+		( preup ${iface} )
+		x=$?
 		eoutdent
 		if [[ ${x:-0} != 0 ]]; then
 			eerror "preup ${iface} failed"
@@ -724,7 +725,7 @@ run_start() {
 	if [[ $( type -t postup ) == "function" ]]; then
 		einfo "Running postup function"
 		eindent
-		x=$( postup ${iface} ; echo $? )
+		( postup ${iface} )
 		eoutdent
 	fi
 
@@ -743,7 +744,8 @@ run_stop() {
 	if [[ $( type -t predown ) == "function" ]]; then
 		einfo "Running predown function"
 		eindent
-		x=$( predown ${iface} ; echo $? )
+		( predown ${iface} )
+		x=$?
 		eoutdent
 		if [[ ${x:-0} != 0 ]]; then
 			eend 1 "predown ${iface} failed"
@@ -760,7 +762,7 @@ run_stop() {
 	if [[ $( type -t postdown ) == "function" ]]; then
 		einfo "Running postdown function"
 		eindent
-		x=$( postdown ${iface} ; echo $? )
+		( postdown ${iface} )
 		eoutdent
 	fi
 

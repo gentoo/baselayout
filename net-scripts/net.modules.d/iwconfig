@@ -359,16 +359,15 @@ iwconfig_associate() {
 	vebegin "Connecting to \"${dessid}\" ${w}"
 
 	if [[ ${ESSID} != any && $( type -t preassociate ) == function ]]; then
-		local essidx=${ESSID} essidvarx=${ESSIDVAR}
 		veinfo "Running preassociate function"
 		eindent
-		preassociate ${iface} ; e=$?
+		( preassociate ${iface} )
+		e=$?
 		eoutdent
 		if [[ ${e} != 0 ]]; then
 			veend 1 "preassociate \"${dessid}\" on ${iface} failed"
 			return 1
 		fi
-		ESSID=${essidx} ESSIDVAR=${essidvarx}
 	fi
 
 	if ! iwconfig_wait_for_association ${iface} ; then
@@ -387,12 +386,10 @@ iwconfig_associate() {
 	iwconfig_report ${iface}
 
 	if [[ $( type -t postassociate ) == function ]]; then
-		local essidx=${ESSID} essidvarx=${ESSIDVAR}
 		veinfo "Running postassociate function"
 		eindent
-		postassociate ${iface}
+		( postassociate ${iface} )
 		eoutdent
-		ESSID=${essidx} ESSIDVAR=${essidvarx}
 	fi
 
 	if ${IN_BACKGROUND}; then
@@ -492,9 +489,11 @@ iwconfig_scan() {
 		fi
 	fi
 
-	# HUP the interface as some drivers/cards need it
-	interface_down ${iface}
-	interface_up ${iface}
+	# HUP the interface
+	# This may be have to be moved to the associate function
+	# if things like dhcp clients keep timing out but work manually
+	interface_down ${IFACE}
+	interface_up ${IFACE}
 
 	# Change back mode if needed
 	x=$( eval echo \$\{mode_${ifvar}\} | tr '[:upper:]' '[:lower:]' )
@@ -836,7 +835,7 @@ iwconfig_configure() {
 # First we check if wireless extensions exist on the interface
 # If they are then we configue wireless
 iwconfig_pre_start() {
-	local iface=$1 r=0 local wasup=true
+	local iface=$1 r=0
 
 	# We don't configure wireless if we're being called from
 	# the background
@@ -845,22 +844,14 @@ iwconfig_pre_start() {
 	save_options "ESSID" ""
 	interface_exists ${iface} || return 0
 
+	interface_up ${iface}
+
 	if ! iwconfig_check_extensions ${iface} ; then
-		if ! interface_is_up ${iface} ; then
-			interface_up ${iface}
-			wasup=false
-		fi
-		if ! iwconfig_check_extensions ${iface} ; then
-			veinfo "Wireless extensions not found for ${iface}"
-			! ${wasup} && interface_down ${iface}
-			return 0
-		fi
+		veinfo "Wireless extensions not found for ${iface}"
+		return 0
 	fi
 
 	einfo "Configuring wireless network for ${iface}"
-
-	# We need to bring the interface up to apply stuff
-	interface_up ${iface}
 
 	# Are we a proper IEEE device?
 	# Most devices reutrn IEEE 802.11b/g - but intel cards return IEEE in lower case
