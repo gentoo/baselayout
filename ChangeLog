@@ -1,6 +1,13 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  03 May 2005; Roy Marples <uberlord@gentoo.org>:
+
+    changed default indentation to 2 spaces to match rcscripts in functions.sh
+
+    wpa_supplicant now stops wpa_cli before wpa_supplicant to fix a potential
+    future error
+
   02 May 2005; Roy Marples <uberlord@gentoo.org>:
 
     Fix user function hooks for echoing to stdout and protecting our vars

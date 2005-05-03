@@ -115,9 +115,21 @@ wpa_supplicant_associated() {
 #
 # Kills any existing wpa_supplicant process on the interface
 wpa_supplicant_kill() {
-	local iface=$1 report=${2:-false}
-	local pidfile="/var/run/wpa_supplicant-${iface}.pid"
-	
+	local iface=$1 report=${2:-false} pidfile
+
+	# Shutdown wpa_cli first, if it's running
+	# This is important as future versions of wpa_supplicant
+	# may send a disconnect message to wpa_cli when it shutsdown
+	pidfile="/var/run/wpa_cli-${iface}.pid"
+	if ! clean_pidfile ${pidfile} ; then
+		${report} && ebegin "Stopping wpa_cli on ${iface}"
+		start-stop-daemon --stop --exec /usr/bin/wpa_cli \
+			--pidfile ${pidfile} 
+		${report} && eend $?
+	fi
+
+	# Now shutdown wpa_supplicant
+	pidfile="/var/run/wpa_supplicant-${iface}.pid"
 	if ! clean_pidfile ${pidfile} ; then
 		${report} && ebegin "Stopping wpa_supplicant on ${iface}"
 		start-stop-daemon --stop --exec /usr/sbin/wpa_supplicant \
@@ -136,15 +148,6 @@ wpa_supplicant_kill() {
 	# If wpa_supplicant exits uncleanly, we need to remove the stale dir
 	[[ -S /var/run/wpa_supplicant/${iface} ]] \
 		&& rm -f /var/run/wpa_supplicant/${iface}
-
-	# wpa_cli should close itself down cleanly, but just incase ...
-	pidfile="/var/run/wpa_cli-${iface}.pid"
-	if ! clean_pidfile ${pidfile} ; then
-		${report} && ebegin "Stopping wpa_cli on ${iface}"
-		start-stop-daemon --stop --exec /usr/bin/wpa_cli \
-			--pidfile ${pidfile} 
-		${report} && eend $?
-	fi
 }
 
 # bool wpa_supplicant_associate(char *interface)

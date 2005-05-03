@@ -44,7 +44,7 @@ RC_USE_CONFIG_PROFILE="yes"
 # Default values for e-message indentation and dots
 #
 RC_INDENTATION=''
-RC_DEFAULT_INDENT=3
+RC_DEFAULT_INDENT=2
 #RC_DOT_PATTERN=' .'
 RC_DOT_PATTERN=''
 
