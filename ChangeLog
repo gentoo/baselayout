@@ -5,6 +5,8 @@
 
     Really fix trace_dependencies() to handle net.* services properly.
 
+    Quiet down valid_i() if ${svcdir}/softlevel do not yet exist.
+
   10 May 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix get_service_index() being off by one.  Fix trace_dependencies() to also

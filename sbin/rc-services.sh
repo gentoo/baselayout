@@ -578,10 +578,13 @@ dependon() {
 #   This is the main code for valid_after and valid_iuse
 #   No point in writing it twice!
 valid_i() {
+	local x mylevel=$( < "${svcdir}/softlevel" 2>/dev/null)
+	# Cannot be SOFTLEVEL, as we need to know current runlevel
+
 	[[ $1 != "after" && $1 != "use" ]] && return 1
 
-	local x mylevel=$( < "${svcdir}/softlevel" )
-	# Cannot be SOFTLEVEL, as we need to know current runlevel
+	# Just set to dummy if not softlevel not initialized
+	[[ -z ${mylevel} ]] && mylevel=${BOOTLEVEL}
 
 	for x in $( i$1 "$2" )
 	do
