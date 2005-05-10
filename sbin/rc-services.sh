@@ -69,7 +69,7 @@ get_service_index() {
 			return 0
 	fi
 
-	for (( x=1; x<${RC_DEPEND_TREE[0]}; x++ )); do
+	for (( x=1; x<=${RC_DEPEND_TREE[0]}; x++ )); do
 		index=$(( ${x} * ${rc_index_scale} ))
 		if [[ ${myservice} == ${RC_DEPEND_TREE[${index}]} ]]; then
 			echo "${index}"
@@ -627,6 +627,8 @@ trace_dependencies() {
 			unsorted=( "${myservice}" )
 			;;
 	esac
+
+	net_service "${myservice}" && unsorted=( "net" ${unsorted[@]} )
 	
 	while (( ${#unsorted[*]} > 0 )) ; do
 		# Get a service from the list and remove it
@@ -657,13 +659,13 @@ trace_dependencies() {
 		# them all to the unsorted so we analyze them later
 		for dependency in ${dependencies[@]} ; do
 			for (( x=0 ; x < ${#sorted[*]} ; x++ )) ; do
-				if [[ ${sorted[x]} == "${dependency}" ]]; then
+				if [[ ${sorted[x]} == "${dependency}" ]] ; then
 					unset sorted[x]
 					break
 				fi
 			done
 			for (( x=0 ; x < ${#unsorted[*]} ; x++ )) ; do
-				if [[ ${unsorted[x]} == "${dependency}" ]]; then
+				if [[ ${unsorted[x]} == "${dependency}" ]] ; then
 					unset unsorted[x]
 					break
 				fi
@@ -679,7 +681,18 @@ trace_dependencies() {
 	# If deptype is set, we do not want the name of this service
 	if [[ -n ${deptype} ]] ; then
 		for (( x=0 ; x < ${#sorted[*]} ; x++ )) ; do
-			if [[ ${sorted[x]} == "${myservice}" ]]; then
+			if [[ ${sorted[x]} == "${myservice}" ]] ; then
+				unset sorted[x]
+				break
+			fi
+		done
+		sorted=( ${sorted[@]} )
+	fi
+
+	# If its a net service, do not include "net"
+	if net_service "${myservice}" ; then
+		for (( x=0 ; x < ${#sorted[*]} ; x++ )) ; do
+			if [[ ${sorted[x]} == "net" ]] ; then
 				unset sorted[x]
 				break
 			fi

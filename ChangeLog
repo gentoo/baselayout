@@ -1,6 +1,14 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  10 May 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+   Fix get_service_index() being off by one.  Fix trace_dependencies() to also
+   take "net" into regard if its a net_service.  This fixes two problems, first
+   shutdown should bring services down that uses net before the net.* services,
+   and secondly '/etc/init.d/net.eth0 needsme', etc should now work properly.
+   All changes to sbin/rc-services.sh.
+
   03 May 2005; Roy Marples <uberlord@gentoo.org>:
 
     changed default indentation to 2 spaces to match rcscripts in functions.sh
