@@ -625,11 +625,20 @@ trace_dependencies() {
 		-*)
 			deptype=${1/-}
 			unsorted=( "${myservice}" )
+			# We need to check what deps matches the 'net' service
+			# as well
+			net_service "${myservice}" && \
+				unsorted=( "net" ${unsorted[@]} )
 			;;
 	esac
 
-	net_service "${myservice}" && unsorted=( "net" ${unsorted[@]} )
-	
+	# If its a net service, just replace it with 'net'
+	if [[ -z ${deptype} ]] ; then
+		for (( x=0 ; x < ${#unsorted[*]} ; x++ )) ; do
+			net_service "${unsorted[x]}" && unsorted[x]="net"
+		done
+	fi
+		
 	while (( ${#unsorted[*]} > 0 )) ; do
 		# Get a service from the list and remove it
 		service=${unsorted[0]}
@@ -678,8 +687,8 @@ trace_dependencies() {
 		sorted=( ${service} ${sorted[@]} )
 	done
 
-	# If deptype is set, we do not want the name of this service
 	if [[ -n ${deptype} ]] ; then
+		# If deptype is set, we do not want the name of this service
 		for (( x=0 ; x < ${#sorted[*]} ; x++ )) ; do
 			if [[ ${sorted[x]} == "${myservice}" ]] ; then
 				unset sorted[x]
@@ -687,17 +696,31 @@ trace_dependencies() {
 			fi
 		done
 		sorted=( ${sorted[@]} )
-	fi
 
-	# If its a net service, do not include "net"
-	if net_service "${myservice}" ; then
+		# If its a net service, do not include "net"
+		if net_service "${myservice}" ; then
+			for (( x=0 ; x < ${#sorted[*]} ; x++ )) ; do
+				if [[ ${sorted[x]} == "net" ]] ; then
+					unset sorted[x]
+					break
+				fi
+			done
+			sorted=( ${sorted[@]} )
+		fi
+	else
+		local netserv y
+
+		# XXX:  I dont think RC_NET_STRICT_CHECKING should be considered
+		#       here, but you never know ...
+		netserv=$(cd "${svcdir}"/started; ls net.* 2>/dev/null)
+		
+		# Replace 'net' with the actual running services
 		for (( x=0 ; x < ${#sorted[*]} ; x++ )) ; do
 			if [[ ${sorted[x]} == "net" ]] ; then
-				unset sorted[x]
-				break
+				y=$((${x} + 1))
+				sorted=( "${sorted[@]:0:${x}}" ${netserv} "${sorted[@]:${y}}" )
 			fi
 		done
-		sorted=( ${sorted[@]} )
 	fi
 	
 	echo ${sorted[@]}

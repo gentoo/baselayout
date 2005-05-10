@@ -3,11 +3,15 @@
 
   10 May 2005; Martin Schlemmer <azarah@gentoo.org>:
 
-   Fix get_service_index() being off by one.  Fix trace_dependencies() to also
-   take "net" into regard if its a net_service.  This fixes two problems, first
-   shutdown should bring services down that uses net before the net.* services,
-   and secondly '/etc/init.d/net.eth0 needsme', etc should now work properly.
-   All changes to sbin/rc-services.sh.
+    Really fix trace_dependencies() to handle net.* services properly.
+
+  10 May 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix get_service_index() being off by one.  Fix trace_dependencies() to also
+    take "net" into regard if its a net_service.  This fixes two problems, first
+    shutdown should bring services down that uses net before the net.* services,
+    and secondly '/etc/init.d/net.eth0 needsme', etc should now work properly.
+    All changes to sbin/rc-services.sh.
 
   03 May 2005; Roy Marples <uberlord@gentoo.org>:
 
