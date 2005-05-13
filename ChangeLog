@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  12 May 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Move pam files out of baselayout and into packages #92387.
+
   10 May 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     Really fix trace_dependencies() to handle net.* services properly.
