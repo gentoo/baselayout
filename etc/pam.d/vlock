@@ -1,4 +1,0 @@
-# /etc/pam.d/vlock:
-# $Header$
-
-auth       required   pam_pwdb.so

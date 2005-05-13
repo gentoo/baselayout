@@ -1,4 +1,0 @@
-# /etc/pam.d/xlock:
-# $Header$
-
-auth       required   pam_pwdb.so
