@@ -38,7 +38,7 @@
 #define NONRETURNING \
 	__attribute__((noreturn))
 
-#if defined(linux)
+#if defined(linux) || (defined(__FreeBSD_kernel__) && defined(__GLIBC__))
 #  define OSLinux
 #elif defined(__GNU__)
 #  define OSHURD
