@@ -397,7 +397,7 @@ svc_status() {
 
 rcscript_errors=$(bash -n "${myscript}" 2>&1) || {
 	[[ -n ${rcscript_errors} ]] && echo "${rcscript_errors}" >&2
-	eerror "ERROR:  \"${myscript}\" has syntax errors in it; not executing..."
+	eerror "ERROR:  \"${myscript}\" has syntax errors in it; aborting ..."
 	exit 1
 }
 
