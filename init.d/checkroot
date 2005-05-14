@@ -27,7 +27,7 @@ start() {
 				# - find the / entry
 				# - make sure we have 6 fields
 				# - see if fs_passno is something other than 0
-				if [[ -n $(awk '($1 ~ /^\// && $2 == "/" \
+				if [[ -n $(awk '($1 ~ /^(\/|UUID|LABEL)/ && $2 == "/" \
 				                && NF == 6 && $6 != 0) { print }' /etc/fstab) ]]
 				then
 					ebegin "Checking root filesystem"

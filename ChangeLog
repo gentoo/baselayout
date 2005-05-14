@@ -5,6 +5,9 @@
 
     Make sure /dev is mounted with sane permissions #87745 by Jordan.
 
+    When we search /etc/fstab for /, make sure we handle mounts that have 
+    UUID/LABEL info in them #90603 by Alessandro Sappia.
+
   12 May 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Move pam files out of baselayout and into packages #92387.
