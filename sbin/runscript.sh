@@ -327,7 +327,15 @@ svc_start() {
 		eerror "        services.  \"${myservice}\" was not started."
 		retval=1
 	elif [[ ${retval} -eq 0 ]] && ! broken "${myservice}" ; then
+		(
+		exit() {
+			eerror "DO NOT USE EXIT IN INIT.D SCRIPTS"
+			eerror "This IS a bug, please fix your broken init.d"
+			unset exit
+			exit $@
+		}
 		start
+		)
 		retval=$?
 	fi
 

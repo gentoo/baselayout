@@ -11,6 +11,8 @@
     Simplify rc-script error checking so we don't need a tempfile and so
     non-root users can run /etc/init.d/status #85892 by Stuart Shelton.
 
+    Add a sanity check for devs who write bad scripts and call exit #85298.
+
   12 May 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Move pam files out of baselayout and into packages #92387.
