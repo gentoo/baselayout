@@ -51,6 +51,19 @@ RC_DOT_PATTERN=''
 # Override defaults with user settings ...
 [ -f /etc/conf.d/rc ] && source /etc/conf.d/rc
 
+# void import_addon(char *addon)
+#
+#  Import code from the specified addon if it exists
+#
+import_addon() {
+	local addon=${svclib}/addons/$1
+	if [[ -r ${addon} ]] ; then
+		source "${addon}"
+		return 0
+	fi
+	return 1
+}
+
 # void splash(...)
 #
 #  Notify bootsplash/splashutils/gensplash/whatever about
@@ -59,9 +72,19 @@ RC_DOT_PATTERN=''
 splash() {
 	return 0
 }
-
 # This will override the splash() function...
-[ -f /sbin/splash-functions.sh ] && source /sbin/splash-functions.sh
+if ! import_addon splash-functions.sh ; then
+	[ -f /sbin/splash-functions.sh ] && source /sbin/splash-functions.sh
+fi
+
+# void profiling(...)
+#
+#  Notify bootsplash/whatever about important events.
+#
+profiling() {
+	return 0
+}
+import_addon profiling-functions.sh
 
 # void get_bootconfig()
 #
@@ -648,13 +671,7 @@ reverse_list() {
 #
 start_addon() {
 	local addon=$1
-
-	[[ -z ${addon} ]] && return 0
-
-	[[ -r ${svclib}/addons/${addon}-start.sh ]] && {
-		(source "${svclib}/addons/${addon}-start.sh")
-	}
-
+	(import_addon ${addon}-start.sh)
 	return 0
 }
 
@@ -678,13 +695,7 @@ start_volumes() {
 #
 stop_addon() {
 	local addon=$1
-
-	[[ -z ${addon} ]] && return 0
-
-	[[ -r ${svclib}/addons/${addon}-stop.sh ]] && {
-		(source "${svclib}/addons/${addon}-stop.sh")
-	}
-
+	(import_addon ${addon}-stop.sh)
 	return 0
 }
 
