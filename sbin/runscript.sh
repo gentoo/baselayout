@@ -10,8 +10,8 @@
 # Functions to control daemons
 [[ ${RC_GOT_DAEMON} != "yes" ]] && source "${svclib}/sh/rc-daemon.sh"
 
-# Fix bug 48595
-if [[ ${EUID} != 0 ]] ; then
+# User must be root to run most script stuff (except status)
+if [[ ${EUID} != 0 ]] && ! [[ $2 == "status" && $# -eq 2 ]] ; then
 	eerror "$0: must be root to run init scripts"
 	exit 1
 fi
@@ -387,7 +387,7 @@ svc_status() {
 	[[ ${efunc} != "eerror" ]]
 }
 
-rcscript_errors=$(wrap_rcscript "${myscript}" 2>&1) || {
+rcscript_errors=$(bash -n "${myscript}" 2>&1) || {
 	[[ -n ${rcscript_errors} ]] && echo "${rcscript_errors}" >&2
 	eerror "ERROR:  \"${myscript}\" has syntax errors in it; not executing..."
 	exit 1

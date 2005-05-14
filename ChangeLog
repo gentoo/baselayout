@@ -8,6 +8,9 @@
     When we search /etc/fstab for /, make sure we handle mounts that have 
     UUID/LABEL info in them #90603 by Alessandro Sappia.
 
+    Simplify rc-script error checking so we don't need a tempfile and so
+    non-root users can run /etc/init.d/status #85892 by Stuart Shelton.
+
   12 May 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Move pam files out of baselayout and into packages #92387.

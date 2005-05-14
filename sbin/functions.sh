@@ -367,29 +367,6 @@ veend() {
 	return ${1:-0}
 }
 
-# bool wrap_rcscript(full_path_and_name_of_rc-script)
-#
-#    check to see if a given rc-script has syntax errors
-#    zero == no errors
-#    nonzero == errors
-#
-wrap_rcscript() {
-	local retval=1
-	local myservice="${1##*/}"
-
-	( echo "function test_script() {" ; cat "$1"; echo "}" ) \
-		> "${svcdir}/${myservice}-$$"
-
-	if source "${svcdir}/${myservice}-$$"
-	then
-		test_script
-		retval=0
-	fi
-	rm -f "${svcdir}/${myservice}-$$"
-
-	return "${retval}"
-}
-
 # char *KV_major(string)
 #
 #    Return the Major (X of X.Y.Z) kernel version
