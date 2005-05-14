@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  14 May 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Make sure /dev is mounted with sane permissions #87745 by Jordan.
+
   12 May 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Move pam files out of baselayout and into packages #92387.

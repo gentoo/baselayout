@@ -252,10 +252,11 @@ then
 				try mount -n ${mntcmd}
 			else
 				if egrep -qs tmpfs /proc/filesystems ; then
-					try mount -n -t tmpfs udev /dev
+					mntcmd="tmpfs"
 				else
-					try mount -n -t ramfs udev /dev
+					mntcmd="ramfs"
 				fi
+				try mount -n -t ${mntcmd} udev /dev -o noexec,nosuid,mode=0755
 			fi
 			eend $?
 
