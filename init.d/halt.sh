@@ -21,7 +21,8 @@ if [[ -n $(ps --no-heading -C 'devfsd') ]]; then
 	eend $?
 elif [[ ! -e /dev/.devfsd && -e /dev/.udev && -z ${CDBOOT} && \
         ${RC_DEVICE_TARBALL} == "yes" ]] && \
-		touch /lib/udev-state/devices.tar.bz2 2>/dev/null ; then
+		touch /lib/udev-state/devices.tar.bz2 2>/dev/null
+then
 	ebegin "Saving device nodes"
 	# Handle our temp files
 	devices_udev=$(mktemp /tmp/devices.udev.XXXXXX)
@@ -77,7 +78,7 @@ umount -at tmpfs &>/dev/null
 
 if [[ -n $(swapon -s 2>/dev/null) ]]; then
 	ebegin "Deactivating swap"
-	swapoff -a &>/dev/null
+	swapoff -a
 	eend $?
 fi
 
@@ -140,8 +141,8 @@ unmounts=$( \
 	      print $2 }' /proc/mounts | sort -ur)
 for x in ${unmounts}; do
 	# Do not umount these if we are booting off a livecd
-	if [[ -n ${CDBOOT} && \
-	      ( ${x} == "/mnt/cdrom" || ${x} = "/mnt/livecd" ) ]]; then
+	if [[ -n ${CDBOOT} ]] && \
+	   [[ ${x} == "/mnt/cdrom" || ${x} = "/mnt/livecd" ]] ; then
 		continue
 	fi
 
@@ -165,16 +166,16 @@ stop_volumes
 # This is a function because its used twice below
 ups_kill_power() {
 	local UPS_CTL UPS_POWERDOWN
-	if [[ -f /etc/killpower ]]; then
+	if [[ -f /etc/killpower ]] ; then
 		UPS_CTL=/sbin/upsdrvctl
 		UPS_POWERDOWN="${UPS_CTL} shutdown"
-	elif [[ -f /etc/apcupsd/powerfail ]]; then
+	elif [[ -f /etc/apcupsd/powerfail ]] ; then
 		UPS_CTL=/etc/apcupsd/apccontrol
 		UPS_POWERDOWN="${UPS_CTL} killpower"
 	else
 		return 0
 	fi
-	if [[ -x ${UPS_CTL} ]]; then
+	if [[ -x ${UPS_CTL} ]] ; then
 		ewarn "Signalling ups driver(s) to kill the load!"
 		${UPS_POWERDOWN}
 		ewarn "Halt system and wait for the UPS to kill our power"
@@ -192,7 +193,7 @@ mount_readonly() {
 	sync; sync
 	sleep 1
 
-	for x in $(awk '$1 != "none" { print $2 }' /proc/mounts | sort -r); do
+	for x in $(awk '$1 != "none" { print $2 }' /proc/mounts | sort -r) ; do
 		x=${x//\\040/ }
 		if [[ ${cmd} == "u" ]]; then
 			umount -r -r "${x}"
@@ -211,11 +212,11 @@ mount_readonly() {
 cp /proc/mounts /etc/mtab &>/dev/null
 ebegin "Remounting remaining filesystems readonly"
 mount_worked=0
-if ! mount_readonly; then
-	if ! mount_readonly; then
+if ! mount_readonly ; then
+	if ! mount_readonly ; then
 		# If these things really don't want to remount ro, then 
 		# let's try to force them to unmount
-		if ! mount_readonly u; then
+		if ! mount_readonly u ; then
 			mount_worked=1
 		fi
 	fi
