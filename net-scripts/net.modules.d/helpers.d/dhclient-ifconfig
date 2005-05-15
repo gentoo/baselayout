@@ -1,9 +1,8 @@
 #!/bin/sh
-# Copyright (c) 2004-2005 Gentoo Foundation
+# Copyright 1999-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
 
 # Contributed by Roy Marples (uberlord@gentoo.org)
 
-/lib/rcscripts/net.modules.d/helpers.d/dhclient-udhcpc-wrapper ifconfig
-exit $?
+exec /lib/rcscripts/net.modules.d/helpers.d/dhclient-udhcpc-wrapper ifconfig
