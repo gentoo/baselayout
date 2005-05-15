@@ -141,8 +141,8 @@ unmounts=$( \
 	      print $2 }' /proc/mounts | sort -ur)
 for x in ${unmounts}; do
 	# Do not umount these if we are booting off a livecd
-	if [[ -n ${CDBOOT} && \
-	   [[ ${x} == "/mnt/cdrom" || ${x} = "/mnt/livecd" ]] ; then
+	if [[ -n ${CDBOOT} ]] && \
+	   [[ ${x} == "/mnt/cdrom" || ${x} == "/mnt/livecd" ]] ; then
 		continue
 	fi
 
