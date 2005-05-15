@@ -97,8 +97,7 @@ get_bootconfig() {
 	local newbootlevel=
 	local newsoftlevel=
 
-	for copt in $(< /proc/cmdline)
-	do
+	for copt in $(</proc/cmdline) ; do
 		case "${copt%=*}" in
 			"bootlevel")
 				newbootlevel="${copt##*=}"
@@ -109,15 +108,13 @@ get_bootconfig() {
 		esac
 	done
 
-	if [ -n "${newbootlevel}" ]
-	then
+	if [ -n "${newbootlevel}" ] ; then
 		export BOOTLEVEL="${newbootlevel}"
 	else
 		export BOOTLEVEL="boot"
 	fi
 
-	if [ -n "${newsoftlevel}" ]
-	then
+	if [ -n "${newsoftlevel}" ] ; then
 		export DEFAULTLEVEL="${newsoftlevel}"
 	else
 		export DEFAULTLEVEL="default"
@@ -129,12 +126,10 @@ get_bootconfig() {
 setup_defaultlevels() {
 	get_bootconfig
 
-	if get_bootparam "noconfigprofile"
-	then
+	if get_bootparam "noconfigprofile" ; then
 		export RC_USE_CONFIG_PROFILE="no"
 
-	elif get_bootparam "configprofile"
-	then
+	elif get_bootparam "configprofile" ; then
 		export RC_USE_CONFIG_PROFILE="yes"
 	fi
 
@@ -145,10 +140,8 @@ setup_defaultlevels() {
 		export BOOTLEVEL="${BOOTLEVEL}.${DEFAULTLEVEL}"
 	fi
 
-	if [ -z "${SOFTLEVEL}" ]
-	then
-		if [ -f "${svcdir}/softlevel" ]
-		then
+	if [ -z "${SOFTLEVEL}" ] ; then
+		if [ -f "${svcdir}/softlevel" ] ; then
 			export SOFTLEVEL="$(< ${svcdir}/softlevel)"
 		else
 			export SOFTLEVEL="${BOOTLEVEL}"
@@ -768,22 +761,19 @@ requote() {
 #                                                                            #
 ##############################################################################
 
-if [ -z "${EBUILD}" ]
-then
+if [ -z "${EBUILD}" ] ; then
 	# Setup a basic $PATH.  Just add system default to existing.
 	# This should solve both /sbin and /usr/sbin not present when
 	# doing 'su -c foo', or for something like:  PATH= rcscript start
 	PATH="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/sbin:${PATH}"
 
-	if [ "$(/sbin/consoletype 2> /dev/null)" = "serial" ]
-	then
+	if [ "$(/sbin/consoletype 2> /dev/null)" = "serial" ] ; then
 		# We do not want colors/endcols on serial terminals
 		RC_NOCOLOR="yes"
 		RC_ENDCOL="no"
 	fi
 
-	for arg in "$@"
-	do
+	for arg in "$@" ; do
 		case "${arg}" in
 			# Lastly check if the user disabled it with --nocolor argument
 			--nocolor|-nc)
@@ -792,8 +782,7 @@ then
 		esac
 	done
 
-	if [ -r "/proc/cmdline" ]
-	then
+	if [ -r "/proc/cmdline" ] ; then
 		setup_defaultlevels
 	fi
 else
