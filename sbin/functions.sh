@@ -40,16 +40,29 @@ RC_NET_STRICT_CHECKING="no"
 RC_PARALLEL_STARTUP="no"
 RC_USE_CONFIG_PROFILE="yes"
 
-# 
+#
 # Default values for e-message indentation and dots
 #
 RC_INDENTATION=''
-RC_DEFAULT_INDENT=3
+RC_DEFAULT_INDENT=2
 #RC_DOT_PATTERN=' .'
 RC_DOT_PATTERN=''
 
 # Override defaults with user settings ...
 [ -f /etc/conf.d/rc ] && source /etc/conf.d/rc
+
+# void import_addon(char *addon)
+#
+#  Import code from the specified addon if it exists
+#
+import_addon() {
+	local addon=${svclib}/addons/$1
+	if [[ -r ${addon} ]] ; then
+		source "${addon}"
+		return 0
+	fi
+	return 1
+}
 
 # void splash(...)
 #
@@ -59,9 +72,19 @@ RC_DOT_PATTERN=''
 splash() {
 	return 0
 }
-
 # This will override the splash() function...
-[ -f /sbin/splash-functions.sh ] && source /sbin/splash-functions.sh
+if ! import_addon splash-functions.sh ; then
+	[ -f /sbin/splash-functions.sh ] && source /sbin/splash-functions.sh
+fi
+
+# void profiling(...)
+#
+#  Notify bootsplash/whatever about important events.
+#
+profiling() {
+	return 0
+}
+import_addon profiling-functions.sh
 
 # void get_bootconfig()
 #
@@ -74,8 +97,7 @@ get_bootconfig() {
 	local newbootlevel=
 	local newsoftlevel=
 
-	for copt in $(< /proc/cmdline)
-	do
+	for copt in $(</proc/cmdline) ; do
 		case "${copt%=*}" in
 			"bootlevel")
 				newbootlevel="${copt##*=}"
@@ -86,15 +108,13 @@ get_bootconfig() {
 		esac
 	done
 
-	if [ -n "${newbootlevel}" ]
-	then
+	if [ -n "${newbootlevel}" ] ; then
 		export BOOTLEVEL="${newbootlevel}"
 	else
 		export BOOTLEVEL="boot"
 	fi
 
-	if [ -n "${newsoftlevel}" ]
-	then
+	if [ -n "${newsoftlevel}" ] ; then
 		export DEFAULTLEVEL="${newsoftlevel}"
 	else
 		export DEFAULTLEVEL="default"
@@ -105,13 +125,11 @@ get_bootconfig() {
 
 setup_defaultlevels() {
 	get_bootconfig
-	
-	if get_bootparam "noconfigprofile"
-	then
+
+	if get_bootparam "noconfigprofile" ; then
 		export RC_USE_CONFIG_PROFILE="no"
-	
-	elif get_bootparam "configprofile"
-	then
+
+	elif get_bootparam "configprofile" ; then
 		export RC_USE_CONFIG_PROFILE="yes"
 	fi
 
@@ -121,11 +139,9 @@ setup_defaultlevels() {
 	then
 		export BOOTLEVEL="${BOOTLEVEL}.${DEFAULTLEVEL}"
 	fi
-									
-	if [ -z "${SOFTLEVEL}" ]
-	then
-		if [ -f "${svcdir}/softlevel" ]
-		then
+
+	if [ -z "${SOFTLEVEL}" ] ; then
+		if [ -f "${svcdir}/softlevel" ] ; then
 			export SOFTLEVEL="$(< ${svcdir}/softlevel)"
 		else
 			export SOFTLEVEL="${BOOTLEVEL}"
@@ -155,15 +171,15 @@ get_libdir() {
 esyslog() {
 	local pri=
 	local tag=
-	
+
 	if [ -x /usr/bin/logger ]
 	then
 		pri="$1"
 		tag="$2"
-		
+
 		shift 2
 		[[ -z "$*" ]] && return 0
-		
+
 		/usr/bin/logger -p "${pri}" -t "${tag}" -- "$*"
 	fi
 
@@ -358,11 +374,11 @@ veinfon() { [[ "${RC_VERBOSE}" != yes ]] || einfon "$@"; }
 vewarn() { [[ "${RC_VERBOSE}" != yes ]] || ewarn "$@"; }
 veerror() { [[ "${RC_VERBOSE}" != yes ]] || eerror "$@"; }
 vebegin() { [[ "${RC_VERBOSE}" != yes ]] || ebegin "$@"; }
-veend() { 
+veend() {
 	[[ "${RC_VERBOSE}" == yes ]] && { eend "$@"; return $?; }
 	return ${1:-0}
 }
-veend() { 
+veend() {
 	[[ "${RC_VERBOSE}" == yes ]] && { ewend "$@"; return $?; }
 	return ${1:-0}
 }
@@ -428,7 +444,7 @@ KV_to_int() {
 # int get_KV()
 #
 #    Return the kernel version (major, minor and micro concated) as an integer.
-#    Assumes X and Y of X.Y.Z are numbers.  Also assumes that some leading 
+#    Assumes X and Y of X.Y.Z are numbers.  Also assumes that some leading
 #    portion of Z is a number.
 #    e.g. 2.4.25, 2.6.10, 2.6.4-rc3, 2.2.40-poop, 2.0.15+foo
 #
@@ -450,7 +466,7 @@ get_bootparam() {
 	local x copt params retval=1
 
 	[ ! -r "/proc/cmdline" ] && return 1
-	
+
 	for copt in $(< /proc/cmdline)
 	do
 		if [ "${copt%=*}" = "gentoo" ]
@@ -461,7 +477,7 @@ get_bootparam() {
 					for (x in nodes)
 						print nodes[x]
 				}')"
-			
+
 			# Parse gentoo option
 			for x in ${params}
 			do
@@ -473,7 +489,7 @@ get_bootparam() {
 			done
 		fi
 	done
-	
+
 	return ${retval}
 }
 
@@ -498,26 +514,26 @@ dolisting() {
 	then
 		mypath="${mypath%/\*}"
 	fi
-	
+
 	for x in ${mypath}
 	do
 		[ ! -e "${x}" ] && continue
-		
+
 		if [ ! -d "${x}" ] && ( [ -L "${x}" -o -f "${x}" ] )
 		then
 			mylist="${mylist} $(ls "${x}" 2> /dev/null)"
 		else
 			[ "${x%/}" != "${x}" ] && x="${x%/}"
-			
+
 			cd "${x}"; tmpstr="$(ls)"
-			
+
 			for y in ${tmpstr}
 			do
 				mylist="${mylist} ${x}/${y}"
 			done
 		fi
 	done
-	
+
 	echo "${mylist}"
 }
 
@@ -527,13 +543,13 @@ dolisting() {
 #
 save_options() {
 	local myopts="$1"
-	
+
 	shift
 	if [ ! -d "${svcdir}/options/${myservice}" ]
 	then
 		mkdir -p -m 0755 "${svcdir}/options/${myservice}"
 	fi
-	
+
 	echo "$*" > "${svcdir}/options/${myservice}/${myopts}"
 
 	return 0
@@ -566,6 +582,16 @@ add_suffix() {
 	fi
 
 	return 0
+}
+
+# char *get_base_ver()
+#
+#    get the version of baselayout that this system is running
+#
+get_base_ver() {
+	[[ ! -r /etc/gentoo-release ]] && return 0
+	local ver=$(</etc/gentoo-release)
+	echo ${ver##* }
 }
 
 # Network filesystems list for common use in rc-scripts.
@@ -622,9 +648,67 @@ get_mount_fstab() {
 	' /etc/fstab
 }
 
+# char *reverse_list(list)
+#
+#   Returns the reversed order of list
+#
+reverse_list() {
+	for (( i = $# ; i > 0 ; --i )); do
+		echo -n "${!i} "
+	done
+}
+
+# void start_addon(addon)
+#
+#   Starts addon.
+#
+start_addon() {
+	local addon=$1
+	(import_addon ${addon}-start.sh)
+	return 0
+}
+
+# void start_volumes()
+#
+#   Starts all volumes in RC_VOLUME_ORDER.
+#
+start_volumes() {
+	local x=
+
+	for x in ${RC_VOLUME_ORDER}; do
+		start_addon "${x}"
+	done
+
+	return 0
+}
+
+# void stop_addon(addon)
+#
+#   Stops addon.
+#
+stop_addon() {
+	local addon=$1
+	(import_addon ${addon}-stop.sh)
+	return 0
+}
+
+# void stop_volumes()
+#
+#   Stops all volumes in RC_VOLUME_ORDER (reverse order).
+#
+stop_volumes() {
+	local x=
+
+	for x in $(reverse_list ${RC_VOLUME_ORDER}); do
+		stop_addon "${x}"
+	done
+
+	return 0
+}
+
 # bool is_older_than(reference, files/dirs to check)
 #
-#   return 0 if any of the files/dirs are newer than 
+#   return 0 if any of the files/dirs are newer than
 #   the reference file
 #
 #   EXAMPLE: if is_older_than a.out *.o ; then ...
@@ -633,12 +717,10 @@ is_older_than() {
 	local ref="$1"
 	shift
 
-	for x in "$@"
-	do
+	for x in "$@" ; do
 		[[ ${x} -nt ${ref} ]] && return 0
 
-		if [[ -d ${x} ]]
-		then
+		if [[ -d ${x} ]] ; then
 			is_older_than "${ref}" "${x}"/* && return 0
 		fi
 	done
@@ -655,22 +737,19 @@ is_older_than() {
 #                                                                            #
 ##############################################################################
 
-if [ -z "${EBUILD}" ]
-then
+if [ -z "${EBUILD}" ] ; then
 	# Setup a basic $PATH.  Just add system default to existing.
 	# This should solve both /sbin and /usr/sbin not present when
 	# doing 'su -c foo', or for something like:  PATH= rcscript start
 	PATH="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/sbin:${PATH}"
 
-	if [ "$(/sbin/consoletype 2> /dev/null)" = "serial" ]
-	then
+	if [ "$(/sbin/consoletype 2> /dev/null)" = "serial" ] ; then
 		# We do not want colors/endcols on serial terminals
 		RC_NOCOLOR="yes"
 		RC_ENDCOL="no"
 	fi
-	
-	for arg in "$@"
-	do
+
+	for arg in "$@" ; do
 		case "${arg}" in
 			# Lastly check if the user disabled it with --nocolor argument
 			--nocolor|-nc)
@@ -679,8 +758,7 @@ then
 		esac
 	done
 
-	if [ -r "/proc/cmdline" ]
-	then
+	if [ -r "/proc/cmdline" ] ; then
 		setup_defaultlevels
 	fi
 else
@@ -697,7 +775,7 @@ else
 	fi
 fi
 
-if [[ -n ${EBUILD} && $* != *depend* ]]; then
+if [[ -n ${EBUILD} && $* == *depend* ]]; then
 	# We do not want stty to run during emerge depend
 	COLS=80
 else

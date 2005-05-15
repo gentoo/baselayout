@@ -87,8 +87,6 @@ udev_version() {
 }
 
 populate_udev() {
-	# Make sure we do not have udevd from initramfs running
-	killall -q udevd
 	# Now populate /dev
 	/sbin/udevstart
 
@@ -148,14 +146,13 @@ then
 
 	echo
 	echo -e "${GOOD}Gentoo Linux${GENTOO_VERS}; ${BRACKET}http://www.gentoo.org/${NORMAL}"
-	echo -e " Copyright 1999-2004 Gentoo Foundation; Distributed under the GPLv2"
+	echo -e " Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2"
 	echo
 
 	check_statedir /proc
 
 	ebegin "Mounting proc at /proc"
-	if [[ ${RC_USE_FSTAB} = "yes" ]]
-	then
+	if [[ ${RC_USE_FSTAB} = "yes" ]] ; then
 		mntcmd=$(get_mount_fstab /proc)
 	else
 		unset mntcmd
@@ -168,13 +165,10 @@ then
 	# Note: /proc MUST be mounted
 	[ -f /sbin/livecd-functions.sh ] && livecd_read_commandline
 
-	if [ "$(get_KV)" -ge "$(KV_to_int '2.6.0')" ]
-	then
-		if [ -d /sys ]
-		then
+	if [ "$(get_KV)" -ge "$(KV_to_int '2.6.0')" ] ; then
+		if [[ -d /sys ]] ; then
 			ebegin "Mounting sysfs at /sys"
-			if [[ ${RC_USE_FSTAB} = "yes" ]]
-			then
+			if [[ ${RC_USE_FSTAB} = "yes" ]] ; then
 				mntcmd=$(get_mount_fstab /sys)
 			else
 				unset mntcmd
@@ -246,18 +240,15 @@ then
 		fi
 
 		# Actually start setting up /dev now
-		if [ "${udev}" = "yes" ]
-		then
+		if [[ ${udev} = "yes" ]] ; then
 			# Setup temporary storage for /dev
 			ebegin "Mounting /dev for udev"
-			if [[ ${RC_USE_FSTAB} = "yes" ]]
-			then
+			if [[ ${RC_USE_FSTAB} = "yes" ]] ; then
 				mntcmd=$(get_mount_fstab /dev)
 			else
 				unset mntcmd
 			fi
-			if [[ -n ${mntcmd} ]]
-			then
+			if [[ -n ${mntcmd} ]] ; then
 				try mount -n ${mntcmd}
 			else
 				if egrep -qs tmpfs /proc/filesystems ; then
@@ -284,8 +275,7 @@ then
 			populate_udev
 
 			# Setup hotplugging (if possible)
-			if [ -e /proc/sys/kernel/hotplug ]
-			then
+			if [ -e /proc/sys/kernel/hotplug ] ; then
 				if [ "$(udev_version)" -ge "48" ] ; then
 					einfo "  Setting /sbin/udevsend as hotplug agent ..."
 					echo "/sbin/udevsend" > /proc/sys/kernel/hotplug
@@ -366,11 +356,9 @@ then
 					ewarn "Could not create /dev/pts!"
 			fi
 
-			if [ -d /dev/pts ]
-			then
+			if [[ -d /dev/pts ]] ; then
 				ebegin "Mounting devpts at /dev/pts"
-				if [[ ${RC_USE_FSTAB} = "yes" ]]
-				then
+				if [[ ${RC_USE_FSTAB} = "yes" ]] ; then
 					mntcmd=$(get_mount_fstab /dev/pts)
 				else
 					unset mntcmd
@@ -385,7 +373,7 @@ then
 	# devfsd has been started, so that the fstab can be properly parsed
 	# and only if the server/Gentoo box is initialized ...
 	ebegin "Activating (possible) swap"
-	/sbin/swapon -a &>/dev/null
+	/sbin/swapon -a
 	eend 0
 
 	# Set the console loglevel to 1 for a cleaner boot
@@ -407,6 +395,8 @@ then
 		(
 		local retval=
 		local service=$1
+		# Needed for some addons like dm-crypt that starts in critical services
+		local myservice=$1
 
 		source "/etc/init.d/${service}" || eerror "Failed to source /etc/init.d/${service}"
 		retval=$?
@@ -662,10 +652,8 @@ fi
 
 mkdir -p -m 0755 "${svcdir}/softscripts.new"
 
-for x in ${myscripts}
-do
-	if [ ! -e "/etc/init.d/${x}" ]
-	then
+for x in ${myscripts} ; do
+	if [[ ! -e /etc/init.d/${x} ]] ; then
 		ewarn "WARNING:  /etc/init.d/${x} missing; skipping ..."
 		continue
 	fi
@@ -738,27 +726,22 @@ dep_stop() {
 }
 
 # Stop services
-if [ "${SOFTLEVEL}" != "single" -a \
-     "${SOFTLEVEL}" != "reboot" -a \
-     "${SOFTLEVEL}" != "shutdown" ]
+if [[ ${SOFTLEVEL} != "single" && \
+      ${SOFTLEVEL} != "reboot" && \
+      ${SOFTLEVEL} != "shutdown" ]]
 then
-	for i in $(dolisting "${svcdir}/started/")
-	do
+	for i in $(dolisting "${svcdir}/started/") ; do
 		dep_stop "${i}"
 	done
 else
 	get_critical_services
 
 	is_critical_service() {
-		local x=
-		local myservice="${1##*/}"
+		local x
+		local myservice=${1##*/}
 
-		for x in ${CRITICAL_SERVICES}
-		do
-			if [ "${myservice}" = "${x}" ]
-			then
-				return 0
-			fi
+		for x in ${CRITICAL_SERVICES} ; do
+			[[ ${myservice} == "${x}" ]] && return 0
 		done
 
 		return 1
@@ -798,8 +781,7 @@ fi
 
 echo "${SOFTLEVEL}" > "${svcdir}/softlevel"
 
-if [ "${SOFTLEVEL}" = "reboot" -o "${SOFTLEVEL}" = "shutdown" ]
-then
+if [[ ${SOFTLEVEL} == "reboot" || ${SOFTLEVEL} == "shutdown" ]] ; then
 	source /sbin/functions.sh
 	
 	# Clear $svcdir from stale entries, but leave the caches around, as it
@@ -809,8 +791,7 @@ then
 	
 	source /etc/init.d/halt.sh
 	
-	if [ "${SOFTLEVEL}" = "reboot" ]
-	then
+	if [[ ${SOFTLEVEL} == "reboot" ]] ; then
 		source /etc/init.d/reboot.sh
 	else
 		source /etc/init.d/shutdown.sh

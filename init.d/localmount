@@ -41,87 +41,8 @@ start() {
 	/sbin/swapon -a
 	eend $?
 
-	dm-crypt-start
-}
-
-# Note: This function is exactly duplicated in localmount.  If you change it
-# here, make sure to change it there also!
-dm-crypt-start() {
-	local cryptfs_status=0 
-	local gpg_options key loop_file mountline mount options post_mount pre_mount source swap
-
-	if [[ -f /etc/conf.d/cryptfs ]] && [[ -x /bin/cryptsetup ]] ; then
-		ebegin "Running post_mount commands for dm-crypt"
-
-		while read mountline; do
-			# skip comments and blank lines
-			[[ ${mountline}\# == \#* ]] && continue
-
-			# check for the start of a new mount/swap
-			case ${mountline} in
-				mount=*|swap=*)
-					# If we have a mount queued up, then execute it
-					dm-crypt-execute
-
-					# Prepare for the next mount/swap by resetting variables
-					unset gpg_options key loop_file mount options pre_mount post_mount source swap
-					;;
-
-				gpg_options=*|key=*|loop_file=*|options=*|post_mount=*|pre_mount=*|source=*)
-					if [[ -z ${mount} && -z ${swap} ]] ; then
-						ewarn "Ignoring setting outside mount/swap section: ${mountline}"
-						continue
-					fi
-					;;
-
-				*)
-					ewarn "Skipping invalid line in /etc/conf.d/cryptfs: ${mountline}"
-					;;
-			esac
-
-			# Queue this setting for the next call to dm-crypt-execute
-			eval "${mountline}"
-		done < /etc/conf.d/cryptfs
-
-		# If we have a mount queued up, then execute it
-		dm-crypt-execute
-
-		ewend ${cryptfs_status} "Failed to run a post_mount command"
-	fi
-
-	return ${cryptfs_status}
-}
-
-# Run any post_mount commands for an individual mount
-#
-# Note: This relies on variables localized in dm-crypt-start.  This function
-# is quite different from the function by the same name in checkfs...
-dm-crypt-execute() {
-	local mount_point target
-
-	if [[ -n ${mount} && -n ${post_mount} ]] ; then
-		target=${mount}
-	else
-		return
-	fi
-
-	if ! /bin/cryptsetup status ${target} | egrep -q '\<active:'; then
-		ewarn "Skipping unmapped target ${target}"
-		cryptfs_status=1
-		return
-	fi
-
-	mount_point=$(grep "/dev/mapper/${target}" /proc/mounts | cut -d' ' -f2)
-	if [[ -z ${mount_point} ]] ; then
-		ewarn "Failed to find mount point for ${target}, skipping"
-		cryptfs_status=1
-	fi
-
-	if [[ -n ${post_mount} ]] ; then
-		ebegin "Running post_mount commands for target ${target}"
-		eval "${post_mount}" >/dev/null
-		eend $? || cryptfs_status=1
-	fi
+	# Start dm-crypt mappings, if any
+	start_addon dm-crypt
 }
 
 # vim:ts=4
