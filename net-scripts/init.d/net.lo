@@ -62,6 +62,13 @@ sort() {
 	LC_ALL=C /bin/sort "$@"
 }
 
+# We need to override the exit function as runscript.sh now checks
+# for it. We need it so we can mark the service as inactive ourselves.
+exit() {
+        unset exit
+        exit "$@"
+}
+
 # void module_class_wrap(char *module, char *provides)
 # Setup class wrappers: interface_up -> iproute2_up, for example
 module_class_wrap() {
