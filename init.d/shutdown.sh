@@ -3,3 +3,7 @@
 # $Header$
 
 /sbin/halt -ihdp
+
+# hmm, if the above failed, that's kind of odd ...
+# so let's force a halt
+/sbin/halt -f
