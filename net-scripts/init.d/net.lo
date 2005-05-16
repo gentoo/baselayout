@@ -69,6 +69,13 @@ go_background() {
 	exit 0
 }
 
+# We need to override the exit function as runscript.sh now checks
+# for it. We need it so we can mark the service as inactive ourselves.
+exit() {
+        unset exit
+        exit "$@"
+}
+
 # bool module_load_minimum(char *module)
 #
 # Does the minimum checking on a module - even when forcing
