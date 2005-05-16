@@ -3,3 +3,7 @@
 # $Header$
 
 /sbin/reboot -idp
+
+# hmm, if the above failed, that's kind of odd ...
+# so let's force a reboot
+/sbin/reboot -f
