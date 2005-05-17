@@ -292,7 +292,7 @@ svc_start() {
 			exit() {
 				eerror "DO NOT USE EXIT IN INIT.D SCRIPTS"
 				eerror "This IS a bug, please fix your broken init.d"
-				unset exit
+				unset -f exit
 				exit $@
 			}
 			start
