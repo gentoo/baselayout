@@ -48,19 +48,23 @@ try() {
 # Check that $1 exists ...
 check_statedir() {
 	[ -z "$1" ] && return 0
-	
-	if [ ! -d "$1" ]
-	then
-		if ! mkdir -p "$1" &>/dev/null
-		then
+
+	if [ ! -d "$1" ] ; then
+		if ! mkdir -p "$1" &>/dev/null ; then
 			splash "critical" &
 			echo
-			eerror "For Gentoo Linux to function properly, \"$1\" need to exist."
-			eerror "Please mount your root partition read/write, and execute:"
-			echo
-			eerror "  # mkdir -p $1"
-			echo; echo
-			/sbin/sulogin ${CONSOLE}
+			eerror "For Gentoo to function properly, \"$1\" needs to exist."
+			if [[ ${RC_FORCE_AUTO} == "yes" ]] ; then
+				eerror "Attempting to create \"$1\" for you ..."
+				mount -o remount,rw /
+				mkdir -p "$1"
+			else
+				eerror "Please mount your root partition read/write, and execute:"
+				echo
+				eerror "  # mkdir -p $1"
+				echo; echo
+				/sbin/sulogin ${CONSOLE}
+			fi
 			einfo "Unmounting filesystems"
 			/bin/mount -a -o remount,ro &>/dev/null
 			einfo "Rebooting"
