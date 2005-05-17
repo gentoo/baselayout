@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  17 May 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Make sure /dev is mounted with exec since many video drivers need to 
+    mmap() device nodes in there with exec access #92921 by Lachlan Pease.
+
   16 May 2005; Mike Frysinger <vapier@gentoo.org>:
 
     If halt/reboot failed, try to force it as a fallback.
