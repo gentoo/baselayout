@@ -260,7 +260,8 @@ then
 				else
 					mntcmd="ramfs"
 				fi
-				try mount -n -t ${mntcmd} udev /dev -o noexec,nosuid,mode=0755
+				# many video drivers require exec access in /dev #92921
+				try mount -n -t ${mntcmd} udev /dev -o exec,nosuid,mode=0755
 			fi
 			eend $?
 
