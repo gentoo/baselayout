@@ -38,6 +38,14 @@ RC_VOLUME_ORDER="raid evms lvm dm"
 
 RC_USE_FSTAB="no"
 
+# RC_FORCE_AUTO tries its best to prevent user interaction during the boot and 
+# shutdown process.  For example, fsck will automatically be run or volumes 
+# remounted to create proper directory trees.  This feature can be dangerous 
+# and is meant ONLY for headless machines where getting a physical console 
+# hooked up is a huge pita.
+
+RC_FORCE_AUTO="no"
+
 # Use this variable to control the /dev management behavior.
 #  auto   - let the scripts figure out what's best at boot
 #  devfs  - use devfs (requires sys-fs/devfsd)

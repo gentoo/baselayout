@@ -37,8 +37,16 @@ start() {
 			# Everything should be ok, so return a pass
 			return 0
 		else
-			eend 2 "Fsck could not correct all errors, manual repair needed"
-			/sbin/sulogin ${CONSOLE}
+			if [[ ${RC_FORCE_AUTO} == "yes" ]] ; then
+				eend 2 "Fsck could not correct all errors, rerunning"
+				fsck -C -T -R -A -a -y
+				retval=$?
+			fi
+
+			if [[ ${retval} -gt 3 ]] ; then
+				eend 2 "Fsck could not correct all errors, manual repair needed"
+				/sbin/sulogin ${CONSOLE}
+			fi
 		fi
 	fi
 }

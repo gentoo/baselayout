@@ -56,8 +56,13 @@ start() {
 			einfo "Rebooting"
 			/sbin/reboot -f
 		else
-			eend 2 "Filesystem couldn't be fixed :("
-			/sbin/sulogin ${CONSOLE}
+			if [[ ${RC_FORCE_AUTO} == "yes" ]] ; then
+				eend 2 "Rerunning fsck in force mode"
+				fsck -y -C -T -a /
+			else
+				eend 2 "Filesystem couldn't be fixed :("
+				/sbin/sulogin ${CONSOLE}
+			fi
 			einfo "Unmounting filesystems"
 			/bin/mount -a -o remount,ro &> /dev/null
 			einfo "Rebooting"
@@ -73,7 +78,9 @@ start() {
 		mount -n -o remount,rw / &> /dev/null
 		if [[ $? -ne 0 ]] ; then
 			eend 2 "Root filesystem could not be mounted read/write :("
-			/sbin/sulogin ${CONSOLE}
+			if [[ ${RC_FORCE_AUTO} != "yes" ]] ; then
+				/sbin/sulogin ${CONSOLE}
+			fi
 		else
 			eend 0
 		fi

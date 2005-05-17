@@ -5,6 +5,9 @@
 
     If halt/reboot failed, try to force it as a fallback.
 
+    Add RC_FORCE_AUTO setting so people can try to minimize amount of 
+    user interaction required for booting.
+
   15 May 2005; Roy Marples <uberlord@gentoo.org>:
 
     udhcpc and dhclient now select the best interface when one goes down
