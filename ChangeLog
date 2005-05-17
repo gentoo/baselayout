@@ -8,6 +8,8 @@
     Add RC_FORCE_AUTO setting so people can try to minimize amount of 
     user interaction required for booting.
 
+    Move nsswitch.conf to glibc.
+
   15 May 2005; Roy Marples <uberlord@gentoo.org>:
 
     udhcpc and dhclient now select the best interface when one goes down
