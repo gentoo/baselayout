@@ -8,9 +8,6 @@ RC_GOT_SERVICES="yes"
 
 [[ ${RC_GOT_FUNCTIONS} != "yes" ]] && source /sbin/functions.sh
 
-# Stop e* output if we're parallel
-[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && RC_QUIET_STDOUT="yes"
-
 if [[ ${RC_GOT_DEPTREE_INFO} != "yes" ]]; then
 	# Only try and update if we are root
 	if [[ ${EUID} == "0" ]] && ! /sbin/depscan.sh -u ; then
@@ -274,9 +271,11 @@ is_runlevel_stop() {
 	return 1
 }
 
+# void sevice_message([char *type] char *message)
+#
+# Print out a service message if we are on parallel
 service_message() {
-	[[ ${RC_PARALLEL_STARTUP} != "yes" || ${RC_QUIET_STDOUT} != "yes" ]] \
-	&& return
+	[[ ${RC_PARALLEL_STARTUP} != "yes" ]] && return
 
 	local cmd="einfo"
 	if [[ $1 == 1 || $1 == "error" || $1 == "eerror" ]]; then
@@ -284,9 +283,10 @@ service_message() {
 		shift
 	fi
 
+	local r="${RC_QUIET_STDOUT}"
 	RC_QUIET_STDOUT="no"
 	${cmd} "$@"
-	RC_QUIET_STDOUT="yes"
+	RC_QUIET_STDOUT="${r}"
 }
 
 # bool begin_service( service )
@@ -339,14 +339,16 @@ end_service()
 wait_service()
 {
 	local service="$1"
+	local fifo="${svcdir}/exclusive/${service}"
 	
 	[[ ${START_CRITICAL} == "yes" ]] && return 0
 	service_started "${service}" && return 0
+	[[ ! -e ${fifo} ]] && return 0
 
 	# This will block until the service fifo is touched
 	# Otheriwse we don't block
 	#cat "${svcdir}/exclusive/${service}" 2> /dev/null
-	local tmp=$( < "${svcdir}/exclusive/${service}" 2>/dev/null )
+	local tmp=$( < "${fifo}" 2>/dev/null )
 	local exitstatus=$( < "${svcdir}/exitcodes/${service}" )
 
 	return "${exitstatus}"
@@ -366,7 +368,6 @@ start_service() {
 	if is_fake_service "${service}" "${SOFTLEVEL}" ; then
 		mark_service_started "${service}"
 		splash "svc_started" "${service}" "0"
-		end_service "${service}"
 		return 0
 	fi
 

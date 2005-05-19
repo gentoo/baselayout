@@ -206,8 +206,10 @@ svc_stop() {
 		eerror "ERROR:  problems stopping dependent services."
 		eerror "        \"${myservice}\" is still up."
 	else
+		# Stop einfo/ebegin/eend from working as parallel messes us up
+		[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && RC_QUIET_STDOUT="yes"
 		# Now that deps are stopped, stop our service
-		stop
+		( stop )
 		retval=$?
 	fi
 
@@ -364,14 +366,20 @@ svc_start() {
 	elif [[ ${retval} -eq 0 ]] && ! broken "${myservice}" ; then
 		(
 		exit() {
+			RC_QUIET_STDOUT="no"
 			eerror "DO NOT USE EXIT IN INIT.D SCRIPTS"
 			eerror "This IS a bug, please fix your broken init.d"
 			unset -f exit
 			exit $@
 		}
+		# Stop einfo/ebegin/eend from working as parallel messes us up
+		[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && RC_QUIET_STDOUT="yes"
 		start
 		)
 		retval=$?
+		# If a service has been marked inactive, stop now as something
+		# may attempt to start it again later
+		service_inactive "${myservice}" && exit 0
 	fi
 
 	if [[ ${retval} -ne 0 ]] && is_runlevel_start ; then
