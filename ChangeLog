@@ -1,6 +1,15 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  19 May 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Merged Paul Pacheco's parallel startup #69854 and modules update
+    #55329 patches
+
+    If RC_PARALLEL_STARTUP==yes then we no longer output einfo/ebegin
+    messages as they don't line up on screen correctly - instead we output
+    service ${myservice} starting/started/stopping/stopped/failed
+
   17 May 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Make sure /dev is mounted with exec since many video drivers need to 

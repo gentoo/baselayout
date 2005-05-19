@@ -128,6 +128,8 @@ svc_stop() {
 	# Remove symlink to prevent recursion
 	mark_service_stopping "${myservice}"
 
+	service_message "Stopping service ${myservice}"
+
 	if in_runlevel "${myservice}" "${BOOTLEVEL}" && \
 	   [[ ${SOFTLEVEL} != "reboot" && ${SOFTLEVEL} != "shutdown" && \
 	      ${SOFTLEVEL} != "single" ]]
@@ -231,6 +233,12 @@ svc_stop() {
 		fi
 	fi
 
+	if [[ ${retval} == 0 ]]; then
+		service_message "Stopped service ${myservice}"
+	else
+		service_message "eerror" "FAILED to stop service ${myservice}!"
+	fi
+
 	return "${retval}"
 }
 
@@ -268,6 +276,8 @@ svc_start() {
 	# Link first to prevent possible recursion
 	mark_service_starting "${myservice}"
 
+	service_message "Starting service ${myservice}"
+
 	# On rc change, start all services "before $myservice" first
 	if is_runlevel_start ; then
 		startupservices="$(ineed "${myservice}") \
@@ -287,33 +297,58 @@ svc_start() {
 			for y in ${netservices} ; do
 				mynetservice=${y##*/}
 
-				if service_stopped "${mynetservice}" ; then
-					start_service "${mynetservice}"
+				start_service "${mynetservice}"
 
-					# A 'need' dependency is critical for startup
-					if [[ $? -ne 0 ]] && ineed -t "${myservice}" "${x}" >/dev/null ; then
-						# Only worry about a net.* service if we do not have one
-						# up and running already, or if RC_NET_STRICT_CHECKING
-						# is set ....
-						if ! is_net_up ; then
-							startfail="yes"
-						fi
+				# A 'need' dependency is critical for startup
+				if [[ $? != 0 ]] && ineed -t "${myservice}" "${x}" >/dev/null ; then
+					# Only worry about a net.* service if we do not have one
+					# up and running already, or if RC_NET_STRICT_CHECKING
+					# is set ....
+					if ! is_net_up ; then
+						startfail="yes"
 					fi
 				fi
-			done
-
+			done	
 		elif [[ ${x} != "net" ]] ; then
-			if service_stopped "${x}" ; then
-				start_service "${x}"
+			start_service "${x}"
 
-				# A 'need' dependacy is critical for startup
-				if [[ $? -ne 0 ]] && ineed -t "${myservice}" "${x}" >/dev/null ; then
-					startfail="yes"
-				fi
+			# A 'need' dependacy is critical for startup
+			if [[ $? != 0 ]] && ineed -t "${myservice}" "${x}" >/dev/null ; then
+				startfail="yes"
 			fi
 		fi
 	done
 
+	# wait for dependencies to finish
+	for x in ${startupservices} ; do
+		if [ "${x}" = "net" -a "${NETSERVICE}" != "yes" ] ; then
+			local netservices="$(dolisting "/etc/runlevels/${BOOTLEVEL}/net.*") \
+			$(dolisting "/etc/runlevels/${mylevel}/net.*")"
+
+			for y in ${netservices} ; do
+				mynetservice="${y##*/}"
+
+				wait_service "${mynetservice}"
+
+				# A 'need' dependency is critical for startup
+				if [ "$?" -ne 0 ] && ineed -t "${myservice}" "${x}" >/dev/null ; then
+					# Only worry about a net.* service if we do not have one
+					# up and running already, or if RC_NET_STRICT_CHECKING
+					# is set ....
+					if ! is_net_up ; then
+						startfail="yes"
+					fi
+				fi
+			done
+		elif [ "${x}" != "net" ] ; then
+			wait_service "${x}"
+			# A 'need' dependacy is critical for startup
+			if [ "$?" -ne 0 ] && ineed -t "${myservice}" "${x}" >/dev/null ; then
+				startfail="yes"
+			fi
+		fi
+	done
+	
 	if [[ ${startfail} == "yes" ]] ; then
 		eerror "ERROR:  Problem starting needed services."
 		eerror "        \"${myservice}\" was not started."
@@ -350,6 +385,12 @@ svc_start() {
 		mark_service_stopped "${myservice}"
 	elif [[ ${retval} -eq 0 ]] ; then
 		mark_service_started "${myservice}"
+	fi
+
+	if [[ ${retval} == 0 ]]; then
+		service_message "Service ${myservice} started OK"
+	else
+		service_message "eerror" "FAILED to start service ${myservice}!"
 	fi
 
 	return "${retval}"

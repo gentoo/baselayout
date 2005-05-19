@@ -423,6 +423,8 @@ then
 
 	splash "rc_init" "${argv1}"
 
+	export START_CRITICAL="yes"
+	
 	# We do not want to break compatibility, so we do not fully integrate
 	# these into /sbin/rc, but rather start them by hand ...
 	for x in ${CRITICAL_SERVICES}
@@ -446,6 +448,8 @@ then
 
 		splash "svc_started" "${x}" "0"
 	done
+
+	unset START_CRITICAL
 
 	# have to run this after /var/run is mounted rw #85304
 	if [ -x /sbin/irqbalance -a "$(get_KV)" -ge "$(KV_to_int '2.5.0')" ]

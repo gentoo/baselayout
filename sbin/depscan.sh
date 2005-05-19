@@ -5,41 +5,36 @@
 
 source /etc/init.d/functions.sh
 
-if [ ! -d "${svcdir}" ]
-then
-	if ! mkdir -p -m 0755 "${svcdir}" 2>/dev/null
-	then
-		eerror " Could not create needed directory '${svcdir}'!"
+if [[ ! -d ${svcdir} ]]; then
+	if ! mkdir -p -m 0755 "${svcdir}" 2>/dev/null ; then
+		eerror "Could not create needed directory '${svcdir}'!"
 	fi
 fi
 
-for x in softscripts snapshot options started starting inactive stopping
-do
-	if [ ! -d "${svcdir}/${x}" ]
-	then
-		if ! mkdir -p -m 0755 "${svcdir}/${x}" 2>/dev/null
-		then
-			eerror " Could not create needed directory '${svcdir}/${x}'!"
+for x in softscripts snapshot options \
+	started starting inactive stopping \
+	exclusive exitcodes ; do
+	if [[ ! -d "${svcdir}/${x}" ]]; then
+		if ! mkdir -p -m 0755 "${svcdir}/${x}" 2>/dev/null ; then
+			eerror "Could not create needed directory '${svcdir}/${x}'!"
 		fi
 	fi
 done
 
 # Only update if files have actually changed
 update=1
-if [ "$1" == "-u" ]
-then
+if [[ $1 == "-u" ]]; then
 	update=0
 	for config in /etc/conf.d /etc/init.d /etc/rc.conf
 	do
-		if [ "${config}" -nt "${svcdir}/depcache" ]
-		then
+		if [[ ${config} -nt "${svcdir}/depcache" ]]; then
 			update=1
 			break
 		fi
 	done
 	shift
 fi
-[ ${update} -eq 0 ] && exit 0
+[[ ${update} == 0 ]] && exit 0
 
 ebegin "Caching service dependencies"
 
@@ -71,6 +66,5 @@ touch -m "${svcdir}"/dep{cache,tree}
 eend ${retval} "Failed to cache service dependencies"
 
 exit ${retval}
-
 
 # vim:ts=4

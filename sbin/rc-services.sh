@@ -271,26 +271,123 @@ is_runlevel_stop() {
 	return 1
 }
 
+service_message() {
+	[[ ${RC_PARALLEL_STARTUP} != "yes" || ${RC_QUIET_STDOUT} != "yes" ]] \
+	&& return
+
+	local cmd="einfo"
+	if [[ $1 == 1 || $1 == "error" || $1 == "eerror" ]]; then
+		cmd="eerror"
+		shift
+	fi
+
+	RC_QUIET_STDOUT="no"
+	${cmd} "$@"
+	RC_QUIET_STDOUT="yes"
+}
+
+# bool begin_service( service )
+#
+#   atomically marks the service as being executed
+#   use like this:
+#
+#   if begin_service service ; then
+#         whatever is in here can only be executed by one process
+#         end_service service
+#   fi
+begin_service()
+{
+	[[ {$START_CRITICAL} == "yes" ]] && return 0
+
+	mkfifo "${svcdir}/exclusive/${service}" 2> /dev/null
+	return $?
+}
+
+# void end_exclusive(service, exitcode)
+#
+#   stops executing a exclusive region and
+#   wakes up anybody who is waiting for the exclusive region
+#
+end_service()
+{
+	local service="$1" exitstatus="$2"
+
+	# if we are doing critical services, there is no fifo
+	[[ "${START_CRITICAL}" == "yes" ]] && return
+
+	if [[ -n ${exitstatus} ]] ; then
+		echo "${exitstatus}" > "${svcdir}/exitcodes/${service}"
+	fi
+
+	# move the fifo to a unique name so no-one is waiting for it
+	if [[ -e "${svcdir}/exclusive/${service}" ]]; then
+		local tempname="${svcdir}/exclusive/${service}.$$"
+		mv -f "${svcdir}/exclusive/${service}" "${tempname}"
+
+		# wake up anybody that was waiting for the fifo
+		touch "${tempname}"
+
+		# We dont need the fifo anymore
+		rm -f "${tempname}"
+	fi
+}
+
+# int wait_exclusive(service)
+wait_service()
+{
+	local service="$1"
+	
+	[[ ${START_CRITICAL} == "yes" ]] && return 0
+	service_started "${service}" && return 0
+
+	# This will block until the service fifo is touched
+	# Otheriwse we don't block
+	#cat "${svcdir}/exclusive/${service}" 2> /dev/null
+	local tmp=$( < "${svcdir}/exclusive/${service}" 2>/dev/null )
+	local exitstatus=$( < "${svcdir}/exitcodes/${service}" )
+
+	return "${exitstatus}"
+}
+
 # int start_service(service)
 #
 #   Start 'service' if it is not already running.
 #
 start_service() {
-	[[ -z $1 ]] && return 1
-	! service_stopped "$1" && return 0
+	local service="$1"
+	[[ -z ${service} ]] && return 1
 
-	splash "svc_start" "$1"
-	
-	if is_fake_service "$1" "${SOFTLEVEL}" ; then
-		mark_service_started "$1"
-		splash "svc_started" "$1" "0"
+	! service_stopped "${service}" && return 0
+
+	splash "svc_start" "${service}"
+	if is_fake_service "${service}" "${SOFTLEVEL}" ; then
+		mark_service_started "${service}"
+		splash "svc_started" "${service}" "0"
+		end_service "${service}"
 		return 0
 	fi
-	
-	(. /sbin/runscript.sh "/etc/init.d/$1" start)
-	local retval="$?"
-	splash "svc_started" "$1" "${retval}"
-	return "${retval}"
+
+	begin_service "${service}"
+	if [[ ${RC_PARALLEL_STARTUP} != "yes" \
+		|| ${START_CRITICAL} == "yes" ]] ; then
+
+		# if we can not start the services in parallel
+		# then just start it and return the exit status
+		(. /sbin/runscript.sh "/etc/init.d/${service}" start)
+		retval="$?"
+		splash "svc_started" "${service}" "${retval}"
+		end_service "${service}" "${retval}"
+		return "${retval}"
+	else
+		# if parallel startup is allowed, start it in background
+		(
+		(. /sbin/runscript.sh "/etc/init.d/${service}" start)
+		retval="$?"
+		splash "svc_started" "${service}" "${retval}"
+		end_service "${service}" "${retval}"
+		) &
+		return 0
+	fi
 }
 
 # int stop_service(service)
@@ -316,6 +413,7 @@ stop_service() {
 	(. /sbin/runscript.sh "/etc/init.d/$1" stop)
 	local retval="$?"
 	splash "svc_stopped" "$1" "${retval}"
+
 	return "${retval}"
 }
 
@@ -348,6 +446,7 @@ mark_service_started() {
 	[[ -f "${svcdir}/inactive/$1" ]] && rm -f "${svcdir}/inactive/$1"
 	[[ -f "${svcdir}/stopping/$1" ]] && rm -f "${svcdir}/stopping/$1"
 
+	echo "0" > "${svcdir}/exitcodes/$1"
 	return "${retval}"
 }
 
@@ -359,8 +458,10 @@ mark_service_inactive() {
 	[[ -z $1 ]] && return 1
 
 	ln -snf "/etc/init.d/$1" "${svcdir}/inactive/$1"
+	local retval="$?"
 
-	return $?
+	echo "0" > "${svcdir}/exitcodes/$1"
+	return "${retval}"
 }
 
 # bool mark_service_stopping(service)
@@ -529,38 +630,12 @@ is_net_up() {
 #   Schedule 'service' for startup, in parallel if possible.
 #
 schedule_service_startup() {
-	if [[ ${RC_PARALLEL_STARTUP} != "yes" ]]; then
-		start_service "$1"
-		return 0
+	local service="$1"
+
+	if ! iparallel "${service}"; then
+		wait
 	fi
-
-	local current_job= count="$( jobs | grep -c "Running" )"
-
-	set -m +b
-
-	if [[ ${count} -gt 0 ]]; then
-		# Wait until we have only one service running
-		while [[ ${count} -gt 1 ]]; do
-			count="$( jobs | grep -c "Running" )"
-		done
-
-		current_job="$(jobs | awk '/Running/ { print $4}')"
-
-		# Wait if we cannot start this service with the already running
-		# one (running one might start this one ...).
-		query_before "$1" "${current_job}" && wait
-	fi
-
-	if iparallel "$1"
-	then
-		eval start_service "$1" \&
-	else
-		# Do not start with any service running if we cannot start
-		# this service in parallel ...
-#		wait
-		
-		start_service "$1"
-	fi
+	start_service "${service}"
 
 	return 0
 }
