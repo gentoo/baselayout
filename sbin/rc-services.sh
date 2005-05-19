@@ -8,6 +8,9 @@ RC_GOT_SERVICES="yes"
 
 [[ ${RC_GOT_FUNCTIONS} != "yes" ]] && source /sbin/functions.sh
 
+# Stop e* output if we're parallel
+[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && RC_QUIET_STDOUT="yes"
+
 if [[ ${RC_GOT_DEPTREE_INFO} != "yes" ]]; then
 	# Only try and update if we are root
 	if [[ ${EUID} == "0" ]] && ! /sbin/depscan.sh -u ; then
