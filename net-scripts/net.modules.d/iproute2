@@ -234,6 +234,10 @@ iproute2_add_address() {
 	[[ ${iface} == "lo" && " ${config[@]} " != *' scope '* ]] \
 		&& config=( "${config[@]}" "scope host" )
 
+        # Work out a broadcast if none supplied
+	[[ ${config[@]} != *' brd '* && ${config[@]} != *' broadcast '* ]] \
+	    && config=( "${config[@]}" "brd +" )
+
 	# Make sure interface is marked UP
 	# This is required for IPv6 addresses
 	iproute2_up ${iface}

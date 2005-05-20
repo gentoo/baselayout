@@ -319,6 +319,13 @@ ifconfig_add_address() {
 		# Support iproute2 style config where possible
 		config=( "${config[@]//brd/broadcast}" )
 		config=( "${config[@]//peer/pointtopoint}" )
+
+		local cidr="${config[0]##*/}"
+		if [[ -n ${cidr} ]]; then
+		    # ifconfig is very silly with CIDR addresses
+		    local nm=$( cidr2netmask "${cidr}" )
+		    config[0]="${config[0]%%/*} netmask ${nm}"
+		fi
 	fi
 
 	# Some kernels like to apply lo with an address when they are brought up
