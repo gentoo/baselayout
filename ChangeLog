@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  20 May 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fixup sbin/{depscan.sh,modules-update} to use is_older_than() for mtime
+    logic.  Some small tweaks regarding 2.6 systems and modules-update.
+
   19 May 2005; Roy Marples <uberlord@gentoo.org>:
 
     Merged Paul Pacheco's parallel startup #69854 and modules update

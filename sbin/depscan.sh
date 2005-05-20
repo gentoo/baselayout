@@ -14,7 +14,7 @@ fi
 for x in softscripts snapshot options \
 	started starting inactive stopping failed \
 	exclusive exitcodes ; do
-	if [[ ! -d "${svcdir}/${x}" ]]; then
+	if [[ ! -d "${svcdir}/${x}" ]] ; then
 		if ! mkdir -p -m 0755 "${svcdir}/${x}" 2>/dev/null ; then
 			eerror "Could not create needed directory '${svcdir}/${x}'!"
 		fi
@@ -27,7 +27,7 @@ if [[ $1 == "-u" ]]; then
 	update=0
 	for config in /etc/conf.d /etc/init.d /etc/rc.conf
 	do
-		if [[ ${config} -nt "${svcdir}/depcache" ]]; then
+		if is_older_than "${svcdir}/depcache" ${config} ; then
 			update=1
 			break
 		fi
