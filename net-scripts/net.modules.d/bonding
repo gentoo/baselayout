@@ -1,3 +1,4 @@
+#!/bin/bash
 # Copyright (c) 2004-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
@@ -8,83 +9,83 @@
 #
 # Returns a string to change module definition for starting up
 bonding_provides() {
-	echo "bonding"
+    echo "bonding"
 }
 
 # void bonding_depend(void)
 #
 # Sets up the dependancies for the module
 bonding_depend() {
-	after interface
-	before vlan dhcp
+    after interface
+    before vlan dhcp
 }
 
 # bool bonding_check_installed(void)
 #
 # Returns 1 if ifenslave is installed, otherwise 0
 bonding_check_installed() {
-	[[ -x /sbin/ifenslave ]] && return 0
-	${1:-false} && eerror "For link aggregation (bonding) support, emerge net-misc/ifenslave"
-	return 1
+    [[ -x /sbin/ifenslave ]] && return 0
+    ${1:-false} && eerror "For link aggregation (bonding) support, emerge net-misc/ifenslave"
+    return 1
 }
 
 # bool bonding_check_depends(void)
 #
 # Checks to see if we have the needed functions
 bonding_check_depends() {
-	local f
+    local f
 
-	for f in interface_exists interface_up interface_down interface_del_addresses; do
-		[[ $( type -t ${f} ) == "function" ]] && continue
-		eerror "bonding: missing required function ${f}\n"
-		return 1
-	done
+    for f in interface_exists interface_up interface_down interface_del_addresses; do
+	[[ $( type -t ${f} ) == "function" ]] && continue
+	eerror "bonding: missing required function ${f}\n"
+	return 1
+    done
 
-	return 0
+    return 0
 }
 
 # bool bonding_post_start(char *iface)
 #
 # Bonds the interface
 bonding_pre_start() {
-	local iface=$1 slaves s ifvar=$( bash_variable $1 )
+    local iface=$1 slaves s ifvar=$( bash_variable $1 )
 
-	eval slaves=\"\$\{slaves_${ifvar}\[@\]\}\"
-	[[ -z ${slaves} ]] && return 0
+    eval slaves=\"\$\{slaves_${ifvar}\[@\]\}\"
+    [[ -z ${slaves} ]] && return 0
 
-	interface_exists ${iface} true || return 1
+    interface_exists ${iface} true || return 1
 
-	if [[ ! -f /proc/net/bonding/${iface} ]]; then
-		eerror "${iface} is not capable of bonding"
-		return 1
-	fi
+    if [[ ! -f /proc/net/bonding/${iface} ]]; then
+	eerror "${iface} is not capable of bonding"
+	return 1
+    fi
 
-	ebegin "Adding slaves to ${iface}"
-	eindent
-	einfo "${slaves}"
-	
-	# Check that our slaves exist
-	for s in ${slaves}; do
-		interface_exists ${s} && continue
-		ewarn "interface ${s} does not exist"
-		return 1
-	done
-	
-	# Must force the slaves to a particular state before adding them
-	for s in ${slaves}; do
-		interface_del_addresses ${s}
-		interface_up ${s}
-	done
+    ebegin "Adding slaves to ${iface}"
+    eindent
+    einfo "${slaves}"
 
-	# now force the master to up
-	interface_up ${iface}
+    # Check that our slaves exist
+    for s in ${slaves}; do
+	interface_exists ${s} && continue
+	ewarn "interface ${s} does not exist"
+	return 1
+    done
 
-	# finally add in slaves
-	eoutdent
-	/sbin/ifenslave ${iface} ${slaves} >${devnull}
-	eend $?
+    # Must force the slaves to a particular state before adding them
+    for s in ${slaves}; do
+	interface_del_addresses ${s}
+	interface_up ${s}
+    done
 
-	return 0 #important
+    # now force the master to up
+    interface_up ${iface}
+
+    # finally add in slaves
+    eoutdent
+    /sbin/ifenslave ${iface} ${slaves} >${devnull}
+    eend $?
+
+    return 0 #important
 }
 
 # bool bonding_pre_stop(void)
@@ -92,32 +93,32 @@ bonding_pre_start() {
 #
 # Always returns 0 (true) 
 bonding_pre_stop() {
-	local iface=$1 slaves s
+    local iface=$1 slaves s
 
-	bonding_check_installed || return 0
+    bonding_check_installed || return 0
 
-	# return silently if this is not a bonding interface
-	[[ ! -f /proc/net/bonding/${iface} ]] && return 0
+    # return silently if this is not a bonding interface
+    [[ ! -f /proc/net/bonding/${iface} ]] && return 0
 
-	# don't trust the config, get the active list instead
-	slaves=$( sed -n -e 's/^Slave Interface: //p' /proc/net/bonding/${iface} )
-	[[ -z ${slaves} ]] && return 0
+    # don't trust the config, get the active list instead
+    slaves=$( sed -n -e 's/^Slave Interface: //p' /proc/net/bonding/${iface} )
+    [[ -z ${slaves} ]] && return 0
 
-	# remove all slaves
-	ebegin "Removing slaves from ${iface}"
-	eindent
-	einfo "${slaves}"
-	eoutdent
-	/sbin/ifenslave -d ${iface} ${slaves} &>${devnull}
+    # remove all slaves
+    ebegin "Removing slaves from ${iface}"
+    eindent
+    einfo "${slaves}"
+    eoutdent
+    /sbin/ifenslave -d ${iface} ${slaves} &>${devnull}
 
-	# reset all slaves
-	for s in ${slaves}; do
-		if interface_exists ${s} ; then
-			interface_del_addresses ${s}
-			interface_down ${s}
-		fi
-	done
+    # reset all slaves
+    for s in ${slaves}; do
+	if interface_exists ${s} ; then
+	    interface_del_addresses ${s}
+	    interface_down ${s}
+	fi
+    done
 
-	eend 0
-	return 0
+    eend 0
+    return 0
 }

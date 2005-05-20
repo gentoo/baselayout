@@ -1,3 +1,4 @@
+#!/bin/bash
 # Copyright (c) 2004-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
@@ -7,45 +8,45 @@
 # Fix any potential localisation problems
 # Note that LC_ALL trumps LC_anything_else according to locale(7)
 pump() {
-	LC_ALL=C /sbin/pump "$@"
+    LC_ALL=C /sbin/pump "$@"
 }
 
 # char* pump_provides(void)
 #
 # Returns a string to change module definition for starting up
 pump_provides() {
-	echo "dhcp"
+    echo "dhcp"
 }
 
 # void pump_depend(void)
 #
 # Sets up the dependancies for the module
 pump_depend() {
-	after interface
+    after interface
 }
 
 # bool pump_check_installed(void)
 #
 # Returns 1 if pump is installed, otherwise 0
 pump_check_installed() {
-	[[ -x /sbin/pump ]] && return 0
-	${1:-false} && eerror "For DHCP (pump) support, emerge net-misc/pump"
-	return 1
+    [[ -x /sbin/pump ]] && return 0
+    ${1:-false} && eerror "For DHCP (pump) support, emerge net-misc/pump"
+    return 1
 }
 
 # bool pump_check_depends(void)
 #
 # Checks to see if we have the needed functions
 pump_check_depends() {
-	local f
+    local f
 
-	for f in interface_exists interface_get_address; do
-		[[ $( type -t ${f} ) == "function" ]] && continue
-		eerror "pump: missing required function ${f}\n"
-		return 1
-	done
+    for f in interface_exists interface_get_address; do
+	[[ $( type -t ${f} ) == "function" ]] && continue
+	eerror "pump: missing required function ${f}\n"
+	return 1
+    done
 
-	return 0
+    return 0
 }
 
 # char* pump_get_vars(char *interface)
@@ -53,7 +54,7 @@ pump_check_depends() {
 # Returns a string spaced with possible user set
 # configuration variables
 pump_get_vars() {
-	echo "pump_$1 dhcp_$1"
+    echo "pump_$1 dhcp_$1"
 }
 
 # bool pump_stop(char *iface)
@@ -62,26 +63,26 @@ pump_get_vars() {
 # Return 0 if pump is not running or we stop it successfully
 # Otherwise 1
 pump_stop() {
-	local iface=$1 count e
-	
-	pump_check_installed || return 0
+    local iface=$1 count e
 
-	# We check for a pump process first as querying for status
-	# causes pump to spawn a process
-	pidof pump &>/dev/null || return 0
+    pump_check_installed || return 0
 
-	e=$( pump --status --interface ${iface} 2>/dev/null | grep ${iface} )
-	[[ -z ${e} ]] && return 1
-	
-	ebegin "Stopping pump on ${iface}"
-	for ((count = 0; count < 9; count = count + 1)); do
-		e=$( pump --release --interface ${iface} 2>/dev/null )
-		[[ -z ${e} ]] && break
-		sleep 1
-	done
-	[[ ${count} -lt 9 ]]
-	eend $? "Timed out"
-	return $?
+    # We check for a pump process first as querying for status
+    # causes pump to spawn a process
+    pidof pump &>/dev/null || return 0
+
+    e=$( pump --status --interface ${iface} 2>/dev/null | grep ${iface} )
+    [[ -z ${e} ]] && return 1
+
+    ebegin "Stopping pump on ${iface}"
+    for ((count = 0; count < 9; count = count + 1)); do
+	e=$( pump --release --interface ${iface} 2>/dev/null )
+	[[ -z ${e} ]] && break
+	sleep 1
+    done
+    [[ ${count} -lt 9 ]]
+    eend $? "Timed out"
+    return $?
 }
 
 # bool pump_start(char *iface)
@@ -91,38 +92,38 @@ pump_stop() {
 # Returns 0 (true) when a dhcp address is obtained, otherwise
 # the return value from pump
 pump_start() {
-	local iface=$1 opts hostname dhcp ifvar=$( bash_variable $1 )
+    local iface=$1 opts hostname dhcp ifvar=$( bash_variable $1 )
 
-	interface_exists ${iface} true || return 1
+    interface_exists ${iface} true || return 1
 
-	eval opts=\"\$\{pump_${ifvar}\}\"
+    eval opts=\"\$\{pump_${ifvar}\}\"
 
-	# Map some generic options to pump
-	eval dhcp=\" \$\{dhcp_${ifvar}\} \"
-	[[ ${dhcp} == *' nodns '* ]] && opts="${opts} --no-dns"
+    # Map some generic options to pump
+    eval dhcp=\" \$\{dhcp_${ifvar}\} \"
+    [[ ${dhcp} == *' nodns '* ]] && opts="${opts} --no-dns"
 
-	# We transmit the hostname by default
-	if [[ ${opts} != *'-h '* && ${opts} != '*--hostname='* ]]; then
-		hostname=$( hostname )
-		[[ -n ${hostname} && ${hostname} != "(none)" && ${hostname} != localhost ]] \
-			&& opts="--hostname=${hostname} ${opts}"
-	fi
+    # We transmit the hostname by default
+    if [[ ${opts} != *'-h '* && ${opts} != '*--hostname='* ]]; then
+	hostname=$( hostname )
+	[[ -n ${hostname} && ${hostname} != "(none)" && ${hostname} != localhost ]] \
+	&& opts="--hostname=${hostname} ${opts}"
+    fi
 
-	# Bring up DHCP for this interface (or alias)
-	ebegin "Running pump"
-	pump ${opts} --win-client-ident --interface ${iface}
-	eend $? || return $?
+    # Bring up DHCP for this interface (or alias)
+    ebegin "Running pump"
+    pump ${opts} --win-client-ident --interface ${iface}
+    eend $? || return $?
 
-	# pump succeeded, show address retrieved
-	local addr=$( interface_get_address ${iface} )
-	einfo "${iface} received address ${addr}"
+    # pump succeeded, show address retrieved
+    local addr=$( interface_get_address ${iface} )
+    einfo "${iface} received address ${addr}"
 
-	eval peer=\"\$\{dhcp_ntp_${iface}\}\"
-	[[ -z ${peer} ]] && eval peer=\"\$\{dhcp_ntp\}\"
-	if [[ ${peer} != "no" ]]; then
-		eval ntp_servers_${ifvar}=$( pump -i ${iface} --status | sed -n -e 's/^.*Ntpservers: //p' )
-		system_ntp
-	fi
+    eval peer=\"\$\{dhcp_ntp_${iface}\}\"
+    [[ -z ${peer} ]] && eval peer=\"\$\{dhcp_ntp\}\"
+    if [[ ${peer} != "no" ]]; then
+	eval ntp_servers_${ifvar}=$( pump -i ${iface} --status | sed -n -e 's/^.*Ntpservers: //p' )
+	system_ntp
+    fi
 
-	return 0
+    return 0
 }

@@ -1,3 +1,4 @@
+#!/bin/bash
 # Copyright (c) 2004-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
@@ -8,37 +9,37 @@
 #
 # Returns a string to change module definition for starting up
 iptunnel_provides() {
-	echo "iptunnel"
+    echo "iptunnel"
 }
 
 # void iptunnel_depend(void)
 #
 # Sets up the dependancies for the module
 iptunnel_depend() {
-	after wireless
-	before interface
+    after wireless
+    before interface
 }
 
 # bool iptunnel_check_installed(void)
 #
 # Tunnelling is provided by the interface
 iptunnel_check_installed() {
-	return 0
+    return 0
 }
 
 # bool iptunnel_check_depends(void)
 #
 # Checks to see if we have the needed functions
 iptunnel_check_depends() {
-	local f
+    local f
 
-	for f in interface_exists interface_tunnel; do
-		[[ $( type -t ${f} ) == "function" ]] && continue
-		eerror "iptunnel: missing required function ${f}\n"
-		return 1
-	done
+    for f in interface_exists interface_tunnel; do
+	[[ $( type -t ${f} ) == "function" ]] && continue
+	eerror "iptunnel: missing required function ${f}\n"
+	return 1
+    done
 
-	return 0
+    return 0
 }
 
 # char* iptunnel_get_vars(char *interface)
@@ -46,23 +47,23 @@ iptunnel_check_depends() {
 # Returns a string spaced with possible user set
 # configuration variables
 iptunnel_get_vars() {
-	echo "iptunnel_$1"
+    echo "iptunnel_$1"
 }
 
 # bool iptunnel_pre_start(char *iface)
 #
 # Create the device, give it the right perms
 iptunnel_pre_start() {
-	local iface=$1 opts ifvar=$( bash_variable $1 )
+    local iface=$1 opts ifvar=$( bash_variable $1 )
 
-	# Get our options
-	eval opts=\"\$\{iptunnel_${ifvar}\}\"
-	[[ -z ${opts} ]] && return 0
+    # Get our options
+    eval opts=\"\$\{iptunnel_${ifvar}\}\"
+    [[ -z ${opts} ]] && return 0
 
-	ebegin "Creating tunnel ${iface}"
-	interface_tunnel add ${iface} ${opts}
-	eend $?
-	return $?
+    ebegin "Creating tunnel ${iface}"
+    interface_tunnel add ${iface} ${opts}
+    eend $?
+    return $?
 
 }
 
@@ -70,13 +71,13 @@ iptunnel_pre_start() {
 #
 # Removes the device
 iptunnel_stop() {
-	local iface=$1
-	
-	interface_exists ${iface} || return 0
-	[[ -z $( interface_tunnel show ${iface} 2>/dev/null ) ]] && return 0
-	
-	ebegin "Destroying tunnel ${iface}"
-	interface_tunnel del ${iface}
-	eend $?
-	return $?
+    local iface=$1
+
+    interface_exists ${iface} || return 0
+    [[ -z $( interface_tunnel show ${iface} 2>/dev/null ) ]] && return 0
+
+    ebegin "Destroying tunnel ${iface}"
+    interface_tunnel del ${iface}
+    eend $?
+    return $?
 }

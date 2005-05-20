@@ -211,6 +211,10 @@ svc_stop() {
 		# Now that deps are stopped, stop our service
 		( stop )
 		retval=$?
+
+		# If a service has been marked inactive, exit now as something
+		# may attempt to start it again later
+		service_inactive "${myservice}" && return 0
 	fi
 
 	if [[ ${retval} -ne 0 ]] ; then
@@ -377,9 +381,9 @@ svc_start() {
 		start
 		)
 		retval=$?
-		# If a service has been marked inactive, stop now as something
+		# If a service has been marked inactive, exit now as something
 		# may attempt to start it again later
-		service_inactive "${myservice}" && exit 0
+		service_inactive "${myservice}" && return 0
 	fi
 
 	if [[ ${retval} -ne 0 ]] && is_runlevel_start ; then

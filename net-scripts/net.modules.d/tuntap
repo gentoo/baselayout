@@ -1,3 +1,4 @@
+#!/bin/bash
 # Copyright (c) 2004-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
@@ -7,46 +8,46 @@
 # Fix any potential localisation problems
 # Note that LC_ALL trumps LC_anything_else according to locale(7)
 tunctl() {
-	LC_ALL=C /usr/bin/tunctl "$@"
+    LC_ALL=C /usr/bin/tunctl "$@"
 }
 
 # char* tuntap_provides(void)
 #
 # Returns a string to change module definition for starting up
 tuntap_provides() {
-	echo "tuntap"
+    echo "tuntap"
 }
 
 # void tuntap_depend(void)
 #
 # Sets up the dependancies for the module
 tuntap_depend() {
-	after interface
-	before dhcp
+    after interface
+    before dhcp
 }
 
 # bool tuntap_check_installed(void)
 #
 # Returns 1 if tuntap is installed, otherwise 0
 tuntap_check_installed() {
-	[[ -x /usr/bin/tunctl ]] && return 0
-	${1:-false} && eerror "For TunTap support, emerge sys-apps/usermode-utilities"
-	return 1
+    [[ -x /usr/bin/tunctl ]] && return 0
+    ${1:-false} && eerror "For TunTap support, emerge sys-apps/usermode-utilities"
+    return 1
 }
 
 # bool tuntap_check_depends(void)
 #
 # Checks to see if we have the needed functions
 tuntap_check_depends() {
-	local f
+    local f
 
-	for f in interface_exists interface_type; do
-		[[ $( type -t ${f} ) == "function" ]] && continue
-		eerror "tuntap: missing required function ${f}\n"
-		return 1
-	done
+    for f in interface_exists interface_type; do
+	[[ $( type -t ${f} ) == "function" ]] && continue
+	eerror "tuntap: missing required function ${f}\n"
+	return 1
+    done
 
-	return 0
+    return 0
 }
 
 # bool tuntap_check_kernel(void)
@@ -54,11 +55,11 @@ tuntap_check_depends() {
 # Checks to see if the tun is present - if not try and load it
 # Returns 1 if there is a problem
 tuntap_check_kernel() {
-	[[ -a /dev/net/tun ]] && return 0
-	/sbin/modprobe tun && sleep 1
-	[[ -a /dev/net/tun ]] && return 0
-	eerror "TUN/TAP support is not present in this kernel"
-	return 1
+    [[ -a /dev/net/tun ]] && return 0
+    /sbin/modprobe tun && sleep 1
+    [[ -a /dev/net/tun ]] && return 0
+    eerror "TUN/TAP support is not present in this kernel"
+    return 1
 }
 
 # char* tuntap_get_vars(char *interface)
@@ -66,48 +67,48 @@ tuntap_check_kernel() {
 # Returns a string spaced with possible user set
 # configuration variables
 tuntap_get_vars() {
-	echo "tunctl_$1"
+    echo "tunctl_$1"
 }
 
 # bool tuntap_pre_start(char *iface)
 #
 # Create the device, give it the right perms
 tuntap_pre_start() {
-	local iface=$1 opts ifvar=$( bash_variable $1 )
-	local itype=$( interface_type ${iface} )
+    local iface=$1 opts ifvar=$( bash_variable $1 )
+    local itype=$( interface_type ${iface} )
 
-	# Check that we are a valid tun/tap interface
-	# NOTE - the name can be anything as we define it
-	# but for simplicity in the config we require either
-	# tun or tap
-	[[ ${itype} != "tun" && ${itype} != "tap" ]] && return 0
+    # Check that we are a valid tun/tap interface
+    # NOTE - the name can be anything as we define it
+    # but for simplicity in the config we require either
+    # tun or tap
+    [[ ${itype} != "tun" && ${itype} != "tap" ]] && return 0
 
-	tuntap_check_kernel || return 1
+    tuntap_check_kernel || return 1
 
-	# Get our options
-	eval opts=\"\$\{tunctl_${ifvar}\}\"
+    # Get our options
+    eval opts=\"\$\{tunctl_${ifvar}\}\"
 
-	ebegin "Creating Tun/Tap interface ${iface}"
-	tunctl ${opts} -t ${iface} &>${devnull}
-	eend $? || return 1
+    ebegin "Creating Tun/Tap interface ${iface}"
+    tunctl ${opts} -t ${iface} &>${devnull}
+    eend $? || return 1
 
-	return 0
+    return 0
 }
 
 # bool tuntap_stop(char *iface)
 #
 # Removes the device
 tuntap_stop() {
-	local iface=$1
-	
-	tuntap_check_installed || return 0
-	interface_exists ${iface} || return 0
+    local iface=$1
 
-	# tunctl doesn't always error on on tun/tap
-	# interfaces (mainly aliases, etc)
-	if tunctl -d ${iface} &>/dev/null ; then
-		interface_exists ${iface} || einfo "Destroyed Tun/Tap interface ${iface}"
-	fi
+    tuntap_check_installed || return 0
+    interface_exists ${iface} || return 0
 
-	return 0 
+    # tunctl doesn't always error on on tun/tap
+    # interfaces (mainly aliases, etc)
+    if tunctl -d ${iface} &>/dev/null ; then
+	interface_exists ${iface} || einfo "Destroyed Tun/Tap interface ${iface}"
+    fi
+
+    return 0 
 }

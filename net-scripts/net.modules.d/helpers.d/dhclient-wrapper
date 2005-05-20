@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Copyright (c) 2004-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
@@ -9,15 +9,15 @@
 # over to udhcpc style ones and call those scripts!
 
 case "${reason}" in
-	BOUND|REBOOT|REBIND) action="bound" ;;
-	RENEW) action="renew" ;;
-	RELEASE|PREINIT|FAIL|EXPIRE|TIMEOUT) action="deconfig" ;;
-	MEDIUM) exit 0 ;;
+    BOUND|REBOOT|REBIND) action="bound" ;;
+    RENEW) action="renew" ;;
+    RELEASE|PREINIT|FAIL|EXPIRE|TIMEOUT) action="deconfig" ;;
+    MEDIUM) exit 0 ;;
 esac
 
 if [[ -z ${action} ]]; then
-	echo "dhclient sent an unknown action ${reason}!" >&2
-	exit 1
+    echo "dhclient sent an unknown action ${reason}!" >&2
+    exit 1
 fi
 
 export ip="${new_ip_address}"

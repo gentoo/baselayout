@@ -6,6 +6,9 @@
     fix ifconfig to understand CIDR addresses - bug #93237
     iproute2 now works out broadcast addresses
 
+    added #!/bin/bash or #!/bin/sh to modules and helpers so they now get
+    nice syntax highlighting and indenting
+
   20 May 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     Fixup sbin/{depscan.sh,modules-update} to use is_older_than() for mtime

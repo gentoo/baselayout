@@ -1,3 +1,4 @@
+#!/bin/bash
 # Copyright (c) 2004-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
@@ -7,45 +8,45 @@
 # Fix any potential localisation problems
 # Note that LC_ALL trumps LC_anything_else according to locale(7)
 dhclient() {
-	LC_ALL=C /sbin/dhclient "$@"
+    LC_ALL=C /sbin/dhclient "$@"
 }
 
 # char* dhclient_provides(void)
 #
 # Returns a string to change module definition for starting up
 dhclient_provides() {
-	echo "dhcp"
+    echo "dhcp"
 }
 
 # void dhclient_depend(void)
 #
 # Sets up the dependancies for the module
 dhclient_depend() {
-	after interface
+    after interface
 }
 
 # bool dhclient_check_installed(void)
 #
 # Returns 1 if dhclient is installed, otherwise 0
 dhclient_check_installed() {
-	[[ -x /sbin/dhclient ]] && return 0
-	${1:-false} && eerror "For DHCP (dhclient) support, emerge net-misc/dhcp"
-	return 1
+    [[ -x /sbin/dhclient ]] && return 0
+    ${1:-false} && eerror "For DHCP (dhclient) support, emerge net-misc/dhcp"
+    return 1
 }
 
 # bool dhclient_check_depends(void)
 #
 # Checks to see if we have the needed functions
 dhclient_check_depends() {
-	local f
+    local f
 
-	for f in interface_exists interface_get_address; do
-		[[ $( type -t ${f} ) == "function" ]] && continue
-		eerror "dhclient: missing required function ${f}\n"
-		return 1
-	done
+    for f in interface_exists interface_get_address; do
+	[[ $( type -t ${f} ) == "function" ]] && continue
+	eerror "dhclient: missing required function ${f}\n"
+	return 1
+    done
 
-	return 0
+    return 0
 }
 
 # char* dhclient_get_vars(char *interface)
@@ -53,7 +54,7 @@ dhclient_check_depends() {
 # Returns a string spaced with possible user set
 # configuration variables
 dhclient_get_vars() {
-	echo "dhclient_${1} dhcp_${1}"
+    echo "dhclient_${1} dhcp_${1}"
 }
 
 # bool dhclient_stop(char *iface)
@@ -61,34 +62,34 @@ dhclient_get_vars() {
 # Stop dhclient on an interface
 # Always returns 0
 dhclient_stop() {
-	local iface=$1 dhcp release
-	local pidfile="/var/run/dhclient-$1.pid"
-	
-	dhclient_check_installed || return 0
-	[[ ! -f ${pidfile} ]] && return 0
+    local iface=$1 dhcp release
+    local pidfile="/var/run/dhclient-$1.pid"
 
-	# We check for a dhclient process first as if we attempt to release
-	# an interface for which dhclient has obtained an IP in the past
-	# it causes a "RELEASE" event anyway.
-	local pid=$( < ${pidfile} )
+    dhclient_check_installed || return 0
+    [[ ! -f ${pidfile} ]] && return 0
 
-	local ifvar=$( bash_variable ${iface} )
-	eval dhcp=\" \$\{dhcp_${ifvar}\} \"
+    # We check for a dhclient process first as if we attempt to release
+    # an interface for which dhclient has obtained an IP in the past
+    # it causes a "RELEASE" event anyway.
+    local pid=$( < ${pidfile} )
 
-	ebegin "Stopping dhclient on ${iface}"
-	if [[ ${dhcp} == *' release '* ]]; then
-		local r=$( dhclient -q -r -sf ${MODULES_DIR}/helpers.d/dhclient-wrapper -pf ${pidfile} ${iface} )
-		[[ ${r} == "deconfig" ]]
-		eend $? "dhclient returned a ${r}"
-		[[ -f /var/cache/dhcp-${iface}.lease ]] \
-			&& rm -f /var/cache/dhcp-${iface}.lease
-	else
-		kill -s TERM ${pid} 2>/dev/null
-		clean_pidfile ${pidfile}
-		eend 0
-	fi
+    local ifvar=$( bash_variable ${iface} )
+    eval dhcp=\" \$\{dhcp_${ifvar}\} \"
 
-	return 0
+    ebegin "Stopping dhclient on ${iface}"
+    if [[ ${dhcp} == *' release '* ]]; then
+	local r=$( dhclient -q -r -sf ${MODULES_DIR}/helpers.d/dhclient-wrapper -pf ${pidfile} ${iface} )
+	[[ ${r} == "deconfig" ]]
+	eend $? "dhclient returned a ${r}"
+	[[ -f /var/cache/dhcp-${iface}.lease ]] \
+	&& rm -f /var/cache/dhcp-${iface}.lease
+    else
+	kill -s TERM ${pid} 2>/dev/null
+	clean_pidfile ${pidfile}
+	eend 0
+    fi
+
+    return 0
 }
 
 # bool dhclient_start(char *iface)
@@ -97,42 +98,42 @@ dhclient_stop() {
 #
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 dhclient_start() {
-	local iface=$1 opts ifvar=$( bash_variable $1 )
-	local pidfile="/var/run/dhclient-$1.pid"
+    local iface=$1 opts ifvar=$( bash_variable $1 )
+    local pidfile="/var/run/dhclient-$1.pid"
 
-	interface_exists ${iface} true || return 1
+    interface_exists ${iface} true || return 1
 
-	# Bring up DHCP for this interface (or alias)
-	ebegin "Running dhclient"
+    # Bring up DHCP for this interface (or alias)
+    ebegin "Running dhclient"
 
-	if ! clean_pidfile ${pidfile} ; then
-		ewarn "dhclient is already running on ${iface}"
-		eend 0
-		return 0
-	fi
-
-	eval opts=\"\$\{dhclient_${ifvar}\}\"
-
-	if [[ ${background} == "yes" ]]; then
-		dhclient ${opts} -sf ${MODULES_DIR}/helpers.d/dhclient-wrapper -pf ${pidfile} -q ${iface} &>/dev/null &
-		eend 0
-		go_background
-	fi
-
-	local x=$( dhclient ${opts} -1 -sf ${MODULES_DIR}/helpers.d/dhclient-wrapper -pf ${pidfile} -q ${iface} )
-	# We just check the last 5 letters
-	[[ ${x:${#x} - 5:5} == "bound" ]]
-	if [[ $? != 0 ]]; then
-		# We need to kill the process if we fail
-		[[ -e ${pidfile} ]] && kill -s TERM $( < ${pidfile} ) 2>/dev/null
-		eend 1
-		return 1
-	fi
+    if ! clean_pidfile ${pidfile} ; then
+	ewarn "dhclient is already running on ${iface}"
 	eend 0
-
-	# DHCP succeeded, show address retrieved
-	local addr=$( interface_get_address ${iface} )
-	einfo "${iface} received address ${addr}"
-
 	return 0
+    fi
+
+    eval opts=\"\$\{dhclient_${ifvar}\}\"
+
+    if [[ ${background} == "yes" ]]; then
+	dhclient ${opts} -sf ${MODULES_DIR}/helpers.d/dhclient-wrapper -pf ${pidfile} -q ${iface} &>/dev/null &
+	eend 0
+	go_background
+    fi
+
+    local x=$( dhclient ${opts} -1 -sf ${MODULES_DIR}/helpers.d/dhclient-wrapper -pf ${pidfile} -q ${iface} )
+    # We just check the last 5 letters
+    [[ ${x:${#x} - 5:5} == "bound" ]]
+    if [[ $? != 0 ]]; then
+	# We need to kill the process if we fail
+	[[ -e ${pidfile} ]] && kill -s TERM $( < ${pidfile} ) 2>/dev/null
+	eend 1
+	return 1
+    fi
+    eend 0
+
+    # DHCP succeeded, show address retrieved
+    local addr=$( interface_get_address ${iface} )
+    einfo "${iface} received address ${addr}"
+
+    return 0
 }

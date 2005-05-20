@@ -1,3 +1,4 @@
+#!/bin/bash
 # Copyright (c) 2004-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
@@ -10,9 +11,9 @@
 # Can handle eth0:1 and eth0.1
 # Which returns eth0 in this case
 interface_device() {
-	local dev="${1%%.*}"
-	[[ ${dev} == $1 ]] && dev="${1%%:*}"
-	echo "${dev}"
+    local dev="${1%%.*}"
+    [[ ${dev} == $1 ]] && dev="${1%%:*}"
+    echo "${dev}"
 }
 
 # char* interface_type(char* iface)
@@ -20,27 +21,27 @@ interface_device() {
 # Returns the base type of the interface
 # eth, ippp, etc
 interface_type() {
-	echo "${1%%[0-9]*}"
+    echo "${1%%[0-9]*}"
 }
 
 # void save_state(char *interface)
 #
 # Saves state information regarding the interface
 save_state() {
-        local iface="$1"
-        local d="${svcdir}/state/${iface}"
+    local iface="$1"
+    local d="${svcdir}/state/${iface}"
 
-        [[ ! -d ${d} ]] && mkdir -p "${d}"
-        cp -a /etc/resolv.conf /etc/ntp.conf /etc/yp.conf "${d}" 2>/dev/null
+    [[ ! -d ${d} ]] && mkdir -p "${d}"
+    cp -a /etc/resolv.conf /etc/ntp.conf /etc/yp.conf "${d}" 2>/dev/null
 }
 
 # void remove_state(char *interface)
 #
 # Removes state information regarding the interface
 remove_state() {
-        local d="${svcdir}/state/$1"
+    local d="${svcdir}/state/$1"
 
-        [[ -d "${d}" ]] && rm -Rf "${d}"
+    [[ -d "${d}" ]] && rm -Rf "${d}"
 }
 
 # void apply_state(char *interface)
@@ -48,16 +49,16 @@ remove_state() {
 # Apply's state information about the interface to the system
 #
 apply_state() {
-	local iface
-	if [[ -z $1 ]]; then
-		iface=$( select_best_interface )
-		[[ -z ${iface} ]] && return
-	else
-		iface="$1"
-	fi
+    local iface
+    if [[ -z $1 ]]; then
+	iface=$( select_best_interface )
+	[[ -z ${iface} ]] && return
+    else
+	iface="$1"
+    fi
 
-	local d="${svcdir}/state/${iface}"
-	[[ -d ${d} ]] && cp -aR ${d}/* /etc
+    local d="${svcdir}/state/${iface}"
+    [[ -d ${d} ]] && cp -aR ${d}/* /etc
 }
 
 # char* select_best_interface() {
@@ -65,7 +66,7 @@ apply_state() {
 # Selects the best interface to apply state information to
 # This is currently based on routing metrics
 select_best_interface() {
-	awk '$2=="00000000" { print $7, $1 }' /proc/net/route | sort -n | head -n 1 | cut -d' ' -f2
+    awk '$2=="00000000" { print $7, $1 }' /proc/net/route | sort -n | head -n 1 | cut -d' ' -f2
 }
 
 # int calculate_metric(char *interface)
@@ -74,101 +75,101 @@ select_best_interface() {
 # The Linux kernel does not use this at the moment, but we use it so that
 # default routes remain and we can work out the "best" interface
 calculate_metric() {
-	local iface="$1" exclude='$1!="Iface" && $1!="lo"'
+    local iface="$1" exclude='$1!="Iface" && $1!="lo"'
 
-	# Have we already got a metric?
-	local m=$( awk '$1=="'${iface}'" && $2=="00000000" { print $7 }' /proc/net/route )
-	if [[ -n ${m} ]]; then
-		echo "${m}"
-		return 0
-	fi
-	
-	local itype=$( interface_type "${iface}" ) x i
-	
-	# If we're not a wireless device then exclude wireless from the
-	# routing table so we stay < 1000
-	if [[ -e /proc/net/wireless ]]; then
-		if ! grep -q "${iface}: " /proc/net/wireless ; then
-			local i=$( sed -n -e 's/^ *\(.*\):.*/\1/p' /proc/net/wireless )
-			for x in ${i} ; do
-				exclude="${exclude} && "'$1'"!=\"${x}\""
-			done
-		fi
-	fi
+    # Have we already got a metric?
+    local m=$( awk '$1=="'${iface}'" && $2=="00000000" { print $7 }' /proc/net/route )
+    if [[ -n ${m} ]]; then
+	echo "${m}"
+	return 0
+    fi
 
-	# Exclude ppp and ippp as well
-	local ix="ppp|ippp"
-	[[ ${itype} == "ppp" ]] && ix="ippp"
-	[[ ${itype} == "ippp" ]] && ix="ppp"
-	i=$( sed -n -e 's/^[ ]*\('${ix}'[0-9]*\):.*$/\1/p' /proc/net/dev )
-	for x in ${i} ; do
+    local itype=$( interface_type "${iface}" ) x i
+
+    # If we're not a wireless device then exclude wireless from the
+    # routing table so we stay < 1000
+    if [[ -e /proc/net/wireless ]]; then
+	if ! grep -q "${iface}: " /proc/net/wireless ; then
+	    local i=$( sed -n -e 's/^ *\(.*\):.*/\1/p' /proc/net/wireless )
+	    for x in ${i} ; do
 		exclude="${exclude} && "'$1'"!=\"${x}\""
-	done
-
-	local m=$( awk "${exclude} { print "'$7'" }" /proc/net/route | sort -rn | head -n 1 | cut -d' ' -f2 )
-	m="${m:--1}"
-	(( m ++ ))
-
-	# If we're a wireless device then add 1000 so that wired interfaces take preference
-	if [[ -e /proc/net/wireless ]]; then
-		grep -q "${iface}:" /proc/net/wireless && (( m+= 1000 ))
+	    done
 	fi
-	
-	# If we're a ppp device then we add 2000 for ISDN, otherwise 3000
-	[[ ${itype} == "ippp" ]] && (( m+= 2000 ))
-	[[ ${itype} == "ppp" ]] && (( m+= 3000 ))
+    fi
 
-	echo ${m}
+    # Exclude ppp and ippp as well
+    local ix="ppp|ippp"
+    [[ ${itype} == "ppp" ]] && ix="ippp"
+    [[ ${itype} == "ippp" ]] && ix="ppp"
+    i=$( sed -n -e 's/^[ ]*\('${ix}'[0-9]*\):.*$/\1/p' /proc/net/dev )
+    for x in ${i} ; do
+	exclude="${exclude} && "'$1'"!=\"${x}\""
+    done
+
+    local m=$( awk "${exclude} { print "'$7'" }" /proc/net/route | sort -rn | head -n 1 | cut -d' ' -f2 )
+    m="${m:--1}"
+    (( m ++ ))
+
+    # If we're a wireless device then add 1000 so that wired interfaces take preference
+    if [[ -e /proc/net/wireless ]]; then
+	grep -q "${iface}:" /proc/net/wireless && (( m+= 1000 ))
+    fi
+
+    # If we're a ppp device then we add 2000 for ISDN, otherwise 3000
+    [[ ${itype} == "ippp" ]] && (( m+= 2000 ))
+    [[ ${itype} == "ppp" ]] && (( m+= 3000 ))
+
+    echo ${m}
 }
 
 # int netmask2cidr(char *netmask)
 #
 # Returns the CIDR of a given netmask
 netmask2cidr() {
-	local binary="" i bin
+    local binary="" i bin
 
-	for i in ${1//./ }; do
-		bin=""
-		while [[ ${i} != 0 ]]; do
-			bin=$[${i}%2]${bin}
-			(( i=i>>1 ))
-		done
-		binary="${binary}${bin}"
+    for i in ${1//./ }; do
+	bin=""
+	while [[ ${i} != 0 ]]; do
+	    bin=$[${i}%2]${bin}
+	    (( i=i>>1 ))
 	done
-	binary="${binary%%0*}"
-	echo "${#binary}"
+	binary="${binary}${bin}"
+    done
+    binary="${binary%%0*}"
+    echo "${#binary}"
 }
 
 # char* netmask2cidr(int cidr)
 #
 # Returns the netmask of a given CIDR
 cidr2netmask() {
-	local cidr="$1" netmask="" done=0 i sum=0 cur=128
-	local octets frac
+    local cidr="$1" netmask="" done=0 i sum=0 cur=128
+    local octets frac
 
-	(( octets=cidr/8 ))
-	(( frac=cidr%8 ))
-	while [[ octets -gt 0 ]]; do
-		netmask="${netmask}.255"
-		(( octets-- ))
-		(( done++ ))
+    (( octets=cidr/8 ))
+    (( frac=cidr%8 ))
+    while [[ octets -gt 0 ]]; do
+	netmask="${netmask}.255"
+	(( octets-- ))
+	(( done++ ))
+    done
+
+    if [[ ${done} -lt 4 ]]; then
+	for (( i=0; i<${frac}; i++ )); do
+	    (( sum+=cur ))
+	    (( cur/=2 ))
 	done
+	netmask="${netmask}.${sum}"
+	(( done++ ))
 
-	if [[ ${done} -lt 4 ]]; then
-		for (( i=0; i<${frac}; i++ )); do
-			(( sum+=cur ))
-			(( cur/=2 ))
-		done
-		netmask="${netmask}.${sum}"
-		(( done++ ))
-		
-		while [[ ${done} -lt 4 ]]; do
-			netmask="${netmask}.0"
-			(( done++ ))
-		done
-	fi
+	while [[ ${done} -lt 4 ]]; do
+	    netmask="${netmask}.0"
+	    (( done++ ))
+	done
+    fi
 
-	echo "${netmask:1}"
+    echo "${netmask:1}"
 }
 
 # char* ip_network(char *ip, char *netmask)
@@ -178,26 +179,26 @@ cidr2netmask() {
 # or
 # ip can be 192.168.0.51 and netmask is 255.255.255.0
 ip_network() {
-	local ip="$1" mask="$2" i network x
+    local ip="$1" mask="$2" i network x
 
-	# If we didn't get parameter 2 then assume we have a CIDR
-	if [[ -z ${mask} ]]; then
-		mask="${ip##*/}"
-		[[ -z ${mask} || ${mask} == ${ip} ]] && return 1
-		mask=$( cidr2netmask ${mask} )
-		ip="${ip%%/*}"
-	fi
+    # If we didn't get parameter 2 then assume we have a CIDR
+    if [[ -z ${mask} ]]; then
+	mask="${ip##*/}"
+	[[ -z ${mask} || ${mask} == ${ip} ]] && return 1
+	mask=$( cidr2netmask ${mask} )
+	ip="${ip%%/*}"
+    fi
 
-	ip=( ${ip//./ } )
-	mask=( ${mask//./ } )
+    ip=( ${ip//./ } )
+    mask=( ${mask//./ } )
 
-	for (( i=0; i<4; i++ )); do
-		(( x=ip[i] & mask[i] ))
-		network="${network}${x}"
-		[[ ${i} -lt 3 ]] && network="${network}."
-	done
+    for (( i=0; i<4; i++ )); do
+	(( x=ip[i] & mask[i] ))
+	network="${network}${x}"
+	[[ ${i} -lt 3 ]] && network="${network}."
+    done
 
-	echo "${network}"
+    echo "${network}"
 }
 
 
@@ -206,19 +207,19 @@ ip_network() {
 # Removes the given pidfile if the process is not running
 # Returns 1 if the process is still running otherwise 0
 clean_pidfile() {
-	local pidfile="$1"
+    local pidfile="$1"
 
-	[[ ! -f ${pidfile} ]] && return 0
-	local pid=$( < ${pidfile} )
+    [[ ! -f ${pidfile} ]] && return 0
+    local pid=$( < ${pidfile} )
 
-	if [[ -n ${pid} ]]; then
-		local cmd="${pidfile##*/}"
-		cmd="${cmd%%-*}"
-		ps -p ${pid} 2>/dev/null | grep -q ${cmd} && return 1
-	fi
+    if [[ -n ${pid} ]]; then
+	local cmd="${pidfile##*/}"
+	cmd="${cmd%%-*}"
+	ps -p ${pid} 2>/dev/null | grep -q ${cmd} && return 1
+    fi
 
-	rm -f ${pidfile}
-	return 0
+    rm -f ${pidfile}
+    return 0
 }
 
 # bool process_finished(int pid, char* cmd)
@@ -226,14 +227,14 @@ clean_pidfile() {
 # We wait for 10 seconds until the command ${cmd}
 # stops running on the process ${pid}
 process_finished() {
-	local i pid="$1" cmd="$2" secs="${3:-9}"
+    local i pid="$1" cmd="$2" secs="${3:-9}"
 
-	for (( i=0; i<secs; i++ )); do
-		ps -p ${pid} 2>/dev/null | grep -q ${cmd} || return 0
-		sleep 1
-	done
+    for (( i=0; i<secs; i++ )); do
+	ps -p ${pid} 2>/dev/null | grep -q ${cmd} || return 0
+	sleep 1
+    done
 
-	return 1
+    return 1
 }
 
 # void function_wrap(char* source, char* target)
@@ -241,43 +242,43 @@ process_finished() {
 # wraps function calls - for example function_wrap(this, that)
 # maps function names this_* to that_*
 function_wrap() {
-	local i
+    local i
 
-	[[ $( type -t ${2}_provides ) == "function" ]] && return
+    [[ $( type -t ${2}_provides ) == "function" ]] && return
 
-	for i in $( typeset -f | grep -o ^${1}_'[^ ]*' ); do
-		eval "${2}${i#${1}}() { ${i} \"\$@\"; }"
-	done
+    for i in $( typeset -f | grep -o ^${1}_'[^ ]*' ); do
+	eval "${2}${i#${1}}() { ${i} \"\$@\"; }"
+    done
 }
 
 # Currently sorucing rc-services.sh causes problems, so we replicate
 # code here when needed
 if [[ $( type -t mark_service_inactive ) != "function" ]]; then
-	svcdir=/var/lib/init.d
-	mark_service_inactive() {
-		[[ -z $1 ]] && return 1
-		ln -snf /etc/init.d/$1 ${svcdir}/inactive/$1
-		return $?
-	}
-	mark_service_stopped() {
-		[[ -z $1 ]] && return 1
-		[[ -f ${svcdir}/starting/$1 ]] && rm -f ${svcdir}/starting/$1
-		[[ -f ${svcdir}/started/$1 ]] && rm -f ${svcdir}/started/$1
-		[[ -f ${svcdir}/inactive/$1 ]] && rm -f ${svcdir}/inactive/$1
-		return $?
-	}
-	mark_service_started() {
-		[[ -z $1 ]] && return 1
-		ln -snf /etc/init.d/${1} ${svcdir}/started/$1
-		[[ -f ${svcdir}/starting/$1 ]] && rm -f ${svcdir}/starting/$1
-		[[ -f ${svcdir}/inactive/$1 ]] && rm -f ${svcdir}/inactive/$1
-		return $?
-	}
+    svcdir=/var/lib/init.d
+    mark_service_inactive() {
+	[[ -z $1 ]] && return 1
+	ln -snf /etc/init.d/$1 ${svcdir}/inactive/$1
+	return $?
+    }
+    mark_service_stopped() {
+	[[ -z $1 ]] && return 1
+	[[ -f ${svcdir}/starting/$1 ]] && rm -f ${svcdir}/starting/$1
+	[[ -f ${svcdir}/started/$1 ]] && rm -f ${svcdir}/started/$1
+	[[ -f ${svcdir}/inactive/$1 ]] && rm -f ${svcdir}/inactive/$1
+	return $?
+    }
+    mark_service_started() {
+	[[ -z $1 ]] && return 1
+	ln -snf /etc/init.d/${1} ${svcdir}/started/$1
+	[[ -f ${svcdir}/starting/$1 ]] && rm -f ${svcdir}/starting/$1
+	[[ -f ${svcdir}/inactive/$1 ]] && rm -f ${svcdir}/inactive/$1
+	return $?
+    }
 fi
 
 if [[ $( type -t bash_variable ) != "function" ]]; then
-	bash_variable() {
-		local argv="$@"
-		LC_ALL=C echo "${argv//[![:word:]]/_}"
-	}
+    bash_variable() {
+	local argv="$@"
+	LC_ALL=C echo "${argv//[![:word:]]/_}"
+    }
 fi
