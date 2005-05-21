@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  21 May 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Quiet down valid_i() if ${svcdir}/softlevel do not yet exist, try #2.
+
   20 May 2005; Roy Marples <uberlord@gentoo.org>:
 
     fix ifconfig to understand CIDR addresses - bug #93237
