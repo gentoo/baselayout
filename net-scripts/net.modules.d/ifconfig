@@ -317,13 +317,11 @@ ifconfig_add_address() {
 	    iface=${iface}:${i}
 	fi
 
-	local ip=${config[0]} netmask
-	local cidr=${ip##*/}
-	ip=${ip%%/*}
-
+	# ifconfig doesn't like CIDR addresses
+	local ip=${config[0]%%/*} cidr=${config[0]##*/} netmask
 	if [[ -n ${cidr} && ${cidr} != ${ip} ]]; then
 	    netmask=$( cidr2netmask ${cidr} )
-	    config[0]="${config[0]%%/*} netmask ${netmask}"
+	    config[0]="${ip} netmask ${netmask}"
 	fi	
 
 	# Support iproute2 style config where possible
