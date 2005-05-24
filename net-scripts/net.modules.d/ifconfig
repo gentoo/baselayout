@@ -319,11 +319,11 @@ ifconfig_add_address() {
 		config=( "${config[@]//brd/broadcast}" )
 		config=( "${config[@]//peer/pointtopoint}" )
 
-		local cidr="${config[0]##*/}"
-		if [[ -n ${cidr} ]]; then
-		    # ifconfig is very silly with CIDR addresses
-		    local nm=$( cidr2netmask "${cidr}" )
-		    config[0]="${config[0]%%/*} netmask ${nm}"
+		# ifconfig doesn't work with CIDR addresses
+		local cidr="${config[0]##*/}" ip="${config[0]%%/*}"
+		if [[ -n ${cidr} && ${cidr} != ${ip} ]]; then
+		    local netmask=$( cidr2netmask "${cidr}" )
+		    config[0]="${ip} netmask ${netmask}"
 		fi
 	fi
 
