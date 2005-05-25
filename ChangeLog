@@ -1,6 +1,24 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  25 May 2005; Roy Marples <uberlord@gentoo.org>:
+
+    networking now expands configuration parameters - fixes #91564
+    so config_eth0=( "192.168.{1..3}.{1..3}/24 brd +" ) expands into
+    config_eth0=(
+       "192.168.1.1/24 brd +"
+       "192.168.1.2/24 brd +"
+       "192.168.1.3/24 brd +"
+       "192.168.2.1/24 brd +"
+       "192.168.2.2/24 brd +"
+       "192.168.2.3/24 brd +"
+       "192.168.3.1/24 brd +"
+       "192.168.3.2/24 brd +"
+       "192.168.3.3/24 brd +"
+    )
+
+    updated ESSID variables example in wireless.example - fixes #92469
+
   21 May 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     Quiet down valid_i() if ${svcdir}/softlevel do not yet exist, try #2.

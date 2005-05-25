@@ -468,8 +468,8 @@ modules_load()  {
 iface_start() {
 	local iface=$1 mod config_counter=-1 x config_worked=false
 	local RC_INDENTATION=${RC_INDENTATION}	# so it will reset after function
-	local -a config fallback fallback_route conf
-	local ifvar=$( bash_variable $1 )
+	local -a config fallback fallback_route conf a 
+	local ifvar=$( bash_variable $1 ) i j
 
 	# pre Start any modules with
 	for mod in ${MODULES[@]}; do
@@ -478,10 +478,32 @@ iface_start() {
 		fi
 	done
 
-	# New style config - one variable fits all
-	eval config=( \"\$\{config_${ifvar}\[@\]\}\" )
-	eval fallback=( \"\$\{fallback_${ifvar}\[@\]\}\" )
-	eval fallback_route=( \"\$\{fallback_route_${ifvar}\[@\]\}\" )
+	# We now expand the configuration parameters and pray that the
+	# fallbacks expand to the same number as config or there will be
+	# trouble!
+	eval a=( \"\$\{config_${ifvar}\[@\]\}\" )
+	for (( i=0; i<${#a[@]}; i++ )); do 
+	    local -a b=( $( expand_parameters "${a[i]}" ) )
+	    config=( "${config[@]}" "${b[@]}" )
+	done
+
+	eval a=( \"\$\{fallback_${ifvar}\[@\]\}\" )
+	for (( i=0; i<${#a[@]}; i++ )); do 
+	    local -a b=( $( expand_parameters "${a[i]}" ) )
+	    fallback=( "${fallback[@]}" "${b[@]}" )
+	done
+
+	# Support range addresses
+	if [[ ${config[0]} == *'{'*'}' ]]; then
+	    local -a tmpa tmpb
+	    for (( i=0; i<${#config[@]}; i++ )); do
+		eval tmpa=( "${config[i]}" )
+		tmpb=( ${config[i]} )
+		for (( j=0; j<${#tmpa[@]}-${#config[@]}; j++ )); do
+		    echo ${tmpa[j]} ${tmpb[@]:1}
+		done
+	    done
+	fi
 
 	# We must support old configs
 	if [[ -z ${config} ]]; then

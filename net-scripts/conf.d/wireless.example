@@ -27,9 +27,10 @@
 # becomes
 #      #key_My_NET="s:passkey"
 # Notice that the space has changed to an underscore - do the same with all
-# characters not in a-z A-Z (english alphabet) 0-9.
+# characters not in a-z A-Z (english alphabet) 0-9. This only applies to
+# variables and not values.
 #
-# Any ESSID's in quotes like essid_eth0="My NET" may need to be escaped
+# Any ESSID's in values like essid_eth0="My NET" may need to be escaped
 # This means placing the character \ before the character
 # \" need to be escaped for example
 # So if your ESSID is
@@ -38,6 +39,11 @@
 #      My \"\\ NET
 # for example
 #      #essid_eth0="My\"\\NET"
+#
+# So using the above we can use
+#      #dns_domain_My____NET="My\"\\NET"
+# which is an invalid dns domain, but shows the how to use the variable
+# structure
 #
 # As a final note, most users will just need to set the following options
 # key_ESSID1="s:yourkeyhere enc open" # s: means a text key

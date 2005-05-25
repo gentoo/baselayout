@@ -251,7 +251,30 @@ function_wrap() {
     done
 }
 
-# Currently sorucing rc-services.sh causes problems, so we replicate
+# char[] * expand_parameters(char *cmd)
+#
+# Returns an array after expanding parameters. For example
+# "192.168.{1..3}.{1..3}/24 brd +"
+# will return
+# "192.168.1.1/24 brd +"
+# "192.168.1.2/24 brd +"
+# "192.168.1.3/24 brd +"
+# "192.168.2.1/24 brd +"
+# "192.168.2.2/24 brd +"
+# "192.168.2.3/24 brd +"
+# "192.168.3.1/24 brd +"
+# "192.168.3.2/24 brd +"
+# "192.168.3.3/24 brd +"
+expand_parameters() {
+    local x="$( eval echo ${@// /_} )"
+    local -a a=( ${x} )
+
+    a=( "${a[@]/#/\"}" )
+    a=( "${a[@]/%/\"}" )
+    echo "${a[*]//_/ }"
+}
+
+# Currently sourcing rc-services.sh causes problems, so we replicate
 # code here when needed
 if [[ $( type -t mark_service_inactive ) != "function" ]]; then
     svcdir=/var/lib/init.d
