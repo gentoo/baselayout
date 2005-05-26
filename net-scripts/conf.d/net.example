@@ -326,6 +326,10 @@
 # custom - passes all parameters directly to net-analyzer/macchanger
 #mac_eth0="some custom set of parameters"
 
+# You can also set other options based on the MAC address of your network card
+# Handy if you use different docking stations with laptops
+#config_001122334455=( "dhcp" )
+
 #-----------------------------------------------------------------------------
 # TUN/TAP
 # For TUN/TAP support emerge sys-apps/usermode-utilities

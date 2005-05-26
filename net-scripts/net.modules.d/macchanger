@@ -42,19 +42,13 @@ macchanger_check_depends() {
     return 0
 }
 
-# bool macchanger_pre_start(char *iface)
+# bool macchanger_go(char *mac)
 #
 # Configures the MAC address for iface 
-macchanger_pre_start() {
-    # We don't change MAC addresses from background
-    ${IN_BACKGROUND} && return 0
+macchanger_go() {
+    local iface="$1" mac="$2" opts
 
-    local iface=$1 mac opts ifvar=$( bash_variable $1 )
-
-    eval mac=\"\$\{mac_${ifvar}\}\"
-    [[ -z ${mac} ]] && return 0
-
-    interface_exists ${iface} true || return 1
+    interface_exists "${iface}" true || return 1
 
     ebegin "Changing MAC address of ${iface}"
 
@@ -120,4 +114,25 @@ macchanger_pre_start() {
     eoutdent
 
     return 0 #important
+}
+
+# bool macchanger_pre_start(char *iface)
+#
+# Configures the MAC address for iface
+macchanger_pre_start() {
+    local iface=$1 mac ifvar=$( bash_variable $1 )
+
+    # We don't change MAC addresses from background
+    if ! ${IN_BACKGROUND} ; then
+	eval mac=\"\$\{mac_${ifvar}\}\"
+	if [[ -n ${mac} ]]; then
+	    macchanger_go "${iface}" "${mac}" || return 1
+	fi
+    fi
+
+    mac=$( interface_get_mac_address ${iface} )
+
+    # Configure any variables for our mac address
+    configure_variables "${iface}" "${mac//:}"
+    return 0
 }

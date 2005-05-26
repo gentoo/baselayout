@@ -6,6 +6,14 @@
     report ${myservice} instead of $0 when disallowing net scripts to work in
     the boot runlevel - fixes #91534
 
+    You can now configure all options via the MAC address of your network card
+    and the MAC address of AP you connect to like so
+    config_001122334455=( "192.168.0.2/24 brd +")
+    Fixes the last part of #52975
+    
+    The old way of configuring for the MAC address of the AP is no longer
+    supported
+
   25 May 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Add gfs to the NET_FS_LIST #93911 by Thomas Rasch.

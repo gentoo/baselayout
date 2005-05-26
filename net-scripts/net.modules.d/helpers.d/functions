@@ -305,3 +305,32 @@ if [[ $( type -t bash_variable ) != "function" ]]; then
 	LC_ALL=C echo "${argv//[![:word:]]/_}"
     }
 fi
+
+# void configure_variables(char *interface, char *option1, [char *option2])
+#
+# Maps configuration options from <variable>_<option> to <variable>_<iface>
+# option2 takes precedence over option1
+configure_variables() {
+    local iface="$1" option1="$2" option2="$3"
+
+    local mod func x i
+    local -a ivars ovars1 ovars2
+    local ifvar=$( bash_variable ${iface} )
+
+    for mod in ${MODULES[@]}; do
+	func="${mod}_get_vars"
+	if [[ $( type -t ${func} ) == "function" ]]; then
+	    ivars=( $( ${func} ${ifvar} ) )
+	    ovars1=( $( ${func} ${option1} ) )
+	    [[ -n ${option2} ]] && ovars2=( $( ${func} ${option2} ) )
+	    for ((i = 0; i<${#ivars[@]}; i++)); do
+		x=""
+		[[ -n ${ovars2[i]} ]] && eval x=( \"\$\{${ovars2[i]}\[@\]\}\" )
+		[[ -z ${x} ]] && eval x=( \"\$\{${ovars1[i]}\[@\]\}\" )
+		[[ -n ${x} ]] && eval "${ivars[i]}=( "\"\$\{x\[@\]\}\"" )"
+	    done
+	fi
+    done
+
+    return 0
+}

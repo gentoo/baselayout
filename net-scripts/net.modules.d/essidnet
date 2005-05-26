@@ -60,27 +60,14 @@ essidnet_pre_start() {
 
     wireless_check_extensions ${iface} || return 0
 
-    local mod func evars evar vars x i mvars mac=$( wireless_get_ap_mac_address ${iface} )
+    local mac=$( wireless_get_ap_mac_address ${iface} )
     local ifvar=$( bash_variable ${iface} )
     local ESSID=$( wireless_get_essid ${iface} )
     local essid=$( bash_variable ${ESSID} )
     mac=${mac//:/}
 
     vebegin "Configuring ${iface} for \"${ESSID//\\\\/\\\\}\"" 2>/dev/null
-
-    for mod in ${MODULES[@]}; do
-	func="${mod}_get_vars"
-	if [[ $(type -t ${func}) == "function" ]]; then
-	    evars=( $( ${func} ${essid} ) )
-	    mvars=( $( ${func} ${mac} ) )
-	    vars=( $( ${func} ${ifvar} ) )
-	    for ((i = 0; i<${#mvars[@]}; i++)); do
-		eval x=( \"\$\{mac_${mvars[i]}\[@\]\}\" )
-		[[ -z ${x} ]] && eval x=( \"\$\{${evars[i]}\[@\]\}\" )
-		[[ -n ${x} ]] && eval "${vars[i]}=( "\"\$\{x\[@\]\}\"" )"
-	    done
-	fi
-    done
+    configure_variables "${iface}" "${essid}" "${mac}"
 
     # Backwards compat for old gateway var
     eval x=\"\$\{gateway_${essid}\}\"

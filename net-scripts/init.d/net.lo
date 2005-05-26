@@ -170,7 +170,7 @@ modules_check_installed() {
 
 # bool modules_check_user(void)
 modules_check_user() {
-	local -a umods
+	local -a umods 
 	local i j k l npref nmods=${#MODULES[@]}
 
 	# Has the interface got any specific modules?
@@ -199,7 +199,9 @@ modules_check_user() {
 				if [[ ${umods[i]:1} == ${MODULES[j]} || ${umods[i]:1} == ${PROVIDES[j]} ]]; then
 					# We may need to setup a class wrapper for it even though
 					# we don't use it directly
-					${MODULES[j]}_check_installed && function_wrap ${MODULES[j]} ${PROVIDES[j]}
+					# However, we put it into an array and wrap later as another module
+					# may provide the same thing
+					${MODULES[j]}_check_installed && WRAP_MODULES=( "${WRAP_MODULES[@]}" "${MODULES[j]} ${PROVIDES[j]}" )
 					unset MODULES[j]
 					unset PROVIDES[j]
 					break
@@ -385,7 +387,7 @@ modules_load()  {
 	local iface=$1 starting=${2:-true} mod p=false i j k unsetfuncs
 	local -a x
 	local RC_INDENTATION=${RC_INDENTATION}	# so it will reset after function
-	local -a PROVIDES
+	local -a PROVIDES WRAP_MODULES
 
 	if [[ ${iface} != "lo" ]]; then
 		eval x=( \"\$\{modules_force_${iface}\[@\]\}\" )
@@ -448,6 +450,14 @@ modules_load()  {
 	for (( i=0; i<j; i++ )); do
 		function_wrap ${MODULES[i]} ${PROVIDES[i]}
 	done
+
+	# Some modules may be installed, but not selected by user preference
+	# so we wrap these if needed
+	j=${#WRAP_MODULES[@]}
+	for (( i=0; i<j; i++ )); do
+		function_wrap ${WRAP_MODULES[i]}
+	done
+
 
 	modules_check_installed || return 1
 

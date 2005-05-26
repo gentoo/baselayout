@@ -144,7 +144,7 @@
 #key_ESSID="s:'foo bar' enc open"
 
 # WEP key for the AP with MAC address 001122334455
-#mac_key_001122334455="s:foobar"
+#key_001122334455="s:foobar"
 
 # Here are some more examples of keys as some users find others work
 # and some don't where they should all do the same thing
@@ -178,9 +178,9 @@
 # incase you use Access Points with the same ESSID but need different
 # networking configs. Below is an example - of course you use the same
 # method with other variables
-#mac_config_001122334455=( "dhcp" )
-#mac_dhcpcd_001122334455="-t 10"
-#mac_dns_servers_001122334455=( "192.168.0.1" "192.168.0.2" )
+#config_001122334455=( "dhcp" )
+#dhcpcd_001122334455="-t 10"
+#dns_servers_001122334455=( "192.168.0.1" "192.168.0.2" )
 
 # Map a MAC address to an ESSID
 # This is used when the Access Point is not broadcasting it's ESSID
@@ -189,7 +189,7 @@
 # not too!
 # Change 001122334455 to the MAC address and ESSID to the ESSID
 # it should map to
-#mac_essid_001122334455="ESSID"
+#essid_001122334455="ESSID"
 
 # This lists the preferred ESSIDs to connect to in order
 # ESSID's can contain any characters here as they must match the broadcast
