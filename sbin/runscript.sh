@@ -45,7 +45,7 @@ fi
 # has completed
 if [[ ${NETSERVICE} == "yes" && ${IFACE} != "lo" ]] ; then
        if [[ -z ${mylevel} || ${mylevel} == ${BOOTLEVEL} ]] ; then
-               eerror "$0: cannot start until the runlevel "${BOOTLEVEL}" has completed"
+               eerror "${myservice}: cannot start until the runlevel ${BOOTLEVEL} has completed"
                exit 1
        fi
 fi

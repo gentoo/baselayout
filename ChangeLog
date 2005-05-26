@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  26 May 2005; Roy Marples <uberlord@gentoo.org>:
+
+    report ${myservice} instead of $0 when disallowing net scripts to work in
+    the boot runlevel - fixes #91534
+
   25 May 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Add gfs to the NET_FS_LIST #93911 by Thomas Rasch.
