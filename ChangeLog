@@ -1,6 +1,13 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  27 May 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Added macnet module (like essidnet but for mac addresses)
+    Regresses macchanger one version
+    Tweaked module depends for macnet
+    dhcp helper now uses macnet
+    
   26 May 2005; Roy Marples <uberlord@gentoo.org>:
 
     report ${myservice} instead of $0 when disallowing net scripts to work in

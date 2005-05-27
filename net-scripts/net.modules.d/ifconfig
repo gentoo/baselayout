@@ -23,7 +23,7 @@ route() {
 #
 # Sets up the dependancies for the module
 ifconfig_depend() {
-    after macchanger wireless
+    after macnet wireless
 }
 
 # bool ifconfig_check_installed(void)

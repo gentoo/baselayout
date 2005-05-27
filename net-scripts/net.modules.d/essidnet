@@ -61,12 +61,11 @@ essidnet_pre_start() {
     wireless_check_extensions ${iface} || return 0
 
     local mac=$( wireless_get_ap_mac_address ${iface} )
-    local ifvar=$( bash_variable ${iface} )
     local ESSID=$( wireless_get_essid ${iface} )
     local essid=$( bash_variable ${ESSID} )
     mac=${mac//:/}
 
-    vebegin "Configuring ${iface} for \"${ESSID//\\\\/\\\\}\"" 2>/dev/null
+    vebegin "Configuring ${iface} for ESSID \"${ESSID//\\\\/\\\\}\"" 2>/dev/null
     configure_variables "${iface}" "${essid}" "${mac}"
 
     # Backwards compat for old gateway var

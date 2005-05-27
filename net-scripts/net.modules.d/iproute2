@@ -19,7 +19,7 @@ iproute2_tunnel() {
 #
 # Sets up the dependancies for the module
 iproute2_depend() {
-    after macchanger wireless
+    after macnet wireless
 }
 
 # bool iproute2_check_installed(void)

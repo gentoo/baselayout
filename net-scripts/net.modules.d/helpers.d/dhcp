@@ -45,39 +45,43 @@ interface_is_up "${interface}" || interface_up "${interface}"
 
 case "${action}" in
     "bound"|"renew")
-    # We handle these actions below
+        # We handle these actions below
     ;;
     "deconfig")
-    interface_del_addresses "${interface}"
-    mark_service_inactive "net.${interface}"
-    if [[ ${auto_interface} == "yes" ]]; then
-	remove_state "${interface}"
-	best_interface=$( select_best_interface )
-	apply_state "${best_interface}"
-    fi
-    echo "${action}"
-    exit 0
+        interface_del_addresses "${interface}"
+	mark_service_inactive "net.${interface}"
+        if [[ ${auto_interface} == "yes" ]]; then
+	    remove_state "${interface}"
+	    best_interface=$( select_best_interface )
+	    apply_state "${best_interface}"
+	fi
+	echo "${action}"
+	exit 0
     ;;
     "nak")
-    echo "${action}"
-    exit 0
+	echo "${action}"
+	exit 0
     ;;
     "leasefail")
     mark_service_inactive "net.${interface}"
-    echo "${action}"
-    exit 0
+	echo "${action}"
+	exit 0
     ;;
     *)
-    echo "${action}"
-    echo "We don't handle that action" >&2
-    exit 1
+	echo "${action}"
+	echo "We don't handle that action" >&2
+	exit 1
     ;;
 esac
+
+# Map MAC address variables to interface variables
+. "${MODULES_DIR}/macnet"
+macnet_pre_start ${interface}
 
 # Map wireless ESSID variables to interface variables
 if wireless_check_extensions "${interface}" ; then
     MODULES=( "${interface_module}" "essidnet" "system" )
-    source ${MODULES_DIR}/essidnet
+    . "${MODULES_DIR}/essidnet"
     essidnet_pre_start ${interface}
 fi
 

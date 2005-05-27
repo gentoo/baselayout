@@ -1,0 +1,65 @@
+#!/bin/bash
+# Copyright (c) 2004-2005 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header$
+
+# Contributed by Roy Marples (uberlord@gentoo.org)
+# Many thanks to all the people in the Gentoo forums for their ideas and
+# motivation for me to make this and keep on improving it
+
+# void macnet_depend(void)
+#
+# Sets up the dependancies for the module
+macnet_depend() {
+    before interface wireless
+    after macchanger 
+}
+
+# bool macnet_check_installed(void)
+#
+# Always returns 0 as we are "installed" by wireless in the depend function
+macnet_check_installed() {
+    return 0
+}
+
+# char* macnet_provides(void)
+#
+# Returns a string to change module definition for starting up
+macnet_provides() {
+    echo "macnet"
+}
+
+# bool macnet_check_depends(void)
+#
+# Checks to see if we have the needed functions
+macnet_check_depends() {
+    local f
+
+    for f in interface_get_mac_address; do
+	[[ $( type -t ${f} ) == "function" ]] && continue
+	eerror "macnet: missing required function ${f}\n"
+	return 1
+    done
+
+    return 0
+}
+
+# bool macnet_start(char *iface)
+#
+# All interfaces and module scripts expose modulename_get_vars
+# which returns a space seperated list of user configuration variables
+# We can override each variable here from a given MAC address of the interface
+# Always returns 0
+macnet_pre_start() {
+    local iface=$1
+
+    interface_exists ${iface} || return 0
+
+    local mac=$( interface_get_mac_address ${iface} )
+    vebegin "Configuring ${iface} for MAC address ${mac}" 2>/dev/null
+    mac=${mac//:}
+    configure_variables "${iface}" "${mac}"
+    veend 0 2>/dev/null
+    
+    return 0
+}

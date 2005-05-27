@@ -16,7 +16,7 @@ ipppd_provides() {
 #
 # Sets up the dependancies for the module
 ipppd_depend() {
-    after macchanger
+    after macnet
     before interface
 }
 
