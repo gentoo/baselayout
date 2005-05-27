@@ -7,6 +7,9 @@
     Regresses macchanger one version
     Tweaked module depends for macnet
     dhcp helper now uses macnet
+
+    is_net_fs now works with what $1 was mounted as, not would it would
+    be remounted as - fixes #53104
     
   26 May 2005; Roy Marples <uberlord@gentoo.org>:
 

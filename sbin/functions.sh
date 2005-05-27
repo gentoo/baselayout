@@ -606,7 +606,8 @@ NET_FS_LIST="afs cifs coda gfs ncpfs nfs nfs4 shfs smbfs"
 #   EXAMPLE:  if is_net_fs / ; then ...
 #
 is_net_fs() {
-	local fstype=$(mount -o remount -fv "$1" | awk '{print $(NF-1)}')
+	# Don't call remount as that may not be actuall how we are mounted
+	local fstype=$( mount | sed -n -e 's:.* on '$1' type \(.*\) .*:\1:p' )
 	[[ " ${NET_FS_LIST} " == *" ${fstype} "* ]]
 	return $?
 }
