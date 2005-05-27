@@ -606,8 +606,13 @@ NET_FS_LIST="afs cifs coda gfs ncpfs nfs nfs4 shfs smbfs"
 #   EXAMPLE:  if is_net_fs / ; then ...
 #
 is_net_fs() {
-	# Don't call remount as that may not be actuall how we are mounted
-	local fstype=$( mount | sed -n -e 's:.* on '$1' type \(.*\) .*:\1:p' )
+	local fstype
+	# /proc/mounts is always accurate but may not always be available
+	if [[ -e /proc/mounts ]]; then
+		fstype=$( sed -n -e '/^rootfs/!s:.* '"$1"' \([^ ]*\).*:\1:p' /proc/mounts )
+	else
+		fstype=$( mount | sed -n -e 's:.* on '"$1"' type \([^ ]*\).*:\1:p' )
+	fi
 	[[ " ${NET_FS_LIST} " == *" ${fstype} "* ]]
 	return $?
 }
