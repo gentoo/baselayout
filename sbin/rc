@@ -374,6 +374,9 @@ then
 		fi
 	fi
 
+	# Start logging console output since we have all /dev stuff setup
+	bootlog start
+
 	# Swap needs to be activated *after* /dev has been fully setup so that
 	# the fstab can be properly parsed.  This first pass we send to /dev/null
 	# in case the user has swap points setup on different partitions.  We 
@@ -447,6 +450,9 @@ then
 
 		splash "svc_started" "${x}" "0"
 	done
+
+	# /var/log should be writable now, so starting saving the boot output
+	bootlog sync
 
 	# have to run this after /var/run is mounted rw #85304
 	if [ -x /sbin/irqbalance -a "$(get_KV)" -ge "$(KV_to_int '2.5.0')" ]
@@ -549,6 +555,9 @@ then
 	else
 		ewarn "Skipping /var/run/utmp initialization (ro root?)"
 	fi
+
+	# All done logging
+	bootlog quit
 
 	exit 0
 fi # Sysinit ends here
