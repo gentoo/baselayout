@@ -86,6 +86,14 @@ profiling() {
 }
 import_addon profiling-functions.sh
 
+# void bootlog(...)
+#
+#  Notify bootlogger about important events.
+bootlog() {
+	return 0
+}
+import_addon bootlogger.sh
+
 # void get_bootconfig()
 #
 #    Get the BOOTLEVEL and SOFTLEVEL by setting
