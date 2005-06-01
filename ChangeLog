@@ -6,6 +6,8 @@
     removed cruft from net-scripts functions helper as rc-services.sh can
     now be sourced by our dhcp helpers without causing errors.
 
+    system module now creates it's temporary files in /tmp instead of /etc
+
   31 May 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Add support for bootlogging (via blogd in showconsole package).
