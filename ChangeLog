@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  01 Jun 2005; Roy Marples <uberlord@gentoo.org>:
+
+    removed cruft from net-scripts functions helper as rc-services.sh can
+    now be sourced by our dhcp helpers without causing errors.
+
   31 May 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Add support for bootlogging (via blogd in showconsole package).

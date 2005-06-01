@@ -10,6 +10,7 @@ action="$1"
 . /etc/conf.d/net
 [[ -z ${MODULES_DIR} ]] && MODULES_DIR="/lib/rcscripts/net.modules.d"
 . "${MODULES_DIR}/system"
+. /lib/rcscripts/sh/rc-services.sh
 . "${MODULES_DIR}/helpers.d/functions"
 
 # Guess which interface module to load - we prefer iproute2

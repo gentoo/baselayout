@@ -274,38 +274,6 @@ expand_parameters() {
     echo "${a[*]//_/ }"
 }
 
-# Currently sourcing rc-services.sh causes problems, so we replicate
-# code here when needed
-if [[ $( type -t mark_service_inactive ) != "function" ]]; then
-    svcdir=/var/lib/init.d
-    mark_service_inactive() {
-	[[ -z $1 ]] && return 1
-	ln -snf /etc/init.d/$1 ${svcdir}/inactive/$1
-	return $?
-    }
-    mark_service_stopped() {
-	[[ -z $1 ]] && return 1
-	[[ -f ${svcdir}/starting/$1 ]] && rm -f ${svcdir}/starting/$1
-	[[ -f ${svcdir}/started/$1 ]] && rm -f ${svcdir}/started/$1
-	[[ -f ${svcdir}/inactive/$1 ]] && rm -f ${svcdir}/inactive/$1
-	return $?
-    }
-    mark_service_started() {
-	[[ -z $1 ]] && return 1
-	ln -snf /etc/init.d/${1} ${svcdir}/started/$1
-	[[ -f ${svcdir}/starting/$1 ]] && rm -f ${svcdir}/starting/$1
-	[[ -f ${svcdir}/inactive/$1 ]] && rm -f ${svcdir}/inactive/$1
-	return $?
-    }
-fi
-
-if [[ $( type -t bash_variable ) != "function" ]]; then
-    bash_variable() {
-	local argv="$@"
-	LC_ALL=C echo "${argv//[![:word:]]/_}"
-    }
-fi
-
 # void configure_variables(char *interface, char *option1, [char *option2])
 #
 # Maps configuration options from <variable>_<option> to <variable>_<iface>
