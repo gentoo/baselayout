@@ -69,6 +69,11 @@ load_modules() {
 }
 
 start() {
+	local KV=$(uname -r)
+	local KV_MAJOR=$(KV_major "${KV}")
+	local KV_MINOR=$(KV_minor "${KV}")
+	local KV_MICRO=$(KV_micro "${KV}")
+
 	# Should not fail if kernel do not have module
 	# support compiled in ...
 	[ -f /proc/modules ] || return 0
@@ -88,29 +93,19 @@ start() {
 		eend $? "Failed to calculate module dependencies"
 	fi
 
-	if [ -f /etc/modules.autoload -a ! -L /etc/modules.autoload ]
-	then
-		# Loop over every line in /etc/modules.autoload.
-		load_modules /etc/modules.autoload
+	local autoload=""
+	if [[ -f /etc/modules.autoload && ! -L /etc/modules.autoload ]]; then
+		autoload=/etc/modules.autoload
 	else
-		local KV="$(uname -r)"
-		local KV_MAJOR="`KV_major "${KV}"`"
-		local KV_MINOR="`KV_minor "${KV}"`"
-
-		# New support for /etc/modules.autoload/kernel-$KV
-		if [ "$(get_KV)" -ge "$(KV_to_int '2.5.48')" ] && \
-		   [ -f /etc/modules.autoload.d/kernel-"${KV_MAJOR}.${KV_MINOR}" ]
-		then
-			load_modules /etc/modules.autoload.d/kernel-"${KV_MAJOR}.${KV_MINOR}"
-			
-		elif [ ! -f /etc/modules.autoload.d/kernel-"${KV_MAJOR}.${KV_MINOR}" ]
-		then
-			ewarn "Missing /etc/modules.autoload.d/kernel-${KV_MAJOR}.${KV_MINOR}"
-			load_modules /etc/modules.autoload.d/kernel-2.4
-		else
-			load_modules /etc/modules.autoload.d/kernel-2.4
-		fi
+		local x
+		for x in "${KV}" ${KV_MAJOR}.${KV_MINOR}.${KV_MICRO} ${KV_MAJOR}.${KV_MINOR} ; do
+			if [[ -f /etc/modules.autoload.d/kernel-"${x}" ]] ; then
+				autoload="/etc/modules.autoload.d/kernel-${x}"
+				break
+			fi
+		done
 	fi
+	[[ -n ${autoload} ]] && load_modules "${autoload}"
 
 	#
 	# Just in case a sysadmin prefers generic symbolic links in
