@@ -5,6 +5,9 @@
 
     Add support for bootlogging (via blogd in showconsole package).
 
+    Rewrite the modules.autoload code in init.d/modules to work off the 
+    current arbitrary kernel version #35872.
+
   29 May 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Make sure we quote EDITOR in /etc/profile #94412 by Stanislav Brabec.
