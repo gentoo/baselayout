@@ -40,7 +40,8 @@ system_get_vars() {
 }
 
 system_dns() {
-    local iface=$1 ifvar=$( bash_variable $1 ) x tmpfile="/tmp/resolv.conf.$$"
+    local iface=$1 ifvar=$( bash_variable $1 ) x 
+    local conffile="/etc/resolv.conf" tmpfile="/tmp/resolv.conf.$$"
 
     # Nameserver setup for the essid if required
     local -a servers
@@ -60,13 +61,14 @@ system_dns() {
     eval x=\"\$\{dns_search_domains_${ifvar}\}\"
     [[ -n ${x} ]] && echo "search ${x}" >> "${tmpfile}"
 
-    [[ -f /etc/resolv.conf && ! -f /etc/resolv.conf.sv ]] \
-	&& mv /etc/resolv.conf /etc/resolv.conf.sv
-    mv "${tmpfile}" /etc/resolv.conf
+    [[ -f ${conffile} && ! -f "${conffile}.sv" ]] \
+	&& mv "${conffile}" "${conffile}".sv
+    mv "${tmpfile}" "${conffile}"
 }
 
 system_ntp() {
-    local iface=$1 ifvar=$( bash_variable $1 ) x tmpfile="/tmp/ntp.conf.$$"
+    local iface=$1 ifvar=$( bash_variable $1 ) x
+    local conffile="/etc/ntp.conf" tmpfile="/tmp/ntp.conf.$$"
     local -a servers
 
     eval servers=( \"\$\{ntp_servers_${ifvar}\[\@\]\}\" )
@@ -77,21 +79,24 @@ system_ntp() {
 
     echo "restrict default noquery notrust nomodify" >> "${tmpfile}"
     echo "restrict 127.0.0.1" >> "${tmpfile}"
-    echo "driftfile /var/lib/ntp/ntp.drift" >> "${tmpfile}"
 
     for x in ${servers[@]}; do
 	echo "restrict ${x} nomodify notrap noquery" >> "${tmpfile}"
 	echo "server ${x}" >> "${tmpfile}"
     done
 
-    [[ -f /etc/ntp.conf && ! -f /etc/ntp.conf.sv ]] \
-	&& mv /etc/ntp.conf /etc/ntp.conf.sv
-    mv "${tmpfile}" /etc/ntp.conf
+    echo "driftfile /var/lib/ntp/ntp.drift" >> "${tmpfile}"
+    echo "logfile /var/log/ntp.log" >> "${tmpfile}"
+    
+    [[ -f ${conffile} && ! -f "${conffile}.sv" ]] \
+	&& mv "${conffile}" "${conffile}.sv"
+    mv "${tmpfile}" "${conffile}"
 }
 
 system_nis() {
-    local iface=$1 ifvar=$( bash_variable $1 ) domain x 
-    local -a servers tmpfile="/tmp/yp.conf.$$"
+    local iface=$1 ifvar=$( bash_variable $1 ) domain x
+    local conffile="/etc/yp.conf" tmpfile="/tmp/yp.conf.$$"
+    local -a servers 
 
     eval servers=( \"\$\{nis_servers_${ifvar}\[\@\]\}\" )
     eval domain=\"\$\{nis_domain_${ifvar}\}\"
@@ -115,9 +120,9 @@ system_nis() {
 	done
     fi
 
-    [[ -f /etc/yp.conf && ! -f /etc/yp.conf.sv ]] \
-	&& mv /etc/yp.conf /etc/yp.conf.sv
-    mv "${tmpfile}" /etc/yp.conf
+    [[ -f ${conffile} && ! -f "${conffile}.sv" ]] \
+	&& mv "${conffile}" "${conffile}.sv"
+    mv "${tmpfile}" "${conffile}"
 }
 
 # bool system_post_start(char *iface)
@@ -125,7 +130,7 @@ system_nis() {
 # Configures the host system for dns, ntp and nis information
 # Always returns 0
 system_post_start() {
-    local iface=$1
+    local iface="$1"
 
     system_dns ${iface}
     system_ntp ${iface}
