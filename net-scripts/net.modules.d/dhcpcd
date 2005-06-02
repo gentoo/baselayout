@@ -94,7 +94,7 @@ dhcpcd_stop() {
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 dhcpcd_start() {
     local iface=$1 opts hostname pidfile="/var/run/dhcpcd-$1.pid" dhcp
-    local ifvar=$( bash_variable ${iface} )
+    local ifvar=$( bash_variable ${iface} ) metric
 
     interface_exists ${iface} true || return 1
 
@@ -114,6 +114,22 @@ dhcpcd_start() {
 	&& opts="-h ${hostname} ${opts}"
     fi
 
+    # Stop dhcpcd from bringing the interface down when we exit
+    [[ " ${opts} " != *" -o "* ]] && opts="${opts} -o"
+
+    # Add our route metric - requires dhcpcd-1.3.22_p4-r9
+    # We have no easy way of testing the version, so we force an error
+    # and grep the usage parameters
+    if [[ " ${opts} " != *" -m "* ]]; then
+        if dhcpcd -h 2>&1 | grep -q routemetric ; then
+	    eval metric=\"\$\{metric_${ifvar}\}\"
+	    opts="${opts} -m ${metric}"
+	fi
+    fi
+
+    # Instruct dhcpcd to use our wrapper 
+    opts="${opts} -c /lib/rcscripts/net.modules.d/helpers.d/dhcpcd-wrapper"
+
     # Bring up DHCP for this interface (or alias)
     ebegin "Running dhcpcd"
 
@@ -124,7 +140,7 @@ dhcpcd_start() {
     fi
 
     if [[ ${background} == "yes" ]]; then
-	eval "dhcpcd ${opts} -c /lib/rcscripts/net.modules.d/helpers.d/dhcpcd-backgrounder ${iface}" & >/dev/null
+	eval "dhcpcd ${opts} ${iface}" & >/dev/null
 	eend 0
 	go_background
     fi

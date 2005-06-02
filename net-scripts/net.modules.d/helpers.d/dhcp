@@ -75,15 +75,18 @@ case "${action}" in
     ;;
 esac
 
+MODULES=( "system" )
+
 # Map MAC address variables to interface variables
 . "${MODULES_DIR}/macnet"
 macnet_pre_start ${interface}
 
 # Map wireless ESSID variables to interface variables
-if wireless_check_extensions "${interface}" ; then
-    MODULES=( "${interface_module}" "essidnet" "system" )
-    . "${MODULES_DIR}/essidnet"
-    essidnet_pre_start ${interface}
+if [[ $( type -t wireless_check_extensions ) == "function" ]]; then
+    if wireless_check_extensions "${interface}" ; then
+	. "${MODULES_DIR}/essidnet"
+	essidnet_pre_start ${interface}
+    fi
 fi
 
 # Calculate the metric for our routes

@@ -1,6 +1,17 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  02 Jun 2005; Roy Marples <uberlord@gentoo.org>:
+  
+    dhcp helper module fixes
+    
+    dhcpcd-backgrounder renamed to dhcpcd-wrapper
+    
+    dhcpcd-wrapper applies dns_search_domains_* to /etc/resolv.conf
+    fixes #94027 when used with dhcpcd-1.3.22_p4-r10
+    
+    dhcpcd module now applies route metric if possible
+
   01 Jun 2005; Roy Marples <uberlord@gentoo.org>:
 
     removed cruft from net-scripts functions helper as rc-services.sh can
