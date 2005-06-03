@@ -1,5 +1,8 @@
-# /etc/inputrc:
+# /etc/inputrc: initialization file for readline
 # $Header$
+
+# For more information on how this file works, please see the
+# INITIALIZATION FILE section of the readline(3) man page
 
 # do not bell on tab-completion
 #set bell-style none
