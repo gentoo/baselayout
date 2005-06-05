@@ -22,7 +22,7 @@ start() {
 
 		if [[ -e /etc/sysctl.conf ]] ; then
 			ebegin "Configuring kernel parameters"
-			/sbin/sysctl -p /etc/sysctl.conf &> /dev/null
+			/sbin/sysctl -p /etc/sysctl.conf > /dev/null
 			eend 0
 		fi
 
@@ -61,8 +61,9 @@ start() {
 				fi
 			done
 		fi
-		# Reset pam_console permissions
-		if [[ -x /sbin/pam_console_apply ]] && [[ ! -c /dev/.devfsd ]] ; then
+		# Reset pam_console permissions if we are actually using it
+		if [[ -x /sbin/pam_console_apply && ! -c /dev/.devfsd && \
+		      -n $(grep -v -e '^[[:space:]]*#' /etc/pam.d/* | grep 'pam_console') ]] ; then
 			/sbin/pam_console_apply -r
 		fi
 		# Create the .keep to stop portage from removing /var/lock
