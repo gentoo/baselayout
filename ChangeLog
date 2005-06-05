@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  05 Jun 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Don't send errors from sysctl to /dev/null.
+
   02 Jun 2005; Roy Marples <uberlord@gentoo.org>:
   
     dhcp helper module fixes
