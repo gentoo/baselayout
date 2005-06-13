@@ -1,7 +1,6 @@
 #!/bin/bash
 # Copyright (c) 2004-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header$
 
 # Contributed by Roy Marples (uberlord@gentoo.org)
 # Many thanks to all the people in the Gentoo forums for their ideas and
@@ -51,7 +50,7 @@ macnet_check_depends() {
 # We can override each variable here from a given MAC address of the interface
 # Always returns 0
 macnet_pre_start() {
-    local iface=$1
+    local iface="$1"
 
     interface_exists ${iface} || return 0
 

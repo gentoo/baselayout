@@ -1,7 +1,6 @@
 #!/bin/bash
 # Copyright (c) 2004-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header$
 
 # Contributed by Roy Marples (uberlord@gentoo.org)
 
@@ -35,11 +34,10 @@ fi
 . "${MODULES_DIR}/${interface_module}"
 function_wrap "${interface_module}" interface
 if [[ -n ${wireless_module} ]]; then
+    . /etc/conf.d/wireless
     . "${MODULES_DIR}/${wireless_module}"
     function_wrap "${wireless_module}" wireless
 fi
-
-auto_interface=${auto_interface:-"yes"}
 
 # Bring the interface up
 interface_is_up "${interface}" || interface_up "${interface}"
@@ -51,8 +49,8 @@ case "${action}" in
     "deconfig")
         interface_del_addresses "${interface}"
 	mark_service_inactive "net.${interface}"
-        if [[ ${auto_interface} == "yes" ]]; then
-	    remove_state "${interface}"
+	remove_state "${interface}"
+        if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
 	    best_interface=$( select_best_interface )
 	    apply_state "${best_interface}"
 	fi
@@ -93,7 +91,7 @@ fi
 ifvar=$( bash_variable ${interface} )
 eval metric=\"\$\{metric_${ifvar}\}\"
 if [[ -z ${metric} ]]; then
-    if [[ ${auto_interface} == "yes" ]]; then
+    if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
 	metric=$( calculate_metric ${interface} )
     else
 	metric=0
@@ -130,6 +128,8 @@ if [[ -n ${hostname} ]]; then
     [[ ${x} == "(none)" || ${x} == "localhost" ]] && /bin/hostname "${hostname}"
 fi
 
+[[ ! -d "${statedir}/${interface}" ]] && mkdir -p "${statedir}/${interface}"
+
 # Only setup the information we're told to
 # By default that's everything
 eval dhcp=\" \$\{dhcp_${ifvar}\} \"
@@ -137,10 +137,12 @@ eval dhcp=\" \$\{dhcp_${ifvar}\} \"
 [[ ${dhcp} != *' nontp '* ]] && system_ntp "${interface}"
 [[ ${dhcp} != *' nonis '* ]] && system_nis "${interface}"
 
-if [[ ${auto_interface} == "yes" ]]; then
-    save_state ${interface}
+if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
+    # save_state ${interface}
     best_interface=$( select_best_interface )
-    apply_state ${best_interface}
+    apply_state "${best_interface}"
+else
+    apply_state "${interface}"
 fi
 
 mark_service_started net.${interface}

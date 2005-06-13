@@ -1,7 +1,6 @@
 #!/bin/bash
 # Copyright (c) 2004-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header$
 
 # Contributed by Roy Marples (uberlord@gentoo.org)
 
@@ -18,8 +17,8 @@ service="net.${interface}"
 
 if [[ $2 != "up" && $2 != "new" ]]; then
     service_started "${service}" && mark_service_inactive "${service}"
-    if [[ ${auto_interface} == "yes" ]]; then
-	remove_state "${interface}"
+    remove_state "${interface}" false
+    if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
 	best_interface=$( select_best_interface )
 	apply_state "${best_interface}"
     fi
@@ -71,8 +70,10 @@ eval search=\"\$\{dns_search_domains_${ifvar}\}\"
 
 ! service_stopping "${service}" && mark_service_started "${service}"
 
-if [[ ${autointerface} == "yes" ]]; then
-    save_state "${interface}"
+# save_state "${interface}"
+if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
     best_interface=$( select_best_interface )
     apply_state "${best_interface}"
+else
+    apply_state "${interface}"
 fi

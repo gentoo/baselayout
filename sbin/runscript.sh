@@ -1,7 +1,6 @@
 #!/bin/bash
 # Copyright 1999-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header$
 
 # Common functions
 [[ ${RC_GOT_FUNCTIONS} != "yes" ]] && source /sbin/functions.sh
@@ -256,20 +255,17 @@ svc_start() {
 	local myserv=
 	local ordservice=
 
-	if service_started "${myservice}" || service_starting "${myservice}" ; then
-		if ! service_inactive "${myservice}" ; then
-			if [[ ${RC_QUIET_STDOUT} != "yes" ]] ; then
-				ewarn "WARNING:  \"${myservice}\" has already been started."
-			fi
+	if service_stopping "${myservice}" ; then
+		ewarn "WARNING:  please wait for \"${myservice}\" to stop first."
+		return 0
+	fi
 
+	if ! service_inactive "${myservice}" ; then
+		if service_started "${myservice}" ; then
+			ewarn "WARNING:  \"${myservice}\" has already been started."
 			return 0
-		fi
-
-		if service_stopping "${myservice}" ; then
-			if [[ ${RC_QUIET_STDOUT} != "yes" ]] ; then
-				ewarn "WARNING:  please wait for \"${myservice}\" to stop first."
-			fi
-
+		elif service_starting "${myservice}" ; then	
+			ewarn "WARNING: \"${myservice}\" is already starting."
 			return 0
 		fi
 	fi
@@ -337,7 +333,7 @@ svc_start() {
 				wait_service "${mynetservice}"
 
 				# A 'need' dependency is critical for startup
-				if [ "$?" -ne 0 ] && ineed -t "${myservice}" "${x}" >/dev/null ; then
+				if [ "$?" -ne 0 ] && ineed -t "${myservice}" "${mynetservice}" >/dev/null ; then
 					# Only worry about a net.* service if we do not have one
 					# up and running already, or if RC_NET_STRICT_CHECKING
 					# is set ....

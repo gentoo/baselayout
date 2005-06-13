@@ -1,7 +1,6 @@
 #!/bin/bash
 # Copyright (c) 2004-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header$
 
 # void system_depend(void)
 #
@@ -41,7 +40,7 @@ system_get_vars() {
 
 system_dns() {
     local iface=$1 ifvar=$( bash_variable $1 ) x 
-    local conffile="/etc/resolv.conf" tmpfile="/tmp/resolv.conf.$$"
+    local conffile="${statedir}/${iface}/resolv.conf" tmpfile="${conffile}.$$"
 
     # Nameserver setup for the essid if required
     local -a servers
@@ -61,14 +60,12 @@ system_dns() {
     eval x=\"\$\{dns_search_domains_${ifvar}\}\"
     [[ -n ${x} ]] && echo "search ${x}" >> "${tmpfile}"
 
-    [[ -f ${conffile} && ! -f "${conffile}.sv" ]] \
-	&& mv "${conffile}" "${conffile}".sv
     mv "${tmpfile}" "${conffile}"
 }
 
 system_ntp() {
     local iface=$1 ifvar=$( bash_variable $1 ) x
-    local conffile="/etc/ntp.conf" tmpfile="/tmp/ntp.conf.$$"
+    local conffile="${statedir}/${iface}/ntp.conf" tmpfile="${conffile}.$$"
     local -a servers
 
     eval servers=( \"\$\{ntp_servers_${ifvar}\[\@\]\}\" )
@@ -88,14 +85,12 @@ system_ntp() {
     echo "driftfile /var/lib/ntp/ntp.drift" >> "${tmpfile}"
     echo "logfile /var/log/ntp.log" >> "${tmpfile}"
     
-    [[ -f ${conffile} && ! -f "${conffile}.sv" ]] \
-	&& mv "${conffile}" "${conffile}.sv"
     mv "${tmpfile}" "${conffile}"
 }
 
 system_nis() {
     local iface=$1 ifvar=$( bash_variable $1 ) domain x
-    local conffile="/etc/yp.conf" tmpfile="/tmp/yp.conf.$$"
+    local conffile="${statedir}/${iface}/yp.conf" tmpfile="${conffile}.$$"
     local -a servers 
 
     eval servers=( \"\$\{nis_servers_${ifvar}\[\@\]\}\" )
