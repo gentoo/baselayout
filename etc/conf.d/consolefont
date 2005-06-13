@@ -1,5 +1,4 @@
 # /etc/conf.d/consolefont
-# $Header$
 
 # CONSOLEFONT specifies the default font that you'd like Linux to use on the
 # console.  You can find a good selection of fonts in /usr/share/consolefonts;

@@ -1,5 +1,4 @@
 # /etc/shells: valid login shells
-# $Header$
 /bin/sh
 /bin/bash
 /bin/tcsh

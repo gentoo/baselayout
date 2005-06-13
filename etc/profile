@@ -1,8 +1,8 @@
-# /etc/profile:
-# $Header$
+# /etc/profile: login shell setup
 #
 # That this file is used by any Bourne-shell derivative to setup the
 # environment for login shells.
+#
 
 # Load environment settings from profile.env, which is created by
 # env-update from the files in /etc/env.d

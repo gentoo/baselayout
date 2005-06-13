@@ -1,8 +1,8 @@
 # /etc/filesystems
-# $Header$
-
+#
 # This file defines the filesystems search order used by a
 # 'mount -t auto' command.
+#
 
 # Uncomment the following line if your modular kernel has vfat
 # support and you want mount to try vfat.

@@ -1,5 +1,4 @@
-# /etc/services:
-# $Id$
+# /etc/services
 #
 # Network services, Internet style
 #
@@ -13,6 +12,7 @@
 #
 # Each line describes one service, and is of the form:
 # service-name  port/protocol  [aliases ...]   [# comment]
+#
 
 #
 # IANA Assignments [Well Known Ports]

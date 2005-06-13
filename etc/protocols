@@ -1,12 +1,9 @@
-# /etc/protocols:
-# $Id$
-# $Header$
+# /etc/protocols
 #
-# Internet (IP) protocols
+# Internet (IP) protocols definition file
 #
-#	from: @(#)protocols	5.1 (Berkeley) 4/17/89
+# See protocols(5) for more info
 #
-# Updated for NetBSD based on RFC 1340, Assigned Numbers (July 1992).
 
 ip	0	IP		# internet protocol, pseudo protocol number
 icmp	1	ICMP		# internet control message protocol

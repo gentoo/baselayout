@@ -1,5 +1,4 @@
 # /etc/conf.d/domainname
-# $Header$
 
 # When setting up resolv.conf, what should take precedence?
 # If you wish to always override DHCP/whatever, set this to 1.
