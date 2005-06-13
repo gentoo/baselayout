@@ -1,5 +1,4 @@
-# /etc/env.d/00basic:
-# $Header$
+# /etc/env.d/00basic
 
 PATH="/opt/bin"
 ROOTPATH="/opt/bin"

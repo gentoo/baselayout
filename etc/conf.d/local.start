@@ -1,6 +1,5 @@
 # /etc/conf.d/local.start
-# $Header$
 
-# This is a good place to load any misc.
-# programs on startup ( 1>&2 )
+# This is a good place to load any misc programs
+# on startup ( use 1>&2 to hide output)
 		

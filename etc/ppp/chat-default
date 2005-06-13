@@ -1,5 +1,4 @@
-# /etc/ppp/chat-default:
-# $Header$
+# /etc/ppp/chat-default
 
 'ABORT' 'BUSY'
 'ABORT' 'ERROR'

@@ -1,5 +1,4 @@
 # /etc/conf.d/clock
-# $Header$
 
 # Set CLOCK to "UTC" if your system clock is set to UTC (also known as
 # Greenwich Mean Time).  If your clock is set to the local time, then 
