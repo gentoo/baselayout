@@ -1,6 +1,5 @@
 # Copyright 1999-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header$
 
 # Check to see if this is a livecd, if it is read the commandline
 # this mainly makes sure $CDBOOT is defined if it's a livecd
