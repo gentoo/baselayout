@@ -344,7 +344,7 @@ ifconfig_add_address() {
     local metric ifvar=$( bash_variable ${iface} )
     # Remove the newly added route and replace with our metric
     eval metric=\"\$\{metric_${ifvar}\}\"
-    [[ ${metric} == 0 || ${auto_interface} != "yes" ]] && return ${r}
+    [[ ${metric} == 0 || ${RC_AUTO_INTERFACE} != "yes" ]] && return ${r}
 
     if [[ -z ${netmask} ]]; then
 	for (( i=1; i<${#config[@]}-1; i++ )); do
