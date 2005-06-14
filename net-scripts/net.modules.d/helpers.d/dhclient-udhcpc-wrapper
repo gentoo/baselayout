@@ -45,4 +45,9 @@ export module=dhclient
 
 # Execute the dhclient script and exit with it's code
 /lib/rcscripts/net.modules.d/helpers.d/udhcpc-${iface_type} ${action}
-exit $?
+result="$?"
+
+[[ -e /etc/dhcp/dhclient-exit-hooks ]] \
+    && ( . /etc/dhcp/dhclient-exit-hooks )
+
+exit "${result}"
