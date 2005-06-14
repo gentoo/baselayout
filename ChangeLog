@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  14 Jun 2005; Roy Marples <uberlord@gentoo.org>:
+
+    dhclient now calls /etc/dhcp/dhclient-exit-hooks when it exits
+    fixes #96000
+
   13 Jun 2005; Roy Marples <uberlord@gentoo.org>:
 
     /etc/{resolv,ntp,yp}.conf now link to /var/lib/net-scripts
