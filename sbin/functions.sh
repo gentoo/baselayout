@@ -647,6 +647,16 @@ is_vserver_sys() {
 	return $?
 }
 
+# bool is_xenU_sys()
+#
+#   return 0 if the currently running system is an unprivileged Xen domain
+#
+#   EXAMPLE:  if is_xenU_sys ; then ...
+#
+is_xenU_sys() {
+	[[ -d /proc/xen && ! -f /proc/xen/privcmd ]]
+}
+
 # bool get_mount_fstab(path)
 #
 #   return the parameters to pass to the mount command generated from fstab

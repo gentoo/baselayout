@@ -12,15 +12,15 @@ setupopts() {
 	if is_uml_sys ; then
 		TBLURB="UML"
 		fakeit=1
-		return 0
 	elif is_vserver_sys ; then
 		TBLURB="VServer"
 		fakeit=1
-		return 0
+	elif is_xenU_sys ; then
+		TBLURB="xen"
+		fakeit=1
 	elif grep -q ' cobd$' /proc/devices ; then
 		TBLURB="coLinux"
 		fakeit=1
-		return 0
 	elif [[ ${CLOCK} == "UTC" ]] ; then
 		myopts="--utc"
 		TBLURB="UTC"
@@ -28,6 +28,7 @@ setupopts() {
 		myopts="--localtime"
 		TBLURB="Local Time"
 	fi
+	[[ ${fakeit} -eq 1 ]] && return 0
 
 	if [[ ${readonly} == "yes" ]] ; then
 		myadj="--noadjfile"
@@ -102,9 +103,9 @@ stop() {
 	setupopts
 
 	ebegin "Syncing system clock to hardware clock [${TBLURB}]"
-	if [[ ${CLOCK} == "UML" ]] ; then
+	if [[ ${fakeit} -eq 1 ]] ; then
 		ret=0
-	
+
 	elif [[ -x /sbin/hwclock ]] ; then
 		errstr=$(/sbin/hwclock --systohc ${myopts} 2>&1 >/dev/null)
 
