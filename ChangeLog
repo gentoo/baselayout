@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  16 Jun 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Add lmtp as an alias to the 2003 tcp port #96190.
+
   14 Jun 2005; Roy Marples <uberlord@gentoo.org>:
 
     dhclient now calls /etc/dhcp/dhclient-exit-hooks when it exits
