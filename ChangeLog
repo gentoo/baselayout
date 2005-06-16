@@ -5,6 +5,8 @@
 
     Add lmtp as an alias to the 2003 tcp port #96190.
 
+    Add support for Xen to clock init.d #96240 by Christopher G. Stach II.
+
   14 Jun 2005; Roy Marples <uberlord@gentoo.org>:
 
     dhclient now calls /etc/dhcp/dhclient-exit-hooks when it exits
