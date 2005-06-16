@@ -923,7 +923,7 @@ rndc		953/udp
 skkserv		1178/tcp			# SKK Japanese input method
 xtel		1313/tcp			# french minitel
 support		1529/tcp			# GNATS
-cfinger		2003/tcp			# GNU Finger
+cfinger		2003/tcp	lmtp		# GNU Finger
 ninstall	2150/tcp			# ninstall service
 ninstall	2150/udp
 afbackup	2988/tcp			# Afbackup system
