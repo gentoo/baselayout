@@ -192,7 +192,7 @@ mount_readonly() {
 	sync; sync
 	sleep 1
 
-	for x in $(awk '$1 != "none" { print $2 }' /proc/mounts | sort -r) ; do
+	for x in $(awk '$1 != "none" { print $2 }' /proc/mounts | sort -ur) ; do
 		x=${x//\\040/ }
 		if [[ ${cmd} == "u" ]]; then
 			umount -r -r "${x}"
