@@ -31,11 +31,7 @@ ifconfig() {
 }
 
 ip=${ip// }
-ip=${ip//000/0}
-ip=${ip//00/0}
 subnet=${subnet// }
-subnet=${subnet//000/0}
-subnet=${subnet//00/0}
 broadcast=${broadcast// }
 [[ -n ${broadcast} ]] && broadcast="broadcast ${broadcast}"
 

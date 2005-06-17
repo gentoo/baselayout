@@ -1,6 +1,6 @@
 # Copyright (c) 2004-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header$
+# $Header: /var/cvsroot/gentoo-src/rc-scripts/net-scripts/net.modules.d/udhcpc,v 1.20.2.5 2005/03/21 16:06:04 uberlord Exp $
 
 # Contributed by Roy Marples (uberlord@gentoo.org)
 
@@ -134,10 +134,10 @@ udhcpc_start() {
 		[[ -n ${x} ]] && opts="${opts} --request=${x}"
 	fi
 
-	x=$( eval "udhcpc ${hostname} ${opts} --script=${script} --now --pidfile=${pidfile} --interface=${iface}" )
+	x=$( eval "udhcpc ${hostname} ${opts} --script=${script} --now --pidfile=${pidfile} --interface=${iface} 2>&1 | egrep -v '^info,'" )
 	# We just check the last 5 letters
 	[[ ${x:((${#x} - 5)):5} == bound ]]
-	eend $? || return 1
+	eend $? "${x}" || return 1
 
 	# DHCP succeeded, show address retrieved
 	local addr=$( interface_get_address ${iface} )

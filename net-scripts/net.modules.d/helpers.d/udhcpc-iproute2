@@ -62,10 +62,6 @@ fi
 # Configure our default route
 x=$(ip route show | awk '{ if ($1 == "default") {print $3} }')
 for r in ${router}; do
-	# ip route doesn't pad 0's, so we strip any padding if we have any
-	r=${r//000/0}
-	r=${r//00/0}
-
 	# We can only have one default route!
 	if [[ -z ${x} ]]; then
 		ip route add default via ${r} dev ${interface} 2>/dev/null && break

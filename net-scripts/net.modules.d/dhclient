@@ -1,6 +1,6 @@
 # Copyright (c) 2004-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header$
+# $Header: /var/cvsroot/gentoo-src/rc-scripts/net-scripts/net.modules.d/dhclient,v 1.18.2.3 2005/01/25 10:42:54 uberlord Exp $
 
 # Contributed by Roy Marples (uberlord@gentoo.org)
 
@@ -119,12 +119,14 @@ dhclient_start() {
 	fi
 
 	eval opts=\"\$\{dhclient_${ifvar}\}\"
-	local x=$( dhclient ${opts} -1 -sf ${script} -pf ${pidfile} -q ${iface} )
+	local x=$( dhclient ${opts} -1 -sf ${script} -pf ${pidfile} -q ${iface} 2>&1 )
+
 	# We just check the last 5 letters
 	[[ ${x:${#x} - 5:5} == bound ]]
 	if [[ $? != 0 ]]; then
+		echo "${x}" >&2
 		# We need to kill the process if we fail
-		kill -s TERM $( cat ${pidfile} ) 2>/dev/null
+		kill -s TERM $( < ${pidfile} ) 2>/dev/null
 		eend 1
 		return 1
 	fi
