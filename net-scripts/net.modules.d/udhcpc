@@ -67,24 +67,24 @@ udhcpc_stop() {
     [[ ! -f ${pidfile} ]] && return 0
 
     ebegin "Stopping udhcpc on ${iface}"
-    local pid=$( < ${pidfile} ) e=true
+    local pid=$( < "${pidfile}" ) e=true
 
-    local ifvar=$( bash_variable ${iface} )
+    local ifvar=$( bash_variable "${iface}" )
     # Release the lease if told to
     eval dhcp=\" \$\{dhcp_${ifvar}\} \"
     if [[ ${dhcp} == *' release '* ]]; then
-	kill -s USR2 ${pid} &>/dev/null
-	[[ -f /var/cache/dhcp-${iface}.lease ]] \
-	&& rm /var/cache/dhcp-${iface}.lease
+	kill -s USR2 "${pid}" &>/dev/null
+	[[ -f "/var/cache/dhcp-${iface}.lease" ]] \
+	&& rm "/var/cache/dhcp-${iface}.lease"
     fi
 
-    kill -s TERM ${pid} &>/dev/null
+    kill -s TERM "${pid}" &>/dev/null
 
     # udhcp-0.9.8-r3 and earlier do not process signals correctly
     # so we need to kill them off
-    if [[ -d /proc/${pid} ]]; then
-	kill -s KILL ${pid} &>/dev/null
-	[[ -d /proc/${pid} ]] && e=false
+    if [[ -d "/proc/${pid}" ]]; then
+	kill -s KILL "${pid}" &>/dev/null
+	[[ -d "/proc/${pid}" ]] && e=false
     fi
 
     ${e}
@@ -98,36 +98,39 @@ udhcpc_stop() {
 #
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 udhcpc_start() {
-    local iface=$1 opts hostname pidfile="/var/run/udhcpc-$1.pid"
+    local iface="$1" opts hostname pidfile="/var/run/udhcpc-$1.pid"
     local cachefile="/var/cache/dhcp-${1}.lease" x
 
-    interface_exists ${iface} true || return 1
+    interface_exists "${iface}" true || return 1
 
-    local ifvar=$( bash_variable ${iface} ) opts hostname
+    local ifvar=$( bash_variable "${iface}" ) opts hostname
     eval opts=\"\$\{udhcpc_${ifvar}\}\"
 
     if [[ ${opts} != *'--hostname='* ]]; then
 	hostname=$( hostname )
-	[[ -n ${hostname} && ${hostname} != "(none)" ]] && opts="${opts} --hostname=${hostname}"
+	[[ -n ${hostname} && ${hostname} != "(none)" ]] \
+	&& opts="${opts} --hostname=${hostname}"
     fi
 
     # Bring up DHCP for this interface (or alias)
     ebegin "Running udhcpc"
 
-    if ! clean_pidfile ${pidfile} ; then
+    if ! clean_pidfile "${pidfile}" ; then
 	ewarn "udhcpc is already running on ${iface}"
 	eend 0
 	return 0
     fi
 
     # Try and load the cache if it exists
-    if [[ -f ${cachefile} && ${opts} != *'--request='* && ${opts} != *'-r '* ]]; then
-	x=$( < ${cachefile} )
+    if [[ -f ${cachefile} \
+	&& ${opts} != *'--request='* && ${opts} != *'-r '* ]]; then
+	x=$( < "${cachefile}" )
 	[[ -n ${x} ]] && opts="${opts} --request=${x}"
     fi
 
     if [[ ${background} == "yes" ]]; then
-	eval "udhcpc ${opts} --script=${MODULES_DIR}/helpers.d/udhcpc-wrapper --pidfile=${pidfile} --interface=${iface}" &>/dev/null &
+	eval "udhcpc ${opts} --script=${MODULES_DIR}/helpers.d/udhcpc-wrapper \
+	--pidfile=${pidfile} --interface=${iface}" &>/dev/null &
 	eend 0
 	go_background
     fi
@@ -140,7 +143,7 @@ udhcpc_start() {
     eend $? "${x}" || return 1
 
     # DHCP succeeded, show address retrieved
-    local addr=$( interface_get_address ${iface} )
+    local addr=$( interface_get_address "${iface}" )
     einfo "${iface} received address ${addr}"
 
     return 0

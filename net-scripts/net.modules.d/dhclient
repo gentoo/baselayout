@@ -53,7 +53,7 @@ dhclient_check_depends() {
 # Returns a string spaced with possible user set
 # configuration variables
 dhclient_get_vars() {
-    echo "dhclient_${1} dhcp_${1}"
+    echo "dhclient_$1 dhcp_$1"
 }
 
 # bool dhclient_stop(char *iface)
@@ -61,8 +61,8 @@ dhclient_get_vars() {
 # Stop dhclient on an interface
 # Always returns 0
 dhclient_stop() {
-    local iface=$1 dhcp release
-    local pidfile="/var/run/dhclient-$1.pid"
+    local iface="$1" dhcp release
+    local pidfile="/var/run/dhclient-${iface}.pid"
 
     dhclient_check_installed || return 0
     [[ ! -f ${pidfile} ]] && return 0
@@ -70,21 +70,22 @@ dhclient_stop() {
     # We check for a dhclient process first as if we attempt to release
     # an interface for which dhclient has obtained an IP in the past
     # it causes a "RELEASE" event anyway.
-    local pid=$( < ${pidfile} )
+    local pid=$( < "${pidfile}" )
 
-    local ifvar=$( bash_variable ${iface} )
+    local ifvar=$( bash_variable "${iface}" )
     eval dhcp=\" \$\{dhcp_${ifvar}\} \"
 
     ebegin "Stopping dhclient on ${iface}"
     if [[ ${dhcp} == *' release '* ]]; then
-	local r=$( dhclient -q -r -sf ${MODULES_DIR}/helpers.d/dhclient-wrapper -pf ${pidfile} ${iface} )
+	local r=$( dhclient -q -r -pf "${pidfile}" \
+	    -sf "${MODULES_DIR}/helpers.d/dhclient-wrapper" "${iface}" )
 	[[ ${r} == "deconfig" ]]
 	eend $? "dhclient returned a ${r}"
-	[[ -f /var/cache/dhcp-${iface}.lease ]] \
-	&& rm -f /var/cache/dhcp-${iface}.lease
+	[[ -f "/var/cache/dhcp-${iface}.lease" ]] \
+	&& rm -f "/var/cache/dhcp-${iface}.lease"
     else
-	kill -s TERM ${pid} 2>/dev/null
-	clean_pidfile ${pidfile}
+	kill -s TERM "${pid}" 2>/dev/null
+	clean_pidfile "${pidfile}"
 	eend 0
     fi
 
@@ -97,15 +98,15 @@ dhclient_stop() {
 #
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 dhclient_start() {
-    local iface=$1 opts ifvar=$( bash_variable $1 )
-    local pidfile="/var/run/dhclient-$1.pid"
+    local iface="$1" opts ifvar=$( bash_variable "$1" )
+    local pidfile="/var/run/dhclient-${iface}.pid"
 
-    interface_exists ${iface} true || return 1
+    interface_exists "${iface}" true || return 1
 
     # Bring up DHCP for this interface (or alias)
     ebegin "Running dhclient"
 
-    if ! clean_pidfile ${pidfile} ; then
+    if ! clean_pidfile "${pidfile}" ; then
 	ewarn "dhclient is already running on ${iface}"
 	eend 0
 	return 0
@@ -114,25 +115,28 @@ dhclient_start() {
     eval opts=\"\$\{dhclient_${ifvar}\}\"
 
     if [[ ${background} == "yes" ]]; then
-	dhclient ${opts} -sf ${MODULES_DIR}/helpers.d/dhclient-wrapper -pf ${pidfile} -q ${iface} &>/dev/null &
+	dhclient ${opts} -pf "${pidfile}" -q \
+	    -sf "${MODULES_DIR}/helpers.d/dhclient-wrapper" \
+	    "${iface}" &>/dev/null &
 	eend 0
 	go_background
     fi
 
-    local x=$( dhclient ${opts} -1 -sf ${MODULES_DIR}/helpers.d/dhclient-wrapper -pf ${pidfile} -q ${iface} 2>&1 )
+    local x=$( dhclient ${opts} -1 -pf "${pidfile}" \
+	-sf "${MODULES_DIR}/helpers.d/dhclient-wrapper" -q "${iface}" 2>&1 )
     # We just check the last 5 letters
     [[ ${x:${#x} - 5:5} == "bound" ]]
     if [[ $? != 0 ]]; then
 	echo "${x}"
 	# We need to kill the process if we fail
-	[[ -e ${pidfile} ]] && kill -s TERM $( < ${pidfile} ) 2>/dev/null
+	[[ -e ${pidfile} ]] && kill -s TERM $( < "${pidfile}" ) 2>/dev/null
 	eend 1
 	return 1
     fi
     eend 0
 
     # DHCP succeeded, show address retrieved
-    local addr=$( interface_get_address ${iface} )
+    local addr=$( interface_get_address "${iface}" )
     einfo "${iface} received address ${addr}"
 
     return 0

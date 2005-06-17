@@ -61,7 +61,7 @@ dhcpcd_check_depends() {
 # Returns a string spaced with possible user set
 # configuration variables
 dhcpcd_get_vars() {
-    echo "dhcpcd_${1} dhcp_${1}"
+    echo "dhcpcd_$1 dhcp_$1"
 }
 
 # bool dhcpcd_stop(char *iface)
@@ -80,7 +80,7 @@ dhcpcd_stop() {
     ebegin "Stopping dhcpcd on ${iface}"
     local pid=$( < ${pidfile} )
 
-    local ifvar=$( bash_variable ${iface} )
+    local ifvar=$( bash_variable "${iface}" )
     eval dhcp=\" \$\{dhcp_${ifvar}\} \"
     if [[ ${dhcp} == *' release '* ]]; then
 	signal="HUP"
@@ -88,8 +88,8 @@ dhcpcd_stop() {
 	signal="TERM"
     fi
 
-    kill -s ${signal} ${pid} &>/dev/null 
-    process_finished ${pid} dhcpcd
+    kill -s "${signal}" "${pid}" &>/dev/null 
+    process_finished "${pid}" dhcpcd
     eend $? "timed out"
     return $?
 }
@@ -100,10 +100,10 @@ dhcpcd_stop() {
 #
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 dhcpcd_start() {
-    local iface=$1 opts hostname pidfile="/var/run/dhcpcd-$1.pid" dhcp
-    local ifvar=$( bash_variable ${iface} ) metric
+    local iface="$1" opts hostname pidfile="/var/run/dhcpcd-$1.pid" dhcp
+    local ifvar=$( bash_variable "${iface}" ) metric
 
-    interface_exists ${iface} true || return 1
+    interface_exists "${iface}" true || return 1
 
     # Get our options
     eval opts=\"\$\{dhcpcd_${ifvar}\}\"
@@ -117,7 +117,8 @@ dhcpcd_start() {
     # We transmit the hostname by default
     if [[ ${opts} != *'-h '* ]]; then
 	hostname=$( hostname )
-	[[ -n ${hostname} && ${hostname} != "(none)" && ${hostname} != "localhost" ]] \
+	[[ -n ${hostname} && ${hostname} != "(none)" \
+	&& ${hostname} != "localhost" ]] \
 	&& opts="-h ${hostname} ${opts}"
     fi
 
@@ -137,7 +138,7 @@ dhcpcd_start() {
     # Bring up DHCP for this interface (or alias)
     ebegin "Running dhcpcd"
 
-    if ! clean_pidfile ${pidfile} ; then
+    if ! clean_pidfile "${pidfile}" ; then
 	ewarn "dhcpcd is already running on ${iface}"
 	eend 0
 	return 0
@@ -153,7 +154,7 @@ dhcpcd_start() {
     eend $? || return 1
 
     # DHCP succeeded, show address retrieved
-    local addr=$( interface_get_address ${iface} )
+    local addr=$( interface_get_address "${iface}" )
     einfo "${iface} received address ${addr}"
 
     return 0

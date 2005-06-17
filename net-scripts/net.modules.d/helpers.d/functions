@@ -37,7 +37,7 @@ save_state() {
     local iface="$1"
     local d="${statedir}/${iface}"
 
-    [[ ! -d ${d} ]] && mkdir -p "${d}"
+    [[ ! -d "${d}" ]] && mkdir -p "${d}"
     cp -a /etc/resolv.conf /etc/ntp.conf /etc/yp.conf "${d}" 2>/dev/null
 }
 
@@ -65,7 +65,7 @@ apply_state() {
     fi
 
     local d="${statedir}/${iface}"
-    [[ -d ${d} ]] && cp -aR "${d}"/* "${netdir}" 
+    [[ -d "${d}" ]] && cp -aR "${d}"/* "${netdir}" 
 }
 
 # char* select_best_interface() {
@@ -73,7 +73,8 @@ apply_state() {
 # Selects the best interface to apply state information to
 # This is currently based on routing metrics
 select_best_interface() {
-    awk '$2=="00000000" { print $7, $1 }' /proc/net/route | sort -n | head -n 1 | cut -d' ' -f2
+    awk '$2=="00000000" { print $7, $1 }' /proc/net/route \
+    | sort -n | head -n 1 | cut -d' ' -f2
 }
 
 # int calculate_metric(char *interface)
@@ -85,7 +86,8 @@ calculate_metric() {
     local iface="$1" exclude='$1!="Iface" && $1!="lo"'
 
     # Have we already got a metric?
-    local m=$( awk '$1=="'${iface}'" && $2=="00000000" { print $7 }' /proc/net/route )
+    local m=$( awk '$1=="'${iface}'" && $2=="00000000" { print $7 }' \
+    /proc/net/route )
     if [[ -n ${m} ]]; then
 	echo "${m}"
 	return 0
@@ -113,7 +115,8 @@ calculate_metric() {
 	exclude="${exclude} && "'$1'"!=\"${x}\""
     done
 
-    local m=$( awk "${exclude} { print "'$7'" }" /proc/net/route | sort -rn | head -n 1 | cut -d' ' -f2 )
+    local m=$( awk "${exclude} { print "'$7'" }" /proc/net/route \
+    | sort -rn | head -n 1 | cut -d' ' -f2 )
     m="${m:--1}"
     (( m ++ ))
 
@@ -126,7 +129,7 @@ calculate_metric() {
     [[ ${itype} == "ippp" ]] && (( m+= 2000 ))
     [[ ${itype} == "ppp" ]] && (( m+= 3000 ))
 
-    echo ${m}
+    echo "${m}"
 }
 
 # int netmask2cidr(char *netmask)
@@ -192,7 +195,7 @@ ip_network() {
     if [[ -z ${mask} ]]; then
 	mask="${ip##*/}"
 	[[ -z ${mask} || ${mask} == ${ip} ]] && return 1
-	mask=$( cidr2netmask ${mask} )
+	mask=$( cidr2netmask "${mask}" )
 	ip="${ip%%/*}"
     fi
 
@@ -208,7 +211,6 @@ ip_network() {
     echo "${network}"
 }
 
-
 # bool clean_pidfile(char *file)
 #
 # Removes the given pidfile if the process is not running
@@ -222,10 +224,10 @@ clean_pidfile() {
     if [[ -n ${pid} ]]; then
 	local cmd="${pidfile##*/}"
 	cmd="${cmd%%-*}"
-	ps -p ${pid} 2>/dev/null | grep -q ${cmd} && return 1
+	ps -p "${pid}" 2>/dev/null | grep -q "${cmd}" && return 1
     fi
 
-    rm -f ${pidfile}
+    rm -f "${pidfile}"
     return 0
 }
 
@@ -237,7 +239,7 @@ process_finished() {
     local i pid="$1" cmd="$2" secs="${3:-9}"
 
     for (( i=0; i<secs; i++ )); do
-	ps -p ${pid} 2>/dev/null | grep -q ${cmd} || return 0
+	ps -p "${pid}" 2>/dev/null | grep -q "${cmd}" || return 0
 	sleep 1
     done
 
@@ -290,14 +292,14 @@ configure_variables() {
 
     local mod func x i
     local -a ivars ovars1 ovars2
-    local ifvar=$( bash_variable ${iface} )
+    local ifvar=$( bash_variable "${iface}" )
 
     for mod in ${MODULES[@]}; do
 	func="${mod}_get_vars"
 	if [[ $( type -t ${func} ) == "function" ]]; then
-	    ivars=( $( ${func} ${ifvar} ) )
-	    ovars1=( $( ${func} ${option1} ) )
-	    [[ -n ${option2} ]] && ovars2=( $( ${func} ${option2} ) )
+	    ivars=( $( "${func}" "${ifvar}" ) )
+	    ovars1=( $( "${func}" "${option1}" ) )
+	    [[ -n ${option2} ]] && ovars2=( $( "${func}" "${option2}" ) )
 	    for ((i = 0; i<${#ivars[@]}; i++)); do
 		x=""
 		[[ -n ${ovars2[i]} ]] && eval x=( \"\$\{${ovars2[i]}\[@\]\}\" )

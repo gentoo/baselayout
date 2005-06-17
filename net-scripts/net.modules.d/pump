@@ -62,7 +62,7 @@ pump_get_vars() {
 # Return 0 if pump is not running or we stop it successfully
 # Otherwise 1
 pump_stop() {
-    local iface=$1 count e
+    local iface="$1" count e
 
     pump_check_installed || return 0
 
@@ -70,12 +70,12 @@ pump_stop() {
     # causes pump to spawn a process
     pidof pump &>/dev/null || return 0
 
-    e=$( pump --status --interface ${iface} 2>/dev/null | grep ${iface} )
+    e=$( pump --status --interface "${iface}" 2>/dev/null | grep "${iface}" )
     [[ -z ${e} ]] && return 1
 
     ebegin "Stopping pump on ${iface}"
     for ((count = 0; count < 9; count = count + 1)); do
-	e=$( pump --release --interface ${iface} 2>/dev/null )
+	e=$( pump --release --interface "${iface}" 2>/dev/null )
 	[[ -z ${e} ]] && break
 	sleep 1
     done
@@ -91,9 +91,9 @@ pump_stop() {
 # Returns 0 (true) when a dhcp address is obtained, otherwise
 # the return value from pump
 pump_start() {
-    local iface=$1 opts hostname dhcp ifvar=$( bash_variable $1 )
+    local iface="$1" opts hostname dhcp ifvar=$( bash_variable "$1" )
 
-    interface_exists ${iface} true || return 1
+    interface_exists "${iface}" true || return 1
 
     eval opts=\"\$\{pump_${ifvar}\}\"
 
@@ -110,17 +110,18 @@ pump_start() {
 
     # Bring up DHCP for this interface (or alias)
     ebegin "Running pump"
-    pump ${opts} --win-client-ident --interface ${iface}
+    pump ${opts} --win-client-ident --interface "${iface}"
     eend $? || return $?
 
     # pump succeeded, show address retrieved
-    local addr=$( interface_get_address ${iface} )
+    local addr=$( interface_get_address "${iface}" )
     einfo "${iface} received address ${addr}"
 
     eval peer=\"\$\{dhcp_ntp_${iface}\}\"
     [[ -z ${peer} ]] && eval peer=\"\$\{dhcp_ntp\}\"
     if [[ ${peer} != "no" ]]; then
-	eval ntp_servers_${ifvar}=$( pump -i ${iface} --status | sed -n -e 's/^.*Ntpservers: //p' )
+	eval ntp_servers_${ifvar}=$( pump -i "${iface}" --status \
+	| sed -n -e 's/^.*Ntpservers: //p' )
 	system_ntp
     fi
 

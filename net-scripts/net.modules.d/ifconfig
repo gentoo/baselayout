@@ -61,7 +61,7 @@ ifconfig_check_depends() {
 #
 # Returns 1 if the interface exists, otherwise 0
 ifconfig_exists() {
-    local e=$( ifconfig -a | grep -o "^$1" ) report=${2:-false}
+    local e=$( ifconfig -a | grep -o "^$1" ) report="${2:-false}"
     [[ -n ${e} ]] && return 0
     ${report} && eerror "$1 does not exist"
     return 1
@@ -71,14 +71,14 @@ ifconfig_exists() {
 #
 # provides a generic interface for bringing interfaces up
 ifconfig_up() {
-    ifconfig $1 up
+    ifconfig "$1" up
 }
 
 # void ifconfig_down(char *iface)
 #
 # provides a generic interface for bringing interfaces down
 ifconfig_down() {
-    ifconfig $1 down
+    ifconfig "$1" down
 }
 
 # bool ifconfig_is_up(char *iface, bool withaddress)
@@ -87,9 +87,9 @@ ifconfig_down() {
 # If withaddress is true then the interface has to have an IPv4 address
 # assigned as well
 ifconfig_is_up() {
-    local check="\<UP\>" addr=${2:-false}
+    local check="\<UP\>" addr="${2:-false}"
     ${addr} && check="\<inet addr:.*${check}"
-    ifconfig $1 | grep -Eq "${check}" && return 0
+    ifconfig "$1" | grep -Eq "${check}" && return 0
     return 1
 }
 
@@ -97,9 +97,9 @@ ifconfig_is_up() {
 #
 # Sets or disables the interface flag 
 ifconfig_set_flag() {
-    local iface=${1} flag=${2} enable=${3}
+    local iface="$1" flag="$2" enable="$3"
     ${enable} || flag="-${flag}"
-    ifconfig ${iface} ${flag}
+    ifconfig "${iface}" "${flag}"
 }
 
 # void ifconfig_get_address(char *interface)
@@ -107,8 +107,9 @@ ifconfig_set_flag() {
 # Fetch the address retrieved by DHCP.  If successful, echoes the
 # address on stdout, otherwise echoes nothing.
 ifconfig_get_address() {
-    local -a x=( $( ifconfig $1 | sed -n -e 's/.*inet addr:\([^ ]*\).*Mask:\([^ ]*\).*/\1 \2/p' ) )
-    x[1]=$( netmask2cidr ${x[1]} )
+    local -a x=( $( ifconfig "$1" \
+	| sed -n -e 's/.*inet addr:\([^ ]*\).*Mask:\([^ ]*\).*/\1 \2/p' ) )
+    x[1]=$( netmask2cidr "${x[1]}" )
     echo "${x[0]}/${x[1]}"
 }
 
@@ -116,14 +117,14 @@ ifconfig_get_address() {
 #
 # Fetch the mac address assingned to the network card
 ifconfig_get_mac_address() {
-    ifconfig $1 | sed -n -e 's/^HWaddr .*\<\(..:..:..:..:..:..\)\>.*/\U\1/p'
+    ifconfig "$1" | sed -n -e 's/^HWaddr .*\<\(..:..:..:..:..:..\)\>.*/\U\1/p'
 }
 
 # void ifconfig_set_mac_address(char *interface, char *mac)
 #
 # Assigned the mac address to the network card
 ifconfig_set_mac_address() {
-    ifconfig $1 hw ether $2
+    ifconfig "$1" hw ether "$2"
 }
 
 # void ifconfig_get_aliases_rev(char *interface)
@@ -141,24 +142,25 @@ ifconfig_get_aliases_rev() {
 # were addresses to remove (whether successful or not).  Returns 1
 # (false) if there were no addresses to remove.
 ifconfig_del_addresses() {
-    local iface=$1 i
+    local iface="$1" i
     # We don't remove addresses from aliases
     [[ ${iface} == *:* ]] && return 0
 
     # If the interface doesn't exist, don't try and delete
-    ifconfig_exists ${iface} || return 0
+    ifconfig_exists "${iface}" || return 0
 
     # iproute2 can add many addresses to an iface unlike ifconfig ...
     # iproute2 added addresses cause problems for ifconfig
     # as we delete an address, a new one appears, so we have to
     # keep polling
-    while ifconfig ${iface} | grep -q -m1 -o 'inet addr:[^ ]*' ; do
-	ifconfig ${iface} 0.0.0.0 || break
+    while ifconfig "${iface}" | grep -q -m1 -o 'inet addr:[^ ]*' ; do
+	ifconfig "${iface}" 0.0.0.0 || break
     done
 
     # Remove IPv6 addresses
-    for i in $( ifconfig ${iface} | sed -n -e 's/^.*inet6 addr: \([^ ]*\) Scope:[^L].*/\1/p' ) ; do
-	/sbin/ifconfig ${iface} inet6 del ${i}
+    for i in $( ifconfig "${iface}" \
+    | sed -n -e 's/^.*inet6 addr: \([^ ]*\) Scope:[^L].*/\1/p' ) ; do
+	/sbin/ifconfig "${iface}" inet6 del "${i}"
     done
     return 0
 }
@@ -168,7 +170,9 @@ ifconfig_del_addresses() {
 # Returns a string spaced with possible user set
 # configuration variables
 ifconfig_get_vars() {
-    echo "config_$1 routes_$1 fallback_$1 metric_$1 ifconfig_$1 ifconfig_fallback_$1 routes_$1 inet6_$1 iface_$1 alias_$1 broadcast_$1 netmask_$1"
+    echo "config_$1 routes_$1 fallback_$1 metric_$1 ifconfig_$1 \
+    ifconfig_fallback_$1 routes_$1 inet6_$1 iface_$1 alias_$1 \
+    broadcast_$1 netmask_$1"
     # The depreciated gateway var has to be handled by
     # each module if needed
 }
@@ -177,7 +181,7 @@ ifconfig_get_vars() {
 #
 # Returns config and config_fallback for the given interface
 ifconfig_get_old_config() {
-    local iface=$1 ifvar=$( bash_variable $1 ) i inet6
+    local iface="$1" ifvar=$( bash_variable "$1" ) i inet6
 
     eval config=( \"\$\{ifconfig_${ifvar}\[@\]\}\" )
     eval config_fallback=( \"\$\{ifconfig_fallback_${ifvar}\[@\]\}\" )
@@ -185,7 +189,7 @@ ifconfig_get_old_config() {
 
     # BACKWARD COMPATIBILITY: populate the config_IFACE array
     # if iface_IFACE is set (fex. iface_eth0 instead of ifconfig_eth0)
-    eval local i=\"\$\{iface_${ifvar}\}\"
+    eval i=\"\$\{iface_${ifvar}\}\"
     if [[ -n ${i} && -z ${config} ]]; then
 	# Make sure these get evaluated as arrays
 	local -a aliases broadcasts netmasks
@@ -221,8 +225,8 @@ ifconfig_iface_stop() {
     # will try to bring it up with an address of "down" which
     # fails.  Do some double-checking before returning error
     # status
-    ifconfig_is_up $1 || return 0
-    ifconfig_down $1 && return 0
+    ifconfig_is_up "$1" || return 0
+    ifconfig_down "$1" && return 0
 
     # It is sometimes impossible to transition an alias from the
     # UP state... particularly if the alias has no address.  So
@@ -241,7 +245,7 @@ ifconfig_iface_stop() {
 # fail, the routine should still return success to indicate that
 # net.eth0 was successful
 ifconfig_post_start() {
-    local iface=$1 ifvar=$( bash_variable $1 ) routes x metric
+    local iface="$1" ifvar=$( bash_variable "$1" ) routes x metric
     eval metric=\"\$\{metric_${ifvar}\}\"
 
     # Make sure interface is marked UP
@@ -282,7 +286,7 @@ ifconfig_post_start() {
 	# Add a metric if we don't have one
 	[[ ${x} != *' metric '* ]] && x="${x} metric ${metric}"
 
-	route add ${x} dev ${iface} 
+	route add ${x} dev "${iface}"
 	eend $?
     done
     eoutdent
@@ -294,7 +298,7 @@ ifconfig_post_start() {
 #
 # Adds the given address to the interface
 ifconfig_add_address() {
-    local iface=$1 i=0 r e
+    local iface="$1" i=0 r e
 
     ifconfig_exists ${iface} true || return 1
 
@@ -310,16 +314,17 @@ ifconfig_add_address() {
 	# for multiple addresses
 	if ifconfig ${iface} | grep -Eq "\<inet addr:.*" ; then
 	    # Get the last alias made for the interface and add 1 to it
-	    i=$( ifconfig | tac | grep -m 1 -o "^${iface}:[0-9]*" | sed -n -e 's/'${iface}'://p' )
-	    i=${i:-0}
+	    i=$( ifconfig | tac | grep -m 1 -o "^${iface}:[0-9]*" \
+	    | sed -n -e 's/'"${iface}"'://p' )
+	    i="${i:-0}"
 	    (( i++ ))
-	    iface=${iface}:${i}
+	    iface="${iface}:${i}"
 	fi
 
 	# ifconfig doesn't like CIDR addresses
-	local ip=${config[0]%%/*} cidr=${config[0]##*/} netmask
+	local ip="${config[0]%%/*}" cidr="${config[0]##*/}" netmask
 	if [[ -n ${cidr} && ${cidr} != ${ip} ]]; then
-	    netmask=$( cidr2netmask ${cidr} )
+	    netmask=$( cidr2netmask "${cidr}" )
 	    config[0]="${ip} netmask ${netmask}"
 	fi	
 
@@ -330,18 +335,19 @@ ifconfig_add_address() {
     fi
 
     # Some kernels like to apply lo with an address when they are brought up
-    if [[ ${iface} == "lo" || ${config[@]} == "127.0.0.1/8 broadcast 127.255.255.255" ]]; then
-	ifconfig ${iface} ${config[@]} 2>/dev/null
+    if [[ ${iface} == "lo" \
+	|| ${config[@]} == "127.0.0.1/8 broadcast 127.255.255.255" ]]; then
+	ifconfig "${iface}" ${config[@]} 2>/dev/null
 	r=0
     else
-	e=$( ifconfig ${iface} ${config[@]} 2>&1 )
+	e=$( ifconfig "${iface}" ${config[@]} 2>&1 )
 	r=$?
 	[[ ${r} != 0 ]] && echo "${e}" > /dev/stderr
     fi
 
     [[ ${r} != 0 || ${config[0]} == 'inet6'* ]] && return ${r}
 
-    local metric ifvar=$( bash_variable ${iface} )
+    local metric ifvar=$( bash_variable "${iface}" )
     # Remove the newly added route and replace with our metric
     eval metric=\"\$\{metric_${ifvar}\}\"
     [[ ${metric} == 0 || ${RC_AUTO_INTERFACE} != "yes" ]] && return ${r}
@@ -349,18 +355,18 @@ ifconfig_add_address() {
     if [[ -z ${netmask} ]]; then
 	for (( i=1; i<${#config[@]}-1; i++ )); do
 	    if [[ ${config[i]} == "netmask" ]]; then
-		netmask=${config[i+1]}
-		cidr=$( netmask2cidr ${netmask} )
+		netmask="${config[i+1]}"
+		cidr=$( netmask2cidr "${netmask}" )
 		break
 	    fi
 	done
 	[[ -z ${netmask} ]] && return ${r}
     fi
 
-    local network=$( ip_network ${ip} ${netmask} )
+    local network=$( ip_network "${ip}" "${netmask}" )
 
-    route del -net ${network}/${cidr} dev ${iface}
-    route add -net ${network}/${cidr} metric ${metric} dev ${iface}
+    route del -net "${network}/${cidr}" dev "${iface}"
+    route add -net "${network}/${cidr}" metric "${metric}" dev "${iface}"
 
     return ${r}
 }
@@ -369,13 +375,13 @@ ifconfig_add_address() {
 #
 # Force default route to the specified gateway
 ifconfig_default_route() {
-    local metric=${3:-0}
+    local metric="${3:-0}"
 
     # Delete any existing default routes
     while true ; do
-	route del default metric ${metric} dev $1 2>/dev/null || break
+	route del default metric "${metric}" dev "$1" 2>/dev/null || break
     done
 
     # Then we add our route
-    route add default gw $2 metric ${metric} dev $1
+    route add default gw "$2" metric ${metric} dev "$1"
 }

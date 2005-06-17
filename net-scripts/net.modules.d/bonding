@@ -47,14 +47,14 @@ bonding_check_depends() {
 #
 # Bonds the interface
 bonding_pre_start() {
-    local iface=$1 slaves s ifvar=$( bash_variable $1 )
+    local iface="$1" slaves s ifvar=$( bash_variable "$1" )
 
     eval slaves=\"\$\{slaves_${ifvar}\[@\]\}\"
     [[ -z ${slaves} ]] && return 0
 
-    interface_exists ${iface} true || return 1
+    interface_exists "${iface}" true || return 1
 
-    if [[ ! -f /proc/net/bonding/${iface} ]]; then
+    if [[ ! -f "/proc/net/bonding/${iface}" ]]; then
 	eerror "${iface} is not capable of bonding"
 	return 1
     fi
@@ -65,23 +65,23 @@ bonding_pre_start() {
 
     # Check that our slaves exist
     for s in ${slaves}; do
-	interface_exists ${s} && continue
+	interface_exists "${s}" && continue
 	ewarn "interface ${s} does not exist"
 	return 1
     done
 
     # Must force the slaves to a particular state before adding them
     for s in ${slaves}; do
-	interface_del_addresses ${s}
-	interface_up ${s}
+	interface_del_addresses "${s}"
+	interface_up "${s}"
     done
 
     # now force the master to up
-    interface_up ${iface}
+    interface_up "${iface}"
 
     # finally add in slaves
     eoutdent
-    /sbin/ifenslave ${iface} ${slaves} >${devnull}
+    /sbin/ifenslave "${iface}" ${slaves} >/dev/null
     eend $?
 
     return 0 #important
@@ -92,15 +92,15 @@ bonding_pre_start() {
 #
 # Always returns 0 (true) 
 bonding_pre_stop() {
-    local iface=$1 slaves s
+    local iface="$1" slaves s
 
     bonding_check_installed || return 0
 
     # return silently if this is not a bonding interface
-    [[ ! -f /proc/net/bonding/${iface} ]] && return 0
+    [[ ! -f "/proc/net/bonding/${iface}" ]] && return 0
 
     # don't trust the config, get the active list instead
-    slaves=$( sed -n -e 's/^Slave Interface: //p' /proc/net/bonding/${iface} )
+    slaves=$( sed -n -e 's/^Slave Interface: //p' "/proc/net/bonding/${iface}" )
     [[ -z ${slaves} ]] && return 0
 
     # remove all slaves
@@ -108,13 +108,13 @@ bonding_pre_stop() {
     eindent
     einfo "${slaves}"
     eoutdent
-    /sbin/ifenslave -d ${iface} ${slaves} &>${devnull}
+    /sbin/ifenslave -d "${iface}" ${slaves} &>${devnull}
 
     # reset all slaves
     for s in ${slaves}; do
-	if interface_exists ${s} ; then
-	    interface_del_addresses ${s}
-	    interface_down ${s}
+	if interface_exists "${s}" ; then
+	    interface_del_addresses "${s}"
+	    interface_down "${s}"
 	fi
     done
 

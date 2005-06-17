@@ -52,11 +52,11 @@ macnet_check_depends() {
 macnet_pre_start() {
     local iface="$1"
 
-    interface_exists ${iface} || return 0
+    interface_exists "${iface}" || return 0
 
-    local mac=$( interface_get_mac_address ${iface} )
+    local mac=$( interface_get_mac_address "${iface}" )
     vebegin "Configuring ${iface} for MAC address ${mac}" 2>/dev/null
-    mac=${mac//:}
+    mac="${mac//:}"
     configure_variables "${iface}" "${mac}"
     veend 0 2>/dev/null
     

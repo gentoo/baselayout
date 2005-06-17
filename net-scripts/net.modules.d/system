@@ -39,7 +39,7 @@ system_get_vars() {
 }
 
 system_dns() {
-    local iface=$1 ifvar=$( bash_variable $1 ) x 
+    local iface="$1" ifvar=$( bash_variable "$1" ) x 
     local conffile="${statedir}/${iface}/resolv.conf" tmpfile="${conffile}.$$"
 
     # Nameserver setup for the essid if required
@@ -64,7 +64,7 @@ system_dns() {
 }
 
 system_ntp() {
-    local iface=$1 ifvar=$( bash_variable $1 ) x
+    local iface="$1" ifvar=$( bash_variable "$1" ) x
     local conffile="${statedir}/${iface}/ntp.conf" tmpfile="${conffile}.$$"
     local -a servers
 
@@ -89,7 +89,7 @@ system_ntp() {
 }
 
 system_nis() {
-    local iface=$1 ifvar=$( bash_variable $1 ) domain x
+    local iface="$1" ifvar=$( bash_variable "$1" ) domain x
     local conffile="${statedir}/${iface}/yp.conf" tmpfile="${conffile}.$$"
     local -a servers 
 
@@ -101,7 +101,7 @@ system_nis() {
     chmod 644 "${tmpfile}"
 
     if [[ -n ${domain} ]]; then
-	/bin/hostname -y ${domain}
+	/bin/hostname -y "${domain}"
 	if [[ -n ${servers} ]]; then
 	    for x in ${servers}; do
 		echo "domain ${domain} server ${x}" >> "${tmpfile}"
@@ -127,9 +127,9 @@ system_nis() {
 system_post_start() {
     local iface="$1"
 
-    system_dns ${iface}
-    system_ntp ${iface}
-    system_nis ${iface}
+    system_dns "${iface}"
+    system_ntp "${iface}"
+    system_nis "${iface}"
 
     return 0
 }

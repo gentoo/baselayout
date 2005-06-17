@@ -4,15 +4,15 @@
 
 # Contributed by Roy Marples (uberlord@gentoo.org)
 
-MODULES_DIR=${MODULES_DIR:-"/lib/rcscripts/net.modules.d"}
+MODULES_DIR="${MODULES_DIR:-/lib/rcscripts/net.modules.d}"
 
 . /lib/rcscripts/sh/rc-services.sh
 . "${MODULES_DIR}/helpers.d/functions"
 . /etc/conf.d/net
 
-auto_interface=${auto_interface:-"yes"}
-interface=${1##*/dhcpcd-}
-interface=${interface%%.info}
+auto_interface="${auto_interface:-yes}"
+interface="${1##*/dhcpcd-}"
+interface="${interface%%.info}"
 service="net.${interface}"
 
 if [[ $2 != "up" && $2 != "new" ]]; then
@@ -56,17 +56,18 @@ MODULES=( "system" )
 
 # Map MAC address variables to interface variables
 . "${MODULES_DIR}/macnet"
-macnet_pre_start ${interface} 1>/dev/null
+macnet_pre_start "${interface}" 1>/dev/null
 
 # Map wireless ESSID variables to interface variables
 if wireless_check_extensions "${interface}" ; then
     . "${MODULES_DIR}/essidnet"
-    essidnet_pre_start ${interface} 1>/dev/null
+    essidnet_pre_start "${interface}" 1>/dev/null
 fi
 
-ifvar=$( bash_variable ${interface} )
+ifvar=$( bash_variable "${interface}" )
 eval search=\"\$\{dns_search_domains_${ifvar}\}\"
-[[ -n ${search} ]] && echo "search ${search}" >> /etc/resolv.conf
+resolv="${statedir}/${interface}/resolv.conf"
+[[ -n ${search} ]] && echo "search ${search}" >> "${resolv}" 
 
 ! service_stopping "${service}" && mark_service_started "${service}"
 

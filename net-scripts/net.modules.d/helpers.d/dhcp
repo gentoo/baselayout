@@ -26,7 +26,8 @@ fi
 # only if we need to
 if [[ -x /usr/sbin/iwconfig ]]; then
     wireless_module="iwconfig"
-elif [[ -x /usr/sbin/wpa_supplicant && -S "/var/run/wpa_supplicant/${interface}" ]]; then
+elif [[ -x /usr/sbin/wpa_supplicant \
+    && -S "/var/run/wpa_supplicant/${interface}" ]]; then
     wireless_module="wpa_supplicant"
 fi
 
@@ -77,22 +78,22 @@ MODULES=( "system" )
 
 # Map MAC address variables to interface variables
 . "${MODULES_DIR}/macnet"
-macnet_pre_start ${interface}
+macnet_pre_start "${interface}"
 
 # Map wireless ESSID variables to interface variables
 if [[ $( type -t wireless_check_extensions ) == "function" ]]; then
     if wireless_check_extensions "${interface}" ; then
 	. "${MODULES_DIR}/essidnet"
-	essidnet_pre_start ${interface}
+	essidnet_pre_start "${interface}"
     fi
 fi
 
 # Calculate the metric for our routes
-ifvar=$( bash_variable ${interface} )
+ifvar=$( bash_variable "${interface}" )
 eval metric=\"\$\{metric_${ifvar}\}\"
 if [[ -z ${metric} ]]; then
     if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
-	metric=$( calculate_metric ${interface} )
+	metric=$( calculate_metric "${interface}" )
     else
 	metric=0
     fi
@@ -100,26 +101,26 @@ if [[ -z ${metric} ]]; then
 fi
 
 # Configure our IP address
-ip=${ip// }
-subnet=${subnet// }
-cidr=$( netmask2cidr ${subnet} )
-broadcast=${broadcast// }
+ip="${ip// }"
+subnet="${subnet// }"
+cidr=$( netmask2cidr "${subnet}" )
+broadcast="${broadcast// }"
 [[ -n ${broadcast} ]] && broadcast="broadcast ${broadcast}"
 
 # If we don't have our address then we flush it and then add our new one
-curip=$( interface_get_address ${interface} )
+curip=$( interface_get_address "${interface}" )
 if [[ ${curip} != "${ip}/${cidr}" ]] ; then
-    interface_del_addresses ${interface}
-    interface_add_address ${interface} "${ip}/${cidr}" ${broadcast}
+    interface_del_addresses "${interface}"
+    interface_add_address "${interface}" "${ip}/${cidr}" "${broadcast}"
 fi
 
 # Store the address in a cache for future usage
-echo ${ip} > /var/cache/dhcp-${interface}.lease
-chmod 600 /var/cache/dhcp-${interface}.lease
+echo "${ip}" > "/var/cache/dhcp-${interface}.lease"
+chmod 600 "/var/cache/dhcp-${interface}.lease"
 
 # Configure our default route - we only have 1 default route
 for r in ${router}; do
-    interface_default_route ${interface} ${r} ${metric:-0} && break
+    interface_default_route "${interface}" "${r}" "${metric:-0}" && break
 done
 
 # Configure our hostname - but only if we need it
@@ -138,14 +139,13 @@ eval dhcp=\" \$\{dhcp_${ifvar}\} \"
 [[ ${dhcp} != *' nonis '* ]] && system_nis "${interface}"
 
 if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
-    # save_state ${interface}
     best_interface=$( select_best_interface )
     apply_state "${best_interface}"
 else
     apply_state "${interface}"
 fi
 
-mark_service_started net.${interface}
+mark_service_started "net.${interface}"
 
 echo "${action}"
 exit 0

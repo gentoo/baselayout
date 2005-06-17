@@ -1,3 +1,4 @@
+#!/bin/bash
 # Copyright (c) 2004-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
@@ -60,24 +61,25 @@ bridge_get_vars() {
 #
 # Returns the interfaces added to the given bridge
 bridge_get_ports() {
-	brctl show 2>/dev/null | sed -n -e '/^'$1'/,/^\S/ { /^\('$1'\|\t\)/s/^.*\t//p }'
+	brctl show 2>/dev/null \
+	| sed -n -e '/^'"$1"'/,/^\S/ { /^\('"$1"'\|\t\)/s/^.*\t//p }'
 }
 
 # bool bridge_start(char *iface)
 #
 # #set up bridge
 bridge_pre_start() {
-	local iface=$1 ports i e x ifvar=$( bash_variable $1 )
+	local iface="$1" ports i e x ifvar=$( bash_variable "$1" )
 	local -a opts
 	eval ports=\"\$\{bridge_${ifvar}\[@\]\}\"
 
 	[[ -z ${ports} ]] && return 0
 
 	# Destroy the bridge if it exists
-	bridge_stop ${iface}
+	bridge_stop "${iface}"
 
 	ebegin "Creating bridge ${iface}"
-	e=$( brctl addbr ${iface} 2>&1 )
+	e=$( brctl addbr "${iface}" 2>&1 )
 	if [[ -n ${e} ]]; then
 		if [[ ${e} == "br_add_bridge: Package not installed" ]]; then
 			eend 1 "Bridging (802.1d) support is not present in this kernel"
@@ -89,9 +91,9 @@ bridge_pre_start() {
 
 	eval opts=( \"\$\{brctl_${ifvar}\[@\]\}\" )
 	for (( i=0; i<${#opts[@]}; i++ )); do
-		x=${opts[i]/ / ${iface} }
+		x="${opts[i]/ / ${iface} }"
 		[[ ${x} == ${opts[i]} ]] && x="${x} ${iface}"
-		e=$( brctl ${x} 2>&1 1>/dev/null )
+		e=$( brctl "${x}" 2>&1 1>/dev/null )
 		[[ -n ${e} ]] && ewarn "${e}"
 	done
 	eend 0
@@ -100,19 +102,19 @@ bridge_pre_start() {
 	eindent
 
 	for i in ${ports}; do
-		interface_exists ${i} && continue 
+		interface_exists "${i}" && continue 
 		eerror "interface ${i} does not exist"
 		return 1
 	done
 
 	for i in ${ports}; do
 		ebegin "${i}"
-		interface_set_flag ${i} promisc true
-		interface_up ${i}
-		e=$( brctl addif ${iface} ${i} 2>&1 )
+		interface_set_flag "${i}" promisc true
+		interface_up "${i}"
+		e=$( brctl addif "${iface}" "${i}" 2>&1 )
 		if [[ -n ${e} ]]; then
 			eend 1 "${e}"
-			interface_set_flag ${i} promisc false
+			interface_set_flag "${i}" promisc false
 			return 1
 		fi
 		eend 0
@@ -129,23 +131,23 @@ bridge_pre_start() {
 bridge_stop() {
 	bridge_check_installed || return 1
 
-	local iface=$1 is_bridge=$( brctl show | grep ^$1 )
+	local iface="$1" is_bridge=$( brctl show | grep "^$1" )
 	[[ -z ${is_bridge} ]] && return 1
 
 	ebegin "Destroying bridge ${iface}"
-	interface_down ${iface}
+	interface_down "${iface}"
 	
- 	local ports=$( bridge_get_ports ${1} ) i
+ 	local ports=$( bridge_get_ports "${iface}" ) i
 	eindent
 	for i in ${ports}; do
 		ebegin "Removing port ${i}"
-		interface_set_flag ${i} promisc false
-		brctl delif ${iface} ${i}
+		interface_set_flag "${i}" promisc false
+		brctl delif "${iface}" "${i}"
 		eend $?
 	done
 	eoutdent
 	
-	brctl delbr ${iface} &>${devnull}
+	brctl delbr "${iface}" &>/dev/null
 	eend 0
 	return 0
 }
