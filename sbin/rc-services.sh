@@ -431,7 +431,9 @@ mark_service_starting() {
 	ln -snf "/etc/init.d/$1" "${svcdir}/starting/$1"
 	local retval=$?
 	
+	[[ -f "${svcdir}/stopping/$1" ]] && rm -f "${svcdir}/started/$1"
 	[[ -f "${svcdir}/inactive/$1" ]] && rm -f "${svcdir}/inactive/$1"
+	[[ -f "${svcdir}/stopping/$1" ]] && rm -f "${svcdir}/stopping/$1"
 	
 	return "${retval}"
 }
@@ -463,6 +465,9 @@ mark_service_inactive() {
 
 	ln -snf "/etc/init.d/$1" "${svcdir}/inactive/$1"
 	local retval="$?"
+	[[ -f "${svcdir}/stopping/$1" ]] && rm -f "${svcdir}/started/$1"
+	[[ -f "${svcdir}/starting/$1" ]] && rm -f "${svcdir}/starting/$1"
+	[[ -f "${svcdir}/stopping/$1" ]] && rm -f "${svcdir}/stopping/$1"
 
 	echo "0" > "${svcdir}/exitcodes/$1"
 	return "${retval}"

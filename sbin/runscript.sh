@@ -519,7 +519,7 @@ for arg in $* ; do
 		svc_status
 		;;
 	zap)
-		if service_started "${myservice}" || service_starting "${myservice}" ; then
+		if ! service_stopped "${myservice}" ; then
 			einfo "Manually resetting ${myservice} to stopped state."
 			mark_service_stopped "${myservice}"
 		fi
