@@ -132,10 +132,12 @@ udhcpc_start() {
 	go_background
     fi
 
-    x=$( eval "udhcpc ${opts} --now --script=${MODULES_DIR}/helpers.d/udhcpc-wrapper --pidfile=${pidfile} --interface=${iface}" )
+    x=$( eval "udhcpc ${opts} --now --pidfile=${pidfile} --interface=${iface} \
+	--script=${MODULES_DIR}/helpers.d/udhcpc-wrapper 2>&1 \
+	| egrep -v '^info,'" )
     # We just check the last 5 letters
     [[ ${x:((${#x} - 5)):5} == "bound" ]]
-    eend $? || return 1
+    eend $? "${x}" || return 1
 
     # DHCP succeeded, show address retrieved
     local addr=$( interface_get_address ${iface} )

@@ -1,6 +1,18 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  17 Jun 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Fixed VLAN documentation for working with eth0.1 style names #95121
+    
+    tarball.sh now works with svn
+
+    dhclient and udhcpc now report any errors to stdout
+
+    RC_DEVICE_TARBALL now defaults to "no"
+
+    STYLE updates to iwconfig
+
   16 Jun 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Add lmtp as an alias to the 2003 tcp port #96190.
@@ -8,7 +20,7 @@
     Add support for Xen to clock init.d #96240 by Christopher G. Stach II.
 
     When we mount readonly, make sure we don't attempt the same mountpoint
-    twice #96259 by Toralf F�rster.
+    twice #96259 by Toralf Förster.
 
   14 Jun 2005; Roy Marples <uberlord@gentoo.org>:
 
@@ -549,7 +561,7 @@
     Add support for loopback dm-crypt by Dylan Carlson #73598 and for gpg 
     dm-crypt by Lars Strojny #75659.
 
-    Update crypto-loop to newer util-linux #40874 by jochen / Jürgen Hötzel
+    Update crypto-loop to newer util-linux #40874 by jochen / JÃ¼rgen HÃ¶tzel
 
   27 Jan 2005; Roy Marples <uberlord@gentoo.org>:
 
@@ -1717,7 +1729,7 @@
 
     Fix bug 47218 (net.eth0 broken for vlans) with patch provided by
     Andy Dustman.  Fix bug 47250 (depscan.sh fails to create
-    /var/lib/init.d/* directories) with patch from Terje Bergström
+    /var/lib/init.d/* directories) with patch from Terje BergstrÃ¶m
 
 * rc-scripts 1.4.6 (08 Apr 2004)
 
@@ -3341,7 +3353,7 @@
   11 Apr 2002; Martin Schlemmer <azarah@gentoo.org>:
 
     Update /etc/skel/.bash_profile to make it tcsh compadible.
-    Thanks to Väinö Järvelä for this fix.
+    Thanks to VÃ¤inÃ¶ JÃ¤rvelÃ¤ for this fix.
 
     Update /etc/profile to also set the PS? variables if $SHELL
     is set to /bin/sh.  This should make prompt colours in
