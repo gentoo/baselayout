@@ -55,6 +55,8 @@ macnet_pre_start() {
     interface_exists "${iface}" || return 0
 
     local mac=$( interface_get_mac_address "${iface}" )
+    [[ -z ${mac} ]] && return 0
+    
     vebegin "Configuring ${iface} for MAC address ${mac}" 2>/dev/null
     mac="${mac//:}"
     configure_variables "${iface}" "${mac}"
