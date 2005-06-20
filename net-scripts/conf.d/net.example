@@ -15,7 +15,7 @@
 ##############################################################################
 # DEFAULTS
 #
-# auto_interface="yes"
+# RC_AUTO_INTERFACE="yes"
 # Set this to no to stop trying to best guess your network setup and choose
 # the best interface to use by default
 
@@ -26,6 +26,12 @@
 #                           were created when it became active)
 # otherwise we
 #     default to NULL
+
+# hotplug_eth0="yes"
+# Do we allow hotplug to bring up interfaces or not? The default is we do,
+# otherwise put no in the above value.
+# NOTE: hotplug just has to be installed for hotplugging to work - it does
+# not matter if it's in any runlevel or not.
 
 ##############################################################################
 # MODULES
@@ -122,6 +128,9 @@
 
 # NOTE: fallback entry must match the entry location in config_eth0
 # As such you can only have one fallback route.
+
+# Some users may need to alter the MTU - here's how
+#mtu_eth0="1500"
 
 ##############################################################################
 # OPTIONAL MODULES

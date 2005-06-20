@@ -900,6 +900,17 @@ link_file() {
 # Start entry point so that we only have one function
 # which localises variables and unsets functions
 start() {
+    if [[ ${IN_HOTPLUG} == "1" ]]; then
+	# If we've been called by hotplug, check if we have
+	# a policy for the interface for not starting
+	local x ifvar=$( bash_variable "${IFACE}" )
+	eval x=\"\$\{hotplug_${ifvar}\}\"
+	if [[ ${x} == "no" || ${x} == "false" ]]; then
+	    eerror "Not starting interface ${iface} due to hotplug policy"
+	    return 1
+	fi
+    fi
+
     if [[ ! -d "${statedir}/${IFACE}" ]]; then
 	if ! mkdir -p "${statedir}/${IFACE}" ; then
 	    eerror "Unable to create state directory!"
