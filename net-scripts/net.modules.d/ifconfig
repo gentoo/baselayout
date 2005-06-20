@@ -117,7 +117,7 @@ ifconfig_get_address() {
 #
 # Fetch the mac address assingned to the network card
 ifconfig_get_mac_address() {
-    ifconfig "$1" | sed -n -e 's/^HWaddr .*\<\(..:..:..:..:..:..\)\>.*/\U\1/p'
+    ifconfig "$1" | sed -n -e 's/.*HWaddr .*\<\(..:..:..:..:..:..\)\>.*/\U\1/p'
 }
 
 # void ifconfig_set_mac_address(char *interface, char *mac)
@@ -245,11 +245,15 @@ ifconfig_iface_stop() {
 # fail, the routine should still return success to indicate that
 # net.eth0 was successful
 ifconfig_post_start() {
-    local iface="$1" ifvar=$( bash_variable "$1" ) routes x metric
+    local iface="$1" ifvar=$( bash_variable "$1" ) routes x metric mtu
     eval metric=\"\$\{metric_${ifvar}\}\"
 
     # Make sure interface is marked UP
-    ifconfig_up ${iface}
+    ifconfig_up "${iface}"
+
+    # MTU support
+    eval mtu=\"\$\{mtu_${ifvar}\}\"
+    [[ -n ${mtu} ]] && ifconfig "${iface}" mtu "${mtu}"
 
     eval routes=( \"\$\{routes_${ifvar}\[@\]\}\" )
 
@@ -329,7 +333,8 @@ ifconfig_add_address() {
 	fi	
 
 	# Support iproute2 style config where possible
-	config=( "${config[@]//brd +/}" )
+	r="${config[@]}"
+	config=( ${r//brd +/} )
 	config=( "${config[@]//brd/broadcast}" )
 	config=( "${config[@]//peer/pointtopoint}" )
     fi
@@ -345,7 +350,8 @@ ifconfig_add_address() {
 	[[ ${r} != 0 ]] && echo "${e}" > /dev/stderr
     fi
 
-    [[ ${r} != 0 || ${config[0]} == 'inet6'* ]] && return ${r}
+    [[ ${r} != 0 || ${config[0]} == 'inet6'* || ${iface} == *:* ]] \
+    && return ${r}
 
     local metric ifvar=$( bash_variable "${iface}" )
     # Remove the newly added route and replace with our metric

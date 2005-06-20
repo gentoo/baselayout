@@ -253,9 +253,9 @@ process_finished() {
 function_wrap() {
     local i
 
-    [[ $( type -t ${2}_provides ) == "function" ]] && return
+    [[ $( type -t "${2}_provides" ) == "function" ]] && return
 
-    for i in $( typeset -f | grep -o ^${1}_'[^ ]*' ); do
+    for i in $( typeset -f | grep -o '^'"${1}"'_[^ ]*' ); do
 	eval "${2}${i#${1}}() { ${i} \"\$@\"; }"
     done
 }

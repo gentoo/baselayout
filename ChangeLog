@@ -1,6 +1,14 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  20 Jun 2005; Roy Marples <uberlord@gentoo.org>:
+
+    ifconfig now reports correct MAC address
+
+    ifconfig and iproute2 now support mtu_eth0 option
+
+    net.lo attemts to arping the requested address when RC_AUTO_INTERFACE==yes
+
   19 Jun 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Make sure /proc/cmdline is readable before using it in get_bootconfig()
