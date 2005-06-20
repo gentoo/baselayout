@@ -856,6 +856,15 @@ iwconfig_pre_start() {
 	return 0
     fi
 
+    # Check for rf_kill - only ipw supports this at present, but other
+    # cards may in the future
+    if [[ -e "/sys/class/net/${iface}/device/rf_kill" ]]; then
+	if [[ $( < "/sys/class/net/${iface}/device/rf_kill" ) != 0 ]]; then
+	    eerror "Wireless radio has been killed for interface ${iface}"
+	    return 1
+	fi
+    fi
+    
     einfo "Configuring wireless network for ${iface}"
 
     # Are we a proper IEEE device?

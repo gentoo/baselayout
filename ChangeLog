@@ -9,6 +9,9 @@
 
     net.lo attemts to arping the requested address when RC_AUTO_INTERFACE==yes
 
+    iwconfig and wpa_supplicant now check rk_kill if available and produce a
+    suitable error if rf is killed #56430
+
   19 Jun 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Make sure /proc/cmdline is readable before using it in get_bootconfig()
