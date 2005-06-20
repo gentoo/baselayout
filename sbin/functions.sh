@@ -105,25 +105,27 @@ get_bootconfig() {
 	local newbootlevel=
 	local newsoftlevel=
 
-	for copt in $(</proc/cmdline) ; do
-		case "${copt%=*}" in
-			"bootlevel")
-				newbootlevel="${copt##*=}"
-				;;
-			"softlevel")
-				newsoftlevel="${copt##*=}"
-				;;
-		esac
-	done
+	if [[ -r /proc/cmdline ]] ; then
+		for copt in $(</proc/cmdline) ; do
+			case "${copt%=*}" in
+				bootlevel)
+					newbootlevel=${copt##*=}
+					;;
+				softlevel)
+					newsoftlevel=${copt##*=}
+					;;
+			esac
+		done
+	fi
 
-	if [ -n "${newbootlevel}" ] ; then
-		export BOOTLEVEL="${newbootlevel}"
+	if [[ -n ${newbootlevel} ]] ; then
+		export BOOTLEVEL=${newbootlevel}
 	else
 		export BOOTLEVEL="boot"
 	fi
 
-	if [ -n "${newsoftlevel}" ] ; then
-		export DEFAULTLEVEL="${newsoftlevel}"
+	if [[ -n ${newsoftlevel} ]] ; then
+		export DEFAULTLEVEL=${newsoftlevel}
 	else
 		export DEFAULTLEVEL="default"
 	fi
