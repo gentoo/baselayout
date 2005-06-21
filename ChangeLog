@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  21 Jun 2005; Roy Marples <uberlord@gentoo.org>:
+
+    interfaces can now dynamically add themselves to a bridge using
+    bridge_add_eth0="br0" - they are dynamically removed as well. Fixes #93321
+
   20 Jun 2005; Roy Marples <uberlord@gentoo.org>:
 
     ifconfig now reports correct MAC address

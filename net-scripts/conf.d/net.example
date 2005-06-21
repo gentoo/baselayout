@@ -361,13 +361,16 @@
 
 # To add ports to bridge br0
 #bridge_br0="eth0 eth1"
+# or dynamically add them when the interface comes up
+#bridge_add_eth0="br0"
+#bridge_add_eth1="br0"
 
 # You need to configure the ports to null values so dhcp does not get started 
 #config_eth0=( "null" )
 #config_eth1=( "null" )
 
 # Finally give the bridge an address - dhcp or a static IP
-#config_br0=( "dhcp" )
+#config_br0=( "dhcp" ) # may not work when adding ports dynamically
 #config_br0=( "192.168.0.1/24" )
 
 # If any of the ports require extra configuration - for example wireless or
