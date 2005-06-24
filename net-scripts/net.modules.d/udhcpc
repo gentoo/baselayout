@@ -116,7 +116,9 @@ udhcpc_start() {
 
 	if [[ ${opts} != *'--hostname='* ]]; then
 		hostname=$( hostname )
-		[[ -n ${hostname} && ${hostname} != "(none)" ]] && hostname="--hostname=${hostname}"
+		[[ -n ${hostname} && ${hostname} != "(none)" \
+		&& ${hostname} != "localhost" ]] \
+		&& hostname="--hostname=${hostname}"
 	fi
 
 	# Bring up DHCP for this interface (or alias)
