@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  24 Jun 2005; Roy Marples <uberlord@gentoo.org>:
+
+    udhcpc now doesn't send hostname if it's set at the default of localhost
+
   21 Jun 2005; Roy Marples <uberlord@gentoo.org>:
 
     interfaces can now dynamically add themselves to a bridge using

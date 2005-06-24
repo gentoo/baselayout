@@ -104,7 +104,8 @@ pump_start() {
     # We transmit the hostname by default
     if [[ ${opts} != *'-h '* && ${opts} != '*--hostname='* ]]; then
 	hostname=$( hostname )
-	[[ -n ${hostname} && ${hostname} != "(none)" && ${hostname} != localhost ]] \
+	[[ -n ${hostname} && ${hostname} != "(none)" \
+	&& ${hostname} != "localhost" ]] \
 	&& opts="--hostname=${hostname} ${opts}"
     fi
 

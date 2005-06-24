@@ -108,7 +108,8 @@ udhcpc_start() {
 
     if [[ ${opts} != *'--hostname='* ]]; then
 	hostname=$( hostname )
-	[[ -n ${hostname} && ${hostname} != "(none)" ]] \
+	[[ -n ${hostname} && ${hostname} != "(none)" \
+	&& ${hostname} != "localhost" ]] \
 	&& opts="${opts} --hostname=${hostname}"
     fi
 
