@@ -5,6 +5,9 @@
 
     udhcpc now doesn't send hostname if it's set at the default of localhost
 
+    net.lo will not take down the interface if it does not exist and starting
+    failed to work
+
   21 Jun 2005; Roy Marples <uberlord@gentoo.org>:
 
     interfaces can now dynamically add themselves to a bridge using

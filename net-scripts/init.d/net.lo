@@ -759,7 +759,7 @@ run_start() {
 
 	# Start the interface
 	if ! iface_start "${iface}" ; then
-	    interface_down "${iface}"
+	    interface_exists "${iface}" && interface_down "${iface}"
 	    eend 1
 	    return 1
 	fi
