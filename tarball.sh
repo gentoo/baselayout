@@ -36,7 +36,7 @@ cp ChangeLog ${DEST}
 chown -R root:root ${DEST}
 chmod 0755 ${DEST}/sbin/*
 chmod 0755 ${DEST}/init.d/*
-( cd $TMP/rc-scripts-${V} ; rm -rf `find -iname CVS` )
+( cd $TMP/rc-scripts-${V} ; rm -rf `find -iname .svn` )
 cd $TMP
 tar cjvf ${TMP}/rc-scripts-${V}.tar.bz2 rc-scripts-${V}
 rm -rf rc-scripts-${V}

@@ -37,6 +37,15 @@ RC_VOLUME_ORDER="raid evms lvm dm"
 
 RC_USE_FSTAB="no"
 
+# RC_USE_CONFIG_PROFILE allows you to have different /etc/conf.d files
+# based on your runlevel - if a conf.d file for your profile does not exist
+# then we try and use the default one.
+# To enable runlevel selection at boot, append "softlevel=foobar" to your
+# kernel line to change to the foobar runlevel. Or "rc foobar" at the command
+# prompt.
+
+RC_USE_CONFIG_PROFILE="yes"
+
 # RC_FORCE_AUTO tries its best to prevent user interaction during the boot and 
 # shutdown process.  For example, fsck will automatically be run or volumes 
 # remounted to create proper directory trees.  This feature can be dangerous 
