@@ -1,6 +1,19 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  28 Jun 2005; Roy Marples <uberlord@gentoo.org>:
+
+    wpa_supplicant now respects the background=no option if
+    wpa_suppliant>=0.4.0 is installed
+
+    fixed network dependencies some more
+
+    You can now restart a script marked starting/inactive
+
+    Documented the use of the RC_USE_CONFIG_PROFILE variable in conf.d/rc
+
+    udhcpc now removes stale pidfiles
+
   24 Jun 2005; Roy Marples <uberlord@gentoo.org>:
 
     udhcpc now doesn't send hostname if it's set at the default of localhost

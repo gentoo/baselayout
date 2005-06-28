@@ -87,6 +87,8 @@ udhcpc_stop() {
 	[[ -d "/proc/${pid}" ]] && e=false
     fi
 
+    [[ -f ${pidfile} ]] && rm -f "${pidfile}"
+
     ${e}
     eend $?
     return $?

@@ -371,8 +371,10 @@ ifconfig_add_address() {
 
     local network=$( ip_network "${ip}" "${netmask}" )
 
-    route del -net "${network}/${cidr}" dev "${iface}"
-    route add -net "${network}/${cidr}" metric "${metric}" dev "${iface}"
+    if route del -net "${network}/${cidr}" metric 0 dev "${iface}" \
+	2>/dev/null ; then
+	route add -net "${network}/${cidr}" metric "${metric}" dev "${iface}"
+    fi
 
     return ${r}
 }

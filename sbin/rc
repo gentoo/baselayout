@@ -592,7 +592,6 @@ then
 fi
 
 source "${svclib}/sh/rc-services.sh"
-source "${svclib}/sh/rc-daemon.sh"
 
 if [ -f "${svcdir}/softlevel" ]
 then
@@ -762,7 +761,7 @@ else
 
 		return 1
 	}
-	
+
 	# First stop non critical services
 	for i in $(get_stop_services) ; do
 		is_critical_service "${i}" || dep_stop "${i}"

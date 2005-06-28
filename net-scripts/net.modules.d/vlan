@@ -136,7 +136,10 @@ vlan_post_start() {
 	eend 0
 
 	# We need to work out the interface name of our new vlan id
-	ifname=$( sed -n -e 's/^\(.*[0-9] \) *| '"${vlan}"' *| .*'"${iface}"'$/\1/p' /proc/net/vlan/config )
+	ifname=$( \
+	    sed -n -e 's/^\([^ \t]*\) *| '"${vlan}"' *| .*'"${iface}"'$/\1/p' \
+	    /proc/net/vlan/config
+	)
 	iface_start "${ifname}"
     done
 
@@ -156,7 +159,7 @@ vlan_pre_stop() {
     for vlan in $( vlan_get_vlans "${iface}" ); do
 	einfo "Removing VLAN ${vlan##*.} from ${iface}"
 	iface_stop "${vlan}"
-	vconfig rem "${vlan}"
+	vconfig rem "${vlan}" >/dev/null
     done
 
     return 0

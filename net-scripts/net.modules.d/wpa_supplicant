@@ -159,15 +159,19 @@ wpa_supplicant_associate() {
 
     eval timeout=\"\$\{wpa_timeout_${ifvar}:-60\}\"
     for (( i=0; i<${timeout}; i++ )); do
-	if ! wpa_cli -i"${iface}" status &>/dev/null ; then
-	    eend 1 "wpa_supplicant has exited unexpectedly"
-	    return 1
+	if ${action} ; then
+	    service_started "net.${iface}" && return 0
+	else
+	    if ! wpa_cli -i"${iface}" status &>/dev/null ; then
+		eend 1 "wpa_supplicant has exited unexpectedly"
+		return 1
+	    fi
+	    wpa_supplicant_associated "${iface}" && break
 	fi
-	wpa_supplicant_associated "${iface}" && break
 	sleep 1
     done
     if [[ ${i} == ${timeout} ]]; then
-	if ! wpa_supplicant_associated "${iface}"; then
+	if ! ${action} && ! wpa_supplicant_associated "${iface}"; then
 	    [[ ${background} != "yes" ]] && eend 1 "timed out"
 
 	    # We now need to kill the process
@@ -253,6 +257,7 @@ wpa_supplicant_pre_start() {
     if [[ ${version} -gt 399 && -x ${actfile} ]]; then
 	opts="${opts} -W -P/var/run/wpa_supplicant-${iface}.pid"
 	action=true
+	[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && background=yes
     fi
 
     start-stop-daemon --start --exec /usr/sbin/wpa_supplicant \
@@ -261,20 +266,22 @@ wpa_supplicant_pre_start() {
 
     # Starting wpa_supplication-0.4.0, we can get wpa_cli to
     # start/stop our scripts from wpa_supplicant messages
-    if [[ ${action} ]]; then
+    if ${action} ; then
+	mark_service_inactive "net.${iface}"
 	ebegin "Starting wpa_cli on ${iface}"
 	start-stop-daemon --start --exec /usr/bin/wpa_cli \
-	    -- -a"${actfile}" -i"${iface}" \
-	    -P"/var/run/wpa_cli-${iface}.pid" -B
+	-- -a"${actfile}" -i"${iface}" \
+	-P"/var/run/wpa_cli-${iface}.pid" -B
 	eend $? || return 1
-	go_background
     fi
 
     # Background wpa_supplication if required
     if [[ ${background} == "yes" ]]; then
-	wpa_supplicant_associate "${iface}" \
-	   && export IN_BACKGROUND=true \
-	   && /etc/init.d/net.${iface} start >/dev/null &
+	if ! ${action} ; then
+	    wpa_supplicant_associate "${iface}" \
+	    && export IN_BACKGROUND=true \
+	    && /etc/init.d/net.${iface} start >/dev/null &
+	fi
 	go_background
     fi
 
@@ -303,7 +310,10 @@ wpa_supplicant_pre_start() {
     fi
     eoutdent
 
-    [[ -x /usr/sbin/wpa_monitor ]] && /usr/sbin/wpa_monitor -i"${iface}"
+    if ${action} ; then
+	einfo "${iface} configured in the background successfully"
+	exit 0 
+    fi
 
     return 0
 }

@@ -11,7 +11,8 @@
 # For pcmcia users. note that pcmcia must be added to the same
 # runlevel as the net.* script that needs it.
 depend() {
-    use coldplug pcmcia usb isdn4linux wlan
+    need localmount
+    use coldplug logger pcmcia usb isdn4linux wlan
 
     # Load any custom depend functions for the given interface
     # For example, br0 may need eth0 and eth1
@@ -20,7 +21,7 @@ depend() {
 }
 
 # Define where our modules are
-MODULES_DIR=/lib/rcscripts/net.modules.d
+MODULES_DIR="/lib/rcscripts/net.modules.d"
 
 # Some defaults
 background="${background:-no}"
@@ -29,7 +30,7 @@ background="${background:-no}"
 source "${MODULES_DIR}/helpers.d/functions"
 
 # Make some wrappers to fudge after/before/need/use depend flags.
-# These are callbacks so mods[i] will be set.
+# These are callbacks so MODULE will be set.
 after() {
     local x="$*"
     [[ $# -gt 1 ]] && x=$( echo -e "${x// /\n}" | sort | xargs )
@@ -62,7 +63,6 @@ sort() {
 # Setup for backgrounding network script
 go_background() {
     einfo "Backgrounding ..."
-    mark_service_started "net.${iface}"
     mark_service_inactive "net.${iface}"
     exit 0
 }
@@ -100,7 +100,7 @@ module_load_minimum() {
 # Load and check each module for sanity
 # If the module is not installed, the functions are to be removed
 modules_load_auto() {
-    local e f i j beforefuncs afterfuncs diffs unload
+    local i j beforefuncs afterfuncs unload
 
     # Populate the MODULES array
     MODULES=( $( find "${MODULES_DIR}"/ -maxdepth 1 -type f ! -name ".*" | sort ) )
@@ -127,10 +127,9 @@ modules_load_auto() {
 	afterfuncs=$( typeset -F )
 	if ${unload} ; then
 	    unset MODULES[i]
-	    unsetfuncs="${unsetfuncs} \
-	    $( diff -U0 <( echo "${beforefuncs}" ) <( echo "${afterfuncs}" ) \
-	    2>/dev/null \
-	    | sed -ne 's/^+declare -f //p' )"
+	    unset -f $( diff -U0 <( echo "${beforefuncs}" ) \
+	    <( echo "${afterfuncs}" ) 2>/dev/null \
+	    | sed -n -e 's/^+declare -f //p' )
 	fi
 	beforefuncs="${afterfuncs}"
 
@@ -493,6 +492,16 @@ iface_start() {
     local -a config fallback fallback_route conf a 
     local ifvar=$( bash_variable "$1" ) i j
 
+    # Try and work out a metric for the interface if we're on auto
+    eval x=\"\$\{metric_${ifvar}\}\"
+    if [[ -z ${x} ]]; then
+	if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
+	    eval "metric_${ifvar}=\""$( calculate_metric ${iface} )"\""
+	else
+	    eval "metric_${ifvar}=0"
+	fi
+    fi
+
     # pre Start any modules with
     for mod in ${MODULES[@]}; do
 	if [[ $( type -t "${mod}_pre_start" ) == "function" ]]; then
@@ -637,9 +646,6 @@ iface_start() {
 # /etc/conf.d/net since the configuration might have changed since
 # iface_start ran.  Instead query for current configuration and bring
 # down the interface.
-#
-# However, we are currently reliant on handler and modules specified
-# in /etc/conf.d/net
 iface_stop() {
     local iface="$1" i aliases need_begin=false mod
     local RC_INDENTATION="${RC_INDENTATION}"
@@ -668,7 +674,10 @@ iface_stop() {
 	done
 
 	# A module may have removed the interface
-	interface_exists "${iface}" || { eend 0; continue; }
+	if ! interface_exists "${iface}" ; then
+	    eend 0
+	    continue
+	fi
 
 	# Delete all the addresses for this alias
 	interface_del_addresses "${i}"
@@ -699,25 +708,15 @@ iface_stop() {
 # We cannot check that the device exists ourselves as modules like
 # tuntap make create it.
 run_start() {
-    local iface="$1" IFVAR=$( bash_variable "$1" ) x
+    local iface="$1" IFVAR=$( bash_variable "$1" )
 
     # We do this so users can specify additional addresses for lo if they
     # need too - additional routes too
     # However, no extra modules are loaded as they are just not needed
     if [[ ${iface} == "lo" ]]; then
-	metric_lo=0
+	metric_lo="0"
 	config_lo=( "127.0.0.1/8 brd 127.255.255.255" "${config_lo[@]}" )
 	routes_lo=( "127.0.0.0/8" "${routes_lo[@]}" )
-    fi
-
-    # Try and work out a metric for the interface if we're on auto
-    eval x=\"\$\{metric_${IFVAR}\}\"
-    if [[ -z ${x} ]]; then
-	if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
-	    eval "metric_${IFVAR}=\""$( calculate_metric ${iface} )"\""
-	else
-	    eval "metric_${IFVAR}=0"
-	fi
     fi
 
     # We may not have a loaded module for ${iface}
@@ -816,7 +815,7 @@ run_stop() {
 # added as we may be called inside the same shell scope for another interface
 run() {
     local iface="$1" cmd="$2" r=1 RC_INDENTATION="${RC_INDENTATION}"
-    local before starting=true
+    local starting=true
     local -a MODULES mods
     local IN_BACKGROUND=${IN_BACKGROUND:-false}
 
@@ -829,9 +828,6 @@ run() {
     unset -f exit
 
     eindent
-
-    unset_functions=${unset_functions:-false}
-    ${unset_functions} && before=$( typeset -F )
     [[ ${cmd} == "stop" ]] && starting=false
 
     # We force lo to only use these modules for a major speed boost
@@ -867,13 +863,6 @@ run() {
 	fi
 	[[ -n ${siface} ]] && apply_state "${siface}"
     fi
-
-    # We need to remove added functions before we quit as other init
-    # scripts may be launching afterwards
-    ${unset_functions} && \
-    unset $( diff -U0 <( echo "${before}" ) <( echo "$( typeset -F )" ) \
-    2>/dev/null \
-    | sed -ne 's/^+declare -f //p' ) 2>/dev/null
 
     return ${r}
 }
@@ -933,16 +922,4 @@ start() {
 stop() {
     einfo "Stopping ${IFACE}"
     run "${IFACE}" stop
-}
-
-# bool restart(void)
-#
-# Restart entry point
-# We do this so as we only have to remove functions when stopping
-restart() {
-    local unset_functions=true
-    service_started "${myservice}" && svc_stop
-    unset_functions=false
-    svc_start
-    return $?
 }

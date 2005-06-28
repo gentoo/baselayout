@@ -377,18 +377,18 @@ start_service() {
 
 		# if we can not start the services in parallel
 		# then just start it and return the exit status
-		(. /sbin/runscript.sh "/etc/init.d/${service}" start)
+		( "etc/init.d/${service}" start )
 		retval="$?"
 		splash "svc_started" "${service}" "${retval}"
-		end_service "${service}" "${retval}"
+		! service_inactive && end_service "${service}" "${retval}"
 		return "${retval}"
 	else
 		# if parallel startup is allowed, start it in background
 		(
-		(. /sbin/runscript.sh "/etc/init.d/${service}" start)
+		( "/etc/init.d/${service}" start )
 		retval="$?"
 		splash "svc_started" "${service}" "${retval}"
-		end_service "${service}" "${retval}"
+		! service_inactive && end_service "${service}" "${retval}"
 		) &
 		return 0
 	fi
@@ -726,7 +726,7 @@ trace_dependencies() {
 			net_service "${unsorted[x]}" && unsorted[x]="net"
 		done
 	fi
-		
+
 	while (( ${#unsorted[*]} > 0 )) ; do
 		# Get a service from the list and remove it
 		service=${unsorted[0]}
@@ -741,13 +741,13 @@ trace_dependencies() {
 		else
 			# Services that should start before $service
 			dependencies=(
-				$(ineed "${service}")
-				$(valid_iuse "${service}")
+				$( ineed "${service}" )
+				$( valid_iuse "${service}" )
 			)
 			if is_runlevel_start || is_runlevel_stop ; then
 				dependencies=(
 					${dependencies[@]}
-					$(valid_iafter "${service}")
+					$( valid_iafter "${service}" )
 				)
 			fi
 		fi
@@ -800,18 +800,30 @@ trace_dependencies() {
 
 		# XXX:  I dont think RC_NET_STRICT_CHECKING should be considered
 		#       here, but you never know ...
-		netserv=$(cd "${svcdir}"/started; ls net.* 2>/dev/null)
+		netserv=$( cd "${svcdir}"/started; ls net.* 2>/dev/null )
+	
+		# If no net services are running or we only have net.lo up, then
+		# assume we are in boot runlevel or starting a new runlevel
+		if [[ -z ${netserv} || ${netserv} == "net.lo" ]]; then
+			local mylevel="${BOOTLEVEL}"
+			[[ -f "${svcdir}/softlevel" ]] && mylevel=$( < "${svcdir}/softlevel" )
+			local startnetserv=$( cd "/etc/runlevels/${mylevel}"; ls net.* 2>/dev/null )
+			[[ -n ${startnetserv} ]] && netserv="${startnetserv}"
+		fi
 		
-		# Replace 'net' with the actual running services
+		# Replace 'net' with the actual net services
 		for (( x=0 ; x < ${#sorted[*]} ; x++ )) ; do
 			if [[ ${sorted[x]} == "net" ]] ; then
 				y=$((${x} + 1))
 				sorted=( "${sorted[@]:0:${x}}" ${netserv} "${sorted[@]:${y}}" )
+				break
 			fi
 		done
 	fi
 	
-	echo ${sorted[@]}
+	# Strip any duplicate net's
+	sorted=" ${sorted[@]} "
+	echo "${sorted[@]// net /}"
 }
 
 # bool query_before(service1, service2)
