@@ -114,7 +114,7 @@ udhcpc_start() {
 	local script=$( udhcpc_get_script ) opts hostname
 	eval opts=\"\$\{udhcpc_${ifvar}\}\"
 
-	if [[ ${opts} != *'--hostname='* ]]; then
+	if [[ ! " ${opts}" =~ " -([hH] |-hostname=)" ]]; then
 		hostname=$( hostname )
 		[[ -n ${hostname} && ${hostname} != "(none)" \
 		&& ${hostname} != "localhost" ]] \
