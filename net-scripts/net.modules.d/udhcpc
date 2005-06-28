@@ -101,14 +101,14 @@ udhcpc_stop() {
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 udhcpc_start() {
     local iface="$1" opts hostname pidfile="/var/run/udhcpc-$1.pid"
-    local cachefile="/var/cache/dhcp-${1}.lease" x
+    local cachefile="/var/cache/dhcp-$1.lease" x
 
     interface_exists "${iface}" true || return 1
 
     local ifvar=$( bash_variable "${iface}" ) opts hostname
     eval opts=\"\$\{udhcpc_${ifvar}\}\"
 
-    if [[ ${opts} != *'--hostname='* ]]; then
+    if [[ ! " ${opts}" =~ " -([hH] |-hostname=)" ]]; then
 	hostname=$( hostname )
 	[[ -n ${hostname} && ${hostname} != "(none)" \
 	&& ${hostname} != "localhost" ]] \
@@ -126,7 +126,7 @@ udhcpc_start() {
 
     # Try and load the cache if it exists
     if [[ -f ${cachefile} \
-	&& ${opts} != *'--request='* && ${opts} != *'-r '* ]]; then
+	&& ${opts} != *"--request="* && ${opts} != *"-r "* ]]; then
 	x=$( < "${cachefile}" )
 	[[ -n ${x} ]] && opts="${opts} --request=${x}"
     fi

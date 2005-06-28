@@ -12,7 +12,8 @@
 
     Documented the use of the RC_USE_CONFIG_PROFILE variable in conf.d/rc
 
-    udhcpc now removes stale pidfiles
+    udhcpc now removes stale pidfiles and parses for -(h|H) instead of
+    just --hostname
 
   24 Jun 2005; Roy Marples <uberlord@gentoo.org>:
 
