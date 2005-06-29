@@ -61,7 +61,7 @@ udhcpc_get_vars() {
 # Stops udhcpc running on an interface
 # Return 1 if we fail to stop udhcpc (if it's running) otherwise 0
 udhcpc_stop() {
-    local iface=$1 count release pidfile="/var/run/udhcpc-$1.pid" dhcp
+    local iface=$1 pidfile="/var/run/udhcpc-$1.pid" dhcp
 
     udhcpc_check_installed || return 0
     [[ ! -f ${pidfile} ]] && return 0
@@ -72,20 +72,13 @@ udhcpc_stop() {
     local ifvar=$( bash_variable "${iface}" )
     # Release the lease if told to
     eval dhcp=\" \$\{dhcp_${ifvar}\} \"
-    if [[ ${dhcp} == *' release '* ]]; then
+    if [[ ${dhcp} == *" release "* ]]; then
 	kill -s USR2 "${pid}" &>/dev/null
 	[[ -f "/var/cache/dhcp-${iface}.lease" ]] \
 	&& rm "/var/cache/dhcp-${iface}.lease"
     fi
 
     kill -s TERM "${pid}" &>/dev/null
-
-    # udhcp-0.9.8-r3 and earlier do not process signals correctly
-    # so we need to kill them off
-    if [[ -d "/proc/${pid}" ]]; then
-	kill -s KILL "${pid}" &>/dev/null
-	[[ -d "/proc/${pid}" ]] && e=false
-    fi
 
     [[ -f ${pidfile} ]] && rm -f "${pidfile}"
 

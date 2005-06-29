@@ -1,6 +1,16 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  29 Jun 2005; Roy Marples <uberlord@gentoo.org>:
+
+    dhclient now parses dhclient_eth0 for -cf parameter to set ${cffile}
+    dhclient now strips lines starting with script and send host-name
+    from ${cffile} and adds send host-name "${HOSTNAME}"; at the top
+    To stop this behaviour, add dhclient_edit_config="no" to /etc/conf.d/net
+    Fixes #96322
+
+    Removed killing udhcpc hard as it now dies nicely
+
   28 Jun 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Add davfs to the net list #97283 by Erik Grinaker.

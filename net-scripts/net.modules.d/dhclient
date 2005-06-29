@@ -76,7 +76,7 @@ dhclient_stop() {
     eval dhcp=\" \$\{dhcp_${ifvar}\} \"
 
     ebegin "Stopping dhclient on ${iface}"
-    if [[ ${dhcp} == *' release '* ]]; then
+    if [[ ${dhcp} != *" release "* ]]; then
 	local r=$( dhclient -q -r -pf "${pidfile}" \
 	    -sf "${MODULES_DIR}/helpers.d/dhclient-wrapper" "${iface}" )
 	[[ ${r} == "deconfig" ]]
@@ -99,21 +99,68 @@ dhclient_stop() {
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 dhclient_start() {
     local iface="$1" opts ifvar=$( bash_variable "$1" )
-    local pidfile="/var/run/dhclient-${iface}.pid"
+    local pidfile="/var/run/dhclient-${iface}.pid" edit=""
+    local cffile="/etc/dhcp/dhclient.conf"
 
     interface_exists "${iface}" true || return 1
 
-    # Bring up DHCP for this interface (or alias)
-    ebegin "Running dhclient"
+    # Stop dhclient if it's already running
+    dhclient_stop "${iface}"
 
-    if ! clean_pidfile "${pidfile}" ; then
-	ewarn "dhclient is already running on ${iface}"
-	eend 0
-	return 0
+    eval edit=\"\$\{dhclient_edit_config_${ifvar}\}\"
+    [[ -z ${edit} ]] && eval edit="${dhclient_edit_config:-yes}"
+    if [[ ${edit} == "yes" || ${edit} == "true" ]]; then
+	edit=true
+    else
+	edit=false
     fi
 
-    eval opts=\"\$\{dhclient_${ifvar}\}\"
+    # Load our options
+    eval opts=\" \$\{dhclient_${ifvar}\} \"
 
+    # Work out our cffile
+    x="${opts##* -cf }"
+    if [[ ${x} != ${opts} ]]; then
+	x="${x%% *}"
+	if [[ -n ${x} ]]; then
+	    cffile="${x}"
+	    opts="${opts//-cf ${cffile}/}"
+	fi
+    fi
+    opts="${opts} -cf ${cffile}"
+    
+    # Ensure that the cffile does not contain any script lines
+    # as that will stop our helpers from running
+    if [[ -e ${cffile} ]] ; then
+	if grep -q "^[ \t]*script " "${cffile}" 2>/dev/null ; then
+	    if ${edit} ; then
+		sed -i '/^[ \t]*script /d' "${cffile}" || return 1
+	    else
+		eerror "You have to remove the script parameter from ${cffile}"
+		return 1
+	    fi
+	fi
+    else
+	${edit} && touch "${cffile}" 2>/dev/null
+    fi
+
+    # Send our hostname by editing cffile
+    if ${edit} && [[ -e ${cffile} ]] ; then
+	local hostname=$( hostname )
+	hostname="fu2"
+	if [[ ${hostname} != "(none)" && ${hostname} != "localhost" ]]; then
+	    sed -i '/^[ \t]*send[ \t]*host-name[ \t]*/d' "${cffile}"
+	    if [[ -s ${cffile} ]]; then
+		sed -i '1 isend host-name "'"${hostname}"'"' "${cffile}"
+	    else
+		echo "send host-name \"${hostname}\";" > "${cffile}"
+	    fi
+	fi
+    fi
+
+    # Bring up DHCP for this interface (or alias)
+    ebegin "Running dhclient"
+    
     if [[ ${background} == "yes" ]]; then
 	dhclient ${opts} -pf "${pidfile}" -q \
 	    -sf "${MODULES_DIR}/helpers.d/dhclient-wrapper" \
