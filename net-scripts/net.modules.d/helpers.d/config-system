@@ -4,12 +4,16 @@
 
 # Contributed by Roy Marples (uberlord@gentoo.org)
 
-[[ -e $(add_suffix /etc/conf.d/net) ]] && source $(add_suffix /etc/conf.d/net)
 [[ -z ${MODULES_DIR} ]] && MODULES_DIR=/lib/rcscripts/net.modules.d
 
 if [[ $( type -t interface_variable ) != function ]]; then
 	source ${MODULES_DIR}/helpers.d/functions
 fi
+if [[ $( type -t add_suffix ) != function ]]; then
+    source /sbin/functions.sh
+fi
+
+[[ -e $(add_suffix /etc/conf.d/net) ]] && source $(add_suffix /etc/conf.d/net)
 
 # bool need_hostname(void)
 #
@@ -69,7 +73,7 @@ get_wireless_vars() {
 	source ${MODULES_DIR}/${module}
 	source ${MODULES_DIR}/essidnet
 
-	essidnet_pre_start ${interface}
+	essidnet_pre_start ${interface} >/dev/null
 }
 
 # This routine configures the local host for non-ip and routing info

@@ -81,6 +81,6 @@ done
 # Set our module to udhcpc if it's not set
 [[ -z ${module} ]] && module=udhcpc
 
-config_system
+config_system >/dev/null
 
 exit 0
