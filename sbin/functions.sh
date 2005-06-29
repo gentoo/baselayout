@@ -25,10 +25,10 @@ ordtypes="before after"
 
 # Dont output to stdout?
 RC_QUIET_STDOUT="no"
-RC_VERBOSE="${RC_VERBOSE:-no}"
+RC_VERBOSE=${RC_VERBOSE:-no}
 
 # Should we use color?
-RC_NOCOLOR="${RC_NOCOLOR:-no}"
+RC_NOCOLOR=${RC_NOCOLOR:-no}
 # Can the terminal handle endcols?
 RC_ENDCOL="yes"
 
@@ -607,7 +607,7 @@ get_base_ver() {
 # Network filesystems list for common use in rc-scripts.
 # This variable is used in is_net_fs and other places such as
 # localmount.
-NET_FS_LIST="afs cifs coda gfs ncpfs nfs nfs4 shfs smbfs"
+NET_FS_LIST="afs cifs coda davfs gfs ncpfs nfs nfs4 shfs smbfs"
 
 # bool is_net_fs(path)
 #
