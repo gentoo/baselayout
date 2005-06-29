@@ -103,11 +103,35 @@ dhclient_stop() {
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 dhclient_start() {
 	local iface=${1} opts pidfile="/var/run/dhclient-${1}.pid"
-	local ifvar=$( interface_variable ${iface} )
+	local ifvar=$( interface_variable ${iface} ) x
+	local cffile="/etc/dhclient.conf"
 
 	interface_exists ${iface} true || return 1
 
 	local script=$( dhclient_get_script )
+
+        # Load our options
+	eval opts=\" \$\{dhclient_${ifvar}\} \"
+
+	# Work out our cffile
+	x="${opts##* -cf }"
+	if [[ ${x} != ${opts} ]]; then
+	    x="${x%% *}"
+	    if [[ -n ${x} ]]; then
+		cffile="${x}"
+		opts="${opts//-cf ${cffile}/}"
+	    fi
+	fi
+	opts="${opts} -cf ${cffile}"
+
+	# Ensure that the cffile does not contain any script lines
+	# as that will stop our helpers from running
+	if [[ -e ${cffile} ]] ; then
+	    if grep -q "^[ \t]*script " "${cffile}" ; then
+                eerror "You have to remove the script parameter from ${cffile}"
+                return 1
+            fi
+        fi
 
 	# Bring up DHCP for this interface (or alias)
 	ebegin "Running dhclient"
