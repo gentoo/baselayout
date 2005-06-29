@@ -377,7 +377,7 @@ start_service() {
 
 		# if we can not start the services in parallel
 		# then just start it and return the exit status
-		( "etc/init.d/${service}" start )
+		( "/etc/init.d/${service}" start )
 		retval="$?"
 		splash "svc_started" "${service}" "${retval}"
 		! service_inactive && end_service "${service}" "${retval}"

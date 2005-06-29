@@ -11,6 +11,8 @@
 
     Removed killing udhcpc hard as it now dies nicely
 
+    wireless.runlevel now works
+
   28 Jun 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Add davfs to the net list #97283 by Erik Grinaker.

@@ -6,11 +6,12 @@
 
 action="$1"
 
-. /etc/conf.d/net
 [[ -z ${MODULES_DIR} ]] && MODULES_DIR="/lib/rcscripts/net.modules.d"
 . "${MODULES_DIR}/system"
 . /lib/rcscripts/sh/rc-services.sh
 . "${MODULES_DIR}/helpers.d/functions"
+conf=$(add_suffix "/etc/conf.d/net")
+[[ -e ${conf} ]] && source "${conf}"
 
 # Guess which interface module to load - we prefer iproute2
 if [[ -x /sbin/ip ]]; then
@@ -35,7 +36,6 @@ fi
 . "${MODULES_DIR}/${interface_module}"
 function_wrap "${interface_module}" interface
 if [[ -n ${wireless_module} ]]; then
-    . /etc/conf.d/wireless
     . "${MODULES_DIR}/${wireless_module}"
     function_wrap "${wireless_module}" wireless
 fi
