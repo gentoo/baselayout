@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  28 Jun 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Add davfs to the net list #97283 by Erik Grinaker.
+
   28 Jun 2005; Roy Marples <uberlord@gentoo.org>:
 
     wpa_supplicant now respects the background=no option if
