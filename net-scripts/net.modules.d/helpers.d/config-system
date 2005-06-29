@@ -4,7 +4,7 @@
 
 # Contributed by Roy Marples (uberlord@gentoo.org)
 
-source /etc/conf.d/net
+[[ -e $(add_suffix /etc/conf.d/net) ]] && source $(add_suffix /etc/conf.d/net)
 [[ -z ${MODULES_DIR} ]] && MODULES_DIR=/lib/rcscripts/net.modules.d
 
 if [[ $( type -t interface_variable ) != function ]]; then

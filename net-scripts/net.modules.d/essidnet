@@ -7,7 +7,8 @@
 # motivation for me to make this and keep on improving it
 
 # Load our config if it exists
-[[ -f /etc/conf.d/wireless ]] && source /etc/conf.d/wireless
+[[ -f $(add_suffix "/etc/conf.d/wireless" ) ]] \
+    && source $(add_suffix "/etc/conf.d/wireless" )
 
 # void essidnet_depend(void)
 #
