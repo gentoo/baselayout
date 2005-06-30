@@ -109,9 +109,15 @@ pump_start() {
 	&& opts="--hostname=${hostname} ${opts}"
     fi
 
+    # Add our route metric
+    eval metric=\"\$\{metric_${ifvar}\}\"
+    [[ -n ${metric} ]] && opts="${opts} --route-metric ${metric}"
+
+    [[ ! -d "${statedir}/${iface}" ]] && mkdir -p "${statedir}/${iface}"
+    
     # Bring up DHCP for this interface (or alias)
     ebegin "Running pump"
-    pump ${opts} --win-client-ident --interface "${iface}"
+    pump ${opts} --win-client-ident --interface "${iface}" "--etc-dir=${statedir}/${iface}"
     eend $? || return $?
 
     # pump succeeded, show address retrieved

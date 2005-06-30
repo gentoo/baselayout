@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  30 Jun 2005; Roy Marples <uberlord@gentoo.org>:
+
+    pump can now use route metrics and store it's configs in
+    /var/lib/net-scripts/state/${iface}
+
   29 Jun 2005; Roy Marples <uberlord@gentoo.org>:
 
     dhclient now parses dhclient_eth0 for -cf parameter to set ${cffile}
