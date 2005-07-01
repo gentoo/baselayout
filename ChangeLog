@@ -12,6 +12,8 @@
 
    A few tweaks to runscript.sh and rc-services.sh to avoid races
 
+   bootmisc now cleans /var/lib/net-scripts/state/*
+
   30 Jun 2005; Roy Marples <uberlord@gentoo.org>:
 
     pump can now use route metrics and store it's configs in

@@ -39,8 +39,16 @@ start() {
 		#
 		# Take care of random stuff [ /var/lock | /var/run | pam ]
 		#
+
+		if [[ -d /var/lib/net-scripts/state ]]; then
+			ebegin "Cleaning /var/lib/net-scripts/state"
+			rm -rf /var/lib/net-scripts/state/*
+			eend 0
+		fi
+
 		ebegin "Cleaning /var/lock, /var/run"
 		rm -rf /var/run/console.lock /var/run/console/*
+		
 		if [[ -z ${CDBOOT} ]] ; then
 			#
 			# Clean up any stale locks.
