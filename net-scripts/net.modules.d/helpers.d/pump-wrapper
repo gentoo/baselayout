@@ -1,0 +1,25 @@
+#!/bin/bash
+# Copyright (c) 2005 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+
+# Contributed by Roy Marples (uberlord@gentoo.org)
+
+[[ $1 == "renewal" ]] && exit 0
+
+action="$1"
+interface="$2"
+
+. /lib/rcscripts/net.modules.d/helpers.d/dhcp-state
+
+if [[ $1 == "up" ]]; then
+    eval nontp=\"\$\{dhcp_${ifvar}\}\"
+    [[ -z ${nontp} ]] && nontp="${dhcp}"
+    if [[ " ${nontp} " != " nontp " ]]; then
+	eval ntp_servers_${ifvar}=$( pump --interface "${interface}" --status \
+        | sed -n -e 's/^.*Ntpservers: //p' )
+	system_ntp "${interface}"
+    fi
+fi
+
+# Apply the state again to refresh ntp servers
+[[ -n ${interface} ]] && apply_state "${interface}"

@@ -514,7 +514,8 @@ test_service_state() {
 
 	local f="${svcdir}/$2/$1"
 	
-	[[ -L ${f} ]] || return 1
+	# Service is in the state requested
+	[[ -L ${f} ]] && return 0
 	
 	if [[ ! -e ${f} ]]; then
 		rm -f "${f}"

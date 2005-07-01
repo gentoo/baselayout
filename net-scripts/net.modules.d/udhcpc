@@ -111,29 +111,27 @@ udhcpc_start() {
     # Bring up DHCP for this interface (or alias)
     ebegin "Running udhcpc"
 
-    if ! clean_pidfile "${pidfile}" ; then
-	ewarn "udhcpc is already running on ${iface}"
-	eend 0
-	return 0
-    fi
+    # Stop any instance of udhcpc on this interface
+    udhcpc_stop "${interface}"
 
     # Try and load the cache if it exists
     if [[ -f ${cachefile} \
-	&& ${opts} != *"--request="* && ${opts} != *"-r "* ]]; then
+	&& " ${opts}" != *" --request="* && " ${opts} " != *" -r "* ]]; then
 	x=$( < "${cachefile}" )
 	[[ -n ${x} ]] && opts="${opts} --request=${x}"
     fi
 
     if [[ ${background} == "yes" ]]; then
-	eval "udhcpc ${opts} --script=${MODULES_DIR}/helpers.d/udhcpc-wrapper \
-	--pidfile=${pidfile} --interface=${iface}" &>/dev/null &
+	eval udhcpc ${opts} --script="${MODULES_DIR}/helpers.d/udhcpc-wrapper" \
+	--pidfile="${pidfile}" --interface="${iface}" &>/dev/null &
 	eend 0
 	go_background
     fi
 
-    x=$( eval "udhcpc ${opts} --now --pidfile=${pidfile} --interface=${iface} \
-	--script=${MODULES_DIR}/helpers.d/udhcpc-wrapper 2>&1 \
-	| egrep -v '^info,'" )
+    x=$( eval udhcpc ${opts} --now --pidfile="${pidfile}" \
+	--interface="${iface}" \
+	--script="${MODULES_DIR}/helpers.d/udhcpc-wrapper" 2>&1 \
+	| egrep -v '^info,' )
     # We just check the last 5 letters
     [[ ${x:((${#x} - 5)):5} == "bound" ]]
     eend $? "${x}" || return 1

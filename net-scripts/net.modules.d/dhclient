@@ -104,9 +104,6 @@ dhclient_start() {
 
     interface_exists "${iface}" true || return 1
 
-    # Stop dhclient if it's already running
-    dhclient_stop "${iface}"
-
     eval edit=\"\$\{dhclient_edit_config_${ifvar}\}\"
     [[ -z ${edit} ]] && eval edit="${dhclient_edit_config:-yes}"
     if [[ ${edit} == "yes" || ${edit} == "true" ]]; then
@@ -160,16 +157,19 @@ dhclient_start() {
 
     # Bring up DHCP for this interface (or alias)
     ebegin "Running dhclient"
+
+    # Stop dhclient if it's already running
+    dhclient_stop "${iface}"
     
     if [[ ${background} == "yes" ]]; then
-	dhclient ${opts} -pf "${pidfile}" -q \
+	eval dhclient ${opts} -pf "${pidfile}" -q \
 	    -sf "${MODULES_DIR}/helpers.d/dhclient-wrapper" \
 	    "${iface}" &>/dev/null &
 	eend 0
 	go_background
     fi
 
-    local x=$( dhclient ${opts} -1 -pf "${pidfile}" \
+    local x=$( eval dhclient ${opts} -1 -pf "${pidfile}" \
 	-sf "${MODULES_DIR}/helpers.d/dhclient-wrapper" -q "${iface}" 2>&1 )
     # We just check the last 5 letters
     [[ ${x:${#x} - 5:5} == "bound" ]]

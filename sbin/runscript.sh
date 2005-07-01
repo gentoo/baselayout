@@ -225,8 +225,11 @@ svc_stop() {
 		
 		# If we are halting the system, do it as cleanly as possible
 		if [[ ${SOFTLEVEL} != "reboot" && ${SOFTLEVEL} != "shutdown" ]] ; then
-			mark_service_started "${myservice}"
-			${was_inactive} && mark_service_inactive "${myservice}"
+			if ${was_inactive} ; then
+				mark_service_inactive "${myservice}"
+			else
+				mark_service_started "${myservice}"
+			fi
 		fi
 	else
 		# If we're stopped from a daemon that sets ${IN_BACKGROUND} such as
@@ -256,13 +259,13 @@ svc_start() {
 	local ordservice=
 
 	if service_stopping "${myservice}" ; then
-		ewarn "WARNING:  please wait for \"${myservice}\" to stop first."
+		ewarn "WARNING: please wait for \"${myservice}\" to stop first."
 		return 0
 	fi
 
 	if ! service_inactive "${myservice}" ; then
 		if service_started "${myservice}" ; then
-			ewarn "WARNING:  \"${myservice}\" has already been started."
+			ewarn "WARNING: \"${myservice}\" has already been started."
 			return 0
 		elif service_starting "${myservice}" ; then	
 			ewarn "WARNING: \"${myservice}\" is already starting."
@@ -407,9 +410,7 @@ svc_start() {
 svc_restart() {
 	if service_started "${myservice}" ; then
 		svc_stop || return "$?"
-		sleep 1
 	fi
-
 	svc_start || return "$?"
 }
 

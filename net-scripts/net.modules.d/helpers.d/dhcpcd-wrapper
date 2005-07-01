@@ -1,80 +1,18 @@
 #!/bin/bash
-# Copyright (c) 2004-2005 Gentoo Foundation
+# Copyright (c) 2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 # Contributed by Roy Marples (uberlord@gentoo.org)
 
-MODULES_DIR="${MODULES_DIR:-/lib/rcscripts/net.modules.d}"
-
-. /lib/rcscripts/sh/rc-services.sh
-. "${MODULES_DIR}/helpers.d/functions"
-. /etc/conf.d/net
-
-auto_interface="${auto_interface:-yes}"
 interface="${1##*/dhcpcd-}"
 interface="${interface%%.info}"
+
 service="net.${interface}"
 
 if [[ $2 != "up" && $2 != "new" ]]; then
-    service_started "${service}" && mark_service_inactive "${service}"
-    remove_state "${interface}" false
-    if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
-	best_interface=$( select_best_interface )
-	apply_state "${best_interface}"
-    fi
-    exit 0
-fi
-
-# Guess which interface module to load - we prefer iproute2
-if [[ -x /sbin/ip ]]; then
-    interface_module="iproute2"
-elif [[ -x /sbin/ifconfig ]]; then
-    interface_module="ifconfig"
+    action="down"
 else
-    echo "Can't find a known interface module" >&2
-    exit 1
+    action="up"
 fi
 
-# iwconfig is the best bet for wireless - we use wpa_supplicant
-# only if we need to
-if [[ -x /usr/sbin/iwconfig ]]; then
-    wireless_module="iwconfig"
-elif [[ -x /usr/sbin/wpa_supplicant && -S "/var/run/wpa_supplicant/${interface}" ]]; then
-    wireless_module="wpa_supplicant"
-fi
-
-# Load our modules
-. "${MODULES_DIR}/${interface_module}"
-. "${MODULES_DIR}/system"
-function_wrap "${interface_module}" interface
-if [[ -n ${wireless_module} ]]; then
-    . "${MODULES_DIR}/${wireless_module}"
-    function_wrap "${wireless_module}" wireless
-fi
-
-MODULES=( "system" )
-
-# Map MAC address variables to interface variables
-. "${MODULES_DIR}/macnet"
-macnet_pre_start "${interface}" 1>/dev/null
-
-# Map wireless ESSID variables to interface variables
-if wireless_check_extensions "${interface}" ; then
-    . "${MODULES_DIR}/essidnet"
-    essidnet_pre_start "${interface}" 1>/dev/null
-fi
-
-ifvar=$( bash_variable "${interface}" )
-eval search=\"\$\{dns_search_domains_${ifvar}\}\"
-resolv="${statedir}/${interface}/resolv.conf"
-[[ -n ${search} ]] && echo "search ${search}" >> "${resolv}" 
-
-! service_stopping "${service}" && mark_service_started "${service}"
-
-# save_state "${interface}"
-if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
-    best_interface=$( select_best_interface )
-    apply_state "${best_interface}"
-else
-    apply_state "${interface}"
-fi
+. /lib/rcscripts/net.modules.d/helpers.d/dhcp-state

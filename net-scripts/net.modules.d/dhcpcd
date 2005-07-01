@@ -119,7 +119,7 @@ dhcpcd_start() {
 	hostname=$( hostname )
 	[[ -n ${hostname} && ${hostname} != "(none)" \
 	&& ${hostname} != "localhost" ]] \
-	&& opts="-h ${hostname} ${opts}"
+	&& opts="-h \"${hostname}\" ${opts}"
     fi
 
     # Stop dhcpcd from bringing the interface down when we exit
@@ -130,7 +130,7 @@ dhcpcd_start() {
     [[ -n ${metric} ]] && opts="${opts} -m ${metric}"
 
     # Instruct dhcpcd to use our wrapper 
-    opts="${opts} -c /lib/rcscripts/net.modules.d/helpers.d/dhcpcd-wrapper"
+    opts="${opts} -c \"/lib/rcscripts/net.modules.d/helpers.d/dhcpcd-wrapper\""
     
     # Instruct dhcpcd to create it's files in our state dir
     opts="${opts} -e \"${statedir}/${iface}\""
@@ -138,19 +138,16 @@ dhcpcd_start() {
     # Bring up DHCP for this interface (or alias)
     ebegin "Running dhcpcd"
 
-    if ! clean_pidfile "${pidfile}" ; then
-	ewarn "dhcpcd is already running on ${iface}"
-	eend 0
-	return 0
-    fi
+    # Halt any existing dhcpcd process
+    dhcpcd_stop "${iface}"
 
     if [[ ${background} == "yes" ]]; then
-	eval "dhcpcd ${opts} ${iface}" & >/dev/null
+	eval dhcpcd ${opts} ${iface} &
 	eend 0
 	go_background
     fi
 
-    eval "dhcpcd ${opts} ${iface}"
+    eval dhcpcd ${opts} ${iface}
     eend $? || return 1
 
     # DHCP succeeded, show address retrieved

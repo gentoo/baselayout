@@ -1,0 +1,45 @@
+#!/bin/bash
+# Copyright (c) 2004-2005 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+
+# Contributed by Roy Marples (uberlord@gentoo.org)
+
+[[ -z ${MODULES_DIR} ]] && MODULES_DIR="/lib/rcscripts/net.modules.d"
+. "${MODULES_DIR}/system"
+. /lib/rcscripts/sh/rc-services.sh
+. "${MODULES_DIR}/helpers.d/functions"
+conf=$(add_suffix "/etc/conf.d/net")
+[[ -e ${conf} ]] && source "${conf}"
+
+# Guess which interface module to load - we prefer iproute2
+if [[ -x /sbin/ip ]]; then
+    interface_module="iproute2"
+elif [[ -x /sbin/ifconfig ]]; then
+    interface_module="ifconfig"
+else
+    echo "Can't find a known interface module" >&2
+    exit 1
+fi
+
+# iwconfig is the best bet for wireless - we use wpa_supplicant
+# only if we need to
+if [[ -x /usr/sbin/iwconfig ]]; then
+    wireless_module="iwconfig"
+elif [[ -x /usr/sbin/wpa_supplicant \
+    && -S "/var/run/wpa_supplicant/${interface}" ]]; then
+    wireless_module="wpa_supplicant"
+fi
+
+MODULES=( "system" )
+
+# Load our modules
+. "${MODULES_DIR}/${interface_module}"
+function_wrap "${interface_module}" interface
+. "${MODULES_DIR}/macnet"
+. "${MODULES_DIR}/system"
+
+if [[ -n ${wireless_module} ]]; then
+    . "${MODULES_DIR}/${wireless_module}"
+    function_wrap "${wireless_module}" wireless
+    . "${MODULES_DIR}/essidnet"
+fi

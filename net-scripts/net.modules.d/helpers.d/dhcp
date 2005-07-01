@@ -6,39 +6,7 @@
 
 action="$1"
 
-[[ -z ${MODULES_DIR} ]] && MODULES_DIR="/lib/rcscripts/net.modules.d"
-. "${MODULES_DIR}/system"
-. /lib/rcscripts/sh/rc-services.sh
-. "${MODULES_DIR}/helpers.d/functions"
-conf=$(add_suffix "/etc/conf.d/net")
-[[ -e ${conf} ]] && source "${conf}"
-
-# Guess which interface module to load - we prefer iproute2
-if [[ -x /sbin/ip ]]; then
-    interface_module="iproute2"
-elif [[ -x /sbin/ifconfig ]]; then
-    interface_module="ifconfig"
-else
-    echo "Can't find a known interface module" >&2
-    exit 1
-fi
-
-# iwconfig is the best bet for wireless - we use wpa_supplicant
-# only if we need to
-if [[ -x /usr/sbin/iwconfig ]]; then
-    wireless_module="iwconfig"
-elif [[ -x /usr/sbin/wpa_supplicant \
-    && -S "/var/run/wpa_supplicant/${interface}" ]]; then
-    wireless_module="wpa_supplicant"
-fi
-
-# Load our modules
-. "${MODULES_DIR}/${interface_module}"
-function_wrap "${interface_module}" interface
-if [[ -n ${wireless_module} ]]; then
-    . "${MODULES_DIR}/${wireless_module}"
-    function_wrap "${wireless_module}" wireless
-fi
+. /lib/rcscripts/net.modules.d/helpers.d/module-loader
 
 # Bring the interface up
 interface_is_up "${interface}" || interface_up "${interface}"
@@ -74,17 +42,13 @@ case "${action}" in
     ;;
 esac
 
-MODULES=( "system" )
-
 # Map MAC address variables to interface variables
-. "${MODULES_DIR}/macnet"
-macnet_pre_start "${interface}"
+macnet_pre_start "${interface}" 1>/dev/null
 
 # Map wireless ESSID variables to interface variables
-if [[ $( type -t wireless_check_extensions ) == "function" ]]; then
+if [[ -n ${wireless_module} ]]; then
     if wireless_check_extensions "${interface}" ; then
-	. "${MODULES_DIR}/essidnet"
-	essidnet_pre_start "${interface}"
+	essidnet_pre_start "${interface}" 1>/dev/null
     fi
 fi
 
