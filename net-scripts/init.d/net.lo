@@ -221,18 +221,16 @@ modules_check_user() {
 	    # ignore this error; whatever is available will be
 	    # used instead.
 	    (( i < ${#umods[@]} - npref )) || continue
-	    eerror "${umods[i]} is not a valid module (missing provides)"
+	    
+	    # The function may not exist because the modules software is
+	    # not installed. Load the module and report its error
+	    if [[ -e "${MODULES_DIR}/${umods[i]}" ]]; then
+		source "${MODULES_DIR}/${umods[i]}"
+		${umods[i]}_check_installed true
+	    else
+		eerror "The module \"${umods[i]}\" does not exist"
+	    fi
 	    return 1
-	fi
-
-	# Ensure that the user specified module has its package installed
-	if (( i < ${#umods[@]} - npref )); then
-	    # $1==true causes check_installed to report its own errors
-	    ${umods[i]}_check_installed true || return 1
-	else
-	    # If this happens on a preferred modules, ignore it;
-	    # whatever is available will be used instead.
-	    ${umods[i]}_check_installed false || continue
 	fi
 
 	mod=$( ${umods[i]}_provides )
@@ -397,7 +395,7 @@ modules_check_depends() {
 # Loads the defined handler and modules for the interface
 # Returns 0 on success, otherwise 1
 modules_load()  {
-    local iface=$1 starting=${2:-true} mod p=false i j k unsetfuncs
+    local iface=$1 starting=${2:-true} mod p=false i j k
     local -a x
     local RC_INDENTATION=${RC_INDENTATION}
     local -a PROVIDES WRAP_MODULES
@@ -450,13 +448,6 @@ modules_load()  {
 	if ${starting}; then
 	    modules_check_user || return 1
 	fi
-
-	# We unset unloaded module functions here as so we can error
-	# with a message informing the user to emerge the correct
-	# package if it's in their modules
-	[[ -n ${unsetfuncs} ]] && unset ${unsetfuncs}
-
-	modules_sort
     fi
 
     # Setup class wrappers: interface_up -> iproute2_up, for example
@@ -471,8 +462,6 @@ modules_load()  {
     for (( i=0; i<j; i++ )); do
 	function_wrap "${WRAP_MODULES[i]}"
     done
-
-    modules_check_installed || return 1
 
     veinfo "modules: ${MODULES[@]}"
     eindent
