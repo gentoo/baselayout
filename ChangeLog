@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  02 Jul 2005; Roy Marples <uberlord@gentoo.org>:
+
+   net.lo no longer needs find or diff
+
   01 Jul 2005; Roy Marples <uberlord@gentoo.org>:
 
    Minor tweaks to all dhcp modules - basically better quoting so that

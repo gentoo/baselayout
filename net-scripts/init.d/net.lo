@@ -100,45 +100,47 @@ module_load_minimum() {
 # Load and check each module for sanity
 # If the module is not installed, the functions are to be removed
 modules_load_auto() {
-    local i j beforefuncs afterfuncs unload
+    local i j
 
     # Populate the MODULES array
-    MODULES=( $( find "${MODULES_DIR}"/ -maxdepth 1 -type f ! -name ".*" | sort ) )
+    # Basically we treat evey file in ${MODULES_DIR} as a module
+    MODULES=( $( cd "${MODULES_DIR}" ; ls ) )
+    j=${#MODULES[@]}
+    for (( i=0; i<j; i++ )); do
+	MODULES[i]="${MODULES_DIR}/${MODULES[i]}"
+	[[ ! -f ${MODULES[i]} ]] && unset MODULES[i]
+    done
+    MODULES=( "${MODULES[@]}" )
 
     # Each of these sources into the global namespace, so it's
     # important that module functions and variables are prefixed with
     # the module name, for example iproute2_
 
-    beforefuncs=$( typeset -F )
     j="${#MODULES[@]}"
     loaded_interface=false
     for (( i=0; i<j; i++ )); do
-	unload=false
-	module_load_minimum "${MODULES[i]}" || unload=true
-	MODULES[i]="${MODULES[i]##*/}"
-
-	! ${unload} && ${MODULES[i]}_check_installed false || unload=true
-
-	if [[ ${MODULES[i]} == "interface" ]]; then
+	if [[ ${MODULES[i]##*/} == "interface" ]]; then
 	    eerror "interface is a reserved name - cannot load a module called interface"
 	    return 1
 	fi
+	(
+	   u=0;
+	   module_load_minimum "${MODULES[i]}" || u=1;
+	   [[ ${u} == 0 ]] && ${MODULES[i]##*/}_check_installed false || u=1;
+	   exit ${u};
+	)
 
-	afterfuncs=$( typeset -F )
-	if ${unload} ; then
+	if [[ $? == 0 ]]; then
+	    source "${MODULES[i]}"
+	    MODULES[i]=${MODULES[i]##*/}
+	else
 	    unset MODULES[i]
-	    unset -f $( diff -U0 <( echo "${beforefuncs}" ) \
-	    <( echo "${afterfuncs}" ) 2>/dev/null \
-	    | sed -n -e 's/^+declare -f //p' )
 	fi
-	beforefuncs="${afterfuncs}"
-
     done
-    MODULES=( "${MODULES[@]}" )
 
+    MODULES=( "${MODULES[@]}" )
     return 0
 }
-
 
 # bool modules_check_installed(void)
 #
