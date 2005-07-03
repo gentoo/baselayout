@@ -1,22 +1,29 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  03 Jul 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Fixed module depends in net.lo
+
+    Remove the "no net scripts in boot runlevel" restriction as we now
+    have a hotplug policy setup instead
+
   02 Jul 2005; Roy Marples <uberlord@gentoo.org>:
 
-   net.lo no longer needs find or diff
+    net.lo no longer needs find or diff
 
   01 Jul 2005; Roy Marples <uberlord@gentoo.org>:
 
-   Minor tweaks to all dhcp modules - basically better quoting so that
-   the eval ${dhcpclient} calls work better
+    Minor tweaks to all dhcp modules - basically better quoting so that
+    the eval ${dhcpclient} calls work better
 
-   pump can now be backgrounded
+    pump can now be backgrounded
 
-   Tweaked the dhcp helpers so that more code is shared
+    Tweaked the dhcp helpers so that more code is shared
 
-   A few tweaks to runscript.sh and rc-services.sh to avoid races
+    A few tweaks to runscript.sh and rc-services.sh to avoid races
 
-   bootmisc now cleans /var/lib/net-scripts/state/*
+    bootmisc now cleans /var/lib/net-scripts/state/*
 
   30 Jun 2005; Roy Marples <uberlord@gentoo.org>:
 

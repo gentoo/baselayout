@@ -40,15 +40,6 @@ else
 	NETSERVICE=
 fi
 
-# We need to stop hotplug from launching net scripts until the boot level
-# has completed
-if [[ ${NETSERVICE} == "yes" && ${IFACE} != "lo" ]] ; then
-       if [[ -z ${mylevel} || ${mylevel} == ${BOOTLEVEL} ]] ; then
-               eerror "${myservice}: cannot start until the runlevel ${BOOTLEVEL} has completed"
-               exit 1
-       fi
-fi
-
 # Source configuration files.
 # (1) Source /etc/conf.d/${myservice} to get initscript-specific
 #     configuration (if it exists).

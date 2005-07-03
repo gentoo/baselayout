@@ -89,9 +89,6 @@ module_load_minimum() {
 	return 1
     done
 
-    # Wrap our before/after/need/use functions
-    ${MODULE}_depend
-
     return 0
 }
 
@@ -395,7 +392,7 @@ modules_check_depends() {
 # Loads the defined handler and modules for the interface
 # Returns 0 on success, otherwise 1
 modules_load()  {
-    local iface=$1 starting=${2:-true} mod p=false i j k
+    local iface=$1 starting=${2:-true} MODULE p=false i j k
     local -a x
     local RC_INDENTATION=${RC_INDENTATION}
     local -a PROVIDES WRAP_MODULES
@@ -454,6 +451,13 @@ modules_load()  {
     j=${#MODULES[@]}
     for (( i=0; i<j; i++ )); do
 	function_wrap "${MODULES[i]}" "${PROVIDES[i]}"
+	
+	# Now load our dependencies - we need to use the MODULE variable
+	# here as the after/before/need functions use it
+	if [[ -z ${modules_force[@]} ]]; then
+	    MODULE="${MODULES[i]}"
+	    ${MODULE}_depend
+	fi
     done
 
     # Some modules may be installed, but not selected by user preference
@@ -462,6 +466,10 @@ modules_load()  {
     for (( i=0; i<j; i++ )); do
 	function_wrap "${WRAP_MODULES[i]}"
     done
+
+    if [[ -z ${modules_force[@]} ]]; then
+	modules_sort || return 1
+    fi
 
     veinfo "modules: ${MODULES[@]}"
     eindent
