@@ -72,13 +72,11 @@ bridge_get_bridge() {
     local x=$( brctl show 2>/dev/null \
     | sed -e '1 {d}; /^[^ ]/ { N }; /.*'"$1"'.*/ {s/^\([^ \t]\+\).*/\1/p}; d' )
 
-    # Silly - if there is only one interface and/or one bridge then the above
-    # still works but outputs the whole line - so we cater for this sillyness
-    if [[ ${x//\t/} == ${x} ]]; then
+    local -a a=( ${x} )
+    if [[ ${#a[@]} == 1 ]]; then
 	echo "${x}"
-    else
-        local -a a=( ${x} )
-	[[ $1 == ${a[3]} ]] && echo "${a[0]}"
+    elif [[ $1 == ${a[3]} ]]; then
+	echo "${a[0]}"
     fi
 }
 
