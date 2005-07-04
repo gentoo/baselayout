@@ -149,17 +149,18 @@ bridge_delete_port() {
 # This can also be called by non-bridges so that the bridge can be created
 # dynamically
 bridge_pre_start() {
-    local iface="$1" ports briface i ifvar=$( bash_variable "$1" )
+    local iface="$1" ports briface i ifvar=$( bash_variable "$1" ) opts
     eval ports=\"\$\{bridge_${ifvar}\[@\]\}\"
     eval briface=\"\$\{bridge_add_${ifvar}\}\"
+    eval opts=\"\$\{brctl_${ifvar}\}\"
 
-    [[ -z ${ports} && -z ${briface} ]] && return 0
+    [[ -z ${ports} && -z ${briface} && -z ${opts} ]] && return 0
 
     # Destroy the bridge if it exists
     [[ -n ${ports} ]] && bridge_stop "${iface}"
 
     # Allow ourselves to add to the bridge
-    if [[ -z ${ports} ]]; then
+    if [[ -z ${ports} && -n ${briface} ]]; then
 	ports="${iface}"
 	iface="${briface}"
     fi
@@ -167,21 +168,23 @@ bridge_pre_start() {
     # Create the bridge if needed
     bridge_exists "${iface}" || bridge_create "${iface}"
 
-    einfo "Adding ports to ${iface}"
-    eindent
+    if [[ -n ${ports} ]]; then
+	einfo "Adding ports to ${iface}"
+	eindent
 
-    for i in ${ports}; do
-	interface_exists "${i}" && continue 
-	eerror "interface ${i} does not exist"
-	return 1
-    done
+	for i in ${ports}; do
+	    interface_exists "${i}" && continue 
+	    eerror "interface ${i} does not exist"
+	    return 1
+	done
 
-    for i in ${ports}; do
-	ebegin "${i}"
-	bridge_add_port "${iface}" "${i}"
-	eend $? || return 1
-    done
-    eoutdent
+	for i in ${ports}; do
+	    ebegin "${i}"
+	    bridge_add_port "${iface}" "${i}"
+	    eend $? || return 1
+	done
+	eoutdent
+    fi
 
     return 0
 }
