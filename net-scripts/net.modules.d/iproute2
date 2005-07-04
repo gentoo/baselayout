@@ -138,6 +138,14 @@ iproute2_set_mac_address() {
     ip link set address "$2" dev "$1"
 }
 
+# int iproute2_set_name(char *interface, char *new_name)
+#
+# Renames the interface
+# This will not work if the interface is setup!
+iproute2_set_name() {
+    ip link set name "$2" dev "$1"
+}
+
 # void iproute2_get_aliases_rev(char *interface)
 #
 # Fetch the list of aliases for an interface.  

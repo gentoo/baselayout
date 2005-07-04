@@ -1,0 +1,67 @@
+#!/bin/bash
+# Copyright (c) 2004-2005 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+
+# Contributed by Roy Marples (uberlord@gentoo.org)
+
+# char* rename_provides(void)
+#
+# Returns a string to change module definition for starting up
+rename_provides() {
+    echo "rename"
+}
+
+# void rename_depend(void)
+#
+# Sets up the dependancies for the module
+rename_depend() {
+    before macchanger interface
+}
+
+# bool rename_check_installed(void)
+#
+# We are always installed
+rename_check_installed() {
+    return 0 
+}
+
+# bool rename_check_depends(void)
+#
+# Checks to see if we have the needed functions
+rename_check_depends() {
+    return 0
+}
+
+# bool rename_pre_start(char *iface)
+#
+# Checks to see if we have to rename the interface 
+rename_pre_start() {
+    local iface="$1" newname="" mac ifvar=$( bash_variable "$1" )
+
+    interface_exists "${iface}" true || return 0
+    
+    mac=$( interface_get_mac_address "${iface}" )
+    eval newname=\"\$\{rename_${mac//:/}\}\"
+    [[ -z ${newname} ]] && eval newname=\"\$\{rename_${ifvar}\}\"
+    [[ -z ${newname} || ${iface} == ${newname} ]] && return 0
+
+    ebegin "Renaming \"${iface}\" to \"${newname}\""
+
+    # Ensure that we have an init script
+    [[ ! -e /etc/init.d/net."${newname}" ]] \
+	&& ( cd /etc/init.d ; ln -s net.lo "net.${newname}" )
+
+    # Ensure that the interface is down and without any addresses or we
+    # will not work
+    interface_del_addresses "${iface}"
+    interface_down "${iface}"
+    interface_set_name "${iface}" "${newname}"
+    eend $? "Failed to rename interface" || return 1
+
+    # Mark us as stopped, start the new interface and bail cleanly
+    mark_service_stopped "net.${iface}"
+    einfo "Stopped configuration of ${iface} due to renaming"
+    service_stopped "net.${newname}" && start_service "net.${newname}"
+    
+    exit 1 
+}

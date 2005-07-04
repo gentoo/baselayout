@@ -135,6 +135,21 @@
 ##############################################################################
 # OPTIONAL MODULES
 
+# INTERFACE RENAMING
+# There is no consistent device renaming scheme for Linux.
+# The preferred way of naming devices is via the kernel module directly or
+# by using udev (http://www.reactivated.net/udevrules.php)
+
+# If you are unable to write udev rules, then we do provide a way of renaming
+# the interface based on it's MAC address, but it is not optimal.
+# Here is how to rename an interface whose MAC address is 00:11:22:33:44:55
+# to foo1
+#rename_001122334455="foo1"
+
+# You can also do this based on current device name - although this is not
+# recommended. Here we rename eth1 to foo2.
+#rename_eth1="foo2"
+
 #-----------------------------------------------------------------------------
 # WIRELESS (802.11 support)
 # Wireless can be provided by iwconfig or wpa_supplicant

@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  04 Jul 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Added a rename module to rename interfaces based on MAC address
+    (preferred) or current name. Fixes #76328
+
   03 Jul 2005; Roy Marples <uberlord@gentoo.org>:
 
     Fixed module depends in net.lo
