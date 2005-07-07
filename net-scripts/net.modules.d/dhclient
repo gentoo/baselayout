@@ -61,7 +61,7 @@ dhclient_get_vars() {
 # Stop dhclient on an interface
 # Always returns 0
 dhclient_stop() {
-    local iface="$1" dhcp release
+    local iface="$1" d
     local pidfile="/var/run/dhclient-${iface}.pid"
 
     dhclient_check_installed || return 0
@@ -73,10 +73,11 @@ dhclient_stop() {
     local pid=$( < "${pidfile}" )
 
     local ifvar=$( bash_variable "${iface}" )
-    eval dhcp=\" \$\{dhcp_${ifvar}\} \"
+    eval d=\" \$\{dhcp_${ifvar}\} \"
+    [[ ${d} == "  " ]] && d=" ${dhcp} "
 
     ebegin "Stopping dhclient on ${iface}"
-    if [[ ${dhcp} != *" release "* ]]; then
+    if [[ ${d} == *" release "* ]]; then
 	local r=$( dhclient -q -r -pf "${pidfile}" \
 	    -sf "${MODULES_DIR}/helpers.d/dhclient-wrapper" "${iface}" )
 	[[ ${r} == "deconfig" ]]
@@ -101,6 +102,7 @@ dhclient_start() {
     local iface="$1" opts ifvar=$( bash_variable "$1" )
     local pidfile="/var/run/dhclient-${iface}.pid" edit=""
     local cffile="/etc/dhcp/dhclient.conf"
+    local d
 
     interface_exists "${iface}" true || return 1
 
@@ -141,8 +143,11 @@ dhclient_start() {
 	${edit} && touch "${cffile}" 2>/dev/null
     fi
 
+    eval d=\" \$\{dhcp_${ifvar}\} \"
+    [[ ${d} == "  " ]] && d=" ${dhcp} "
+
     # Send our hostname by editing cffile
-    if ${edit} && [[ -e ${cffile} ]] ; then
+    if ${edit} && [[ -e ${cffile} && ${d} != *" nosendhost "* ]] ; then
 	local hostname=$( hostname )
 	hostname="fu2"
 	if [[ ${hostname} != "(none)" && ${hostname} != "localhost" ]]; then

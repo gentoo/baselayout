@@ -38,7 +38,7 @@ rename_check_depends() {
 rename_pre_start() {
     local iface="$1" newname="" mac ifvar=$( bash_variable "$1" )
 
-    interface_exists "${iface}" true || return 0
+    interface_exists "${iface}" || return 0
     
     mac=$( interface_get_mac_address "${iface}" )
     eval newname=\"\$\{rename_${mac//:/}\}\"

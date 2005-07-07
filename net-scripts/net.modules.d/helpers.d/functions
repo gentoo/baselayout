@@ -65,7 +65,10 @@ apply_state() {
     fi
 
     local d="${statedir}/${iface}"
-    [[ -d "${d}" ]] && cp -aR "${d}"/* "${netdir}" 
+    if [[ -d "${d}" ]]; then
+	local x=$( ls "${d}" )
+	[[ -n ${x} ]] && cp -aR "${d}"/* "${netdir}"
+    fi
 }
 
 # char* select_best_interface() {
@@ -73,8 +76,18 @@ apply_state() {
 # Selects the best interface to apply state information to
 # This is currently based on routing metrics
 select_best_interface() {
-    awk '$2=="00000000" { print $7, $1 }' /proc/net/route \
-    | sort -n | head -n 1 | cut -d' ' -f2
+    local -a ifs=( $( awk '$2=="00000000" { print $7, $1 }' /proc/net/route \
+	| sort -n | cut -d' ' -f2 ) )
+
+    local iface
+    for iface in ${ifs[@]} ; do
+	if [[ -e "${statedir}/${iface}/resolv.conf" ]]; then
+	    echo "${iface}"
+	    return 0
+	fi
+    done
+
+    echo ${ifs[0]}
 }
 
 # int calculate_metric(char *interface)

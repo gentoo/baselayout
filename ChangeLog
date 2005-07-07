@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  07 Jul 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Added "nosendhost" dhcp option so users can request not to send their
+    machines hostname by default. Fixes #98132
+
   04 Jul 2005; Roy Marples <uberlord@gentoo.org>:
 
     Added a rename module to rename interfaces based on MAC address

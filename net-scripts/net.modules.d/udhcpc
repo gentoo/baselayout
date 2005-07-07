@@ -61,7 +61,7 @@ udhcpc_get_vars() {
 # Stops udhcpc running on an interface
 # Return 1 if we fail to stop udhcpc (if it's running) otherwise 0
 udhcpc_stop() {
-    local iface=$1 pidfile="/var/run/udhcpc-$1.pid" dhcp
+    local iface=$1 pidfile="/var/run/udhcpc-$1.pid" d
 
     udhcpc_check_installed || return 0
     [[ ! -f ${pidfile} ]] && return 0
@@ -70,9 +70,10 @@ udhcpc_stop() {
     local pid=$( < "${pidfile}" ) e=true
 
     local ifvar=$( bash_variable "${iface}" )
-    # Release the lease if told to
-    eval dhcp=\" \$\{dhcp_${ifvar}\} \"
-    if [[ ${dhcp} == *" release "* ]]; then
+    eval d=\" \$\{dhcp_${ifvar}\} \"
+    [[ ${d} == "  " ]] && d=" ${dhcp} "
+
+    if [[ ${d} == *" release "* ]]; then
 	kill -s USR2 "${pid}" &>/dev/null
 	[[ -f "/var/cache/dhcp-${iface}.lease" ]] \
 	&& rm "/var/cache/dhcp-${iface}.lease"
@@ -93,19 +94,24 @@ udhcpc_stop() {
 #
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 udhcpc_start() {
-    local iface="$1" opts hostname pidfile="/var/run/udhcpc-$1.pid"
-    local cachefile="/var/cache/dhcp-$1.lease" x
+    local iface="$1" opts pidfile="/var/run/udhcpc-$1.pid"
+    local cachefile="/var/cache/dhcp-$1.lease" d
 
     interface_exists "${iface}" true || return 1
 
     local ifvar=$( bash_variable "${iface}" ) opts hostname
     eval opts=\"\$\{udhcpc_${ifvar}\}\"
 
-    if [[ ! " ${opts}" =~ " -([hH] |-hostname=)" ]]; then
-	hostname=$( hostname )
-	[[ -n ${hostname} && ${hostname} != "(none)" \
-	&& ${hostname} != "localhost" ]] \
-	&& opts="${opts} --hostname=${hostname}"
+    eval d=\" \$\{dhcp_${ifvar}\} \"
+    [[ ${d} == "  " ]] && d=" ${dhcp} "
+    
+    if [[ ${d} != *" nosendhost "* ]]; then
+	if [[ ! " ${opts}" =~ " -([hH] |-hostname=)" ]]; then
+	    local hostname=$( hostname )
+	    [[ -n ${hostname} && ${hostname} != "(none)" \
+	    && ${hostname} != "localhost" ]] \
+	    && opts="${opts} --hostname=${hostname}"
+	fi
     fi
 
     # Bring up DHCP for this interface (or alias)
@@ -115,10 +121,11 @@ udhcpc_start() {
     udhcpc_stop "${interface}"
 
     # Try and load the cache if it exists
-    if [[ -f ${cachefile} \
-	&& " ${opts}" != *" --request="* && " ${opts} " != *" -r "* ]]; then
-	x=$( < "${cachefile}" )
-	[[ -n ${x} ]] && opts="${opts} --request=${x}"
+    if [[ -f ${cachefile} ]]; then
+	if [[ " ${opts}" != *" --request="* && " ${opts} " != *" -r "* ]]; then
+	   local x=$( < "${cachefile}" )
+	    [[ -n ${x} ]] && opts="${opts} --request=${x}"
+	fi
     fi
 
     if [[ ${background} == "yes" ]]; then
