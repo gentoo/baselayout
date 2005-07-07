@@ -106,19 +106,22 @@ udhcpc_stop() {
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 udhcpc_start() {
 	local iface=$1 opts hostname pidfile="/var/run/udhcpc-${1}.pid"
-	local cachefile="/var/cache/udhcpc-${1}.cache" x
+	local cachefile="/var/cache/udhcpc-${1}.cache" x dhcp
 
 	interface_exists ${iface} true || return 1
 
 	local ifvar=$( interface_variable ${iface} )
 	local script=$( udhcpc_get_script ) opts hostname
-	eval opts=\"\$\{udhcpc_${ifvar}\}\"
+	eval opts=\" \$\{udhcpc_${ifvar}\} \"
+	eval dhcp=\" \$\{dhcp_${ifvar}\} \"
 
-	if [[ ! " ${opts}" =~ " -([hH] |-hostname=)" ]]; then
-		hostname=$( hostname )
+	if [[ ${dhcp} != *' nosendhost '* ]]; then
+	    if [[ ! " ${opts}" =~ " -([hH] |-hostname=)" ]]; then
+	    	hostname=$( hostname )
 		[[ -n ${hostname} && ${hostname} != "(none)" \
 		&& ${hostname} != "localhost" ]] \
 		&& hostname="--hostname=${hostname}"
+	    fi
 	fi
 
 	# Bring up DHCP for this interface (or alias)

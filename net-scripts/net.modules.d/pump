@@ -104,7 +104,7 @@ pump_start() {
 	[[ ${dhcp} == *' nodns '* ]] && opts="${opts} --no-dns"
 
 	# We transmit the hostname by default
-	if [[ ${opts} != *'-h '* && ${opts} != '*--hostname='* ]]; then
+	if [[ ${dhcp} != *' nosendhost '* && ${opts} != *'-h '* && ${opts} != '*--hostname='* ]]; then
 		hostname=$( hostname )
 		[[ -n ${hostname} && ${hostname} != "(none)" && ${hostname} != localhost ]] \
 			&& opts="--hostname=${hostname} ${opts}"

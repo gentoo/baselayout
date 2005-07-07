@@ -107,7 +107,7 @@ dhcpcd_start() {
 	[[ ${dhcp} == *' nonis '* ]] && opts="${opts} -Y"
 
 	# We transmit the hostname by default
-	if [[ ${opts} != *'-h '* ]]; then
+	if [[ ${dhcp} != *' nosendhost '* && ${opts} != *'-h '* ]]; then
 		hostname=$( hostname )
 		[[ -n ${hostname} && ${hostname} != "(none)" && ${hostname} != localhost ]] \
 			&& opts="-h ${hostname} ${opts}"
