@@ -256,11 +256,12 @@
 
 # GENERIC DHCP OPTIONS
 # Set generic DHCP options like so
-#dhcp_eth0="release nodns nontp nonis"
+#dhcp_eth0="release nodns nontp nonis nosendhost"
 
-# This tells the dhcp client to release it's lease when it stops and not to
-# overwrite dns, ntp and nis settings when it starts. You can use any
-# combination of the above options - the default is not to use any of them
+# This tells the dhcp client to release it's lease when it stops, not to send
+# the current hostname to the dhcp server and not to overwrite dns, ntp and
+# nis settings when it starts. You can use any combination of the above
+# options - the default is not to use any of them
 
 #-----------------------------------------------------------------------------
 # Automatic Private IP Addressing (APIPA)
