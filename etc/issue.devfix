@@ -12,7 +12,9 @@ rmdir /mnt/fixit
 
 You may refer to these instructions at /etc/issue.  
 If you previously had an issue file, it has been 
-backed up at /etc/issue.devfix.
+backed up at /etc/issue.devfix.  Once you've fixed 
+your system, you will have to restore your old issue 
+file in order to get rid of this warning.
 
 Thanks for using Gentoo ! :)
 http://bugs.gentoo.org/show_bug.cgi?id=40987
