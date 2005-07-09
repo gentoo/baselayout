@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+  09 Jul 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add workaround for evms device names and 'RC_DEVICE_TARBALL="yes"'.  Patch
+    by Olaf Niermann, bug #95799.
+
 * rc-scripts-1.6.11 (20 Apr 2005)
 
   13 Mar 2005; Roy Marples <uberlord@gentoo.org>:

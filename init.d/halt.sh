@@ -26,6 +26,7 @@ then
 	# Handle our temp files
 	devices_udev=$(mktemp /tmp/devices.udev.XXXXXX)
 	devices_real=$(mktemp /tmp/devices.real.XXXXXX)
+	devices_totar=$(mktemp /tmp/devices.totar.XXXXXX)
 	device_tarball=$(mktemp /tmp/devices-XXXXXX)
 	
 	if [[ -z ${devices_udev} || -z ${devices_real} || \
@@ -58,10 +59,10 @@ then
 		for x in MAKEDEV core fd initctl pts shm stderr stdin stdout; do
 			echo "${x}" >> "${devices_udev}"
 		done
-		tarball_devices="$(fgrep -x -v -f "${devices_udev}" < "${devices_real}")"
+		fgrep -x -v -f "${devices_udev}" < "${devices_real}" > "${devices_totar}"
 		# Now only tarball those not created by udev if we have any
-		if [[ -n ${tarball_devices} ]]; then
-			try tar -jclpf "${device_tarball}" ${tarball_devices}
+		if [[ -s ${devices_totar} ]]; then
+			try tar -jclpf "${device_tarball}" -T "${devices_totar}"
 			try mv -f "${device_tarball}" /lib/udev-state/devices.tar.bz2
 			try rm -f "${devices_udev}" "${devices_real}"
 		else
