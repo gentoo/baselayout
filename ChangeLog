@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  09 Jul 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add workaround for evms device names and 'RC_DEVICE_TARBALL="yes"'.  Patch
+    by Olaf Niermann, bug #95799.
+
   07 Jul 2005; Roy Marples <uberlord@gentoo.org>:
 
     Added "nosendhost" dhcp option so users can request not to send their
