@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  09 Jul 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Only remount the / filesystem readonly if it isn't already and don't 
+    screw around with net filesystems #98405 in init.d/checkroot.
+
   09 Jul 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     Add workaround for evms device names and 'RC_DEVICE_TARBALL="yes"'.  Patch
