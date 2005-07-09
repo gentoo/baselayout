@@ -6,6 +6,9 @@
     Only remount the / filesystem readonly if it isn't already and don't 
     screw around with net filesystems #98405 in init.d/checkroot.
 
+    Add support for completely wiping out /tmp and in general clean up
+    the bootmisc file #56592.
+
   09 Jul 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     Add workaround for evms device names and 'RC_DEVICE_TARBALL="yes"'.  Patch
