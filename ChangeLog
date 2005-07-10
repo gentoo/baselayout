@@ -9,6 +9,8 @@
     Add support for completely wiping out /tmp and in general clean up
     the bootmisc file #56592.
 
+    Add back in support for mounting usbfs under usbgid #35860.
+
   09 Jul 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     Add workaround for evms device names and 'RC_DEVICE_TARBALL="yes"'.  Patch

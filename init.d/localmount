@@ -13,7 +13,7 @@ start() {
 	eend $? "Some local filesystem failed to mount"
 
 	# Make sure we insert usbcore if its a module
-	if [[ -f /proc/modules ]] ; then
+	if [[ -f /proc/modules && ! -d /proc/bus/usb ]] ; then
 		# >/dev/null to hide errors from non-USB users
 		modprobe usbcore &> /dev/null
 	fi
@@ -28,10 +28,9 @@ start() {
 	   [[ -e /proc/bus/usb && ! -e /proc/bus/usb/devices ]]
 	then
 		ebegin "Mounting USB device filesystem (${usbfs})"
-#		# Fetch usb gid from /etc/group; fixes bug 35860
-#		usbgid=$(awk -F: '/^usb:/{print $3; exit}' /etc/group)
-#		mount -t ${usbfs} ${usbgid:+-o devmode=0664,devgid=$usbgid}
-		mount -t ${usbfs} usbfs /proc/bus/usb &>/dev/null
+		usbgid=$(awk -F: '/^usb:/{print $3; exit}' /etc/group)
+		mount -t ${usbfs} usbfs /proc/bus/usb \
+			${usbgid:+-o devmode=0664,devgid=${usbgid}}
 		eend $? "Failed to mount USB device filesystem"
 	fi
 
