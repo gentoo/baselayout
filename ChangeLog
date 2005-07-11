@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  11 Jul 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add fix -r to unmount to be -n .. bug #98667, thanks to Patrick McLean.
+
   11 Jul 2005; Roy Marples <uberlord@gentoo.org>:
 
     udhcpc/dhclient helpers no longer flush IPv6 addresses - fixes #98539
