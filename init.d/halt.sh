@@ -196,7 +196,7 @@ mount_readonly() {
 	for x in $(awk '$1 != "none" { print $2 }' /proc/mounts | sort -ur) ; do
 		x=${x//\\040/ }
 		if [[ ${cmd} == "u" ]]; then
-			umount -r -r "${x}"
+			umount -n -r "${x}"
 		else
 			mount -n -o remount,ro "${x}" &>/dev/null
 		fi
