@@ -156,12 +156,15 @@ iproute2_get_aliases_rev() {
     ip addr show dev "${iface}" | grep -o "${iface}:[0-9].*" | tac
 }
 
-# bool iproute2_del_addresses(char *interface, bool report)
+# bool iproute2_del_addresses(char *interface, bool onlyinet)
 #
 # Remove addresses from interface.
+# If onlyinet is true, then we only remove IPv4 / inet addresses.
 iproute2_del_addresses() {
-    ip addr flush label "$1" scope global &>/dev/null
-    ip addr flush label "$1" scope host &>/dev/null
+    local pre=""
+    ${2:-false} && pre="-f inet"
+    ip ${pre} addr flush label "$1" scope global &>/dev/null
+    ip ${pre} addr flush label "$1" scope host &>/dev/null
     return 0
 }
 

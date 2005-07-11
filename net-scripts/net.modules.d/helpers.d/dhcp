@@ -17,7 +17,8 @@ case "${action}" in
         # We handle these actions below
     ;;
     "deconfig")
-        interface_del_addresses "${interface}"
+	# Just remove IPv4 / inet addresses
+        interface_del_addresses "${interface}" true
 	if service_starting "${service}" || service_started "${service}" ; then
 	    mark_service_inactive "net.${interface}"
 	fi
@@ -79,7 +80,8 @@ broadcast="${broadcast// }"
 # If we don't have our address then we flush it and then add our new one
 curip=$( interface_get_address "${interface}" )
 if [[ ${curip} != "${ip}/${cidr}" ]] ; then
-    interface_del_addresses "${interface}"
+    # Just remove IPv4 / inet addresses
+    interface_del_addresses "${interface}" true
     interface_add_address "${interface}" "${ip}/${cidr}" "${broadcast}"
 fi
 

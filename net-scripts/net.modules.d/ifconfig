@@ -153,13 +153,14 @@ ifconfig_get_aliases_rev() {
     ifconfig | grep -o "^$1:[0-9]* " | tac
 }
 
-# bool ifconfig_interface_del_addresses(char *interface)
+# bool ifconfig_del_addresses(char *interface, bool onlyinet)
 #
 # Remove addresses from interface.  Returns 0 (true) if there
 # were addresses to remove (whether successful or not).  Returns 1
 # (false) if there were no addresses to remove.
+# If onlyinet is true then we only delete IPv4 / inet addresses
 ifconfig_del_addresses() {
-    local iface="$1" i
+    local iface="$1" i onlyinet="${2:-false}"
     # We don't remove addresses from aliases
     [[ ${iface} == *:* ]] && return 0
 
@@ -175,10 +176,12 @@ ifconfig_del_addresses() {
     done
 
     # Remove IPv6 addresses
-    for i in $( ifconfig "${iface}" \
-    | sed -n -e 's/^.*inet6 addr: \([^ ]*\) Scope:[^L].*/\1/p' ) ; do
-	/sbin/ifconfig "${iface}" inet6 del "${i}"
-    done
+    if ! ${onlyinet} ; then
+	for i in $( ifconfig "${iface}" \
+	    | sed -n -e 's/^.*inet6 addr: \([^ ]*\) Scope:[^L].*/\1/p' ) ; do
+	    /sbin/ifconfig "${iface}" inet6 del "${i}"
+	done
+    fi
     return 0
 }
 
