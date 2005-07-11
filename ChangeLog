@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+  11 Jul 2005; Roy Marples <uberlord@gentoo.org>:
+
+    udhcpc/dhclient helpers no longer flush IPv6 addresses - fixes #98539
+
   09 Jul 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     Add workaround for evms device names and 'RC_DEVICE_TARBALL="yes"'.  Patch

@@ -37,8 +37,8 @@ ip link set up dev ${interface} &>/dev/null
 source ${MODULES_DIR}/helpers.d/config-system
 
 if [[ ${action} == deconfig ]]; then
-	ip addr flush dev ${interface} scope global &>/dev/null
-	ip addr flush dev ${interface} scope host &>/dev/null
+	ip -f inet addr flush dev ${interface} scope global &>/dev/null
+	ip -f inet addr flush dev ${interface} scope host &>/dev/null
 	restore_configs
 	exit 0
 fi
@@ -53,8 +53,8 @@ broadcast=${broadcast// }
 # If we don't have our address then we flush it and then add our new one
 ip -family inet addr show scope global dev ${interface} | grep inet | grep -q "${ip}/${cidr}"
 if [[ $? == 1 ]] ; then
-	ip addr flush dev ${interface} scope global &>/dev/null
-	ip addr flush dev ${interface} scope host &>/dev/null
+	ip -f inet addr flush dev ${interface} scope global &>/dev/null
+	ip -f inet addr flush dev ${interface} scope host &>/dev/null
 	ip addr add dev ${interface} ${ip}/${cidr} ${broadcast}
 	echo "flushed" > /tmp/action
 fi
