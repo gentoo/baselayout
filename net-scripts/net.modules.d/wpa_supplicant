@@ -166,20 +166,27 @@ wpa_supplicant_associate() {
 		eend 1 "wpa_supplicant has exited unexpectedly"
 		return 1
 	    fi
-	    wpa_supplicant_associated "${iface}" && break
+	    wpa_supplicant_associated "${iface}" && return 0
 	fi
 	sleep 1
     done
-    if [[ ${i} == ${timeout} ]]; then
-	if ! ${action} && ! wpa_supplicant_associated "${iface}"; then
-	    [[ ${background} != "yes" ]] && eend 1 "timed out"
 
-	    # We now need to kill the process
-	    wpa_supplicant_kill "${iface}"
-
-	    return 1
+    # Spit out an appropriate error
+    if [[ ${background} != "yes" ]]; then
+	if ${action} ; then
+	    eend 1 "Failed to configure ${iface} in the background"
+	else
+	    eend 1 "Timed out"
 	fi
     fi
+    
+    # We now need to kill the process
+    wpa_supplicant_kill "${iface}"
+
+    # We need to mark the service as stopped as we may be have been marked
+    # as inactive previously
+    ${action} && mark_service_stopped "net.${iface}"
+    return 1
 }
 
 # bool wpa_supplicant_pre_start(char *interface)
@@ -253,7 +260,13 @@ wpa_supplicant_pre_start() {
     version=$( wpa_cli -v | sed -n -e 's/wpa_cli v//p' )
     version=( ${version//./ } )
     (( version = version[0] * 1000 + version[1] * 100 + version[2] ))
+    
     # wpa_supplicant 0.4.0 and greater supports wpa_cli actions
+    # This is very handy as if and when different association mechanisms are
+    # introduced to wpa_supplicant we don't have to recode for them as
+    # wpa_cli is now responsible for informing us of success/failure.
+    # The downside of this is that we don't see the interface being configured
+    # for DHCP/static.
     if [[ ${version} -gt 399 && -x ${actfile} ]]; then
 	opts="${opts} -W -P/var/run/wpa_supplicant-${iface}.pid"
 	action=true

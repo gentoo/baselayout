@@ -9,6 +9,9 @@
 
     udhcpc/dhclient helpers no longer flush IPv6 addresses - fixes #98539
 
+    wpa_supplicant now marks service as stopped when using wpa_supplicant-0.4.x
+    and we have associated but failed to configure in the background.
+
   09 Jul 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Only remount the / filesystem readonly if it isn't already and don't 
@@ -27,7 +30,7 @@
   07 Jul 2005; Roy Marples <uberlord@gentoo.org>:
 
     Added "nosendhost" dhcp option so users can request not to send their
-    machines hostname by default. Fixes #98132
+    machines hostname by default. Fixes #98132 - Patch by Eli.
 
   04 Jul 2005; Roy Marples <uberlord@gentoo.org>:
 
