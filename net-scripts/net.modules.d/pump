@@ -98,6 +98,7 @@ pump_start() {
     eval d=\" \$\{dhcp_${ifvar}\} \"
     [[ ${d} == "  " ]] && d=" ${dhcp} "
     [[ ${d} == *" nodns "* ]] && opts="${opts} --no-dns"
+    [[ ${d} == *" nogateway "* ]] && opts="${opts} --no-gateway"
 
     if [[ ${d} != *" nosendhost "* ]]; then
 	if [[ ${opts} != *" -h "* && ${opts} != *" --hostname="* ]]; then

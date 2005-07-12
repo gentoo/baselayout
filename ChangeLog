@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  12 Jul 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Added dhcp_eth0="nogateway" option, generic to all dhcp clients.
+    Fixes #98466
+
   11 Jul 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     Add fix -r to unmount to be -n .. bug #98667, thanks to Patrick McLean.

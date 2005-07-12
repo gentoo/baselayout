@@ -21,6 +21,7 @@
 
 # When it's set to yes, we
 #     default to DHCP
+#     link /etc/{resolv,ntp,yp}.conf to /var/lib/net-scripts
 #     calculate a metric based on what interfaces are up and type
 #     select the interface (use it's resolv.conf, ntp.conf and yp.conf that
 #                           were created when it became active)
@@ -256,12 +257,13 @@
 
 # GENERIC DHCP OPTIONS
 # Set generic DHCP options like so
-#dhcp_eth0="release nodns nontp nonis nosendhost"
+#dhcp_eth0="release nodns nontp nonis nogateway nosendhost"
 
-# This tells the dhcp client to release it's lease when it stops, not to send
-# the current hostname to the dhcp server and not to overwrite dns, ntp and
-# nis settings when it starts. You can use any combination of the above
-# options - the default is not to use any of them
+# This tells the dhcp client to release it's lease when it stops, not to
+# overwrite dns, ntp and nis settings, not to set a default route and not to
+# send the current hostname to the dhcp server and when it starts.
+# You can use any combination of the above options - the default is not to
+# use any of them.
 
 #-----------------------------------------------------------------------------
 # Automatic Private IP Addressing (APIPA)

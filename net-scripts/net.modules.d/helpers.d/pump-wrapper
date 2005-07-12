@@ -12,9 +12,9 @@ interface="$2"
 . /lib/rcscripts/net.modules.d/helpers.d/dhcp-state
 
 if [[ $1 == "up" ]]; then
-    eval nontp=\"\$\{dhcp_${ifvar}\}\"
-    [[ -z ${nontp} ]] && nontp="${dhcp}"
-    if [[ " ${nontp} " != " nontp " ]]; then
+    eval nontp=\" \$\{dhcp_${ifvar}\} \"
+    [[ -z ${nontp} ]] && nontp=" ${dhcp} "
+    if [[ ${nontp} != *" nontp "* ]]; then
 	eval ntp_servers_${ifvar}=$( pump --interface "${interface}" --status \
         | sed -n -e 's/^.*Ntpservers: //p' )
 	system_ntp "${interface}"

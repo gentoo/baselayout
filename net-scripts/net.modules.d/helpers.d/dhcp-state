@@ -32,8 +32,10 @@ fi
 
 # Add any search domains if we have any defined
 ifvar=$( bash_variable "${interface}" )
-eval dhcp=\" \$\{dhcp_${ifvar}\} \"
-if [[ ${dhcp} != *' nodns '* ]]; then
+eval d=\" \$\{dhcp_${ifvar}\} \"
+[[ ${d} == "  " ]] && d=" ${dhcp} "
+
+if [[ ${d} != *" nodns "* ]]; then
     eval search=\"\$\{dns_search_domains_${ifvar}\}\"
     if [[ -n ${search} ]]; then
         resolv="${statedir}/${interface}/resolv.conf"
