@@ -105,6 +105,7 @@ dhcpcd_start() {
 	[[ ${dhcp} == *' nodns '* ]] && opts="${opts} -R"
 	[[ ${dhcp} == *' nontp '* ]] && opts="${opts} -N"
 	[[ ${dhcp} == *' nonis '* ]] && opts="${opts} -Y"
+	[[ ${dhcp} == *' nogateway '* ]] && opts="${opts} -G"
 
 	# We transmit the hostname by default
 	if [[ ${dhcp} != *' nosendhost '* && ${opts} != *'-h '* ]]; then

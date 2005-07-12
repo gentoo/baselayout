@@ -102,6 +102,7 @@ pump_start() {
 	# Map some generic options to pump
 	eval dhcp=\" \$\{dhcp_${ifvar}\} \"
 	[[ ${dhcp} == *' nodns '* ]] && opts="${opts} --no-dns"
+	[[ ${dhcp} == *' nogateway '* ]] && opts="${opts} --no-gateway"
 
 	# We transmit the hostname by default
 	if [[ ${dhcp} != *' nosendhost '* && ${opts} != *'-h '* && ${opts} != '*--hostname='* ]]; then

@@ -59,16 +59,19 @@ if [[ $? == 1 ]] ; then
 	echo "flushed" > /tmp/action
 fi
 
-# Configure our default route
-x=$(ip route show | awk '{ if ($1 == "default") {print $3} }')
-for r in ${router}; do
+eval dhcp=\" \$\{dhcp_${interface}\} \"
+if [[ ${dhcp} != *' nogateway '* ]]; then
+    # Configure our default route
+    x=$(ip route show | awk '{ if ($1 == "default") {print $3} }')
+    for r in ${router}; do
 	# We can only have one default route!
 	if [[ -z ${x} ]]; then
-		ip route add default via ${r} dev ${interface} 2>/dev/null && break
+	    ip route add default via ${r} dev ${interface} 2>/dev/null && break
 	elif [[ ${x} != ${r} ]]; then
-		ip route change default via ${r} dev ${interface} 2>/dev/null && break
+	    ip route change default via ${r} dev ${interface} 2>/dev/null && break
 	fi
-done
+    done
+fi
 
 # Set our module to udhcpc if it's not set
 [[ -z ${module} ]] && module=udhcpc

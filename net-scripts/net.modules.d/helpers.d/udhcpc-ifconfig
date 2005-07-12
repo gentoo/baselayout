@@ -63,15 +63,18 @@ fi
 # Configure our IP address
 ifconfig ${interface} inet ${ip} netmask ${subnet} ${broadcast}
 
-# Configure our routers
-for r in ${router}; do
+eval dhcp=\" \$\{dhcp_${interface}\} \"
+if [[ ${dhcp} != *' nogateway '* ]]; then
+    # Configure our routers
+    for r in ${router}; do
 	while true; do
-		/sbin/route del 0.0.0.0 2>/dev/null || break
+	    /sbin/route del 0.0.0.0 2>/dev/null || break
 	done
 
 	# We can only have one default route!
 	/sbin/route add default gw ${r} dev ${interface} && break
-done
+    done
+fi
 
 # Set our module to udhcpc if it's not set
 [[ -z ${module} ]] && module=udhcpc
