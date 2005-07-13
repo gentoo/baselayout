@@ -6,6 +6,8 @@
     pump-0.8.21-r4 now creates ntp.conf by itself so the ntp.conf creation
     code has been removed from the pump module and helper.
 
+    Moved wpa_supplicant and iwconfig et all from /usr/sbin to /sbin
+
   12 Jul 2005; Roy Marples <uberlord@gentoo.org>:
 
     Added dhcp_eth0="nogateway" option, generic to all dhcp clients.

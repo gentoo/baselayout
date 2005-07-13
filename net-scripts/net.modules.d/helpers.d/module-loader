@@ -23,9 +23,9 @@ fi
 
 # iwconfig is the best bet for wireless - we use wpa_supplicant
 # only if we need to
-if [[ -x /usr/sbin/iwconfig ]]; then
+if [[ -x /sbin/iwconfig ]]; then
     wireless_module="iwconfig"
-elif [[ -x /usr/sbin/wpa_supplicant \
+elif [[ -x /sbin/wpa_supplicant \
     && -S "/var/run/wpa_supplicant/${interface}" ]]; then
     wireless_module="wpa_supplicant"
 fi

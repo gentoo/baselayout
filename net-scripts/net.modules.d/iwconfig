@@ -9,16 +9,16 @@
 # Fix any potential localisation problems
 # Note that LC_ALL trumps LC_anything_else according to locale(7)
 iwconfig() {
-    LC_ALL=C /usr/sbin/iwconfig "$@"
+    LC_ALL=C /sbin/iwconfig "$@"
 }
 iwgetid() {
-    LC_ALL=C /usr/sbin/iwgetid "$@"
+    LC_ALL=C /sbin/iwgetid "$@"
 }
 iwlist() {
-    LC_ALL=C /usr/sbin/iwlist "$@"
+    LC_ALL=C /sbin/iwlist "$@"
 }
 iwpriv() {
-    LC_ALL=C /usr/sbin/iwpriv "$@"
+    LC_ALL=C /sbin/iwpriv "$@"
 }
 
 # void iwconfig_depend(void)
@@ -32,7 +32,7 @@ iwconfig_depend() {
 #
 # Returns 1 if wireless-tools is installed, otherwise 0
 iwconfig_check_installed() {
-    [[ -x /usr/sbin/iwconfig ]] && return 0
+    [[ -x /sbin/iwconfig ]] && return 0
     ${1:-false} && eerror "For Wireless (802.11) support, emerge net-wireless/wireless-tools"
     return 1
 }

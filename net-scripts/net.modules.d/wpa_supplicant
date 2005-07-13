@@ -7,11 +7,11 @@
 # Fix any potential localisation problems
 # Note that LC_ALL trumps LC_anything_else according to locale(7)
 wpa_supplicant() {
-    LC_ALL=C /usr/sbin/wpa_supplicant "$@"
+    LC_ALL=C /sbin/wpa_supplicant "$@"
 }
 
 wpa_cli() {
-    LC_ALL=C /usr/bin/wpa_cli "$@"
+    LC_ALL=C /bin/wpa_cli "$@"
 }
 
 # char* wpa_supplicant_provides(void)
@@ -34,7 +34,7 @@ wpa_supplicant_depend() {
 # Returns 0 if wpa_supplicant is installed, otherwise 1
 wpa_supplicant_check_installed() {
     local report="${1:-false}" installed=0
-    if [[ ! -x /usr/sbin/wpa_supplicant ]]; then
+    if [[ ! -x /sbin/wpa_supplicant ]]; then
 	installed=1
 	${report} && eerror "For WPA support (wpa_supplicant) support, emerge net-wireless/wpa-supplicant"
     fi
@@ -123,7 +123,7 @@ wpa_supplicant_kill() {
     pidfile="/var/run/wpa_cli-${iface}.pid"
     if ! clean_pidfile "${pidfile}" ; then
 	${report} && ebegin "Stopping wpa_cli on ${iface}"
-	start-stop-daemon --stop --exec /usr/bin/wpa_cli \
+	start-stop-daemon --stop --exec /bin/wpa_cli \
 	    --pidfile "${pidfile}"
 	${report} && eend $?
     fi
@@ -132,12 +132,12 @@ wpa_supplicant_kill() {
     pidfile="/var/run/wpa_supplicant-${iface}.pid"
     if ! clean_pidfile "${pidfile}" ; then
 	${report} && ebegin "Stopping wpa_supplicant on ${iface}"
-	start-stop-daemon --stop --exec /usr/sbin/wpa_supplicant \
+	start-stop-daemon --stop --exec /sbin/wpa_supplicant \
 	    --pidfile "${pidfile}"
 	${report} && eend $?
     else
 	# Support wpa_supplicant-0.3.x
-	local pid=$( pgrep -f '^/usr/sbin/wpa_supplicant .* -i'"${iface}"'[ ]*$' )
+	local pid=$( pgrep -f '^/sbin/wpa_supplicant .* -i'"${iface}"'[ ]*$' )
 	if [[ -n ${pid} ]]; then
 	    ${report} && ebegin "Stopping wpa_supplicant on ${iface}"
 	    kill -s TERM "${pid}"
@@ -196,7 +196,7 @@ wpa_supplicant_associate() {
 wpa_supplicant_pre_start() {
     local iface="$1" opts timeout action
     local cfgfile="/etc/wpa_supplicant.conf"
-    local actfile="/usr/sbin/wpa_cli.action"
+    local actfile="/sbin/wpa_cli.action"
 
     # We don't configure wireless if we're being called from
     # the background
@@ -273,7 +273,7 @@ wpa_supplicant_pre_start() {
 	[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && background=yes
     fi
 
-    start-stop-daemon --start --exec /usr/sbin/wpa_supplicant \
+    start-stop-daemon --start --exec /sbin/wpa_supplicant \
         -- ${opts} -B -c/etc/wpa_supplicant.conf -i"${iface}"
     eend $? || return 1
 
@@ -282,7 +282,7 @@ wpa_supplicant_pre_start() {
     if ${action} ; then
 	mark_service_inactive "net.${iface}"
 	ebegin "Starting wpa_cli on ${iface}"
-	start-stop-daemon --start --exec /usr/bin/wpa_cli \
+	start-stop-daemon --start --exec /bin/wpa_cli \
 	-- -a"${actfile}" -i"${iface}" \
 	-P"/var/run/wpa_cli-${iface}.pid" -B
 	eend $? || return 1
