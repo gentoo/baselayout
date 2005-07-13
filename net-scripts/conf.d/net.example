@@ -213,10 +213,10 @@
 # DHCP
 # DHCP can be provided by dhcpcd, dhclient, udhcpc or pump
 #
-# dhcpcd:   emerge net-misc/dhcpcd
-# udhcpc:   emerge net-misc/udhcp
 # dhclient: emerge net-misc/dhcp
+# dhcpcd:   emerge net-misc/dhcpcd
 # pump:     emerge net-misc/pump
+# udhcpc:   emerge net-misc/udhcp
 
 # If you have more than one DHCP client installed, you need to specify which
 # one to use - otherwise we default to dhcpcd if available
@@ -225,6 +225,8 @@
 # Notes:
 # - dhcpcd, udhcpc and pump send the current hostname
 #   to the DHCP server by default
+#   pump always sends the current hostname - so below to disable
+#   udhcpc and dhcpcd from doing this
 # - dhclient attempts to modify /etc/dhclient.conf (or the file specified
 #   by the -cf option) with the current hostname and to strip any script
 #   lines. To stop this behaviour, add dhclient_edit_config="no" to

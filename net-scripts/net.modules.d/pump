@@ -99,15 +99,7 @@ pump_start() {
     [[ ${d} == "  " ]] && d=" ${dhcp} "
     [[ ${d} == *" nodns "* ]] && opts="${opts} --no-dns"
     [[ ${d} == *" nogateway "* ]] && opts="${opts} --no-gateway"
-
-    if [[ ${d} != *" nosendhost "* ]]; then
-	if [[ ${opts} != *" -h "* && ${opts} != *" --hostname="* ]]; then
-	    local hostname=$( hostname )
-	    [[ -n ${hostname} && ${hostname} != "(none)" \
-	    && ${hostname} != "localhost" ]] \
-	    && opts="--hostname=${hostname} ${opts}"
-	fi
-    fi
+    [[ ${d} == *" nontp "* ]] && opts="${opts} --no-ntp"
 
     # Add our route metric
     eval metric=\"\$\{metric_${ifvar}\}\"
