@@ -47,12 +47,12 @@ get_wireless_vars() {
 	local m x
 	# Lets do this the easy way - iwconfig is what we need as it supports
 	# getting all the information we need regardless of how it was setup
-	if [[ -f /usr/sbin/iwconfig ]]; then
+	if [[ -f /sbin/iwconfig ]]; then
 		m=iwconfig
 	else
 		# This is hairy. We need to know if a supplicant is installed
 		# and running on the interface
-		if [[ -f /usr/sbin/wpa_supplicant && -S /var/run/wpa_supplicant/${interface} ]]; then
+		if [[ -f /sbin/wpa_supplicant && -S /var/run/wpa_supplicant/${interface} ]]; then
 			m=wpa_supplicant
 		fi
 	fi
