@@ -1,7 +1,8 @@
 #!/bin/bash
 export TMP="${TMP:-/tmp}"
-export V="1.7.1"
-export DEST="${TMP}/rc-scripts-${V}"
+export V="1.12.0"
+export NAME="baselayout"
+export DEST="${TMP}/${NAME}-${V}"
 
 if [[ $1 != "-f" ]] ; then
 	echo "Performing sanity checks (run with -f to skip) ..."
@@ -38,10 +39,10 @@ cp ChangeLog ${DEST}
 chown -R root:root ${DEST}
 chmod 0755 ${DEST}/sbin/*
 chmod 0755 ${DEST}/init.d/*
-( cd $TMP/rc-scripts-${V} ; rm -rf `find -iname .svn` )
+( cd $TMP/${NAME}-${V} ; rm -rf `find -iname .svn` )
 cd $TMP
-tar cjvf ${TMP}/rc-scripts-${V}.tar.bz2 rc-scripts-${V}
-rm -rf rc-scripts-${V}
+tar cjvf ${TMP}/${NAME}-${V}.tar.bz2 ${NAME}-${V}
+rm -rf ${NAME}-${V}
 
 echo
-du -b ${TMP}/rc-scripts-${V}.tar.bz2
+du -b ${TMP}/${NAME}-${V}.tar.bz2
