@@ -76,7 +76,7 @@ pump_stop() {
 
     # Pump always releases the lease
     ebegin "Stopping pump on ${iface}"
-    pump --release --keep-up --interface "${iface}"
+    pump --release --interface "${iface}"
     eend $? "Failed to stop pump"
     return $?
 }
@@ -112,7 +112,7 @@ pump_start() {
 
     opts="${opts} --win-client-ident --etc-dir=${statedir}/${iface}"
     opts="${opts} --script /lib/rcscripts/net.modules.d/helpers.d/pump-wrapper"
-    opts="${opts} --interface ${iface}"
+    opts="${opts} --keep-up --interface ${iface}"
     
     # Bring up DHCP for this interface (or alias)
     ebegin "Running pump"
