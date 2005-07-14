@@ -145,6 +145,8 @@ dhcpcd_start() {
     # Halt any existing dhcpcd process
     dhcpcd_stop "${iface}"
 
+    [[ ! -d "${statedir}/${iface}" ]] && mkdir -p "${statedir}/${iface}"
+    
     if [[ ${background} == "yes" ]]; then
 	eval dhcpcd ${opts} ${iface} &
 	eend 0

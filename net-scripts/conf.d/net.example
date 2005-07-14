@@ -185,12 +185,11 @@
 # Setting name/domain server causes /etc/resolv.conf to be overwritten
 # Note that if DHCP is used, and you want this to take precedence then
 # set dhcp_ESSID="nodns"
-#nameservers_ESSID=( "192.168.0.1" "192.168.0.2" )
-#domain_ESSID="some.domain"
-#searchdomains_ESSID="search.this.domain search.that.domain"
+#dns_servers_ESSID=( "192.168.0.1" "192.168.0.2" )
+#dns_domain_ESSID="some.domain"
+#dns_search_path_ESSID="search.this.domain search.that.domain"
 # Please check the man page for resolv.conf for more information
-# as domain and search (searchdomains) are mutually exclusive and
-# searchdomains takes precedence
+# as domain and search are mutually exclusive.
 
 # You can also override any settings found here per MAC address of the AP
 # incase you use Access Points with the same ESSID but need different
@@ -198,7 +197,7 @@
 # method with other variables
 #mac_config_001122334455=( "dhcp" )
 #mac_dhcpcd_001122334455="-t 10"
-#mac_nameservers_001122334455=( "192.168.0.1" "192.168.0.2" )
+#mac_dns_servers_001122334455=( "192.168.0.1" "192.168.0.2" )
 
 # When an interface has been associated with an Access Point, a global
 # variable called ESSID is set to the Access Point's ESSID for use in the
@@ -434,7 +433,7 @@
 # To use dns settings such as these, dns_servers_eth0 must be set!
 # dns_domain_eth0="your.domain"
 # dns_servers_eth0="192.168.0.2 192.168.0.3"
-# dns_search_domains_eth0="this.domain that.domain"
+# dns_search_path_eth0="this.domain that.domain"
 
 # ntp_servers_eth0="192.168.0.2 192.168.0.3"
 
