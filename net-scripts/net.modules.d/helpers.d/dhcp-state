@@ -1,10 +1,14 @@
 #!/bin/bash
-# Copyright (c) 2004-2005 Gentoo Foundation
+# Copyright (c) 2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 # Contributed by Roy Marples (uberlord@gentoo.org)
 
-. /lib/rcscripts/net.modules.d/helpers.d/module-loader
+MODULES_DIR="/lib/rcscripts/net.modules.d"
+. /lib/rcscripts/sh/rc-services.sh
+. "${MODULES_DIR}/helpers.d/functions"
+conf=$(add_suffix "/etc/conf.d/net")
+[[ -e ${conf} ]] && source "${conf}"
 
 service="net.${interface}"
 
@@ -13,41 +17,11 @@ if [[ ${action} != "up" ]]; then
 	mark_service_inactive "${service}"
     fi
     remove_state "${interface}" false
-    if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
-	best_interface=$( select_best_interface )
-	apply_state "${best_interface}"
-    fi
-    exit 0
+else
+    ! service_stopping "${service}" && mark_service_started "${service}"
 fi
 
-# Map MAC address variables to interface variables
-macnet_pre_start "${interface}" 1>/dev/null
-
-# Map wireless ESSID variables to interface variables
-if [[ -n ${wireless_module} ]]; then
-    if wireless_check_extensions "${interface}" ; then
-	essidnet_pre_start "${interface}" 1>/dev/null
-    fi
+if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
+    best_interface=$( select_best_interface )
+    apply_state "${best_interface}"
 fi
-
-# Add any search domains if we have any defined
-ifvar=$( bash_variable "${interface}" )
-eval d=\" \$\{dhcp_${ifvar}\} \"
-[[ ${d} == "  " ]] && d=" ${dhcp} "
-
-if [[ ${d} != *" nodns "* ]]; then
-    eval search=\"\$\{dns_search_domains_${ifvar}\}\"
-    if [[ -n ${search} ]]; then
-        resolv="${statedir}/${interface}/resolv.conf"
-	tmp="${revolv}.$$"
-	egrep -v "^[ \t]*search" "${resolv}" > "${tmp}"
-	domain=$( sed -n -e 's/^[ \t]*domain[ \t]*\(.*\)[ \t]*.*/\1/p' ${tmp} )
-	echo "search ${domain} ${search}" >> "${tmp}" 
-	mv "${tmp}" "${resolv}"
-    fi
-fi
-
-! service_stopping "${service}" && mark_service_started "${service}"
-
-[[ ${RC_AUTO_INTERFACE} == "yes" ]] && interface=$( select_best_interface )
-apply_state "${interface}"

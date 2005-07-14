@@ -88,7 +88,7 @@ pump_stop() {
 # Returns 0 (true) when a dhcp address is obtained, otherwise
 # the return value from pump
 pump_start() {
-    local iface="$1" opts d ifvar=$( bash_variable "$1" )
+    local iface="$1" opts d ifvar=$( bash_variable "$1" ) search
 
     interface_exists "${iface}" true || return 1
 
@@ -100,6 +100,9 @@ pump_start() {
     [[ ${d} == *" nodns "* ]] && opts="${opts} --no-dns"
     [[ ${d} == *" nogateway "* ]] && opts="${opts} --no-gateway"
     [[ ${d} == *" nontp "* ]] && opts="${opts} --no-ntp"
+
+    eval search=\"\$\{dns_search_path_${ifvar}\}\"
+    [[ -n ${search} ]] && opts="${opts} --search-path='"${search}"'"
 
     # Add our route metric
     eval metric=\"\$\{metric_${ifvar}\}\"
@@ -119,7 +122,7 @@ pump_start() {
 	eend 0
 	go_background
     fi
-   
+  
     eval pump ${opts}
     eend $? || return $?
 
