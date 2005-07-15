@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  15 Jul 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Do not run depmod in modules-update if System.map is missing, bug #59188.
+
   14 Jul 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Remove pointless check of depmod existence in modules init.d since the 
