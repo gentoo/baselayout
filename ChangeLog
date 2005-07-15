@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  14 Ul 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Remove pointless check of depmod existence in modules init.d since the 
+    modules-update script checks for it.
+
   13 Jul 2005; Roy Marples <uberlord@gentoo.org>:
 
     pump-0.8.21-r4 now creates ntp.conf by itself so the ntp.conf creation
