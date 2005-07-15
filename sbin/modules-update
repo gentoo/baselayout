@@ -206,7 +206,7 @@ then
 	if [ -f /usr/src/linux/System.map ]; then
 		depmod -a -F /usr/src/linux/System.map ${KV}
 	else
-		depmod -a ${KV}
+		ewarn "System.map not found - unable to check symbols"
 	fi
 fi
 
