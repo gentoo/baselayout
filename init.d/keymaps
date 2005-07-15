@@ -34,7 +34,11 @@ start() {
 		echo 1 > /proc/sys/dev/mac_hid/keyboard_sends_linux_keycodes
 	fi
 
-	# New kbd support.
+	# Turn on unicode if user wants it
+	if [[ ${UNICODE} == "yes" ]] ; then
+		/usr/bin/kbd_mode -u
+	fi
+
 	ebegin "Loading key mappings"
 	if [[ -x /bin/loadkeys ]] ; then
 		[[ ${SET_WINDOWKEYS} == "yes" ]] && WINDOWKEYS_KEYMAP="windowkeys"
@@ -53,7 +57,6 @@ start() {
 		local dumpkey_opts=""
 		[[ -n ${DUMPKEYS_CHARSET} ]] && dumpkey_opts="-c ${DUMPKEYS_CHARSET}"
 
-		/usr/bin/kbd_mode -u
 		dumpkeys ${dumpkey_opts} | loadkeys --unicode
 		termencoding=$'\033%G'
 		termmsg="UTF-8"
