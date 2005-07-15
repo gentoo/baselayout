@@ -15,7 +15,8 @@ rename_provides() {
 #
 # Sets up the dependancies for the module
 rename_depend() {
-    before macchanger interface
+    after macchanger
+    before macnet interface
 }
 
 # bool rename_check_installed(void)
