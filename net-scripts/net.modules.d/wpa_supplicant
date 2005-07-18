@@ -179,13 +179,13 @@ wpa_supplicant_associate() {
 	    eend 1 "Timed out"
 	fi
     fi
-    
-    # We now need to kill the process
-    wpa_supplicant_kill "${iface}"
 
-    # We need to mark the service as stopped as we may be have been marked
-    # as inactive previously
-    ${action} && mark_service_stopped "net.${iface}"
+    # exit without error with wpa_supplicant-0.4.x as we may get kickstarted
+    # when an AP comes in range
+    ${action} && exit 0
+    
+    # Kill wpa_supplicant for 0.3.x
+    wpa_supplicant_kill "${iface}"
     return 1
 }
 
@@ -270,7 +270,7 @@ wpa_supplicant_pre_start() {
     if [[ ${version} -gt 399 && -x ${actfile} ]]; then
 	opts="${opts} -W -P/var/run/wpa_supplicant-${iface}.pid"
 	action=true
-	[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && background=yes
+	 [[ ${RC_PARALLEL_STARTUP} == "yes" ]] && background=no
     fi
 
     start-stop-daemon --start --exec /sbin/wpa_supplicant \
@@ -286,7 +286,6 @@ wpa_supplicant_pre_start() {
 	-- -a"${actfile}" -i"${iface}" \
 	-P"/var/run/wpa_cli-${iface}.pid" -B
 	eend $? || return 1
-	go_background
     fi
 
     # Background wpa_supplication if required
