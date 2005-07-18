@@ -286,6 +286,7 @@ wpa_supplicant_pre_start() {
 	-- -a"${actfile}" -i"${iface}" \
 	-P"/var/run/wpa_cli-${iface}.pid" -B
 	eend $? || return 1
+	go_background
     fi
 
     # Background wpa_supplication if required
