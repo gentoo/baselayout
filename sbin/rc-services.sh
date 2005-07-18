@@ -380,7 +380,6 @@ start_service() {
 		( "/etc/init.d/${service}" start )
 		retval="$?"
 		splash "svc_started" "${service}" "${retval}"
-		! service_inactive && end_service "${service}" "${retval}"
 		return "${retval}"
 	else
 		# if parallel startup is allowed, start it in background
@@ -388,7 +387,6 @@ start_service() {
 		( "/etc/init.d/${service}" start )
 		retval="$?"
 		splash "svc_started" "${service}" "${retval}"
-		! service_inactive && end_service "${service}" "${retval}"
 		) &
 		return 0
 	fi
@@ -452,7 +450,6 @@ mark_service_started() {
 	[[ -f "${svcdir}/inactive/$1" ]] && rm -f "${svcdir}/inactive/$1"
 	[[ -f "${svcdir}/stopping/$1" ]] && rm -f "${svcdir}/stopping/$1"
 
-	echo "0" > "${svcdir}/exitcodes/$1"
 	return "${retval}"
 }
 
@@ -469,7 +466,6 @@ mark_service_inactive() {
 	[[ -f "${svcdir}/starting/$1" ]] && rm -f "${svcdir}/starting/$1"
 	[[ -f "${svcdir}/stopping/$1" ]] && rm -f "${svcdir}/stopping/$1"
 
-	echo "0" > "${svcdir}/exitcodes/$1"
 	return "${retval}"
 }
 

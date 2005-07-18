@@ -254,7 +254,12 @@ svc_start() {
 		return 0
 	fi
 
-	if ! service_inactive "${myservice}" ; then
+	if service_inactive "${myservice}" ; then
+		if [[ ${IN_BACKGROUND} != "true" ]] ; then
+			ewarn "WARNING: \"${myservice}\" has already been started."
+			return 0
+		fi
+	else
 		if service_started "${myservice}" ; then
 			ewarn "WARNING: \"${myservice}\" has already been started."
 			return 0
@@ -293,24 +298,28 @@ svc_start() {
 			for y in ${netservices} ; do
 				mynetservice=${y##*/}
 
-				start_service "${mynetservice}"
+				if ! service_inactive "${mynetservice}" ; then
+					start_service "${mynetservice}"
 
-				# A 'need' dependency is critical for startup
-				if [[ $? != 0 ]] && ineed -t "${myservice}" "${x}" >/dev/null ; then
-					# Only worry about a net.* service if we do not have one
-					# up and running already, or if RC_NET_STRICT_CHECKING
-					# is set ....
-					if ! is_net_up ; then
-						startfail="yes"
+					# A 'need' dependency is critical for startup
+					if [[ $? != 0 ]] && ineed -t "${myservice}" "${x}" >/dev/null ; then
+						# Only worry about a net.* service if we do not have one
+						# up and running already, or if RC_NET_STRICT_CHECKING
+						# is set ....
+						if ! is_net_up ; then
+							startfail="yes"
+						fi
 					fi
 				fi
 			done	
 		elif [[ ${x} != "net" ]] ; then
-			start_service "${x}"
+			if ! service_inactive "{x}"; then
+				start_service "${x}"
 
-			# A 'need' dependacy is critical for startup
-			if [[ $? != 0 ]] && ineed -t "${myservice}" "${x}" >/dev/null ; then
-				startfail="yes"
+				# A 'need' dependacy is critical for startup
+				if [[ $? != 0 ]] && ineed -t "${myservice}" "${x}" >/dev/null ; then
+					startfail="yes"
+				fi
 			fi
 		fi
 	done
@@ -395,6 +404,7 @@ svc_start() {
 		service_message "eerror" "FAILED to start service ${myservice}!"
 	fi
 
+	end_service "${myservice}" "${retval}"
 	return "${retval}"
 }
 

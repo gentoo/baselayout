@@ -36,7 +36,7 @@ wpa_supplicant_check_installed() {
     local report="${1:-false}" installed=0
     if [[ ! -x /sbin/wpa_supplicant ]]; then
 	installed=1
-	${report} && eerror "For WPA support (wpa_supplicant) support, emerge net-wireless/wpa-supplicant"
+	${report} && eerror "For WPA support (wpa_supplicant) support, emerge net-wireless/wpa_supplicant"
     fi
     if [[ ! -e /proc/net/packet ]]; then
 	installed=1
@@ -286,6 +286,7 @@ wpa_supplicant_pre_start() {
 	-- -a"${actfile}" -i"${iface}" \
 	-P"/var/run/wpa_cli-${iface}.pid" -B
 	eend $? || return 1
+	go_background
     fi
 
     # Background wpa_supplication if required

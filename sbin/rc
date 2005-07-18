@@ -827,8 +827,7 @@ dep_start() {
 	[[ ! -L ${svcdir}/softscripts/${myservice} ]] && continue
 
 	# Only start a script if it isn't already running
-	service_started "${myservice}" || \
-		schedule_service_startup "${myservice}"
+	service_stopped "${myservice}" && schedule_service_startup "${myservice}"
 }
 
 # Start scripts
