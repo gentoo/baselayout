@@ -1,6 +1,14 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  18 Jul 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Changed wpa-supplicant to wpa_supplicant when reporting that it is not
+    installed. Fixes #99381
+
+    Fixed some startup problems caused by a mixture of inactive +
+    begin_service/end_service functions.
+
   16 Jul 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     Add Darwin support for start-stop-daemon, bug #82421.
