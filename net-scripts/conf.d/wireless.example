@@ -169,7 +169,7 @@
 # please put -R in your dhcpcd options
 #dns_servers_ESSID=( "192.168.0.1" "192.168.0.2" )
 #dns_domain_ESSID="some.domain"
-#dns_search_domains_ESSID="search.this.domain search.that.domain"
+#dns_search_path_ESSID="search.this.domain search.that.domain"
 # Please check the man page for resolv.conf for more information
 # as domain and search (searchdomains) are mutually exclusive and
 # searchdomains takes precedence

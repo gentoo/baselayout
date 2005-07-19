@@ -35,7 +35,7 @@ system_check_depends() {
 #
 # Returns a string spaced with possible user set configuration variables
 system_get_vars() {
-    echo "dns_servers_$1 dns_domain_$1 dns_search_domains_$1 ntp_servers_$1 nis_domain_$1 nis_servers_$1"
+    echo "dns_servers_$1 dns_domain_$1 dns_search_path_$1 ntp_servers_$1 nis_domain_$1 nis_servers_$1"
 }
 
 system_dns() {
@@ -57,7 +57,7 @@ system_dns() {
 	echo "nameserver ${x}" >> "${tmpfile}"
     done
 
-    eval x=\"\$\{dns_search_domains_${ifvar}\}\"
+    eval x=\"\$\{dns_search_path_${ifvar}\}\"
     [[ -n ${x} ]] && echo "search ${x}" >> "${tmpfile}"
 
     mv "${tmpfile}" "${conffile}"
