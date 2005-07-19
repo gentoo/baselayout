@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (c) 2004-2005 Gentoo Foundation
+# Copyright (c) 2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -15,8 +15,8 @@ rename_provides() {
 #
 # Sets up the dependancies for the module
 rename_depend() {
-    after macchanger
-    before macnet interface
+    after macchanger macnet
+    before wireless interface
 }
 
 # bool rename_check_installed(void)
@@ -33,6 +33,14 @@ rename_check_depends() {
     return 0
 }
 
+# char* rename_get_vars(char *interface)
+#
+# Returns a string spaced with possible user set
+# configuration variables
+rename_get_vars() {
+    echo "rename_$1"
+}
+
 # bool rename_pre_start(char *iface)
 #
 # Checks to see if we have to rename the interface 
@@ -40,18 +48,18 @@ rename_pre_start() {
     local iface="$1" newname="" mac ifvar=$( bash_variable "$1" )
 
     interface_exists "${iface}" || return 0
-    
-    mac=$( interface_get_mac_address "${iface}" )
-    eval newname=\"\$\{rename_${mac//:/}\}\"
-    [[ -z ${newname} ]] && eval newname=\"\$\{rename_${ifvar}\}\"
+
+    eval newname=\"\$\{rename_${ifvar}\}\"
     [[ -z ${newname} || ${iface} == ${newname} ]] && return 0
 
     # We cannot rename vlan interfaces as /proc/net/vlan/config always
     # returns the old interface name. We don't bail out though as it's
     # not critical that the interface gets renamed.
-    if grep -q "^eth0.2 " /proc/net/vlan/config ; then
-	eerror "Cannot rename VLAN interfaces"
-	return 0
+    if [[ -d /proc/net/vlan/config ]] ; then
+	if grep -q "^eth0.2 " /proc/net/vlan/config ; then
+	    eerror "Cannot rename VLAN interfaces"
+	    return 0
+	fi
     fi
     
     ebegin "Renaming \"${iface}\" to \"${newname}\""
