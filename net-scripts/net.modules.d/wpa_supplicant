@@ -201,7 +201,7 @@ wpa_supplicant_pre_start() {
     # We don't configure wireless if we're being called from
     # the background
     if ${IN_BACKGROUND} ; then
-	ESSID=$( wpa_supplicant_get_essid "$1" )
+	ESSID=$( wpa_supplicant_get_essid "${iface}" )
 	ESSIDVAR=$( bash_variable "${ESSID}" )
 	save_options "ESSID" "${ESSID}"
 	return 0
@@ -330,16 +330,6 @@ wpa_supplicant_pre_start() {
 
     return 0
 }
-
-# bool wpa_supplicant_pre_stop(char *iface)
-#
-# Gets the last set ESSID if we have one
-# We don't query for the current ESSID as it may have changed to another
-# one
-wpa_supplicant_pre_stop() {
-    ESSID=$( get_options "ESSID" )
-    ESSIDVAR=$( bash_variable "${ESSID}" )
-}	
 
 # bool wpa_supplicant_post_stop(char *iface)
 #

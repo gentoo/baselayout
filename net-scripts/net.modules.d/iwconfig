@@ -903,13 +903,3 @@ iwconfig_pre_start() {
     interface_down "${iface}"
     return 1
 }
-
-# bool iwconfig_pre_stop(char *iface)
-#
-# Gets the last set ESSID if we have one
-# We don't query for the current ESSID as it may have changed to another
-# one
-iwconfig_pre_stop() {
-    ESSID=$( get_options "ESSID" )
-    ESSIDVAR=$( bash_variable "${ESSID}" )
-}

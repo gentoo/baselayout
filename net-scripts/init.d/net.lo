@@ -783,6 +783,11 @@ run_start() {
 run_stop() {
     local iface="$1" IFVAR=$( bash_variable "$1" ) x
 
+    # Load our ESSID variable so users can use it in predown() instead
+    # of having to write code.
+    local ESSID=$( get_options "ESSID" ) ESSIDVAR
+    [[ -n ${ESSID} ]] && ESSIDVAR=$( bash_variable "${ESSID}" )
+
     # Call user-defined predown function if it exists
     if [[ $( type -t predown ) == "function" ]]; then
 	einfo "Running predown function"
