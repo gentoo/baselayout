@@ -77,14 +77,6 @@ start() {
 	# support compiled in ...
 	[ -f /proc/modules ] || return 0
 
-	# Here we should fail, as a modular kernel do need
-	# depmod command ...
-	if [ ! -x /sbin/depmod ]
-	then
-		eerror "ERROR:  system is missing /sbin/depmod !"
-		return 1
-	fi
-
 	if [ -z "${CDBOOT}" ] && touch /etc/modules.conf 2> /dev/null
 	then
 		ebegin "Calculating module dependencies"
