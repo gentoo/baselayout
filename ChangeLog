@@ -5,6 +5,8 @@
 
     Fixed <wpa_supplicant-0.4 support
 
+    Removed trailing tab from local.start - fixes #99624
+
   19 Jul 2005; Roy Marples <uberlord@gentoo.org>:
 
     ${ESSID} and ${ESSIDVAR} are now available in predown() - fixes #99106
