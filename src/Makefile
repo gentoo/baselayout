@@ -1,4 +1,4 @@
-# Copyright 1999-2004 Gentoo Foundation
+# Copyright 1999-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header$
 
@@ -24,10 +24,10 @@ endif
 all: $(TARGET)
 
 runscript: runscript.o
-	$(LD) $(LDFLAGS) $(LDFLAGS_RS) $^ -o $@
+	$(LD) $(LDFLAGS) $^ -o $@ $(LDFLAGS_RS)
 
 start-stop-daemon: start-stop-daemon.c
-	$(CC) $(CFLAGS) $(LDFLAGS) $(LDFLAGS_SSD) $^ -o $@
+	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@ $(LDFLAGS_SSD)
 
 install: $(TARGET)
 	install -m 0755 -d $(DESTDIR)/bin
