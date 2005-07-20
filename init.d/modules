@@ -76,13 +76,6 @@ start() {
 	# support compiled in ...
 	[[ -f /proc/modules ]] || return 0
 
-	# Here we should fail, as a modular kernel do need
-	# depmod command ...
-	if [[ ! -x /sbin/depmod ]]; then
-		eerror "ERROR:  system is missing /sbin/depmod !"
-		return 1
-	fi
-
 	# Make sure depmod from modutils do not whine, but do not bother if
 	# we are on a 2.6 kernel without modprobe.old
 	if [[ -z "${CDBOOT}" ]] && [[ $(get_KV) -lt $(KV_to_int '2.5.48') || \
