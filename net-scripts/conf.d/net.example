@@ -15,19 +15,6 @@
 ##############################################################################
 # DEFAULTS
 #
-# RC_AUTO_INTERFACE="yes"
-# Set this to no to stop trying to best guess your network setup and choose
-# the best interface to use by default
-
-# When it's set to yes, we
-#     default to DHCP
-#     link /etc/{resolv,ntp,yp}.conf to /var/lib/net-scripts
-#     calculate a metric based on what interfaces are up and type
-#     select the interface (use it's resolv.conf, ntp.conf and yp.conf that
-#                           were created when it became active)
-# otherwise we
-#     default to NULL
-
 # hotplug_eth0="yes"
 # Do we allow hotplug to bring up interfaces or not? The default is we do,
 # otherwise put no in the above value.

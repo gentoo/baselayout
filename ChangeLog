@@ -7,6 +7,8 @@
 
     Removed trailing tab from local.start - fixes #99624
 
+    Moved RC_AUTO_INTERFACE definition to /etc/conf.d/rc
+
   19 Jul 2005; Roy Marples <uberlord@gentoo.org>:
 
     ${ESSID} and ${ESSIDVAR} are now available in predown() - fixes #99106
