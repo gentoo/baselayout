@@ -194,7 +194,7 @@ wpa_supplicant_associate() {
 # Start wpa_supplicant on an interface and wait for association
 # Returns 0 (true) when successful, non-zero otherwise
 wpa_supplicant_pre_start() {
-    local iface="$1" opts timeout action
+    local iface="$1" opts timeout action=false
     local cfgfile="/etc/wpa_supplicant.conf"
     local actfile="/sbin/wpa_cli.action"
 
