@@ -7,6 +7,8 @@
 
     Removed trailing tab from local.start - fixes #99624
 
+    Moved RC_AUTO_INTERFACE definition to /etc/conf.d/rc
+
   19 Jul 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Punt the vpopmail user/group to the ebuild.

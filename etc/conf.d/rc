@@ -25,6 +25,18 @@ RC_PARALLEL_STARTUP="no"
 
 RC_NET_STRICT_CHECKING="no"
 
+# RC_AUTO_INTERFACE allows to to say if we try and configure your interfaces
+# automatically. This includes
+#     default to DHCP
+#     link /etc/{resolv,ntp,yp}.conf to /var/lib/net-scripts
+#     calculate a metric based on what interfaces are up and type
+#     select the interface (use it's resolv.conf, ntp.conf and yp.conf that
+#                           were created when it became active)
+# otherwise we
+#     default to NULL
+
+RC_AUTO_INTERFACE="yes"
+
 # RC_VOLUME_ORDER allows you to specify, or even remove the volume setup
 # for various volume managers (MD, EVMS2, LVM, DM, etc).  Note that they are
 # stopped in reverse order.
