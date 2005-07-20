@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+  20 Jul 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Removed trailing tab from local.start - fixes #99624
+
   18 Jul 2005; Roy Marples <uberlord@gentoo.org>:
 
     Changed wpa-supplicant to wpa_supplicant when reporting that it is not
