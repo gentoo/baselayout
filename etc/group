@@ -41,7 +41,6 @@ qmail:x:201:
 postfix:x:207:
 postdrop:x:208:
 smmsp:x:209:smmsp
-slocate::245:
 portage::250:portage
 utmp:x:406:
 nogroup::65533:
