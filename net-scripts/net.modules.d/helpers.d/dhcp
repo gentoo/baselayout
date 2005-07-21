@@ -95,7 +95,7 @@ chmod 600 "/var/cache/dhcp-${interface}.lease"
 
 # Configure our default route - we only have 1 default route
 if [[ ${d} != *" nogateway " ]]; then
-    for r in ${router}; do
+    for r in ${routers}; do
 	interface_default_route "${interface}" "${r}" "${metric:-0}" && break
     done
 fi

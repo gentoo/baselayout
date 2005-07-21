@@ -22,10 +22,9 @@ fi
 export ip="${new_ip_address}"
 export subnet="${new_subnet_mask}"
 export broadcast="${new_broadcast_address}"
-routers=( "${new_routers}" )
-export router="${routers[0]}"
+export routers="${new_routers}"
 
-export hostname="${new_hostname}"
+export hostname="${new_host_name}"
 
 export dns_domain_${interface}="${new_domain_name}"
 export dns_servers_${interface}="${new_domain_name_servers}"

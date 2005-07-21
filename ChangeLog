@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  21 Jul 2005; Roy Marples <uberlord@gentoo.org>:
+
+    dhclient now sets the hostname correctly    
+
   20 Jul 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Make sure the X11 dirs are always created in /tmp #99679 by Marc Ballarin.

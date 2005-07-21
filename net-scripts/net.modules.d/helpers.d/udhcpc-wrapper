@@ -8,6 +8,7 @@
 
 export dns_domain_${interface}="${domain}"
 export dns_servers_${interface}="${dns}"
+export routers="${router}"
 
 export ntp_servers_${interface}="${ntpsrv}"
 
