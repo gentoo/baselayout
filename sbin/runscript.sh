@@ -91,26 +91,18 @@ svc_stop() {
 	local was_inactive=false
 
 	if service_stopping "${myservice}" ; then
-		if [[ ${RC_QUIET_STDOUT} != "yes" ]] ; then
-			eerror "ERROR:  \"${myservice}\" is already stopping."
-			return 1
-		else
-			return 0
-		fi
+		eerror "ERROR:  \"${myservice}\" is already stopping."
+		return 0
 	fi
 	
-	if service_stopped "${myservice}" && ! service_inactive "${myservice}" ; then
-		if [[ ${RC_QUIET_STDOUT} != "yes" ]] ; then
-			eerror "ERROR:  \"${myservice}\" has not yet been started."
-			return 1
-		else
-			return 0
-		fi
+	if service_stopped "${myservice}" ; then
+		eerror "ERROR:  \"${myservice}\" has not yet been started."
+		return 0
 	fi
 
 	# Do not try to stop if it had already failed to do so on runlevel change
 	if is_runlevel_stop && service_failed "${myservice}" ; then
-		exit 1
+		return 1
 	fi
 
 	service_inactive "${myservice}" && was_inactive=true
@@ -263,7 +255,7 @@ svc_start() {
 		if service_started "${myservice}" ; then
 			ewarn "WARNING: \"${myservice}\" has already been started."
 			return 0
-		elif service_starting "${myservice}" ; then	
+		elif service_starting "${myservice}" ; then
 			ewarn "WARNING: \"${myservice}\" is already starting."
 			return 0
 		fi
@@ -271,7 +263,7 @@ svc_start() {
 
 	# Do not try to start if i have done so already on runlevel change
 	if is_runlevel_start && service_failed "${myservice}" ; then
-		exit 1
+		return 1
 	fi
 
 	# Link first to prevent possible recursion
@@ -298,28 +290,13 @@ svc_start() {
 			for y in ${netservices} ; do
 				mynetservice=${y##*/}
 
-				if ! service_inactive "${mynetservice}" ; then
+				if ! service_started "${mynetservice}" ; then
 					start_service "${mynetservice}"
-
-					# A 'need' dependency is critical for startup
-					if [[ $? != 0 ]] && ineed -t "${myservice}" "${x}" >/dev/null ; then
-						# Only worry about a net.* service if we do not have one
-						# up and running already, or if RC_NET_STRICT_CHECKING
-						# is set ....
-						if ! is_net_up ; then
-							startfail="yes"
-						fi
-					fi
 				fi
 			done	
 		elif [[ ${x} != "net" ]] ; then
-			if ! service_inactive "{x}"; then
+			if service_stopped "${x}"; then
 				start_service "${x}"
-
-				# A 'need' dependacy is critical for startup
-				if [[ $? != 0 ]] && ineed -t "${myservice}" "${x}" >/dev/null ; then
-					startfail="yes"
-				fi
 			fi
 		fi
 	done
@@ -335,21 +312,25 @@ svc_start() {
 
 				wait_service "${mynetservice}"
 
-				# A 'need' dependency is critical for startup
-				if [ "$?" -ne 0 ] && ineed -t "${myservice}" "${mynetservice}" >/dev/null ; then
-					# Only worry about a net.* service if we do not have one
-					# up and running already, or if RC_NET_STRICT_CHECKING
-					# is set ....
-					if ! is_net_up ; then
-						startfail="yes"
+				if ! service_started "${mynetservice}" ; then
+					# A 'need' dependency is critical for startup
+					if ineed -t "${myservice}" "${x}" >/dev/null ; then
+						# Only worry about a net.* service if we do not have one
+						# up and running already, or if RC_NET_STRICT_CHECKING
+						# is set ....
+						if ! is_net_up ; then
+							startfail="yes"
+						fi
 					fi
 				fi
 			done
 		elif [ "${x}" != "net" ] ; then
 			wait_service "${x}"
-			# A 'need' dependacy is critical for startup
-			if [ "$?" -ne 0 ] && ineed -t "${myservice}" "${x}" >/dev/null ; then
-				startfail="yes"
+			if ! service_started "${x}" ; then
+				# A 'need' dependacy is critical for startup
+				if ineed -t "${myservice}" "${x}" >/dev/null ; then
+					startfail="yes"
+				fi
 			fi
 		fi
 	done
@@ -382,7 +363,7 @@ svc_start() {
 		retval=$?
 		# If a service has been marked inactive, exit now as something
 		# may attempt to start it again later
-		service_inactive "${myservice}" && return 0
+		service_inactive "${myservice}" && return 1 
 	fi
 
 	if [[ ${retval} -ne 0 ]] && is_runlevel_start ; then
@@ -408,7 +389,7 @@ svc_start() {
 }
 
 svc_restart() {
-	if service_started "${myservice}" ; then
+	if service_started "${myservice}" || service_inactive "${myservice}" ; then
 		svc_stop || return "$?"
 	fi
 	svc_start || return "$?"
