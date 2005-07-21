@@ -49,7 +49,7 @@ start() {
 
 	ebegin "Cleaning /var/lock, /var/run"
 	rm -rf /var/run/console.lock /var/run/console/*
-		
+
 	if [[ -z ${CDBOOT} ]] ; then
 		#
 		# Clean up any stale locks.
@@ -108,17 +108,20 @@ start() {
 			eend 0
 		else
 			ebegin "Cleaning /tmp directory"
-			{
+			(
 				rm -f /tmp/.X*-lock /tmp/esrv* /tmp/kio* /tmp/jpsock.* /tmp/.fam*
 				rm -rf /tmp/.esd* /tmp/orbit-* /tmp/ssh-* /tmp/ksocket-* /tmp/.*-unix
-				# Make sure our X11 stuff have the correct permissions
-				mkdir -p /tmp/.{ICE,X11}-unix
-				chown 0:0 /tmp/.{ICE,X11}-unix
-				chmod 1777 /tmp/.{ICE,X11}-unix
-				[[ -x /sbin/restorecon ]] && restorecon /tmp/.{ICE,X11}-unix
-			} &> /dev/null
+			) &> /dev/null
 			eend 0
 		fi
+
+		(
+			# Make sure our X11 stuff have the correct permissions
+			mkdir -p /tmp/.{ICE,X11}-unix
+			chown 0:0 /tmp/.{ICE,X11}-unix
+			chmod 1777 /tmp/.{ICE,X11}-unix
+			[[ -x /sbin/restorecon ]] && restorecon /tmp/.{ICE,X11}-unix
+		) &> /dev/null
 	fi
 
 	#
