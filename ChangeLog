@@ -1,9 +1,17 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  21 Jul 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix hangs in bootup, bug #99663.
+
   21 Jul 2005; Roy Marples <uberlord@gentoo.org>:
 
-    dhclient now sets the hostname correctly
+    dhclient now sets the hostname correctly    
+
+  20 Jul 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Make sure the X11 dirs are always created in /tmp #99679 by Marc Ballarin.
 
   20 Jul 2005; Roy Marples <uberlord@gentoo.org>:
 
@@ -12,6 +20,16 @@
     Removed trailing tab from local.start - fixes #99624
 
     Moved RC_AUTO_INTERFACE definition to /etc/conf.d/rc
+
+  20 Jul 2005; Roy Marples <uberlord@gentoo.org>:
+  
+    Fixed <wpa_supplicant-0.4 support
+    
+  19 Jul 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Punt the cyrus/slocate/vpopmail users/groups to the respective ebuilds.
+
+    Removed trailing tab from local.start - fixes #99624
 
   19 Jul 2005; Roy Marples <uberlord@gentoo.org>:
 
