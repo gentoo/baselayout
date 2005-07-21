@@ -362,7 +362,9 @@ start_service() {
 	local service="$1"
 	[[ -z ${service} ]] && return 1
 
-	! service_stopped "${service}" && return 0
+	service_starting "${service}" && return 0
+	service_started "${service}" && return 0
+	service_inactive "${service}" && return 1
 
 	splash "svc_start" "${service}"
 	if is_fake_service "${service}" "${SOFTLEVEL}" ; then
@@ -401,7 +403,8 @@ start_service() {
 stop_service() {
 	[[ -z $1 ]] && return 1
 
-	! service_started "$1" && return 0
+	service_stopping "$1" && return 0
+	service_stopped "$1" && return 0
 
 	splash "svc_stop" "$1"
 	
@@ -431,7 +434,7 @@ mark_service_starting() {
 	ln -snf "/etc/init.d/$1" "${svcdir}/starting/$1"
 	local retval=$?
 	
-	[[ -f "${svcdir}/stopping/$1" ]] && rm -f "${svcdir}/started/$1"
+	[[ -f "${svcdir}/started/$1" ]] && rm -f "${svcdir}/started/$1"
 	[[ -f "${svcdir}/inactive/$1" ]] && rm -f "${svcdir}/inactive/$1"
 	[[ -f "${svcdir}/stopping/$1" ]] && rm -f "${svcdir}/stopping/$1"
 	
@@ -464,7 +467,7 @@ mark_service_inactive() {
 
 	ln -snf "/etc/init.d/$1" "${svcdir}/inactive/$1"
 	local retval="$?"
-	[[ -f "${svcdir}/stopping/$1" ]] && rm -f "${svcdir}/started/$1"
+	[[ -f "${svcdir}/started/$1" ]] && rm -f "${svcdir}/started/$1"
 	[[ -f "${svcdir}/starting/$1" ]] && rm -f "${svcdir}/starting/$1"
 	[[ -f "${svcdir}/stopping/$1" ]] && rm -f "${svcdir}/stopping/$1"
 
@@ -565,6 +568,7 @@ service_stopped() {
 	service_starting "$1" && return 1
 	service_started "$1" && return 1
 	service_stopping "$1" && return 1
+	service_inactive "$1" && return 1
 
 	return 0
 }

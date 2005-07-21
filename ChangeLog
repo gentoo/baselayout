@@ -7,7 +7,11 @@
 
   21 Jul 2005; Roy Marples <uberlord@gentoo.org>:
 
-    dhclient now sets the hostname correctly    
+    dhclient now sets the hostname correctly.
+
+    Fixed some start/stop/restart logic for #99663.
+
+    Stopped rc-status from checking failed and broken which no longer apply.
 
   20 Jul 2005; Mike Frysinger <vapier@gentoo.org>:
 

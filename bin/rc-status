@@ -162,8 +162,6 @@ fi
 [[ -x ${svcdir}/inactive ]] && inactive=$(ls ${svcdir}/inactive)
 [[ -x ${svcdir}/started ]] && started=$(ls ${svcdir}/started)
 [[ -x ${svcdir}/stopping ]] && stopping=$(ls ${svcdir}/stopping)
-[[ -x ${svcdir}/failed"  ]] && failed=$(ls ${svcdir}/failed)
-[[ -x ${svcdir}/broken"  ]] && broken=$(ls ${svcdir}/broken)
 
 ################################################################################
 #  Now print out the information we've gathered.  We do this by going through  #
@@ -200,12 +198,8 @@ for level in ${runlevelidxs} ; do
 			print_msg "${service}" "${GOOD}" 'starting'
 		elif [[ -n ${stopping} && $(in_list "${stopping}" "${service}") -eq 1 ]] ; then
 			print_msg "${service}" "${BAD}" 'stopping'
-		elif [[ -n ${failed} && $(in_list "${failed}" "${service}") -eq 1 ]] ; then
-			print_msg "${service}" "${BAD}" 'failed'
-		elif [[ -n ${broken} && $(in_list "${broken}" "${service}") -eq 1 ]] ; then
-			print_msg "${service}" "${BAD}" 'broken'
 		else
-			print_msg "${service}" "${WARN}" '  off'
+			print_msg "${service}" "${WARN}" 'stopped'
 		fi
 	done
 	let "arridx += 1"
