@@ -15,7 +15,7 @@
 
   19 Jul 2005; Mike Frysinger <vapier@gentoo.org>:
 
-    Punt the cyrus/vpopmail users/groups to the respective ebuilds.
+    Punt the cyrus/slocate/vpopmail users/groups to the respective ebuilds.
 
   19 Jul 2005; Roy Marples <uberlord@gentoo.org>:
 
