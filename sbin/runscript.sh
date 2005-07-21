@@ -404,7 +404,6 @@ svc_start() {
 		service_message "eerror" "FAILED to start service ${myservice}!"
 	fi
 
-	end_service "${myservice}" "${retval}"
 	return "${retval}"
 }
 

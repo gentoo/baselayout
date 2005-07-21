@@ -380,6 +380,7 @@ start_service() {
 		( "/etc/init.d/${service}" start )
 		retval="$?"
 		splash "svc_started" "${service}" "${retval}"
+		end_service "${service}" "${retval}"
 		return "${retval}"
 	else
 		# if parallel startup is allowed, start it in background
@@ -387,6 +388,7 @@ start_service() {
 		( "/etc/init.d/${service}" start )
 		retval="$?"
 		splash "svc_started" "${service}" "${retval}"
+		end_service "${service}" "${retval}"
 		) &
 		return 0
 	fi
