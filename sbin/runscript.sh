@@ -138,6 +138,10 @@ svc_stop() {
 		fi
 	fi
 
+	# Save the IN_BACKGROUND var as we need to clear it for stopping depends
+	local ib_save="${IN_BACKGROUND}"
+	unset IN_BACKGROUND
+
 	for mydep in ${mydeps} ; do
 		# If some service 'need' $mydep, stop it first; or if it is a runlevel change,
 		# first stop all services that is started 'after' $mydep.
@@ -183,6 +187,8 @@ svc_stop() {
 			done
 		fi
 	done
+
+	IN_BACKGROUND="${ib_save}"
 
 	if [[ ${retval} -ne 0 ]] ; then
 		eerror "ERROR:  problems stopping dependent services."

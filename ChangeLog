@@ -1,6 +1,13 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  22 Jul 2005; Roy Marples <uberlord@gentoo.org>:
+
+    When a service is stopped, the IN_BACKGROUND variable is cleared
+    before any dependencies are stopped so they are not marked inactive.
+    The IN_BACKGROUND variable is then restored so the parent script can be
+    marked inactive.
+
   21 Jul 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Change the -l option to tar to --one-file-system #99775.
