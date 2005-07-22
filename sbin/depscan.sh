@@ -5,6 +5,11 @@
 
 source /etc/init.d/functions.sh
 
+if [[ $1 == "--debug" ]] ; then
+	shift
+	set -x
+fi
+
 if [[ ! -d ${svcdir} ]]; then
 	if ! mkdir -p -m 0755 "${svcdir}" 2>/dev/null ; then
 		eerror "Could not create needed directory '${svcdir}'!"
