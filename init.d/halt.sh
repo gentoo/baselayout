@@ -62,7 +62,7 @@ then
 		fgrep -x -v -f "${devices_udev}" < "${devices_real}" > "${devices_totar}"
 		# Now only tarball those not created by udev if we have any
 		if [[ -s ${devices_totar} ]]; then
-			try tar -jclpf "${device_tarball}" -T "${devices_totar}"
+			try tar --one-file-system -jcpf "${device_tarball}" -T "${devices_totar}"
 			try mv -f "${device_tarball}" /lib/udev-state/devices.tar.bz2
 			try rm -f "${devices_udev}" "${devices_real}"
 		else
