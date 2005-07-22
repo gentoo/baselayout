@@ -47,7 +47,7 @@ then
 			echo "${x}" >> "${devices_udev}"
 		done
 		# Now only tarball those not created by udev
-		try tar -jclpf "${device_tarball}" \
+		try tar --one-file-system -jcpf "${device_tarball}" \
 		        `fgrep -x -v -f "${devices_udev}" < "${devices_real}"`
 		try mv -f "${device_tarball}" /lib/udev-state/devices.tar.bz2
 		try rm -f "${devices_udev}" "${devices_real}"
