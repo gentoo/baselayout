@@ -5,6 +5,8 @@
 
     Change the -l option to tar to --one-file-system #99775.
 
+    Add a --debug option to depscan.sh.
+
   21 Jul 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix hangs in bootup, bug #99663.
