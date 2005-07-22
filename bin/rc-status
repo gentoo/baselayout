@@ -199,7 +199,7 @@ for level in ${runlevelidxs} ; do
 		elif [[ -n ${stopping} && $(in_list "${stopping}" "${service}") -eq 1 ]] ; then
 			print_msg "${service}" "${BAD}" 'stopping'
 		else
-			print_msg "${service}" "${WARN}" 'stopped'
+			print_msg "${service}" "${BAD}" 'stopped'
 		fi
 	done
 	let "arridx += 1"
