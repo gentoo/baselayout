@@ -29,7 +29,6 @@ gdm::32:gdm
 xfs::33:xfs
 games::35:
 named::40:named
-mysql:x:60:
 postgres::70:
 cdrw::80:
 nut::84:
