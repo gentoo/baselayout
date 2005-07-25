@@ -7,6 +7,8 @@
     net services in trace_dependencies().  Sort services and make sure they
     are unique.
 
+    Fix the adding of dependencies to properly add netservices as 'net'.
+
   25 Jul 2005; Roy Marples <uberlord@gentoo.org>:
 
     trace_dependencies no longer clobbers the net service.

@@ -758,8 +758,17 @@ trace_dependencies() {
 					$( valid_iafter "${service}" )
 				)
 			fi
+			# If its a net service, just replace it with 'net'
+			for (( x=0 ; x < ${#dependencies[*]} ; x++ )) ; do
+				net_service "${dependencies[x]}" && dependencies[x]="net"
+			done
 		fi
 	
+		# Make sure services is sorted an unique
+		dependencies=( $( for (( x=0 ; x < ${#dependencies[*]} ; x++ )) ; do
+						echo "${dependencies[x]}"
+					  done | sort -u ) )
+
 		# Remove each one of those from the sorted list and add
 		# them all to the unsorted so we analyze them later
 		for dependency in ${dependencies[@]} ; do
