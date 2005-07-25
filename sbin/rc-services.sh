@@ -730,6 +730,11 @@ trace_dependencies() {
 		done
 	fi
 
+	# Make sure services is sorted an unique
+	unsorted=( $( for (( x=0 ; x < ${#unsorted[*]} ; x++ )) ; do
+	              	echo "${unsorted[x]}"
+	              done | sort -u ) )
+
 	while (( ${#unsorted[*]} > 0 )) ; do
 		# Get a service from the list and remove it
 		service=${unsorted[0]}
@@ -804,13 +809,25 @@ trace_dependencies() {
 		# XXX:  I dont think RC_NET_STRICT_CHECKING should be considered
 		#       here, but you never know ...
 		netserv=$( cd "${svcdir}"/started; ls net.* 2>/dev/null )
+
+		get_netservices() {
+			local runlevel=$1
+			
+			if [[ -d /etc/runlevels/${runlevel} ]] ; then
+				cd /etc/runlevels/${runlevel}
+				ls net.* 2>/dev/null
+			fi
+		}
 	
 		# If no net services are running or we only have net.lo up, then
 		# assume we are in boot runlevel or starting a new runlevel
 		if [[ -z ${netserv} || ${netserv} == "net.lo" ]]; then
 			local mylevel="${BOOTLEVEL}"
-			[[ -f "${svcdir}/softlevel" ]] && mylevel=$( < "${svcdir}/softlevel" )
-			local startnetserv=$( cd "/etc/runlevels/${mylevel}"; ls net.* 2>/dev/null )
+			local startnetserv=$( get_netservices "${mylevel}" )
+			
+			[[ -f ${svcdir}/softlevel ]] && mylevel=$( < "${svcdir}/softlevel" )
+			[[ ${BOOTLEVEL} != "${mylevel}" ]] && \
+				startnetserv="${startnetserv} $( get_netservices "${mylevel}" )"
 			[[ -n ${startnetserv} ]] && netserv="${startnetserv}"
 		fi
 		
@@ -822,11 +839,6 @@ trace_dependencies() {
 				break
 			fi
 		done
-
-		# Strip any duplicate net's
-		local s=" ${sorted[@]} "
-		s="${sorted[@]// net / }"
-		sorted=( ${s} )
 	fi
 	
 	echo "${sorted[@]}"
