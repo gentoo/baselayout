@@ -850,14 +850,12 @@ run() {
 	    remove_state "${iface}"
 	else
 	    run_start "${iface}" && r=0
-	    # save_state ${iface}
 	fi
     fi
 
     # Only apply best state if we're on auto
-    # Otherwise apply the interface state
     if [[ ${r} == 0 ]]; then
-	local siface="${iface}"
+	local siface=""
 	if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
 	    siface=$( select_best_interface )
 	    if [[ -n ${siface} ]]; then
@@ -914,9 +912,11 @@ start() {
 	fi
     fi
 
-    link_file "resolv.conf"
-    link_file "ntp.conf"
-    link_file "yp.conf"
+    if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
+	link_file "resolv.conf"
+	link_file "ntp.conf"
+	link_file "yp.conf"
+    fi
 
     einfo "Starting ${IFACE}"
     run "${IFACE}" start

@@ -5,6 +5,8 @@
 
     trace_dependencies no longer clobbers the net service.
 
+    RC_AUTO_INTERFACE no longer symlinks /etc/{resolv,ntp,yp}.conf when no.
+
   25 Jul 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     Do not restart dependencies on runlevel change if the service that needs

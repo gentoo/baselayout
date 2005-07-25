@@ -56,18 +56,23 @@ remove_state() {
 # Apply's state information about the interface to the system
 #
 apply_state() {
-    local iface
-    if [[ -z $1 ]]; then
+    local iface="$1"
+    
+    if [[ -z ${iface} ]]; then
 	iface=$( select_best_interface )
 	[[ -z ${iface} ]] && return
-    else
-	iface="$1"
     fi
 
     local d="${statedir}/${iface}"
-    if [[ -d "${d}" ]]; then
+    if [[ -d ${d} ]]; then
 	local x=$( ls "${d}" )
-	[[ -n ${x} ]] && cp -aR "${d}"/* "${netdir}"
+	if [[ -n ${x} ]] ; then
+	    if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
+		cp -aR "${d}"/* "${netdir}"
+	    else
+		cp -ar "${d}"/* /etc
+	    fi
+	fi
     fi
 }
 

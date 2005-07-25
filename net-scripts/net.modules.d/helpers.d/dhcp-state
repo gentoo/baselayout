@@ -24,4 +24,6 @@ fi
 if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
     best_interface=$( select_best_interface )
     apply_state "${best_interface}"
+elif [[ ${action} == "up" ]]; then
+    apply_state "${interface}"
 fi
