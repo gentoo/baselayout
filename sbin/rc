@@ -822,18 +822,9 @@ get_start_services() {
 	trace_dependencies ${list}
 }
 
-dep_start() {
-	local myservice="${1##*/}"
-
-	[[ ! -L ${svcdir}/softscripts/${myservice} ]] && continue
-
-	# Only start a script if it isn't already running
-	service_stopped "${myservice}" && schedule_service_startup "${myservice}"
-}
-
 # Start scripts
 for i in $(get_start_services) ; do
-	dep_start "${i##*/}"
+	service_stopped "${i}" && schedule_service_startup "${i}"
 done
 
 # Wait for any services that may still be running ...

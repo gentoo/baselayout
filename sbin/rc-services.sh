@@ -822,11 +822,14 @@ trace_dependencies() {
 				break
 			fi
 		done
+
+		# Strip any duplicate net's
+		local s=" ${sorted[@]} "
+		s="${sorted[@]// net / }"
+		sorted=( ${s} )
 	fi
 	
-	# Strip any duplicate net's
-	sorted=" ${sorted[@]} "
-	echo "${sorted[@]// net /}"
+	echo "${sorted[@]}"
 }
 
 # bool query_before(service1, service2)

@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  25 Jul 2005; Roy Marples <uberlord@gentoo.org>
+
+    trace_dependencies no longer clobbers the net service.
+
   25 Jul 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     Do not restart dependencies on runlevel change if the service that needs
