@@ -728,8 +728,8 @@ dep_stop() {
 		needsme=0
 		
 		for dep in $(needsme "${myservice}") ; do
-			if service_started "${dep}" && \
-			   [[ -L "${svcdir}/softscripts.new/${dep}" ]] ; then
+			#if service_started "${dep}" && \
+			if [[ -L "${svcdir}/softscripts.new/${dep}" ]] ; then
 				# This dep is valid
 				needsme=1
 				
