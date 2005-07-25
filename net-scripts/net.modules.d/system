@@ -41,9 +41,8 @@ system_get_vars() {
 system_dns() {
     local iface="$1" ifvar=$( bash_variable "$1" ) x
     local conffile="${statedir}/${iface}/resolv.conf" tmpfile="${conffile}.$$"
-
-    # Nameserver setup for the essid if required
     local -a servers
+    
     eval servers=( \"\$\{dns_servers_${ifvar}\[@\]\}\" )
     [[ -z ${servers} ]] && return 0
 
