@@ -13,6 +13,8 @@
     The RC_PARALLEL_STARTUP works well for all - no need for init scripts to
     state if they parallel or not.
 
+    Removed loops from trace_dependencies for a nice speed boost.
+
   25 Jul 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     If we do not have net services, check both boot and current runlevel for
