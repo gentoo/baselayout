@@ -1,6 +1,12 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  26 Jul 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Removed the "parallel" depend for init scripts and related functions.
+    The RC_PARALLEL_STARTUP works well for all - no need for init scripts to
+    state if they parallel or not.
+
   25 Jul 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     If we do not have net services, check both boot and current runlevel for

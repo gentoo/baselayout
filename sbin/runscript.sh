@@ -295,8 +295,7 @@ svc_start() {
 
 			for y in ${netservices} ; do
 				mynetservice=${y##*/}
-
-				if ! service_started "${mynetservice}" ; then
+				if service_stopped "${mynetservice}" ; then
 					start_service "${mynetservice}"
 				fi
 			done	
@@ -541,16 +540,16 @@ for arg in $* ; do
 
 		# Restart dependencies as well
 		if service_started "${myservice}" ; then
-			for x in $(dolisting "${svcdir}/snapshot/$$/") ; do
+			for x in $(trace_dependencies \
+				$(dolisting "${svcdir}/snapshot/$$/") ) ; do
 				if service_stopped "${x##*/}" ; then
-#					schedule_service_startup "${x##*/}"
 					start_service "${x##*/}"
 				fi
 			done
 		fi
 
 		# Wait for any services that may still be running ...
-#		[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && wait
+		[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && wait
 
 		rm -rf "${svcdir}/snapshot/$$"
 		svcrestart="no"

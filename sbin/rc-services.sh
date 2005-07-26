@@ -43,7 +43,6 @@ rc_usesme=
 rc_ibefore=
 rc_iafter=
 rc_broken=
-rc_parallel=
 rc_mtime=
 
 ############
@@ -107,7 +106,6 @@ get_dep_info() {
 	rc_ibefore="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_ibefore}))]}"
 	rc_iafter="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_iafter}))]}"
 	rc_broken="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_broken}))]}"
-	rc_parallel="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_parallel}))]}"
 	rc_mtime="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_mtime}))]}"
 	return 0
 }
@@ -207,14 +205,6 @@ broken() {
 	check_dependency broken "$@"
 }
 
-# bool iparallel(service)
-#
-#   Returns true if the service can be started in parallel.
-#
-iparallel() {
-	! check_dependency parallel -t "$1" "no"
-}
-
 # bool is_fake_service(service, runlevel)
 #
 #   Returns ture if 'service' is a fake service in 'runlevel'.
@@ -306,7 +296,7 @@ begin_service()
 	return $?
 }
 
-# void end_exclusive(service, exitcode)
+# void end_service(service, exitcode)
 #
 #   stops executing a exclusive region and
 #   wakes up anybody who is waiting for the exclusive region
@@ -335,7 +325,11 @@ end_service()
 	fi
 }
 
-# int wait_exclusive(service)
+# int wait_service(service)
+#
+# If a service has started, or a fifo does not exist return 0
+# Otherwise, wait until we get an exit code via the fifo and return
+# that instead.
 wait_service()
 {
 	local service="$1"
@@ -633,21 +627,6 @@ is_net_up() {
 	then
 		return 1
 	fi
-
-	return 0
-}
-
-# void schedule_service_startup(service)
-#
-#   Schedule 'service' for startup, in parallel if possible.
-#
-schedule_service_startup() {
-	local service="$1"
-
-	if ! iparallel "${service}"; then
-		wait
-	fi
-	start_service "${service}"
 
 	return 0
 }

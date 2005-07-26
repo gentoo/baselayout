@@ -824,7 +824,7 @@ get_start_services() {
 
 # Start scripts
 for i in $(get_start_services) ; do
-	service_stopped "${i}" && schedule_service_startup "${i}"
+	service_stopped "${i}" && start_service "${i}"
 done
 
 # Wait for any services that may still be running ...
