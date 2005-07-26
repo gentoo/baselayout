@@ -25,10 +25,6 @@ function print_start() {
 	print "	echo \"PROVIDE $*\"; return 0" >> TMPCACHE
 	print "}" >> TMPCACHE
 	print "" >> TMPCACHE
-	print "parallel() {" >> TMPCACHE
-	print "	echo \"PARALLEL $*\"; return 0" >> TMPCACHE
-	print "}" >> TMPCACHE
-	print "" >> TMPCACHE
 }
 
 function print_header1(mtime) {

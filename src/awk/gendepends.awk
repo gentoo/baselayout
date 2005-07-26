@@ -122,30 +122,6 @@ function check_provide(provide)
 	return 0
 }
 
-# bool add_parallel(service, parallel)
-#
-#   Add 'yes' or 'no' to the parallel modifier of 'service'.
-#
-function add_parallel(service, parallel,    sindex)
-{
-	if ((parallel != "yes") && (parallel != "no")) {
-		eerror(" The 'parallel' modifier can only take 'yes' or 'no' as argument!")
-		eerror(" Please fix this in the '" service "' service.")
-		return 0
-	}
-	
-	if (check_service(service)) {
-		sindex = get_service_index(service)
-		
-		RESOLVED_DEPTREE[sindex,PARALLEL] = parallel
-
-		return 1
-	} else
-		eerror(" Service '" service "' do not exist!")
-
-	return 0
-}
-
 # bool add_db_entry(service, type, item)
 #
 #   Add a entry to RESOLVED_DEPTREE
@@ -307,11 +283,10 @@ BEGIN {
 	BEFORE = 6
 	AFTER = 7
 	BROKEN = 8
-	PARALLEL = 9
-	MTIME = 10
-	PROVIDE = 11	# Not part of Types as when finally printed ...
+	MTIME = 9
+	PROVIDE = 10	# Not part of Types as when finally printed ...
 	TYPES_MIN = 2
-	TYPES_MAX = 10
+	TYPES_MAX = 9
 
 	TYPE_NAMES[NEED] = "ineed"
 	TYPE_NAMES[NEEDME] = "needsme"
@@ -321,7 +296,6 @@ BEGIN {
 	TYPE_NAMES[AFTER] = "iafter"
 	TYPE_NAMES[BROKEN] = "broken"
 	TYPE_NAMES[PROVIDE] = "provide"
-	TYPE_NAMES[PARALLEL] = "parallel"
 	TYPE_NAMES[MTIME] = "mtime"
 
 	# Get our environment variables
@@ -396,13 +370,6 @@ BEGIN {
 			add_deptree_item(RC_NUMBER, PROVIDE, $0)
 	}
 
-	if ($1 == "PARALLEL") {
-		sub(/PARALLEL[[:space:]]*/, "")
-
-		if ($0 != "")
-			add_deptree_item(RC_NUMBER, PARALLEL, $0)
-	}
-
 	if ($1 == "MTIME") {
 		sub(/MTIME[[:space:]]*/, "")
 
@@ -420,14 +387,11 @@ END {
 		DEPTREE[RC_NUMBER,NAME] = "net"
 	}
 	
-	# Calculate all the provides and parallels ...
+	# Calculate all the provides ...
 	for (x = 1;x <= RC_NUMBER;x++) {
 
 		if ((x,PROVIDE) in DEPTREE)
 			add_provide(DEPTREE[x,NAME], DEPTREE[x,PROVIDE])
-			
-		if ((x,PARALLEL) in DEPTREE)
-			add_parallel(DEPTREE[x,NAME], DEPTREE[x,PARALLEL])
 	}
 
 	# Now do NEED, USE, BEFORE and AFTER
