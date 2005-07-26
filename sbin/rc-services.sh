@@ -694,12 +694,12 @@ trace_dependencies() {
 	case "$1" in
 		-*)
 			deptype=${1/-}
-			unsorted=( "${myservice}" )
-			# We need to check what deps matches the 'net' service
-			# as well
-			net_service "${myservice}" && \
-				unsorted=( "net" ${unsorted[@]} )
-			;;
+			if net_service "${myservice}" ; then
+				unsorted=( "net" "${myservice}" )
+			else
+				unsorted=( "${myservice}" )
+			fi
+		;;
 	esac
 
 	# If its a net service, just replace it with 'net'
@@ -708,12 +708,15 @@ trace_dependencies() {
 			net_service "${unsorted[x]}" && unsorted[x]="net"
 		done
 	fi
-
-	# Make sure services is sorted an unique
-	unsorted=( $( for (( x=0 ; x < ${#unsorted[*]} ; x++ )) ; do
-	              	echo "${unsorted[x]}"
-	              done | sort -u ) )
-
+	
+	sort_unique() {
+	    set -- "${@/%/\n}"
+		echo -e "$*" | sort -u
+	}
+		
+	# Make sure services is sorted and unique
+	unsorted=( $( sort_unique ${unsorted[*]} ) )
+	
 	while (( ${#unsorted[*]} > 0 )) ; do
 		# Get a service from the list and remove it
 		service=${unsorted[0]}
@@ -737,35 +740,23 @@ trace_dependencies() {
 					$( valid_iafter "${service}" )
 				)
 			fi
-			# If its a net service, just replace it with 'net'
+			
+			#If its a net service, just replace it with 'net'
 			for (( x=0 ; x < ${#dependencies[*]} ; x++ )) ; do
 				net_service "${dependencies[x]}" && dependencies[x]="net"
 			done
 		fi
 	
-		# Make sure services is sorted an unique
-		dependencies=( $( for (( x=0 ; x < ${#dependencies[*]} ; x++ )) ; do
-						echo "${dependencies[x]}"
-					  done | sort -u ) )
+		# Make sure services is sorted and unique
+		dependencies=( $( sort_unique ${dependencies[*]} ) )
 
 		# Remove each one of those from the sorted list and add
 		# them all to the unsorted so we analyze them later
 		for dependency in ${dependencies[@]} ; do
-			for (( x=0 ; x < ${#sorted[*]} ; x++ )) ; do
-				if [[ ${sorted[x]} == "${dependency}" ]] ; then
-					unset sorted[x]
-					break
-				fi
-			done
-			for (( x=0 ; x < ${#unsorted[*]} ; x++ )) ; do
-				if [[ ${unsorted[x]} == "${dependency}" ]] ; then
-					unset unsorted[x]
-					break
-				fi
-			done
-			
-			sorted=( ${sorted[@]} )
-			unsorted=( ${unsorted[@]} ${dependency} )
+			x=" ${sorted[@]} "
+			sorted=( ${x// ${dependency} / } )
+			x=" ${unsorted[@]} "
+			unsorted=( ${x// ${dependency} / } ${dependency} )
 		done
 	
 		sorted=( ${service} ${sorted[@]} )
@@ -773,23 +764,13 @@ trace_dependencies() {
 
 	if [[ -n ${deptype} ]] ; then
 		# If deptype is set, we do not want the name of this service
-		for (( x=0 ; x < ${#sorted[*]} ; x++ )) ; do
-			if [[ ${sorted[x]} == "${myservice}" ]] ; then
-				unset sorted[x]
-				break
-			fi
-		done
-		sorted=( ${sorted[@]} )
+		x=" ${sorted[@]} "
+		sorted=( ${x// ${myservice} / } )
 
 		# If its a net service, do not include "net"
 		if net_service "${myservice}" ; then
-			for (( x=0 ; x < ${#sorted[*]} ; x++ )) ; do
-				if [[ ${sorted[x]} == "net" ]] ; then
-					unset sorted[x]
-					break
-				fi
-			done
-			sorted=( ${sorted[@]} )
+			x=" ${sorted[@]} "
+			sorted=( ${x// net / } )
 		fi
 	else
 		local netserv y
@@ -820,13 +801,8 @@ trace_dependencies() {
 		fi
 		
 		# Replace 'net' with the actual net services
-		for (( x=0 ; x < ${#sorted[*]} ; x++ )) ; do
-			if [[ ${sorted[x]} == "net" ]] ; then
-				y=$((${x} + 1))
-				sorted=( "${sorted[@]:0:${x}}" ${netserv} "${sorted[@]:${y}}" )
-				break
-			fi
-		done
+		x=" ${sorted[@]} "
+		sorted=( ${x// net / ${netserv} } )
 	fi
 	
 	echo "${sorted[@]}"
