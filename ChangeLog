@@ -5,6 +5,8 @@
 
     Remove the "parallel" depend stuff from the awk backend.
 
+    Remove the "parallel" depend stuff from the help.
+
   26 Jul 2005; Roy Marples <uberlord@gentoo.org>:
 
     Removed the "parallel" depend for init scripts and related functions.
