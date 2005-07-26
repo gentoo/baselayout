@@ -56,11 +56,6 @@ typedef struct {
 						   provides.  This is only valid
 						   after we resolving - thus after
 						   service_resolve_dependencies() */
-	int parallel;				/* Is it safe to run service in
-						   parallel.  Currently:
-						    1   - can run parallel
-						    0   - cannot run parallel
-						    -1  - undefined */
 	time_t mtime;				/* Modification time of script */
 } service_info_t;
 
@@ -74,7 +69,6 @@ int service_del_dependency(char *servicename, char *dependency, service_type_t t
 service_info_t *service_get_virtual(char *virtual);
 int service_add_virtual(char *servicename, char* virtual);
 int service_set_mtime(char *servicename, time_t mtime);
-int service_set_parallel(char *servicename, char *parallel);
 int service_resolve_dependencies(void);
 
 #endif /* _DEPEND_H */

@@ -102,10 +102,6 @@ int service_add(char *servicename) {
 		for (count = 0; count < ALL_SERVICE_TYPE_T; count++)
 			info->depend_info[count] = NULL;
 		info->provide = NULL;
-		/* -1 for now means unspecified.  If the service actually
-		 * passed 'yes' or 'no', it will be 1 or 0, as we rather
-		 * not assume about a service's parallel capabilities */
-		info->parallel = -1;
 
 		/* We want to keep the list sorted */
 		list_for_each_entry(sorted, &service_info_list, node) {
@@ -297,42 +293,6 @@ int service_set_mtime(char *servicename, time_t mtime) {
 				mtime, servicename);
 		
 		info->mtime = mtime;
-
-		return 0;
-	} else {
-		DBG_MSG("Invalid service name '%s'!\n", servicename);
-	}
-		
-	return -1;
-}
-
-int service_set_parallel(char *servicename, char *parallel) {
-	service_info_t *info;
-	int status = 0;
-
-	if ((NULL == servicename) || (0 == strlen(servicename)) ||
-	    (NULL == parallel) || (0 == strlen(parallel))) {
-		DBG_MSG("Invalid argument passed!\n");
-		return -1;
-	}
-
-	if ((0 != strcmp(parallel, "yes")) && (0 != strcmp(parallel, "no"))) {
-		EERROR(" The 'parallel' modifier can only take 'yes' or 'no' as argument!\n");
-		EERROR(" Please fix this for the '%s' service.\n", servicename);
-		return -1;
-	}
-
-	info = service_get_info(servicename);
-	if (NULL != info) {
-		DBG_MSG("Setting parallel to '%s' for service '%s'.\n",
-				parallel, servicename);
-
-		/* If 'yes', then parallel = 1, if 'no', then parallel = 0,
-		 * else parallel = -1 as set by add_service() */
-		if (0 == strcmp(parallel, "yes"))
-			status = 1;
-		
-		info->parallel = status;
 
 		return 0;
 	} else {

@@ -673,9 +673,8 @@ int write_legacy_stage3(FILE *output) {
 	fprintf(output, "rc_type_ibefore=6\n");
 	fprintf(output, "rc_type_iafter=7\n");
 	fprintf(output, "rc_type_broken=8\n");
-	fprintf(output, "rc_type_parallel=9\n");
-	fprintf(output, "rc_type_mtime=10\n");
-	fprintf(output, "rc_index_scale=11\n\n");
+	fprintf(output, "rc_type_mtime=9\n");
+	fprintf(output, "rc_index_scale=10\n\n");
 	fprintf(output, "declare -a RC_DEPEND_TREE\n\n");
 
 	list_for_each_entry(info, &service_info_list, node) {
@@ -720,14 +719,6 @@ int write_legacy_stage3(FILE *output) {
 		}
 		
 		fprintf(output, "RC_DEPEND_TREE[%i+9]=", index*11);
-		switch (info->parallel) {
-			case 0:
-				fprintf(output, "\"no\"");
-				break;
-			case 1:
-				fprintf(output, "\"yes\"");
-				break;
-		}
 		fprintf(output, "\n");
 
 		fprintf(output, "RC_DEPEND_TREE[%i+10]=\"%li\"\n\n", index*11,
@@ -887,30 +878,6 @@ have_dep_field:
 			goto _continue;
 		}
 
-		if (0 == strcmp(token, FIELD_PARALLEL)) {
-			/* Just use the first value, and ignore the rest */
-			token = strsep(&tmp_p, " ");
-
-			retval = service_set_parallel(rc_name, token);
-			if (-1 == retval) {
-				DBG_MSG("Failed to set parallel for service '%s'!\n",
-						rc_name);
-				/* We do not care if this fails */
-#if 0
-				goto error;
-#endif
-			}
-
-			/* Some debugging in case we have some corruption or
-			 * other issues */
-			token = strsep(&tmp_p, " ");
-			if (NULL != token)
-				DBG_MSG("Too many falues for field '%s'!\n",
-						FIELD_MTIME);
-			
-			goto _continue;
-		}
-
 		if (0 == strcmp(token, FIELD_MTIME)) {
 			time_t mtime = 0;
 			
@@ -976,9 +943,6 @@ size_t parse_print_start(char **data, size_t index) {
 	PRINT_TO_BUFFER(data, write_count, error, "}\n\n");
 	PRINT_TO_BUFFER(data, write_count, error, "provide() {\n");
 	PRINT_TO_BUFFER(data, write_count, error, " [ -n \"$*\" ] && echo \"PROVIDE $*\"; return 0\n");
-	PRINT_TO_BUFFER(data, write_count, error, "}\n\n");
-	PRINT_TO_BUFFER(data, write_count, error, "parallel() {\n");
-	PRINT_TO_BUFFER(data, write_count, error, " [ -n \"$*\" ] && echo \"PARALLEL $*\"; return 0\n");
 	PRINT_TO_BUFFER(data, write_count, error, "}\n\n");
 
 	return write_count;

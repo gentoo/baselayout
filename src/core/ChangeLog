@@ -2,6 +2,13 @@
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 # $Header$
 
+26 Jul 2005 Martin Schlemmer <azarah@gentoo.org>
+
+        * depend.c
+        * depend.h
+        * parse.c
+        * parse.h: Remove the "parallel" stuff, as we do not use it anymore.
+
 15 Apr 2005 Martin Schlemmer <azarah@gentoo.org>
 
         * parse.c: Do not source rc.conf for every script - once is enough.
