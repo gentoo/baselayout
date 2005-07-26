@@ -30,7 +30,6 @@ myservice=${myservice##*/}
 export SVCNAME=${myservice}
 mylevel=$(<"${svcdir}/softlevel")
 
-
 # Set $IFACE to the name of the network interface if it is a 'net.*' script
 if [[ ${myservice%%.*} == "net" ]] && [[ ${myservice##*.} != ${myservice} ]] ; then
 	IFACE=${myservice##*.}
@@ -344,31 +343,31 @@ svc_start() {
 		eerror "ERROR:  Problem starting needed services."
 		eerror "        \"${myservice}\" was not started."
 		retval=1
-	fi
-
-	# Start service
-	if [[ ${retval} -eq 0 ]] && broken "${myservice}" ; then
-		eerror "ERROR:  Some services needed are missing.  Run"
-		eerror "        './${myservice} broken' for a list of those"
-		eerror "        services.  \"${myservice}\" was not started."
-		retval=1
-	elif [[ ${retval} -eq 0 ]] && ! broken "${myservice}" ; then
-		(
-		exit() {
-			RC_QUIET_STDOUT="no"
-			eerror "DO NOT USE EXIT IN INIT.D SCRIPTS"
-			eerror "This IS a bug, please fix your broken init.d"
-			unset -f exit
-			exit $@
-		}
-		# Stop einfo/ebegin/eend from working as parallel messes us up
-		[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && RC_QUIET_STDOUT="yes"
-		start
-		)
-		retval=$?
-		# If a service has been marked inactive, exit now as something
-		# may attempt to start it again later
-		service_inactive "${myservice}" && return 1 
+	else
+		if broken "${myservice}" ; then
+			eerror "ERROR:  Some services needed are missing.  Run"
+			eerror "        './${myservice} broken' for a list of those"
+			eerror "        services.  \"${myservice}\" was not started."
+			retval=1
+		else
+			(
+			exit() {
+				RC_QUIET_STDOUT="no"
+				eerror "DO NOT USE EXIT IN INIT.D SCRIPTS"
+				eerror "This IS a bug, please fix your broken init.d"
+				unset -f exit
+				exit $@
+			}
+			# Stop einfo/ebegin/eend from working as parallel messes us up
+			[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && RC_QUIET_STDOUT="yes"
+			start
+			)
+			retval=$?
+			
+			# If a service has been marked inactive, exit now as something
+			# may attempt to start it again later
+			service_inactive "${myservice}" && return 1 
+		fi
 	fi
 
 	if [[ ${retval} -ne 0 ]] && is_runlevel_start ; then
