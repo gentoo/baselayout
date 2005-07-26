@@ -15,6 +15,9 @@
 
     Removed loops from trace_dependencies for a nice speed boost.
 
+    Fixed failure in runscript.sh to proceed when a non needed dependency
+    (ie use, after, before) failed to start.
+
   25 Jul 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     If we do not have net services, check both boot and current runlevel for
