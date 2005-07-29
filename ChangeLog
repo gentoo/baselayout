@@ -3,7 +3,7 @@
 
   29 Jul 2005; Roy Marples <uberlord@gentoo.org>:
 
-   Fixed dhclient sending hostname #100745
+   Fixed dhclient sending hostname #100745, thanks to Benoit Boissinot.
 
 * baselayout-1.12.0_pre3 (29 Jul 2005)
 
