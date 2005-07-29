@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  29 Jul 2005; Roy Marples <uberlord@gentoo.org>:
+
+   Fixed dhclient sending hostname #100745
+
 * baselayout-1.12.0_pre3 (29 Jul 2005)
 
   26 Jul 2005; Roy Marples <uberlord@gentoo.org>:
