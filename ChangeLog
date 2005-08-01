@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  01 Aug 2005; Roy Marples <uberlord@gentoo.org>:
+
+    dhclient now has to be told it can edit dhclient.conf instead of assuming
+    it. Final fix to #100745.
+
   30 Jul 2005; Roy Marples <uberlord@gentoo.org>:
 
     Fixed associate_order "forcepreferred" #100799, thanks to Benoit Boissinot.

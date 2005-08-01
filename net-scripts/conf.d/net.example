@@ -213,10 +213,6 @@
 #   to the DHCP server by default
 #   pump always sends the current hostname - so below to disable
 #   udhcpc and dhcpcd from doing this
-# - dhclient attempts to modify /etc/dhclient.conf (or the file specified
-#   by the -cf option) with the current hostname and to strip any script
-#   lines. To stop this behaviour, add dhclient_edit_config="no" to
-#   /etc/conf.d/net
 # - dhcpcd does not daemonize when the lease time is infinite
 # - udhcp-0.9.3-r3 and earlier does not support getting NTP servers 
 # - dhclient does not support getting NTP servers 
@@ -252,6 +248,11 @@
 # send the current hostname to the dhcp server and when it starts.
 # You can use any combination of the above options - the default is not to
 # use any of them.
+
+# DHCLIENT
+# dhclient can modify /etc/dhclient.conf (or the file specified by the -cf
+# option) with the current hostname and to strip any script lines. To enable
+# this, add dhclient_edit_config="yes" to /etc/conf.d/net
 
 #-----------------------------------------------------------------------------
 # Automatic Private IP Addressing (APIPA)

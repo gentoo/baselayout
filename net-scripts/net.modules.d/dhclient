@@ -107,7 +107,7 @@ dhclient_start() {
     interface_exists "${iface}" true || return 1
 
     eval edit=\"\$\{dhclient_edit_config_${ifvar}\}\"
-    [[ -z ${edit} ]] && eval edit="${dhclient_edit_config:-yes}"
+    [[ -z ${edit} ]] && eval edit="${dhclient_edit_config:-no}"
     if [[ ${edit} == "yes" || ${edit} == "true" ]]; then
 	edit=true
     else
