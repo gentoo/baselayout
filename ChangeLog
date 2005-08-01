@@ -12,6 +12,9 @@
 
     Tweaked module depends to fix order when no dhcp client is found.
 
+    rc-daemon now works with mysql - fixes #100982, thanks to bju from the
+    forums.
+
   30 Jul 2005; Roy Marples <uberlord@gentoo.org>:
 
     Fixed associate_order "forcepreferred" #100799, thanks to Benoit Boissinot.

@@ -172,7 +172,7 @@ pidof() {
 	        args="${args} '"${arg}"'"
 	done
 
-	eval /bin/pidof "${args}"
+	eval /bin/pidof -x ${args}
 }
 
 # bool is_daemon_running(char* cmd, char* pidfile)
