@@ -22,7 +22,7 @@ bridge_provides() {
 # Sets up the dependancies for the module
 bridge_depend() {
     after interface tuntap
-    before dhcp
+    before dhcp apipa
 }
 
 # bool bridge_check_installed(void)
