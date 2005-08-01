@@ -11,6 +11,9 @@
     rc-daemon now works with mysql - fixes #100982, thanks to bju from the
     forums.
 
+    We now only link /etc/{resolv,ntp,yp}.conf when the file exists.
+    We now link back everything in the state dir except for .sv files.
+
   30 Jul 2005; Roy Marples <uberlord@gentoo.org>:
 
     Fixed associate_order "forcepreferred" #100799, thanks to Benoit Boissinot.

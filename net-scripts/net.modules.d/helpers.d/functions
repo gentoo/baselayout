@@ -54,6 +54,8 @@ remove_state() {
 # void apply_state(char *interface)
 #
 # Apply's state information about the interface to the system
+# If the files in the state dir are not links back to etc then
+# we create them if RC_AUTO_INTERFACE="yes"
 #
 apply_state() {
     local iface="$1"
@@ -65,10 +67,20 @@ apply_state() {
 
     local d="${statedir}/${iface}"
     if [[ -d ${d} ]]; then
-	local x=$( ls "${d}" )
-	if [[ -n ${x} ]] ; then
+	local files=$( ls "${d}" )
+	if [[ -n ${files} ]] ; then
 	    if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
 		cp -aR "${d}"/* "${netdir}"
+		local file 
+		for file in ${files} ; do
+		    # Skip .sv files
+		    [[ ${file} == *".sv" ]] && contine
+		    local link=$( readlink "/etc/${file}" 2>/dev/null )
+		    if [[ ${link} != "${netdir}/${file}" ]]; then
+			[[ -e "/etc/${file}" ]] && rm -f "/etc/${file}"
+			ln -snf "${netdir}/${file}" "/etc/${file}"
+		    fi
+		done
 	    else
 		cp -ar "${d}"/* /etc
 	    fi

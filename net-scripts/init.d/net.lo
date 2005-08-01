@@ -882,8 +882,8 @@ link_file() {
 	if [[ -f "/etc/${file}" ]]; then
 	    vewarn "Moving /etc/${file} to ${netdir}/${file} and creating link"
 	    mv "/etc/${file}" "${netdir}"
+	    ln -snf "${netdir}/${file}" "/etc/${file}"
 	fi
-	ln -sf "${netdir}/${file}" "/etc/${file}"
     fi
 }
 
