@@ -24,6 +24,10 @@
 
 * baselayout-1.12.0_pre3 (29 Jul 2005)
 
+  26 Jul 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Remove the "parallel" depend stuff from the awk backend.
+
   26 Jul 2005; Roy Marples <uberlord@gentoo.org>:
 
     Removed the "parallel" depend for init scripts and related functions.
