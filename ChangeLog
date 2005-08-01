@@ -20,13 +20,15 @@
 
   29 Jul 2005; Roy Marples <uberlord@gentoo.org>:
 
-   Fixed dhclient sending hostname #100745, thanks to Benoit Boissinot.
+    Fixed dhclient sending hostname #100745, thanks to Benoit Boissinot.
 
 * baselayout-1.12.0_pre3 (29 Jul 2005)
 
   26 Jul 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     Remove the "parallel" depend stuff from the awk backend.
+
+    Remove the "parallel" depend stuff from the help.
 
   26 Jul 2005; Roy Marples <uberlord@gentoo.org>:
 
