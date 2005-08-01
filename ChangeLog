@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  01 Aug 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Only create /dev/core if /proc/kcore exists #100978 by Timo Hirvonen.
+
   01 Aug 2005; Roy Marples <uberlord@gentoo.org>:
 
     dhclient now has to be told it can edit dhclient.conf instead of assuming

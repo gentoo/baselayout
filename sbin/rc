@@ -99,7 +99,7 @@ populate_udev() {
 	ln -snf fd/0 /dev/stdin
 	ln -snf fd/1 /dev/stdout
 	ln -snf fd/2 /dev/stderr
-	ln -snf /proc/kcore /dev/core
+	[ -e /proc/kcore ] && ln -snf /proc/kcore /dev/core
 
 	# Create nodes that udev can't
 	[ -x /sbin/dmsetup ] && /sbin/dmsetup mknodes &>/dev/null
@@ -389,6 +389,10 @@ then
 	# the logger should anyhow dump the ring-0 buffer at start to the
 	# logs, and that with dmesg can be used to check for problems
 	/bin/dmesg -n 1
+
+	# Start RAID/LVM/EVMS/DM volumes for /usr, /var, etc.
+	# NOTE: this should be done *before* mounting anything
+	[[ -z ${CDBOOT} ]] && start_volumes
 
 	# We set the forced softlevel from the kernel command line
 	# It needs to be run right after proc is mounted for the
