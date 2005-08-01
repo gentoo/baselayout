@@ -99,7 +99,7 @@ populate_udev() {
 	ln -snf fd/0 /dev/stdin
 	ln -snf fd/1 /dev/stdout
 	ln -snf fd/2 /dev/stderr
-	ln -snf /proc/kcore /dev/core
+	[ -e /proc/kcore ] && ln -snf /proc/kcore /dev/core
 
 	# Create nodes that udev can't
 	[ -x /sbin/dmsetup ] && /sbin/dmsetup mknodes &>/dev/null
