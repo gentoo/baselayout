@@ -10,6 +10,8 @@
     dhclient now has to be told it can edit dhclient.conf instead of assuming
     it. Final fix to #100745.
 
+    Tweaked module depends to fix order when no dhcp client is found.
+
   30 Jul 2005; Roy Marples <uberlord@gentoo.org>:
 
     Fixed associate_order "forcepreferred" #100799, thanks to Benoit Boissinot.

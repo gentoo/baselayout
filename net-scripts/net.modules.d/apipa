@@ -15,7 +15,7 @@ apipa_provides() {
 #
 # Sets up the dependancies for the module
 apipa_depend() {
-    after dhcp
+    after system dhcp vlan
 }
 
 # bool apipa_check_installed(void)
