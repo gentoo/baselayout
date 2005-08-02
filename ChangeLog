@@ -5,6 +5,9 @@
 
     0 timeout now means infinite for wpa_supplicant and iwconfig wrt #90443
 
+    iwconfig no longer downs and ups the interface after a scan - instead we
+    set essid any just before doing it
+
   01 Aug 2005; Roy Marples <uberlord@gentoo.org>:
 
     dhclient now has to be told it can edit dhclient.conf instead of assuming

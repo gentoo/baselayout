@@ -436,6 +436,9 @@ iwconfig_scan() {
 	fi
     fi
 
+    # Set the essid to any. This is required for scanning
+    iwconfig "${iface}" essid any
+
     veinfo "Scanning for access points"
 
     # Sleep if required
@@ -498,12 +501,6 @@ iwconfig_scan() {
 	    ewarn "  \"${x}\""
 	fi
     fi
-
-    # HUP the interface
-    # This may be have to be moved to the associate function
-    # if things like dhcp clients keep timing out but work manually
-    interface_down "${iface}"
-    interface_up "${iface}"
 
     # Change back mode if needed
     x=$( eval echo \"\$\{mode_${ifvar}\:-managed}\" | tr '[:upper:]' '[:lower:]' )
@@ -683,10 +680,6 @@ iwconfig_defaults() {
     iwconfig "${iface}" power off &>/dev/null
     iwconfig "${iface}" txpower auto &>/dev/null
     iwconfig "${iface}" key [1] off &>/dev/null
-
-    # We need to set the essid to any as some drivers won't
-    # scan correctly if they are already set to an ESSID
-    iwconfig "${iface}" essid any &>/dev/null
 }
 
 # void iwconfig_strip_associated(char *iface)
@@ -855,6 +848,8 @@ iwconfig_pre_start() {
     save_options "ESSID" ""
     interface_exists "${iface}" || return 0
 
+    # We need to bring the interface up, as some cards do not register
+    # in /proc/wireless until they are brought up.
     interface_up "${iface}"
 
     if ! iwconfig_check_extensions "${iface}" ; then
@@ -863,7 +858,7 @@ iwconfig_pre_start() {
     fi
 
     # Check for rf_kill - only ipw supports this at present, but other
-    # cards may in the future
+    # cards may in the future.
     if [[ -e "/sys/class/net/${iface}/device/rf_kill" ]]; then
 	if [[ $( < "/sys/class/net/${iface}/device/rf_kill" ) != 0 ]]; then
 	    eerror "Wireless radio has been killed for interface ${iface}"
