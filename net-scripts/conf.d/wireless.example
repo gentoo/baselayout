@@ -105,8 +105,10 @@
 # or resource is unavailable. The default is to wait zero seconds
 #sleep_scan_eth0="1"
 
-# Seconds to wait until associated. The default is to wait 10 seconds
-#sleep_associate_eth0="5"
+# Seconds to wait until associated. The default is to wait 10 seconds.
+# 0 means wait indefinitely. WARNING : this can cause an infinite delay when
+# booting.
+#associate_timeout_eth0="5"
 
 # By default a successful association in Managed mode sets the MAC
 # address of the AP connected to. However, some drivers (namely

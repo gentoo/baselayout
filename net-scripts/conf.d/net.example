@@ -159,7 +159,8 @@
 #wpa_supplicant_ath0="-Dmadwifi" # For Atheros based cards
 # Consult wpa_supplicant for more drivers
 # By default we give wpa_suppliant 60 seconds to associate and authenticate
-#wpa_timeout_eth0=60
+# 0 means we wait indefinitely
+#associate_timeout_eth0=60
 
 # GENERIC WIRELESS OPTIONS
 # PLEASE READ THE INSTRUCTIONS IN /etc/conf.d/wireless.example FOR
