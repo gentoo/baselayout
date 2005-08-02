@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  02 Aug 2005; Roy Marples <uberlord@gentoo.org>:
+
+    0 timeout now means infinite for wpa_supplicant and iwconfig wrt #90443
+
   01 Aug 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Only create /dev/core if /proc/kcore exists #100978 by Timo Hirvonen.

@@ -308,13 +308,19 @@ iwconfig_test_associated() {
 # Waits for a configured ammount of time until
 # we are assocaited with an Access Point
 iwconfig_wait_for_association() {
-    local iface="$1" i=0 wait ifvar=$( bash_variable "$1" )
-    eval wait=\"\$\{sleep_associate_${ifvar}\:-10}\"
+    local iface="$1" i=0 timeout ifvar=$( bash_variable "$1" )
+    eval timeout=\"\$\{associate_timeout_${ifvar}\}\"
+    [[ -z ${timeout} ]] && eval timeout=\"\$\{sleep_associate_${ifvar}\:-10\}\"
 
-    while (( i<wait )); do
+    [[ ${timeout} == "0" ]] \
+	&& vewarn "WARNING: infinite timeout set for association on ${iface}"
+
+    while true; do
 	iwconfig_test_associated "${iface}" && return 0
 	sleep 1
+	[[ ${timeout} == "0" ]] && continue
 	(( i++ ))
+	[[ ${i} == ${timeout} || ${i} -gt ${timeout} ]] && break
     done
     return 1
 }
