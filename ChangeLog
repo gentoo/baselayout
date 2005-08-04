@@ -6,6 +6,8 @@
     Update /sbin/rc to actually use init's single level, and also to launch
     sulogin, bug #66834.
 
+    Fix a typo and some logic issues in new trace_dependencies().
+
   04 Aug 2005; Roy Marples <uberlord@gentoo.org>:
 
     interface state directories are now created with -m 0755 to ensure that

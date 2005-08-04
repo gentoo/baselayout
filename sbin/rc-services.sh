@@ -712,7 +712,7 @@ trace_dependencies() {
     }
 
     local last=""
-    while [[ ${services[*]} != ${last} ]]; do
+    while [[ ${services[*]} != "${last}" ]]; do
 	last="${services[*]}"
 	for (( i=0; i<${#services[*]}; i++ )); do
 	    if [[ -n ${deptype} ]] ; then
@@ -759,7 +759,14 @@ trace_dependencies() {
 
 	local x deps="$( ineed ${service} ) $( valid_iuse ${service} )"
 	if is_runlevel_start || is_runlevel_stop ; then
-	    deps="$( valid_iafter ${service} )"
+	    deps="${deps} $( valid_iafter ${service} )"
+	fi
+
+	if [[ -n ${deptype} ]] ; then
+		#If its a net service, just replace it with 'net'
+		for (( j=0; j<${#deps[*]}; j++ )) ; do
+			net_service "${deps[j]}" && deps[j]="net"
+		done
 	fi
 
 	for x in ${deps}; do
