@@ -35,7 +35,7 @@ macnet_check_depends() {
     local f
 
     for f in interface_get_mac_address; do
-	[[ $( type -t ${f} ) == "function" ]] && continue
+	[[ $( type -t "${f}" ) == "function" ]] && continue
 	eerror "macnet: missing required function ${f}\n"
 	return 1
     done

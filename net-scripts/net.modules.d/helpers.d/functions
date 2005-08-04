@@ -18,7 +18,7 @@ statedir="${netdir}/state"
 # Which returns eth0 in this case
 interface_device() {
     local dev="${1%%.*}"
-    [[ ${dev} == $1 ]] && dev="${1%%:*}"
+    [[ ${dev} == "$1" ]] && dev="${1%%:*}"
     echo "${dev}"
 }
 
@@ -37,7 +37,7 @@ save_state() {
     local iface="$1"
     local d="${statedir}/${iface}"
 
-    [[ ! -d "${d}" ]] && mkdir -m 0755 -p "${d}"
+    [[ ! -d ${d} ]] && mkdir -m 0755 -p "${d}"
     cp -a /etc/resolv.conf /etc/ntp.conf /etc/yp.conf "${d}" 2>/dev/null
 }
 
@@ -47,7 +47,7 @@ save_state() {
 remove_state() {
     local d="${statedir}/$1"
 
-    [[ -d "${d}" ]] && rm -Rf "${d}"
+    [[ -d ${d} ]] && rm -Rf "${d}"
     [[ ! ${2:-true} ]] && mkdir -m 0755 -p "${d}"
 }
 
@@ -104,7 +104,7 @@ select_best_interface() {
 	fi
     done
 
-    echo ${ifs[0]}
+    echo "${ifs[0]}"
 }
 
 # int calculate_metric(char *interface)
@@ -170,7 +170,7 @@ netmask2cidr() {
 
     for i in ${1//./ }; do
 	bin=""
-	while [[ ${i} != 0 ]]; do
+	while [[ ${i} != "0" ]]; do
 	    bin=$[${i}%2]${bin}
 	    (( i=i>>1 ))
 	done
@@ -249,7 +249,7 @@ clean_pidfile() {
     local pidfile="$1"
 
     [[ ! -f ${pidfile} ]] && return 0
-    local pid=$( < ${pidfile} )
+    local pid=$( < "${pidfile}" )
 
     if [[ -n ${pid} ]]; then
 	local cmd="${pidfile##*/}"

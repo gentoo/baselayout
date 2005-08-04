@@ -42,7 +42,7 @@ vlan_check_depends() {
     local f
 
     for f in iface_start iface_stop; do
-	[[ $( type -t ${f} ) == function ]] && continue
+	[[ $( type -t "${f}" ) == function ]] && continue
 	eerror "vlan: missing required function ${f}\n"
 	return 1
     done
@@ -91,11 +91,11 @@ vlan_pre_start() {
     vlan_check_kernel || return 1
 
     for (( i=0; i<${#opts[@]}; i++ )); do
-	if [[ ${opts[i]} == 'set_name_type'* ]]; then
-	    x=${opts[i]}
+	if [[ ${opts[i]} == "set_name_type "* ]]; then
+	    x="${opts[i]}"
 	else
-	    x=${opts[i]/ / ${iface} }
-	    [[ ${x} == ${opts[i]} ]] && x="${x} ${iface}"
+	    x="${opts[i]/ / ${iface} }"
+	    [[ ${x} == "${opts[i]}" ]] && x="${x} ${iface}"
 	fi
 	e=$( vconfig ${x} 2>&1 1>/dev/null )
 	[[ -z ${e} ]] && continue
@@ -119,7 +119,7 @@ vlan_post_start() {
 
     # BACKWARD COMPATIBILITY: check for old vlan variable name
     eval vlans_old=\"\$\{iface_${ifvar}_vlans\}\"
-    [[ -n ${vlans_old} && -z ${vlans} ]] && vlans=${vlans_old}
+    [[ -n ${vlans_old} && -z ${vlans} ]] && vlans="${vlans_old}"
 
     [[ -z ${vlans} ]] && return 0
 
@@ -128,7 +128,7 @@ vlan_post_start() {
     # Start vlans for this interface
     for vlan in ${vlans}; do
 	einfo "Adding VLAN ${vlan} to ${iface}"
-	e=$( vconfig add ${iface} ${vlan} 2>&1 1>/dev/null )
+	e=$( vconfig add "${iface}" "${vlan}" 2>&1 1>/dev/null )
 	if [[ -n ${e} ]] ; then
 	    eend 1 "${e}"
 	    continue

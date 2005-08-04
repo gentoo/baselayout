@@ -22,6 +22,8 @@
     trace_dependencies gets a re-write (again) to try and solve the hanging
     issues that many people are reporting
 
+    More anal about RHS quoting
+
   02 Aug 2005; Roy Marples <uberlord@gentoo.org>:
 
     0 timeout now means infinite for wpa_supplicant and iwconfig wrt #90443

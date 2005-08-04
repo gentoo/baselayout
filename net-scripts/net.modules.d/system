@@ -114,8 +114,6 @@ system_nis() {
 	done
     fi
 
-    [[ -f ${conffile} && ! -f "${conffile}.sv" ]] \
-	&& mv "${conffile}" "${conffile}.sv"
     mv "${tmpfile}" "${conffile}"
 }
 

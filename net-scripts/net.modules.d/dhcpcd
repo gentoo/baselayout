@@ -48,7 +48,7 @@ dhcpcd_check_depends() {
     local f
 
     for f in interface_exists interface_get_address; do
-	[[ $( type -t ${f} ) == "function" ]] && continue
+	[[ $( type -t "${f}" ) == "function" ]] && continue
 	eerror "dhcpcd: missing required function ${f}\n"
 	return 1
     done
@@ -78,7 +78,7 @@ dhcpcd_stop() {
     [[ ! -f ${pidfile} ]] && return 0
 
     ebegin "Stopping dhcpcd on ${iface}"
-    local pid=$( < ${pidfile} )
+    local pid=$( < "${pidfile}" )
 
     local ifvar=$( bash_variable "${iface}" )
     eval d=\" \$\{dhcp_${ifvar}\} \"

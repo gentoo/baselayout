@@ -40,7 +40,7 @@ udhcpc_check_depends() {
     local f
 
     for f in interface_exists interface_get_address; do
-	[[ $( type -t ${f} ) == "function" ]] && continue
+	[[ $( type -t "${f}" ) == "function" ]] && continue
 	eerror "udhcpc: missing required function ${f}\n"
 	return 1
     done
@@ -61,7 +61,7 @@ udhcpc_get_vars() {
 # Stops udhcpc running on an interface
 # Return 1 if we fail to stop udhcpc (if it's running) otherwise 0
 udhcpc_stop() {
-    local iface=$1 pidfile="/var/run/udhcpc-$1.pid" d
+    local iface="$1" pidfile="/var/run/udhcpc-$1.pid" d
 
     udhcpc_check_installed || return 0
     [[ ! -f ${pidfile} ]] && return 0
@@ -84,8 +84,8 @@ udhcpc_stop() {
     [[ -f ${pidfile} ]] && rm -f "${pidfile}"
 
     ${e}
-    eend $?
-    return $?
+    eend "$?"
+    return "$?"
 }
 
 # bool udhcpc_start(char *iface)
@@ -141,7 +141,7 @@ udhcpc_start() {
 	| egrep -v '^info,' )
     # We just check the last 5 letters
     [[ ${x:((${#x} - 5)):5} == "bound" ]]
-    eend $? "${x}" || return 1
+    eend "$?" "${x}" || return 1
 
     # DHCP succeeded, show address retrieved
     local addr=$( interface_get_address "${iface}" )

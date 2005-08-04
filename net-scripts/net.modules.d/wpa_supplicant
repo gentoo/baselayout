@@ -33,16 +33,16 @@ wpa_supplicant_depend() {
 #
 # Returns 0 if wpa_supplicant is installed, otherwise 1
 wpa_supplicant_check_installed() {
-    local report="${1:-false}" installed=0
+    local report="${1:-false}" installed="0"
     if [[ ! -x /sbin/wpa_supplicant ]]; then
-	installed=1
+	installed="1"
 	${report} && eerror "For WPA support (wpa_supplicant) support, emerge net-wireless/wpa_supplicant"
     fi
     if [[ ! -e /proc/net/packet ]]; then
-	installed=1
+	installed="1"
 	${report} && eerror "wpa_supplicant requires Packet Socket (CONFIG_PACKET=y) enabled in the kernel"
     fi
-    return ${installed}
+    return "${installed}"
 }
 
 # bool wpa_supplicant_check_depends(void)
@@ -52,7 +52,7 @@ wpa_supplicant_check_depends() {
     local f
 
     for f in interface_exists; do
-	[[ $( type -t ${f} ) == "function" ]] && continue
+	[[ $( type -t "${f}" ) == "function" ]] && continue
 	eerror "wpa_supplicant: missing required function ${f}\n"
 	return 1
     done
@@ -102,7 +102,7 @@ wpa_supplicant_get_ap_mac_address() {
 wpa_supplicant_associated() {
     local -a status=( "$( wpa_cli -i"$1" status | sed -n -e 's/^\(key_mgmt\|wpa_state\|EAP state\)=\([^=]\+\).*/\U\2/p' )" )
 
-    case ${status[0]} in
+    case "${status[0]}" in
 	"NONE")			[[ ${status[1]} == "ASSOCIATED" ]] ;;
 	"IEEE 802.1X (no WPA)")	[[ ${status[2]} == "SUCCESS" ]] ;;
 	*)			[[ ${status[1]} == "COMPLETED" ]] ;;
@@ -125,7 +125,7 @@ wpa_supplicant_kill() {
 	${report} && ebegin "Stopping wpa_cli on ${iface}"
 	start-stop-daemon --stop --exec /bin/wpa_cli \
 	    --pidfile "${pidfile}"
-	${report} && eend $?
+	${report} && eend "$?"
     fi
 
     # Now shutdown wpa_supplicant
@@ -134,7 +134,7 @@ wpa_supplicant_kill() {
 	${report} && ebegin "Stopping wpa_supplicant on ${iface}"
 	start-stop-daemon --stop --exec /sbin/wpa_supplicant \
 	    --pidfile "${pidfile}"
-	${report} && eend $?
+	${report} && eend "$?"
     else
 	# Support wpa_supplicant-0.3.x
 	local pid=$( pgrep -f '^/sbin/wpa_supplicant .* -i'"${iface}"'[ ]*$' )
@@ -174,7 +174,7 @@ wpa_supplicant_associate() {
 	fi
 	sleep 1
 	(( i++ ))
-	[[ ${i} == ${timeout} || ${i} -gt ${timeout} ]] && break
+	[[ ${i} == "${timeout}" || ${i} -gt "${timeout}" ]] && break
     done
 
     # Spit out an appropriate error
@@ -257,7 +257,7 @@ wpa_supplicant_pre_start() {
 
     local ifvar=$( bash_variable "${iface}" )
     eval opts=\" \$\{wpa_supplicant_${ifvar}\}\"
-    [[ ${opts} != *' -D'* ]] \
+    [[ ${opts} != *" -D"* ]] \
 	&& ewarn "wpa_supplicant_${ifvar} does not define a driver"
 
     # Some drivers require the interface to be up
@@ -281,7 +281,7 @@ wpa_supplicant_pre_start() {
 
     start-stop-daemon --start --exec /sbin/wpa_supplicant \
         -- ${opts} -B -c/etc/wpa_supplicant.conf -i"${iface}"
-    eend $? || return 1
+    eend "$?" || return 1
 
     # Starting wpa_supplication-0.4.0, we can get wpa_cli to
     # start/stop our scripts from wpa_supplicant messages
@@ -291,7 +291,7 @@ wpa_supplicant_pre_start() {
 	start-stop-daemon --start --exec /bin/wpa_cli \
 	-- -a"${actfile}" -i"${iface}" \
 	-P"/var/run/wpa_cli-${iface}.pid" -B
-	eend $? || return 1
+	eend "$?" || return 1
     fi
 
     # Background wpa_supplication if required
