@@ -30,49 +30,65 @@ RC_WAIT_ON_START="0.1"
 # Override default settings with user settings ...
 [[ -f /etc/conf.d/rc ]] && source /etc/conf.d/rc
 
-# void rc_setup_daemon_vars(void)
+# void rc_shift_args(void)
 #
-# Setup our vars based on the start-stop-daemon command
-rc_setup_daemon_vars() {
-	local name
-        local -a sargs=( "${args%% \'--\' *}" )
-	local -a eargs
-	local x=${args// \'--\' /}
-	[[ ${x} != ${args} ]] && eargs=( "${args##* \'--\' }" )
-	
-	local i j=${#sargs[@]}
-	for (( i=0; i<j; i++ )); do
-		case ${sargs[i]} in
+# Proccess vars - makes things easier by using the shift command
+# and indirect variables
+rc_shift_args() {
+	while [[ $# != "0" ]]; do
+		if [[ $1 != "-"* && -n ${addvar} ]]; then
+			if [[ -z ${!addvar} ]]; then
+				eval "${addvar}=\"$1\""
+			else
+				eval "${addvar}=\"${!addvar} $1\""
+			fi
+			shift
+			continue
+		fi
+		unset addvar
+		case $1 in
 			-S|--start)
 				stopping=false
-				unset sargs[i]
 				;;
 			-K|--stop)
 				stopping=true
-				unset sargs[i]
 				;;
 			-n|--name)
-				[[ ${i} -lt ${j} ]] && name=${sargs[i+1]}
+				addvar="name"
 				;;
 			-x|--exec|-a|--startas)
-				[[ ${i} -lt ${j} ]] && cmd=${sargs[i+1]}
+				addvar="cmd"
 				;;
 			-p|--pidfile)
-				[[ ${i} -lt ${j} ]] && pidfile=${sargs[i+1]}
+				addvar="pidfile"
 				;;
 			--pid=*)
-				pidfile=${sargs[i]##--pid=}
+				pidfile="${1##--pid=}"
 				;;
 			-s|--signal)
-				[[ ${i} -lt ${j} ]] && signal=${sargs[i+1]}
+				addvar="signal"
 				;;
 			-t|--test|-o|--oknodo)
 				nothing=true
 				;;
 		esac
+		shift
 	done
+}	
 
-	[[ -z ${cmd} ]] && cmd=${name}
+# void rc_setup_daemon_vars(void)
+#
+# Setup our vars based on the start-stop-daemon command
+rc_setup_daemon_vars() {
+	local name i
+        local -a sargs=( "${args%% \'--\' *}" )
+	local -a eargs
+	local x=${args// \'--\' /}
+	[[ ${x} != ${args} ]] && eargs=( "${args##* \'--\' }" )
+
+	rc_shift_args ${sargs[@]}
+
+	[[ -z ${cmd} ]] && cmd="${name}"
 
 	# The env command launches daemons in a special environment
 	# so we need to cater for this
@@ -80,7 +96,7 @@ rc_setup_daemon_vars() {
 		j=${#eargs[@]}
 		for (( i=0; i<j; i++ )); do
 			if [[ ${eargs[i]:0:1} != "-" ]]; then
-				cmd=${eargs[i]}
+				cmd="${eargs[i]}"
 				break
 			fi
 		done
@@ -181,8 +197,19 @@ pidof() {
 # If a pidfile is supplied, the pid inside it must match
 # a pid in the list of pidof ${cmd}
 is_daemon_running() {
-	local cmd=$1 pidfile=$2 pids pid
-	
+	local cmd pidfile pids pid
+
+	if [[ $# == "1" ]]; then
+		cmd="$1"
+	else
+		local i j="$#"
+		for (( i=0; i<j-1; i++ )); do
+			cmd="${cmd} $1"
+			shift
+		done
+		pidfile="$1"
+	fi
+
 	pids=$( pidof ${cmd} )
 	[[ -z ${pids} ]] && return 1
 	
@@ -214,7 +241,7 @@ rc_start_daemon() {
 	is_daemon_running ${cmd} ${pidfile}
 	retval=$?
 	[[ ${retval} == 0 ]] && return 0
-	
+
 	# Stop if we can to clean things up
 	if [[ $( type -t stop ) == "function" ]]; then
 		stop >/dev/null # We don't want to echo ebegin/eend

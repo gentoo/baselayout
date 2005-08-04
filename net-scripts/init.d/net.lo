@@ -906,7 +906,7 @@ start() {
     fi
 
     if [[ ! -d "${statedir}/${IFACE}" ]]; then
-	if ! mkdir -p "${statedir}/${IFACE}" ; then
+	if ! mkdir -m 0755 -p "${statedir}/${IFACE}" ; then
 	    eerror "Unable to create state directory!"
 	    return 1
 	fi

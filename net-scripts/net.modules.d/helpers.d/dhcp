@@ -106,7 +106,8 @@ if [[ -n ${hostname} ]]; then
     [[ ${x} == "(none)" || ${x} == "localhost" ]] && /bin/hostname "${hostname}"
 fi
 
-[[ ! -d "${statedir}/${interface}" ]] && mkdir -p "${statedir}/${interface}"
+[[ ! -d "${statedir}/${interface}" ]] \
+    && mkdir -m 0755 -p "${statedir}/${interface}"
 
 # Only setup the information we're told to
 # By default that's everything
