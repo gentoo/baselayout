@@ -25,7 +25,7 @@ RC_PARALLEL_STARTUP="no"
 
 RC_NET_STRICT_CHECKING="no"
 
-# RC_AUTO_INTERFACE allows to to say if we try and configure your interfaces
+# RC_AUTO_INTERFACE allows us to try and configure your interfaces
 # automatically. This includes
 #     default to DHCP
 #     link /etc/{resolv,ntp,yp}.conf to /var/lib/net-scripts

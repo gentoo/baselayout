@@ -1,6 +1,13 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  04 Aug 2005; Roy Marples <uberlord@gentoo.org>:
+
+    interface state directories are now created with -m 0755 to ensure that
+    everyone can read them
+
+    rc-daemon.sh now supports multiple cmds - partial fix for #98745
+
   02 Aug 2005; Roy Marples <uberlord@gentoo.org>:
 
     0 timeout now means infinite for wpa_supplicant and iwconfig wrt #90443

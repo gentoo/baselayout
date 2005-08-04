@@ -108,7 +108,7 @@ pump_start() {
     eval metric=\"\$\{metric_${ifvar}\}\"
     [[ -n ${metric} ]] && opts="${opts} --route-metric ${metric}"
 
-    [[ ! -d "${statedir}/${iface}" ]] && mkdir -p "${statedir}/${iface}"
+    [[ ! -d "${statedir}/${iface}" ]] && mkdir -m 0755 -p "${statedir}/${iface}"
 
     opts="${opts} --win-client-ident --etc-dir=${statedir}/${iface}"
     opts="${opts} --script /lib/rcscripts/net.modules.d/helpers.d/pump-wrapper"
