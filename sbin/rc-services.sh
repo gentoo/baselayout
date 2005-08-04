@@ -763,7 +763,7 @@ trace_dependencies() {
 			deps="${deps} $( valid_iafter ${service} )"
 		fi
 
-		if [[ -n ${deptype} ]] ; then
+		if [[ -z ${deptype} ]] ; then
 			# If its a net service, just replace it with 'net'
 			for (( j=0; j<${#deps[*]}; j++ )) ; do
 				net_service "${deps[j]}" && deps[j]="net"
