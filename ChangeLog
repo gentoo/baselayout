@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  04 Aug 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update /sbin/rc to actually use init's single level, and also to launch
+    sulogin, bug #66834.
+
   04 Aug 2005; Roy Marples <uberlord@gentoo.org>:
 
     interface state directories are now created with -m 0755 to ensure that
