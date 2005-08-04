@@ -8,6 +8,8 @@
 
     Fix a typo and some logic issues in new trace_dependencies().
 
+    Whitespace cleanups in new trace_dependencies().
+
   04 Aug 2005; Roy Marples <uberlord@gentoo.org>:
 
     interface state directories are now created with -m 0755 to ensure that
