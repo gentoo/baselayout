@@ -687,137 +687,145 @@ valid_iafter() {
 #   Get and sort the dependencies of given service[s].
 #
 trace_dependencies() {
-    local -a services=( "$*" ) deps
-    local i j
+	local -a services=( "$*" ) deps
+	local i j
 
-    if [[ $1 == -* ]]; then
-	deptype="${1/-}"
-	if net_service "${myservice}" ; then
-	    services=( "net" "${myservice}" )
-	else
-	    services=( "${myservice}" )
-	fi
-    fi
-
-    # If its a net service, just replace it with 'net'
-    if [[ -z ${deptype} ]] ; then
-	for (( i=0; i<${#services[*]} ; i++ )) ; do
-	    net_service "${services[i]}" && services[i]="net"
-        done
-    fi
-
-    sort_unique() {
-	set -- " ${*/%/\n}"
-	echo -e "$*" | sort -u
-    }
-
-    local last=""
-    while [[ ${services[*]} != ${last} ]]; do
-	last="${services[*]}"
-	for (( i=0; i<${#services[*]}; i++ )); do
-	    if [[ -n ${deptype} ]] ; then
-		deps=( ${deps[*]} $( "${deptype}" "${services[i]}" ) )
-	    else
-		ndeps=( 
-		    $( ineed "${services[i]}" )
-		    $( valid_iuse "${services[i]}" )
-		)
-		if is_runlevel_start || is_runlevel_stop ; then
-		    ndeps=( ${ndeps[*]} $( valid_iafter "${services[i]}" ) )
+	if [[ $1 == -* ]]; then
+		deptype="${1/-}"
+		if net_service "${myservice}" ; then
+			services=( "net" "${myservice}" )
+		else
+			services=( "${myservice}" )
 		fi
+	fi
 
-		#If its a net service, just replace it with 'net'
-		for (( j=0; j<${#ndeps[*]}; j++ )) ; do
-		    net_service "${ndeps[j]}" && ndeps[j]="net"
+	# If its a net service, just replace it with 'net'
+	if [[ -z ${deptype} ]] ; then
+		for (( i=0; i<${#services[*]} ; i++ )) ; do
+			net_service "${services[i]}" && services[i]="net"
 		done
-
-		deps=( ${deps[*]} ${ndeps[*]} )
-	    fi
-	done
-	services=( $(sort_unique ${services[*]} ${deps[*]}) )
-    done
-
-    # Now, we sort our services
-    # When a service is first visited, we mark it dead and then
-    # revisit any dependencies. Finally we add ourselves to the sorted list.
-    # This should never get into an infinite loop, thanks to our dead array.
-    local -a dead=() deadname=() sorted=() 
-    for (( i=0; i<${#services[*]}; i++ )); do
-	dead[i]=false;
-	deadname[i]="${services[i]}"
-    done
-
-    after_visit() {
-	local service="$1" i
-
-	for (( i=0; i<${#deadname[*]}; i++)); do
-	    [[ ${service} == ${deadname[i]} ]] && break
-	done
-
-	${dead[i]} && return
-	dead[i]=true
-
-	local x deps="$( ineed ${service} ) $( valid_iuse ${service} )"
-	if is_runlevel_start || is_runlevel_stop ; then
-	    deps="$( valid_iafter ${service} )"
 	fi
 
-	for x in ${deps}; do
-	    after_visit "${x}"
-	done
-
-	sorted=( ${sorted[*]} "${service}" )
-    }
-
-    for (( i=0; i<${#services[*]}; i++ )); do
-	after_visit ${services[i]}
-    done
-    services=( ${sorted[*]} )
-
-    if [[ -n ${deptype} ]] ; then
-	# If deptype is set, we do not want the name of this service
-	x=" ${services[@]} "
-	services=( ${x// ${myservice} / } )
-
-	# If its a net service, do not include "net"
-	if net_service "${myservice}" ; then
-	    x=" ${services[@]} "
-	    sorted=( ${services// net / } )
-	fi
-    else
-	local netserv y
-
-	# XXX:  I dont think RC_NET_STRICT_CHECKING should be considered
-	#       here, but you never know ...
-	netserv=$( cd "${svcdir}"/started; ls net.* 2>/dev/null )
-
-	get_netservices() {
-	    local runlevel="$1"
-
-	    if [[ -d "/etc/runlevels/${runlevel}" ]] ; then
-		cd "/etc/runlevels/${runlevel}"
-		ls net.* 2>/dev/null
-	    fi
+	sort_unique() {
+		set -- " ${*/%/\n}"
+		echo -e "$*" | sort -u
 	}
 
-	# If no net services are running or we only have net.lo up, then
-	# assume we are in boot runlevel or starting a new runlevel
-	if [[ -z ${netserv} || ${netserv} == "net.lo" ]]; then
-	    local mylevel="${BOOTLEVEL}"
-	    local startnetserv=$( get_netservices "${mylevel}" )
+	local last=""
+	while [[ ${services[*]} != "${last}" ]]; do
+		last="${services[*]}"
+		for (( i=0; i<${#services[*]}; i++ )); do
+			if [[ -n ${deptype} ]] ; then
+				deps=( ${deps[*]} $( "${deptype}" "${services[i]}" ) )
+			else
+				ndeps=( 
+					$( ineed "${services[i]}" )
+					$( valid_iuse "${services[i]}" )
+				)
+			
+				if is_runlevel_start || is_runlevel_stop ; then
+					ndeps=( ${ndeps[*]} $( valid_iafter "${services[i]}" ) )
+				fi
 
-	    [[ -f "${svcdir}/softlevel" ]] && mylevel=$( < "${svcdir}/softlevel" )
-	    [[ ${BOOTLEVEL} != ${mylevel} ]] && \
-	    startnetserv="${startnetserv} $( get_netservices "${mylevel}" )"
-	    [[ -n ${startnetserv} ]] && netserv="${startnetserv}"
+				#If its a net service, just replace it with 'net'
+				for (( j=0; j<${#ndeps[*]}; j++ )) ; do
+					net_service "${ndeps[j]}" && ndeps[j]="net"
+				done
+
+				deps=( ${deps[*]} ${ndeps[*]} )
+			fi
+		done
+		services=( $(sort_unique ${services[*]} ${deps[*]}) )
+	done
+
+	# Now, we sort our services
+	# When a service is first visited, we mark it dead and then
+	# revisit any dependencies. Finally we add ourselves to the sorted list.
+	# This should never get into an infinite loop, thanks to our dead array.
+	local -a dead=() deadname=() sorted=() 
+	for (( i=0; i<${#services[*]}; i++ )); do
+		dead[i]=false;
+		deadname[i]="${services[i]}"
+	done
+
+	after_visit() {
+		local service="$1" i
+
+		for (( i=0; i<${#deadname[*]}; i++)); do
+			[[ ${service} == ${deadname[i]} ]] && break
+		done
+
+		${dead[i]} && return
+		dead[i]=true
+
+		local x deps="$( ineed ${service} ) $( valid_iuse ${service} )"
+		if is_runlevel_start || is_runlevel_stop ; then
+			deps="${deps} $( valid_iafter ${service} )"
+		fi
+
+		if [[ -n ${deptype} ]] ; then
+			# If its a net service, just replace it with 'net'
+			for (( j=0; j<${#deps[*]}; j++ )) ; do
+				net_service "${deps[j]}" && deps[j]="net"
+			done
+		fi
+
+		for x in ${deps}; do
+			after_visit "${x}"
+		done
+
+		sorted=( ${sorted[*]} "${service}" )
+	}
+
+	for (( i=0; i<${#services[*]}; i++ )); do
+		after_visit ${services[i]}
+	done
+	services=( ${sorted[*]} )
+
+	if [[ -n ${deptype} ]] ; then
+		# If deptype is set, we do not want the name of this service
+		x=" ${services[@]} "
+		services=( ${x// ${myservice} / } )
+
+		# If its a net service, do not include "net"
+		if net_service "${myservice}" ; then
+			x=" ${services[@]} "
+			sorted=( ${services// net / } )
+		fi
+	else
+		local netserv y
+
+		# XXX:  I dont think RC_NET_STRICT_CHECKING should be considered
+		#       here, but you never know ...
+		netserv=$( cd "${svcdir}"/started; ls net.* 2>/dev/null )
+
+		get_netservices() {
+			local runlevel="$1"
+
+			if [[ -d "/etc/runlevels/${runlevel}" ]] ; then
+				cd "/etc/runlevels/${runlevel}"
+				ls net.* 2>/dev/null
+			fi
+		}
+
+		# If no net services are running or we only have net.lo up, then
+		# assume we are in boot runlevel or starting a new runlevel
+		if [[ -z ${netserv} || ${netserv} == "net.lo" ]]; then
+			local mylevel="${BOOTLEVEL}"
+			local startnetserv=$( get_netservices "${mylevel}" )
+
+			[[ -f "${svcdir}/softlevel" ]] && mylevel=$( < "${svcdir}/softlevel" )
+			[[ ${BOOTLEVEL} != ${mylevel} ]] && \
+			startnetserv="${startnetserv} $( get_netservices "${mylevel}" )"
+			[[ -n ${startnetserv} ]] && netserv="${startnetserv}"
+		fi
+
+		# Replace 'net' with the actual net services
+		x=" ${services[@]} "
+		services=( ${x// net / ${netserv} } )
 	fi
 
-	# Replace 'net' with the actual net services
-	x=" ${services[@]} "
-	services=( ${x// net / ${netserv} } )
-    fi
-
-    echo "${services[@]}"
+	echo "${services[@]}"
 }
 
 # bool query_before(service1, service2)
@@ -844,3 +852,5 @@ query_before() {
 
 	return 1
 }
+
+# vim:ts=4
