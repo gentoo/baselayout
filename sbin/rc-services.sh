@@ -687,7 +687,7 @@ valid_iafter() {
 #   Get and sort the dependencies of given service[s].
 #
 trace_dependencies() {
-	local -a services=( "$*" ) deps
+	local -a services=( "$@" ) deps
 	local i j
 
 	if [[ $1 == -* ]]; then
@@ -701,22 +701,22 @@ trace_dependencies() {
 
 	# If its a net service, just replace it with 'net'
 	if [[ -z ${deptype} ]] ; then
-		for (( i=0; i<${#services[*]} ; i++ )) ; do
+		for (( i=0; i<${#services[@]} ; i++ )) ; do
 			net_service "${services[i]}" && services[i]="net"
 		done
 	fi
 
 	sort_unique() {
-		set -- " ${*/%/\n}"
-		echo -e "$*" | sort -u
+		set -- " ${@/%/\n}"
+		echo -e "$@" | sort -u
 	}
 
 	local last=""
-	while [[ ${services[*]} != "${last}" ]]; do
+	while [[ ${services[@]} != "${last}" ]]; do
 		last="${services[*]}"
-		for (( i=0; i<${#services[*]}; i++ )); do
+		for (( i=0; i<${#services[@]}; i++ )); do
 			if [[ -n ${deptype} ]] ; then
-				deps=( ${deps[*]} $( "${deptype}" "${services[i]}" ) )
+				deps=( "${deps[@]}" $( "${deptype}" "${services[i]}" ) )
 			else
 				ndeps=( 
 					$( ineed "${services[i]}" )
@@ -724,7 +724,7 @@ trace_dependencies() {
 				)
 			
 				if is_runlevel_start || is_runlevel_stop ; then
-					ndeps=( ${ndeps[*]} $( valid_iafter "${services[i]}" ) )
+					ndeps=( "${ndeps[@]}" $( valid_iafter "${services[i]}" ) )
 				fi
 
 				#If its a net service, just replace it with 'net'
@@ -732,10 +732,10 @@ trace_dependencies() {
 					net_service "${ndeps[j]}" && ndeps[j]="net"
 				done
 
-				deps=( ${deps[*]} ${ndeps[*]} )
+				deps=( "${deps[@]}" "${ndeps[@]}" )
 			fi
 		done
-		services=( $(sort_unique ${services[*]} ${deps[*]}) )
+		services=( $(sort_unique ${services[@]} ${deps[@]}) )
 	done
 
 	# Now, we sort our services
@@ -743,7 +743,7 @@ trace_dependencies() {
 	# revisit any dependencies. Finally we add ourselves to the sorted list.
 	# This should never get into an infinite loop, thanks to our dead array.
 	local -a dead=() deadname=() sorted=() 
-	for (( i=0; i<${#services[*]}; i++ )); do
+	for (( i=0; i<${#services[@]}; i++ )); do
 		dead[i]=false;
 		deadname[i]="${services[i]}"
 	done
@@ -751,7 +751,7 @@ trace_dependencies() {
 	after_visit() {
 		local service="$1" i
 
-		for (( i=0; i<${#deadname[*]}; i++)); do
+		for (( i=0; i<${#deadname[@]}; i++)); do
 			[[ ${service} == ${deadname[i]} ]] && break
 		done
 
@@ -765,7 +765,7 @@ trace_dependencies() {
 
 		if [[ -z ${deptype} ]] ; then
 			# If its a net service, just replace it with 'net'
-			for (( j=0; j<${#deps[*]}; j++ )) ; do
+			for (( j=0; j<${#deps[@]}; j++ )) ; do
 				net_service "${deps[j]}" && deps[j]="net"
 			done
 		fi
@@ -774,13 +774,13 @@ trace_dependencies() {
 			after_visit "${x}"
 		done
 
-		sorted=( ${sorted[*]} "${service}" )
+		sorted=( "${sorted[@]}" "${service}" )
 	}
 
 	for (( i=0; i<${#services[*]}; i++ )); do
-		after_visit ${services[i]}
+		after_visit "${services[i]}"
 	done
-	services=( ${sorted[*]} )
+	services=( "${sorted[@]}" )
 
 	if [[ -n ${deptype} ]] ; then
 		# If deptype is set, we do not want the name of this service

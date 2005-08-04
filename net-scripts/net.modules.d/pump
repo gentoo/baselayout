@@ -40,7 +40,7 @@ pump_check_depends() {
     local f
 
     for f in interface_exists interface_get_address; do
-	[[ $( type -t ${f} ) == "function" ]] && continue
+	[[ $( type -t "${f}" ) == "function" ]] && continue
 	eerror "pump: missing required function ${f}\n"
 	return 1
     done
@@ -77,8 +77,8 @@ pump_stop() {
     # Pump always releases the lease
     ebegin "Stopping pump on ${iface}"
     pump --release --interface "${iface}"
-    eend $? "Failed to stop pump"
-    return $?
+    eend "$?" "Failed to stop pump"
+    return "$?"
 }
 
 # bool pump_start(char *iface)
@@ -124,7 +124,7 @@ pump_start() {
     fi
   
     eval pump ${opts}
-    eend $? || return $?
+    eend "$?" || return "$?"
 
     # pump succeeded, show address retrieved
     local addr=$( interface_get_address "${iface}" )

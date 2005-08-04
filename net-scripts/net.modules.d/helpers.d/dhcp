@@ -13,10 +13,10 @@ service="net.${interface}"
 interface_is_up "${interface}" || interface_up "${interface}"
 
 case "${action}" in
-    "bound"|"renew")
+    bound|renew)
         # We handle these actions below
     ;;
-    "deconfig")
+    deconfig)
 	# Just remove IPv4 / inet addresses
         interface_del_addresses "${interface}" true
 	if service_starting "${service}" || service_started "${service}" ; then
@@ -30,11 +30,11 @@ case "${action}" in
 	echo "${action}"
 	exit 0
     ;;
-    "nak")
+    nak)
 	echo "${action}"
 	exit 0
     ;;
-    "leasefail")
+    leasefail)
 	if service_starting "${service}" || service_started "${service}" ; then
 	    mark_service_inactive "net.${interface}"
 	fi
@@ -65,7 +65,7 @@ if [[ -z ${metric} ]]; then
     if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
 	metric=$( calculate_metric "${interface}" )
     else
-	metric=0
+	metric="0"
     fi
     eval metric_${ifvar}="${metric}"
 fi
@@ -94,7 +94,7 @@ echo "${ip}" > "/var/cache/dhcp-${interface}.lease"
 chmod 600 "/var/cache/dhcp-${interface}.lease"
 
 # Configure our default route - we only have 1 default route
-if [[ ${d} != *" nogateway " ]]; then
+if [[ ${d} != *" nogateway "* ]]; then
     for r in ${routers}; do
 	interface_default_route "${interface}" "${r}" "${metric:-0}" && break
     done

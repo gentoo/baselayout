@@ -41,7 +41,7 @@ bridge_check_depends() {
     local f
 
     for f in interface_down interface_del_addresses interface_set_flag; do
-	[[ $( type -t ${f} ) == "function" ]] && continue
+	[[ $( type -t "${f}" ) == "function" ]] && continue
 	eerror "bridge: missing required function ${f}\n"
 	return 1
     done
@@ -73,9 +73,9 @@ bridge_get_bridge() {
     | sed -e '1 {d}; /^[^ ]/ { N }; /.*'"$1"'.*/ {s/^\([^ \t]\+\).*/\1/p}; d' )
 
     local -a a=( ${x} )
-    if [[ ${#a[@]} == 1 ]]; then
+    if [[ ${#a[@]} == "1" ]]; then
 	echo "${x}"
-    elif [[ $1 == ${a[3]} ]]; then
+    elif [[ $1 == "${a[3]}" ]]; then
 	echo "${a[0]}"
     fi
 }
@@ -109,7 +109,7 @@ bridge_create() {
     eval opts=( \"\$\{brctl_${ifvar}\[@\]\}\" )
     for (( i=0; i<${#opts[@]}; i++ )); do
 	x="${opts[i]/ / ${iface} }"
-	[[ ${x} == ${opts[i]} ]] && x="${x} ${iface}"
+	[[ ${x} == "${opts[i]}" ]] && x="${x} ${iface}"
 	x=$( brctl ${x} 2>&1 1>/dev/null )
 	[[ -n ${x} ]] && ewarn "${x}"
     done

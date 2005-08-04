@@ -33,7 +33,7 @@ iptunnel_check_depends() {
     local f
 
     for f in interface_exists interface_tunnel; do
-	[[ $( type -t ${f} ) == "function" ]] && continue
+	[[ $( type -t "${f}" ) == "function" ]] && continue
 	eerror "iptunnel: missing required function ${f}\n"
 	return 1
     done
@@ -61,8 +61,8 @@ iptunnel_pre_start() {
 
     ebegin "Creating tunnel ${iface}"
     interface_tunnel add "${iface}" ${opts}
-    eend $?
-    return $?
+    eend "$?"
+    return "$?"
 
 }
 
@@ -77,6 +77,6 @@ iptunnel_stop() {
 
     ebegin "Destroying tunnel ${iface}"
     interface_tunnel del "${iface}"
-    eend $?
-    return $?
+    eend "$?"
+    return "$?"
 }

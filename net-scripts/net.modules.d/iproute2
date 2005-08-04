@@ -25,16 +25,16 @@ iproute2_depend() {
 #
 # Returns 1 if iproute2 is installed, otherwise 0
 iproute2_check_installed() {
-    local report="${1:-false}" installed=0
+    local report="${1:-false}" installed="0"
     if [[ ! -x /sbin/ip ]]; then
-	installed=1
+	installed="1"
 	${report} && eerror "For iproute2 support, emerge sys-apps/iproute2"
     fi
     if [[ ! -e /proc/net/netlink ]]; then
-	installed=1
+	installed="1"
 	${report} && eerror "iproute2 requires NetLink enabled in the kernel"
     fi
-    return ${installed} 
+    return "${installed}"
 }
 
 # char* iproute2_provides(void)
@@ -60,7 +60,7 @@ iproute2_check_depends() {
     local f
 
     for f in interface_device; do
-	[[ $( type -t ${f} ) == "function" ]] && continue
+	[[ $( type -t "${f}" ) == "function" ]] && continue
 	eerror "iproute2: missing required function ${f}\n"
 	return 1
     done
@@ -188,7 +188,7 @@ iproute2_get_old_config() {
     eval inet6=( \"\$\{inet6_${ifvar}\[@\]\}\" )
 
     # BACKWARD COMPATIBILITY: check for space-separated inet6 addresses
-    [[ ${#inet6[@]} == 1 && ${inet6} == *' '* ]] && inet6=( ${inet6} )
+    [[ ${#inet6[@]} == "1" && ${inet6} == *" "* ]] && inet6=( ${inet6} )
 
     # Add inet6 addresses to our config if required
     [[ -n ${inet6} ]] && config=( "${config[@]}" "${inet6[@]}" )
@@ -205,7 +205,7 @@ iproute2_iface_stop() {
     local label="$1" iface=$( interface_device "$1" )
 
     # Shut down the link if this isn't an alias or vlan
-    if [[ ${label} == ${iface} ]]; then
+    if [[ ${label} == "${iface}" ]]; then
 	iproute2_down "${iface}"
 	return $?
     fi
@@ -226,28 +226,28 @@ iproute2_add_address() {
     config=( ${config[@]:1} )
 
     # Convert an ifconfig line to iproute2
-    local n=${#config[@]};
+    local n="${#config[@]}"
     for (( x=0; x<n; x++ )); do
-	case ${config[x]} in
+	case "${config[x]}" in
 	    netmask)
-	    config[0]="${config[0]}/$( netmask2cidr ${config[x+1]} )"
-	    unset config[x] config[x+1]
+		config[0]="${config[0]}/$( netmask2cidr ${config[x+1]} )"
+		unset config[x] config[x+1]
 	    ;;
 	    mtu)
-	    ip link set mtu "${config[x+1]}" dev "${iface}"
-	    unset config[x] config[x+1]
+		ip link set mtu "${config[x+1]}" dev "${iface}"
+		unset config[x] config[x+1]
 	    ;;
 	esac
     done
     config=( "${config[@]//pointtopoint/peer}" )
 
     # Always scope lo addresses as host unless specified otherwise
-    [[ ${iface} == "lo" && " ${config[@]} " != *' scope '* ]] \
-    && config=( "${config[@]}" "scope host" )
+    [[ ${iface} == "lo" && " ${config[@]} " != *" scope "* ]] \
+	&& config=( "${config[@]}" "scope host" )
 
     # Work out a broadcast if none supplied
-    [[ ${config[@]} != *' brd '* && ${config[@]} != *' broadcast '* ]] \
-    && config=( "${config[@]}" "brd +" )
+    [[ ${config[@]} != *" brd "* && ${config[@]} != *" broadcast "* ]] \
+	&& config=( "${config[@]}" "brd +" )
 
     # Make sure interface is marked UP
     # This is required for IPv6 addresses
@@ -258,19 +258,19 @@ iproute2_add_address() {
     if [[ ${iface} == "lo" \
 	&& ${config[@]} == "127.0.0.1/8 brd 127.255.255.255 scope host" ]]; then
 	ip addr add dev "${iface}" ${config[@]} 2>/dev/null
-	r=0
+	r="0"
     else
 	ip addr add dev "${iface}" ${config[@]}
-	r=$?
+	r="$?"
     fi
 
     local metric ifvar=$( bash_variable "${iface}" )
     # Remove the newly added route and replace with our metric
     eval metric=\"\$\{metric_${ifvar}\}\"
-    [[ ${metric} == 0 || ${RC_AUTO_INTERFACE} != "yes" ]] && return ${r}
+    [[ ${metric} == "0" || ${RC_AUTO_INTERFACE} != "yes" ]] && return "${r}"
 
     local network=$( ip_network "${config[0]}" )
-    [[ -z ${network} ]] && return ${r}
+    [[ -z ${network} ]] && return "${r}"
 
     local cidr="${config[0]##*/}"
     if ip route del "${network}/${cidr}" metric 0 dev "${iface}" \
@@ -278,7 +278,7 @@ iproute2_add_address() {
 	ip route add "${network}/${cidr}" metric "${metric}" dev "${iface}"
     fi
 
-    return ${r}
+    return "${r}"
 }
 
 # bool iproute2_post_start(char *interface)
@@ -315,10 +315,10 @@ iproute2_post_start() {
 	x="${x//gw/via}"
 	x="${x//-A inet6}"
 	x="${x//-net}"
-	[[ ${x} == *'-host'* ]] && x="${x//-host} scope host"
+	[[ " ${x} " == *" -host "* ]] && x="${x//-host} scope host"
 
 	# Add a metric if we don't have one
-	[[ ${x} != *' metric '* ]] && x="${x} metric ${metric}"
+	[[ " ${x} " != *" metric "* ]] && x="${x} metric ${metric}"
 
 	ip route append ${x} dev "${iface}"
 	eend $?

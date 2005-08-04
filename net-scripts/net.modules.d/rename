@@ -50,7 +50,7 @@ rename_pre_start() {
     interface_exists "${iface}" || return 0
 
     eval newname=\"\$\{rename_${ifvar}\}\"
-    [[ -z ${newname} || ${iface} == ${newname} ]] && return 0
+    [[ -z ${newname} || ${iface} == "${newname}" ]] && return 0
 
     # We cannot rename vlan interfaces as /proc/net/vlan/config always
     # returns the old interface name. We don't bail out though as it's
@@ -65,7 +65,7 @@ rename_pre_start() {
     ebegin "Renaming \"${iface}\" to \"${newname}\""
 
     # Ensure that we have an init script
-    [[ ! -e /etc/init.d/net."${newname}" ]] \
+    [[ ! -e "/etc/init.d/net.${newname}" ]] \
 	&& ( cd /etc/init.d ; ln -s net.lo "net.${newname}" )
 
     # Ensure that the interface is down and without any addresses or we
@@ -73,7 +73,7 @@ rename_pre_start() {
     interface_del_addresses "${iface}"
     interface_down "${iface}"
     interface_set_name "${iface}" "${newname}"
-    eend $? "Failed to rename interface" || return 1
+    eend "$?" "Failed to rename interface" || return 1
 
     # Mark us as stopped, start the new interface and bail cleanly
     mark_service_stopped "net.${iface}"

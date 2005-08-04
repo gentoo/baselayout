@@ -41,7 +41,7 @@ tuntap_check_depends() {
     local f
 
     for f in interface_exists interface_type; do
-	[[ $( type -t ${f} ) == "function" ]] && continue
+	[[ $( type -t "${f}" ) == "function" ]] && continue
 	eerror "tuntap: missing required function ${f}\n"
 	return 1
     done
@@ -89,7 +89,7 @@ tuntap_pre_start() {
 
     ebegin "Creating Tun/Tap interface ${iface}"
     tunctl ${opts} -t "${iface}" &>${devnull}
-    eend $? || return 1
+    eend "$?" || return 1
 
     return 0
 }

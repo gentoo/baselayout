@@ -278,11 +278,11 @@ ifconfig_post_start() {
     eval routes=( \"\$\{routes_${ifvar}\[@\]\}\" )
 
     # BACKWARD COMPATIBILITY: set the default gateway
-    if [[ ${gateway} == ${iface}/* ]]; then
+    if [[ ${gateway} == "${iface}/"* ]]; then
 	# We don't add the old gateway if one has been set in routes_IFACE
 	local gw=true
 	for x in "${routes[@]}"; do
-	    [[ ${x} != "*default gw*" ]] && continue
+	    [[ ${x} != *"default gw"* ]] && continue
 	    gw=false
 	    break
 	done
@@ -302,13 +302,13 @@ ifconfig_post_start() {
 	x="${x//scope * / }"
 
 	# Assume we're a net device unless told otherwise
-	[[ " ${x} " != *' -net '* && " ${x} " != *' -host '* ]] && x="-net ${x}"
+	[[ " ${x} " != *" -net "* && " ${x} " != *" -host "* ]] && x="-net ${x}"
 
 	# Support adding IPv6 addresses easily
-	[[ ${x} == *:* && ${x} != *'-A inet6'* ]] && x="-A inet6 ${x}"
+	[[ ${x} == *:* && ${x} != *"-A inet6"* ]] && x="-A inet6 ${x}"
 
 	# Add a metric if we don't have one
-	[[ ${x} != *' metric '* ]] && x="${x} metric ${metric}"
+	[[ ${x} != *" metric "* ]] && x="${x} metric ${metric}"
 
 	route add ${x} dev "${iface}"
 	eend $?
@@ -324,7 +324,7 @@ ifconfig_post_start() {
 ifconfig_add_address() {
     local iface="$1" i=0 r e
 
-    ifconfig_exists ${iface} true || return 1
+    ifconfig_exists "${iface}" true || return 1
 
     # Extract the config
     local -a config=( "$@" )
@@ -336,10 +336,10 @@ ifconfig_add_address() {
     else
 	# IPv4 is tricky - ifconfig requires an aliased device
 	# for multiple addresses
-	if ifconfig ${iface} | grep -Eq "\<inet addr:.*" ; then
+	if ifconfig "${iface}" | grep -Eq "\<inet addr:.*" ; then
 	    # Get the last alias made for the interface and add 1 to it
 	    i=$( ifconfig | tac | grep -m 1 -o "^${iface}:[0-9]*" \
-	    | sed -n -e 's/'"${iface}"'://p' )
+		| sed -n -e 's/'"${iface}"'://p' )
 	    i="${i:-0}"
 	    (( i++ ))
 	    iface="${iface}:${i}"
@@ -347,7 +347,7 @@ ifconfig_add_address() {
 
 	# ifconfig doesn't like CIDR addresses
 	local ip="${config[0]%%/*}" cidr="${config[0]##*/}" netmask
-	if [[ -n ${cidr} && ${cidr} != ${ip} ]]; then
+	if [[ -n ${cidr} && ${cidr} != "${ip}" ]]; then
 	    netmask=$( cidr2netmask "${cidr}" )
 	    config[0]="${ip} netmask ${netmask}"
 	fi	
@@ -363,20 +363,20 @@ ifconfig_add_address() {
     if [[ ${iface} == "lo" \
 	|| ${config[@]} == "127.0.0.1/8 broadcast 127.255.255.255" ]]; then
 	ifconfig "${iface}" ${config[@]} 2>/dev/null
-	r=0
+	r="0"
     else
 	e=$( ifconfig "${iface}" ${config[@]} 2>&1 )
-	r=$?
-	[[ ${r} != 0 ]] && echo "${e}" > /dev/stderr
+	r="$?"
+	[[ ${r} != "0" ]] && echo "${e}" > /dev/stderr
     fi
 
-    [[ ${r} != 0 || ${config[0]} == 'inet6'* || ${iface} == *:* ]] \
+    [[ ${r} != "0" || ${config[0]} == "inet6"* || ${iface} == *:* ]] \
     && return ${r}
 
     local metric ifvar=$( bash_variable "${iface}" )
     # Remove the newly added route and replace with our metric
     eval metric=\"\$\{metric_${ifvar}\}\"
-    [[ ${metric} == 0 || ${RC_AUTO_INTERFACE} != "yes" ]] && return ${r}
+    [[ ${metric} == "0" || ${RC_AUTO_INTERFACE} != "yes" ]] && return ${r}
 
     if [[ -z ${netmask} ]]; then
 	for (( i=1; i<${#config[@]}-1; i++ )); do
@@ -411,5 +411,5 @@ ifconfig_default_route() {
     done
 
     # Then we add our route
-    route add default gw "$2" metric ${metric} dev "$1"
+    route add default gw "$2" metric "${metric}" dev "$1"
 }
