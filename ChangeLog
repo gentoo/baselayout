@@ -8,6 +8,10 @@
     Fixed a few quoting issues in iwconfig
     Use return values instead of capturing stderr output for iwconfig commands
 
+    Added # vim:ts=4 to all net-script files and re-indented
+
+    ${svcdir}/dep{cache,tree} are now chmodded 0644 so users can read them
+
   04 Aug 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     Update /sbin/rc to actually use init's single level, and also to launch

@@ -8,44 +8,44 @@
 
 # Load our config if it exists
 [[ -f $(add_suffix "/etc/conf.d/wireless" ) ]] \
-    && source $(add_suffix "/etc/conf.d/wireless" )
+&& source $(add_suffix "/etc/conf.d/wireless" )
 
 # void essidnet_depend(void)
 #
 # Sets up the dependancies for the module
 essidnet_depend() {
-    before interface
-    after wireless
-    installed wireless
+	before interface
+	after wireless
+	installed wireless
 }
 
 # bool essidnet_check_installed(void)
 #
 # Always returns 0 as we are "installed" by wireless in the depend function
 essidnet_check_installed() {
-    return 0
+	return 0
 }
 
 # char* essidnet_provides(void)
 #
 # Returns a string to change module definition for starting up
 essidnet_provides() {
-    echo "essidnet"
+	echo "essidnet"
 }
 
 # bool essidnet_check_depends(void)
 #
 # Checks to see if we have the needed functions
 essidnet_check_depends() {
-    local f
+	local f
 
-    for f in wireless_check_extensions wireless_get_essid wireless_get_ap_mac_address; do
-	[[ $( type -t "${f}" ) == "function" ]] && continue
-	eerror "essidnet: missing required function ${f}\n"
-	return 1
-    done
+	for f in wireless_check_extensions wireless_get_essid wireless_get_ap_mac_address; do
+		[[ $( type -t "${f}" ) == "function" ]] && continue
+		eerror "essidnet: missing required function ${f}\n"
+		return 1
+	done
 
-    return 0
+	return 0
 }
 
 # bool essidnet_start(char *iface)
@@ -56,22 +56,24 @@ essidnet_check_depends() {
 # of the AP connected to. MAC configuration takes precedence
 # Always returns 0
 essidnet_pre_start() {
-    local iface="$1"
+	local iface="$1"
 
-    wireless_check_extensions "${iface}" || return 0
+	wireless_check_extensions "${iface}" || return 0
 
-    local mac=$( wireless_get_ap_mac_address "${iface}" )
-    local ESSID=$( wireless_get_essid "${iface}" )
-    local essid=$( bash_variable ${ESSID} )
-    mac="${mac//:/}"
+	local mac=$( wireless_get_ap_mac_address "${iface}" )
+	local ESSID=$( wireless_get_essid "${iface}" )
+	local essid=$( bash_variable ${ESSID} )
+	mac="${mac//:/}"
 
-    vebegin "Configuring ${iface} for ESSID \"${ESSID//\\\\/\\\\}\"" 2>/dev/null
-    configure_variables "${iface}" "${essid}" "${mac}"
+	vebegin "Configuring ${iface} for ESSID \"${ESSID//\\\\/\\\\}\"" 2>/dev/null
+	configure_variables "${iface}" "${essid}" "${mac}"
 
-    # Backwards compat for old gateway var
-    eval x=\"\$\{gateway_${essid}\}\"
-    [[ -n ${x} ]] && gateway="${iface}/${x}"
+	# Backwards compat for old gateway var
+	eval x=\"\$\{gateway_${essid}\}\"
+	[[ -n ${x} ]] && gateway="${iface}/${x}"
 
-    veend 0 2>/dev/null
-    return 0
+	veend 0 2>/dev/null
+	return 0
 }
+
+# vim:ts=4

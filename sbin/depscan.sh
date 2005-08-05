@@ -66,7 +66,8 @@ bash "${svcdir}/depcache" | \
 	-f /lib/rcscripts/awk/gendepends.awk || \
 	retval=1
 
-touch -m "${svcdir}"/dep{cache,tree}
+touch "${svcdir}"/dep{cache,tree}
+chmod 0644 "${svcdir}"/dep{cache,tree}
 
 eend ${retval} "Failed to cache service dependencies"
 

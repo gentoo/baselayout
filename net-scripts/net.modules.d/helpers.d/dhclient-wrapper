@@ -8,15 +8,15 @@
 # over to udhcpc style ones and call those scripts!
 
 case "${reason}" in
-    BOUND|REBOOT|REBIND) action="bound" ;;
-    RENEW) action="renew" ;;
-    RELEASE|PREINIT|FAIL|EXPIRE|TIMEOUT) action="deconfig" ;;
-    MEDIUM) exit 0 ;;
+	BOUND|REBOOT|REBIND) action="bound" ;;
+	RENEW) action="renew" ;;
+	RELEASE|PREINIT|FAIL|EXPIRE|TIMEOUT) action="deconfig" ;;
+	MEDIUM) exit 0 ;;
 esac
 
 if [[ -z ${action} ]]; then
-    echo "dhclient sent an unknown action ${reason}!" >&2
-    exit 1
+	echo "dhclient sent an unknown action ${reason}!" >&2
+	exit 1
 fi
 
 export ip="${new_ip_address}"
@@ -38,6 +38,8 @@ export nis_servers_${interface}="${new_nis_servers}"
 result="$?"
 
 [[ -e /etc/dhcp/dhclient-exit-hooks ]] \
-    && ( . /etc/dhcp/dhclient-exit-hooks ) 
+&& ( . /etc/dhcp/dhclient-exit-hooks ) 
 
 exit "${result}"
+
+# vim:ts=4

@@ -7,82 +7,82 @@
 # Fix any potential localisation problems
 # Note that LC_ALL trumps LC_anything_else according to locale(7)
 wpa_supplicant() {
-    LC_ALL=C /sbin/wpa_supplicant "$@"
+	LC_ALL=C /sbin/wpa_supplicant "$@"
 }
 
 wpa_cli() {
-    LC_ALL=C /bin/wpa_cli "$@"
+	LC_ALL=C /bin/wpa_cli "$@"
 }
 
 # char* wpa_supplicant_provides(void)
 #
 # Returns a string to change module definition for starting up
 wpa_supplicant_provides() {
-    echo "wireless"
+	echo "wireless"
 }
 
 # void wpa_supplicant_depend(void)
 #
 # Sets up the dependancies for the module
 wpa_supplicant_depend() {
-    after macnet
-    before interface
+	after macnet
+	before interface
 }
 
 # bool wpa_supplicant_check_installed(void)
 #
 # Returns 0 if wpa_supplicant is installed, otherwise 1
 wpa_supplicant_check_installed() {
-    local report="${1:-false}" installed="0"
-    if [[ ! -x /sbin/wpa_supplicant ]]; then
-	installed="1"
-	${report} && eerror "For WPA support (wpa_supplicant) support, emerge net-wireless/wpa_supplicant"
-    fi
-    if [[ ! -e /proc/net/packet ]]; then
-	installed="1"
-	${report} && eerror "wpa_supplicant requires Packet Socket (CONFIG_PACKET=y) enabled in the kernel"
-    fi
-    return "${installed}"
+	local report="${1:-false}" installed="0"
+	if [[ ! -x /sbin/wpa_supplicant ]]; then
+		installed="1"
+		${report} && eerror "For WPA support (wpa_supplicant) support, emerge net-wireless/wpa_supplicant"
+	fi
+	if [[ ! -e /proc/net/packet ]]; then
+		installed="1"
+		${report} && eerror "wpa_supplicant requires Packet Socket (CONFIG_PACKET=y) enabled in the kernel"
+	fi
+	return "${installed}"
 }
 
 # bool wpa_supplicant_check_depends(void)
 #
 # Checks to see if we have the needed functions
 wpa_supplicant_check_depends() {
-    local f
+	local f
 
-    for f in interface_exists; do
-	[[ $( type -t "${f}" ) == "function" ]] && continue
-	eerror "wpa_supplicant: missing required function ${f}\n"
-	return 1
-    done
+	for f in interface_exists; do
+		[[ $( type -t "${f}" ) == "function" ]] && continue
+		eerror "wpa_supplicant: missing required function ${f}\n"
+		return 1
+	done
 
-    return 0
+	return 0
 }
 
 # bool wpa_supplicant_check_extensions(char *interface)
 #
 # Checks to see if wireless extensions are enabled on the interface
 wpa_supplicant_check_extensions() {
-    grep -q "$1: " /proc/net/wireless
+	grep -q "$1: " /proc/net/wireless
 }
 
 # char* wpa_supplicant_get_essid(char *interface)
 #
 # Gets the current ESSID of iface
 wpa_supplicant_get_essid() {
-    local i essid
+	local i essid
 
-    for (( i=0; i<5; i++ )); do
-	essid=$( wpa_cli -i"$1" status | sed -n -e 's/^ssid=//p' )
-	if [[ -n ${essid} ]]; then
-	    echo "${essid}"
-	    return 0
-	fi
-	sleep 1
-    done
+	for (( i=0; i<5; i++ )); do
+		essid=$( wpa_cli -i"$1" status | sed -n -e 's/^ssid=//p' )
+		if [[ -n ${essid} ]]; then
+			echo "${essid}"
+			return 0
+		fi
+		sleep 1
+	done
 
-    return 1
+	return 1
 }
 
 # char* wpa_supplicant_get_ap_mac_address(char *interface)
@@ -90,7 +90,7 @@ wpa_supplicant_get_essid() {
 # Returns the MAC address of the Access Point
 # the interface is connected to
 wpa_supplicant_get_ap_mac_address() {
-    wpa_cli -i"$1" status | sed -n -e 's/^bssid=\([^=]\+\).*/\U\1/p'
+	wpa_cli -i"$1" status | sed -n -e 's/^bssid=\([^=]\+\).*/\U\1/p'
 }
 
 # bool wpa_supplicant_associated(char *interface)
@@ -100,54 +100,54 @@ wpa_supplicant_get_ap_mac_address() {
 # correct encryption keys
 # We only need this for wpa_supplicant-0.3.x
 wpa_supplicant_associated() {
-    local -a status=( "$( wpa_cli -i"$1" status | sed -n -e 's/^\(key_mgmt\|wpa_state\|EAP state\)=\([^=]\+\).*/\U\2/p' )" )
+	local -a status=( "$( wpa_cli -i"$1" status | sed -n -e 's/^\(key_mgmt\|wpa_state\|EAP state\)=\([^=]\+\).*/\U\2/p' )" )
 
-    case "${status[0]}" in
-	"NONE")			[[ ${status[1]} == "ASSOCIATED" ]] ;;
-	"IEEE 802.1X (no WPA)")	[[ ${status[2]} == "SUCCESS" ]] ;;
-	*)			[[ ${status[1]} == "COMPLETED" ]] ;;
-    esac
+	case "${status[0]}" in
+		"NONE")			[[ ${status[1]} == "ASSOCIATED" ]] ;;
+		"IEEE 802.1X (no WPA)")	[[ ${status[2]} == "SUCCESS" ]] ;;
+		*)			[[ ${status[1]} == "COMPLETED" ]] ;;
+	esac
 
-    return $?
+	return $?
 }
 
 # void wpa_supplicant_kill(char *interface, bool report)
 #
 # Kills any existing wpa_supplicant process on the interface
 wpa_supplicant_kill() {
-    local iface="$1" report="${2:-false}" pidfile
+	local iface="$1" report="${2:-false}" pidfile
 
-    # Shutdown wpa_cli first, if it's running
-    # This is important as future versions of wpa_supplicant
-    # may send a disconnect message to wpa_cli when it shutsdown
-    pidfile="/var/run/wpa_cli-${iface}.pid"
-    if ! clean_pidfile "${pidfile}" ; then
-	${report} && ebegin "Stopping wpa_cli on ${iface}"
-	start-stop-daemon --stop --exec /bin/wpa_cli \
-	    --pidfile "${pidfile}"
-	${report} && eend "$?"
-    fi
-
-    # Now shutdown wpa_supplicant
-    pidfile="/var/run/wpa_supplicant-${iface}.pid"
-    if ! clean_pidfile "${pidfile}" ; then
-	${report} && ebegin "Stopping wpa_supplicant on ${iface}"
-	start-stop-daemon --stop --exec /sbin/wpa_supplicant \
-	    --pidfile "${pidfile}"
-	${report} && eend "$?"
-    else
-	# Support wpa_supplicant-0.3.x
-	local pid=$( pgrep -f '^/sbin/wpa_supplicant .* -i'"${iface}"'[ ]*$' )
-	if [[ -n ${pid} ]]; then
-	    ${report} && ebegin "Stopping wpa_supplicant on ${iface}"
-	    kill -s TERM "${pid}"
-	    ${report} && eend 0
+	# Shutdown wpa_cli first, if it's running
+	# This is important as future versions of wpa_supplicant
+	# may send a disconnect message to wpa_cli when it shutsdown
+	pidfile="/var/run/wpa_cli-${iface}.pid"
+	if ! clean_pidfile "${pidfile}" ; then
+		${report} && ebegin "Stopping wpa_cli on ${iface}"
+		start-stop-daemon --stop --exec /bin/wpa_cli \
+		--pidfile "${pidfile}"
+		${report} && eend "$?"
 	fi
-    fi
 
-    # If wpa_supplicant exits uncleanly, we need to remove the stale dir
-    [[ -S "/var/run/wpa_supplicant/${iface}" ]] \
-    && rm -f "/var/run/wpa_supplicant/${iface}"
+	# Now shutdown wpa_supplicant
+	pidfile="/var/run/wpa_supplicant-${iface}.pid"
+	if ! clean_pidfile "${pidfile}" ; then
+		${report} && ebegin "Stopping wpa_supplicant on ${iface}"
+		start-stop-daemon --stop --exec /sbin/wpa_supplicant \
+		--pidfile "${pidfile}"
+		${report} && eend "$?"
+	else
+		# Support wpa_supplicant-0.3.x
+		local pid=$( pgrep -f '^/sbin/wpa_supplicant .* -i'"${iface}"'[ ]*$' )
+		if [[ -n ${pid} ]]; then
+			${report} && ebegin "Stopping wpa_supplicant on ${iface}"
+			kill -s TERM "${pid}"
+			${report} && eend 0
+		fi
+	fi
+
+	# If wpa_supplicant exits uncleanly, we need to remove the stale dir
+	[[ -S "/var/run/wpa_supplicant/${iface}" ]] \
+	&& rm -f "/var/run/wpa_supplicant/${iface}"
 }
 
 # bool wpa_supplicant_associate(char *interface)
@@ -155,44 +155,44 @@ wpa_supplicant_kill() {
 # Returns 0 if wpa_supplicant associates and authenticates to an AP
 # otherwise, 1
 wpa_supplicant_associate() {
-    local iface="$1" ifvar=$( bash_variable "$1" ) timeout i
-    eval timeout=\"\$\{associate_timeout_${ifvar}\}\"
-    [[ -z ${timeout} ]] && eval timeout=\"\$\{wpa_timeout_${ifvar}:-60\}\"
+	local iface="$1" ifvar=$( bash_variable "$1" ) timeout i
+	eval timeout=\"\$\{associate_timeout_${ifvar}\}\"
+	[[ -z ${timeout} ]] && eval timeout=\"\$\{wpa_timeout_${ifvar}:-60\}\"
 
-    [[ ${timeout} == "0" ]] \
+	[[ ${timeout} == "0" ]] \
 	&& vewarn "WARNING: infinite timeout set for association on ${iface}"
-    
-    while true ; do
-	if ${action} ; then
-	    service_started "net.${iface}" && return 0
-	else
-	    if ! wpa_cli -i"${iface}" status &>/dev/null ; then
-		eend 1 "wpa_supplicant has exited unexpectedly"
-		return 1
-	    fi
-	    wpa_supplicant_associated "${iface}" && return 0
-	fi
-	sleep 1
-	(( i++ ))
-	[[ ${i} == "${timeout}" || ${i} -gt "${timeout}" ]] && break
-    done
 
-    # Spit out an appropriate error
-    if [[ ${background} != "yes" ]]; then
-	if ${action} ; then
-	    eend 1 "Failed to configure ${iface} in the background"
-	else
-	    eend 1 "Timed out"
-	fi
-    fi
+	while true ; do
+		if ${action} ; then
+			service_started "net.${iface}" && return 0
+		else
+			if ! wpa_cli -i"${iface}" status &>/dev/null ; then
+				eend 1 "wpa_supplicant has exited unexpectedly"
+				return 1
+			fi
+			wpa_supplicant_associated "${iface}" && return 0
+		fi
+		sleep 1
+		(( i++ ))
+		[[ ${i} == "${timeout}" || ${i} -gt "${timeout}" ]] && break
+	done
 
-    # exit without error with wpa_supplicant-0.4.x as we may get kickstarted
-    # when an AP comes in range
-    ${action} && exit 0
-    
-    # Kill wpa_supplicant for 0.3.x
-    wpa_supplicant_kill "${iface}"
-    return 1
+	# Spit out an appropriate error
+	if [[ ${background} != "yes" ]]; then
+		if ${action} ; then
+			eend 1 "Failed to configure ${iface} in the background"
+		else
+			eend 1 "Timed out"
+		fi
+	fi
+
+	# exit without error with wpa_supplicant-0.4.x as we may get kickstarted
+	# when an AP comes in range
+	${action} && exit 0
+
+	# Kill wpa_supplicant for 0.3.x
+	wpa_supplicant_kill "${iface}"
+	return 1
 }
 
 # bool wpa_supplicant_pre_start(char *interface)
@@ -200,142 +200,142 @@ wpa_supplicant_associate() {
 # Start wpa_supplicant on an interface and wait for association
 # Returns 0 (true) when successful, non-zero otherwise
 wpa_supplicant_pre_start() {
-    local iface="$1" opts timeout action=false
-    local cfgfile="/etc/wpa_supplicant.conf"
-    local actfile="/sbin/wpa_cli.action"
+	local iface="$1" opts timeout action=false
+	local cfgfile="/etc/wpa_supplicant.conf"
+	local actfile="/sbin/wpa_cli.action"
 
-    # We don't configure wireless if we're being called from
-    # the background
-    if ${IN_BACKGROUND} ; then
+	# We don't configure wireless if we're being called from
+	# the background
+	if ${IN_BACKGROUND} ; then
+		ESSID=$( wpa_supplicant_get_essid "${iface}" )
+		ESSIDVAR=$( bash_variable "${ESSID}" )
+		save_options "ESSID" "${ESSID}"
+		return 0
+	fi
+
+	save_options "ESSID" ""
+
+	# We only work on wirelesss interfaces
+	wpa_supplicant_check_extensions "${iface}" || return 0
+
+	# Kill off any existing wpa_supplicant on this interface
+	# This is so we can re-read the configuration file and clean any stale
+	# directories
+	wpa_supplicant_kill "${iface}" true
+
+	# Check for rf_kill - only ipw supports this at present, but other
+	# cards may in the future
+	if [[ -e "/sys/class/net/${iface}/device/rf_kill" ]]; then
+		if [[ $( < "/sys/class/net/${iface}/device/rf_kill" ) != 0 ]]; then
+			eerror "Wireless radio has been killed for interface ${iface}"
+			return 1
+		fi
+	fi
+
+	# If wireless-tools is installed, try and apply our user config
+	# This is needed for some drivers - such as hostap because they start
+	# the card in Master mode which causes problems with wpa_supplicant.
+	if [[ $( type -t iwconfig_defaults ) == "function" ]]; then
+		iwconfig_defaults "${iface}"
+		iwconfig_user_config "${iface}"
+	fi	
+
+	ebegin "Starting wpa_supplicant on ${iface}"
+
+	if [[ ! -f ${cfgfile} ]]; then
+		eend 1 "configuration file ${cfgfile} not found!"
+		return 1
+	fi
+
+	local ctrl_dir=$( sed -n -e 's/[ \t]*#.*//g;s/[ \t]*$//g;s/^ctrl_interface=//p' "${cfgfile}" )
+	if [[ ${ctrl_dir} != "/var/run/wpa_supplicant" ]]; then
+		eerror "${cfgfile} must set"
+		eerror "  ctrl_interface=/var/run/wpa_supplicant"
+		eend 1
+		return 1
+	fi
+
+	local ifvar=$( bash_variable "${iface}" )
+	eval opts=\" \$\{wpa_supplicant_${ifvar}\}\"
+	[[ ${opts} != *" -D"* ]] \
+	&& ewarn "wpa_supplicant_${ifvar} does not define a driver"
+
+	# Some drivers require the interface to be up
+	interface_up "${iface}"
+
+	version=$( wpa_cli -v | sed -n -e 's/wpa_cli v//p' )
+	version=( ${version//./ } )
+	(( version = version[0] * 1000 + version[1] * 100 + version[2] ))
+
+	# wpa_supplicant 0.4.0 and greater supports wpa_cli actions
+	# This is very handy as if and when different association mechanisms are
+	# introduced to wpa_supplicant we don't have to recode for them as
+	# wpa_cli is now responsible for informing us of success/failure.
+	# The downside of this is that we don't see the interface being configured
+	# for DHCP/static.
+	if [[ ${version} -gt 399 && -x ${actfile} ]]; then
+		opts="${opts} -W -P/var/run/wpa_supplicant-${iface}.pid"
+		action=true
+		[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && background=no
+	fi
+
+	start-stop-daemon --start --exec /sbin/wpa_supplicant \
+	-- ${opts} -B -c/etc/wpa_supplicant.conf -i"${iface}"
+	eend "$?" || return 1
+
+	# Starting wpa_supplication-0.4.0, we can get wpa_cli to
+	# start/stop our scripts from wpa_supplicant messages
+	if ${action} ; then
+		mark_service_inactive "net.${iface}"
+		ebegin "Starting wpa_cli on ${iface}"
+		start-stop-daemon --start --exec /bin/wpa_cli \
+		-- -a"${actfile}" -i"${iface}" \
+		-P"/var/run/wpa_cli-${iface}.pid" -B
+		eend "$?" || return 1
+	fi
+
+	# Background wpa_supplication if required
+	if [[ ${background} == "yes" ]]; then
+		if ! ${action} ; then
+			wpa_supplicant_associate "${iface}" \
+			&& export IN_BACKGROUND=true \
+			&& /etc/init.d/net.${iface} start >/dev/null &
+		fi
+		go_background
+	fi
+
+	eindent
+	veinfo "Waiting for association"
+	eend 0
+
+	wpa_supplicant_associate "${iface}" || return 1
+
+	# Set ESSID for essidnet and report
 	ESSID=$( wpa_supplicant_get_essid "${iface}" )
 	ESSIDVAR=$( bash_variable "${ESSID}" )
 	save_options "ESSID" "${ESSID}"
-	return 0
-    fi
 
-    save_options "ESSID" ""
+	local -a status=( "$( wpa_cli -i${iface} status | sed -n -e 's/^\(bssid\|pairwise_cipher\|key_mgmt\)=\([^=]\+\).*/\U\2/p' | tr '[:lower:]' '[:upper:]' )" )
+	einfo "${iface} connected to \"${ESSID//\\\\/\\\\}\" at ${status[0]}"
 
-    # We only work on wirelesss interfaces
-    wpa_supplicant_check_extensions "${iface}" || return 0
-
-    # Kill off any existing wpa_supplicant on this interface
-    # This is so we can re-read the configuration file and clean any stale
-    # directories
-    wpa_supplicant_kill "${iface}" true
-
-    # Check for rf_kill - only ipw supports this at present, but other
-    # cards may in the future
-    if [[ -e "/sys/class/net/${iface}/device/rf_kill" ]]; then
-	if [[ $( < "/sys/class/net/${iface}/device/rf_kill" ) != 0 ]]; then
-	    eerror "Wireless radio has been killed for interface ${iface}"
-	    return 1
-	fi
-    fi
-
-    # If wireless-tools is installed, try and apply our user config
-    # This is needed for some drivers - such as hostap because they start
-    # the card in Master mode which causes problems with wpa_supplicant.
-    if [[ $( type -t iwconfig_defaults ) == "function" ]]; then
-	iwconfig_defaults "${iface}"
-	iwconfig_user_config "${iface}"
-    fi	
-
-    ebegin "Starting wpa_supplicant on ${iface}"
-
-    if [[ ! -f ${cfgfile} ]]; then
-	eend 1 "configuration file ${cfgfile} not found!"
-	return 1
-    fi
-
-    local ctrl_dir=$( sed -n -e 's/[ \t]*#.*//g;s/[ \t]*$//g;s/^ctrl_interface=//p' "${cfgfile}" )
-    if [[ ${ctrl_dir} != "/var/run/wpa_supplicant" ]]; then
-	eerror "${cfgfile} must set"
-	eerror "  ctrl_interface=/var/run/wpa_supplicant"
-	eend 1
-	return 1
-    fi
-
-    local ifvar=$( bash_variable "${iface}" )
-    eval opts=\" \$\{wpa_supplicant_${ifvar}\}\"
-    [[ ${opts} != *" -D"* ]] \
-	&& ewarn "wpa_supplicant_${ifvar} does not define a driver"
-
-    # Some drivers require the interface to be up
-    interface_up "${iface}"
-
-    version=$( wpa_cli -v | sed -n -e 's/wpa_cli v//p' )
-    version=( ${version//./ } )
-    (( version = version[0] * 1000 + version[1] * 100 + version[2] ))
-    
-    # wpa_supplicant 0.4.0 and greater supports wpa_cli actions
-    # This is very handy as if and when different association mechanisms are
-    # introduced to wpa_supplicant we don't have to recode for them as
-    # wpa_cli is now responsible for informing us of success/failure.
-    # The downside of this is that we don't see the interface being configured
-    # for DHCP/static.
-    if [[ ${version} -gt 399 && -x ${actfile} ]]; then
-	opts="${opts} -W -P/var/run/wpa_supplicant-${iface}.pid"
-	action=true
-	 [[ ${RC_PARALLEL_STARTUP} == "yes" ]] && background=no
-    fi
-
-    start-stop-daemon --start --exec /sbin/wpa_supplicant \
-        -- ${opts} -B -c/etc/wpa_supplicant.conf -i"${iface}"
-    eend "$?" || return 1
-
-    # Starting wpa_supplication-0.4.0, we can get wpa_cli to
-    # start/stop our scripts from wpa_supplicant messages
-    if ${action} ; then
-	mark_service_inactive "net.${iface}"
-	ebegin "Starting wpa_cli on ${iface}"
-	start-stop-daemon --start --exec /bin/wpa_cli \
-	-- -a"${actfile}" -i"${iface}" \
-	-P"/var/run/wpa_cli-${iface}.pid" -B
-	eend "$?" || return 1
-    fi
-
-    # Background wpa_supplication if required
-    if [[ ${background} == "yes" ]]; then
-	if ! ${action} ; then
-	    wpa_supplicant_associate "${iface}" \
-	    && export IN_BACKGROUND=true \
-	    && /etc/init.d/net.${iface} start >/dev/null &
-	fi
-	go_background
-    fi
-
-    eindent
-    veinfo "Waiting for association"
-    eend 0
-
-    wpa_supplicant_associate "${iface}" || return 1
-
-    # Set ESSID for essidnet and report
-    ESSID=$( wpa_supplicant_get_essid "${iface}" )
-    ESSIDVAR=$( bash_variable "${ESSID}" )
-    save_options "ESSID" "${ESSID}"
-
-    local -a status=( "$( wpa_cli -i${iface} status | sed -n -e 's/^\(bssid\|pairwise_cipher\|key_mgmt\)=\([^=]\+\).*/\U\2/p' | tr '[:lower:]' '[:upper:]' )" )
-    einfo "${iface} connected to \"${ESSID//\\\\/\\\\}\" at ${status[0]}"
-
-    if [[ ${status[2]} == "NONE" ]]; then
-	if [[ ${status[1]} == "NONE" ]]; then
-	    ewarn "not using any encryption"
+	if [[ ${status[2]} == "NONE" ]]; then
+		if [[ ${status[1]} == "NONE" ]]; then
+			ewarn "not using any encryption"
+		else
+			veinfo "using ${status[1]}"
+		fi
 	else
-	    veinfo "using ${status[1]}"
+		veinfo "using ${status[2]}/${status[1]}"
 	fi
-    else
-	veinfo "using ${status[2]}/${status[1]}"
-    fi
-    eoutdent
+	eoutdent
 
-    if ${action} ; then
-	local addr=$( interface_get_address "${iface}" )
-	einfo "${iface} configured with address ${addr}"
-	exit 0 
-    fi
+	if ${action} ; then
+		local addr=$( interface_get_address "${iface}" )
+		einfo "${iface} configured with address ${addr}"
+		exit 0 
+	fi
 
-    return 0
+	return 0
 }
 
 # bool wpa_supplicant_post_stop(char *iface)
@@ -343,6 +343,8 @@ wpa_supplicant_pre_start() {
 # Stops wpa_supplicant on an interface
 # Returns 0 (true) when successful, non-zero otherwise
 wpa_supplicant_post_stop() {
-    ! ${IN_BACKGROUND} && wpa_supplicant_kill "$1" true
-    return 0
+	! ${IN_BACKGROUND} && wpa_supplicant_kill "$1" true
+	return 0
 }
+
+# vim:ts=4

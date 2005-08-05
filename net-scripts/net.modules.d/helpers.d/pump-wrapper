@@ -10,3 +10,5 @@ action="$1"
 interface="$2"
 
 . /lib/rcscripts/net.modules.d/helpers.d/dhcp-state
+
+# vim:ts=4
