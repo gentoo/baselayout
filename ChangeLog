@@ -5,6 +5,9 @@
 
     Rationalise if/then/else login in runscript.sh svc_start() and svc_stop()
 
+    Fixed a few quoting issues in iwconfig
+    Use return values instead of capturing stderr output for iwconfig commands
+
   04 Aug 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     Update /sbin/rc to actually use init's single level, and also to launch
