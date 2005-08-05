@@ -524,18 +524,6 @@ iface_start() {
 		fallback=( "${fallback[@]}" "${b[@]}" )
 	done
 
-	# Support range addresses
-	if [[ ${config[0]} == *'{'*'}' ]]; then
-		local -a tmpa tmpb
-		for (( i=0; i<${#config[@]}; i++ )); do
-			eval tmpa=( "${config[i]}" )
-			tmpb=( ${config[i]} )
-			for (( j=0; j<${#tmpa[@]}-${#config[@]}; j++ )); do
-				echo "${tmpa[j]} ${tmpb[@]:1}"
-			done
-		done
-	fi
-
 	# We must support old configs
 	if [[ -z ${config} ]]; then
 		interface_get_old_config "${iface}" || return 1
