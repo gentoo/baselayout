@@ -51,7 +51,7 @@ iwconfig_check_depends() {
     local f
 
     for f in interface_up interface_down interface_exists; do
-	[[ $( type -t ${f} ) == "function" ]] && continue
+	[[ $( type -t "${f}" ) == "function" ]] && continue
 	eerror "iwconfig: missing required function ${f}\n"
 	return 1
     done
@@ -164,13 +164,12 @@ iwconfig_get_wep_key() {
 #
 # Applies the user configuration to the interface
 iwconfig_user_config() {
-    local iface="$1" conf e ifvar=$( bash_variable "$1" )
+    local iface="$1" conf ifvar=$( bash_variable "$1" )
 
     # Apply the user configuration
     eval conf=\"\$\{iwconfig_${ifvar}\}\"
     if [[ -n ${conf} ]]; then
-	e=$( iwconfig "${iface}" "${conf}" 2>&1 )
-	if [[ -n ${e} ]]; then
+	if ! eval iwconfig "${iface}" ${conf} ; then
 	    ewarn "${iface} does not support the following configuration commands"
 	    ewarn "  \"${conf}\""
 	fi
@@ -178,8 +177,7 @@ iwconfig_user_config() {
 
     eval conf=\"\$\{iwpriv_${ifvar}\}\"
     if [[ -n ${conf} ]]; then
-	e=$( iwpriv "${iface}" "${conf}" 2>&1 )
-	if [[ -n ${e} ]]; then
+	if ! eval iwpriv "${iface}" ${conf} ; then
 	    ewarn "${iface} does not support the following private ioctls"
 	    ewarn "  \"${conf}\""
 	fi
@@ -190,7 +188,7 @@ iwconfig_user_config() {
 #
 # Sets up our wireless interface to operate in ad-hoc or master mode
 iwconfig_setup_specific() {
-    local iface="$1" mode="$2" channel key dessid e
+    local iface="$1" mode="$2" channel key dessid
     local ifvar=$( bash_variable "$1" )
 
     if [[ -z ${ESSID} ]]; then
@@ -203,35 +201,32 @@ iwconfig_setup_specific() {
 
     # We only change the mode if it's not the same
     local cur_mode=$( iwconfig_get_mode "${iface}" )
-    if [[ ${cur_mode} != ${mode} ]]; then
-	e=$( iwconfig "${iface}" mode "${mode}" 2>&1 )
-	if [[ -n ${e} ]]; then
+    if [[ ${cur_mode} != "${mode}" ]]; then
+	if ! iwconfig "${iface}" mode "${mode}" ; then
 	    eerror "${iface} does not support setting the mode to \"${mode}\""
 	    return 1
 	fi
     fi
 
     key=$( iwconfig_get_wep_key )
-    e=$( eval iwconfig ${iface} key ${key} 2>&1 )
-    if [[ -n ${e} && ${key} != "off" ]]; then
-	e=$( get_essid_var "${essid}" )
-	ewarn "${iface} does not support setting keys"
-	ewarn "or the parameter \"mac_key_${ESSIDVAR}\" or \"key_${ESSIDVAR}\" is incorrect"
+    if ! eval iwconfig ${iface} key ${key} ; then
+	if [[ ${key} != "off" ]]; then
+	    ewarn "${iface} does not support setting keys"
+	    ewarn "or the parameter \"mac_key_${ESSIDVAR}\" or \"key_${ESSIDVAR}\" is incorrect"
+	fi
     fi
 
-    e=$( iwconfig "${iface}" essid "${ESSID}" 2>&1 )
-    if [[ -n ${e} ]]; then
+    if ! eval iwconfig "${iface}" essid "${ESSID}" ; then
 	eerror "${iface} does not support setting ESSID to \"${dessid}\""
 	return 1
     fi
-    iwconfig "${iface}" nick "${ESSID}" 2>/dev/null
+    eval iwconfig "${iface}" nick "${ESSID}" 2>/dev/null
 
     eval channel=\"\$\{channel_${ifvar}\}\"
     # We default the channel to 3
     channel=${channel:-3}
 
-    e=$( iwconfig "${iface}" channel "${channel}" 2>&1 )
-    if [[ -n ${e} ]]; then
+    if ! iwconfig "${iface}" channel "${channel}" ; then
 	ewarn "${iface} does not support setting the channel to \"${channel}\""
 	return 1
     fi
@@ -263,8 +258,8 @@ iwconfig_associate_mac() {
     )
 
     [[ -z ${mac} ]] && return 1
-    for i in ${invalid_macs[@]}; do
-	[[ ${i} == ${mac} ]] && return 1
+    for i in "${invalid_macs[@]}"; do
+	[[ ${mac} == "${i}" ]] && return 1
     done
     return 0
 }
@@ -274,29 +269,29 @@ iwconfig_associate_mac() {
 # Returns true if the link quality is not 0 or 0.
 iwconfig_associate_quality() {
     local quality=$( sed -n -e 's/^.*'"$1"': *[0-9]* *\([0-9]*\).*/\1/p' )
-    [[ ${quality} != 0 ]]
-    return $?
+    [[ ${quality} != "0" ]]
+    return "$?"
 }
 
 # bool iwconfig_test_associated(char *iface)
 #
 # Returns true if the interface has associated with an Access Point
 iwconfig_test_associated() {
-    local iface="$1" test ifvar=$( bash_variable "$1" )
+    local iface="$1" ttype ifvar=$( bash_variable "$1" )
     # Some drivers don't set MAC to a bogus value when assocation is lost/fails
     # whereas they do set link quality to 0
 
-    test=$( eval echo \"\$\{associate_test_${ifvar}\:-mac}\" | tr '[:upper:]' '[:lower:]' )
-    if [[ ${test} != "mac" && ${test} != "quality" && ${test} != "all" ]]; then
+    ttype=$( eval echo \"\$\{associate_test_${ifvar}\:-mac}\" | tr '[:upper:]' '[:lower:]' )
+    if [[ ${ttype} != "mac" && ${ttype} != "quality" && ${ttype} != "all" ]]; then
 	ewarn "  associate_test_${iface} is not set to mac, quality or all"
 	ewarn "  defaulting to \"mac\""
 	test="mac"
     fi
 
-    case "${test}" in
-	"mac") iwconfig_associate_mac "${iface}" && return 0 ;;
-	"quality") iwconfig_associate_quality "${iface}" && return 0 ;;
-	"all") iwconfig_associate_mac "${iface}" \
+    case "${ttype}" in
+	mac) iwconfig_associate_mac "${iface}" && return 0 ;;
+	quality) iwconfig_associate_quality "${iface}" && return 0 ;;
+	all) iwconfig_associate_mac "${iface}" \
 	    && iwconfig_associate_quality "${iface}" && return 0 ;;
     esac
 
@@ -320,7 +315,7 @@ iwconfig_wait_for_association() {
 	sleep 1
 	[[ ${timeout} == "0" ]] && continue
 	(( i++ ))
-	[[ ${i} == ${timeout} || ${i} -gt ${timeout} ]] && break
+	[[ ${i} == "${timeout}" || ${i} -gt ${timeout} ]] && break
     done
     return 1
 }
@@ -352,18 +347,21 @@ iwconfig_associate() {
 	    vewarn "\"${dessid}\" is not WEP enabled - ignoring setting"
 	fi
 
-	e=$( eval iwconfig ${iface} key ${key} 2>&1 )
-	if [[ -n ${e} && ${key} != "off" ]]; then
-	    ewarn "${iface} does not support setting keys"
-	    ewarn "or the parameter \"mac_key_${ESSIDVAR}\" or \"key_${ESSIDVAR}\" is incorrect"
-	    return 1
+	if ! eval iwconfig "${iface}" key ${key} ; then
+	    if [[ ${key} != "off" ]]; then
+	        ewarn "${iface} does not support setting keys"
+		ewarn "or the parameter \"mac_key_${ESSIDVAR}\" or \"key_${ESSIDVAR}\" is incorrect"
+		return 1
+	    fi
 	fi
 	[[ ${key} != "off" ]] && w=$( iwconfig_get_wep_status "${iface}" )
     fi
 
-    e=$( iwconfig "${iface}" essid "${ESSID}" 2>&1 )
-    [[ -n ${e} && ${ESSID} != "any" ]] \
-	&& ewarn "${iface} does not support setting ESSID to \"${dessid}\""
+    if ! iwconfig "${iface}" essid "${ESSID}" ; then
+	if [[ ${ESSID} != "any" ]]; then
+	    ewarn "${iface} does not support setting ESSID to \"${dessid}\""
+	fi
+    fi
     iwconfig "${iface}" nick "${ESSID}" 2>/dev/null
 
     vebegin "Connecting to \"${dessid}\" ${w}"
@@ -417,20 +415,20 @@ iwconfig_associate() {
 #
 # Fills 3 arrays with information from a wireless scan
 iwconfig_scan() {
-    local iface="$1" e mode x ifvar=$( bash_variable "$1" )
+    local iface="$1" mode x ifvar=$( bash_variable "$1" )
 
     # First, we may need to change mode to scan in
     mode=$( eval echo \"\$\{scan_mode_${ifvar}\}\" | tr '[:upper:]' '[:lower:]' )
     if [[ -n ${mode} ]]; then
-	e=$( iwconfig "${iface}" mode "${mode}" 2>&1 )
-	[[ -n ${e} ]] && ewarn "${iface} does not support setting the mode to \"${mode}\""
+	if ! iwconfig "${iface}" mode "${mode}" ; then
+	    ewarn "${iface} does not support setting the mode to \"${mode}\""
+	fi
     fi
 
     # Next we set any private driver ioctls needed
     eval x=\"\$\{iwpriv_scan_pre_${ifvar}\}\"
     if [[ -n ${x} ]]; then
-	e=$( iwpriv "${iface}" ${x} 2>&1 )
-	if [[ -n ${e} ]]; then
+	if ! eval iwpriv "${iface}" ${x} ; then
 	    ewarn "${iface} does not support the following private ioctls" \
 	    ewarn "  \"${x}\""
 	fi
@@ -450,7 +448,7 @@ iwconfig_scan() {
 
     while read line; do
 	error=false
-	case ${line} in
+	case "${line}" in
 	    *Address:*)
 	    (( i++ ))
 	    mac[i]=$( echo "${line#*: }" | tr '[:lower:]' '[:upper:]' )
@@ -495,8 +493,7 @@ iwconfig_scan() {
     # We may need to unset the previous private driver ioctls
     eval x=\"\$\{iwpriv_scan_post_${ifvar}\}\"
     if [[ -n ${x} ]]; then
-	e=$( iwpriv "${iface}" ${x} 2>&1 )
-	if [[ -n ${e} ]]; then
+	if ! eval iwpriv "${iface}" ${x} ; then
 	    ewarn "${iface} does not support the following private ioctls" \
 	    ewarn "  \"${x}\""
 	fi
@@ -504,7 +501,7 @@ iwconfig_scan() {
 
     # Change back mode if needed
     x=$( eval echo \"\$\{mode_${ifvar}\:-managed}\" | tr '[:upper:]' '[:lower:]' )
-    [[ ${mode} != ${x} ]] && iwconfig "${iface}" mode "${x}" &>/dev/null
+    [[ ${mode} != "${x}" ]] && iwconfig "${iface}" mode "${x}"
 
     for (( i=0; i<${#mac[@]}; i++ )); do
 	sortline="${sortline}${qual[i]} ${i}\n"
@@ -514,9 +511,9 @@ iwconfig_scan() {
 
     for (( i=0; i<${#mac[@]}; i++ )); do
 	(( x=(i * 2) + 1 ))
-	mac_APs[i]=${mac[${sortline[${x}]}]}
-	essid_APs[i]=${essid[${sortline[${x}]}]}
-	enc_APs[i]=${enc[${sortline[${x}]}]}
+	mac_APs[i]="${mac[${sortline[${x}]}]}"
+	essid_APs[i]="${essid[${sortline[${x}]}]}"
+	enc_APs[i]="${enc[${sortline[${x}]}]}"
     done
 
     return 0
@@ -537,7 +534,7 @@ iwconfig_scan_report() {
     eindent
     for ((i=0; i<${#mac_APs[@]}; i++)); do
 	k=""
-	[[ ${enc_APs[i]} == yes ]] && k="(WEP required)"
+	[[ ${enc_APs[i]} == "yes" ]] && k="(WEP required)"
 
 	if [[ -z ${essid_APs[i]} ]]; then
 	    veinfo "Found ${mac_APs[i]} ${k}"
@@ -560,7 +557,7 @@ iwconfig_scan_report() {
 	    remove=true
 	else
 	    for k in "${blacklist_aps[@]}"; do
-		if [[ ${k} == ${essid_APs[i]} ]]; then
+		if [[ ${k} == "${essid_APs[i]}" ]]; then
 		    vewarn "\"${k//\\\\/\\\\}\" has been blacklisted - not connecting"
 		    remove=true
 		    break
@@ -578,7 +575,7 @@ iwconfig_scan_report() {
     # Now we remove any duplicates
     for ((i=0; i < ${#essid_APs[@]} - 1; i++)); do
 	for ((j=${i} + 1; j <${#essid_APs[@]}; j++)); do
-	    [[ ${essid_APs[i]} == ${essid_APs[j]} ]] && u=( "${u[@]}" "${j}" )
+	    [[ ${essid_APs[i]} == "${essid_APs[j]}" ]] && u=( "${u[@]}" "${j}" )
 	done
     done
 
@@ -607,7 +604,7 @@ iwconfig_force_preferred() {
     for essid in "${preferred_aps[@]}"; do
 	local found_AP=false
 	for ((i = 0; i < ${#mac_APs[@]}; i++)); do
-	    if [[ ${essid} == ${essid_APs[i]} ]]; then
+	    if [[ ${essid} == "${essid_APs[i]}" ]]; then
 		found_AP=true
 		break
 	    fi
@@ -631,7 +628,7 @@ iwconfig_connect_preferred() {
 
     for essid in "${preferred_aps[@]}"; do
 	for ((i=0; i<${#essid_APs[@]}; i++)); do
-	    if [[ ${essid} == ${essid_APs[i]} ]]; then
+	    if [[ ${essid} == "${essid_APs[i]}" ]]; then
 		ESSID="${essid}"
 		iwconfig_associate "${iface}" "${mac_APs[i]}" "${enc_APs[i]}" && return 0
 		break
@@ -652,7 +649,7 @@ iwconfig_connect_not_preferred() {
     for ((i=0; i<${#mac_APs[@]}; i++)); do
 	has_preferred=false
 	for ap in "${preferred_aps[@]}"; do
-	    if [[ ${ap} == ${essid_APs[i]} ]]; then
+	    if [[ ${ap} == "${essid_APs[i]}" ]]; then
 		has_preferred=true
 		break
 	    fi
@@ -699,7 +696,7 @@ iwconfig_strip_associated() {
 	e=$( iwconfig_get_essid "${i}" )
 	u=()
 	for ((j=0; j<${#mac_APs[@]}; j++)); do
-	    if [[ ${essid_APs[j]} == ${e} ]]; then
+	    if [[ ${essid_APs[j]} == "${e}" ]]; then
 		ewarn "${e} has already been associated with ${i}"
 		unset essid_APs[j]
 		unset mac_APs[j]
@@ -712,7 +709,7 @@ iwconfig_strip_associated() {
 	    fi
 	done
 	for ((j=0; j<${#preferred_aps[@]}; j++)); do
-	    if [[ ${preferred_aps[j]} == ${e} ]]; then
+	    if [[ ${preferred_aps[j]} == "${e}" ]]; then
 		unset preferred_aps[j]
 		preferred_aps=( "${preferred_aps[@]}" )
 		break
@@ -753,9 +750,8 @@ iwconfig_configure() {
     # We only change the mode if it's not the same as some drivers
     # only do managed and throw an error changing to managed
     local cur_mode=$( iwconfig_get_mode "${iface}" )
-    if [[ ${cur_mode} != ${x} ]]; then
-	e=$( iwconfig "${iface}" mode "${x}" 2>&1 )
-	if [[ -n ${e} && ${x} != "auto" ]]; then
+    if [[ ${cur_mode} != "${x}" ]]; then
+	if ! iwconfig "${iface}" mode "${x}" ; then
 	    eerror "${iface} does not support setting the mode to \"${x}\""
 	    return 1
 	fi
