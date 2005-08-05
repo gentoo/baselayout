@@ -7,45 +7,45 @@
 # Fix any potential localisation problems
 # Note that LC_ALL trumps LC_anything_else according to locale(7)
 dhclient() {
-    LC_ALL=C /sbin/dhclient "$@"
+	LC_ALL=C /sbin/dhclient "$@"
 }
 
 # char* dhclient_provides(void)
 #
 # Returns a string to change module definition for starting up
 dhclient_provides() {
-    echo "dhcp"
+	echo "dhcp"
 }
 
 # void dhclient_depend(void)
 #
 # Sets up the dependancies for the module
 dhclient_depend() {
-    after interface
+	after interface
 }
 
 # bool dhclient_check_installed(void)
 #
 # Returns 1 if dhclient is installed, otherwise 0
 dhclient_check_installed() {
-    [[ -x /sbin/dhclient ]] && return 0
-    ${1:-false} && eerror "For DHCP (dhclient) support, emerge net-misc/dhcp"
-    return 1
+	[[ -x /sbin/dhclient ]] && return 0
+	${1:-false} && eerror "For DHCP (dhclient) support, emerge net-misc/dhcp"
+	return 1
 }
 
 # bool dhclient_check_depends(void)
 #
 # Checks to see if we have the needed functions
 dhclient_check_depends() {
-    local f
+	local f
 
-    for f in interface_exists interface_get_address; do
-	[[ $( type -t "${f}" ) == "function" ]] && continue
-	eerror "dhclient: missing required function ${f}\n"
-	return 1
-    done
+	for f in interface_exists interface_get_address; do
+		[[ $( type -t "${f}" ) == "function" ]] && continue
+		eerror "dhclient: missing required function ${f}\n"
+		return 1
+	done
 
-    return 0
+	return 0
 }
 
 # char* dhclient_get_vars(char *interface)
@@ -53,7 +53,7 @@ dhclient_check_depends() {
 # Returns a string spaced with possible user set
 # configuration variables
 dhclient_get_vars() {
-    echo "dhclient_$1 dhcp_$1"
+	echo "dhclient_$1 dhcp_$1"
 }
 
 # bool dhclient_stop(char *iface)
@@ -61,36 +61,36 @@ dhclient_get_vars() {
 # Stop dhclient on an interface
 # Always returns 0
 dhclient_stop() {
-    local iface="$1" d
-    local pidfile="/var/run/dhclient-${iface}.pid"
+	local iface="$1" d
+	local pidfile="/var/run/dhclient-${iface}.pid"
 
-    dhclient_check_installed || return 0
-    [[ ! -f ${pidfile} ]] && return 0
+	dhclient_check_installed || return 0
+	[[ ! -f ${pidfile} ]] && return 0
 
-    # We check for a dhclient process first as if we attempt to release
-    # an interface for which dhclient has obtained an IP in the past
-    # it causes a "RELEASE" event anyway.
-    local pid=$( < "${pidfile}" )
+	# We check for a dhclient process first as if we attempt to release
+	# an interface for which dhclient has obtained an IP in the past
+	# it causes a "RELEASE" event anyway.
+	local pid=$( < "${pidfile}" )
 
-    local ifvar=$( bash_variable "${iface}" )
-    eval d=\" \$\{dhcp_${ifvar}\} \"
-    [[ ${d} == "  " ]] && d=" ${dhcp} "
+	local ifvar=$( bash_variable "${iface}" )
+	eval d=\" \$\{dhcp_${ifvar}\} \"
+	[[ ${d} == "  " ]] && d=" ${dhcp} "
 
-    ebegin "Stopping dhclient on ${iface}"
-    if [[ ${d} == *" release "* ]]; then
-	local r=$( dhclient -q -r -pf "${pidfile}" \
-	    -sf "${MODULES_DIR}/helpers.d/dhclient-wrapper" "${iface}" )
-	[[ ${r} == "deconfig" ]]
-	eend $? "dhclient returned a ${r}"
-	[[ -f "/var/cache/dhcp-${iface}.lease" ]] \
-	&& rm -f "/var/cache/dhcp-${iface}.lease"
-    else
-	kill -s TERM "${pid}" 2>/dev/null
-	clean_pidfile "${pidfile}"
-	eend 0
-    fi
+	ebegin "Stopping dhclient on ${iface}"
+	if [[ ${d} == *" release "* ]]; then
+		local r=$( dhclient -q -r -pf "${pidfile}" \
+		-sf "${MODULES_DIR}/helpers.d/dhclient-wrapper" "${iface}" )
+		[[ ${r} == "deconfig" ]]
+		eend $? "dhclient returned a ${r}"
+		[[ -f "/var/cache/dhcp-${iface}.lease" ]] \
+		&& rm -f "/var/cache/dhcp-${iface}.lease"
+	else
+		kill -s TERM "${pid}" 2>/dev/null
+		clean_pidfile "${pidfile}"
+		eend 0
+	fi
 
-    return 0
+	return 0
 }
 
 # bool dhclient_start(char *iface)
@@ -99,96 +99,98 @@ dhclient_stop() {
 #
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 dhclient_start() {
-    local iface="$1" opts ifvar=$( bash_variable "$1" )
-    local pidfile="/var/run/dhclient-${iface}.pid" edit=""
-    local cffile="/etc/dhcp/dhclient.conf"
-    local d
+	local iface="$1" opts ifvar=$( bash_variable "$1" )
+	local pidfile="/var/run/dhclient-${iface}.pid" edit=""
+	local cffile="/etc/dhcp/dhclient.conf"
+	local d
 
-    interface_exists "${iface}" true || return 1
+	interface_exists "${iface}" true || return 1
 
-    eval edit=\"\$\{dhclient_edit_config_${ifvar}\}\"
-    [[ -z ${edit} ]] && eval edit="${dhclient_edit_config:-no}"
-    if [[ ${edit} == "yes" || ${edit} == "true" ]]; then
-	edit=true
-    else
-	edit=false
-    fi
-
-    # Load our options
-    eval opts=\" \$\{dhclient_${ifvar}\} \"
-
-    # Work out our cffile
-    x="${opts##* -cf }"
-    if [[ ${x} != "${opts}" ]]; then
-	x="${x%% *}"
-	if [[ -n ${x} ]]; then
-	    cffile="${x}"
-	    opts="${opts//-cf ${cffile}/}"
+	eval edit=\"\$\{dhclient_edit_config_${ifvar}\}\"
+	[[ -z ${edit} ]] && eval edit="${dhclient_edit_config:-no}"
+	if [[ ${edit} == "yes" || ${edit} == "true" ]]; then
+		edit=true
+	else
+		edit=false
 	fi
-    fi
-    opts="${opts} -cf ${cffile}"
-    
-    # Ensure that the cffile does not contain any script lines
-    # as that will stop our helpers from running
-    if [[ -e ${cffile} ]] ; then
-	if grep -q "^[ \t]*script " "${cffile}" 2>/dev/null ; then
-	    if ${edit} ; then
-		sed -i '/^[ \t]*script /d' "${cffile}" || return 1
-	    else
-		eerror "You have to remove the script parameter from ${cffile}"
-		return 1
-	    fi
+
+	# Load our options
+	eval opts=\" \$\{dhclient_${ifvar}\} \"
+
+	# Work out our cffile
+	x="${opts##* -cf }"
+	if [[ ${x} != "${opts}" ]]; then
+		x="${x%% *}"
+		if [[ -n ${x} ]]; then
+			cffile="${x}"
+			opts="${opts//-cf ${cffile}/}"
+		fi
 	fi
-    else
-	${edit} && touch "${cffile}" 2>/dev/null
-    fi
+	opts="${opts} -cf ${cffile}"
 
-    eval d=\" \$\{dhcp_${ifvar}\} \"
-    [[ ${d} == "  " ]] && d=" ${dhcp} "
-
-    # Send our hostname by editing cffile
-    if ${edit} && [[ -e ${cffile} && ${d} != *" nosendhost "* ]] ; then
-	local hostname=$( hostname )
-	if [[ ${hostname} != "(none)" && ${hostname} != "localhost" ]]; then
-	    sed -i '/^[ \t]*send[ \t]*host-name[ \t]*/d' "${cffile}"
-	    if [[ -s ${cffile} ]]; then
-		sed -i '1 isend host-name "'"${hostname}"'";' "${cffile}"
-	    else
-		echo "send host-name \"${hostname}\";" > "${cffile}"
-	    fi
+	# Ensure that the cffile does not contain any script lines
+	# as that will stop our helpers from running
+	if [[ -e ${cffile} ]] ; then
+		if grep -q "^[ \t]*script " "${cffile}" 2>/dev/null ; then
+			if ${edit} ; then
+				sed -i '/^[ \t]*script /d' "${cffile}" || return 1
+			else
+				eerror "You have to remove the script parameter from ${cffile}"
+				return 1
+			fi
+		fi
+	else
+		${edit} && touch "${cffile}" 2>/dev/null
 	fi
-    fi
 
-    # Bring up DHCP for this interface (or alias)
-    ebegin "Running dhclient"
+	eval d=\" \$\{dhcp_${ifvar}\} \"
+	[[ ${d} == "  " ]] && d=" ${dhcp} "
 
-    # Stop dhclient if it's already running
-    dhclient_stop "${iface}"
-    
-    if [[ ${background} == "yes" ]]; then
-	eval dhclient ${opts} -pf "${pidfile}" -q \
-	    -sf "${MODULES_DIR}/helpers.d/dhclient-wrapper" \
-	    "${iface}" &>/dev/null &
-	eend 0
-	go_background
-    fi
+	# Send our hostname by editing cffile
+	if ${edit} && [[ -e ${cffile} && ${d} != *" nosendhost "* ]] ; then
+		local hostname=$( hostname )
+		if [[ ${hostname} != "(none)" && ${hostname} != "localhost" ]]; then
+			sed -i '/^[ \t]*send[ \t]*host-name[ \t]*/d' "${cffile}"
+			if [[ -s ${cffile} ]]; then
+				sed -i '1 isend host-name "'"${hostname}"'";' "${cffile}"
+			else
+				echo "send host-name \"${hostname}\";" > "${cffile}"
+			fi
+		fi
+	fi
 
-    local x=$( eval dhclient ${opts} -1 -pf "${pidfile}" \
+	# Bring up DHCP for this interface (or alias)
+	ebegin "Running dhclient"
+
+	# Stop dhclient if it's already running
+	dhclient_stop "${iface}"
+
+	if [[ ${background} == "yes" ]]; then
+		eval dhclient ${opts} -pf "${pidfile}" -q \
+		-sf "${MODULES_DIR}/helpers.d/dhclient-wrapper" \
+		"${iface}" &>/dev/null &
+		eend 0
+		go_background
+	fi
+
+	local x=$( eval dhclient ${opts} -1 -pf "${pidfile}" \
 	-sf "${MODULES_DIR}/helpers.d/dhclient-wrapper" -q "${iface}" 2>&1 )
-    # We just check the last 5 letters
-    [[ ${x:${#x} - 5:5} == "bound" ]]
-    if [[ $? != "0" ]]; then
-	echo "${x}"
-	# We need to kill the process if we fail
-	[[ -e ${pidfile} ]] && kill -s TERM $( < "${pidfile}" ) 2>/dev/null
-	eend 1
-	return 1
-    fi
-    eend 0
+	# We just check the last 5 letters
+	[[ ${x:${#x} - 5:5} == "bound" ]]
+	if [[ $? != "0" ]]; then
+		echo "${x}"
+		# We need to kill the process if we fail
+		[[ -e ${pidfile} ]] && kill -s TERM $( < "${pidfile}" ) 2>/dev/null
+		eend 1
+		return 1
+	fi
+	eend 0
 
-    # DHCP succeeded, show address retrieved
-    local addr=$( interface_get_address "${iface}" )
-    einfo "${iface} received address ${addr}"
+	# DHCP succeeded, show address retrieved
+	local addr=$( interface_get_address "${iface}" )
+	einfo "${iface} received address ${addr}"
 
-    return 0
+	return 0
 }
+
+# vim:ts=4

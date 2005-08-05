@@ -8,39 +8,41 @@ interface="${1##*/dhcpcd-}"
 interface="${interface%%.info}"
 
 if [[ $2 != "up" && $2 != "new" ]]; then
-    action="down"
+	action="down"
 else
-    action="up"
+	action="up"
 fi
 
 . /lib/rcscripts/net.modules.d/helpers.d/module-loader
 
 if [[ ${action} == "up" ]]; then
-    # Map MAC address variables to interface variables
-    macnet_pre_start "${interface}" 1>/dev/null
+	# Map MAC address variables to interface variables
+	macnet_pre_start "${interface}" 1>/dev/null
 
-    # Map wireless ESSID variables to interface variables
-    if [[ -n ${wireless_module} ]]; then
-	if wireless_check_extensions "${interface}" ; then
-	    essidnet_pre_start "${interface}" 1>/dev/null
+	# Map wireless ESSID variables to interface variables
+	if [[ -n ${wireless_module} ]]; then
+		if wireless_check_extensions "${interface}" ; then
+			essidnet_pre_start "${interface}" 1>/dev/null
+		fi
 	fi
-    fi
 
-    # Add any search paths if we have any defined
-    ifvar=$( bash_variable "${interface}" )
-    eval d=\" \$\{dhcp_${ifvar}\} \"
-    [[ ${d} == "  " ]] && d=" ${dhcp} "
+	# Add any search paths if we have any defined
+	ifvar=$( bash_variable "${interface}" )
+	eval d=\" \$\{dhcp_${ifvar}\} \"
+	[[ ${d} == "  " ]] && d=" ${dhcp} "
 
-    if [[ ${d} != *" nodns "* ]]; then
-	eval search=\"\$\{dns_search_path_${ifvar}\}\"
-	if [[ -n ${search} ]]; then
-	    resolv="${statedir}/${interface}/resolv.conf"
-	    tmp="${revolv}.$$"
-	    egrep -v "^[ \t]*(search|domain)[ \t]*" "${resolv}" > "${tmp}"
-	    echo "search ${search}" >> "${tmp}" 
-	    mv "${tmp}" "${resolv}"
+	if [[ ${d} != *" nodns "* ]]; then
+		eval search=\"\$\{dns_search_path_${ifvar}\}\"
+		if [[ -n ${search} ]]; then
+			resolv="${statedir}/${interface}/resolv.conf"
+			tmp="${revolv}.$$"
+			egrep -v "^[ \t]*(search|domain)[ \t]*" "${resolv}" > "${tmp}"
+			echo "search ${search}" >> "${tmp}" 
+			mv "${tmp}" "${resolv}"
+		fi
 	fi
-    fi
 fi
 
 . /lib/rcscripts/net.modules.d/helpers.d/dhcp-state
+
+# vim:ts=4

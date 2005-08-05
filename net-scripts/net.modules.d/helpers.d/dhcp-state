@@ -13,17 +13,19 @@ conf=$(add_suffix "/etc/conf.d/net")
 service="net.${interface}"
 
 if [[ ${action} != "up" ]]; then
-    if service_starting "${service}" || service_started "${service}" ; then
-	mark_service_inactive "${service}"
-    fi
-    remove_state "${interface}" false
+	if service_starting "${service}" || service_started "${service}" ; then
+		mark_service_inactive "${service}"
+	fi
+	remove_state "${interface}" false
 else
-    ! service_stopping "${service}" && mark_service_started "${service}"
+	! service_stopping "${service}" && mark_service_started "${service}"
 fi
 
 if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
-    best_interface=$( select_best_interface )
-    apply_state "${best_interface}"
+	best_interface=$( select_best_interface )
+	apply_state "${best_interface}"
 elif [[ ${action} == "up" ]]; then
-    apply_state "${interface}"
+	apply_state "${interface}"
 fi
+
+# vim:ts=4

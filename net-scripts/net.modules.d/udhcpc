@@ -7,45 +7,45 @@
 # Fix any potential localisation problems
 # Note that LC_ALL trumps LC_anything_else according to locale(7)
 udhcpc() {
-    LC_ALL=C /sbin/udhcpc "$@"
+	LC_ALL=C /sbin/udhcpc "$@"
 }
 
 # char* udhcpc_provides(void)
 #
 # Returns a string to change module definition for starting up
 udhcpc_provides() {
-    echo "dhcp"
+	echo "dhcp"
 }
 
 # void udhcpc_depend(void)
 #
 # Sets up the dependancies for the module
 udhcpc_depend() {
-    after interface
+	after interface
 }
 
 # bool udhcpc_check_installed(void)
 #
 # Returns 1 if udhcpc is installed, otherwise 0
 udhcpc_check_installed() {
-    [[ -x /sbin/udhcpc ]] && return 0
-    ${1:-false} && eerror "For DHCP (udhcpc) support, emerge net-misc/udhcp"
-    return 1
+	[[ -x /sbin/udhcpc ]] && return 0
+	${1:-false} && eerror "For DHCP (udhcpc) support, emerge net-misc/udhcp"
+	return 1
 }
 
 # bool udhcpc_check_depends(void)
 #
 # Checks to see if we have the needed functions
 udhcpc_check_depends() {
-    local f
+	local f
 
-    for f in interface_exists interface_get_address; do
-	[[ $( type -t "${f}" ) == "function" ]] && continue
-	eerror "udhcpc: missing required function ${f}\n"
-	return 1
-    done
+	for f in interface_exists interface_get_address; do
+		[[ $( type -t "${f}" ) == "function" ]] && continue
+		eerror "udhcpc: missing required function ${f}\n"
+		return 1
+	done
 
-    return 0
+	return 0
 }
 
 # char* udhcpc_get_vars(char *interface)
@@ -53,7 +53,7 @@ udhcpc_check_depends() {
 # Returns a string spaced with possible user set
 # configuration variables
 udhcpc_get_vars() {
-    echo "udhcpc_$1 dhcp_$1"
+	echo "udhcpc_$1 dhcp_$1"
 }
 
 # bool udhcpc_stop(char *iface)
@@ -61,31 +61,31 @@ udhcpc_get_vars() {
 # Stops udhcpc running on an interface
 # Return 1 if we fail to stop udhcpc (if it's running) otherwise 0
 udhcpc_stop() {
-    local iface="$1" pidfile="/var/run/udhcpc-$1.pid" d
+	local iface="$1" pidfile="/var/run/udhcpc-$1.pid" d
 
-    udhcpc_check_installed || return 0
-    [[ ! -f ${pidfile} ]] && return 0
+	udhcpc_check_installed || return 0
+	[[ ! -f ${pidfile} ]] && return 0
 
-    ebegin "Stopping udhcpc on ${iface}"
-    local pid=$( < "${pidfile}" ) e=true
+	ebegin "Stopping udhcpc on ${iface}"
+	local pid=$( < "${pidfile}" ) e=true
 
-    local ifvar=$( bash_variable "${iface}" )
-    eval d=\" \$\{dhcp_${ifvar}\} \"
-    [[ ${d} == "  " ]] && d=" ${dhcp} "
+	local ifvar=$( bash_variable "${iface}" )
+	eval d=\" \$\{dhcp_${ifvar}\} \"
+	[[ ${d} == "  " ]] && d=" ${dhcp} "
 
-    if [[ ${d} == *" release "* ]]; then
-	kill -s USR2 "${pid}" &>/dev/null
-	[[ -f "/var/cache/dhcp-${iface}.lease" ]] \
-	&& rm "/var/cache/dhcp-${iface}.lease"
-    fi
+	if [[ ${d} == *" release "* ]]; then
+		kill -s USR2 "${pid}" &>/dev/null
+		[[ -f "/var/cache/dhcp-${iface}.lease" ]] \
+		&& rm "/var/cache/dhcp-${iface}.lease"
+	fi
 
-    kill -s TERM "${pid}" &>/dev/null
+	kill -s TERM "${pid}" &>/dev/null
 
-    [[ -f ${pidfile} ]] && rm -f "${pidfile}"
+	[[ -f ${pidfile} ]] && rm -f "${pidfile}"
 
-    ${e}
-    eend "$?"
-    return "$?"
+	${e}
+	eend "$?"
+	return "$?"
 }
 
 # bool udhcpc_start(char *iface)
@@ -94,58 +94,60 @@ udhcpc_stop() {
 #
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 udhcpc_start() {
-    local iface="$1" opts pidfile="/var/run/udhcpc-$1.pid"
-    local cachefile="/var/cache/dhcp-$1.lease" d
+	local iface="$1" opts pidfile="/var/run/udhcpc-$1.pid"
+	local cachefile="/var/cache/dhcp-$1.lease" d
 
-    interface_exists "${iface}" true || return 1
+	interface_exists "${iface}" true || return 1
 
-    local ifvar=$( bash_variable "${iface}" ) opts hostname
-    eval opts=\"\$\{udhcpc_${ifvar}\}\"
+	local ifvar=$( bash_variable "${iface}" ) opts hostname
+	eval opts=\"\$\{udhcpc_${ifvar}\}\"
 
-    eval d=\" \$\{dhcp_${ifvar}\} \"
-    [[ ${d} == "  " ]] && d=" ${dhcp} "
-    
-    if [[ ${d} != *" nosendhost "* ]]; then
-	if [[ ! " ${opts}" =~ " -([hH] |-hostname=)" ]]; then
-	    local hostname=$( hostname )
-	    [[ -n ${hostname} && ${hostname} != "(none)" \
-	    && ${hostname} != "localhost" ]] \
-	    && opts="${opts} --hostname=${hostname}"
+	eval d=\" \$\{dhcp_${ifvar}\} \"
+	[[ ${d} == "  " ]] && d=" ${dhcp} "
+
+	if [[ ${d} != *" nosendhost "* ]]; then
+		if [[ ! " ${opts}" =~ " -([hH] |-hostname=)" ]]; then
+			local hostname=$( hostname )
+			[[ -n ${hostname} && ${hostname} != "(none)" \
+			&& ${hostname} != "localhost" ]] \
+			&& opts="${opts} --hostname=${hostname}"
+		fi
 	fi
-    fi
 
-    # Bring up DHCP for this interface (or alias)
-    ebegin "Running udhcpc"
+	# Bring up DHCP for this interface (or alias)
+	ebegin "Running udhcpc"
 
-    # Stop any instance of udhcpc on this interface
-    udhcpc_stop "${interface}"
+	# Stop any instance of udhcpc on this interface
+	udhcpc_stop "${interface}"
 
-    # Try and load the cache if it exists
-    if [[ -f ${cachefile} ]]; then
-	if [[ " ${opts}" != *" --request="* && " ${opts} " != *" -r "* ]]; then
-	   local x=$( < "${cachefile}" )
-	    [[ -n ${x} ]] && opts="${opts} --request=${x}"
+	# Try and load the cache if it exists
+	if [[ -f ${cachefile} ]]; then
+		if [[ " ${opts}" != *" --request="* && " ${opts} " != *" -r "* ]]; then
+			local x=$( < "${cachefile}" )
+			[[ -n ${x} ]] && opts="${opts} --request=${x}"
+		fi
 	fi
-    fi
 
-    if [[ ${background} == "yes" ]]; then
-	eval udhcpc ${opts} --script="${MODULES_DIR}/helpers.d/udhcpc-wrapper" \
-	--pidfile="${pidfile}" --interface="${iface}" &>/dev/null &
-	eend 0
-	go_background
-    fi
+	if [[ ${background} == "yes" ]]; then
+		eval udhcpc ${opts} --script="${MODULES_DIR}/helpers.d/udhcpc-wrapper" \
+		--pidfile="${pidfile}" --interface="${iface}" &>/dev/null &
+		eend 0
+		go_background
+	fi
 
-    x=$( eval udhcpc ${opts} --now --pidfile="${pidfile}" \
+	x=$( eval udhcpc ${opts} --now --pidfile="${pidfile}" \
 	--interface="${iface}" \
 	--script="${MODULES_DIR}/helpers.d/udhcpc-wrapper" 2>&1 \
 	| egrep -v '^info,' )
-    # We just check the last 5 letters
-    [[ ${x:((${#x} - 5)):5} == "bound" ]]
-    eend "$?" "${x}" || return 1
+	# We just check the last 5 letters
+	[[ ${x:((${#x} - 5)):5} == "bound" ]]
+	eend "$?" "${x}" || return 1
 
-    # DHCP succeeded, show address retrieved
-    local addr=$( interface_get_address "${iface}" )
-    einfo "${iface} received address ${addr}"
+	# DHCP succeeded, show address retrieved
+	local addr=$( interface_get_address "${iface}" )
+	einfo "${iface} received address ${addr}"
 
-    return 0
+	return 0
 }
+
+# vim:ts=4

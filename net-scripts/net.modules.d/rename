@@ -8,29 +8,29 @@
 #
 # Returns a string to change module definition for starting up
 rename_provides() {
-    echo "rename"
+	echo "rename"
 }
 
 # void rename_depend(void)
 #
 # Sets up the dependancies for the module
 rename_depend() {
-    after macchanger macnet
-    before wireless interface
+	after macchanger macnet
+	before wireless interface
 }
 
 # bool rename_check_installed(void)
 #
 # We are always installed
 rename_check_installed() {
-    return 0 
+	return 0 
 }
 
 # bool rename_check_depends(void)
 #
 # Checks to see if we have the needed functions
 rename_check_depends() {
-    return 0
+	return 0
 }
 
 # char* rename_get_vars(char *interface)
@@ -38,47 +38,49 @@ rename_check_depends() {
 # Returns a string spaced with possible user set
 # configuration variables
 rename_get_vars() {
-    echo "rename_$1"
+	echo "rename_$1"
 }
 
 # bool rename_pre_start(char *iface)
 #
 # Checks to see if we have to rename the interface 
 rename_pre_start() {
-    local iface="$1" newname="" mac ifvar=$( bash_variable "$1" )
+	local iface="$1" newname="" mac ifvar=$( bash_variable "$1" )
 
-    interface_exists "${iface}" || return 0
+	interface_exists "${iface}" || return 0
 
-    eval newname=\"\$\{rename_${ifvar}\}\"
-    [[ -z ${newname} || ${iface} == "${newname}" ]] && return 0
+	eval newname=\"\$\{rename_${ifvar}\}\"
+	[[ -z ${newname} || ${iface} == "${newname}" ]] && return 0
 
-    # We cannot rename vlan interfaces as /proc/net/vlan/config always
-    # returns the old interface name. We don't bail out though as it's
-    # not critical that the interface gets renamed.
-    if [[ -d /proc/net/vlan/config ]] ; then
-	if grep -q "^eth0.2 " /proc/net/vlan/config ; then
-	    eerror "Cannot rename VLAN interfaces"
-	    return 0
+	# We cannot rename vlan interfaces as /proc/net/vlan/config always
+	# returns the old interface name. We don't bail out though as it's
+	# not critical that the interface gets renamed.
+	if [[ -d /proc/net/vlan/config ]] ; then
+		if grep -q "^eth0.2 " /proc/net/vlan/config ; then
+			eerror "Cannot rename VLAN interfaces"
+			return 0
+		fi
 	fi
-    fi
-    
-    ebegin "Renaming \"${iface}\" to \"${newname}\""
 
-    # Ensure that we have an init script
-    [[ ! -e "/etc/init.d/net.${newname}" ]] \
+	ebegin "Renaming \"${iface}\" to \"${newname}\""
+
+	# Ensure that we have an init script
+	[[ ! -e "/etc/init.d/net.${newname}" ]] \
 	&& ( cd /etc/init.d ; ln -s net.lo "net.${newname}" )
 
-    # Ensure that the interface is down and without any addresses or we
-    # will not work
-    interface_del_addresses "${iface}"
-    interface_down "${iface}"
-    interface_set_name "${iface}" "${newname}"
-    eend "$?" "Failed to rename interface" || return 1
+	# Ensure that the interface is down and without any addresses or we
+	# will not work
+	interface_del_addresses "${iface}"
+	interface_down "${iface}"
+	interface_set_name "${iface}" "${newname}"
+	eend "$?" "Failed to rename interface" || return 1
 
-    # Mark us as stopped, start the new interface and bail cleanly
-    mark_service_stopped "net.${iface}"
-    einfo "Stopped configuration of ${iface} due to renaming"
-    service_stopped "net.${newname}" && start_service "net.${newname}"
-    
-    exit 1 
+	# Mark us as stopped, start the new interface and bail cleanly
+	mark_service_stopped "net.${iface}"
+	einfo "Stopped configuration of ${iface} due to renaming"
+	service_stopped "net.${newname}" && start_service "net.${newname}"
+
+	exit 1 
 }
+
+# vim:ts=4
