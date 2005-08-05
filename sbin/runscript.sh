@@ -92,9 +92,7 @@ svc_stop() {
 	if service_stopping "${myservice}" ; then
 		eerror "ERROR:  \"${myservice}\" is already stopping."
 		return 0
-	fi
-	
-	if service_stopped "${myservice}" ; then
+	elif service_stopped "${myservice}" ; then
 		eerror "ERROR:  \"${myservice}\" has not yet been started."
 		return 0
 	fi
@@ -171,7 +169,7 @@ svc_stop() {
 
 				stop_service "${x}"
 
-				if [[ $? -ne 0 ]] ; then
+				if ! service_stopped "${x}" ; then
 					# If we are halting the system, try and get it down as
 					# clean as possible, else do not stop our service if
 					# a dependent service did not stop.
@@ -219,6 +217,8 @@ svc_stop() {
 				mark_service_started "${myservice}"
 			fi
 		fi
+
+		service_message "eerror" "FAILED to stop service ${myservice}!"
 	else
 		# If we're stopped from a daemon that sets ${IN_BACKGROUND} such as
 		# wpa_monitor when we mark as inactive instead of taking the down
@@ -227,12 +227,7 @@ svc_stop() {
 		else
 			mark_service_stopped "${myservice}"
 		fi
-	fi
-
-	if [[ ${retval} == 0 ]]; then
 		service_message "Stopped service ${myservice}"
-	else
-		service_message "eerror" "FAILED to stop service ${myservice}!"
 	fi
 
 	return "${retval}"
@@ -246,24 +241,20 @@ svc_start() {
 	local myserv=
 	local ordservice=
 
-	if service_stopping "${myservice}" ; then
+	if service_starting "${myservice}" ; then
+		ewarn "WARNING: \"${myservice}\" is already starting."
+		return 0
+	elif service_stopping "${myservice}" ; then
 		ewarn "WARNING: please wait for \"${myservice}\" to stop first."
 		return 0
-	fi
-
-	if service_inactive "${myservice}" ; then
+	elif service_inactive "${myservice}" ; then
 		if [[ ${IN_BACKGROUND} != "true" ]] ; then
 			ewarn "WARNING: \"${myservice}\" has already been started."
 			return 0
 		fi
-	else
-		if service_started "${myservice}" ; then
-			ewarn "WARNING: \"${myservice}\" has already been started."
-			return 0
-		elif service_starting "${myservice}" ; then
-			ewarn "WARNING: \"${myservice}\" is already starting."
-			return 0
-		fi
+	elif service_started "${myservice}" ; then
+		ewarn "WARNING: \"${myservice}\" has already been started."
+		return 0
 	fi
 
 	# Do not try to start if i have done so already on runlevel change
@@ -271,9 +262,7 @@ svc_start() {
 		return 1
 	fi
 
-	# Link first to prevent possible recursion
 	mark_service_starting "${myservice}"
-
 	service_message "Starting service ${myservice}"
 
 	# On rc change, start all services "before $myservice" first
@@ -343,50 +332,46 @@ svc_start() {
 		eerror "ERROR:  Problem starting needed services."
 		eerror "        \"${myservice}\" was not started."
 		retval=1
+	elif broken "${myservice}" ; then
+		eerror "ERROR:  Some services needed are missing.  Run"
+		eerror "        './${myservice} broken' for a list of those"
+		eerror "        services.  \"${myservice}\" was not started."
+		retval=1
 	else
-		if broken "${myservice}" ; then
-			eerror "ERROR:  Some services needed are missing.  Run"
-			eerror "        './${myservice} broken' for a list of those"
-			eerror "        services.  \"${myservice}\" was not started."
-			retval=1
-		else
-			(
-			exit() {
-				RC_QUIET_STDOUT="no"
-				eerror "DO NOT USE EXIT IN INIT.D SCRIPTS"
-				eerror "This IS a bug, please fix your broken init.d"
-				unset -f exit
-				exit $@
-			}
-			# Stop einfo/ebegin/eend from working as parallel messes us up
-			[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && RC_QUIET_STDOUT="yes"
-			start
-			)
-			retval=$?
-			
-			# If a service has been marked inactive, exit now as something
-			# may attempt to start it again later
-			service_inactive "${myservice}" && return 1 
+		(
+		exit() {
+			RC_QUIET_STDOUT="no"
+			eerror "DO NOT USE EXIT IN INIT.D SCRIPTS"
+			eerror "This IS a bug, please fix your broken init.d"
+			unset -f exit
+			exit $@
+		}
+		# Stop einfo/ebegin/eend from working as parallel messes us up
+		[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && RC_QUIET_STDOUT="yes"
+		start
+		)
+		retval=$?
+		
+		# If a service has been marked inactive, exit now as something
+		# may attempt to start it again later
+		service_inactive "${myservice}" && return 1 
+	fi
+
+	if [[ ${retval} != 0 ]]; then
+		is_runlevel_start && mark_service_failed "${myservice}"
+
+		# Remove link if service didn't start; but only if we're not booting
+		# If we're booting, we need to continue and do our best to get the
+		# system up.
+		if [[ ${SOFTLEVEL} != "${BOOTLEVEL}" ]]; then
+			mark_service_stopped "${myservice}"
 		fi
-	fi
 
-	if [[ ${retval} -ne 0 ]] && is_runlevel_start ; then
-		mark_service_failed "${myservice}"
-	fi
-
-	# Remove link if service didn't start; but only if we're not booting
-	# if we're booting, we need to continue and do our best to get the
-	# system up.
-	if [[ ${retval} -ne 0 ]] && [[ ${SOFTLEVEL} != ${BOOTLEVEL} ]] ; then
-		mark_service_stopped "${myservice}"
-	elif [[ ${retval} -eq 0 ]] ; then
-		mark_service_started "${myservice}"
-	fi
-
-	if [[ ${retval} == 0 ]]; then
-		service_message "Service ${myservice} started OK"
-	else
 		service_message "eerror" "FAILED to start service ${myservice}!"
+	else
+		mark_service_started "${myservice}"
+
+		service_message "Service ${myservice} started OK"
 	fi
 
 	return "${retval}"
