@@ -28,13 +28,23 @@ done
 
 # Only update if files have actually changed
 update=1
+ref_file="${svcdir}/depcache"
 if [[ $1 == "-u" ]]; then
 	update=0
+
+	# If its not there, we have to update, and make sure its present
+	# for next mtime testing
+	if [[ ! -e ${svcdir}/depcache ]] ; then
+			update=1
+			touch "${svcdir}/depcache"
+	fi
+	
 	for config in /etc/conf.d /etc/init.d /etc/rc.conf
 	do
-		if is_older_than "${svcdir}/depcache" ${config} ; then
+		if is_older_than "${svcdir}/depcache" "${config}" ; then
 			update=1
-			break
+			# Get the latest mtime in case something is in the future
+			is_older_than "${ref_file}" "${config}" && ref_file=${config}
 		fi
 	done
 	shift
@@ -66,7 +76,7 @@ bash "${svcdir}/depcache" | \
 	-f /lib/rcscripts/awk/gendepends.awk || \
 	retval=1
 
-touch "${svcdir}"/dep{cache,tree}
+touch -r "${ref_file}" "${svcdir}"/dep{cache,tree}
 chmod 0644 "${svcdir}"/dep{cache,tree}
 
 eend ${retval} "Failed to cache service dependencies"

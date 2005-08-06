@@ -52,6 +52,80 @@ function check_depend(service1, type, service2,    tmpsplit, x)
 	return 0
 }
 
+# bool check_resolved_depend(service1, type, service2)
+#
+#   Returns true if 'service1' need/use/is_before/is_after 'service2'
+#   It should only be trusted if we do the BEFORE/AFTER loop
+#
+function check_resolved_depend(service1, type, service2,    tmpsplit, x)
+{
+	if (check_service(service1)) {
+		x = get_service_index(service1)
+
+		if ((x,type) in RESOLVED_DEPTREE) {
+			split(RESOLVED_DEPTREE[x,type], tmpsplit)
+
+			for (x in tmpsplit) {
+				if (tmpsplit[x] == service2)
+					return 1
+			}
+		}
+	}
+
+	return 0
+}
+
+# string get_resolved_depends(service, type)
+#
+#   Return the services that depend of type on service
+#   It should only be trusted if we do the BEFORE/AFTER loop
+#
+function get_resolved_depends(service, type,    x)
+{
+	if (check_service(service)) {
+		x = get_service_index(service)
+		
+		if ((x,type) in RESOLVED_DEPTREE)
+			return RESOLVED_DEPTREE[x,type]
+	}
+
+	return ""
+}
+
+# bool check_recursive_depend(service1, service2, bool checkuse)
+#
+#   Return true if service1 USE/NEED a service that NEEDS/USES
+#   service2
+#   It should only be trusted if we do the BEFORE/AFTER loop
+#
+function check_recursive_depend(service1, service2, checkuse,    x, deps, deplist)
+{
+	deps = get_resolved_depends(service2, NEEDME)
+	if (deps != "") {
+		split(deps, deplist)
+		for (x in deplist)
+			if (check_resolved_depend(service1, NEED, deplist[x]))
+				return 1
+			if (checkuse && check_resolved_depend(service1, USE, deplist[x]))
+				return 1
+	}
+
+	if (!checkuse)
+		return 0
+
+	deps = get_resolved_depends(service2, USEME)
+	if (deps != "") {
+		split(deps, deplist)
+		for (x in deplist)
+			if (check_resolved_depend(service1, NEED, deplist[x]) ||
+			    check_resolved_depend(service1, USE, deplist[x])) {
+				return 1
+			}
+	}
+
+	return 0
+}
+
 # bool add_deptree_item(rcnumber, type, item)
 #
 #   Add an item(s) 'item' to the DEPTREE array at index [rcnumber,type]
@@ -214,27 +288,41 @@ function resolve_depend(type, service, deplist,    x, deparray)
 	
 			if (type == BEFORE) {
 				# NEED and USE override BEFORE (service BEFORE deparray[x])
-				if (check_depend(service, NEED, deparray[x]) ||
-				    check_depend(service, USE, deparray[x]))
+				if (check_resolved_depend(service, NEED, deparray[x]) ||
+				    check_resolved_depend(service, USE, deparray[x]))
 					continue
+				
+				if (check_recursive_depend(service, deparray[x], 1)) {
+					ewarn(" Service '" service "' should be BEFORE service '" deparray[x] "', but one of")
+					ewarn(" the services '" service "' depends on, depends on '" deparray[x] "'!")
+					continue
+				}
 			}
 			
 			if (type == AFTER) {
 				# NEED and USE override AFTER (service AFTER deparray[x])
-				if (check_depend(deparray[x], NEED, service) ||
-				    check_depend(deparray[x], USE, service))
+				if (check_resolved_depend(deparray[x], NEED, service) ||
+				    check_resolved_depend(deparray[x], USE, service))
 					continue
+				
+				if (check_recursive_depend(deparray[x], service, 1)) {
+					ewarn(" Service '" service "' should be AFTER service '" deparray[x] "', but one of")
+					ewarn(" the services '" deparray[x] "' depends on, depends on '" service "'!")
+					continue
+				}
 			}
 
 			# NEED override USE (service USE deparray[x])
-			if ((type == USE) && (check_depend(deparray[x], NEED, service))) {
+			if (type == USE && (check_resolved_depend(deparray[x], NEED, service) ||
+			                    check_recursive_depend(deparray[x], service, 0))) {
 				ewarn(" Service '" deparray[x] "' NEED service '" service "', but service '" service "' wants")
 				ewarn(" to USE service '" deparray[x] "'!")
 				continue
 			}
 
 			# We do not want to add circular depends ...
-			if (check_depend(deparray[x], type, service)) {
+			if (check_depend(deparray[x], type, service) ||
+			    check_resolved_depend(deparray[x], type, service)) {
 					
 					if ((service,deparray[x],type) in CIRCULAR_DEPEND)
 						continue
@@ -389,20 +477,25 @@ END {
 	
 	# Calculate all the provides ...
 	for (x = 1;x <= RC_NUMBER;x++) {
-
 		if ((x,PROVIDE) in DEPTREE)
 			add_provide(DEPTREE[x,NAME], DEPTREE[x,PROVIDE])
 	}
 
-	# Now do NEED, USE, BEFORE and AFTER
+	# Now do NEED
 	for (x = 1;x <= RC_NUMBER;x++) {
-	
 		if ((x,NEED) in DEPTREE)
 			resolve_depend(NEED, DEPTREE[x,NAME], DEPTREE[x,NEED])
+	}
 
+	# Now do USE
+	for (x = 1;x <= RC_NUMBER;x++) {
 		if ((x,USE) in DEPTREE)
 			resolve_depend(USE, DEPTREE[x,NAME], DEPTREE[x,USE])
+	}
 
+	# Now do BEFORE and AFTER
+	for (x = 1;x <= RC_NUMBER;x++) {
+	
 		if ((x,BEFORE) in DEPTREE)
 			resolve_depend(BEFORE, DEPTREE[x,NAME], DEPTREE[x,BEFORE])
 

@@ -139,7 +139,7 @@ argv1="$1"
 # First time boot stuff goes here.  Note that 'sysinit' is an internal runlevel
 # used to bring up local filesystems, and should not be started with /sbin/rc
 # directly ...
-if [ "${RUNLEVEL}" = "S" -a "${argv1}" = "sysinit" ]
+if [[ ( ${RUNLEVEL} == "S" || ${RUNLEVEL} == "1" ) && ${argv1} = "sysinit" ]]
 then
 	# Setup initial $PATH just in case
 	PATH="/bin:/sbin:/usr/bin:/usr/sbin:${PATH}"
@@ -566,7 +566,7 @@ then
 	exit 0
 fi # Sysinit ends here
 
-if [ "${RUNLEVEL}" = "S" -a "${argv1}" = "boot" ]
+if [[ ( ${RUNLEVEL} == "S" || ${RUNLEVEL} == "1" ) && ${argv1} == "boot" ]]
 then
 	setup_defaultlevels
 
@@ -585,15 +585,15 @@ then
 	# if there is one
 	argv1="${BOOTLEVEL}"
 	
-elif [ "${RUNLEVEL}" != "S" -a -e "${svcdir}/ksoftlevel" ]
+elif [[ ${RUNLEVEL} != "S" && ${RUNLEVEL} != "1" && -e ${svcdir}/ksoftlevel ]]
 then
 	argv1="$(< ${svcdir}/ksoftlevel)"
 	rm -f "${svcdir}/ksoftlevel"
-elif [ "${RUNLEVEL}" != "S" -a "${argv1}" = "single" ]
+elif [[ ${RUNLEVEL} != "S" && ${RUNLEVEL} != "1" && ${argv1} == "single" ]]
 then
 	/sbin/telinit S
 	exit 0
-elif [ "${RUNLEVEL}" = "S" -a "${argv1}" != "single" ]
+elif [[ ( ${RUNLEVEL} == "S" || ${RUNLEVEL} == "1" ) && ${argv1} != "single" ]]
 then
 	level=$(awk -v level="default" '
 		$2 == level {
