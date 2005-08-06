@@ -29,8 +29,11 @@ done
 # Only update if files have actually changed
 update=1
 ref_file="${svcdir}/depcache"
-if [[ $1 == "-u" ]]; then
+
+if [[ $1 == "-u" ]] ; then
 	update=0
+	clock_screw=0
+	mtime_test="${svcdir}/mtime-test.$$"
 
 	# If its not there, we have to update, and make sure its present
 	# for next mtime testing
@@ -38,17 +41,23 @@ if [[ $1 == "-u" ]]; then
 			update=1
 			touch "${svcdir}/depcache"
 	fi
-	
+
+	touch "${mtime_test}"
 	for config in /etc/conf.d /etc/init.d /etc/rc.conf
 	do
-		if is_older_than "${svcdir}/depcache" "${config}" ; then
-			update=1
-			# Get the latest mtime in case something is in the future
-			is_older_than "${ref_file}" "${config}" && ref_file=${config}
-		fi
+		[[ ${update} == 0 ]] && \
+			is_older_than "${svcdir}/depcache" "${config}" && update=1
+		
+		is_older_than "${mtime_test}" "${config}" && clock_screw=1
 	done
+	rm -f "${mtime_test}"
+
+	[[ ${clock_screw} == 1 ]] && \
+		ewarn "Some file in '/etc/{conf.d,init.d}' have Modification time in the future!"
+
 	shift
 fi
+
 [[ ${update} == 0 ]] && exit 0
 
 ebegin "Caching service dependencies"
