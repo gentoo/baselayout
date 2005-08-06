@@ -8,6 +8,8 @@
     but sure that all NEED's will override the rest, that USE will override
     BEFORE/AFTER, and also check both the resolved and unresolved trees.
 
+    Also test if RUNLEVEL is '1' besides 'S', fixing 'init 1'.
+
   05 Aug 2005; Roy Marples <uberlord@gentoo.org>:
 
     Rationalise if/then/else login in runscript.sh svc_start() and svc_stop()
