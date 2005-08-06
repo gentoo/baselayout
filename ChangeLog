@@ -10,6 +10,9 @@
 
     Also test if RUNLEVEL is '1' besides 'S', fixing 'init 1'.
 
+    Hack init.d/clock to wait for /dev/rtc if compiled as a module ... hopefully
+    udev will get sorted soon.
+
   05 Aug 2005; Roy Marples <uberlord@gentoo.org>:
 
     Rationalise if/then/else login in runscript.sh svc_start() and svc_stop()
