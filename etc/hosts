@@ -1,19 +1,31 @@
-# /etc/hosts
+# /etc/hosts: Local Host Database
 #
-# This file describes a number of hostname-to-address
-# mappings for the TCP/IP subsystem.  It is mostly
-# used at boot time, when no name servers are running.
-# On small systems, this file can be used instead of a
-# "named" name server.  Just add the names, addresses
-# and any aliases to this file...
+# This file describes a number of aliases-to-address mappings for the for 
+# local hosts that share this file.
+#
+# In the presence of the domain name service or NIS, this file may not be 
+# consulted at all; see /etc/host.conf for the resolution order.
 #
 
+# IPv4 and IPv6 localhost aliases
 127.0.0.1	localhost
-# IPV6 versions of localhost and co
-::1 ip6-localhost ip6-loopback
-fe00::0 ip6-localnet
-ff00::0 ip6-mcastprefix
-ff02::1 ip6-allnodes
-ff02::2 ip6-allrouters
-ff02::3 ip6-allhosts
+::1	localhost
 
+#
+# Imaginary network.
+#10.0.0.2               myname
+#10.0.0.3               myfriend
+#
+# According to RFC 1918, you can use the following IP networks for private 
+# nets which will never be connected to the Internet:
+#
+#       10.0.0.0        -   10.255.255.255
+#       172.16.0.0      -   172.31.255.255
+#       192.168.0.0     -   192.168.255.255
+#
+# In case you want to be able to connect directly to the Internet (i.e. not 
+# behind a NAT, ADSL router, etc...), you need real official assigned 
+# numbers.  Do not try to invent your own network numbers but instead get one 
+# from your network provider (if any) or from your regional registry (ARIN, 
+# APNIC, LACNIC, RIPE NCC, or AfriNIC.)
+#

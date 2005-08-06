@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  06 Aug 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Add a lot more documentation to /etc/hosts from FreeBSD's standard hosts 
+    file #101418 by Mark Cooper.
+
   06 Aug 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     Revert 'mtime' changes to depscan.sh, and just make it warn if it detects
