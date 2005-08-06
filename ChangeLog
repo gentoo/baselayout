@@ -13,6 +13,8 @@
     Hack init.d/clock to wait for /dev/rtc if compiled as a module ... hopefully
     udev will get sorted soon.
 
+    Try a workaround for the "mtime in future" issues we have with depscan.sh.
+
   05 Aug 2005; Roy Marples <uberlord@gentoo.org>:
 
     Rationalise if/then/else login in runscript.sh svc_start() and svc_stop()
