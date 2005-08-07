@@ -28,7 +28,6 @@ done
 
 # Only update if files have actually changed
 update=1
-ref_file="${svcdir}/depcache"
 
 if [[ $1 == "-u" ]] ; then
 	update=0
@@ -85,7 +84,7 @@ bash "${svcdir}/depcache" | \
 	-f /lib/rcscripts/awk/gendepends.awk || \
 	retval=1
 
-touch -r "${ref_file}" "${svcdir}"/dep{cache,tree}
+touch "${svcdir}"/dep{cache,tree}
 chmod 0644 "${svcdir}"/dep{cache,tree}
 
 eend ${retval} "Failed to cache service dependencies"
