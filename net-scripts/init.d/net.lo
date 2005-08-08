@@ -858,6 +858,24 @@ run() {
 			siface="${iface}"
 		fi
 		[[ -n ${siface} ]] && apply_state "${siface}"
+	else
+		if [[ ${cmd} == "start" ]]; then
+			# Call user-defined failup if it exists
+			if [[ $( type -t failup ) == "function" ]]; then
+				einfo "Running failup function"
+				eindent
+				( failup "${iface}" )
+				eoutdent
+			fi
+		else
+			# Call user-defined faildown if it exists
+			if [[ $( type -t faildown ) == "function" ]]; then
+				einfo "Running faildown function"
+				eindent
+				( faildown "${iface}" )
+				eoutdent
+			fi
+		fi
 	fi
 
 	return "${r}"

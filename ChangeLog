@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  08 Aug 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Add failup/faildown user functions when an interface fails to come up/go
+    down. Fixes bug #101087.
+
   06 Aug 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Add a lot more documentation to /etc/hosts from FreeBSD's standard hosts 

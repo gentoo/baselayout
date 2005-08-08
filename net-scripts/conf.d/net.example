@@ -434,7 +434,8 @@
 # 
 # Four functions can be defined which will be called surrounding the
 # start/stop operations.  The functions are called with the interface
-# name first so that one function can control multiple adapters.
+# name first so that one function can control multiple adapters. An extra two
+# functions can be defined when an interface fails to start or stop.
 #
 # The return values for the preup and predown functions should be 0
 # (success) to indicate that configuration or deconfiguration of the
@@ -443,8 +444,8 @@
 # non-zero value, then the interface will not be allowed to continue
 # deconfiguration.
 #
-# The return values for the postup and postdown functions are ignored
-# since there's nothing to do if they indicate failure.
+# The return values for the postup, postdown, failup and faildown functions are
+# ignored since there's nothing to do if they indicate failure.
 #
 # ${IFACE} is set to the interface being brought up/down
 # ${IFVAR} is ${IFACE} converted to variable name bash allows
@@ -496,6 +497,16 @@
 #	# thought of anything nifty to do with it yet ;-)
 #	# Return 0 always
 #	return 0
+#}
+
+#failup() {
+#       # This function is mostly here for completeness... I haven't
+#       # thought of anything nifty to do with it yet ;-)
+#}
+
+#faildown()
+#       # This function is mostly here for completeness... I haven't
+#       # thought of anything nifty to do with it yet ;-)
 #}
 
 ##############################################################################
