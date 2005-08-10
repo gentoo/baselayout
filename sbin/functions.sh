@@ -1,6 +1,5 @@
 # Copyright 1999-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header$
 
 RC_GOT_FUNCTIONS="yes"
 
@@ -92,7 +91,7 @@ import_addon profiling-functions.sh
 bootlog() {
 	return 0
 }
-import_addon bootlogger.sh
+[[ ${RC_BOOTLOG} == "yes" ]] && import_addon bootlogger.sh
 
 # void get_bootconfig()
 #
