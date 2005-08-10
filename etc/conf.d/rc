@@ -43,6 +43,12 @@ RC_AUTO_INTERFACE="yes"
 
 RC_VOLUME_ORDER="raid evms lvm dm"
 
+# RC_BOOTLOG will generate a log of the boot messages shown on the console.  
+# Useful for headless machines or debugging.  You need to emerge the 
+# app-admin/showconsole package for this to work.
+
+RC_BOOTLOG="no"
+
 # RC_USE_FSTAB allows you to override the default mount options for the 
 # standard /proc, /sys, /dev, and /dev/pts mount points.  Note that this 
 # is the new way for selecting ramfs/tmpfs/etc... for udev mounting.
