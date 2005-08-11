@@ -1,6 +1,8 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+* baselayout-1.12.0_pre5 (11 Aug 2005)
+
   08 Aug 2005; Roy Marples <uberlord@gentoo.org>:
 
     Add failup/faildown user functions when an interface fails to come up/go
