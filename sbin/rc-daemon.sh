@@ -59,8 +59,11 @@ rc_shift_args() {
 			-x|--exec|-a|--startas)
 				addvar="cmd"
 				;;
-			-p|--pidfile)
+			-p|--pidfile|--pid)
 				addvar="pidfile"
+				;;
+			--pidfile=*)
+				pidfile="${1##--pidfile=}"
 				;;
 			--pid=*)
 				pidfile="${1##--pid=}"
