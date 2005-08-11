@@ -3,6 +3,8 @@
 
   11 Aug 2005; Roy Marples <uberlord@gentoo.org>:
 
+    Add support for --pid ${pidfile} and --pidfile=${pidfile} in rc-daemon.sh
+
     Remove tail from depdir() in /sbin/modules-update
 
   10 Aug 2005; Mike Frysinger <vapier@gentoo.org>:
