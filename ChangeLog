@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  11 Aug 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Remove tail from depdir() in /sbin/modules-update
+
   10 Aug 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Document the boot logging option RC_BOOTLOG with app-admin/showconsole.
