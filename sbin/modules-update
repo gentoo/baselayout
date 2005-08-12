@@ -71,7 +71,8 @@ set -e
 export LC_COLLATE="C"
 
 depdir() {
-	local dep=$(sed -n -e 's/^[ \t]*depfile=//g; s,/[^/]*$,,g; {$p}' ${CFGFILE})
+	local dep=$(sed -n -e '/[ \t]*depfile=/h;${x;s/[ \t]*depfile=//g;s,/[^/]*$,,p}' \
+		"${CFGFILE}")
 	[[ -z ${dep} ]] && dep="/lib/modules/${KV}"
 	echo "${dep}"
 }
