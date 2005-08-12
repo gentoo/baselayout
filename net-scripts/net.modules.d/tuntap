@@ -88,7 +88,7 @@ tuntap_pre_start() {
 	eval opts=\"\$\{tunctl_${ifvar}\}\"
 
 	ebegin "Creating Tun/Tap interface ${iface}"
-	tunctl ${opts} -t "${iface}" &>${devnull}
+	tunctl ${opts} -t "${iface}"
 	eend "$?" || return 1
 
 	return 0
