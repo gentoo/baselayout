@@ -8,7 +8,7 @@
 
     tuntap no longer complains about ${devnull}
 
-    We now merge resolv.conf's from active interfaces
+    We now merge resolv.conf and ntp.conf from active interfaces
 
   11 Aug 2005; Roy Marples <uberlord@gentoo.org>:
 
