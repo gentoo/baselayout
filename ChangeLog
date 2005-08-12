@@ -1,6 +1,15 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  12 Aug 2005; Roy Marples <uberlord@gentoo.org>:
+
+    RC_AUTO_INTERFACE now defaults to no - we no longer mess with /etc unless
+    told too
+
+    tuntap no longer complains about ${devnull}
+
+    We now merge resolv.conf's from active interfaces
+
   11 Aug 2005; Roy Marples <uberlord@gentoo.org>:
 
     Add support for --pid ${pidfile} and --pidfile=${pidfile} in rc-daemon.sh
