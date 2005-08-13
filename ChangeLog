@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  13 Aug 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Parallel startup races should now be fixed
+
   12 Aug 2005; Roy Marples <uberlord@gentoo.org>:
 
     RC_AUTO_INTERFACE now defaults to no - we no longer mess with /etc unless
