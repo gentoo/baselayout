@@ -306,16 +306,17 @@ end_service()
 	local service="$1" exitstatus="$2"
 
 	# if we are doing critical services, there is no fifo
-	[[ "${START_CRITICAL}" == "yes" ]] && return
+	[[ ${START_CRITICAL} == "yes" ]] && return
 
 	if [[ -n ${exitstatus} ]] ; then
 		echo "${exitstatus}" > "${svcdir}/exitcodes/${service}"
 	fi
 
 	# move the fifo to a unique name so no-one is waiting for it
-	if [[ -e "${svcdir}/exclusive/${service}" ]]; then
-		local tempname="${svcdir}/exclusive/${service}.$$"
-		mv -f "${svcdir}/exclusive/${service}" "${tempname}"
+	local fifo="${svcdir}/exclusive/${service}"
+	if [[ -e "${fifo}" ]]; then
+		local tempname="${fifo}.$$"
+		mv -f "${fifo}" "${tempname}"
 
 		# wake up anybody that was waiting for the fifo
 		touch "${tempname}"
@@ -360,14 +361,15 @@ start_service() {
 	service_started "${service}" && return 0
 	service_inactive "${service}" && return 1
 
-	splash "svc_start" "${service}"
 	if is_fake_service "${service}" "${SOFTLEVEL}" ; then
 		mark_service_started "${service}"
+		splash "svc_start" "${service}"
 		splash "svc_started" "${service}" "0"
 		return 0
 	fi
 
-	begin_service "${service}"
+	begin_service "${service}" || return 0
+	splash "svc_start" "${service}"
 	if [[ ${RC_PARALLEL_STARTUP} != "yes" \
 		|| ${START_CRITICAL} == "yes" ]] ; then
 
