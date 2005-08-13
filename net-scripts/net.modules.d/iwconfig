@@ -209,18 +209,18 @@ iwconfig_setup_specific() {
 	fi
 
 	key=$( iwconfig_get_wep_key )
-	if ! eval iwconfig ${iface} key ${key} ; then
+	if ! iwconfig "${iface}" key ${key} ; then
 		if [[ ${key} != "off" ]]; then
 			ewarn "${iface} does not support setting keys"
 			ewarn "or the parameter \"mac_key_${ESSIDVAR}\" or \"key_${ESSIDVAR}\" is incorrect"
 		fi
 	fi
 
-	if ! eval iwconfig "${iface}" essid "${ESSID}" ; then
+	if ! iwconfig "${iface}" essid "${ESSID}" ; then
 		eerror "${iface} does not support setting ESSID to \"${dessid}\""
 		return 1
 	fi
-	eval iwconfig "${iface}" nick "${ESSID}" 2>/dev/null
+	iwconfig "${iface}" nick "${ESSID}" 2>/dev/null
 
 	eval channel=\"\$\{channel_${ifvar}\}\"
 	# We default the channel to 3
@@ -251,10 +251,10 @@ iwconfig_associate_mac() {
 	# Checks if a MAC address has been assigned
 	local mac=$( iwconfig_get_ap_mac_address "$1" ) i
 	local -a invalid_macs=(
-	"00:00:00:00:00:00"
-	"44:44:44:44:44:44"
-	"FF:00:00:00:00:00" 
-	"FF:FF:FF:FF:FF:FF"
+		"00:00:00:00:00:00"
+		"44:44:44:44:44:44"
+		"FF:00:00:00:00:00" 
+		"FF:FF:FF:FF:FF:FF"
 	)
 
 	[[ -z ${mac} ]] && return 1
@@ -327,10 +327,12 @@ iwconfig_wait_for_association() {
 # and if we have a WEP key for the ESSID or not
 # so we can fail gracefully without even trying to connect
 iwconfig_associate() {
-	local iface="$1" mac="$2" wep_required="$3" w="(WEP Disabled)"
+	local iface="$1" mode="${2:-managed}"
+	local mac="$2" wep_required="$3" w="(WEP Disabled)"
 	local dessid="${ESSID//\\\\/\\\\}" key
 	wep_required="${wep_required:-off}"
 
+	iwconfig "${iface}" mode "${mode}" 2>/dev/null
 	if [[ ${ESSID} == "any" ]]; then
 		iwconfig "${iface}" ap any 2>/dev/null
 		dessid="any"
@@ -347,7 +349,7 @@ iwconfig_associate() {
 			vewarn "\"${dessid}\" is not WEP enabled - ignoring setting"
 		fi
 
-		if ! eval iwconfig "${iface}" key ${key} ; then
+		if ! iwconfig "${iface}" key ${key} ; then
 			if [[ ${key} != "off" ]]; then
 				ewarn "${iface} does not support setting keys"
 				ewarn "or the parameter \"mac_key_${ESSIDVAR}\" or \"key_${ESSIDVAR}\" is incorrect"
@@ -444,28 +446,32 @@ iwconfig_scan() {
 	[[ -n ${x} ]] && sleep "${x}"
 
 	local error=true i=-1 line
-	local -a mac essid enc qual
+	local -a mac essid enc qual mode
 
 	while read line; do
 		error=false
 		case "${line}" in
 			*Address:*)
-			(( i++ ))
-			mac[i]=$( echo "${line#*: }" | tr '[:lower:]' '[:upper:]' )
-			;;
+				(( i++ ))
+				mac[i]=$( echo "${line#*: }" | tr '[:lower:]' '[:upper:]' )
+				;;
 			*ESSID:*)
-			essid[i]="${line#*\"}"
-			essid[i]="${essid[i]%*\"}"
-			;;
+				essid[i]="${line#*\"}"
+				essid[i]="${essid[i]%*\"}"
+				;;
+			*Mode:*)
+				mode[i]="${line#*:}"
+				[[ ${mode[i]} == "Master" ]] && mode[i]="Managed"
+				;;
 			*'Encryption key:'*)
-			enc[i]="${line#*:}"
-			;;
+				enc[i]="${line#*:}"
+				;;
 			*Quality*)
-			qual[i]="${line#*:}"
-			qual[i]="${qual[i]%/*}"
-			qual[i]="${qual[i]//[![:digit:]]/}"
-			qual[i]="${qual[i]:-0}"
-			;;
+				qual[i]="${line#*:}"
+				qual[i]="${qual[i]%/*}"
+				qual[i]="${qual[i]//[![:digit:]]/}"
+				qual[i]="${qual[i]:-0}"
+				;;
 		esac
 	done < <( iwlist "${iface}" scan 2>/dev/null )
 
@@ -511,9 +517,10 @@ iwconfig_scan() {
 
 	for (( i=0; i<${#mac[@]}; i++ )); do
 		(( x=(i * 2) + 1 ))
-		mac_APs[i]="${mac[${sortline[${x}]}]}"
-		essid_APs[i]="${essid[${sortline[${x}]}]}"
-		enc_APs[i]="${enc[${sortline[${x}]}]}"
+		mac_APs[i]="${mac[${sortline[x]}]}"
+		essid_APs[i]="${essid[${sortline[x]}]}"
+		mode_APs[i]="${mode[${sortline[x]}]}"
+		enc_APs[i]="${enc[${sortline[x]}]}"
 	done
 
 	return 0
@@ -581,12 +588,14 @@ iwconfig_scan_report() {
 
 	for i in ${u[@]}; do
 		unset essid_APs[i]
+		unset mode_APs[i]
 		unset mac_APs[i]
 		unset enc_APs[i]
 	done
 
 	# We need to squash our arrays so indexes work again
 	essid_APs=( "${essid_APs[@]}" )
+	mode_APs=( "${mode_APs[@]}" )
 	mac_APs=( "${mac_APs[@]}" )
 	enc_APs=( "${enc_APs[@]}" )
 }
@@ -630,7 +639,8 @@ iwconfig_connect_preferred() {
 		for ((i=0; i<${#essid_APs[@]}; i++)); do
 			if [[ ${essid} == "${essid_APs[i]}" ]]; then
 				ESSID="${essid}"
-				iwconfig_associate "${iface}" "${mac_APs[i]}" "${enc_APs[i]}" && return 0
+				iwconfig_associate "${iface}" "${mode_APs[i]}" "${mac_APs[i]}" \
+					"${enc_APs[i]}" && return 0
 				break
 			fi
 		done
@@ -656,7 +666,8 @@ iwconfig_connect_not_preferred() {
 		done
 		if ! ${has_preferred} ; then
 			ESSID="${essid_APs[i]}"
-			iwconfig_associate "${iface}" "${mac_APs[i]}" "${enc_APs[i]}" && return 0
+			iwconfig_associate "${iface}" "${mode_APs[i]}" "${mac_APs[i]}" \
+				"${enc_APs[i]}" && return 0
 		fi
 	done
 
@@ -677,6 +688,7 @@ iwconfig_defaults() {
 	iwconfig "${iface}" power off &>/dev/null
 	iwconfig "${iface}" txpower auto &>/dev/null
 	iwconfig "${iface}" key [1] off &>/dev/null
+	iwconfig "${iface}" mode managed &>/dev/null
 }
 
 # void iwconfig_strip_associated(char *iface)
@@ -699,10 +711,12 @@ iwconfig_strip_associated() {
 			if [[ ${essid_APs[j]} == "${e}" ]]; then
 				ewarn "${e} has already been associated with ${i}"
 				unset essid_APs[j]
+				unset mode_Aps[j]
 				unset mac_APs[j]
 				unset enc_APs[j]
 				# We need to squash our arrays so that indexes work
 				essid_APs=( "${essid_APs[@]}" )
+				mode_APs=( "${mode_APs[@]}" )
 				mac_APs=( "${mac_APs[@]}" )
 				enc_APs=( "${enc_APs[@]}" )
 				break
@@ -728,7 +742,7 @@ iwconfig_strip_associated() {
 # variables for the ESSID
 iwconfig_configure() {
 	local iface="$1" test x e ifvar=$( bash_variable "$1" )
-	local -a essid_APs mac_APs enc_APs
+	local -a essid_APs mac_APs mode_APs enc_APs
 
 	iwconfig_defaults "${iface}"
 	iwconfig_user_config "${iface}"
@@ -801,15 +815,15 @@ iwconfig_configure() {
 
 		iwconfig_connect_preferred "${iface}" && return 0
 		[[ ${associate_order} == "forcepreferred" ]] \
-		&& iwconfig_force_preferred "${iface}" && return 0
+			&& iwconfig_force_preferred "${iface}" && return 0
 		[[ ${associate_order} == "any" || ${associate_order} == "forceany" ]] \
-		&& iwconfig_connect_not_preferred "${iface}" && return 0
+			&& iwconfig_connect_not_preferred "${iface}" && return 0
 	fi
 
 	e="associate with"
 	[[ -z ${mac_APs} ]] && e="find"
 	[[ ${preferred_only} == "force" || ${preferred_aps} == "forceonly" ]] \
-	&& e="force"
+		&& e="force"
 	e="Couldn't ${e} any access points on ${iface}"
 
 	eval ESSID=\"\$\{adhoc_essid_${ifvar}\}\"

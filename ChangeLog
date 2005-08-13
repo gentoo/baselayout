@@ -5,6 +5,8 @@
 
     Parallel startup races should now be fixed
 
+    iwconfig now scans for mode so you can prefer ad-hoc networks
+
   12 Aug 2005; Roy Marples <uberlord@gentoo.org>:
 
     RC_AUTO_INTERFACE now defaults to no - we no longer mess with /etc unless

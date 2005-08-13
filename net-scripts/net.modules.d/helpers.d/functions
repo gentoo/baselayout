@@ -273,6 +273,10 @@ merge_configs() {
 select_best_interface() {
 	local -a ifs=( $(order_interfaces true) )
 
+	# We never select lo as the best interface
+	local x=" ${ifs[@]} "
+	ifs=( ${x// lo / } )
+
 	local iface
 	for iface in ${ifs[@]} ; do
 		if [[ -e "${statedir}/${iface}/resolv.conf" ]]; then
