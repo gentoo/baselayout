@@ -524,12 +524,9 @@ iface_start() {
 		fallback=( "${fallback[@]}" "${b[@]}" )
 	done
 
-	eval a=( \"\$\{fallback_route_${ifvar}\[@\]\}\" )
-	for (( i=0; i<${#a[@]}; i++ )); do 
-		local -a b=( $( expand_parameters "${a[i]}" ) )
-		fallback_route=( "${fallback_route[@]}" "${b[@]}" )
-	done
-
+	# We don't expand routes
+	eval fallback_route=( \"\$\{fallback_route_${ifvar}\[@\]\}\" )
+	
 	# We must support old configs
 	if [[ -z ${config} ]]; then
 		interface_get_old_config "${iface}" || return 1
