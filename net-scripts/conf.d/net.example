@@ -504,7 +504,7 @@
 #       # thought of anything nifty to do with it yet ;-)
 #}
 
-#faildown()
+#faildown() {
 #       # This function is mostly here for completeness... I haven't
 #       # thought of anything nifty to do with it yet ;-)
 #}
