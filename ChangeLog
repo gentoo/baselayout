@@ -5,6 +5,9 @@
 
     fallback_route_eth0 now works again
 
+    Implemented interactive startup - fixes #5353
+    Thanks to Paul Pacheco for the patch
+
   13 Aug 2005; Roy Marples <uberlord@gentoo.org>:
 
     Parallel startup races should now be fixed

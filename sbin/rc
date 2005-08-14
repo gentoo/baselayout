@@ -90,6 +90,69 @@ udev_version() {
 	echo "${version}"
 }
 
+# void noblock_read(var)
+#
+#   reads a line of input into var like regular read
+#   but it does not block waiting for input
+#
+noblock_read() {
+	local old_tty_settings="$(stty -g)"
+	stty -icanon min 0 time 0
+	read "$@"
+	stty "${old_tty_settings}"
+}
+
+# bool user_want_interactive(void)
+#
+#   return 0 if user wants interactive mode
+#
+user_want_interactive() {
+	local user_input
+	noblock_read user_input
+	[[ ${user_input} == *"I"* || ${user_input} == *"i"* ]]
+}
+
+# void do_interactive
+#
+#   starts, skips, continues or drops to the shell
+#   depending on user selection
+#
+do_interactive() {
+	local service="$1"
+	shift
+
+	local start_text="Start service"
+	local skip_text="Skip service"
+	local continue_text="Continue boot process"
+	local shell_text="Exit to shell"
+	
+	echo
+	echo "About to start the service ${service}"
+	PS3="Enter your selection: "
+	select action in "${start_text}" "${skip_text}"	"${continue_text}" \
+		"${shell_text}"
+	do
+		case ${action} in
+			"${start_text}") 
+				"$@"
+				break
+				;;
+			"${skip_text}")
+				break
+				;;
+			"${continue_text}")
+				export interactive="no"
+				"$@"
+				break
+				;;
+			"${shell_text}")
+				echo
+				sulogin "${CONSOLE}"
+				;;
+		esac
+	done
+}
+
 populate_udev() {
 	# Now populate /dev
 	/sbin/udevstart
@@ -152,7 +215,8 @@ then
 	echo -e "${GOOD}Gentoo Linux${GENTOO_VERS}; ${BRACKET}http://www.gentoo.org/${NORMAL}"
 	echo -e " Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2"
 	echo
-
+	echo -e "Press ${GOOD}I${NORMAL} to enter interactive boot mode"
+	echo
 	check_statedir /proc
 
 	ebegin "Mounting proc at /proc"
@@ -390,10 +454,6 @@ then
 	# logs, and that with dmesg can be used to check for problems
 	/bin/dmesg -n 1
 
-	# Start RAID/LVM/EVMS/DM volumes for /usr, /var, etc.
-	# NOTE: this should be done *before* mounting anything
-	[[ -z ${CDBOOT} ]] && start_volumes
-
 	# We set the forced softlevel from the kernel command line
 	# It needs to be run right after proc is mounted for the
 	# boot runlevel
@@ -438,9 +498,8 @@ then
 	for x in ${CRITICAL_SERVICES}
 	do
 		splash "svc_start" "${x}"
-
-		if ! start_critical_service "${x}"
-		then
+		user_want_interactive && export interactive="yes"
+		if ! start_critical_service "${x}" ; then
 			splash "critical" &>/dev/null &
 			
 			echo
@@ -519,6 +578,8 @@ then
 	# should help speed things up a bit
 	rm -rf $(ls -d1 "${svcdir}/"* 2>/dev/null | \
 	         grep -ve '\(depcache\|deptree\|envcache\)')
+
+	echo "${interactive}" > "${svcdir}/interactive"
 
 	# Update the dependency cache
 	/sbin/depscan.sh -u
@@ -787,10 +848,12 @@ else
 		is_critical_service "${i}" || dep_stop "${i}"
 	done
 
+	export STOP_CRITICAL="yes"
 	# Now stop the rest
 	for i in $(get_stop_services) ; do
 		dep_stop "${i}"
 	done
+	unset STOP_CRITICAL
 fi
 
 # Only change softlevel AFTER all the services have been stopped,
@@ -846,9 +909,19 @@ get_start_services() {
 	trace_dependencies ${list}
 }
 
+[[ -e "${svcdir}/interactive" ]] \
+	&& export interactive="$(<"${svcdir}/interactive")"
+
 # Start scripts
 for i in $(get_start_services) ; do
-	service_stopped "${i}" && start_service "${i}"
+	if service_stopped "${i}" ; then
+		user_want_interactive && export interactive="yes"
+		if [[ ${interactive} == "yes" ]]; then
+			do_interactive "${i}" start_service "${i}"
+		else
+			start_service "${i}"
+		fi
+	fi
 done
 
 # Wait for any services that may still be running ...
@@ -878,7 +951,17 @@ fi
 rm -rf "${svcdir}/failed" &>/dev/null
 
 # If we were in the boot runlevel, it is done now ...
-[ -n "${BOOT}" ] && unset BOOT
+if [[ -n ${BOOT} ]]; then
+	unset BOOT
+	# Save our interactive mode into the default runlevel
+	echo "${interactive}" > "${svcdir}/interactive"
+else
+	# As we're not boot, we remove the interactive file
+	[[ -e "${svcdir}/interactive" ]] && rm -f "${svcdir}/interactive"
+fi
+
+# No need to export this anymore
+unset interactive
 
 splash "rc_exit"
 
