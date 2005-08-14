@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  14 Aug 2005; Roy Marples <uberlord@gentoo.org>:
+
+    fallback_route_eth0 now works again
+
   13 Aug 2005; Roy Marples <uberlord@gentoo.org>:
 
     Parallel startup races should now be fixed
