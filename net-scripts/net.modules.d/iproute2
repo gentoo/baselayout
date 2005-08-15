@@ -193,6 +193,10 @@ iproute2_get_old_config() {
 	# Add inet6 addresses to our config if required
 	[[ -n ${inet6} ]] && config=( "${config[@]}" "${inet6[@]}" )
 
+	# Support old style iface_xxx syntax
+	[[ -z ${config} && $(type -t ifconfig_get_old_config) == "function" ]] \
+		&& ifconfig_get_old_config "${iface}"
+
 	return 0
 }
 

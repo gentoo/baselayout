@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  15 Aug 2005; Roy Marples <uberlord@gentoo.org>:
+
+    iproute2 now understands the old iface_xxx syntax, but this only works
+    if ifconfig (from net-tools) is installed
+
   14 Aug 2005; Roy Marples <uberlord@gentoo.org>:
 
     fallback_route_eth0 now works again
