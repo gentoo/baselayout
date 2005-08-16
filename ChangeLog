@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  15 Aug 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Add ocfs2 to the NET_FS_LIST #102659 by Lazar Obradovic.
+
   15 Aug 2005; Roy Marples <uberlord@gentoo.org>:
 
     iproute2 now understands the old iface_xxx syntax, but this only works
