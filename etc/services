@@ -769,10 +769,10 @@ netboot-pxe	3928/tcp	pxe		# PXE NetBoot Manager
 netboot-pxe	3928/udp	pxe
 smauth-port	3929/tcp			# AMS Port
 smauth-port	3929/udp
-pxc-spvr-ft	4002/tcp	pxc-spvr-ft rquotad
-pxc-spvr-ft	4002/udp	pxc-spvr-ft rquotad
-pxc-splr-ft	4003/tcp	pxc-splr-ft
-pxc-splr-ft	4003/udp	pxc-splr-ft
+pxc-spvr-ft	4002/tcp	pxc-spvr-ft
+pxc-spvr-ft	4002/udp	pxc-spvr-ft
+pxc-splr-ft	4003/tcp	pxc-splr-ft rquotad
+pxc-splr-ft	4003/udp	pxc-splr-ft rquotad
 pxc-roid	4004/tcp	pxc-roid
 pxc-roid	4004/udp	pxc-roid
 pxc-pin		4005/tcp	pxc-pin
