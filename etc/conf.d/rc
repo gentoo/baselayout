@@ -27,13 +27,12 @@ RC_NET_STRICT_CHECKING="no"
 
 # RC_AUTO_INTERFACE allows us to try and configure your interfaces
 # automatically. This includes
-#     default to DHCP
 #     link /etc/{resolv,ntp,yp}.conf to /var/lib/net-scripts
 #     calculate a metric based on what interfaces are up and type
 #     apply interface state (resolv.conf, ntp.conf, etc)
 #     merge resolv.conf and ntp.conf from active interfaces based on metric
 # otherwise we
-#     don't do the above and default the config to NULL
+#     don't do the above
 
 RC_AUTO_INTERFACE="no"
 

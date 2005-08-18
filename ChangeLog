@@ -1,6 +1,17 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  18 Aug 2005; Roy Marples <uberlord@gentoo.org>:
+
+    RC_AUTO_INTERFACE defaults to NO - but we still default to DHCP
+    
+    consoletype is now cached. This has the benefit of being very slightly
+    faster and you now get coloured text for parallel startup
+    
+    Parallel startup also does parallel shutdown as well
+    
+    You're now warned if you're using a deprecated conf.d/net syntax
+    
   18 Aug 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Add a note about the 6th field for root filesystems #95846.

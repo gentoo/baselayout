@@ -530,6 +530,10 @@ iface_start() {
 	# We must support old configs
 	if [[ -z ${config} ]]; then
 		interface_get_old_config "${iface}" || return 1
+		if [[ -n ${config} ]]; then
+			ewarn "You are using a depreciated configuration syntax for ${iface}"
+			ewarn "You are advised to read /etc/conf.d/net.example and upgrade it accordingly"
+		fi
 	fi
 
 	# Handle "noop" correctly
@@ -547,7 +551,7 @@ iface_start() {
 	# Provide a default of DHCP if no configuration is set and we're auto
 	# Otherwise a default of NULL
 	if [[ -z ${config} ]]; then
-		if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
+#		if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
 			if [[ $( type -t "dhcp_start" ) == "function" ]]; then
 				config=( "dhcp" )
 				ewarn "Configuration not set for ${iface} - assuming dhcp"
@@ -556,10 +560,10 @@ iface_start() {
 				eerror "No configuration for ${iface}"
 				return 1
 			fi
-		else
-			config=( "null" )
-			ewarn "Configuration not set for ${iface} - assuming null"
-		fi
+#		else
+#			config=( "null" )
+#			ewarn "Configuration not set for ${iface} - assuming null"
+#		fi
 	fi
 
 	einfo "Bringing up ${iface}"
