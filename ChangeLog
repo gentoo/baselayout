@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  18 Aug 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Add a note about the 6th field for root filesystems #95846.
+
   16 Aug 2005; Mike Frysinger <vapier@gentoo.org>:
 
     rquotad is supposed to be an alias for port 4003 not 4002.
