@@ -777,7 +777,6 @@ requote() {
 	echo "$*"
 }
 
-
 ##############################################################################
 #                                                                            #
 # This should be the last code in here, please add all functions above!!     #
@@ -792,8 +791,13 @@ if [ -z "${EBUILD}" ] ; then
 	# doing 'su -c foo', or for something like:  PATH= rcscript start
 	PATH="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/sbin:${PATH}"
 
-	if [ "$(/sbin/consoletype 2> /dev/null)" = "serial" ] ; then
-		# We do not want colors/endcols on serial terminals
+	# Cache the CONSOLETYPE - this is important as backgrounded shells don't
+	# have a TTY. rc unsets it at the end of running so it shouldn't hang
+	# around
+	if [[ -z ${CONSOLETYPE} ]]; then
+		export CONSOLETYPE=$( /sbin/consoletype 2>/dev/null )
+	fi
+	if [[ ${CONSOLETYPE} == "serial" ]] ; then
 		RC_NOCOLOR="yes"
 		RC_ENDCOL="no"
 	fi

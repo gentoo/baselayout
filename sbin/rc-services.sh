@@ -306,16 +306,17 @@ end_service()
 	local service="$1" exitstatus="$2"
 
 	# if we are doing critical services, there is no fifo
-	[[ "${START_CRITICAL}" == "yes" ]] && return
+	[[ ${START_CRITICAL} == "yes" ]] && return
 
 	if [[ -n ${exitstatus} ]] ; then
 		echo "${exitstatus}" > "${svcdir}/exitcodes/${service}"
 	fi
 
 	# move the fifo to a unique name so no-one is waiting for it
-	if [[ -e "${svcdir}/exclusive/${service}" ]]; then
-		local tempname="${svcdir}/exclusive/${service}.$$"
-		mv -f "${svcdir}/exclusive/${service}" "${tempname}"
+	local fifo="${svcdir}/exclusive/${service}"
+	if [[ -e "${fifo}" ]]; then
+		local tempname="${fifo}.$$"
+		mv -f "${fifo}" "${tempname}"
 
 		# wake up anybody that was waiting for the fifo
 		touch "${tempname}"
@@ -335,14 +336,12 @@ wait_service()
 	local service="$1"
 	local fifo="${svcdir}/exclusive/${service}"
 	
-	[[ ${START_CRITICAL} == "yes" ]] && return 0
-	service_started "${service}" && return 0
+	[[ ${START_CRITICAL} == "yes" || ${STOP_CRITICAL} == "yes" ]] && return 0
 	[[ ! -e ${fifo} ]] && return 0
 
 	# This will block until the service fifo is touched
 	# Otheriwse we don't block
-	#cat "${svcdir}/exclusive/${service}" 2> /dev/null
-	local tmp=$( < "${fifo}" 2>/dev/null )
+	local tmp=$( < "${fifo}" &>/dev/null )
 	local exitstatus=$( < "${svcdir}/exitcodes/${service}" )
 
 	return "${exitstatus}"
@@ -356,21 +355,26 @@ start_service() {
 	local service="$1"
 	[[ -z ${service} ]] && return 1
 
+	if [[ ! -e "/etc/init.d/${service}" ]]; then
+		mark_service_stopped "${service}"
+		return 1
+	fi
+	
 	service_starting "${service}" && return 0
 	service_started "${service}" && return 0
 	service_inactive "${service}" && return 1
 
-	splash "svc_start" "${service}"
 	if is_fake_service "${service}" "${SOFTLEVEL}" ; then
 		mark_service_started "${service}"
+		splash "svc_start" "${service}"
 		splash "svc_started" "${service}" "0"
 		return 0
 	fi
 
-	begin_service "${service}"
+	begin_service "${service}" || return 0
+	splash "svc_start" "${service}"
 	if [[ ${RC_PARALLEL_STARTUP} != "yes" \
 		|| ${START_CRITICAL} == "yes" ]] ; then
-
 		# if we can not start the services in parallel
 		# then just start it and return the exit status
 		( "/etc/init.d/${service}" start )
@@ -381,10 +385,10 @@ start_service() {
 	else
 		# if parallel startup is allowed, start it in background
 		(
-		( "/etc/init.d/${service}" start )
-		retval="$?"
-		splash "svc_started" "${service}" "${retval}"
-		end_service "${service}" "${retval}"
+			"/etc/init.d/${service}" start 
+			retval="$?"
+			splash "svc_started" "${service}" "${retval}"
+			end_service "${service}" "${retval}"
 		) &
 		return 0
 	fi
@@ -395,27 +399,49 @@ start_service() {
 #   Stop 'service' if it is not already running.
 #
 stop_service() {
-	[[ -z $1 ]] && return 1
+	local service="$1"
+	[[ -z ${service} ]] && return 1
 
-	service_stopping "$1" && return 0
-	service_stopped "$1" && return 0
+	if [[ ! -e "/etc/init.d/${service}" ]]; then
+		mark_service_stopped "${service}"
+		return 0
+	fi
 
-	splash "svc_stop" "$1"
+	service_stopping "${service}" && return 0
+	service_stopped "${service}" && return 0
 	
 	local level="${SOFTLEVEL}"
 	is_runlevel_stop && level="${OLDSOFTLEVEL}"
 
-	if is_fake_service "$1" "${level}" ; then
-		mark_service_stopped "$1"
-		splash "svc_stopped" "$1" "0"
+	if is_fake_service "${service}" "${level}" ; then
+		splash "svc_stop" "${service}"
+		mark_service_stopped "${service}"
+		splash "svc_stopped" "${service}" "0"
 		return 0
 	fi
 
-	(. /sbin/runscript.sh "/etc/init.d/$1" stop)
-	local retval="$?"
-	splash "svc_stopped" "$1" "${retval}"
+	begin_service "${service}" || return 0
 
-	return "${retval}"
+	splash "svc_stop" "${service}"
+	if [[ ${RC_PARALLEL_STARTUP} != "yes" \
+		|| ${STOP_CRITICAL} == "yes" ]] ; then
+		# if we can not start the services in parallel
+		# then just start it and return the exit status
+		( "/etc/init.d/${service}" stop )
+		retval="$?"
+		splash "svc_stopped" "${service}" "${retval}"
+		end_service "${service}" "${retval}"
+		return "${retval}"
+	else
+		# if parallel startup is allowed, start it in background
+		(
+			( "/etc/init.d/${service}" stop )
+			retval="$?"
+			splash "svc_stopped" "${service}" "${retval}"
+			end_service "${service}" "${retval}"
+		) &
+		return 0
+	fi
 }
 
 # bool mark_service_starting(service)
