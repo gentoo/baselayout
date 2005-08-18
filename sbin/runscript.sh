@@ -52,7 +52,6 @@ fi
 [[ ${NETSERVICE} == "yes" ]]                    && source "$(add_suffix /etc/conf.d/net)"
 [[ -e $(add_suffix /etc/rc.conf) ]]             && source "$(add_suffix /etc/rc.conf)"
 
-
 usage() {
 	local IFS="|"
 	myline="Usage: ${myservice} { $* "
@@ -138,6 +137,7 @@ svc_stop() {
 	# Save the IN_BACKGROUND var as we need to clear it for stopping depends
 	local ib_save="${IN_BACKGROUND}"
 	unset IN_BACKGROUND
+	local -a servicelist=() index=0
 
 	for mydep in ${mydeps} ; do
 		# If some service 'need' $mydep, stop it first; or if it is a runlevel change,
@@ -145,44 +145,65 @@ svc_stop() {
 		if needsme "${mydep}" >/dev/null || \
 		   (is_runlevel_stop && ibefore "${mydep}" >/dev/null)
 		then
-			local servicelist=$(needsme "${mydep}")
+			local -a sl=( $(needsme "${mydep}") )
 
 			# On runlevel change, stop all services "after $mydep" first ...
-			is_runlevel_stop && servicelist="${servicelist} $(ibefore "${mydep}")"
+			if is_runlevel_stop ; then
+				sl=( "${sl[@]}" $(ibefore "${mydep}") )
+			fi
 
-			for x in ${servicelist} ; do
-				# Make sure we have a relevant rc-script ...
-				if [[ ${x} != "net" ]] && [[ ! -f /etc/init.d/${x} ]] ; then
+			local z="${#sl[@]}"
+			for (( x=0; x<z; x++ )); do
+				# Service not currently running, continue
+				if ! service_started "${sl[x]}" ; then
+					unset sl[x]
 					continue
 				fi
-
-				# Service not currently running, continue
-				service_started "${x}" || continue
 
 				if ibefore -t "${mydep}" "${x}" >/dev/null && \
 				   [[ -L ${svcdir}/softscripts.new/${x} ]]
 				then
 					# Service do not 'need' $mydep, and is still present in
 					# new runlevel ...
+					unset sl[x]
 					continue
 				fi
-
-				stop_service "${x}"
-
-				if ! service_stopped "${x}" ; then
-					# If we are halting the system, try and get it down as
-					# clean as possible, else do not stop our service if
-					# a dependent service did not stop.
-					if needsme -t "${mydep}" "${x}" >/dev/null && \
-					   [[ ${SOFTLEVEL} != "reboot" && ${SOFTLEVEL} != "shutdown" ]]
-					then
-						retval=1
-					fi
-
-					break
-				fi
+				
+				stop_service "${sl[x]}"
 			done
 		fi
+		servicelist[index]="${sl[index]}"
+		(( index++ ))
+	done
+
+	index=0
+	for mydep in ${mydeps} ; do
+		for x in ${servicelist[index]} ; do
+			service_stopped "${x}" && continue
+
+			if ibefore -t "${mydep}" "${x}" >/dev/null && \
+				[[ -L "${svcdir}/softscripts.new/${x}" ]]
+			then
+				# Service do not 'need' $mydep, and is still present in
+				# new runlevel ...
+				continue
+			fi
+
+			wait_service "${x}"
+
+			if ! service_stopped "${x}" ; then
+				# If we are halting the system, try and get it down as
+				# clean as possible, else do not stop our service if
+				# a dependent service did not stop.
+				if needsme -t "${mydep}" "${x}" >/dev/null && \
+					[[ ${SOFTLEVEL} != "reboot" && ${SOFTLEVEL} != "shutdown" ]]
+				then
+					retval=1
+				fi
+				break
+			fi
+		done
+		(( index++ ))
 	done
 
 	IN_BACKGROUND="${ib_save}"
@@ -378,7 +399,7 @@ svc_start() {
 }
 
 svc_restart() {
-	if service_started "${myservice}" || service_inactive "${myservice}" ; then
+	if ! service_stopped "${myservice}" ; then
 		svc_stop || return "$?"
 	fi
 	svc_start || return "$?"

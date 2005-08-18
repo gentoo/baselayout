@@ -141,7 +141,7 @@ do_interactive() {
 				break
 				;;
 			"${continue_text}")
-				export interactive="no"
+				interactive="no"
 				"$@"
 				break
 				;;
@@ -498,7 +498,7 @@ then
 	for x in ${CRITICAL_SERVICES}
 	do
 		splash "svc_start" "${x}"
-		user_want_interactive && export interactive="yes"
+		user_want_interactive && interactive="yes"
 		if ! start_critical_service "${x}" ; then
 			splash "critical" &>/dev/null &
 			
@@ -829,6 +829,9 @@ then
 	for i in $(get_stop_services) ; do
 		dep_stop "${i}"
 	done
+	
+	# Wait for any services that may still be stopping ...
+	[ "${RC_PARALLEL_STARTUP}" = "yes" ] && wait
 else
 	get_critical_services
 
@@ -847,6 +850,9 @@ else
 	for i in $(get_stop_services) ; do
 		is_critical_service "${i}" || dep_stop "${i}"
 	done
+
+	# Wait for any services that may still be stopping ...
+	[ "${RC_PARALLEL_STARTUP}" = "yes" ] && wait
 
 	export STOP_CRITICAL="yes"
 	# Now stop the rest
@@ -910,12 +916,12 @@ get_start_services() {
 }
 
 [[ -e "${svcdir}/interactive" ]] \
-	&& export interactive="$(<"${svcdir}/interactive")"
+	&& interactive="$(<"${svcdir}/interactive")"
 
 # Start scripts
 for i in $(get_start_services) ; do
 	if service_stopped "${i}" ; then
-		user_want_interactive && export interactive="yes"
+		user_want_interactive && interactive="yes"
 		if [[ ${interactive} == "yes" ]]; then
 			do_interactive "${i}" start_service "${i}"
 		else
@@ -960,8 +966,8 @@ else
 	[[ -e "${svcdir}/interactive" ]] && rm -f "${svcdir}/interactive"
 fi
 
-# No need to export this anymore
-unset interactive
+# Remove the cached CONSOLETYPE
+unset CONSOLETYPE
 
 splash "rc_exit"
 
