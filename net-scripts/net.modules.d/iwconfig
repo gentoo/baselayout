@@ -63,7 +63,7 @@ iwconfig_check_depends() {
 #
 # Checks to see if wireless extensions are enabled on the interface
 iwconfig_check_extensions() {
-	grep -q "$1: " /proc/net/wireless
+	grep -q "^[ ]*$1: " /proc/net/wireless
 }
 
 # char* iwconfig_get_wep_status(char *interface)
