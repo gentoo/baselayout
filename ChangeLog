@@ -1,6 +1,13 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  19 Aug 2005; Roy Marples <uberlord@gentoo.org>:
+
+  dhcpcd now reports the correct needed version
+
+  iwconfig and wpa_supplicant have better tests for wireless interface
+  which fixes the "lan wlan" problem
+
 * baselayout-1.12.0_pre6 (18 Aug 2005)
 
   18 Aug 2005; Roy Marples <uberlord@gentoo.org>:
