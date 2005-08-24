@@ -46,7 +46,7 @@ rc_shift_args() {
 			continue
 		fi
 		unset addvar
-		case $1 in
+		case "$1" in
 			-S|--start)
 				stopping=false
 				;;
@@ -61,6 +61,12 @@ rc_shift_args() {
 				;;
 			-p|--pidfile)
 				addvar="pidfile"
+				;;
+			--pidfile=*)
+				pidfile="${1##--pidfile=}"
+				;;
+			--pid=*)
+				pidfile="${1##--pid=}"
 				;;
 			-s|--signal)
 				addvar="signal"
@@ -86,18 +92,6 @@ rc_setup_daemon_vars() {
 	rc_shift_args ${sargs[@]}
 
 	[[ -z ${cmd} ]] && cmd="${name}"
-
-	# The env command launches daemons in a special environment
-	# so we need to cater for this
-	if [[ ${cmd} == "/usr/bin/env" ]]; then
-		j="${#eargs[@]}"
-		for (( i=0; i<j; i++ )); do
-			if [[ ${eargs[i]:0:1} != "-" ]]; then
-				cmd="${eargs[i]}"
-				break
-			fi
-		done
-	fi
 
 	# We may want to launch the daemon with a custom command
 	# This is mainly useful for debugging with apps like valgrind, strace
@@ -168,7 +162,7 @@ rc_kill_pid() {
 	rc_try_kill_pid "${pid}" "${signal}" "${session}" && return 0
 
 	[[ ${RC_RETRY_KILL} == "yes" ]] \
-	&& rc_try_kill_pid "${pid}" KILL "${session}" && return 0
+		&& rc_try_kill_pid "${pid}" KILL "${session}" && return 0
 
 	return 1 
 }
@@ -298,7 +292,7 @@ rc_stop_daemon() {
 # how we are called
 start-stop-daemon() {
 	local args=$( requote "$@" )
-	local cmd pidfile pid stopping nothing=false signal=TERM
+	local cmd pidfile pid stopping signal nothing=false
 
 	rc_setup_daemon_vars
 
