@@ -1,12 +1,16 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  24 Aug 2005; Roy Marples <uberlord@gentoo.org>:
+
+    rc-daemon now handles --signal correct - fixes #103182
+
   19 Aug 2005; Roy Marples <uberlord@gentoo.org>:
 
-  dhcpcd now reports the correct needed version
+    dhcpcd now reports the correct needed version
 
-  iwconfig and wpa_supplicant have better tests for wireless interface
-  which fixes the "lan wlan" problem
+    iwconfig and wpa_supplicant have better tests for wireless interface
+    which fixes the "lan wlan" problem
 
 * baselayout-1.12.0_pre6 (18 Aug 2005)
 
@@ -14,7 +18,7 @@
 
     RC_AUTO_INTERFACE defaults to NO - but we still default to DHCP
 
-     consoletype is now cached. This has the benefit of being very slightly
+    consoletype is now cached. This has the benefit of being very slightly
     faster and you now get coloured text for parallel startup
 
     Parallel startup also does parallel shutdown as well
