@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  25 Aug 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix typo in /sbin/rc - we should check if ${argv1} is in /etc/inittab, and
+    not if 'default' is in there ...
+
   24 Aug 2005; Roy Marples <uberlord@gentoo.org>:
 
     rc-daemon now handles --signal correct - fixes #103182
