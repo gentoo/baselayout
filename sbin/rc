@@ -167,6 +167,7 @@ populate_udev() {
 	# Create nodes that udev can't
 	[ -x /sbin/dmsetup ] && /sbin/dmsetup mknodes &>/dev/null
 	[ -x /sbin/lvm ] && /sbin/lvm vgscan -P --mknodes --ignorelockingfailure &>/dev/null
+	[ -x /sbin/evms_activate ] && /sbin/evms_activate -q &>/dev/null
 
 	# Create problematic directories
 	mkdir -p /dev/{pts,shm}

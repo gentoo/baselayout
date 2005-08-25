@@ -6,6 +6,8 @@
     Fix typo in /sbin/rc - we should check if ${argv1} is in /etc/inittab, and
     not if 'default' is in there ...
 
+    Add /sbin/evms_activate to populate_udev(), bug #50711.
+
   24 Aug 2005; Roy Marples <uberlord@gentoo.org>:
 
     rc-daemon now handles --signal correct - fixes #103182
