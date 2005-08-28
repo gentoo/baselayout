@@ -30,7 +30,7 @@ source /sbin/functions.sh
 runleveldir=/etc/runlevels
 
 # grab settings from conf.d/rc
-source /etc/conf.d/rc
+[[ -f /etc/conf.d/rc ]] && source /etc/conf.d/rc
 
 ################################################################################
 #  Parse command line options                                                  #
@@ -121,7 +121,7 @@ declare -a runlevels
 arridx=0
 for level in ${runlevelidxs} ; do
 	if [[ ${level} == ${runlevel} || -n ${ALL} ]] ; then
-		runlevels[${arridx}]=$(find ${runleveldir}/${level} -maxdepth 1 -type l -printf '%f ')
+		runlevels[${arridx}]=$(find ${runleveldir}/${level} -maxdepth 1 -type l -exec basename {} \;)
 		let "arridx += 1"
 	fi
 done
