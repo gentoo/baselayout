@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  30 Aug 2005; Roy Marples <uberlord@gentoo.org>:
+
+    fixed IPv6 address problems in ifconfig and iproute2 modules
+
   11 Aug 2005; Roy Marples <uberlord@gentoo.org>:
 
     Add support for --pid ${pidfile} and --pidfile=${pidfile} in rc-daemon.sh
