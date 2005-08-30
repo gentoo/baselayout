@@ -5,7 +5,6 @@
 
     iwconfig fixed for scanned ad-hoc networks
     we now prefer managed over ad-hoc when processing scan results
-    iwconfig defaults to sleeping 1 second before scanning
     
     iwconfig associate_test_quality now works. Fixes #103579 thanks to
     Harald Schioeberg
