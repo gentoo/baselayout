@@ -63,7 +63,7 @@ iwconfig_check_depends() {
 #
 # Checks to see if wireless extensions are enabled on the interface
 iwconfig_check_extensions() {
-	grep -q "^[ ]*$1: " /proc/net/wireless
+	grep -q "^[ \t]*$1:[ \t]" /proc/net/wireless
 }
 
 # char* iwconfig_get_wep_status(char *interface)
@@ -197,7 +197,7 @@ iwconfig_setup_specific() {
 		return 1
 	fi
 	dessid="${ESSID//\\\\/\\\\}"
-	ESSIDVAR="$( bash_variable "${ESSID}" )"
+	ESSIDVAR=$( bash_variable "${ESSID}" )
 
 	# We only change the mode if it's not the same
 	local cur_mode=$( iwconfig_get_mode "${iface}" )
@@ -268,7 +268,10 @@ iwconfig_associate_mac() {
 #
 # Returns true if the link quality is not 0 or 0.
 iwconfig_associate_quality() {
-	local quality=$( sed -n -e 's/^.*'"$1"': *[0-9]* *\([0-9]*\).*/\1/p' )
+	local quality=$( \
+		sed -n -e 's/^.*'"$1"': *[0-9]* *\([0-9]*\).*/\1/p' \
+		/proc/net/wireless
+	)
 	[[ ${quality} != "0" ]]
 	return "$?"
 }
@@ -328,7 +331,7 @@ iwconfig_wait_for_association() {
 # so we can fail gracefully without even trying to connect
 iwconfig_associate() {
 	local iface="$1" mode="${2:-managed}"
-	local mac="$2" wep_required="$3" w="(WEP Disabled)"
+	local mac="$3" wep_required="$4" w="(WEP Disabled)"
 	local dessid="${ESSID//\\\\/\\\\}" key
 	wep_required="${wep_required:-off}"
 
@@ -442,7 +445,7 @@ iwconfig_scan() {
 	veinfo "Scanning for access points"
 
 	# Sleep if required
-	eval x=\"\$\{sleep_scan_${ifvar}\}\"
+	eval x=\"\$\{sleep_scan_${ifvar}:-1\}\"
 	[[ -n ${x} ]] && sleep "${x}"
 
 	local error=true i=-1 line
@@ -460,8 +463,8 @@ iwconfig_scan() {
 				essid[i]="${essid[i]%*\"}"
 				;;
 			*Mode:*)
-				mode[i]="${line#*:}"
-				[[ ${mode[i]} == "Master" ]] && mode[i]="Managed"
+				mode[i]=$(echo "${line#*:}" | tr '[:upper:]' '[:lower:]' )
+				[[ ${mode[i]} == "master" ]] && mode[i]="managed"
 				;;
 			*'Encryption key:'*)
 				enc[i]="${line#*:}"
@@ -510,6 +513,8 @@ iwconfig_scan() {
 	[[ ${mode} != "${x}" ]] && iwconfig "${iface}" mode "${x}"
 
 	for (( i=0; i<${#mac[@]}; i++ )); do
+		# Don't like ad-hoc nodes by default
+		[[ ${mode[i]} == "ad-hoc" ]] && (( qual[i]-=10000 ))
 		sortline="${sortline}${qual[i]} ${i}\n"
 	done
 
