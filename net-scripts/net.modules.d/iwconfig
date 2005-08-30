@@ -445,7 +445,7 @@ iwconfig_scan() {
 	veinfo "Scanning for access points"
 
 	# Sleep if required
-	eval x=\"\$\{sleep_scan_${ifvar}:-1\}\"
+	eval x=\"\$\{sleep_scan_${ifvar}\}\"
 	[[ -n ${x} ]] && sleep "${x}"
 
 	local error=true i=-1 line
