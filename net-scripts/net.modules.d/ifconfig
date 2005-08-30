@@ -359,6 +359,9 @@ ifconfig_add_address() {
 		config=( "${config[@]//peer/pointtopoint}" )
 	fi
 
+	# Bring the interface up
+	ifconfig_up "${iface}"
+
 	# Some kernels like to apply lo with an address when they are brought up
 	if [[ ${iface} == "lo" \
 		|| ${config[@]} == "127.0.0.1/8 broadcast 127.255.255.255" ]]; then
