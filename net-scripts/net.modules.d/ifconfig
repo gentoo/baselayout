@@ -265,7 +265,7 @@ ifconfig_iface_stop() {
 # fail, the routine should still return success to indicate that
 # net.eth0 was successful
 ifconfig_post_start() {
-	local iface="$1" ifvar=$( bash_variable "$1" ) routes x metric mtu
+	local iface="$1" ifvar=$( bash_variable "$1" ) routes x metric mtu cidr
 	eval metric=\"\$\{metric_${ifvar}\}\"
 
 	# Make sure interface is marked UP
@@ -325,7 +325,8 @@ ifconfig_add_address() {
 	local iface="$1" i=0 r e
 
 	ifconfig_exists "${iface}" true || return 1
-
+	ifconfig_up "${iface}"
+	
 	# Extract the config
 	local -a config=( "$@" )
 	config=( ${config[@]:1} )
@@ -358,9 +359,6 @@ ifconfig_add_address() {
 		config=( "${config[@]//brd/broadcast}" )
 		config=( "${config[@]//peer/pointtopoint}" )
 	fi
-
-	# Bring the interface up
-	ifconfig_up "${iface}"
 
 	# Some kernels like to apply lo with an address when they are brought up
 	if [[ ${iface} == "lo" \
