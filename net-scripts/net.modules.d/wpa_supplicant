@@ -64,7 +64,7 @@ wpa_supplicant_check_depends() {
 #
 # Checks to see if wireless extensions are enabled on the interface
 wpa_supplicant_check_extensions() {
-	grep -q "^[ ]*$1: " /proc/net/wireless
+	grep -q "^[ \t]*$1:[ \t]" /proc/net/wireless
 }
 
 # char* wpa_supplicant_get_essid(char *interface)

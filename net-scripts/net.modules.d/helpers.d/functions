@@ -309,8 +309,8 @@ calculate_metric() {
 	# If we're not a wireless device then exclude wireless from the
 	# routing table so we stay < 1000
 	if [[ -e /proc/net/wireless ]]; then
-		if ! grep -q "${iface}: " /proc/net/wireless ; then
-			local i=$( sed -n -e 's/^ *\(.*\):.*/\1/p' /proc/net/wireless )
+		if ! grep -q "^[ \t]*${iface}:[ \t]" /proc/net/wireless ; then
+			local i=$( sed -n -e 's/^[ \t]*\(.*\):.*/\1/p' /proc/net/wireless )
 			for x in ${i} ; do
 				exclude="${exclude} && "'$1'"!=\"${x}\""
 			done
@@ -333,7 +333,7 @@ calculate_metric() {
 
 	# If we're a wireless device then add 1000 so that wired interfaces take preference
 	if [[ -e /proc/net/wireless ]]; then
-		grep -q "${iface}:" /proc/net/wireless && (( m+= 1000 ))
+		grep -q "^[ \t]*${iface}:[ \t]" /proc/net/wireless && (( m+= 1000 ))
 	fi
 
 	# If we're a ppp device then we add 2000 for ISDN, otherwise 3000
