@@ -1,6 +1,8 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+* baselayout-1.12.0_pre7 (31 Aug 2005)
+
   31 Aug 2005; Roy Marples <uberlord@gentoo.org>:
 
     service status requests (either by /etc/init.d/foo status or rc-status)
