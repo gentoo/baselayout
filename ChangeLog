@@ -1,6 +1,16 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  31 Aug 2005; Roy Marples <uberlord@gentoo.org>:
+
+    service status requests (either by /etc/init.d/foo status or rc-status)
+    now update the service status by checking daemons and/or pidfiles to check
+    if they are still running or not. To update the status in your own code,
+    source "${svclib}/sh/rc-daemon.sh" and call
+    update_service_status "${service}"
+
+    Trimmed $Header$ from a few files
+
   30 Aug 2005; Roy Marples <uberlord@gentoo.org>:
 
     iwconfig fixed for scanned ad-hoc networks

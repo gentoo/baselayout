@@ -1,6 +1,5 @@
 # Copyright 1999-2005 Gentoo Foundation 
 # Distributed under the terms of the GNU General Public License v2
-# $Header$
 
 # RC functions to work with daemons
 # Basically we're a fancy wrapper for start-stop-daemon
@@ -19,6 +18,7 @@
 RC_GOT_DAEMON="yes"
 
 [[ ${RC_GOT_FUNCTIONS} != "yes" ]] && source /sbin/functions.sh
+[[ ${RC_GOT_SERVICES} != "yes" ]] && source "${svclib}/sh/rc-services.sh"
 
 RC_RETRY_KILL="no"
 RC_RETRY_TIMEOUT=1
@@ -285,14 +285,45 @@ rc_stop_daemon() {
 	return "${retval}"
 }
 
+# void update_service_status(char *service)
+#
+# Loads the service state file and ensures that all listed daemons are still
+# running - hopefully on their correct pids too
+# If not, we stop the service
+update_service_status() {
+	local service="$1" daemonfile="${svcdir}/daemons/$1" i
+	local -a RC_DAEMONS=() RC_PIDFILES=()
+
+	# We only care about marking started services as stopped if the daemon(s)
+	# for it are no longer running
+	! service_started "${service}" && return
+	[[ ! -f ${daemonfile} ]] && return
+
+	# OK, now check that every daemon launched is active
+	# If the --start command was any good a pidfile was specified too
+	source "${daemonfile}"
+	for (( i=0; i<${#RC_DAEMONS[@]}; i++ )); do
+		if ! is_daemon_running ${RC_DAEMONS[i]} "${RC_PIDFILES[i]}" ; then
+			if [[ -e "/etc/init.d/${service}" ]]; then
+				/etc/init.d/"${service}" stop &>/dev/null
+				break
+			fi
+		fi
+	done
+}
+
 # int start-stop-daemon(...)
 #
 # Provide a wrapper to start-stop-daemon
 # Return the result of start_daemon or stop_daemon depending on
 # how we are called
 start-stop-daemon() {
-	local args=$( requote "$@" )
-	local cmd pidfile pid stopping signal nothing=false
+	local args=$( requote "$@" ) result i
+	local cmd pidfile pid stopping signal nothing=false 
+	local daemonfile="${svcdir}/daemons/${myservice}"
+	local -a RC_DAEMONS=() RC_PIDFILES=()
+
+	[[ -e ${daemonfile} ]] && source "${daemonfile}"
 
 	rc_setup_daemon_vars
 
@@ -303,10 +334,49 @@ start-stop-daemon() {
 	fi
 
 	if ${stopping}; then
-		rc_stop_daemon 
+		rc_stop_daemon
+		result="$?"
+		if [[ ${result} == "0" ]]; then
+			# We stopped the daemon successfully
+			# so we remove it from our state
+			for (( i=0; i<${#RC_DAEMONS[@]}; i++ )); do
+				# We should really check for valid cmd AND pidfile
+				# But most called to --stop only set the pidfile
+				if [[ ${RC_DAEMONS[i]} == "{cmd}" \
+					|| ${RC_PIDFILES[i]}="${pidfile}" ]]; then
+					unset RC_DAEMONS[i] RC_PIDFILES[i]
+					RC_DAEMONS=( "${RC_DAEMONS[@]}" )
+					RC_PIDFILES=( "${RC_PIDFILES[@]}" )
+					break
+				fi
+			done
+		fi
 	else
 		rc_start_daemon
+		result="$?"
+		if [[ ${result} == "0" ]]; then
+			# We started the daemon sucessfully
+			# so we add it to our state
+			local max="${#RC_DAEMONS[@]}"
+			RC_DAEMONS[max]="${cmd}"
+			RC_PIDFILES[max]="${pidfile}"
+		fi
 	fi
+
+	# Write the new list of daemon states for this service
+	if [[ ${#RC_DAEMONS[@]} == "0" ]]; then
+		[[ -f ${daemonfile} ]] && rm -f "${daemonfile}"
+	else
+		echo "RC_DAEMONS[0]=\"${RC_DAEMONS[0]}\"" > "${daemonfile}"
+		echo "RC_PIDFILES[0]=\"${RC_PIDFILES[0]}\"" >> "${daemonfile}"
+
+		for (( i=1; i<${#RC_DAEMONS[@]}; i++ )); do
+			echo "RC_DAEMONS[${i}]=\"${RC_DAEMONS[i]}\"" >> "${daemonfile}"
+			echo "RC_PIDFILES[${i}]=\"${RC_PIDFILES[i]}\"" >> "${daemonfile}"
+		done
+	fi
+
+	return "${result}"
 }
 
 # vim:ts=4
