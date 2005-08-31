@@ -34,21 +34,21 @@ static void (*selinux_run_init_new) (int argc, char **argv);
 extern char **environ;
 
 void setup_selinux(int argc, char **argv) {
-	void *lib_handle;
+	void *lib_handle = NULL;
 	
 	lib_handle = dlopen("/lib/rcscripts/runscript_selinux.so", RTLD_NOW | RTLD_GLOBAL);
-	if (lib_handle != NULL) {
+	if (NULL != lib_handle) {
 		selinux_run_init_old = dlsym(lib_handle, "selinux_runscript");
 		selinux_run_init_new = dlsym(lib_handle, "selinux_runscript2");
 
-		/* use new run_init if it exists, else fall back to old */
-		if (selinux_run_init_new != NULL)
+		/* Use new run_init if it exists, else fall back to old */
+		if (NULL != selinux_run_init_new)
 			selinux_run_init_new(argc, argv);
-		else if (selinux_run_init_old != NULL)
+		else if (NULL != selinux_run_init_old)
 			selinux_run_init_old();
 		else {
-			/* this shouldnt happen... probably corrupt lib */
-			fprintf(stderr,"Run_init is missing from runscript_selinux.so!\n");
+			/* This shouldnt happen... probably corrupt lib */
+			fprintf(stderr, "Run_init is missing from runscript_selinux.so!\n");
 			exit(127);
 		}
 	}
