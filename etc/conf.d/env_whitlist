@@ -1,0 +1,34 @@
+# /etc/conf.d/env_whitelist:  Environment whitelist for rc-system
+
+# Specify which variables is allowed to be passed from the environment to the
+# rc-system.  If it is not set by the environment, then the variable will be
+# taken from /etc/profile.env - meaning, if you need to set LANG or such,
+# do it in a /etc/env.d/00myownstuff file for example, and run env-update.
+
+# User controlled
+LANG
+
+
+
+#
+# Internal variables needed for operation of rc-system
+#
+# NB: Do not modify below this line if you do not know what you are doing!!
+#
+
+# Hotplug ?
+IN_BACKGROUND
+IN_HOTPLUG
+
+# Default shell stuff
+SHELL
+USER
+HOME
+
+# From /sbin/init
+PATH
+INIT_VERSION
+RUNLEVEL
+PREVLEVEL
+CONSOLE
+

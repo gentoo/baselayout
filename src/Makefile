@@ -23,11 +23,14 @@ endif
 
 all: $(TARGET)
 
-runscript: runscript.o
-	$(LD) $(LDFLAGS) $^ -o $@ $(LDFLAGS_RS)
+rs-misc.o: core/misc.c
+	$(CC) $(CFLAGS) -c -o $@ $^
+
+runscript: runscript.o rs-misc.o
+	$(LD) $(LDFLAGS) -o $@ $^ $(LDFLAGS_RS)
 
 start-stop-daemon: start-stop-daemon.c
-	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@ $(LDFLAGS_SSD)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LDFLAGS_SSD)
 
 install: $(TARGET)
 	install -m 0755 -d $(DESTDIR)/bin
@@ -37,4 +40,4 @@ install: $(TARGET)
 
 clean:
 	rm -f $(TARGET)
-	rm -f *.o *~ core
+	rm -f *.o *~

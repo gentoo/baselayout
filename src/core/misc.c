@@ -551,7 +551,7 @@ _continue:
 
 	if (NULL == value) {
 		DBG_MSG("Failed to get value for config entry '%s'!\n", entry);
-		errno = ENOENT;
+		errno = ENOMSG;
 		goto error;
 	}
 
