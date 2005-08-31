@@ -17,7 +17,7 @@
 static void (*selinux_run_init_old) (void);
 static void (*selinux_run_init_new) (int argc, char **argv);
 
-void setup_selinux() {
+void setup_selinux(int argc, char **argv) {
 	void *lib_handle;
 	
 	lib_handle = dlopen("/lib/rcscripts/runscript_selinux.so", RTLD_NOW | RTLD_GLOBAL);
@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	/* Ok, we are ready to go, so setup selinux if applicable */
-	setup_selinux();
+	setup_selinux(argc, argv);
 
 	if (execv("/sbin/runscript.sh", myargs) < 0)
 		exit(1);
