@@ -1,7 +1,6 @@
 #!/bin/bash
 # Copyright 1999-2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header$
 
 source /etc/init.d/functions.sh
 
@@ -16,7 +15,7 @@ if [[ ! -d ${svcdir} ]]; then
 	fi
 fi
 
-for x in softscripts snapshot options \
+for x in softscripts snapshot options daemons \
 	started starting inactive stopping failed \
 	exclusive exitcodes ; do
 	if [[ ! -d "${svcdir}/${x}" ]] ; then

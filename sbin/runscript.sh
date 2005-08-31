@@ -413,6 +413,10 @@ svc_status() {
 	# to work with the printed " * status:  foo".
 	local efunc="" state=""
 
+	# If we are effectively root, check to see if required daemons are running
+	# and update our status accordingly
+	[[ ${EUID} == 0 ]] && update_service_status "${myservice}"
+
 	if service_starting "${myservice}" ; then
 		efunc="einfo"
 		state="starting"
