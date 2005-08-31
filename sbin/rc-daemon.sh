@@ -305,7 +305,7 @@ update_service_status() {
 	for (( i=0; i<${#RC_DAEMONS[@]}; i++ )); do
 		if ! is_daemon_running ${RC_DAEMONS[i]} "${RC_PIDFILES[i]}" ; then
 			if [[ -e "/etc/init.d/${service}" ]]; then
-				/etc/init.d/"${service}" stop &>/dev/null
+				( /etc/init.d/"${service}" stop &>/dev/null )
 				break
 			fi
 		fi
