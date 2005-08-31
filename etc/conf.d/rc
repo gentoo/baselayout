@@ -60,9 +60,10 @@ RC_USE_FSTAB="no"
 # kernel line to change to the foobar runlevel.  Here we would search for
 # /etc/conf.d/<service>.foobar config files before trying to use the default
 # /etc/conf.d/<service>.
-# Note that it is only active if specify 'softlevel' on the kernel args, and
-# is really intended to use for different grub/lilo entries to specify config
-# changes for say laptops between home and work.
+# Note that it is only active if 'softlevel' was specified via the kernel line,
+# and it is intended to use for different grub/lilo entries to specify config
+# changes for say laptops between home and work, where you would have setup
+# 'work' and 'home' runlevels, with /etc/conf.d/*.<runlevel> as needed.
 
 RC_USE_CONFIG_PROFILE="yes"
 
