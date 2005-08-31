@@ -17,22 +17,9 @@
 static void (*selinux_run_init_old) (void);
 static void (*selinux_run_init_new) (int argc, char **argv);
 
-int main(int argc, char *argv[]) {
-	char *myargs[32];
+void setup_selinux() {
 	void *lib_handle;
-	int new = 1;
-	myargs[0] = "runscript";
-
-	while (argv[new] != 0) {
-		myargs[new] = argv[new];
-		new++;
-	}
-	myargs[new] = NULL;
-	if (argc < 3) {
-		execv("/lib/rcscripts/sh/rc-help.sh", myargs);
-		exit(1);
-	}
-
+	
 	lib_handle = dlopen("/lib/rcscripts/runscript_selinux.so", RTLD_NOW | RTLD_GLOBAL);
 	if (lib_handle != NULL) {
 		selinux_run_init_old = dlsym(lib_handle, "selinux_runscript");
@@ -49,6 +36,25 @@ int main(int argc, char *argv[]) {
 			exit(127);
 		}
 	}
+}
+
+int main(int argc, char *argv[]) {
+	char *myargs[32];
+	int new = 1;
+	myargs[0] = "runscript";
+
+	while (argv[new] != 0) {
+		myargs[new] = argv[new];
+		new++;
+	}
+	myargs[new] = NULL;
+	if (argc < 3) {
+		execv("/lib/rcscripts/sh/rc-help.sh", myargs);
+		exit(1);
+	}
+
+	/* Ok, we are ready to go, so setup selinux if applicable */
+	setup_selinux();
 
 	if (execv("/sbin/runscript.sh", myargs) < 0)
 		exit(1);
