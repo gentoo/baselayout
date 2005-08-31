@@ -2,7 +2,7 @@
 # Copyright 1999-2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
-source /etc/init.d/functions.sh
+source /sbin/functions.sh
 
 if [ "${RC_NOCOLOR}" = "yes" ]
 then

@@ -2,7 +2,7 @@
 # Copyright 1999-2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
-source /etc/init.d/functions.sh || exit 1
+source /sbin/functions.sh || exit 1
 
 if [ "${EUID}" -ne 0 ]
 then
