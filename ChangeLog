@@ -5,6 +5,8 @@
 
     Add the initial stuff for filtering of env variables for the rc-system.
 
+    Use /sbin/functions.sh instead of /etc/init.d/functions.sh.
+
 * baselayout-1.12.0_pre7 (31 Aug 2005)
 
   31 Aug 2005; Roy Marples <uberlord@gentoo.org>:
