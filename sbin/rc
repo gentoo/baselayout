@@ -579,6 +579,7 @@ then
 	rm -rf $(ls -d1 "${svcdir}/"* 2>/dev/null | \
 	         grep -ve '\(depcache\|deptree\|envcache\)')
 
+	echo "sysinit" > "${svcdir}/softlevel"
 	echo "${interactive}" > "${svcdir}/interactive"
 
 	# Update the dependency cache
