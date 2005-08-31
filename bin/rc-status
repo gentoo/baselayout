@@ -31,6 +31,7 @@ runleveldir=/etc/runlevels
 
 # grab settings from conf.d/rc
 source /etc/conf.d/rc
+source "${svclib}/sh/rc-daemon.sh"
 
 ################################################################################
 #  Parse command line options                                                  #
@@ -157,10 +158,19 @@ fi
 #  Now collect information about the status of the various services; whether   #
 #  they're started, broken, or failed.  Put all of this into arrays.           #
 ################################################################################
-# Read services from ${svcdir}/{started,failed,broken}
+if [[ -x ${svcdir}/started ]]; then
+    started=$(ls ${svcdir}/started)
+    # If we're root then update service statuses incase any naughty daemons
+    # stopped running without our say so
+    if [[ ${EUID} == 0 ]]; then
+	for service in ${started}; do
+	    update_service_status "${service}"
+	done
+	started=$(ls ${svcdir}/started)
+    fi
+fi
 [[ -x ${svcdir}/starting ]] && starting=$(ls ${svcdir}/starting)
 [[ -x ${svcdir}/inactive ]] && inactive=$(ls ${svcdir}/inactive)
-[[ -x ${svcdir}/started ]] && started=$(ls ${svcdir}/started)
 [[ -x ${svcdir}/stopping ]] && stopping=$(ls ${svcdir}/stopping)
 
 ################################################################################
