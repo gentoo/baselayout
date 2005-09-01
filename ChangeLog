@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  01 Sep 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Fixed ifconfig bringing lo up and then working out aliases, bug #104415
+
   31 Aug 2005; Roy Marples <uberlord@gentoo.org>:
 
     service status requests (either by /etc/init.d/foo status or rc-status)
