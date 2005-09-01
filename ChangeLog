@@ -3,6 +3,8 @@
 
   01 Sep 2005; Roy Marples <uberlord@gentoo.org>:
 
+    Altered iproute2 to use the same lo logic as ifconfig below
+
     Fixed ifconfig bringing lo up and then working out aliases, bug #104415
 
   31 Aug 2005; Roy Marples <uberlord@gentoo.org>:
