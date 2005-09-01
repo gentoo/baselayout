@@ -325,7 +325,6 @@ ifconfig_add_address() {
 	local iface="$1" i=0 r e
 
 	ifconfig_exists "${iface}" true || return 1
-	ifconfig_up "${iface}"
 	
 	# Extract the config
 	local -a config=( "$@" )
@@ -360,19 +359,17 @@ ifconfig_add_address() {
 		config=( "${config[@]//peer/pointtopoint}" )
 	fi
 
-	# Some kernels like to apply lo with an address when they are brought up
-	if [[ ${iface} == "lo" \
-		|| ${config[@]} == "127.0.0.1/8 broadcast 127.255.255.255" ]]; then
-		ifconfig "${iface}" ${config[@]} 2>/dev/null
-		r="0"
-	else
-		e=$( ifconfig "${iface}" ${config[@]} 2>&1 )
-		r="$?"
-		[[ ${r} != "0" ]] && echo "${e}" > /dev/stderr
-	fi
+	# Ensure that the interface is up so we can add IPv6 addresses
+	interface_up "${iface}"
 
-	[[ ${r} != "0" || ${config[0]} == "inet6"* || ${iface} == *:* ]] \
-	&& return ${r}
+	# Some kernels like to apply lo with an address when they are brought up
+	if [[ ${iface} == "lo" && ${config[@]} == "127.0.0.1 netmask 255.0.0.0 broadcast 127.255.255.255" ]]; then
+		ifconfig "${iface}" 0.0.0.0
+	fi
+		
+	ifconfig "${iface}" ${config[@]}
+	r="$?"
+	[[ ${r} != "0" ]] && return ${r}
 
 	local metric ifvar=$( bash_variable "${iface}" )
 	# Remove the newly added route and replace with our metric

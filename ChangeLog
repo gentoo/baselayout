@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  01 Sep 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Fixed ifconfig bringing lo up and then working out aliases, bug #104415
+
   31 Aug 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     Add the initial stuff for filtering of env variables for the rc-system.
