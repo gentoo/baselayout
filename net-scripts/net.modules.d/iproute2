@@ -224,7 +224,6 @@ iproute2_add_address() {
 	local iface="$1" x
 
 	iproute2_exists "${iface}" true || return 1
-	iproute2_up "${iface}"
 
 	# Extract the config
 	local -a config=( "$@" )
@@ -257,16 +256,17 @@ iproute2_add_address() {
 			&& config=( "${config[@]}" "brd +" )
 	fi
 
+    # Ensure that the interface is up so we can add IPv6 addresses
+	interface_up "${iface}"
+
 	# Some kernels like to apply lo with an address when they are brought up
-	local r
 	if [[ ${iface} == "lo" \
 		&& ${config[@]} == "127.0.0.1/8 brd 127.255.255.255 scope host" ]]; then
-		ip addr add dev "${iface}" ${config[@]} 2>/dev/null
-		r="0"
-	else
-		ip addr add dev "${iface}" ${config[@]}
-		r="$?"
+		ip addr del dev "${iface}" 127.0.0.1/8 2>/dev/null
 	fi
+	
+	ip addr add dev "${iface}" ${config[@]}
+	r="$?"
 
 	local metric ifvar=$( bash_variable "${iface}" )
 	# Remove the newly added route and replace with our metric
