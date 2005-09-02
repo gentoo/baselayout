@@ -19,9 +19,17 @@
 #include "core/debug.h"
 #include "core/misc.h"
 
+#ifndef LIBDIR
+# define LIBDIR		"lib"
+#endif
+
 #define SBIN_RC		"/sbin/rc"
 #define PROFILE_ENV	"/etc/profile.env"
-#define ENV_WHITELIST	"/etc/conf.d/env_whitlist"
+#define RCSCRIPTS_LIB	"/" LIBDIR "/rcscripts"
+#define SYS_WHITELIST	RCSCRIPTS_LIB "/conf.d/env_whitlist"
+#define USR_WHITELIST	"/etc/conf.d/env_whitlist"
+#define RCSCRIPT_HELP	RCSCRIPTS_LIB "/sh/rc-help.sh"
+#define SELINUX_LIB	RCSCRIPTS_LIB "/runscript_selinux.so"
 #define SOFTLEVEL	"SOFTLEVEL"
 
 #define DEFAULT_PATH	"PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/sbin"
@@ -36,7 +44,7 @@ extern char **environ;
 void setup_selinux(int argc, char **argv) {
 	void *lib_handle = NULL;
 	
-	lib_handle = dlopen("/lib/rcscripts/runscript_selinux.so", RTLD_NOW | RTLD_GLOBAL);
+	lib_handle = dlopen(SELINUX_LIB, RTLD_NOW | RTLD_GLOBAL);
 	if (NULL != lib_handle) {
 		selinux_run_init_old = dlsym(lib_handle, "selinux_runscript");
 		selinux_run_init_new = dlsym(lib_handle, "selinux_runscript2");
@@ -54,8 +62,7 @@ void setup_selinux(int argc, char **argv) {
 	}
 }
 
-char **get_whitelist() {
-	char **whitelist = NULL;
+char **get_whitelist(char **whitelist, char *filename) {
 	char *buf = NULL;
 	char *tmp_buf = NULL;
 	char *tmp_p = NULL;
@@ -64,7 +71,7 @@ char **get_whitelist() {
 	int count = 0;
 	int current = 0;
 			
-	if (-1 == file_map(ENV_WHITELIST, &buf, &lenght))
+	if (-1 == file_map(filename, &buf, &lenght))
 		return NULL;
 
 	while (current < lenght) {
@@ -122,7 +129,15 @@ char **filter_environ(char *caller) {
 		 * environment should be fine */
 		return environ;
 
-	if (1 != is_file(ENV_WHITELIST, 1))
+	if (1 == is_file(SYS_WHITELIST, 1))
+		whitelist = get_whitelist(whitelist, SYS_WHITELIST);
+	else
+		EWARN("System environment whitelist missing!\n");
+
+	if (1 == is_file(USR_WHITELIST, 1))
+		whitelist = get_whitelist(whitelist, USR_WHITELIST);
+	
+	if (NULL == whitelist)
 		/* If no whitelist is present, revert to old behaviour */
 		return environ;
 		
@@ -130,7 +145,6 @@ char **filter_environ(char *caller) {
 		/* XXX: Maybe warn here? */
 		check_profile = 0;
 	
-	whitelist = get_whitelist();
 	STRING_LIST_FOR_EACH(whitelist, env_name, count) {
 		char *env_var = NULL;
 		char *tmp_p = NULL;
@@ -208,7 +222,7 @@ int main(int argc, char *argv[]) {
 
 	/* Do not do help for /sbin/rc */
 	if (argc < 3 && !IS_SBIN_RC()) {
-		execv("/lib/rcscripts/sh/rc-help.sh", myargs);
+		execv(RCSCRIPT_HELP, myargs);
 		exit(1);
 	}
 
