@@ -213,7 +213,8 @@ int main(int argc, char *argv[]) {
 	char *caller = argv[1];
 	int new = 1;
 	
-	myargs[0] = "runscript";
+	/* Need to be /bin/bash, else BASH is invalid */
+	myargs[0] = "/bin/bash";
 	while (argv[new] != 0) {
 		myargs[new] = argv[new];
 		new++;

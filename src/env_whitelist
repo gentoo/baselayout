@@ -16,6 +16,7 @@ IN_HOTPLUG
 SHELL
 USER
 HOME
+TERM
 
 # From /sbin/init
 PATH
