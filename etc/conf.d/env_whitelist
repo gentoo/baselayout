@@ -3,8 +3,13 @@
 # Specify which variables is allowed to be passed from the environment to the
 # rc-system.  If it is not set by the environment, then the variable will be
 # taken from /etc/profile.env - meaning, if you need to set LANG or such,
-# do it in a /etc/env.d/00myownstuff file for example, and run env-update.
+# do it in a /etc/env.d/99myownstuff file for example, and run env-update.
 
 # User controlled
-LANG
+#
+# Note: for the LANG and LC_* variables, having /usr on a seperate partition
+#       may cause issues during reboot or shutdown (lockup during umount of
+#       partitions).
+#
+#LANG
 
