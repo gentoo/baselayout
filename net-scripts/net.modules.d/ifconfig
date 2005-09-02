@@ -256,6 +256,26 @@ ifconfig_iface_stop() {
 	return 1
 }
 
+# bool ifconfig_pre_start(char *interface)
+#
+# Runs any pre_start stuff on our interface - just the MTU atm
+# We set MTU twice as it may be needed for DHCP - a dhcp client could
+# change it in error, so we set MTU in post start too
+ifconfig_pre_start() {
+	local iface="$1"
+
+	interface_exists "${iface}" || return 0
+
+	local ifvar=$( bash_variable "$1" ) mtu
+
+	# MTU support
+	eval mtu=\"\$\{mtu_${ifvar}\}\"
+	[[ -n ${mtu} ]] && ifconfig "${iface}" mtu "${mtu}"
+
+	return 0
+}
+
+
 # bool ifconfig_post_start(char *iface)
 #
 # Bring up iface using ifconfig utilities, called from iface_start
