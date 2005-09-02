@@ -1,0 +1,26 @@
+# /lib/rcscripts/conf.d/env_whitelist:  System environment whitelist for rc-system
+
+# See /etc/conf.d/env_whitelist for details.
+
+#
+# Internal variables needed for operation of rc-system
+#
+# NB: Do not modify below this line if you do not know what you are doing!!
+#
+
+# Hotplug ?
+IN_BACKGROUND
+IN_HOTPLUG
+
+# Default shell stuff
+SHELL
+USER
+HOME
+
+# From /sbin/init
+PATH
+INIT_VERSION
+RUNLEVEL
+PREVLEVEL
+CONSOLE
+

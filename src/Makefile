@@ -7,9 +7,11 @@ LD = gcc
 
 CFLAGS = -Wall -O2
 DESTDIR =
+LIBDIR = lib
 
 BIN_TARGETS =
 SBIN_TARGETS = consoletype runscript start-stop-daemon
+SYS_WHITELIST = env_whitelist
 
 TARGET = $(BIN_TARGETS) $(SBIN_TARGETS)
 
@@ -20,6 +22,8 @@ endif
 ifeq ($(OS),BSD)
 LDFLAGS_SSD = -lkvm
 endif
+
+CFLAGS += -DLIBDIR=\"$(LIBDIR)\"
 
 all: $(TARGET)
 
@@ -37,6 +41,8 @@ install: $(TARGET)
 	install -m 0755 -d $(DESTDIR)/sbin
 #	install -m 0755 $(BIN_TARGETS) $(DESTDIR)/bin
 	install -m 0755 $(SBIN_TARGETS) $(DESTDIR)/sbin
+	install -m 0755 -d $(DESTDIR)/$(LIBDIR)/rcscripts/conf.d
+	install -m 0644 $(SYS_WHITELIST) $(DESTDIR)/$(LIBDIR)/rcscripts/conf.d
 
 clean:
 	rm -f $(TARGET)

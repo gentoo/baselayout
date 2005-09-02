@@ -8,27 +8,3 @@
 # User controlled
 LANG
 
-
-
-#
-# Internal variables needed for operation of rc-system
-#
-# NB: Do not modify below this line if you do not know what you are doing!!
-#
-
-# Hotplug ?
-IN_BACKGROUND
-IN_HOTPLUG
-
-# Default shell stuff
-SHELL
-USER
-HOME
-
-# From /sbin/init
-PATH
-INIT_VERSION
-RUNLEVEL
-PREVLEVEL
-CONSOLE
-
