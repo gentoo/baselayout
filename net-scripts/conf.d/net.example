@@ -429,6 +429,25 @@
 # nis_domain_eth0="domain"
 # nis_servers_eth0="192.168.0.2 192.168.0.3"
 
+#-----------------------------------------------------------------------------
+# Cable in/out detection
+# Sometimes the cable is in, others it's out. Obviously you don't want to
+# restart net.eth0 every time when you plug it in either.
+#
+# netplug is a package that detects this and requires no extra configuration
+# on your part.
+# emerge sys-apps/netplug
+# and you're done :)
+
+# By default we wait 10 seconds for netplug to configure the interface for us
+# if it doesn't, we abort but leave netplug running and the net.eth0 service
+# marked as inactive so when a cable is plugged in it starts fine.
+# plug_timeout="10"
+
+# If you don't want to use netplug on a specific interface but you have it
+# installed, you can disable it for that interface via the modules statement
+# modules_eth0=( "!netplug" )
+
 ##############################################################################
 # ADVANCED CONFIGURATION
 # 
