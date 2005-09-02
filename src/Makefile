@@ -23,7 +23,7 @@ ifeq ($(OS),BSD)
 LDFLAGS_SSD = -lkvm
 endif
 
-CFLAGS += -DLIBDIR=\"$(LIBDIR)\"
+override CFLAGS += -DLIBDIR=\"$(LIBDIR)\"
 
 all: $(TARGET)
 
