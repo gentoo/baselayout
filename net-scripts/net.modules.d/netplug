@@ -1,0 +1,123 @@
+#!/bin/bash
+# Copyright (c) 2004-2005 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+
+# Contributed by Roy Marples (uberlord@gentoo.org)
+
+# char* netplug_provides(void)
+#
+# Returns a string to change module definition for starting up
+netplug_provides() {
+	echo "netplug"
+}
+
+# void netplug_depend(void)
+#
+# Sets up the dependancies for the module
+netplug_depend() {
+	after macnet
+	before interface
+}
+
+# bool netplug_check_installed(void)
+#
+# Returns 0 if netplug is installed, otherwise 1
+netplug_check_installed() {
+	if [[ ! -x /sbin/netplugd ]]; then
+		${1:-false} && eerror "For netplug support, emerge sys-apps/netplug"
+		return 1
+	fi
+	return 0
+}
+
+# bool netplug_check_depends(void)
+#
+# Checks to see if we have the needed functions
+netplug_check_depends() {
+	local f
+
+	for f in interface_exists; do
+		[[ $( type -t "${f}" ) == "function" ]] && continue
+		eerror "netplug: missing required function ${f}\n"
+		return 1
+	done
+
+	return 0
+}
+
+# bool netplug_pre_start(char *interface)
+#
+# Start netplug on an interface
+netplug_pre_start() {
+	local iface="$1" timeout i
+	local pidfile="/var/run/netplug.${iface}.pid"
+
+	# We don't start netplug if we're being called from the background
+	${IN_BACKGROUND} && return 0 
+
+	# We need a valid MAC address
+	# It's a basic test to ensure it's not a virtual interface
+	local mac=$(interface_get_mac_address "${iface}")
+	if [[ -z ${mac} ]]; then
+		vewarn "netplug only works on interfaces with a valid MAC address"
+		return 0
+	fi
+	
+	# We don't work on wirelesss interfaces
+	if [[ $(type -t wireless_check_extensions) == "function" ]]; then
+		if wireless_check_extensions "${iface}"; then
+			veinfo "netplug does not work on wireless interfaces"
+			return 0
+		fi
+	fi
+
+	ebegin "Starting netplug on ${iface}"
+
+	# We need the interface up for netplug to listen to netlink events
+	interface_up "${iface}"
+
+	# Mark the us as inactive so netplug can restart us
+	mark_service_inactive "net.${iface}"
+
+	# Start netplug
+	start-stop-daemon --start --exec /sbin/netplugd \
+		--pidfile "${pidfile}" \
+		-- -i "${iface}" -P -p "${pidfile}" -c /dev/null
+	eend "$?" || return 1
+
+	eindent
+	veinfo "Waiting for ${iface} to be marked as started"
+
+	eval timeout=\"\$\{plug_timeout_${ifvar}\:-10}\"
+	[[ ${timeout} == "0" ]] \
+		&& vewarn "WARNING: infinite timeout set for ${iface} to come up"
+
+	i=0
+	while true ; do
+		if service_started "net.${iface}"; then
+			local addr=$( interface_get_address "${iface}" )
+			einfo "${iface} configured with address ${addr}"			
+			exit 0
+		fi
+		sleep 1
+		(( i++ ))
+		[[ ${i} == "${timeout}" || ${i} -gt "${timeout}" ]] && break
+	done
+
+	eend 1 "Failed to configure ${iface} in the background"
+	exit 0
+}
+
+# bool netplug_post_stop(char *iface)
+#
+# Stops netplug on an interface
+# Returns 0 (true) when successful, non-zero otherwise
+netplug_post_stop() {
+	${IN_BACKGROUND} && return 0
+	ebegin "Stopping netplug on $1"
+	start-stop-daemon --stop --exec /sbin/netplugd \
+		--pidfile "/var/run/netplug.$1.pid"
+	eend $?
+}
+
+# vim:ts=4
