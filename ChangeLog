@@ -1,6 +1,8 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+* baselayout-1.12.0_pre8 (02 Sep 2005)
+
   02 Sep 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     Split the enviroment whitelist for runscript into a system and user part.
