@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  02 Sep 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Fixed netplug from stopping on the wrong interface
+
 * baselayout-1.12.0_pre8 (02 Sep 2005)
 
   02 Sep 2005; Martin Schlemmer <azarah@gentoo.org>:

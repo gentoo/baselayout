@@ -114,9 +114,14 @@ netplug_pre_start() {
 # Returns 0 (true) when successful, non-zero otherwise
 netplug_post_stop() {
 	${IN_BACKGROUND} && return 0
-	ebegin "Stopping netplug on $1"
+	local iface="$1"
+	local pidfile="/var/run/netplug.${iface}.pid"
+
+	[[ ! -e ${pidfile} ]] && return 0
+	
+	ebegin "Stopping netplug on ${iface}"
 	start-stop-daemon --stop --exec /sbin/netplugd \
-		--pidfile "/var/run/netplug.$1.pid"
+		--pidfile "${pidfile}"
 	eend $?
 }
 
