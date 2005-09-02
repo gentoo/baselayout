@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  02 Sep 2005; Roy Marples <uberlord@gentoo.org>:
+
+    We also set MTU in the pre_start of ifconfig/iproute2 incase a DHCP
+    client or similar needs it.
+
   01 Sep 2005; Roy Marples <uberlord@gentoo.org>:
 
     Altered iproute2 to use the same lo logic as ifconfig below
