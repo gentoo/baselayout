@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  03 Sep 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Clean up netmount and don't unmount afs filesystems if the user has the 
+    afs-client init.d script running.
+
   03 Sep 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     Add warning about having LANG in env_whitelist, add TERM to system

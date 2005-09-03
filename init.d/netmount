@@ -10,39 +10,42 @@ depend() {
 	# that should be mounted at boot time.  Also filter out comments.
 	local nfsmounts=$(awk '!/^#/ && ($3=="nfs" || $3=="nfs4") && $4 !~ /noauto/ { print $0 }' /etc/fstab)
 
-	if [ -n "${nfsmounts}" ]
-	then
+	if [[ -n ${nfsmounts} ]] ; then
 		myneed="${myneed} portmap"
 		myuse="${myuse} nfs nfsmount"
+	else
+		myuse="${myuse} portmap"
 	fi
 
 	need ${myneed}
 	use ${myuse}
 }
 
+remove_net_fs() {
+	local fs
+	rcfilesystems=" ${rcfilesystems} "
+	for fs in "$@" ; do
+		rcfilesystems=${rcfilesystems// ${fs} /}
+	done
+	rcfilesystems=${rcfilesystems# } # remove front and
+	rcfilesystems=${rcfilesystems% } #   back spaces
+}
+
 start() {
-	local rcfilesystems=""
+	local rcfilesystems=${NET_FS_LIST}
 
 	# Only try to mount NFS filesystems if portmap was started.
 	# This is to fix "hang" problems for new users who do not
 	# add portmap to the default runlevel.
-	if [ -L "${svcdir}/started/portmap" ]
-	then
-		rcfilesystems="${NET_FS_LIST// /,}"		# convert to comma-separated
-	else
-		rcfilesystems=" ${NET_FS_LIST} "
-		rcfilesystems=${rcfilesystems// nfs /}	# remove nfs
-		rcfilesystems=${rcfilesystems// nfs4 /}	# remove nfs4
-		rcfilesystems=${rcfilesystems# }		# remove front and
-		rcfilesystems=${rcfilesystems% }		#   back spaces
-		rcfilesystems=${rcfilesystems// /,}		# convert to comma-separated
+	if ! service_started portmap ; then
+		remove_net_fs nfs nfs4
 	fi
+	rcfilesystems=${rcfilesystems// /,}   # convert to comma-separated
 
 	ebegin "Mounting network filesystems"
 	mount -at ${rcfilesystems} >/dev/null
 
-	if [ "$?" -ne 0 ]
-	then
+	if [[ $? != 0 ]] ; then
 		ewend 1 "Could not mount all network filesystems!"
 	else
 		eend 0
@@ -52,12 +55,23 @@ start() {
 }
 
 stop() {
+	local rcfilesystems=${NET_FS_LIST}
+
+	# We let the afs init script handle unmounting afs stuff
+	# because it requires special handling of the afs daemon
+	# and similar ugly cruft
+	if service_started afs-client ; then
+		remove_net_fs afs
+	fi
+
+	rcfilesystems=${rcfilesystems// /,}   # convert to comma-separated
+
 	local ret
 	ebegin "Unmounting network filesystems"
-	[ -z "$(umount -art ${NET_FS_LIST// /,} 2>&1)" ]
+	[[ -z $(umount -art ${rcfilesystems} 2>&1) ]]
 	ret=$?
 	eend ${ret} "Failed to simply unmount filesystems"
-	[ ${ret} -eq 0 ] && return 0
+	[[ ${ret} == 0 ]] && return 0
 
 	# `umount -a` will fail if the filesystems are in use.
 	# Here we use fuser to kill off processes that are using 
@@ -68,8 +82,7 @@ stop() {
 	local retry=0
 	local remaining="go"
 
-	while [ -n "${remaining}" -a ${retry} -lt 3 ]
-	do
+	while [[ -n ${remaining} && ${retry} -lt 3 ]] ; do
 		# Populate $remaining with a newline-delimited list of network 
 		# filesystems.  Mount points have spaces swapped for '\040' (see 
 		# fstab(5)) so we have to translate them back to spaces.
@@ -79,7 +92,7 @@ stop() {
 		IFS=$'\n'
 		set -- ${remaining//\\040/ }
 		unset IFS
-		[ -z "${remaining}" ] && break
+		[[ -z ${remaining} ]] && break
 
 		# try to unmount again
 		ebegin $'\t'"Unmounting network filesystems (retry #$((retry+1)))"
