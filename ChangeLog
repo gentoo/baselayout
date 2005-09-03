@@ -6,6 +6,9 @@
     Clean up netmount and don't unmount afs filesystems if the user has the 
     afs-client init.d script running.
 
+    Update rc-help.sh to show custom init.d opts #49663 and in general make 
+    the output a lot more useful.
+
   03 Sep 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     Add warning about having LANG in env_whitelist, add TERM to system

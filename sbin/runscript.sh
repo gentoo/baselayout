@@ -570,6 +570,9 @@ for arg in $* ; do
 		;;
 	--quiet|--nocolor)
 		;;
+	help)
+		exec "${svclib}"/sh/rc-help.sh "${myscript}" help
+		;;
 	*)
 		# Allow for homegrown functions
 		svc_homegrown ${arg}
