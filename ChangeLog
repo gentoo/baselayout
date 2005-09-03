@@ -325,7 +325,7 @@
 
   19 Jul 2005; Mike Frysinger <vapier@gentoo.org>:
 
-    Punt the bind/cyrus/mysql/qmail/slocate/vpopmail users/groups to the 
+    Punt the bind/cyrus/man/mysql/qmail/slocate/vpopmail users/groups to the 
     respective ebuilds.
 
   19 Jul 2005; Roy Marples <uberlord@gentoo.org>:
