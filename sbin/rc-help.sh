@@ -1,11 +1,10 @@
 #!/bin/bash
-# Copyright 1999-2004 Gentoo Foundation
+# Copyright 1999-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
-source /etc/init.d/functions.sh
+source /sbin/functions.sh
 
-if [ "${RC_NOCOLOR}" = "yes" ]
-then
+if [[ ${RC_NOCOLOR} == "yes" ]] ; then
 	unset BLUE GREEN OFF CYAN
 else
 	BLUE="\033[34;01m"
@@ -14,23 +13,43 @@ else
 	CYAN="\033[36;01m"
 fi
 
-myscript="${1}"
-if [ -L "${1}" ]
-then
-	myservice="$(readlink "${1}")"
-else
-	myservice=${1}
+myscript=$1
+if [[ -z ${myscript} ]] ; then
+	echo "Please execute an init.d script"
+	exit 1
 fi
 
+if [[ -L ${myscript} ]] ; then
+	myservice=$(readlink "${myscript}")
+else
+	myservice=${myscript}
+fi
 myservice=${myservice##*/}
 
+if [[ $2 == "help" ]] ; then
+	BE_VERBOSE="yes"
+	NL=$'\n'
+else
+	BE_VERBOSE="no"
+	NL=""
+fi
+
+default_opts="start stop restart pause zap"
+extra_opts=$(source "${myscript}" 2>/dev/null ; echo ${opts})
+
+if [[ ${BE_VERBOSE} == "yes" ]] ; then
 echo -e "
-${GREEN}Gentoo Linux RC-Scripts; ${BLUE}http://www.gentoo.org/${OFF}
- Copyright 1999-2004 Gentoo Foundation; Distributed under the GPL
+${GREEN}Gentoo RC-Scripts; ${BLUE}http://www.gentoo.org/${OFF}
+ Copyright 1999-2005 Gentoo Foundation; Distributed under the GPL
+"
+fi
 
-Usage: ${CYAN}${myservice}${OFF} < ${GREEN}flags${OFF} > [ ${GREEN}options${OFF} ]
+echo -e "Usage: ${CYAN}${myservice}${OFF} [ ${GREEN}flags${OFF} ] < ${GREEN}options${OFF} >
 
-${CYAN}Options:${OFF}
+${CYAN}Normal Options:${OFF}"
+
+if [[ ${BE_VERBOSE} == "yes" ]] ; then
+echo -e "
     ${GREEN}start${OFF}
       Start service, as well as the services it depends on (if not already
       started).
@@ -75,18 +94,35 @@ ${CYAN}Options:${OFF}
     ${GREEN}broken${OFF}
       List the missing or broken dependencies of type 'need' this service
       depends on.
+"
 
-${CYAN}Flags:${OFF}
+else
+
+echo -e "    ${GREEN}${default_opts}${OFF}
+      Default init.d options."
+
+fi
+
+if [[ -n ${extra_opts} ]] ; then
+echo -e "
+${CYAN}Additional Options:${OFF}${NL}
+    ${GREEN}${extra_opts}${OFF}
+      Extra options supported by this init.d script."
+fi
+
+echo -e "
+${CYAN}Flags:${OFF}${NL}
     ${GREEN}--quiet${OFF}
-      Suppress output to stdout, except if:
-
+      Suppress output to stdout, except if:${NL}
       1) It is a warning, then output to stdout
-      2) It is an error, then output to stderr
-
+      2) It is an error, then output to stderr${NL}
     ${GREEN}--nocolor${OFF}
-      Suppress the use of colors.
+      Suppress the use of colors."
 
+if [[ ${BE_VERBOSE} == "yes" ]] ; then
+echo -e "
 ${CYAN}Dependencies:${OFF}
+
     This is the heart of the Gentoo RC-Scripts, as it determines the order
     in which services gets started, and also to some extend what services
     get started in the first place.
@@ -105,17 +141,17 @@ ${CYAN}Dependencies:${OFF}
     on one line only.
 
     ${GREEN}need${OFF}
-      These are all the services needed for this service to start.  If any service
-      in the 'need' line is not started, it will be started even if it is not
-      in the current, or 'boot' runlevel, and then this service will be started.
-      If any services in the 'need' line fails to start or is missing, this
-      service will never be started.
+      These are all the services needed for this service to start.  If any
+      service in the 'need' line is not started, it will be started even if it
+      is not in the current, or 'boot' runlevel, and then this service will be
+      started.  If any services in the 'need' line fails to start or is
+      missing, this service will never be started.
 
     ${GREEN}use${OFF}
       This can be seen as representing optional services this service depends on
       that are not critical for it to start.  For any service in the 'use' line,
-      it must be added to the 'boot' or current runlevel to be considered a valid
-      'use' dependency.  It can also be used to determine startup order.
+      it must be added to the 'boot' or current runlevel to be considered a
+      valid 'use' dependency.  It can also be used to determine startup order.
 
     ${GREEN}before${OFF}
       This, together with the 'after' dependency type, can be used to control
@@ -137,8 +173,8 @@ ${CYAN}Dependencies:${OFF}
       of a system logger depend on 'logger'.  This should make things much more
       generic.
 
-    Note that the 'need', 'use', 'before' and 'after' dependeny types can have '*'
-    as argument.  Having:
+    Note that the 'need', 'use', 'before', and 'after' dependency types accept
+    an '*' as an argument.  Having:
 
     depend() {
     	before *
@@ -157,6 +193,7 @@ ${CYAN}Dependencies:${OFF}
     been warned!
 
 ${CYAN}'net' Dependency and 'net.*' Services:${OFF}
+
     Example:
 
     depend() {
@@ -171,16 +208,31 @@ ${CYAN}'net' Dependency and 'net.*' Services:${OFF}
     1.  It is part of the 'boot' runlevel
     2.  It is part of the current runlevel
 
-    A few examples are the /etc/init.d/net.eth0 and /etc/init.d/net.lo services.
+    A few examples are the /etc/init.d/net.eth0 and /etc/init.d/net.lo services."
+fi
 
-${CYAN}Configuration files:${OFF}
+echo -e "
+${CYAN}Configuration files:${OFF}"
+
+if [[ ${BE_VERBOSE} == "yes" ]] ; then
+echo -e "
     There are two files which will be sourced for possible configuration by
     the rc-scripts.  They are (sourced from top to bottom):
+"
+fi
 
-    /etc/conf.d/${myservice}
-    /etc/rc.conf
+echo -e "    /etc/conf.d/${myservice}${NL}    /etc/rc.conf"
 
+if [[ ${BE_VERBOSE} == "yes" ]] ; then
+echo -e "
 ${CYAN}Management:${OFF}
+
     Services are added and removed via the 'rc-update' tool.  Running it without
     arguments should give sufficient help.
 "
+else
+echo -e "
+For more info, please run '${myscript} help'."
+fi
+
+exit 0
