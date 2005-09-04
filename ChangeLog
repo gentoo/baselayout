@@ -1,6 +1,12 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  04 Sep 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Do not unmount /usr, but rather remount it ro, else we run into issues
+    with systems that have locales enabled, as the fuser call in halt.sh tries
+    to kill bash (due to it using /usr/lib/locale/*).
+
   03 Sep 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Clean up netmount and don't unmount afs filesystems if the user has the 
