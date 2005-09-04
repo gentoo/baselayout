@@ -22,7 +22,6 @@ tape::26:root
 video::27:root
 gdm::32:gdm
 xfs::33:xfs
-games::35:
 postgres::70:
 cdrw::80:
 nut::84:
