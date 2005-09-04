@@ -6,10 +6,5 @@
 # do it in a /etc/env.d/99myownstuff file for example, and run env-update.
 
 # User controlled
-#
-# Note: for the LANG and LC_* variables, having /usr on a seperate partition
-#       may cause issues during reboot or shutdown (lockup during umount of
-#       partitions).
-#
-#LANG
+LANG
 
