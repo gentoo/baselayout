@@ -18,7 +18,6 @@ console::17:
 audio::18:
 cdrom::19:
 dialout::20:root
-ftp::21:
 sshd::22:
 at::25:at
 tape::26:root
