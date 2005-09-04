@@ -325,7 +325,7 @@
 
   19 Jul 2005; Mike Frysinger <vapier@gentoo.org>:
 
-    Punt the bind/cron/cyrus/ftp/man/mysql/qmail/slocate/squid/sshd/vpopmail 
+    Punt the bind/cron/cyrus/ftp/games/man/mysql/qmail/slocate/squid/sshd/vpopmail 
     users/groups to the respective ebuilds.
 
   19 Jul 2005; Roy Marples <uberlord@gentoo.org>:
