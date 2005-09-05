@@ -56,24 +56,6 @@
 	 0 == strncmp(&_name[strlen(_name) - strlen(_ext)], \
 		      _ext, strlen(_ext)))
 
-/* For each '_char' in '_string', inc '_count' */
-#define COUNT_CHAR_UP(_string, _char, _count) \
-	do { \
-		int _i; \
-		for (_i = 0;_i < strlen(_string);_i++) \
-			if (_string[_i] == _char) \
-				_count++; \
-	} while (0)
-
-/* For each '_char' in '_string', dec '_count' */
-#define COUNT_CHAR_DN(_string, _char, _count) \
-	do { \
-		int _i; \
-		for (_i = 0;_i < strlen(_string);_i++) \
-			if (_string[_i] == _char) \
-				_count--; \
-	} while (0)
-
 /* Add a new item to a string list.  If the pointer to the list is NULL,
  * allocate enough memory for the amount of entries needed.  Ditto for
  * when it already exists, but we add one more entry than it can
