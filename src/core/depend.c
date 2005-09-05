@@ -480,8 +480,10 @@ int service_resolve_dependencies(void) {
 
 	/* Add our 'net' service */
 	if (NULL == service_get_info("net")) {
-		if (-1 == service_add("net"))
+		if (-1 == service_add("net")) {
+			DBG_MSG("Failed to add virtual!\n");
 			return -1;
+		}
 	}
 
 	/* Calculate all virtuals */

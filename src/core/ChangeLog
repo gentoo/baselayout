@@ -8,6 +8,8 @@
 
         * misc.h: Remove the unused COUNT_CHAR_* macro's.
 
+        * depend.c: Add missing debugging info.
+
 26 Jul 2005 Martin Schlemmer <azarah@gentoo.org>
 
         * depend.c
