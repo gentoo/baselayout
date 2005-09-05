@@ -101,7 +101,7 @@ pump_start() {
 	[[ ${d} == *" nogateway "* ]] && opts="${opts} --no-gateway"
 	[[ ${d} == *" nontp "* ]] && opts="${opts} --no-ntp"
 
-	eval search=\"\$\{dns_search_path_${ifvar}\}\"
+	eval search=\"\$\{dns_search_${ifvar}\}\"
 	[[ -n ${search} ]] && opts="${opts} --search-path='"${search}"'"
 
 	# Add our route metric

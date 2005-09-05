@@ -1,6 +1,13 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  05 Sep 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Added resolv.conf options for "option" and "sortlist" directives, #104870
+
+    dns_search_path_eth0 renamed to dns_search_eth0 so that all the dns_
+    variables match their resolv.conf counterpart.
+
   02 Sep 2005; Roy Marples <uberlord@gentoo.org>:
 
     netplug module added + documentation for it.
