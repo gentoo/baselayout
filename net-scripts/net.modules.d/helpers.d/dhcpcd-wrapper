@@ -32,7 +32,7 @@ if [[ ${action} == "up" ]]; then
 	[[ ${d} == "  " ]] && d=" ${dhcp} "
 
 	if [[ ${d} != *" nodns "* ]]; then
-		eval search=\"\$\{dns_search_path_${ifvar}\}\"
+		eval search=\"\$\{dns_search_${ifvar}\}\"
 		if [[ -n ${search} ]]; then
 			resolv="${statedir}/${interface}/resolv.conf"
 			tmp="${revolv}.$$"
