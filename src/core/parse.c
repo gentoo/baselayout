@@ -157,7 +157,7 @@ loop_error:
 	}
 
 	/* Final check if we have some entries */
-	if (NULL == file_list[0]) {
+	if ((NULL == file_list) || (NULL == file_list[0])) {
 		DBG_MSG("No rc-scripts to parse!\n");
 		errno = ENOENT;
 		goto error;
@@ -261,7 +261,6 @@ size_t parse_rcscript(char *scriptname, time_t mtime, char **data, size_t index)
 			if (REGEX_FULL_MATCH != tmp_data.match) {
 				DBG_MSG("'%s' is not a valid rc-script!\n",
 						gbasename(scriptname));
-				errno = 0;
 				goto error;
 			}
 
@@ -269,7 +268,6 @@ size_t parse_rcscript(char *scriptname, time_t mtime, char **data, size_t index)
 			if (CHECK_FILE_EXTENSION(scriptname, ".sh")) {
 				EWARN("'%s' is invalid (should not end with '.sh')!\n",
 						gbasename(scriptname));
-				errno = 0;
 				goto error;
 			}
 			DBG_MSG("Parsing '%s'.\n", gbasename(scriptname));

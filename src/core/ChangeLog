@@ -2,6 +2,12 @@
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 # $Header$
 
+06 Sep 2005 Martin Schlemmer <azarah@gentoo.org>
+
+        * parse.c
+        * misc.c: Try to cleanup error handling a bit (debug messages, return
+        value, etc).
+
 05 Sep 2005 Martin Schlemmer <azarah@gentoo.org>
 
         * parse.c: Make sure field in parse_cache() is not used uninitialized.

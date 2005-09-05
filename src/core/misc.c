@@ -333,12 +333,8 @@ int rmtree(const char *pathname) {
 
 	dirlist = ls_dir(pathname, 1);
 	if ((NULL == dirlist) && (0 != errno)) {
-		/* If errno = ENOENT and the directory exists, then it means
-		 * it is empty, so we should not error out */
-		if (ENOENT != errno) {
-			DBG_MSG("Could not get listing for '%s'!\n", pathname);
-			return -1;
-		}
+		DBG_MSG("Could not get listing for '%s'!\n", pathname);
+		return -1;
 	}
 
 	while ((NULL != dirlist) && (NULL != dirlist[i])) {
@@ -417,7 +413,6 @@ char **ls_dir(const char *pathname, int hidden) {
 			tmp_p = strcatpaths(pathname, d_name);
 			if (NULL == tmp_p) {
 				DBG_MSG("Failed to allocate buffer!\n");
-				/* errno = ENOMEM */
 				goto error;
 			}
 
@@ -425,11 +420,8 @@ char **ls_dir(const char *pathname, int hidden) {
 		}
 	} while (NULL != dir_entry);
 
-	if ((NULL == dirlist) || (NULL == dirlist[0])) {
+	if ((NULL == dirlist) || (NULL == dirlist[0]))
 		DBG_MSG("Directory is empty.\n");
-		errno = ENOENT;
-		goto error;
-	}
 
 	closedir(dirfd);
 	
@@ -531,9 +523,10 @@ char *get_cnf_entry(const char *pathname, const char *entry) {
 				free(value);
 
 			value = strndup(token, strlen(token));
-			if (NULL == value)
-				/* errno = ENOMEM */
+			if (NULL == value) {
+				DBG_MSG("Failed to allocate temporary buffer!\n");
 				goto error;
+			}
 
 			/* We do not break, as there might be more than one entry
 			 * defined, and as bash uses the last, so should we */
@@ -549,11 +542,8 @@ _continue:
 	}
 				
 
-	if (NULL == value) {
+	if (NULL == value)
 		DBG_MSG("Failed to get value for config entry '%s'!\n", entry);
-		errno = ENOMSG;
-		goto error;
-	}
 
 	file_unmap(buf, lenght);
 
