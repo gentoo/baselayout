@@ -35,13 +35,13 @@ system_check_depends() {
 #
 # Returns a string spaced with possible user set configuration variables
 system_get_vars() {
-	echo "dns_servers_$1 dns_domain_$1 dns_search_path_$1 ntp_servers_$1 nis_domain_$1 nis_servers_$1"
+	echo "dns_servers_$1 dns_domain_$1 dns_options_$1 dns_search_$1 dns_sortlist_$1 ntp_servers_$1 nis_domain_$1 nis_servers_$1"
 }
 
 system_dns() {
 	local iface="$1" ifvar=$( bash_variable "$1" ) x
 	local conffile="${statedir}/${iface}/resolv.conf" tmpfile="${conffile}.$$"
-	local -a servers
+	local -a servers options
 
 	eval servers=( \"\$\{dns_servers_${ifvar}\[@\]\}\" )
 	[[ -z ${servers} ]] && return 0
@@ -56,8 +56,16 @@ system_dns() {
 		echo "nameserver ${x}" >> "${tmpfile}"
 	done
 
-	eval x=\"\$\{dns_search_path_${ifvar}\}\"
+	eval x=\"\$\{dns_search_${ifvar}\}\"
 	[[ -n ${x} ]] && echo "search ${x}" >> "${tmpfile}"
+
+	eval options=( \"\$\{dns_options_${ifvar}\[@\]\}\" )
+	for x in "${options[@]}"; do
+		echo "option ${x}" >> "${tmpfile}"
+	done
+
+	eval x=\"\$\{dns_sortlist_${ifvar}\}\"
+	[[ -n ${x} ]] && echo "sortlist ${x}" >> "${tmpfile}"
 
 	mv "${tmpfile}" "${conffile}"
 }
