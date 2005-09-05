@@ -2,6 +2,10 @@
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 # $Header$
 
+05 Sep 2005 Martin Schlemmer <azarah@gentoo.org>
+
+        * parse.c: Make sure field in parse_cache() is not used uninitialized.
+
 26 Jul 2005 Martin Schlemmer <azarah@gentoo.org>
 
         * depend.c

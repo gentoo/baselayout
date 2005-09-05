@@ -817,6 +817,7 @@ int parse_cache(const char *data, size_t lenght) {
 			 * services */
 			retval = service_add_dependency(rc_name, rc_name, BROKEN);
 			if (-1 == retval) {
+				field = service_type_names[type];
 				DBG_MSG("Failed to add dependency '%s' to service '%s', type '%s'!\n",
 						token, rc_name, field);
 				goto error;
