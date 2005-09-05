@@ -61,7 +61,7 @@ system_dns() {
 
 	eval options=( \"\$\{dns_options_${ifvar}\[@\]\}\" )
 	for x in "${options[@]}"; do
-		echo "option ${x}" >> "${tmpfile}"
+		echo "options ${x}" >> "${tmpfile}"
 	done
 
 	eval x=\"\$\{dns_sortlist_${ifvar}\}\"
