@@ -8,6 +8,9 @@
         * misc.c: Try to cleanup error handling a bit (debug messages, return
         value, etc).
 
+        * parse.c: Fix output of write_legacy_stage3() after removing the
+        parallel dependency type.
+
 05 Sep 2005 Martin Schlemmer <azarah@gentoo.org>
 
         * parse.c: Make sure field in parse_cache() is not used uninitialized.

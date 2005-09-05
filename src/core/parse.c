@@ -694,12 +694,12 @@ int write_legacy_stage3(FILE *output) {
 		if (0 == strcmp("net", info->name))
 			continue;
 #endif
-		fprintf(output, "RC_DEPEND_TREE[%i]=\"%s\"\n", index*11, info->name);
+		fprintf(output, "RC_DEPEND_TREE[%i]=\"%s\"\n", index*10, info->name);
 		
 		for (i = 0;i <= BROKEN;i++) {
 			dep_count = 0;
 			
-			fprintf(output, "RC_DEPEND_TREE[%i+%i]=", (index * 11), (i + 2));
+			fprintf(output, "RC_DEPEND_TREE[%i+%i]=", (index * 10), (i + 2));
 			
 			STRING_LIST_FOR_EACH(info->depend_info[i], service, count) {
 				if (0 == dep_count)
@@ -716,10 +716,7 @@ int write_legacy_stage3(FILE *output) {
 				fprintf(output, "\n");
 		}
 		
-		fprintf(output, "RC_DEPEND_TREE[%i+9]=", index*11);
-		fprintf(output, "\n");
-
-		fprintf(output, "RC_DEPEND_TREE[%i+10]=\"%li\"\n\n", index*11,
+		fprintf(output, "RC_DEPEND_TREE[%i+9]=\"%li\"\n\n", index*10,
 				info->mtime);
 		index++;
 	}
