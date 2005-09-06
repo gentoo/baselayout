@@ -72,7 +72,6 @@ size_t parse_rcscript(char *scriptname, time_t mtime, char **data, size_t index)
 size_t parse_print_start(char **data, size_t index);
 size_t parse_print_header(char *scriptname, time_t mtime, char **data, size_t index);
 size_t parse_print_body(char *scriptname, char **data, size_t index);
-size_t parse_print_end(char **data, size_t index);
 
 int get_rcscripts(void) {
 	rcscript_info_t *info;
@@ -296,18 +295,6 @@ size_t parse_rcscript(char *scriptname, time_t mtime, char **data, size_t index)
 					data, write_count);
 			if (-1 == write_count) {
 				DBG_MSG("Failed to call parse_print_body()!\n");
-				goto error;
-			}
-
-			/* Need to have the 'source', as parse_cache() checks for
-			 * second arg */
-			PRINT_TO_BUFFER(data, write_count, error,
-				"  . \"%s\" >/dev/null 2>&1 || echo \"FAILED source\"\n",
-				scriptname);
-			
-			write_count = parse_print_end(data, write_count);
-			if (-1 == write_count) {
-				DBG_MSG("Failed to call parse_print_end()!\n");
 				goto error;
 			}
 
@@ -922,24 +909,12 @@ error:
 size_t parse_print_start(char **data, size_t index) {
 	size_t write_count = index;
 	
-	PRINT_TO_BUFFER(data, write_count, error, ". /sbin/functions.sh\n");
-	PRINT_TO_BUFFER(data, write_count, error, "[ -e /etc/rc.conf ] && . /etc/rc.conf\n\n");
-//	PRINT_TO_BUFFER(data, write_count, error, "set -e\n\n");
-	PRINT_TO_BUFFER(data, write_count, error, "need() {\n");
-	PRINT_TO_BUFFER(data, write_count, error, " [ -n \"$*\" ] && echo \"NEED $*\"; return 0\n");
-	PRINT_TO_BUFFER(data, write_count, error, "}\n\n");
-	PRINT_TO_BUFFER(data, write_count, error, "use() {\n");
-	PRINT_TO_BUFFER(data, write_count, error, " [ -n \"$*\" ] && echo \"USE $*\"; return 0\n");
-	PRINT_TO_BUFFER(data, write_count, error, "}\n\n");
-	PRINT_TO_BUFFER(data, write_count, error, "before() {\n");
-	PRINT_TO_BUFFER(data, write_count, error, " [ -n \"$*\" ] && echo \"BEFORE $*\"; return 0\n");
-	PRINT_TO_BUFFER(data, write_count, error, "}\n\n");
-	PRINT_TO_BUFFER(data, write_count, error, "after() {\n");
-	PRINT_TO_BUFFER(data, write_count, error, " [ -n \"$*\" ] && echo \"AFTER $*\"; return 0\n");
-	PRINT_TO_BUFFER(data, write_count, error, "}\n\n");
-	PRINT_TO_BUFFER(data, write_count, error, "provide() {\n");
-	PRINT_TO_BUFFER(data, write_count, error, " [ -n \"$*\" ] && echo \"PROVIDE $*\"; return 0\n");
-	PRINT_TO_BUFFER(data, write_count, error, "}\n\n");
+	PRINT_TO_BUFFER(data, write_count, error,
+		". /sbin/functions.sh\n"
+		"[ -e /etc/rc.conf ] && . /etc/rc.conf\n"
+		"\n"
+	/*	"set -e\n" */
+		"\n");
 
 	return write_count;
 
@@ -950,10 +925,15 @@ error:
 size_t parse_print_header(char *scriptname, time_t mtime, char **data, size_t index) {
 	size_t write_count = index;
 	
-	PRINT_TO_BUFFER(data, write_count, error, "#*** %s ***\n\n", scriptname);
-	PRINT_TO_BUFFER(data, write_count, error, "myservice=\"%s\"\n", scriptname);
-	PRINT_TO_BUFFER(data, write_count, error, "echo \"RCSCRIPT ${myservice}\"\n\n");
-	PRINT_TO_BUFFER(data, write_count, error, "echo \"MTIME %li\"\n\n", mtime);
+	PRINT_TO_BUFFER(data, write_count, error,
+		"#*** %s ***\n"
+		"\n"
+		"myservice=\"%s\"\n"
+		"echo \"RCSCRIPT ${myservice}\"\n"
+		"\n"
+		"echo \"MTIME %li\"\n"
+		"\n",
+		scriptname, scriptname, mtime);
 
 	return write_count;
 
@@ -993,33 +973,51 @@ size_t parse_print_body(char *scriptname, char **data, size_t index) {
 	if (NULL == ext)
 		ext = tmp_ptr;
 	
-	PRINT_TO_BUFFER(data, write_count, error, "\n");
-	PRINT_TO_BUFFER(data, write_count, error, "  # Get settings for rc-script ...\n");
-	PRINT_TO_BUFFER(data, write_count, error, "  [ -e \"/etc/conf.d/${myservice}\" ] && \\\n");
-	PRINT_TO_BUFFER(data, write_count, error, "  	. \"/etc/conf.d/${myservice}\"\n");
-	PRINT_TO_BUFFER(data, write_count, error, "  [ -e /etc/conf.d/net ] && \\\n");
-	PRINT_TO_BUFFER(data, write_count, error, "  [ \"%s\" = \"net\" ] && \\\n", base);
-	PRINT_TO_BUFFER(data, write_count, error, "  [ \"%s\" != \"${myservice}\" ] && \\\n", ext);
-	PRINT_TO_BUFFER(data, write_count, error, "  	. /etc/conf.d/net\n");
-	PRINT_TO_BUFFER(data, write_count, error, "  depend() {\n");
-	PRINT_TO_BUFFER(data, write_count, error, "    return 0\n");
-	PRINT_TO_BUFFER(data, write_count, error, "  }\n\n");
-	PRINT_TO_BUFFER(data, write_count, error, "  # Actual depend() function ...\n");
-
-	free(tmp_buf);
-	
-	return write_count;
-
-error:
-	return -1;
-}
-
-size_t parse_print_end(char **data, size_t index) {
-	size_t write_count = index;
-	
-	PRINT_TO_BUFFER(data, write_count, error, "\n");
-	PRINT_TO_BUFFER(data, write_count, error, "  depend\n");
-	PRINT_TO_BUFFER(data, write_count, error, "\n\n");
+	PRINT_TO_BUFFER(data, write_count, error,
+		"\n"
+		"(\n"
+		"  # Get settings for rc-script ...\n"
+		"  [ -e \"/etc/conf.d/${myservice}\" ] && \\\n"
+		"  	. \"/etc/conf.d/${myservice}\"\n"
+		"  [ -e /etc/conf.d/net ] && \\\n"
+		"  [ \"%s\" = \"net\" ] && \\\n"
+		"  [ \"%s\" != \"${myservice}\" ] && \\\n"
+		"  	. /etc/conf.d/net\n"
+		"  depend() {\n"
+		"    return 0\n"
+		"  }\n"
+		"  \n"
+		"  # Actual depend() function ...\n"
+		"  (\n"
+		"    set -e\n"
+		"    . \"/etc/init.d/%s\" >/dev/null 2>&1\n"
+		"    set +e\n"
+		"    \n"
+		"    need() {\n"
+		"      [ \"$#\" -gt 0 ] && echo \"NEED $*\"; return 0\n"
+		"    }\n"
+		"    \n"
+		"    use() {\n"
+		"      [ \"$#\" -gt 0 ] && echo \"USE $*\"; return 0\n"
+		"    }\n"
+		"    \n"
+		"    before() {\n"
+		"      [ \"$#\" -gt 0 ] && echo \"BEFORE $*\"; return 0\n"
+		"    }\n"
+		"    \n"
+		"    after() {\n"
+		"      [ \"$#\" -gt 0 ] && echo \"AFTER $*\"; return 0\n"
+		"    }\n"
+		"    \n"
+		"    provide() {\n"
+		"      [ \"$#\" -gt 0 ] && echo \"PROVIDE $*\"; return 0\n"
+		"    }\n"
+		"    \n"
+		"    depend\n"
+		"  ) || echo \"FAILED source\"\n"
+		")\n"
+		"\n\n",
+		base, ext, scriptname);
 
 	return write_count;
 

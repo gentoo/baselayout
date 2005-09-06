@@ -15,6 +15,11 @@
 
         * misc.h: Add MIN/MAX macro's.
 
+        * parse.c: Cleanup and merge parse_print_*() functions.  Move need(),
+        etc functions to after sourcing of script, else we run into issues
+        with net.* scripts that redefine them.  Better checking if scripts
+        have issues or not.
+
 05 Sep 2005 Martin Schlemmer <azarah@gentoo.org>
 
         * parse.c: Make sure field in parse_cache() is not used uninitialized.
