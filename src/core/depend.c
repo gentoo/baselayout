@@ -484,6 +484,7 @@ int service_resolve_dependencies(void) {
 			DBG_MSG("Failed to add virtual!\n");
 			return -1;
 		}
+		service_set_mtime("net", 0);
 	}
 
 	/* Calculate all virtuals */

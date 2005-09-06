@@ -29,6 +29,8 @@
 
         * parse.c: Reset tmp_count between writing and reading.
 
+        * depend.c: Also add mtime for 'net' service if we need to add it.
+
 05 Sep 2005 Martin Schlemmer <azarah@gentoo.org>
 
         * parse.c: Make sure field in parse_cache() is not used uninitialized.
