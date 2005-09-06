@@ -31,6 +31,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <sys/poll.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -434,21 +435,13 @@ size_t generate_stage2(char **data) {
 
 		struct sigaction act_new;
 		struct sigaction act_old;
-		struct timeval tv;
-#if defined(USE_WRITE_SELECT)
-		fd_set write_fds;
-#endif
-		fd_set read_fds;
+		struct pollfd poll_fds[2];
 		char buf[PARSE_BUFFER_SIZE+1];
 		char *stage1_data = NULL;
 		size_t stage1_write_count = 0;
 		size_t stage1_written = 0;
-#if defined(USE_WRITE_SELECT)
-		int max_write_fds = child_pfds[WRITE_PIPE] + 1;
-#endif
-		int max_read_fds = parent_pfds[READ_PIPE] + 1;
 		int status = 0;
-		int read_count;
+		int read_count = 0;
 		int closed_write_pipe = 0;
 		int tmp_pid = 0;
 
@@ -487,72 +480,62 @@ size_t generate_stage2(char **data) {
 		close(tmp_fd);
 #endif
 
-		/* Do setup for select() */
-		tv.tv_sec = 0;		/* We do not want to wait for select() */
-		tv.tv_usec = 0;		/* Same thing here */
-#if defined(USE_WRITE_SELECT)
-		FD_ZERO(&write_fds);
-		FD_SET(child_pfds[WRITE_PIPE], &write_fds);
-#endif
-		FD_ZERO(&read_fds);
-		FD_SET(parent_pfds[READ_PIPE], &read_fds);
-
 		do {
-#if defined(USE_WRITE_SELECT)
-			fd_set wwrite_fds = write_fds;
-#endif
-			fd_set wread_fds = read_fds;
 			int tmp_count = 0;
-#if defined(USE_WRITE_SELECT)
 			int do_write = 0;
-#endif
 			int do_read = 0;
-		
-			/* Check if we can read from parent_pfds[READ_PIPE] */
-			select(max_read_fds, &wread_fds, NULL, NULL, &tv);
-			do_read = FD_ISSET(parent_pfds[READ_PIPE], &wread_fds);
 
-			/* While there is data to be written */
+			/* Check if we can write or read */
+			poll_fds[WRITE_PIPE].fd = child_pfds[WRITE_PIPE];
+			poll_fds[WRITE_PIPE].events = POLLOUT;
+			poll_fds[READ_PIPE].fd = parent_pfds[READ_PIPE];
+			poll_fds[READ_PIPE].events = POLLIN | POLLPRI;
 			if (stage1_written < stage1_write_count) {
-#if defined(USE_WRITE_SELECT)
-				/* Check if we can write */
-				select(max_write_fds, NULL, &wwrite_fds,
-						NULL, &tv);
-				do_write = FD_ISSET(child_pfds[WRITE_PIPE],
-						&wwrite_fds);
+				poll(poll_fds, 2, -1);
+				if (poll_fds[WRITE_PIPE].revents & POLLOUT)
+					do_write = 1;
+			} else {
+				poll(&(poll_fds[READ_PIPE]), 1, -1);
+			}
+			if (poll_fds[READ_PIPE].revents & POLLIN || poll_fds[READ_PIPE].revents & POLLPRI)
+				do_read = 1;
+
+			do {
+				if ((stage1_written >= stage1_write_count) ||
+				    (do_read) || (!do_write))
+					goto cont_do_read;
 
 				/* If we can write, or there is nothing to
 				 * read, keep feeding the write pipe */
-				if (do_write || !do_read) {
-#else
-				if (!do_read) {
-#endif
-					tmp_count = write(child_pfds[WRITE_PIPE],
-							&stage1_data[stage1_written],
-							strlen(&stage1_data[stage1_written]));
-					if (-1 == tmp_count) {
-						DBG_MSG("Error writing to child_pfds[WRITE_PIPE]!\n");
-						goto failed;
-					}
-					/* What was written before, plus what
-					 * we wrote now as well as the ending
-					 * '\0' of the line */
-					stage1_written += tmp_count + 1;
-				
-					/* Close the write pipe if we done
-					 * writing to get a EOF signaled to
-					 * bash */
-					if (stage1_written >= stage1_write_count) {
-						closed_write_pipe = 1;
-						close(child_pfds[WRITE_PIPE]);
-					}
+				tmp_count = write(child_pfds[WRITE_PIPE],
+						&stage1_data[stage1_written],
+						strlen(&stage1_data[stage1_written]));
+				if ((-1 == tmp_count) && (EINTR != errno)) {
+					DBG_MSG("Error writing to child_pfds[WRITE_PIPE]!\n");
+					goto failed;
 				}
-			}
+				/* What was written before, plus what
+				 * we wrote now as well as the ending
+				 * '\0' of the line */
+				stage1_written += tmp_count + 1;
 			
-			if (do_read) {
+				/* Close the write pipe if we done
+				 * writing to get a EOF signaled to
+				 * bash */
+				if (stage1_written >= stage1_write_count) {
+					closed_write_pipe = 1;
+					close(child_pfds[WRITE_PIPE]);
+				}
+			} while ((tmp_count > 0) && (stage1_written < stage1_write_count));
+		
+cont_do_read:
+			do {
+				if (!do_read)
+					goto cont_waitpid;
+				
 				read_count = read(parent_pfds[READ_PIPE], buf,
 						PARSE_BUFFER_SIZE);
-				if (-1 == read_count) {
+				if ((-1 == read_count) && (EINTR != errno)) {
 					DBG_MSG("Error reading parent_pfds[READ_PIPE]!\n");
 					goto failed;
 				}
@@ -566,15 +549,17 @@ size_t generate_stage2(char **data) {
 						goto failed;
 					}
 					
-					memcpy(&tmp_p[write_count], buf,
-							read_count);
+					memcpy(&tmp_p[write_count], buf, read_count);
 
 					*data = tmp_p;				
 					write_count += read_count;
 				}
-			}
-			tmp_pid = waitpid(child_pid, &status, WNOHANG);
-		} while (0 == tmp_pid);
+			} while (read_count > 0);
+	
+cont_waitpid:
+			if (0 == tmp_pid)
+				tmp_pid = waitpid(child_pid, &status, WNOHANG);
+		} while (0 == tmp_pid); //&& !(poll_fds[READ_PIPE].revents & POLLHUP));
 
 failed:
 		/* Set old_errno to disable child exit code checking below */
