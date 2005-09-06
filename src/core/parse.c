@@ -529,6 +529,8 @@ size_t generate_stage2(char **data) {
 			} while ((tmp_count > 0) && (stage1_written < stage1_write_count));
 		
 cont_do_read:
+			tmp_count = 0;
+			
 			do {
 				if (!do_read)
 					continue;
