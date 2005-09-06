@@ -54,8 +54,10 @@ cc-option = $(shell if $(CC) $(1) -S -o /dev/null -xc /dev/null \
 
 ifeq ($(DEBUG),1)
   override CFLAGS += -ggdb3
-  override CFLAGS += $(call cc-option, -fbounds-checking, -pipe)
   EXTRA_CFLAGS += -DRC_DEBUG
+endif
+ifeq ($(BOUNDS),1)
+  override CFLAGS += $(call cc-option, -fbounds-checking, -pipe)
 endif
 
 $(DEPSCAN): $(OBJS) $(DEPSCAN).o

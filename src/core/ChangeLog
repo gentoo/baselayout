@@ -11,6 +11,8 @@
         * parse.c: Fix output of write_legacy_stage3() after removing the
         parallel dependency type.
 
+        * Makefile: Do not enable bounds checking with DEBUG=1.
+
 05 Sep 2005 Martin Schlemmer <azarah@gentoo.org>
 
         * parse.c: Make sure field in parse_cache() is not used uninitialized.
