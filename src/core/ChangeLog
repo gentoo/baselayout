@@ -13,6 +13,8 @@
 
         * Makefile: Do not enable bounds checking with DEBUG=1.
 
+        * misc.h: Add MIN/MAX macro's.
+
 05 Sep 2005 Martin Schlemmer <azarah@gentoo.org>
 
         * parse.c: Make sure field in parse_cache() is not used uninitialized.
