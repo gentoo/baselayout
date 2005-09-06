@@ -441,7 +441,6 @@ size_t generate_stage2(char **data) {
 		size_t stage1_write_count = 0;
 		size_t stage1_written = 0;
 		int status = 0;
-		int read_count = 0;
 		int closed_write_pipe = 0;
 		int tmp_pid = 0;
 
@@ -497,16 +496,17 @@ size_t generate_stage2(char **data) {
 			} else {
 				poll(&(poll_fds[READ_PIPE]), 1, -1);
 			}
-			if (poll_fds[READ_PIPE].revents & POLLIN || poll_fds[READ_PIPE].revents & POLLPRI)
+			if ((poll_fds[READ_PIPE].revents & POLLIN) ||
+			    (poll_fds[READ_PIPE].revents & POLLPRI))
 				do_read = 1;
 
 			do {
+				/* If we can write, or there is nothing to
+				 * read, keep feeding the write pipe */
 				if ((stage1_written >= stage1_write_count) ||
 				    (do_read) || (!do_write))
 					goto cont_do_read;
 
-				/* If we can write, or there is nothing to
-				 * read, keep feeding the write pipe */
 				tmp_count = write(child_pfds[WRITE_PIPE],
 						&stage1_data[stage1_written],
 						strlen(&stage1_data[stage1_written]));
@@ -533,28 +533,28 @@ cont_do_read:
 				if (!do_read)
 					continue;
 				
-				read_count = read(parent_pfds[READ_PIPE], buf,
+				tmp_count = read(parent_pfds[READ_PIPE], buf,
 						PARSE_BUFFER_SIZE);
-				if ((-1 == read_count) && (EINTR != errno)) {
+				if ((-1 == tmp_count) && (EINTR != errno)) {
 					DBG_MSG("Error reading parent_pfds[READ_PIPE]!\n");
 					goto failed;
 				}
-				if (read_count > 0) {
+				if (tmp_count > 0) {
 					char *tmp_p;
 
 					tmp_p = realloc(*data, write_count +
-								read_count);
+								tmp_count);
 					if (NULL == tmp_p) {
 						DBG_MSG("Failed to allocate buffer!\n");
 						goto failed;
 					}
 					
-					memcpy(&tmp_p[write_count], buf, read_count);
+					memcpy(&tmp_p[write_count], buf, tmp_count);
 
 					*data = tmp_p;				
-					write_count += read_count;
+					write_count += tmp_count;
 				}
-			} while (read_count > 0);
+			} while (tmp_count > 0);
 		} while (!(poll_fds[READ_PIPE].revents & POLLHUP));
 
 failed:

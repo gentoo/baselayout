@@ -25,6 +25,8 @@
         * parse.c: Remove the waitpid() call in the read/write loop of our
         generate_stage2(), as its very slow on amd64.
 
+        * parse.c: Remove some redundent variables and other cleanups.
+
 05 Sep 2005 Martin Schlemmer <azarah@gentoo.org>
 
         * parse.c: Make sure field in parse_cache() is not used uninitialized.
