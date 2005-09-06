@@ -31,16 +31,19 @@ if [[ ${action} == "up" ]]; then
 	eval d=\" \$\{dhcp_${ifvar}\} \"
 	[[ ${d} == "  " ]] && d=" ${dhcp} "
 
+	resolv="${statedir}/${interface}/resolv.conf"
+	
 	if [[ ${d} != *" nodns "* ]]; then
 		eval search=\"\$\{dns_search_${ifvar}\}\"
 		if [[ -n ${search} ]]; then
-			resolv="${statedir}/${interface}/resolv.conf"
 			tmp="${revolv}.$$"
 			egrep -v "^[ \t]*(search|domain)[ \t]*" "${resolv}" > "${tmp}"
 			echo "search ${search}" >> "${tmp}" 
 			mv "${tmp}" "${resolv}"
 		fi
 	fi
+
+	system_dns_extra "${interface}" "${resolv}"
 fi
 
 . /lib/rcscripts/net.modules.d/helpers.d/dhcp-state
