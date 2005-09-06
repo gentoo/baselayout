@@ -22,6 +22,9 @@
 
         * parse.c: Use poll() rather than select() and some other cleanups.
 
+        * parse.c: Remove the waitpid() call in the read/write loop of our
+        generate_stage2(), as its very slow on amd64.
+
 05 Sep 2005 Martin Schlemmer <azarah@gentoo.org>
 
         * parse.c: Make sure field in parse_cache() is not used uninitialized.

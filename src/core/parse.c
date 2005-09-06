@@ -531,7 +531,7 @@ size_t generate_stage2(char **data) {
 cont_do_read:
 			do {
 				if (!do_read)
-					goto cont_waitpid;
+					continue;
 				
 				read_count = read(parent_pfds[READ_PIPE], buf,
 						PARSE_BUFFER_SIZE);
@@ -555,11 +555,7 @@ cont_do_read:
 					write_count += read_count;
 				}
 			} while (read_count > 0);
-	
-cont_waitpid:
-			if (0 == tmp_pid)
-				tmp_pid = waitpid(child_pid, &status, WNOHANG);
-		} while (0 == tmp_pid); //&& !(poll_fds[READ_PIPE].revents & POLLHUP));
+		} while (!(poll_fds[READ_PIPE].revents & POLLHUP));
 
 failed:
 		/* Set old_errno to disable child exit code checking below */
