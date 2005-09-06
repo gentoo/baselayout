@@ -20,7 +20,7 @@
         with net.* scripts that redefine them.  Better checking if scripts
         have issues or not.
 
-        * parse.c: Use poll() rather than eselect() and some other cleanups.
+        * parse.c: Use poll() rather than select() and some other cleanups.
 
 05 Sep 2005 Martin Schlemmer <azarah@gentoo.org>
 
