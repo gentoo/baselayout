@@ -12,6 +12,8 @@
         * simple-regex.c
         * simple-regex.h: Misc style and other cleanups.
 
+        * TODO: New file.
+
 06 Sep 2005 Martin Schlemmer <azarah@gentoo.org>
 
         * parse.c

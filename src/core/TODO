@@ -1,0 +1,8 @@
+Shortlist of cleanups to think about at some stage:
+===================================================
+* Make error handling (and thus especially touching errno) more consistent.
+* Split generate_stage2() and co to handle a function at a time if not too
+  slow .. this will enable us to use less memory.
+* Think about using linked lists to the actual dependencies, rather than
+  string lists for service_info_t->depend_info.  This might need a lot of
+  rework, but could also safe us some memory, and lower trashing.
