@@ -258,7 +258,6 @@
 # this, add dhclient_edit_config="yes" to /etc/conf.d/net
 
 #-----------------------------------------------------------------------------
-# Automatic Private IP Addressing (APIPA)
 # For APIPA support, emerge net-misc/iputils or net-analyzer/arping
 
 # APIPA is a module that tries to find a free address in the range
@@ -269,6 +268,37 @@
 # connect directly to the internet.
 #config_eth0=( "dhcp" )
 #fallback_eth0=( "apipa" )
+
+#-----------------------------------------------------------------------------
+# ARPING Gateway configuration 
+# and
+# Automatic Private IP Addressing (APIPA)
+# For arpingnet / apipa support, emerge net-misc/iputils or net-analyzer/arping
+#
+# This is a module that tries to find a gateway IP. If it exists then we use
+# that gateways configuration for our own. For the configuration variables
+# simply ensure that each ocet is zero padded and the dots are removed.
+# Below is an example.
+#
+#arping_eth0="192.168.0.1 10.0.0.1"
+#config_192168000001=( "192.168.0.2/24" )
+#routes_192168000001=( "default via 192.168.0.1" )
+#dns_servers_192168000001=( "192.168.0.1" )
+#config_010000000001=( "10.0.0.254/8" )
+#routes_010000000001=( "default via 10.0.0.1" )
+#dns_servers_010000000001=( "10.0.0.1" )
+
+# If we don't find any gateways (or there are none configured) then we try and
+# use APIPA to find a free address in the range 169.254.0.0-169.254.255.255
+# by arping a random address in that range on the interface. If no reply is
+# found then we assign that address to the interface.
+
+# This is only useful for LANs where there is no DHCP server.
+#config_eth0=( "arping" )
+
+# or if no DHCP server can be found
+#config_eth0=( "dhcp" )
+#fallback_eth0=( "arping" )
 
 #-----------------------------------------------------------------------------
 # VLAN (802.1q support)
