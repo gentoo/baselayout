@@ -159,8 +159,12 @@ wpa_supplicant_associate() {
 	eval timeout=\"\$\{associate_timeout_${ifvar}\}\"
 	[[ -z ${timeout} ]] && eval timeout=\"\$\{wpa_timeout_${ifvar}:-60\}\"
 
-	[[ ${timeout} == "0" ]] \
-	&& vewarn "WARNING: infinite timeout set for association on ${iface}"
+	if [[ ${timeout} == "0" ]]; then
+		ewarn "WARNING: infinite timeout set for association on ${iface}"
+	elif [[ ${timeout} -lt 0 ]]; then
+		ewarn "WARNING: negative timeout set for ${iface}"
+		exit 0
+	fi
 
 	while true ; do
 		if ${action} ; then

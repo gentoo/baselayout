@@ -1,6 +1,21 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  07 Sep 2005; Roy Marples <uberlord@gentoo.org>:
+
+    updated env_whitelist so that nothing is allowed by default
+
+    system module now runs through pre instead of post and is run by
+    lo as well, so dns_ options can be configured for it
+
+    netplug and wpa_supplicant understand negative timeouts to be defined
+    as "return immediately and don't wait for success"
+
+    dns options and sortlist now get merged in resolv.conf too
+
+    bridge error message regarding the kernel module should work with
+    newer versions of bridge-utils
+
   06 Sep 2005; Roy Marples <uberlord@gentoo.org>:
 
     dns_*, nis_* and ntp_* options now work globally too, but are overridden

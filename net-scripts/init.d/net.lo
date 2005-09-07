@@ -181,7 +181,7 @@ modules_check_user() {
 
 	# Add our preferred modules
 	npref=3
-	umods=( "${umods[@]}" "iproute2" "dhcpcd" "iwconfig" )
+	umods=( "${umods[@]}" "iproute2" "dhcpcd" "iwconfig" "netplug" )
 
 	# First we strip any modules that conflict from user settings
 	# So if the user specifies pump then we don't use dhcpcd
@@ -429,7 +429,7 @@ modules_load()  {
 			for (( k=i+1; k<j; k++ )); do
 				[[ -z ${modules_force[k]} ]] && continue
 				[[ $( ${modules_force[i]}_provides ) \
-					== $( ${modules_force[i]}_provides ) ]] \
+					== $( ${modules_force[k]}_provides ) ]] \
 					&& unset modules_force[k]
 			done
 		done
@@ -838,7 +838,7 @@ run() {
 	[[ ${cmd} == "stop" ]] && starting=false
 
 	# We force lo to only use these modules for a major speed boost
-	[[ ${iface} == "lo" ]] && modules_force=( "iproute2" "ifconfig" )
+	[[ ${iface} == "lo" ]] && modules_force=( "iproute2" "ifconfig" "system" )
 
 	if modules_load "${iface}" "${starting}" ; then
 		if [[ ${cmd} == "stop" ]]; then

@@ -98,7 +98,7 @@ bridge_create() {
 	ebegin "Creating bridge ${iface}"
 	x=$( brctl addbr "${iface}" 2>&1 )
 	if [[ -n ${x} ]]; then
-		if [[ ${x} == "br_add_bridge: Package not installed" ]]; then
+		if [[ ${x//Package not installed/} != "${x}" ]]; then
 			eend 1 "Bridging (802.1d) support is not present in this kernel"
 		else
 			eend 1 "${x}"

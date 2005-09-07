@@ -11,25 +11,25 @@ interface="$2"
 
 if [[ ${action} == "up" ]]; then
 	. /lib/rcscripts/net.modules.d/helpers.d/module-loader
-    
+
 	# Map MAC address variables to interface variables
-    macnet_pre_start "${interface}" 1>/dev/null
+	macnet_pre_start "${interface}" 1>/dev/null
 
-    # Map wireless ESSID variables to interface variables
-    if [[ -n ${wireless_module} ]]; then
-        if wireless_check_extensions "${interface}" ; then
-            essidnet_pre_start "${interface}" 1>/dev/null
-        fi
-    fi
+	# Map wireless ESSID variables to interface variables
+	if [[ -n ${wireless_module} ]]; then
+		if wireless_check_extensions "${interface}" ; then
+			essidnet_pre_start "${interface}" 1>/dev/null
+		fi
+	fi
 
-    # Add any search paths if we have any defined
-    ifvar=$( bash_variable "${interface}" )
-    eval d=\" \$\{dhcp_${ifvar}\} \"
-    [[ ${d} == "  " ]] && d=" ${dhcp} "
+	# Add any search paths if we have any defined
+	ifvar=$( bash_variable "${interface}" )
+	eval d=\" \$\{dhcp_${ifvar}\} \"
+	[[ ${d} == "  " ]] && d=" ${dhcp} "
 
-    resolv="${statedir}/${interface}/resolv.conf"
+	resolv="${statedir}/${interface}/resolv.conf"
 
-    system_dns_extra "${interface}" "${resolv}"
+	system_dns_extra "${interface}" "${resolv}"
 fi
 
 . /lib/rcscripts/net.modules.d/helpers.d/dhcp-state
