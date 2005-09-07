@@ -2,6 +2,10 @@
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
   07 Sep 2005; Roy Marples <uberlord@gentoo.org>:
+ 
+    replace the apipa module with a generic arping module which can now
+    do gateway detection and apply a configuration for it as well as the
+    apipa stuff
 
     updated env_whitelist so that nothing is allowed by default
 

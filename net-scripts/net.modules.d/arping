@@ -4,41 +4,40 @@
 
 # Contributed by Roy Marples (uberlord@gentoo.org)
 
-# char* apipa_provides(void)
+# char* arping_provides(void)
 #
 # Returns a string to change module definition for starting up
-apipa_provides() {
-	echo "apipa"
+arping_provides() {
+	echo "arping"
 }
 
-# void apipa_depend(void)
+# void arping_depend(void)
 #
 # Sets up the dependancies for the module
-apipa_depend() {
+arping_depend() {
 	after system dhcp vlan
 }
 
-# bool apipa_check_installed(void)
+# bool arping_check_installed(void)
 #
-# Returns 1 if ifenslave is installed, otherwise 0
-apipa_check_installed() {
+# Returns 0 if arping or arping2 is installed, otherwise 1
+arping_check_installed() {
 	[[ -x /sbin/arping || -x /usr/sbin/arping2 ]] && return 0
 	if ${1:-false}; then
-		eerror "For Automatic Private IP Addressing (APIPA) support"
-		eerror "emerge net-misc/iputils or net-analyzer/arping"
+		eerror "For arping support emerge net-misc/iputils or net-analyzer/arping"
 	fi
 	return 1
 }
 
-# bool apipa_check_depends(void)
+# bool arping_check_depends(void)
 #
 # Checks to see if we have the needed functions
-apipa_check_depends() {
+arping_check_depends() {
 	local f
 
-	for f in interface_exists interface_up; do
+	for f in interface_exists interface_up ; do
 		[[ $( type -t "${f}" ) == "function" ]] && continue
-		eerror "apipa: missing required function ${f}\n"
+		eerror "arping: missing required function ${f}\n"
 		return 1
 	done
 
@@ -72,33 +71,87 @@ address_exists() {
 	return 1
 }
 
-# bool apipa_start(char *iface)
+# bool arping_gateways(void)
+#
+# arpings a list of gateways
+# If one is foung then apply it's configuration
+arping_gateways() {
+	local gateways x conf i
+	
+	eval gateways=\"\$\{arping_${ifvar}\}\"
+	[[ -z ${gateways} ]] && return 1
+
+	einfo "Pinging gateways on ${iface} for configuration"
+	eindent
+
+	for x in ${gateways}; do
+		vebegin "${x}"
+		if address_exists "${iface}" "${x}" ; then
+			for i in ${x//./ } ; do
+				if [[ ${#i} == "2" ]]; then
+					conf="${conf}0${i}"
+				elif [[ ${#i} == "1" ]]; then
+					conf="${conf}00${i}"
+				else
+					conf="${conf}${i}"
+				fi
+			done
+			veend 0
+			eoutdent
+			veinfo "Configuring ${iface} for ${x}"
+			configure_variables "${iface}" "${conf}"
+			return 0
+		fi
+		veend 1
+	done
+
+	eoutdent
+	return 1
+}
+
+# bool arping_apipa(char *iface)
 #
 # Tries to locate an address in the 169.254.0.0 netmask 169.254.255.255 range
-apipa_start() {
+arping_apipa() {
 	local iface="$1" i1 i2 addr i=0
 
-	interface_exists "${iface}" true || return 1
-
-	ebegin "Searching for free addresses"
-	interface_up "${iface}"
+	einfo "Searching for free addresses in 169.254.0.0/16"
+	eindent
 
 	while [[ ${i} -lt 64516 ]]; do
 		(( i1=${RANDOM}%255 ))
 		(( i2=${RANDOM}%255 ))
 
 		addr="169.254.${i1}.${i2}"
+		vebegin "${addr}/16"
 		if ! address_exists "${iface}" "${addr}" ; then
 			config[config_counter]="${addr}/16 broadcast 169.254.255.255"
 			(( config_counter-- ))
-			eend 0
+			veend 0
+			eoutdent
 			return 0
 		fi
 
 		(( i++ ))
 	done
 
-	eend 1 "No free address found!"
+	eerror "No free address found!"
+	eoutdent
+	return 1
+}
+
+# bool arping_start(char *iface)
+#
+# Tries to detect a config based on arpinging things
+arping_start() {
+	local iface="$1"
+
+	interface_exists "${iface}" true || return 1
+	interface_up "${iface}"
+	
+	arping_gateways "${iface}" && return 0
+	arping_apipa "${iface}" && return 0
+
 	return 1
 }
 
