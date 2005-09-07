@@ -86,11 +86,16 @@ netplug_pre_start() {
 	eend "$?" || return 1
 
 	eindent
-	veinfo "Waiting for ${iface} to be marked as started"
 
 	eval timeout=\"\$\{plug_timeout_${ifvar}\:-10}\"
-	[[ ${timeout} == "0" ]] \
-		&& vewarn "WARNING: infinite timeout set for ${iface} to come up"
+	if [[ ${timeout} == "0" ]]; then
+		ewarn "WARNING: infinite timeout set for ${iface} to come up"
+	elif [[ ${timeout} -lt 0 ]]; then
+		ewarn "WARNING: negative timeout set for ${iface}"
+		exit 0
+	fi
+
+	veinfo "Waiting for ${iface} to be marked as started"
 
 	i=0
 	while true ; do
