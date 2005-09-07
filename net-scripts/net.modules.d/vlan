@@ -22,7 +22,7 @@ vlan_provides() {
 # Sets up the dependancies for the module
 vlan_depend() {
 	after interface
-	before apipa dhcp
+	before dhcp arping
 }
 
 # bool vlan_check_installed(void)
