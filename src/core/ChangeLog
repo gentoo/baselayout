@@ -2,6 +2,16 @@
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 # $Header$
 
+07 Sep 2005 Martin Schlemmer <azarah@gentoo.org>
+
+        * debug.h
+        * depend.c
+        * misc.c
+        * misc.h
+        * parse.c
+        * simple-regex.c
+        * simple-regex.h: Misc style and other cleanups.
+
 06 Sep 2005 Martin Schlemmer <azarah@gentoo.org>
 
         * parse.c

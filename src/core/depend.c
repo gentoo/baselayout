@@ -51,7 +51,8 @@ char *service_type_names[] = {
 
 int __service_resolve_dependency(char *servicename, char *dependency, service_type_t type);
 
-service_info_t *service_get_info(char *servicename) {
+service_info_t *service_get_info(char *servicename)
+{
 	service_info_t *info;
 
 	if ((NULL == servicename) || (0 == strlen(servicename))) {
@@ -72,7 +73,8 @@ service_info_t *service_get_info(char *servicename) {
 	return NULL;
 }
 
-int service_add(char *servicename) {
+int service_add(char *servicename)
+{
 	service_info_t *info;
 	service_info_t *sorted;
 	int count;
@@ -120,13 +122,16 @@ int service_add(char *servicename) {
 	return -1;
 }
 
-int service_is_dependency(char *servicename, char *dependency, service_type_t type) {
+int service_is_dependency(char *servicename, char *dependency, service_type_t type)
+{
 	service_info_t *info;
 	char *service;
 	int count = 0;
 	
-	if ((NULL == servicename) || (0 == strlen(servicename)) ||
-	    (NULL == dependency) || (0 == strlen(dependency))) {
+	if ((NULL == servicename)
+	    || (0 == strlen(servicename))
+	    || (NULL == dependency)
+	    || (0 == strlen(dependency))) {
 		DBG_MSG("Invalid argument passed!\n");
 		return -1;
 	}
@@ -144,12 +149,15 @@ int service_is_dependency(char *servicename, char *dependency, service_type_t ty
 	return -1;
 }
 
-int service_add_dependency(char *servicename, char *dependency, service_type_t type) {
+int service_add_dependency(char *servicename, char *dependency, service_type_t type)
+{
 	service_info_t *info;
 	char *tmp_buf;
 	
-	if ((NULL == servicename) || (0 == strlen(servicename)) ||
-	    (NULL == dependency) || (0 == strlen(dependency))) {
+	if ((NULL == servicename)
+	    || (0 == strlen(servicename))
+	    || (NULL == dependency)
+	    || (0 == strlen(dependency))) {
 		DBG_MSG("Invalid argument passed!\n");
 		return -1;
 	}
@@ -159,7 +167,7 @@ int service_add_dependency(char *servicename, char *dependency, service_type_t t
 		/* Do not add duplicates */
 		if (-1 == service_is_dependency(servicename, dependency, type)) {
 			DBG_MSG("Adding dependency '%s' of service '%s', type '%s'.\n",
-				dependency, servicename, service_type_names[type]);
+			        dependency, servicename, service_type_names[type]);
 
 			tmp_buf = strndup(dependency, strlen(dependency));
 			if (NULL == tmp_buf) {
@@ -170,8 +178,7 @@ int service_add_dependency(char *servicename, char *dependency, service_type_t t
 			STRING_LIST_ADD_SORT(info->depend_info[type], tmp_buf, error);
 		} else {
 			DBG_MSG("Duplicate dependency '%s' for service '%s', type '%s'!\n",
-					dependency, servicename,
-					service_type_names[type]);
+			        dependency, servicename, service_type_names[type]);
 			/* Rather do not fail here, as we add a lot of doubles
 			 * during resolving of dependencies */
 		}
@@ -185,11 +192,14 @@ error:
 	return -1;
 }
 
-int service_del_dependency(char *servicename, char *dependency, service_type_t type) {
+int service_del_dependency(char *servicename, char *dependency, service_type_t type)
+{
 	service_info_t *info;
 	
-	if ((NULL == servicename) || (0 == strlen(servicename)) ||
-	    (NULL == dependency) || (0 == strlen(dependency))) {
+	if ((NULL == servicename)
+	    || (0 == strlen(servicename))
+	    || (NULL == dependency)
+	    || (0 == strlen(dependency))) {
 		DBG_MSG("Invalid argument passed!\n");
 		return -1;
 	}
@@ -202,7 +212,7 @@ int service_del_dependency(char *servicename, char *dependency, service_type_t t
 	info = service_get_info(servicename);
 	if (NULL != info) {
 		DBG_MSG("Removing dependency '%s' of service '%s', type '%s'.\n",
-			dependency , servicename, service_type_names[type]);
+		        dependency , servicename, service_type_names[type]);
 
 		STRING_LIST_DEL(info->depend_info[type], dependency, error);
 		return 0;
@@ -214,7 +224,8 @@ error:
 	return -1;
 }
 
-service_info_t *service_get_virtual(char *virtual) {
+service_info_t *service_get_virtual(char *virtual)
+{
 	service_info_t *info;
 	
 	if ((NULL == virtual) || (0 == strlen(virtual))) {
@@ -235,18 +246,21 @@ service_info_t *service_get_virtual(char *virtual) {
 	return NULL;
 }
 
-int service_add_virtual(char *servicename, char* virtual) {
+int service_add_virtual(char *servicename, char* virtual)
+{
 	service_info_t *info;
 	
-	if ((NULL == servicename) || (0 == strlen(servicename)) ||
-	    (NULL == virtual ) || (0 == strlen(virtual))) {
+	if ((NULL == servicename)
+	    || (0 == strlen(servicename))
+	    || (NULL == virtual )
+	    || (0 == strlen(virtual))) {
 		DBG_MSG("Invalid argument passed!\n");
 		return -1;
 	}
 
 	if (NULL != service_get_info(virtual)) {
 		EERROR(" Cannot add provide '%s', as a service with the same name exists!\n",
-				virtual);
+		       virtual);
 		/* Do not fail here as we do have a service that resolves
 		 * the virtual */
 	}
@@ -255,7 +269,7 @@ int service_add_virtual(char *servicename, char* virtual) {
 	if (NULL != info) {
 		/* We cannot have more than one service Providing a virtual */
 		EWARN(" Service '%s' already provides '%s'!;\n",
-				info->name, virtual);
+		      info->name, virtual);
 		EWARN(" Not adding service '%s'...\n", servicename);
 		/* Do not fail here as we do have a service that resolves
 		 * the virtual */
@@ -263,7 +277,7 @@ int service_add_virtual(char *servicename, char* virtual) {
 		info = service_get_info(servicename);
 		if (NULL != info) {
 			DBG_MSG("Adding virtual '%s' of service '%s'.\n",
-					virtual, servicename);
+			        virtual, servicename);
 
 			info->provide = strndup(virtual, strlen(virtual));
 			if (NULL == info->provide) {
@@ -279,7 +293,8 @@ int service_add_virtual(char *servicename, char* virtual) {
 	return 0;
 }
 
-int service_set_mtime(char *servicename, time_t mtime) {
+int service_set_mtime(char *servicename, time_t mtime)
+{
 	service_info_t *info;
 
 	if ((NULL == servicename) || (0 == strlen(servicename))) {
@@ -290,7 +305,7 @@ int service_set_mtime(char *servicename, time_t mtime) {
 	info = service_get_info(servicename);
 	if (NULL != info) {
 		DBG_MSG("Setting mtime '%li' of service '%s'.\n",
-				mtime, servicename);
+		        mtime, servicename);
 		
 		info->mtime = mtime;
 
@@ -302,12 +317,15 @@ int service_set_mtime(char *servicename, time_t mtime) {
 	return -1;
 }
 
-int __service_resolve_dependency(char *servicename, char *dependency, service_type_t type) {
+int __service_resolve_dependency(char *servicename, char *dependency, service_type_t type)
+{
 	service_info_t *info;
 	int retval;
 	
-	if ((NULL == servicename) || (0 == strlen(servicename)) ||
-	    (NULL == dependency) || (0 == strlen(dependency))) {
+	if ((NULL == servicename)
+	    || (0 == strlen(servicename))
+	    || (NULL == dependency)
+	    || (0 == strlen(dependency))) {
 		DBG_MSG("Invalid argument passed!\n");
 		return -1;
 	}
@@ -319,7 +337,7 @@ int __service_resolve_dependency(char *servicename, char *dependency, service_ty
 	}
 
 	DBG_MSG("Checking dependency '%s' of service '%s', type '%s'.\n",
-			dependency, servicename, service_type_names[type]);
+	        dependency, servicename, service_type_names[type]);
 
 	/* If there are no existing service 'dependency', try to resolve
 	 * possible virtual services */
@@ -328,8 +346,8 @@ int __service_resolve_dependency(char *servicename, char *dependency, service_ty
 		info = service_get_virtual(dependency);
 		if (NULL != info) {
 			DBG_MSG("Virtual '%s' -> '%s' for service '%s', type '%s'.\n",
-				dependency, info->name, servicename,
-				service_type_names[type]);
+			        dependency, info->name, servicename,
+			        service_type_names[type]);
 		
 			retval = service_del_dependency(servicename, dependency, type);
 			if (-1 == retval) {
@@ -352,7 +370,7 @@ int __service_resolve_dependency(char *servicename, char *dependency, service_ty
 	if (NULL == info) {
 		if ((type == NEED) || (type == NEED_ME)) {
 			EWARN(" Can't find service '%s' needed by '%s';  continuing...\n",
-					dependency, servicename);
+			      dependency, servicename);
 
 			retval = service_add_dependency(servicename, dependency, BROKEN);
 			if (-1 == retval) {
@@ -379,19 +397,22 @@ int __service_resolve_dependency(char *servicename, char *dependency, service_ty
 		/* Dont work too well with the '*' before and after */
 		if ((type != BEFORE) && (type != AFTER))
 			EWARN(" Service '%s' can't depend on itself;  continuing...\n",
-					servicename);
+			      servicename);
 
 		/* Delete invalid entry */
 		goto remove;
 	}
 
 	/* Currently only these depend/order types are supported */
-	if ((type == NEED) || (type == USE) || (type == BEFORE) || (type == AFTER)) {
+	if ((type == NEED)
+	    || (type == USE)
+	    || (type == BEFORE)
+	    || (type == AFTER)) {
 		if (type == BEFORE) {
 			/* NEED and USE override BEFORE
 			 * ('servicename' BEFORE 'dependency') */
-			if ((0 == service_is_dependency(servicename, dependency, NEED)) ||
-			    (0 == service_is_dependency(servicename, dependency, USE))) {
+			if ((0 == service_is_dependency(servicename, dependency, NEED))
+			    || (0 == service_is_dependency(servicename, dependency, USE))) {
 				/* Delete invalid entry */
 				goto remove;
 			}
@@ -400,8 +421,8 @@ int __service_resolve_dependency(char *servicename, char *dependency, service_ty
 		if (type == AFTER) {
 			/* NEED and USE override AFTER
 			 * ('servicename' AFTER 'dependency') */
-			if ((0 == service_is_dependency(dependency, servicename, NEED)) ||
-			    (0 == service_is_dependency(dependency, servicename, USE))) {
+			if ((0 == service_is_dependency(dependency, servicename, NEED))
+			    || (0 == service_is_dependency(dependency, servicename, USE))) {
 				/* Delete invalid entry */
 				goto remove;
 			}
@@ -410,9 +431,9 @@ int __service_resolve_dependency(char *servicename, char *dependency, service_ty
 		/* We do not want to add circular dependencies ... */
 		if (0 == service_is_dependency(dependency, servicename, type)) {
 			EWARN(" Services '%s' and '%s' have circular\n",
-					servicename, dependency);
+			      servicename, dependency);
 			EWARN(" dependency of type '%s';  continuing...\n",
-					service_type_names[type]);
+			      service_type_names[type]);
 
 			/* For now remove this dependency */
 			goto remove;
@@ -472,7 +493,8 @@ remove:
 	return 0;
 }
 
-int service_resolve_dependencies(void) {
+int service_resolve_dependencies(void)
+{
 	service_info_t *info;
 	char *service;
 	char *next = NULL;

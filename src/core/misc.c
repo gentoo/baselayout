@@ -37,10 +37,13 @@
 #include "debug.h"
 #include "misc.h"
 
-char *memrepchr(char **str, char old, char new, size_t size) {
+char *memrepchr(char **str, char old, char new, size_t size)
+{
 	char *str_p;
 
-	if ((NULL == str) || (NULL == *str) || (0 == strlen(*str))) {
+	if ((NULL == str)
+	    || (NULL == *str)
+	    || (0 == strlen(*str))) {
 		DBG_MSG("Invalid argument passed!\n");
 		errno = EINVAL;
 		return NULL;
@@ -56,12 +59,15 @@ char *memrepchr(char **str, char old, char new, size_t size) {
 	return *str;
 }
 
-char *strcatpaths(const char *pathname1, const char *pathname2) {
+char *strcatpaths(const char *pathname1, const char *pathname2)
+{
 	char *new_path = NULL;
 	int lenght;
 	
-	if ((NULL == pathname1) || (0 == strlen(pathname1)) ||
-	    (NULL == pathname2) || (0 == strlen(pathname2))) {
+	if ((NULL == pathname1)
+	    || (0 == strlen(pathname1))
+	    || (NULL == pathname2)
+	    || (0 == strlen(pathname2))) {
 		DBG_MSG("Invalid argument passed!\n");
 		errno = EINVAL;
 		return NULL;
@@ -85,7 +91,8 @@ char *strcatpaths(const char *pathname1, const char *pathname2) {
 	return new_path;
 }
 
-char *strndup(const char *str, size_t size) {
+char *strndup(const char *str, size_t size)
+{
 	char *new_str = NULL;
 	size_t len;
 
@@ -96,7 +103,7 @@ char *strndup(const char *str, size_t size) {
 	}
 
 	/* Check lenght of str without breaching the size limit */
-	for (len = 0;(len < size) && ('\0' != str[len]);len++);
+	for (len = 0; (len < size) && ('\0' != str[len]); len++);
 
 	new_str = malloc(len + 1);
 	if (NULL == new_str) {
@@ -110,7 +117,8 @@ char *strndup(const char *str, size_t size) {
 	return (char *)memcpy(new_str, str, len);
 }
 
-char *gbasename(const char *path) {
+char *gbasename(const char *path)
+{
 	char *new_path = NULL;
 	
 	if ((NULL == path) || (0 == strlen(path))) {
@@ -125,7 +133,8 @@ char *gbasename(const char *path) {
 }
 	
 
-int exists(const char *pathname) {
+int exists(const char *pathname)
+{
 	struct stat buf;
 	int retval;
 
@@ -144,7 +153,8 @@ int exists(const char *pathname) {
 	return 0;
 }
 
-int is_file(const char *pathname, int follow_link) {
+int is_file(const char *pathname, int follow_link)
+{
 	struct stat buf;
 	int retval;
 
@@ -163,7 +173,8 @@ int is_file(const char *pathname, int follow_link) {
 	return 0;
 }
 
-int is_link(const char *pathname) {
+int is_link(const char *pathname)
+{
 	struct stat buf;
 	int retval;
 
@@ -182,7 +193,8 @@ int is_link(const char *pathname) {
 	return 0;
 }
 
-int is_dir(const char *pathname, int follow_link) {
+int is_dir(const char *pathname, int follow_link)
+{
 	struct stat buf;
 	int retval;
 
@@ -201,7 +213,8 @@ int is_dir(const char *pathname, int follow_link) {
 	return 0;
 }
 
-time_t get_mtime(const char *pathname, int follow_link) {
+time_t get_mtime(const char *pathname, int follow_link)
+{
 	struct stat buf;
 	int retval;
 
@@ -221,7 +234,8 @@ time_t get_mtime(const char *pathname, int follow_link) {
 }
 
 #ifdef __KLIBC__
-int remove(const char *pathname) {
+int remove(const char *pathname)
+{
 	int retval;
 	
 	if ((NULL == pathname) || (0 == strlen(pathname))) {
@@ -230,7 +244,7 @@ int remove(const char *pathname) {
 		return -1;
 	}
 
-	if (is_dir(pathname, 0))
+	if (1 == is_dir(pathname, 0))
 		retval = rmdir(pathname);
 	else
 		retval = unlink(pathname);
@@ -239,7 +253,8 @@ int remove(const char *pathname) {
 }
 #endif
 
-int mktree(const char *pathname, mode_t mode) {
+int mktree(const char *pathname, mode_t mode)
+{
 	char *temp_name = NULL;
 	char *temp_token = NULL;
 	char *token_p;
@@ -284,14 +299,14 @@ int mktree(const char *pathname, mode_t mode) {
 
 		/* If it does not exist, create the dir.  If it does exit,
 		 * but is not a directory, we will catch it below. */
-		if (!exists(temp_name)) {
+		if (1 != exists(temp_name)) {
 			retval = mkdir(temp_name, mode);
 			if (-1 == retval) {
 				DBG_MSG("Failed to create directory!\n");
 				goto error;
 			}
 		/* Not a directory or symlink pointing to a directory */
-		} else if (!is_dir(temp_name, 1)) {
+		} else if (1 != is_dir(temp_name, 1)) {
 			DBG_MSG("Component in pathname is not a directory!\n");
 			errno = ENOTDIR;
 			goto error;
@@ -315,7 +330,8 @@ error:
 	return -1;
 }
 
-int rmtree(const char *pathname) {
+int rmtree(const char *pathname)
+{
 	char **dirlist = NULL;
 	int i = 0;
 	
@@ -325,7 +341,7 @@ int rmtree(const char *pathname) {
 		return -1;
 	}
 
-	if (!exists(pathname)) {
+	if (1 != exists(pathname)) {
 		DBG_MSG("'%s' does not exists!\n", pathname);
 		errno = ENOENT;
 		return -1;
@@ -340,7 +356,7 @@ int rmtree(const char *pathname) {
 	while ((NULL != dirlist) && (NULL != dirlist[i])) {
 		/* If it is a directory, call rmtree() again with
 		 * it as argument */
-		if (is_dir(dirlist[i], 0)) {
+		if (1 == is_dir(dirlist[i], 0)) {
 			if (-1 == rmtree(dirlist[i])) {
 				DBG_MSG("Failed to delete sub directory!\n");
 				goto error;
@@ -349,7 +365,7 @@ int rmtree(const char *pathname) {
 
 		/* Now actually remove it.  Note that if it was a directory,
 		 * it should already be removed by above rmtree() call */
-		if ((exists(dirlist[i]) && (-1 == remove(dirlist[i])))) {
+		if ((1 == exists(dirlist[i]) && (-1 == remove(dirlist[i])))) {
 			DBG_MSG("Failed to remove '%s'!\n", dirlist[i]);
 			goto error;
 		}
@@ -371,7 +387,8 @@ error:
 	return -1;
 }
 
-char **ls_dir(const char *pathname, int hidden) {
+char **ls_dir(const char *pathname, int hidden)
+{
 	DIR *dirfd;
 	struct dirent *dir_entry;
 	char **dirlist = NULL;
@@ -444,7 +461,8 @@ error:
 /* This handles simple 'entry="bar"' type variables.  If it is more complex
  * ('entry="$(pwd)"' or such), it will obviously not work, but current behaviour
  * should be fine for the type of variables we want. */
-char *get_cnf_entry(const char *pathname, const char *entry) {
+char *get_cnf_entry(const char *pathname, const char *entry)
+{
 	char *buf = NULL;
 	char *tmp_buf = NULL;
 	char *tmp_p;
@@ -455,15 +473,17 @@ char *get_cnf_entry(const char *pathname, const char *entry) {
 	int current = 0;
 			
 
-	if ((NULL == pathname) || (0 == strlen(pathname)) ||
-	    (NULL == entry) || (0 == strlen(entry))) {
+	if ((NULL == pathname)
+	    || (0 == strlen(pathname))
+	    || (NULL == entry)
+	    || (0 == strlen(entry))) {
 		DBG_MSG("Invalid argument passed!\n");
 		errno = EINVAL;
 		return NULL;
 	}
 
 	/* If it is not a file or symlink pointing to a file, bail */
-	if (!is_file(pathname, 1)) {
+	if (1 != is_file(pathname, 1)) {
 		DBG_MSG("Given pathname is not a file or do not exist!\n");
 		/* FIXME: Might need to set this to something better? */
 		errno = ENOENT;

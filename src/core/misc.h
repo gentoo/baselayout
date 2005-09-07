@@ -62,9 +62,9 @@
 
 /* Return true if filename '_name' ends in '_ext' */
 #define CHECK_FILE_EXTENSION(_name, _ext) \
-	(strlen(_name) > strlen(_ext) && \
-	 0 == strncmp(&_name[strlen(_name) - strlen(_ext)], \
-		      _ext, strlen(_ext)))
+	((strlen(_name) > strlen(_ext)) \
+	 && (0 == strncmp(&(_name[strlen(_name) - strlen(_ext)]), \
+	                  _ext, strlen(_ext))))
 
 /* Add a new item to a string list.  If the pointer to the list is NULL,
  * allocate enough memory for the amount of entries needed.  Ditto for
@@ -154,8 +154,9 @@
 #define STRING_LIST_DEL(_string_list, _item, _error) \
 	do { \
 		int _i = 0; \
-		if ((NULL == _item) || (0 == strlen(_item)) || \
-		    (NULL == _string_list)) { \
+		if ((NULL == _item) \
+		    || (0 == strlen(_item)) \
+		    || (NULL == _string_list)) { \
 			DBG_MSG("Invalid argument passed!\n"); \
 			errno = EINVAL; \
 			goto _error; \
@@ -194,30 +195,31 @@
  * from using it if not absolutely needed.  The major difference to above,
  * is that it should be safe from having the item removed from under you. */
 #define STRING_LIST_FOR_EACH_SAFE(_string_list, _pos, _next, _counter) \
-		if ((NULL != _string_list) && (0 == (_counter = 0))) \
+		if ((NULL != _string_list) \
+		    && (0 == (_counter = 0))) \
 			       /* First part of the while checks if this is the
 				* first loop, and if so setup _pos and _next
 				* and increment _counter */ \
-			while ((((0 == _counter) && \
-			        (NULL != (_pos = _string_list[_counter])) && \
-			        (_pos != (_next = _string_list[++_counter]))) || \
+			while ((((0 == _counter) \
+			         && (NULL != (_pos = _string_list[_counter])) \
+			         && (_pos != (_next = _string_list[++_counter]))) \
 			       /* Second part is when it is not the first loop
 				* and _pos was not removed from under us.  We
 				* just increment _counter, and setup _pos and
 				* _next */ \
-			       ((0 != _counter) && \
-			        (_pos == _string_list[_counter-1]) && \
-			        (_next == _string_list[_counter]) && \
-			        (NULL != (_pos = _string_list[_counter])) && \
-			        (_pos != (_next = _string_list[++_counter]))) || \
+			       || ((0 != _counter) \
+			           && (_pos == _string_list[_counter-1]) \
+			           && (_next == _string_list[_counter]) \
+			           && (NULL != (_pos = _string_list[_counter])) \
+			           && (_pos != (_next = _string_list[++_counter]))) \
 			       /* Last part is when _pos was removed from under
 				* us.  We basically just setup _pos and _next,
 				* but leave _counter alone */ \
-			       ((0 != _counter) && \
-				(_pos != _string_list[_counter-1]) && \
-			        (_next == _string_list[_counter-1]) && \
-			        (NULL != (_pos = _string_list[_counter-1])) && \
-				(_pos != (_next = _string_list[_counter])))))
+			       || ((0 != _counter) \
+				   && (_pos != _string_list[_counter-1]) \
+			           && (_next == _string_list[_counter-1]) \
+			           && (NULL != (_pos = _string_list[_counter-1])) \
+				   && (_pos != (_next = _string_list[_counter])))))
 
 /* Just free the whole string list */
 #define STRING_LIST_FREE(_string_list) \

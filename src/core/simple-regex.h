@@ -48,13 +48,13 @@
 
 /* Evaluate to true if we have some kind of match */
 #define REGEX_MATCH(_regex_data) \
-	((REGEX_FULL_MATCH == _regex_data.match) || \
-	 (REGEX_PARTIAL_MATCH == _regex_data.match))
+	((REGEX_FULL_MATCH == _regex_data.match) \
+	 || (REGEX_PARTIAL_MATCH == _regex_data.match))
 
 /* Same as above, but for use when _regex_data is a pointer */
 #define REGEX_MATCH_P(_regex_data) \
-	((REGEX_FULL_MATCH == _regex_data->match) || \
-	 (REGEX_PARTIAL_MATCH == _regex_data->match))
+	((REGEX_FULL_MATCH == _regex_data->match) \
+	 || (REGEX_PARTIAL_MATCH == _regex_data->match))
 
 typedef struct {
 	char *data;	/* String to perform regex operation on */
