@@ -244,7 +244,8 @@ in_runlevel() {
 #   starting services.
 #
 is_runlevel_start() {
-	[[ -d "${svcdir}/softscripts.old" ]] && return 0
+	[[ -d ${svcdir}/softscripts.old && \
+	   ${SOFTLEVEL} != "${OLDSOFTLEVEL}" ]] && return 0
 
 	return 1
 }
@@ -255,7 +256,8 @@ is_runlevel_start() {
 #   stopping services.
 #
 is_runlevel_stop() {
-	[[ -d "${svcdir}/softscripts.new" ]] && return 0
+	[[ -d ${svcdir}/softscripts.new && \
+	   ${SOFTLEVEL} != "${OLDSOFTLEVEL}" ]] && return 0
 
 	return 1
 }
@@ -517,6 +519,7 @@ mark_service_stopping() {
 mark_service_stopped() {
 	[[ -z $1 ]] && return 1
 
+	[[ -f "${svcdir}/daemons/$1" ]] && rm -f "${svcdir}/daemons/$1"
 	[[ -f "${svcdir}/starting/$1" ]] && rm -f "${svcdir}/starting/$1"
 	[[ -f "${svcdir}/started/$1" ]] && rm -f "${svcdir}/started/$1"
 	[[ -f "${svcdir}/inactive/$1" ]] && rm -f "${svcdir}/inactive/$1"

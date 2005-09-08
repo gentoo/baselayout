@@ -8,7 +8,7 @@
 #
 # Returns a string to change module definition for starting up
 netplug_provides() {
-	echo "netplug"
+	echo "plug"
 }
 
 # void netplug_depend(void)
@@ -36,7 +36,7 @@ netplug_check_installed() {
 netplug_check_depends() {
 	local f
 
-	for f in interface_exists; do
+	for f in interface_exists interface_get_mac_address ; do
 		[[ $( type -t "${f}" ) == "function" ]] && continue
 		eerror "netplug: missing required function ${f}\n"
 		return 1
