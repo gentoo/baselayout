@@ -475,6 +475,8 @@
 # netplug is a package that detects this and requires no extra configuration
 # on your part.
 # emerge sys-apps/netplug
+# or
+# emerge sys-apps/ifplugd
 # and you're done :)
 
 # By default we wait 10 seconds for netplug to configure the interface for us
@@ -485,6 +487,11 @@
 # If you don't want to use netplug on a specific interface but you have it
 # installed, you can disable it for that interface via the modules statement
 # modules_eth0=( "!netplug" )
+# You can do the same for ifplugd
+
+# To use specific ifplugd options, fex specifying wiress mode
+#ifplugd_eth0="--api-mode wlan"
+# man ifplugd for more options
 
 ##############################################################################
 # ADVANCED CONFIGURATION
