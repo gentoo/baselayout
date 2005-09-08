@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  08 Sep 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Added ifplugd module, but we prefer netplug by default
+
   07 Sep 2005; Roy Marples <uberlord@gentoo.org>:
  
     replace the apipa module with a generic arping module which can now

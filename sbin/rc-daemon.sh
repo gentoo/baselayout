@@ -358,8 +358,17 @@ start-stop-daemon() {
 			# We started the daemon sucessfully
 			# so we add it to our state
 			local max="${#RC_DAEMONS[@]}"
-			RC_DAEMONS[max]="${cmd}"
-			RC_PIDFILES[max]="${pidfile}"
+			for (( i=0; i<${max}; i++ )); do
+				if [[ ${RC_DAEMONS[i]} == "{cmd}" \
+					&& ${RC_PIDFILES[i]}="${pidfile}" ]]; then
+					break
+				fi
+			done
+			
+			if [[ ${i} == "${max}" ]]; then
+				RC_DAEMONS[max]="${cmd}"
+				RC_PIDFILES[max]="${pidfile}"
+			fi
 		fi
 	fi
 

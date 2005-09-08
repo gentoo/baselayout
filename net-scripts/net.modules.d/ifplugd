@@ -1,0 +1,146 @@
+#!/bin/bash
+# Copyright (c) 2004-2005 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+
+# Contributed by Roy Marples (uberlord@gentoo.org)
+
+# char* ifplugd_provides(void)
+#
+# Returns a string to change module definition for starting up
+ifplugd_provides() {
+	echo "plug"
+}
+
+# void ifplugd_depend(void)
+#
+# Sets up the dependancies for the module
+ifplugd_depend() {
+	after macnet
+	before interface
+}
+
+# bool ifplugd_check_installed(void)
+#
+# Returns 0 if ifplugd is installed, otherwise 1
+ifplugd_check_installed() {
+	if [[ ! -x /usr/sbin/ifplugd ]]; then
+		${1:-false} && eerror "For ifplugd support, emerge sys-apps/ifplugd"
+		return 1
+	fi
+	return 0
+}
+
+# bool ifplugd_check_depends(void)
+#
+# Checks to see if we have the needed functions
+ifplugd_check_depends() {
+	local f
+
+	for f in interface_exists interface_get_mac_address; do
+		[[ $( type -t "${f}" ) == "function" ]] && continue
+		eerror "ifplugd: missing required function ${f}\n"
+		return 1
+	done
+
+	return 0
+}
+
+# bool ifplugd_pre_start(char *interface)
+#
+# Start ifplugd on an interface
+ifplugd_pre_start() {
+	local iface="$1" ifvar=$( bash_variable "$1" ) timeout i opts
+	local pidfile="/var/run/ifplugd.${iface}.pid"
+
+	# We don't start ifplugd if we're being called from the background
+	${IN_BACKGROUND} && return 0
+
+	# ifplugd could have been started by the old init script
+	if [[ -e ${pidfile} ]]; then
+		ewarn "ifplugd is already running on ${iface}"
+		return 0
+	fi
+
+	# We need a valid MAC address
+	# It's a basic test to ensure it's not a virtual interface
+	local mac=$(interface_get_mac_address "${iface}")
+	if [[ -z ${mac} ]]; then
+		vewarn "ifplugd only works on interfaces with a valid MAC address"
+		return 0
+	fi
+
+	# Do some options
+	eval opts=\" \$\{ifplugd_${ifvar}\} \"
+	
+	# We don't work on wirelesss interfaces
+	# Although ifplugd can, we prefer wpa_supplicant, unless explicitly told
+	# so via our options
+	if [[ ${opts} != *" -m wlan "* && ${opts} != *" --api-mode=wlan "* ]]; then
+		if [[ $(type -t wireless_check_extensions) == "function" ]]; then
+			if wireless_check_extensions "${iface}"; then
+				veinfo "ifplugd does not work on wireless interfaces"
+				return 0
+			fi
+		fi
+	fi
+
+	ebegin "Starting ifplugd on ${iface}"
+
+	# We need the interface up for ifplugd to listen to netlink events
+	interface_up "${iface}"
+
+	# Mark the us as inactive so ifplugd can restart us
+	mark_service_inactive "net.${iface}"
+
+	# Start ifplugd
+	start-stop-daemon --start --exec /usr/sbin/ifplugd \
+		--pidfile "${pidfile}" \
+		-- ${opts} --iface="${iface}"
+	eend "$?" || return 1
+
+	eindent
+
+	eval timeout=\"\$\{plug_timeout_${ifvar}\:-10}\"
+	if [[ ${timeout} == "0" ]]; then
+		ewarn "WARNING: infinite timeout set for ${iface} to come up"
+	elif [[ ${timeout} -lt 0 ]]; then
+		ewarn "WARNING: negative timeout set for ${iface}"
+		exit 0
+	fi
+
+	veinfo "Waiting for ${iface} to be marked as started"
+
+	i=0
+	while true ; do
+		if service_started "net.${iface}"; then
+			local addr=$( interface_get_address "${iface}" )
+			einfo "${iface} configured with address ${addr}"			
+			exit 0
+		fi
+		sleep 1
+		(( i++ ))
+		[[ ${i} == "${timeout}" || ${i} -gt "${timeout}" ]] && break
+	done
+
+	eend 1 "Failed to configure ${iface} in the background"
+	exit 0
+}
+
+# bool ifplugd_post_stop(char *iface)
+#
+# Stops ifplugd on an interface
+# Returns 0 (true) when successful, non-zero otherwise
+ifplugd_post_stop() {
+	${IN_BACKGROUND} && return 0
+	local iface="$1"
+	local pidfile="/var/run/ifplugd.${iface}.pid"
+
+	[[ ! -e ${pidfile} ]] && return 0
+	
+	ebegin "Stopping ifplugd on ${iface}"
+	start-stop-daemon --stop --exec /usr/sbin/ifplugd \
+		--pidfile "${pidfile}"
+	eend $?
+}
+
+# vim:ts=4

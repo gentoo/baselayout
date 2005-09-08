@@ -519,6 +519,7 @@ mark_service_stopping() {
 mark_service_stopped() {
 	[[ -z $1 ]] && return 1
 
+	[[ -f "${svcdir}/daemons/$1" ]] && rm -f "${svcdir}/daemons/$1"
 	[[ -f "${svcdir}/starting/$1" ]] && rm -f "${svcdir}/starting/$1"
 	[[ -f "${svcdir}/started/$1" ]] && rm -f "${svcdir}/started/$1"
 	[[ -f "${svcdir}/inactive/$1" ]] && rm -f "${svcdir}/inactive/$1"
