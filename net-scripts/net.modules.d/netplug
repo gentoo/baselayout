@@ -53,7 +53,9 @@ netplug_pre_start() {
 	local pidfile="/var/run/netplug.${iface}.pid"
 
 	# We don't start netplug if we're being called from the background
-	${IN_BACKGROUND} && return 0 
+	${IN_BACKGROUND} && return 0
+
+	interface_exists "${iface}" || return 0
 
 	# We need a valid MAC address
 	# It's a basic test to ensure it's not a virtual interface

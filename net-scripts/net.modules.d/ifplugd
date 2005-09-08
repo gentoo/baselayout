@@ -55,9 +55,11 @@ ifplugd_pre_start() {
 	# We don't start ifplugd if we're being called from the background
 	${IN_BACKGROUND} && return 0
 
+	interface_exists "${iface}" || return 0
+
 	# ifplugd could have been started by the old init script
 	if [[ -e ${pidfile} ]]; then
-		ewarn "ifplugd is already running on ${iface}"
+		vewarn "ifplugd is already running on ${iface}"
 		return 0
 	fi
 
