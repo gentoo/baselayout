@@ -1,6 +1,5 @@
-# Copyright 1999-2004 Gentoo Foundation
+# Copyright 1999-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header$
 
 BEGIN {
 
@@ -53,7 +52,11 @@ BEGIN {
 	# SPECIALS are treated differently.  For each env.d file, the variables are
 	# appended seperated with a ':'.  If not in specials, for each env.d file,
 	# the variable are just set to the new value.
-	tmpspecials="KDEDIRS:PATH:CLASSPATH:LDPATH:MANPATH:INFOPATH:ROOTPATH:CONFIG_PROTECT:CONFIG_PROTECT_MASK:PRELINK_PATH:PRELINK_PATH_MASK:PYTHONPATH:ADA_INCLUDE_PATH:ADA_OBJECTS_PATH"
+	tmpspecials = \
+		"ADA_INCLUDE_PATH:ADA_OBJECTS_PATH:CLASSPATH:" \
+		"CONFIG_PROTECT:CONFIG_PROTECT_MASK:INFOPATH:" \
+		"KDEDIRS:LDPATH:MANPATH:PATH:PKG_CONFIG_PATH:" \
+		"PRELINK_PATH:PRELINK_PATH_MASK:PYTHONPATH:ROOTPATH"
 	split(tmpspecials, SPECIALS, ":")
 
 	unlink(ENVCACHE)
