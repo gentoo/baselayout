@@ -51,8 +51,7 @@
 #  define OSOpenBSD
 #elif defined(hpux)
 #  define OShpux
-#elif defined(__FreeBSD__) || defined(__DragonFly__)
-/* Consider DragonFly as a FreeBSD for now. */
+#elif defined(__FreeBSD__)
 #  define OSFreeBSD
 #elif defined(__NetBSD__)
 #  define OSNetBSD

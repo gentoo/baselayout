@@ -2,6 +2,55 @@
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 # $Header$
 
+07 Sep 2005 Martin Schlemmer <azarah@gentoo.org>
+
+        * debug.h
+        * depend.c
+        * misc.c
+        * misc.h
+        * parse.c
+        * simple-regex.c
+        * simple-regex.h: Misc style and other cleanups.
+
+        * TODO: New file.
+
+06 Sep 2005 Martin Schlemmer <azarah@gentoo.org>
+
+        * parse.c
+        * misc.c: Try to cleanup error handling a bit (debug messages, return
+        value, etc).
+
+        * parse.c: Fix output of write_legacy_stage3() after removing the
+        parallel dependency type.
+
+        * Makefile: Do not enable bounds checking with DEBUG=1.
+
+        * misc.h: Add MIN/MAX macro's.
+
+        * parse.c: Cleanup and merge parse_print_*() functions.  Move need(),
+        etc functions to after sourcing of script, else we run into issues
+        with net.* scripts that redefine them.  Better checking if scripts
+        have issues or not.
+
+        * parse.c: Use poll() rather than select() and some other cleanups.
+
+        * parse.c: Remove the waitpid() call in the read/write loop of our
+        generate_stage2(), as its very slow on amd64.
+
+        * parse.c: Remove some redundent variables and other cleanups.
+
+        * parse.c: Reset tmp_count between writing and reading.
+
+        * depend.c: Also add mtime for 'net' service if we need to add it.
+
+05 Sep 2005 Martin Schlemmer <azarah@gentoo.org>
+
+        * parse.c: Make sure field in parse_cache() is not used uninitialized.
+
+        * misc.h: Remove the unused COUNT_CHAR_* macro's.
+
+        * depend.c: Add missing debugging info.
+
 26 Jul 2005 Martin Schlemmer <azarah@gentoo.org>
 
         * depend.c

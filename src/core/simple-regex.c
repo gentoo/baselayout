@@ -75,13 +75,13 @@
 /* Macro to check if a regex_data_t pointer is valid */
 #define CHECK_REGEX_DATA_P(_regex_data, _on_error) \
 	do { \
-		if ((NULL == _regex_data) || \
-		    (NULL == _regex_data->data) || \
+		if ((NULL == _regex_data) \
+		    || (NULL == _regex_data->data) \
 		    /* We do not check for this, as it might still \
 		     * provide a match ('*' or '?' wildcard) */ \
-		    /* (0 == strlen(_regex_data->data)) || */ \
-		    (NULL == _regex_data->regex) || \
-		    (0 == strlen(_regex_data->regex))) {\
+		    /* || (0 == strlen(_regex_data->data)) */ \
+		    || (NULL == _regex_data->regex) \
+		    || (0 == strlen(_regex_data->regex))) {\
 			DBG_MSG("Invalid argument passed!\n"); \
 			goto _on_error; \
 		} \
@@ -112,7 +112,8 @@ int __match(regex_data_t *regex_data);
  *
  */
 
-size_t get_word(const char *regex, char **r_word) {
+size_t get_word(const char *regex, char **r_word)
+{
 	char *r_list;
 	char *tmp_p;
 	size_t count = 0;
@@ -137,7 +138,7 @@ size_t get_word(const char *regex, char **r_word) {
 			case '+':
 			case '?':
 				/* If its a wildcard, backup one step */
-				*--tmp_p = '\0';
+				*(--tmp_p) = '\0';
 				count--;
 				return count;
 			case '[':
@@ -170,7 +171,8 @@ error:
 	return -1;
 }
 
-int match_word(regex_data_t *regex_data) {
+int match_word(regex_data_t *regex_data)
+{
 	char *data_p = regex_data->data;
 	char *r_word = NULL, *r_word_p;
 	size_t count = 0;
@@ -187,7 +189,7 @@ int match_word(regex_data_t *regex_data) {
 	while ((strlen(data_p) > 0) && (strlen(r_word_p) > 0 )) {
 		/* If 'r_word' is not 100% part of 'string', we do not have
 		 * a match.  If its a '.', it matches no matter what. */
-		if ((data_p[0] != r_word_p[0]) && (r_word_p[0] != '.')) {
+		if ((data_p[0] != r_word_p[0]) && ('.' != r_word_p[0])) {
 			count = 0;
 			goto exit;
 		}
@@ -227,21 +229,26 @@ error:
 	return -1;
 }
 
-size_t get_list_size(const char *regex) {
+size_t get_list_size(const char *regex)
+{
 	size_t count = 0;
 	
 	/* NULL string means we do not have a list */
-	if ((NULL == regex) || (0 == strlen(regex)) || (regex[0] != '[')) {
+	if ((NULL == regex)
+	    || (0 == strlen(regex))
+	    || ('[' != regex[0])) {
 		DBG_MSG("Invalid argument passed!\n");
 		return 0;
 	}
 
 	regex++;
 
-	while ((strlen(regex) > 0) && (regex[0] != ']')) {
+	while ((strlen(regex) > 0) && (']' != regex[0])) {
 		/* We have a sequence (x-y) */
-		if ((regex[0] == '-') && (regex[1] != ']') &&
-		    (strlen(regex) >= 2) && (regex[-1] < regex[1]))
+		if (('-' == regex[0])
+		    && (']' != regex[1])
+		    && (strlen(regex) >= 2)
+		    && (regex[-1] < regex[1]))
 		{
 			/* Add current + diff in sequence */
 			count += regex[1] - regex[-1];
@@ -256,7 +263,8 @@ size_t get_list_size(const char *regex) {
 	return count;
 }
 
-size_t get_list(const char *regex, char **r_list) {
+size_t get_list(const char *regex, char **r_list)
+{
 	char *tmp_buf = NULL;
 	size_t count = 0;
 	size_t size;
@@ -270,7 +278,7 @@ size_t get_list(const char *regex, char **r_list) {
 	/* Bail if we do not have a list.  Do not add debugging, as
 	 * it is very noisy (used a lot when we call match_list() in
 	 * __match() and match() to test for list matching) */
-	if (regex[0] != '[')
+	if ('[' != regex[0])
 		return 0;
 
 	size = get_list_size(regex);
@@ -291,12 +299,12 @@ size_t get_list(const char *regex, char **r_list) {
 	regex++;
 	count++;
 
-	while ((strlen(regex) > 0) && (regex[0] != ']')) {
+	while ((strlen(regex) > 0) && (']' != regex[0])) {
 		/* We have a sequence (x-y) */
-		if ((regex[0] == '-') && (regex[1] != ']') &&
-		    (strlen(regex) >= 2) && (regex[-1] < regex[1]))
-		{
-			
+		if (('-' == regex[0])
+		    && (']' != regex[1])
+		    && (strlen(regex) >= 2)
+		    && (regex[-1] < regex[1])) {			
 			/* Fill in missing chars in sequence */
 			while (tmp_buf[-1] < regex[1]) {
 				tmp_buf[0] = (char)(tmp_buf[-1] + 1);
@@ -317,7 +325,7 @@ size_t get_list(const char *regex, char **r_list) {
 	count++;
 
 	/* We do not have a list as it does not end in ']' */
-	if (regex[0] != ']') {
+	if (']' != regex[0]) {
 		count = 0;
 		free(*r_list);
 	}
@@ -327,7 +335,8 @@ size_t get_list(const char *regex, char **r_list) {
 
 /* If the first is the '^' character, everything but the list is matched
  * NOTE:  We only evaluate _ONE_ data character at a time!! */
-int __match_list(regex_data_t *regex_data) {
+int __match_list(regex_data_t *regex_data)
+{
 	regex_data_t tmp_data;
 	char *data_p = regex_data->data;
 	char *list_p = regex_data->regex;
@@ -338,7 +347,7 @@ int __match_list(regex_data_t *regex_data) {
 
 	CHECK_REGEX_DATA_P(regex_data, failed);
 	
-	if (list_p[0] == '^') {
+	if ('^' == list_p[0]) {
 		/* We need to invert the match */
 		invert = 1;
 		/* Make sure '^' is not part of our list */
@@ -401,7 +410,8 @@ error:
 	return -1;					
 }
 
-int match_list(regex_data_t *regex_data) {
+int match_list(regex_data_t *regex_data)
+{
 	regex_data_t tmp_data;
 	char *data_p = regex_data->data;
 	char *list_p = regex_data->regex;
@@ -464,7 +474,8 @@ error:
 	return -1;
 }
 
-size_t get_wildcard(const char *regex, char *r_wildcard) {
+size_t get_wildcard(const char *regex, char *r_wildcard)
+{
 	/* NULL regex means we do not have a wildcard */
 	if ((NULL == regex) || (0 == strlen(regex))) {
 		DBG_MSG("Invalid argument passed!\n");
@@ -488,7 +499,8 @@ size_t get_wildcard(const char *regex, char *r_wildcard) {
 	return strlen(r_wildcard);
 }
 
-int __match_wildcard(regex_data_t *regex_data, int (*match_func)(regex_data_t *regex_data), const char *regex) {
+int __match_wildcard(regex_data_t *regex_data, int (*match_func)(regex_data_t *regex_data), const char *regex)
+{
 	regex_data_t tmp_data;
 	char *data_p = regex_data->data;
 	char *wildcard_p = regex_data->regex;
@@ -525,9 +537,10 @@ int __match_wildcard(regex_data_t *regex_data, int (*match_func)(regex_data_t *r
 				/* If we have at least one match for '+', or none
 				 * for '*' or '?', check if we have a word or list match.
 				 * We do this because a word weights more than a wildcard */
-				if ((strlen(wildcard_p) > 2) && ((count > 0) ||
-				     (r_wildcard[1] == '*') || (r_wildcard[1] == '?')))
-				{
+				if ((strlen(wildcard_p) > 2)
+				    && ((count > 0)
+				        || ('*' == r_wildcard[1])
+					|| ('?' == r_wildcard[1]))) {
 					regex_data_t tmp_data2;
 #if 0
 					printf("data_p = %s, wildcard_p = %s\n", data_p, wildcard_p);
@@ -539,9 +552,9 @@ int __match_wildcard(regex_data_t *regex_data, int (*match_func)(regex_data_t *r
 						goto error;
 						
 					if (/* '.' might be a special case ... */
-					    /* (wildcard_p[2] != '.') && */
-					    (REGEX_MATCH(tmp_data2) &&
-					     (REGEX_FULL_MATCH == tmp_data2.match))) {
+					    /* ('.' != wildcard_p[2]) && */
+					    ((REGEX_MATCH(tmp_data2))
+					     && (REGEX_FULL_MATCH == tmp_data2.match))) {
 						goto exit;
 					}
 				}
@@ -557,7 +570,7 @@ int __match_wildcard(regex_data_t *regex_data, int (*match_func)(regex_data_t *r
 						goto error;
 				}
 			/* Only once for '?' */
-			} while ((REGEX_MATCH(tmp_data)) && (r_wildcard[1] != '?'));
+			} while ((REGEX_MATCH(tmp_data)) && ('?' != r_wildcard[1]));
 			
 			break;
 		default:
@@ -589,7 +602,8 @@ error:
 	return -1;
 }
 
-int match_wildcard(regex_data_t *regex_data) {
+int match_wildcard(regex_data_t *regex_data)
+{
 	regex_data_t tmp_data;
 	char *data_p = regex_data->data;
 	char *wildcard_p = regex_data->regex;
@@ -639,7 +653,8 @@ error:
 	return -1;
 }
 
-int __match(regex_data_t *regex_data) {
+int __match(regex_data_t *regex_data)
+{
 	regex_data_t tmp_data;
 	char *data_p = regex_data->data;
 	char *regex_p = regex_data->regex;
@@ -686,8 +701,8 @@ match:
 		match = 1;
 
 		/* Check that we do not go out of bounds */
-		if (((data_p - regex_data->data) > strlen(regex_data->data)) ||
-		    ((regex_p - regex_data->regex) > strlen(regex_data->regex)))
+		if (((data_p - regex_data->data) > strlen(regex_data->data))
+		    || ((regex_p - regex_data->regex) > strlen(regex_data->regex)))
 			goto failed;
 	}
 
@@ -727,7 +742,8 @@ error:
 	return -1;
 }
 
-int match(regex_data_t *regex_data) {
+int match(regex_data_t *regex_data)
+{
 	regex_data_t tmp_data;
 	char *data_p = regex_data->data;
 	char *regex_p;
@@ -747,13 +763,13 @@ int match(regex_data_t *regex_data) {
 	regex_p = tmp_buf;
 
 	/* Should we only match from the start? */
-	if (regex_p[0] == '^') {
+	if ('^' == regex_p[0]) {
 		regex_p++;
 		from_start = 1;
 	}
 
 	/* Should we match up to the end? */
-	if (regex_p[strlen(regex_p) - 1] == '$') {
+	if ('$' == regex_p[strlen(regex_p) - 1]) {
 		regex_p[strlen(regex_p) - 1] = '\0';
 		to_end = 1;
 	}
@@ -763,8 +779,9 @@ int match(regex_data_t *regex_data) {
 		retval = __match(&tmp_data);
 		if (-1 == retval)
 			goto error;
-	} while ((strlen(data_p++) > 0) &&
-			(!REGEX_MATCH(tmp_data)) && (0 == from_start));
+	} while ((strlen(data_p++) > 0)
+	         && (!REGEX_MATCH(tmp_data))
+		 && (0 == from_start));
 
 	/* Compensate for above extra inc */
 	data_p--;
@@ -777,8 +794,8 @@ int match(regex_data_t *regex_data) {
 			goto failed;
 		}
 		
-		if ((data_p == regex_data->data) &&
-		    (tmp_data.match == REGEX_FULL_MATCH))
+		if ((data_p == regex_data->data)
+		    && (tmp_data.match == REGEX_FULL_MATCH))
 			regex_data->match = REGEX_FULL_MATCH;
 		else
 			regex_data->match = REGEX_PARTIAL_MATCH;
@@ -807,48 +824,4 @@ error:
 
 	return -1;
 }
-
-#if 0
-int main() {
-	regex_data_t tmp_data;
-	FILE *rcscript;
-	char regex[] = "^[ \t]*[d-p]+d[ \t]*(+)[ \t]*{$";
-	char tempstr[255];
-	int retval;
-
-	rcscript = fopen("acpid", "r");
-	if (NULL == rcscript) {
-		printf("%s", "Error opening file!");
-		return 1;
-	}
-
-	while (0 != fgets(tempstr, 254, rcscript)) {
-		if (tempstr[strlen(tempstr) - 1] == '\n')
-			tempstr[strlen(tempstr) - 1] = '\0';
-		
-		FILL_REGEX_DATA(tmp_data, tempstr, regex);
-		retval = match(&tmp_data);
-		if (-1 != retval) {
-			if (REGEX_MATCH(tmp_data)) {
-				printf("*** string = '%s' ***\n", tempstr);
-				printf("*** regex = '%s' ***\n", regex);
-				
-				if (REGEX_FULL_MATCH == tmp_data.match)
-					printf("match (full): '%s', %i\n", tmp_data.where, tmp_data.count);
-				else
-					printf("match: '%s', %i\n", tmp_data.where, tmp_data.count);
-				
-			} else {
-				printf("%s", "No match\n");
-			}
-		} else {
-			printf("%s", "Error during match\n");
-		}
-	}
-
-	fclose(rcscript);
-
-	return 0;
-}
-#endif
 

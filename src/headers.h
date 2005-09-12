@@ -12,7 +12,7 @@
 #define HAVE_SETSID
 
 /* OS-specific includes */
-#if defined(__linux__)
+#if defined(__GLIBC__)
 # define HAVE_SYS_SYSMACROS_H
 # define HAVE_ERROR_H
 #endif

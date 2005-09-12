@@ -41,11 +41,7 @@ do
 		eerror "One of more critical startup scripts failed to start!"
 		eerror "Please correct this, and reboot ..."
 		echo; echo
-		/sbin/sulogin ${CONSOLE}
-		einfo "Unmounting filesystems"
-		/bin/mount -a -o remount,ro &>/dev/null
-		einfo "Rebooting"
-		/sbin/reboot -f
+		single_user
 	fi
 
 	splash "svc_started" "${x}" "0"

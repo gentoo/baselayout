@@ -31,6 +31,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <sys/poll.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -72,9 +73,9 @@ size_t parse_rcscript(char *scriptname, time_t mtime, char **data, size_t index)
 size_t parse_print_start(char **data, size_t index);
 size_t parse_print_header(char *scriptname, time_t mtime, char **data, size_t index);
 size_t parse_print_body(char *scriptname, char **data, size_t index);
-size_t parse_print_end(char **data, size_t index);
 
-int get_rcscripts(void) {
+int get_rcscripts(void)
+{
 	rcscript_info_t *info;
 	char **file_list = NULL;
 	char *rcscript;
@@ -89,17 +90,16 @@ int get_rcscripts(void) {
 
 	STRING_LIST_FOR_EACH(file_list, rcscript, count) {
 		    /* Is it a file? */
-		if ((!is_file(rcscript, 1)) ||
+		if (!(is_file(rcscript, 1))
 		    /* Do not process scripts, source or backup files. */
-		    (CHECK_FILE_EXTENSION(rcscript, ".c")) ||
-		    (CHECK_FILE_EXTENSION(rcscript, ".bak")) ||
-		    (CHECK_FILE_EXTENSION(rcscript, "~")))
-		{
+		    || (CHECK_FILE_EXTENSION(rcscript, ".c"))
+		    || (CHECK_FILE_EXTENSION(rcscript, ".bak"))
+		    || (CHECK_FILE_EXTENSION(rcscript, "~"))) {
 			DBG_MSG("'%s' is not a valid rc-script!\n",
-					gbasename(rcscript));
+			        gbasename(rcscript));
 		} else {
 			DBG_MSG("Adding rc-script '%s' to list.\n",
-					gbasename(rcscript));
+			        gbasename(rcscript));
 
 			info = malloc(sizeof(rcscript_info_t));
 			if (NULL == info) {
@@ -118,14 +118,13 @@ int get_rcscripts(void) {
 			info->mtime = get_mtime(rcscript, 1);
 			if (0 == info->mtime) {
 				DBG_MSG("Failed to get modification time for '%s'!\n",
-						rcscript);
+				        rcscript);
 				/* We do not care if it fails - we will pick up
 				 * later if there is a problem with the file */
 			}
 
 			/* File name for the conf.d config file (if any) */
-			confd_file = strcatpaths(CONFD_DIR_NAME,
-					gbasename(rcscript));
+			confd_file = strcatpaths(CONFD_DIR_NAME, gbasename(rcscript));
 			if (NULL == confd_file) {
 				DBG_MSG("Failed to allocate temporary buffer!\n");
 				goto loop_error;
@@ -136,7 +135,7 @@ int get_rcscripts(void) {
 			info->confd_mtime = get_mtime(confd_file, 1);
 			if (0 == info->confd_mtime) {
 				DBG_MSG("Failed to get modification time for '%s'!\n",
-						confd_file);
+				        confd_file);
 				/* We do not care that it fails, as not all
 				 * rc-scripts will have conf.d config files */
 			}
@@ -157,7 +156,7 @@ loop_error:
 	}
 
 	/* Final check if we have some entries */
-	if (NULL == file_list[0]) {
+	if ((NULL == file_list) || (NULL == file_list[0])) {
 		DBG_MSG("No rc-scripts to parse!\n");
 		errno = ENOENT;
 		goto error;
@@ -175,7 +174,8 @@ error:
 
 /* Returns 0 if we do not need to regen the cache file, else -1 with
  * errno set if something went wrong */
-int check_rcscripts_mtime(char *cachefile) {
+int check_rcscripts_mtime(char *cachefile)
+{
 	rcscript_info_t *info;
 	time_t cache_mtime;
 	time_t rc_conf_mtime;
@@ -190,7 +190,7 @@ int check_rcscripts_mtime(char *cachefile) {
 	cache_mtime = get_mtime(cachefile, 1);
 	if (0 == cache_mtime) {
 		DBG_MSG("Could not get modification time for cache file '%s'!\n",
-				cachefile);
+		        cachefile);
 		return -1;
 	}
 
@@ -198,24 +198,24 @@ int check_rcscripts_mtime(char *cachefile) {
 	rc_conf_mtime = get_mtime(RC_CONF_FILE_NAME, 1);
 	if (rc_conf_mtime > cache_mtime) {
 		DBG_MSG("'%s' have a later modification time than '%s'.\n",
-				RC_CONF_FILE_NAME, cachefile);
+		        RC_CONF_FILE_NAME, cachefile);
 		return -1;
 	}
 	/* Get and compare mtime for RC_CONFD_FILE_NAME with that of cachefile */
 	rc_confd_mtime = get_mtime(RC_CONFD_FILE_NAME, 1);
 	if (rc_confd_mtime > cache_mtime) {
 		DBG_MSG("'%s' have a later modification time than '%s'.\n",
-				RC_CONFD_FILE_NAME, cachefile);
+		        RC_CONFD_FILE_NAME, cachefile);
 		return -1;
 	}
 
 	/* Get and compare mtime for each rc-script and its conf.d config file
 	 * with that of cachefile */
 	list_for_each_entry(info, &rcscript_list, node) {
-		if ((info->mtime > cache_mtime) ||
-		    (info->confd_mtime > cache_mtime)) {
+		if ((info->mtime > cache_mtime)
+		    || (info->confd_mtime > cache_mtime)) {
 			DBG_MSG("'%s' have a later modification time than '%s'.\n",
-					info->filename, cachefile);
+			        info->filename, cachefile);
 			return -1;
 		}
 	}
@@ -224,7 +224,8 @@ int check_rcscripts_mtime(char *cachefile) {
 }
 
 /* Return count on success, -1 on error.  If it was critical, errno will be set. */
-size_t parse_rcscript(char *scriptname, time_t mtime, char **data, size_t index) {
+size_t parse_rcscript(char *scriptname, time_t mtime, char **data, size_t index)
+{
 	regex_data_t tmp_data;
 	char *buf = NULL;
 	char *tmp_buf = NULL;
@@ -241,14 +242,14 @@ size_t parse_rcscript(char *scriptname, time_t mtime, char **data, size_t index)
 	
 	if (-1 == file_map(scriptname, &buf, &lenght)) {
 		DBG_MSG("Could not open '%s' for reading!\n",
-				gbasename(scriptname));
+		        gbasename(scriptname));
 		return -1;
 	}
 	
 	while (current < lenght) {
 		count = buf_get_line(buf, lenght, current);
 
-		tmp_buf = strndup(&buf[current], count);
+		tmp_buf = strndup(&(buf[current]), count);
 		if (NULL == tmp_buf) {
 			DBG_MSG("Failed to allocate temporary buffer!\n");
 			goto error;
@@ -257,25 +258,23 @@ size_t parse_rcscript(char *scriptname, time_t mtime, char **data, size_t index)
 		if (0 == current) {
 			/* Check if it starts with '#!/sbin/runscript' */
 			DO_REGEX(tmp_data, tmp_buf,
-				"[ \t]*#![ \t]*/sbin/runscript[ \t]*.*", error);
+			         "[ \t]*#![ \t]*/sbin/runscript[ \t]*.*", error);
 			if (REGEX_FULL_MATCH != tmp_data.match) {
 				DBG_MSG("'%s' is not a valid rc-script!\n",
-						gbasename(scriptname));
-				errno = 0;
+				        gbasename(scriptname));
 				goto error;
 			}
 
 			/* We do not want rc-scripts ending in '.sh' */
 			if (CHECK_FILE_EXTENSION(scriptname, ".sh")) {
 				EWARN("'%s' is invalid (should not end with '.sh')!\n",
-						gbasename(scriptname));
-				errno = 0;
+				      gbasename(scriptname));
 				goto error;
 			}
 			DBG_MSG("Parsing '%s'.\n", gbasename(scriptname));
 
 			write_count = parse_print_header(gbasename(scriptname),
-					mtime, data, write_count);
+			                                 mtime, data, write_count);
 			if (-1 == write_count) {
 				DBG_MSG("Failed to call parse_print_header()!\n");
 				goto error;
@@ -295,21 +294,9 @@ size_t parse_rcscript(char *scriptname, time_t mtime, char **data, size_t index)
 			DBG_MSG("Got 'depend()' function.\n");
 
 			write_count = parse_print_body(gbasename(scriptname),
-					data, write_count);
+			                               data, write_count);
 			if (-1 == write_count) {
 				DBG_MSG("Failed to call parse_print_body()!\n");
-				goto error;
-			}
-
-			/* Need to have the 'source', as parse_cache() checks for
-			 * second arg */
-			PRINT_TO_BUFFER(data, write_count, error,
-				"  . \"%s\" >/dev/null 2>&1 || echo \"FAILED source\"\n",
-				scriptname);
-			
-			write_count = parse_print_end(data, write_count);
-			if (-1 == write_count) {
-				DBG_MSG("Failed to call parse_print_end()!\n");
 				goto error;
 			}
 
@@ -340,7 +327,8 @@ error:
 }
 
 
-size_t generate_stage1(char **data) {
+size_t generate_stage1(char **data)
+{
 	rcscript_info_t *info;
 	size_t write_count = 0;
 	size_t tmp_count;
@@ -352,10 +340,11 @@ size_t generate_stage1(char **data) {
 	}
 
 	list_for_each_entry(info, &rcscript_list, node) {
-		tmp_count = parse_rcscript(info->filename, info->mtime, data, write_count);
+		tmp_count = parse_rcscript(info->filename, info->mtime,
+		                           data, write_count);
 		if (-1 == tmp_count) {
 			DBG_MSG("Failed to parse '%s'!\n",
-					gbasename(info->filename));
+			        gbasename(info->filename));
 
 			/* If 'errno' is set, it is critical (hopefully) */
 			if (0 != errno)
@@ -369,12 +358,14 @@ size_t generate_stage1(char **data) {
 }
 
 /* Empty signal handler for SIGPIPE */
-static void sig_handler(int signum) {
+static void sig_handler(int signum)
+{
 	return;
 }
 
 /* Returns data's lenght on success, else -1 on error. */
-size_t generate_stage2(char **data) {
+size_t generate_stage2(char **data)
+{
 	/* parent_pfds is used to send data to the parent
 	 * (thus the parent only use the read pipe, and the
 	 *  child uses the write pipe)
@@ -449,21 +440,12 @@ size_t generate_stage2(char **data) {
 
 		struct sigaction act_new;
 		struct sigaction act_old;
-		struct timeval tv;
-#if defined(USE_WRITE_SELECT)
-		fd_set write_fds;
-#endif
-		fd_set read_fds;
+		struct pollfd poll_fds[2];
 		char buf[PARSE_BUFFER_SIZE+1];
 		char *stage1_data = NULL;
 		size_t stage1_write_count = 0;
 		size_t stage1_written = 0;
-#if defined(USE_WRITE_SELECT)
-		int max_write_fds = child_pfds[WRITE_PIPE] + 1;
-#endif
-		int max_read_fds = parent_pfds[READ_PIPE] + 1;
 		int status = 0;
-		int read_count;
 		int closed_write_pipe = 0;
 		int tmp_pid = 0;
 
@@ -502,94 +484,86 @@ size_t generate_stage2(char **data) {
 		close(tmp_fd);
 #endif
 
-		/* Do setup for select() */
-		tv.tv_sec = 0;		/* We do not want to wait for select() */
-		tv.tv_usec = 0;		/* Same thing here */
-#if defined(USE_WRITE_SELECT)
-		FD_ZERO(&write_fds);
-		FD_SET(child_pfds[WRITE_PIPE], &write_fds);
-#endif
-		FD_ZERO(&read_fds);
-		FD_SET(parent_pfds[READ_PIPE], &read_fds);
-
 		do {
-#if defined(USE_WRITE_SELECT)
-			fd_set wwrite_fds = write_fds;
-#endif
-			fd_set wread_fds = read_fds;
 			int tmp_count = 0;
-#if defined(USE_WRITE_SELECT)
 			int do_write = 0;
-#endif
 			int do_read = 0;
-		
-			/* Check if we can read from parent_pfds[READ_PIPE] */
-			select(max_read_fds, &wread_fds, NULL, NULL, &tv);
-			do_read = FD_ISSET(parent_pfds[READ_PIPE], &wread_fds);
 
-			/* While there is data to be written */
+			/* Check if we can write or read */
+			poll_fds[WRITE_PIPE].fd = child_pfds[WRITE_PIPE];
+			poll_fds[WRITE_PIPE].events = POLLOUT;
+			poll_fds[READ_PIPE].fd = parent_pfds[READ_PIPE];
+			poll_fds[READ_PIPE].events = POLLIN | POLLPRI;
 			if (stage1_written < stage1_write_count) {
-#if defined(USE_WRITE_SELECT)
-				/* Check if we can write */
-				select(max_write_fds, NULL, &wwrite_fds,
-						NULL, &tv);
-				do_write = FD_ISSET(child_pfds[WRITE_PIPE],
-						&wwrite_fds);
+				poll(poll_fds, 2, -1);
+				if (poll_fds[WRITE_PIPE].revents & POLLOUT)
+					do_write = 1;
+			} else {
+				poll(&(poll_fds[READ_PIPE]), 1, -1);
+			}
+			if ((poll_fds[READ_PIPE].revents & POLLIN)
+			    || (poll_fds[READ_PIPE].revents & POLLPRI))
+				do_read = 1;
 
+			do {
 				/* If we can write, or there is nothing to
 				 * read, keep feeding the write pipe */
-				if (do_write || !do_read) {
-#else
-				if (!do_read) {
-#endif
-					tmp_count = write(child_pfds[WRITE_PIPE],
-							&stage1_data[stage1_written],
-							strlen(&stage1_data[stage1_written]));
-					if (-1 == tmp_count) {
-						DBG_MSG("Error writing to child_pfds[WRITE_PIPE]!\n");
-						goto failed;
-					}
-					/* What was written before, plus what
-					 * we wrote now as well as the ending
-					 * '\0' of the line */
-					stage1_written += tmp_count + 1;
-				
-					/* Close the write pipe if we done
-					 * writing to get a EOF signaled to
-					 * bash */
-					if (stage1_written >= stage1_write_count) {
-						closed_write_pipe = 1;
-						close(child_pfds[WRITE_PIPE]);
-					}
+				if ((stage1_written >= stage1_write_count)
+				    || (1 == do_read)
+				    || (1 != do_write))
+					goto cont_do_read;
+
+				tmp_count = write(child_pfds[WRITE_PIPE],
+				                  &stage1_data[stage1_written],
+				                  strlen(&stage1_data[stage1_written]));
+				if ((-1 == tmp_count) && (EINTR != errno)) {
+					DBG_MSG("Error writing to child_pfds[WRITE_PIPE]!\n");
+					goto failed;
 				}
-			}
+				/* What was written before, plus what
+				 * we wrote now as well as the ending
+				 * '\0' of the line */
+				stage1_written += tmp_count + 1;
 			
-			if (do_read) {
-				read_count = read(parent_pfds[READ_PIPE], buf,
-						PARSE_BUFFER_SIZE);
-				if (-1 == read_count) {
+				/* Close the write pipe if we done
+				 * writing to get a EOF signaled to
+				 * bash */
+				if (stage1_written >= stage1_write_count) {
+					closed_write_pipe = 1;
+					close(child_pfds[WRITE_PIPE]);
+				}
+			} while ((tmp_count > 0) && (stage1_written < stage1_write_count));
+		
+cont_do_read:
+			/* Reset tmp_count for below read loop */
+			tmp_count = 0;
+			
+			do {
+				if (1 != do_read)
+					continue;
+				
+				tmp_count = read(parent_pfds[READ_PIPE], buf,
+				                 PARSE_BUFFER_SIZE);
+				if ((-1 == tmp_count) && (EINTR != errno)) {
 					DBG_MSG("Error reading parent_pfds[READ_PIPE]!\n");
 					goto failed;
 				}
-				if (read_count > 0) {
+				if (tmp_count > 0) {
 					char *tmp_p;
 
-					tmp_p = realloc(*data, write_count +
-								read_count);
+					tmp_p = realloc(*data, write_count + tmp_count);
 					if (NULL == tmp_p) {
 						DBG_MSG("Failed to allocate buffer!\n");
 						goto failed;
 					}
 					
-					memcpy(&tmp_p[write_count], buf,
-							read_count);
+					memcpy(&tmp_p[write_count], buf, tmp_count);
 
-					*data = tmp_p;				
-					write_count += read_count;
+					*data = tmp_p;
+					write_count += tmp_count;
 				}
-			}
-			tmp_pid = waitpid(child_pid, &status, WNOHANG);
-		} while (0 == tmp_pid);
+			} while (tmp_count > 0);
+		} while (!(poll_fds[READ_PIPE].revents & POLLHUP));
 
 failed:
 		/* Set old_errno to disable child exit code checking below */
@@ -598,7 +572,7 @@ failed:
 
 		free(stage1_data);
 
-		if (0 == closed_write_pipe)
+		if (1 != closed_write_pipe)
 			close(child_pfds[WRITE_PIPE]);
 		close(parent_pfds[READ_PIPE]);
 
@@ -653,7 +627,8 @@ error:
 	return -1;
 }
 
-int write_legacy_stage3(FILE *output) {
+int write_legacy_stage3(FILE *output)
+{
 	service_info_t *info;
 	char *service;
 	int count;
@@ -690,18 +665,14 @@ int write_legacy_stage3(FILE *output) {
 	index = 1;
 
 	list_for_each_entry(info, &service_info_list, node) {
-#if 0
-		/* Make it easier to compare old depscan.sh output and this
-		 * output as it puts 'net' right in the middle */
-		if (0 == strcmp("net", info->name))
-			continue;
-#endif
-		fprintf(output, "RC_DEPEND_TREE[%i]=\"%s\"\n", index*11, info->name);
+		fprintf(output, "RC_DEPEND_TREE[%i]=\"%s\"\n",
+		        index * 10, info->name);
 		
 		for (i = 0;i <= BROKEN;i++) {
 			dep_count = 0;
 			
-			fprintf(output, "RC_DEPEND_TREE[%i+%i]=", (index * 11), (i + 2));
+			fprintf(output, "RC_DEPEND_TREE[%i+%i]=",
+			        (index * 10), (i + 2));
 			
 			STRING_LIST_FOR_EACH(info->depend_info[i], service, count) {
 				if (0 == dep_count)
@@ -718,11 +689,8 @@ int write_legacy_stage3(FILE *output) {
 				fprintf(output, "\n");
 		}
 		
-		fprintf(output, "RC_DEPEND_TREE[%i+9]=", index*11);
-		fprintf(output, "\n");
-
-		fprintf(output, "RC_DEPEND_TREE[%i+10]=\"%li\"\n\n", index*11,
-				info->mtime);
+		fprintf(output, "RC_DEPEND_TREE[%i+9]=\"%li\"\n\n",
+		        index * 10, info->mtime);
 		index++;
 	}
 
@@ -740,7 +708,8 @@ int write_legacy_stage3(FILE *output) {
 	return 0;
 }
 
-int parse_cache(const char *data, size_t lenght) {
+int parse_cache(const char *data, size_t lenght)
+{
 	service_info_t *info;
 	service_type_t type = ALL_SERVICE_TYPE_T;
 	char *tmp_buf = NULL;
@@ -761,7 +730,7 @@ int parse_cache(const char *data, size_t lenght) {
 	while (current < lenght) {
 		count = buf_get_line((char *)data, lenght, current);
 
-		tmp_buf = strndup(&data[current], count);
+		tmp_buf = strndup(&(data[current]), count);
 		if (NULL == tmp_buf) {
 			DBG_MSG("Failed to allocate temporary buffer!\n");
 			goto error;
@@ -776,9 +745,11 @@ int parse_cache(const char *data, size_t lenght) {
 		token = strsep(&tmp_p, " ");
 
 		/* FIELD name empty/bogus? */
-		if ((NULL == token) || (0 == strlen(token)) ||
+		if ((NULL == token)
+		    || (0 == strlen(token))
 		    /* We got an empty FIELD value */
-		    (NULL == tmp_p) || (0 == strlen(tmp_p))) {
+		    || (NULL == tmp_p)
+		    || (0 == strlen(tmp_p))) {
 			DBG_MSG("Parsing stopped due to short read!\n");
 			errno = EMSGSIZE;
 			goto error;
@@ -790,8 +761,7 @@ int parse_cache(const char *data, size_t lenght) {
 			/* Add the service to the list, and initialize all data */
 			retval = service_add(tmp_p);
 			if (-1 == retval) {
-				DBG_MSG("Failed to add %s to service list!\n",
-						tmp_p);
+				DBG_MSG("Failed to add %s to service list!\n", tmp_p);
 				goto error;
 			}
 
@@ -817,8 +787,9 @@ int parse_cache(const char *data, size_t lenght) {
 			 * services */
 			retval = service_add_dependency(rc_name, rc_name, BROKEN);
 			if (-1 == retval) {
+				field = service_type_names[type];
 				DBG_MSG("Failed to add dependency '%s' to service '%s', type '%s'!\n",
-						token, rc_name, field);
+				        token, rc_name, field);
 				goto error;
 			}
 			goto _continue;
@@ -862,12 +833,12 @@ have_dep_field:
 			
 			while (NULL != token) {
 				DBG_MSG("Field = '%s', service = '%s', value = '%s'\n",
-						field, rc_name, token);
+				        field, rc_name, token);
 				
 				retval = service_add_dependency(rc_name, token, type);
 				if (-1 == retval) {
 					DBG_MSG("Failed to add dependency '%s' to service '%s', type '%s'!\n",
-							token, rc_name, field);
+					        token, rc_name, field);
 					goto error;
 				}
 				
@@ -890,7 +861,7 @@ have_dep_field:
 			retval = service_set_mtime(rc_name, mtime);
 			if (-1 == retval) {
 				DBG_MSG("Failed to set mtime for service '%s'!\n",
-						rc_name);
+				        rc_name);
 				goto error;
 			}
 
@@ -899,7 +870,7 @@ have_dep_field:
 			token = strsep(&tmp_p, " ");
 			if (NULL != token)
 				DBG_MSG("Too many falues for field '%s'!\n",
-						FIELD_MTIME);
+				        FIELD_MTIME);
 			
 			goto _continue;
 		}
@@ -923,27 +894,16 @@ error:
 	return -1;
 }
 
-size_t parse_print_start(char **data, size_t index) {
+size_t parse_print_start(char **data, size_t index)
+{
 	size_t write_count = index;
 	
-	PRINT_TO_BUFFER(data, write_count, error, ". /sbin/functions.sh\n");
-	PRINT_TO_BUFFER(data, write_count, error, "[ -e /etc/rc.conf ] && . /etc/rc.conf\n\n");
-//	PRINT_TO_BUFFER(data, write_count, error, "set -e\n\n");
-	PRINT_TO_BUFFER(data, write_count, error, "need() {\n");
-	PRINT_TO_BUFFER(data, write_count, error, " [ -n \"$*\" ] && echo \"NEED $*\"; return 0\n");
-	PRINT_TO_BUFFER(data, write_count, error, "}\n\n");
-	PRINT_TO_BUFFER(data, write_count, error, "use() {\n");
-	PRINT_TO_BUFFER(data, write_count, error, " [ -n \"$*\" ] && echo \"USE $*\"; return 0\n");
-	PRINT_TO_BUFFER(data, write_count, error, "}\n\n");
-	PRINT_TO_BUFFER(data, write_count, error, "before() {\n");
-	PRINT_TO_BUFFER(data, write_count, error, " [ -n \"$*\" ] && echo \"BEFORE $*\"; return 0\n");
-	PRINT_TO_BUFFER(data, write_count, error, "}\n\n");
-	PRINT_TO_BUFFER(data, write_count, error, "after() {\n");
-	PRINT_TO_BUFFER(data, write_count, error, " [ -n \"$*\" ] && echo \"AFTER $*\"; return 0\n");
-	PRINT_TO_BUFFER(data, write_count, error, "}\n\n");
-	PRINT_TO_BUFFER(data, write_count, error, "provide() {\n");
-	PRINT_TO_BUFFER(data, write_count, error, " [ -n \"$*\" ] && echo \"PROVIDE $*\"; return 0\n");
-	PRINT_TO_BUFFER(data, write_count, error, "}\n\n");
+	PRINT_TO_BUFFER(data, write_count, error,
+		". /sbin/functions.sh\n"
+		"[ -e /etc/rc.conf ] && . /etc/rc.conf\n"
+		"\n"
+	/*	"set -e\n" */
+		"\n");
 
 	return write_count;
 
@@ -951,13 +911,19 @@ error:
 	return -1;
 }
 
-size_t parse_print_header(char *scriptname, time_t mtime, char **data, size_t index) {
+size_t parse_print_header(char *scriptname, time_t mtime, char **data, size_t index)
+{
 	size_t write_count = index;
 	
-	PRINT_TO_BUFFER(data, write_count, error, "#*** %s ***\n\n", scriptname);
-	PRINT_TO_BUFFER(data, write_count, error, "myservice=\"%s\"\n", scriptname);
-	PRINT_TO_BUFFER(data, write_count, error, "echo \"RCSCRIPT ${myservice}\"\n\n");
-	PRINT_TO_BUFFER(data, write_count, error, "echo \"MTIME %li\"\n\n", mtime);
+	PRINT_TO_BUFFER(data, write_count, error,
+		"#*** %s ***\n"
+		"\n"
+		"myservice=\"%s\"\n"
+		"echo \"RCSCRIPT ${myservice}\"\n"
+		"\n"
+		"echo \"MTIME %li\"\n"
+		"\n",
+		scriptname, scriptname, mtime);
 
 	return write_count;
 
@@ -965,7 +931,8 @@ error:
 	return -1;
 }
 
-size_t parse_print_body(char *scriptname, char **data, size_t index) {
+size_t parse_print_body(char *scriptname, char **data, size_t index)
+{
 	size_t write_count = index;
 	char *tmp_buf = NULL;
 	char *tmp_ptr;
@@ -997,33 +964,51 @@ size_t parse_print_body(char *scriptname, char **data, size_t index) {
 	if (NULL == ext)
 		ext = tmp_ptr;
 	
-	PRINT_TO_BUFFER(data, write_count, error, "\n");
-	PRINT_TO_BUFFER(data, write_count, error, "  # Get settings for rc-script ...\n");
-	PRINT_TO_BUFFER(data, write_count, error, "  [ -e \"/etc/conf.d/${myservice}\" ] && \\\n");
-	PRINT_TO_BUFFER(data, write_count, error, "  	. \"/etc/conf.d/${myservice}\"\n");
-	PRINT_TO_BUFFER(data, write_count, error, "  [ -e /etc/conf.d/net ] && \\\n");
-	PRINT_TO_BUFFER(data, write_count, error, "  [ \"%s\" = \"net\" ] && \\\n", base);
-	PRINT_TO_BUFFER(data, write_count, error, "  [ \"%s\" != \"${myservice}\" ] && \\\n", ext);
-	PRINT_TO_BUFFER(data, write_count, error, "  	. /etc/conf.d/net\n");
-	PRINT_TO_BUFFER(data, write_count, error, "  depend() {\n");
-	PRINT_TO_BUFFER(data, write_count, error, "    return 0\n");
-	PRINT_TO_BUFFER(data, write_count, error, "  }\n\n");
-	PRINT_TO_BUFFER(data, write_count, error, "  # Actual depend() function ...\n");
-
-	free(tmp_buf);
-	
-	return write_count;
-
-error:
-	return -1;
-}
-
-size_t parse_print_end(char **data, size_t index) {
-	size_t write_count = index;
-	
-	PRINT_TO_BUFFER(data, write_count, error, "\n");
-	PRINT_TO_BUFFER(data, write_count, error, "  depend\n");
-	PRINT_TO_BUFFER(data, write_count, error, "\n\n");
+	PRINT_TO_BUFFER(data, write_count, error,
+		"\n"
+		"(\n"
+		"  # Get settings for rc-script ...\n"
+		"  [ -e \"/etc/conf.d/${myservice}\" ] && \\\n"
+		"  	. \"/etc/conf.d/${myservice}\"\n"
+		"  [ -e /etc/conf.d/net ] && \\\n"
+		"  [ \"%s\" = \"net\" ] && \\\n"
+		"  [ \"%s\" != \"${myservice}\" ] && \\\n"
+		"  	. /etc/conf.d/net\n"
+		"  depend() {\n"
+		"    return 0\n"
+		"  }\n"
+		"  \n"
+		"  # Actual depend() function ...\n"
+		"  (\n"
+		"    set -e\n"
+		"    . \"/etc/init.d/%s\" >/dev/null 2>&1\n"
+		"    set +e\n"
+		"    \n"
+		"    need() {\n"
+		"      [ \"$#\" -gt 0 ] && echo \"NEED $*\"; return 0\n"
+		"    }\n"
+		"    \n"
+		"    use() {\n"
+		"      [ \"$#\" -gt 0 ] && echo \"USE $*\"; return 0\n"
+		"    }\n"
+		"    \n"
+		"    before() {\n"
+		"      [ \"$#\" -gt 0 ] && echo \"BEFORE $*\"; return 0\n"
+		"    }\n"
+		"    \n"
+		"    after() {\n"
+		"      [ \"$#\" -gt 0 ] && echo \"AFTER $*\"; return 0\n"
+		"    }\n"
+		"    \n"
+		"    provide() {\n"
+		"      [ \"$#\" -gt 0 ] && echo \"PROVIDE $*\"; return 0\n"
+		"    }\n"
+		"    \n"
+		"    depend\n"
+		"  ) || echo \"FAILED source\"\n"
+		")\n"
+		"\n\n",
+		base, ext, scriptname);
 
 	return write_count;
 

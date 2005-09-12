@@ -30,7 +30,7 @@
 	do { \
 		int old_errno = errno; \
 		fprintf(stderr, "DEBUG(1): in %s, function %s(), line %i:\n", __FILE__, \
-				__FUNCTION__, __LINE__); \
+		        __FUNCTION__, __LINE__); \
 		fprintf(stderr, "DEBUG(2): " _format, ## _arg); \
 		errno = old_errno; \
 		if (0 != errno) { \
@@ -48,7 +48,7 @@
 		/* if ((0 != errno) && (ESPIPE != errno)) { */ \
 		if (0 != errno) { \
 			fprintf(stderr, "DEBUG(1): in %s, function %s(), line %i:\n", \
-					__FILE__, __FUNCTION__, __LINE__); \
+			        __FILE__, __FUNCTION__, __LINE__); \
 			fprintf(stderr, "DEBUG(2): " _format, ## _arg); \
 			errno = old_errno; \
 			perror("DEBUG(3)"); \
@@ -62,7 +62,7 @@
 	do { \
 		int old_errno = errno; \
 		fprintf(stderr, "ERROR: file '%s', function '%s', line %i.\n", \
-			__FILE__, __FUNCTION__, __LINE__); \
+		        __FILE__, __FUNCTION__, __LINE__); \
 		errno = old_errno; \
 		if (0 != errno) \
 		 	perror("ERROR"); \
