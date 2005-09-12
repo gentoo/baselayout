@@ -31,7 +31,7 @@ if [[ $2 == "help" ]] ; then
 	NL=$'\n'
 else
 	BE_VERBOSE="no"
-	NL=""
+	NL=
 fi
 
 default_opts="start stop restart pause zap"

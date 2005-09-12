@@ -27,7 +27,7 @@ user_want_interactive() {
 #   depending on user selection
 #
 do_interactive() {
-	local service="$1"
+	local service=$1
 	shift
 
 	local start_text="Start service"
@@ -70,10 +70,8 @@ get_critical_services() {
 	local x=
 	CRITICAL_SERVICES=
 	
-	if [ -f "/etc/runlevels/${BOOTLEVEL}/.critical" ]
-	then
-		for x in $(< /etc/runlevels/${BOOTLEVEL}/.critical)
-		do
+	if [[ -f /etc/runlevels/${BOOTLEVEL}/.critical ]] ; then
+		for x in $(< "/etc/runlevels/${BOOTLEVEL}/.critical") ; do
 			CRITICAL_SERVICES="${CRITICAL_SERVICES} ${x##*/}"
 		done
 	else
@@ -86,7 +84,7 @@ get_critical_services() {
 }
 
 # Save $1
-argv1="$1"
+argv1=$1
 
 # First time boot stuff goes here.  Note that 'sysinit' is an internal runlevel
 # used to bring up local filesystems, and should not be started with /sbin/rc
@@ -105,8 +103,7 @@ if [[ ( ${RUNLEVEL} == "S" || ${RUNLEVEL} == "1" ) && ${argv1} == "boot" ]]
 then
 	setup_defaultlevels
 
-	if [ -n "${DEFAULTLEVEL}" -a "${DEFAULTLEVEL}" != "default" ]
-	then
+	if [[ -n ${DEFAULTLEVEL} && ${DEFAULTLEVEL} != "default" ]] ; then
 		# Setup our default runlevel runlevel that will be run
 		# the first time /sbin/rc is called with argv1 != sysinit|boot
 		echo "${DEFAULTLEVEL}" > "${svcdir}/ksoftlevel"
@@ -118,11 +115,11 @@ then
 
 	# We reset argv1 to the bootlevel given on the kernel command line
 	# if there is one
-	argv1="${BOOTLEVEL}"
+	argv1=${BOOTLEVEL}
 	
 elif [[ ${RUNLEVEL} != "S" && ${RUNLEVEL} != "1" && -e ${svcdir}/ksoftlevel ]]
 then
-	argv1="$(< ${svcdir}/ksoftlevel)"
+	argv1=$(< ${svcdir}/ksoftlevel)
 	rm -f "${svcdir}/ksoftlevel"
 elif [[ ${RUNLEVEL} != "S" && ${RUNLEVEL} != "1" && ${argv1} == "single" ]]
 then
@@ -143,34 +140,29 @@ fi
 
 source "${svclib}/sh/rc-services.sh"
 
-if [ -f "${svcdir}/softlevel" ]
-then
+if [[ -f ${svcdir}/softlevel ]] ; then
 	# Set OLDSOFTLEVEL if we had a valid SOFTLEVEL
-	export OLDSOFTLEVEL="$(< ${svcdir}/softlevel)"
+	export OLDSOFTLEVEL=$(< ${svcdir}/softlevel)
 else
 	export OLDSOFTLEVEL=
 fi
 	
-if [ -z "${argv1}" ]
-then
-	if [ -f "${svcdir}/softlevel" ]
-	then
-		export SOFTLEVEL="$(< ${svcdir}/softlevel)"
+if [[ -z ${argv1} ]] ; then
+	if [[ -f ${svcdir}/softlevel ]] ; then
+		export SOFTLEVEL=$(< ${svcdir}/softlevel)
 	else
-		export SOFTLEVEL="${BOOTLEVEL}"
+		export SOFTLEVEL=${BOOTLEVEL}
 	fi
 else
-	export SOFTLEVEL="${argv1}"
+	export SOFTLEVEL=${argv1}
 fi
 
-if [ ! -f "${svcdir}/softlevel" ]
-then
+if [[ ! -f ${svcdir}/softlevel ]] ; then
 	echo "${SOFTLEVEL}" > "${svcdir}/softlevel"
 fi
 
 # For keeping a list of services that fails during boot/halt
-if [ ! -d "${svcdir}/failed" ]
-then
+if [[ ! -d ${svcdir}/failed ]] ; then
 	mkdir -p -m 0755 "${svcdir}/failed"
 else
 	rm -rf "${svcdir}"/failed/*
@@ -178,38 +170,33 @@ fi
 
 splash "rc_init" "${argv1}"
 
-if [ "${SOFTLEVEL}" = "reboot" -o "${SOFTLEVEL}" = "shutdown" ]
-then
+if [[ ${SOFTLEVEL} == "reboot" || ${SOFTLEVEL} == "shutdown" ]] ; then
 	myscripts=
 
-elif [ "${SOFTLEVEL}" = "single" ]
-then
+elif [[ ${SOFTLEVEL} = "single" ]] ; then
 	get_critical_services
 
-	myscripts="${CRITICAL_SERVICES}"
+	myscripts=${CRITICAL_SERVICES}
 	
-elif [ ! -d "/etc/runlevels/${SOFTLEVEL}" ]
-then
+elif [[ ! -d /etc/runlevels/${SOFTLEVEL} ]] ; then
 	eerror "ERROR:  runlevel ${SOFTLEVEL} does not exist; exiting ..."
 	exit 1
 else
 	myscripts=
-	if [ "${SOFTLEVEL}" != "${BOOTLEVEL}" ]
-	then
+	if [[ ${SOFTLEVEL} != "${BOOTLEVEL}" ]] ; then
 		# Normal runlevels *include* boot scripts
-		mylevels="$(dolisting "/etc/runlevels/${SOFTLEVEL}/")"
+		mylevels=$(dolisting "/etc/runlevels/${SOFTLEVEL}/")
 		mylevels="${mylevels} $(dolisting /etc/runlevels/${BOOTLEVEL}/)"
 	else
 		# Non-normal runlevels don't include boot scripts as default
-		mylevels="$(dolisting "/etc/runlevels/${SOFTLEVEL}/")"
+		mylevels=$(dolisting "/etc/runlevels/${SOFTLEVEL}/")
 	fi
 	
-	[ "${OLDSOFTLEVEL}" = "${BOOTLEVEL}" -o "${OLDSOFTLEVEL}" = "single" ] \
-		&& /bin/dmesg -n 1
+	[[ ${OLDSOFTLEVEL} == "${BOOTLEVEL}" || ${OLDSOFTLEVEL} == "single" ]] && \
+		/bin/dmesg -n 1
 	
-	for x in ${mylevels}
-	do
-		[ -L "${x}" ] && myscripts="${myscripts} ${x##*/}"
+	for x in ${mylevels} ; do
+		[[ -L ${x} ]] && myscripts="${myscripts} ${x##*/}"
 	done
 fi
 
@@ -235,7 +222,7 @@ get_stop_services() {
 	local x list
 
 	for x in $(dolisting "${svcdir}/inactive/") \
-		$(dolisting "${svcdir}/started/") ; do
+	         $(dolisting "${svcdir}/started/") ; do
 		list="${list} ${x##*/}"
 	done
 
@@ -261,8 +248,7 @@ dep_stop() {
 	      ${SOFTLEVEL} != "shutdown" && \
 	      ${SOFTLEVEL} != "single" ]] ; then
 		if [[ -z ${OLDSOFTLEVEL} ]] || \
-		   ! in_runlevel "${myservice}" "${OLDSOFTLEVEL}"
-		then
+		   ! in_runlevel "${myservice}" "${OLDSOFTLEVEL}" ; then
 			# This service is not in the previous runlevel, so
 			# do not stop it ...
 			return 0
@@ -279,7 +265,7 @@ dep_stop() {
 		
 		for dep in $(needsme "${myservice}") ; do
 			#if service_started "${dep}" && \
-			if [[ -L "${svcdir}/softscripts.new/${dep}" ]] ; then
+			if [[ -L ${svcdir}/softscripts.new/${dep} ]] ; then
 				# This dep is valid
 				needsme=1
 				
@@ -294,8 +280,7 @@ dep_stop() {
 # Stop services
 if [[ ${SOFTLEVEL} != "single" && \
       ${SOFTLEVEL} != "reboot" && \
-      ${SOFTLEVEL} != "shutdown" ]]
-then
+      ${SOFTLEVEL} != "shutdown" ]] ; then
 	for i in $(get_stop_services) ; do
 		dep_stop "${i}"
 	done
@@ -322,7 +307,7 @@ else
 	done
 
 	# Wait for any services that may still be stopping ...
-	[ "${RC_PARALLEL_STARTUP}" = "yes" ] && wait
+	[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && wait
 
 	export STOP_CRITICAL="yes"
 	# Now stop the rest
@@ -385,14 +370,14 @@ get_start_services() {
 	trace_dependencies ${list}
 }
 
-[[ -e "${svcdir}/interactive" ]] \
-	&& interactive="$(<"${svcdir}/interactive")"
+[[ -e "${svcdir}/interactive" ]] && \
+	interactive=$(< "${svcdir}/interactive")
 
 # Start scripts
 for i in $(get_start_services) ; do
 	if service_stopped "${i}" ; then
 		user_want_interactive && interactive="yes"
-		if [[ ${interactive} == "yes" ]]; then
+		if [[ ${interactive} == "yes" ]] ; then
 			do_interactive "${i}" start_service "${i}"
 		else
 			start_service "${i}"
@@ -401,7 +386,7 @@ for i in $(get_start_services) ; do
 done
 
 # Wait for any services that may still be running ...
-[ "${RC_PARALLEL_STARTUP}" = "yes" ] && wait
+[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && wait
 
 # Clean the old runlevel
 rm -rf "${svcdir}/softscripts.old" &>/dev/null
@@ -414,11 +399,9 @@ rm -rf "${svcdir}/softscripts.old" &>/dev/null
 
 # We want devfsd running after a change of runlevel (this is mostly if we return
 # from runlevel 'single')
-if [ -z "`ps --no-heading -C 'devfsd'`" -a \
-     -n "`gawk '/\/dev devfs/ { print }' /proc/mounts 2>/dev/null`" ]
-then
-	if [ "${RC_DEVFSD_STARTUP}" != "no" ]
-	then
+if [[ -z $(ps --no-heading -C 'devfsd') && \
+      -n $(gawk '/\/dev devfs/ { print }' /proc/mounts 2>/dev/null) ]] ; then
+	if [[ ${RC_DEVFSD_STARTUP} != "no" ]] ; then
 		/sbin/devfsd /dev &>/dev/null
 	fi
 fi
@@ -427,18 +410,19 @@ fi
 rm -rf "${svcdir}/failed" &>/dev/null
 
 # If we were in the boot runlevel, it is done now ...
-if [[ -n ${BOOT} ]]; then
+if [[ -n ${BOOT} ]] ; then
 	unset BOOT
 	# Save our interactive mode into the default runlevel
 	echo "${interactive}" > "${svcdir}/interactive"
 else
 	# As we're not boot, we remove the interactive file
-	[[ -e "${svcdir}/interactive" ]] && rm -f "${svcdir}/interactive"
+	[[ -e ${svcdir}/interactive ]] && rm -f "${svcdir}/interactive"
 fi
 
 # Remove the cached CONSOLETYPE
 unset CONSOLETYPE
 
 splash "rc_exit"
+
 
 # vim:ts=4

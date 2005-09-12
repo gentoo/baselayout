@@ -30,8 +30,7 @@ export START_CRITICAL="yes"
 
 # We do not want to break compatibility, so we do not fully integrate
 # these into /sbin/rc, but rather start them by hand ...
-for x in ${CRITICAL_SERVICES}
-do
+for x in ${CRITICAL_SERVICES} ; do
 	splash "svc_start" "${x}"
 	user_want_interactive && interactive="yes"
 	if ! start_critical_service "${x}" ; then
@@ -62,17 +61,14 @@ check_statedir "${svcdir}"
 # Should we use tmpfs/ramfs/ramdisk for caching dependency and 
 # general initscript data?  Note that the 'gentoo=<fs>' kernel 
 # option should override any other setting ...
-for fs in tmpfs ramfs ramdisk
-do
-	if get_bootparam "${fs}"
-	then
+for fs in tmpfs ramfs ramdisk ; do
+	if get_bootparam "${fs}" ; then
 		svcmount="yes"
 		svcfstype="${fs}"
 		break
 	fi
 done
-if [ "${svcmount}" = "yes" ]
-then
+if [[ ${svcmount} == "yes" ]] ; then
 	ebegin "Mounting ${svcfstype} at ${svcdir}"
 	case "${svcfstype}" in
 	ramfs)
@@ -93,8 +89,7 @@ then
 fi
 
 # If booting off CD, we want to update inittab before setting the runlevel
-if [ -f "/sbin/livecd-functions.sh" -a -n "${CDBOOT}" ]
-then
+if [[ -f /sbin/livecd-functions.sh && -n ${CDBOOT} ]] ; then
 	ebegin "Updating inittab"
 	livecd_fix_inittab
 	eend $?
@@ -116,26 +111,23 @@ echo "${interactive}" > "${svcdir}/interactive"
 # are marked as started ...
 (
 	# Needed for mark_service_started()
-	source "${svclib}/sh/rc-services.sh"
+	source "${svclib}"/sh/rc-services.sh
 	
-	for x in ${CRITICAL_SERVICES}
-	do
+	for x in ${CRITICAL_SERVICES} ; do
 		mark_service_started "${x}"
 	done
 )
 
 # If the user's /dev/null or /dev/console are missing, we 
 # should help them out and explain how to rectify the situation
-if [ ${dev_null} -eq 0 -o ${dev_console} -eq 0 ] \
-    && [ -e /usr/share/baselayout/issue.devfix ]
-then
+if [[ ${dev_null} -eq 0 || ${dev_console} -eq 0 ]] && \
+   [[ -e /usr/share/baselayout/issue.devfix ]] ; then
 	# Backup current /etc/issue
-	if [ -e /etc/issue -a ! -e /etc/issue.devfix ]
-	then
-		mv /etc/issue /etc/issue.devfix
+	if [[ -e /etc/issue && ! -e /etc/issue.devfix ]] ; then
+		mv -f /etc/issue /etc/issue.devfix
 	fi
 
-	cp /usr/share/baselayout/issue.devfix /etc/issue
+	cp -f /usr/share/baselayout/issue.devfix /etc/issue
 fi
 
 # All done logging

@@ -9,14 +9,13 @@ try() {
 	local errstr
 	local retval=0
 	
-	if [ -c /dev/null ]; then
+	if [[ -c /dev/null ]] ; then
 		errstr="$((eval $*) 2>&1 >/dev/null)"
 	else
 		errstr="$((eval $*) 2>&1)"
 	fi
 	retval=$?
-	if [ "${retval}" -ne 0 ]
-	then
+	if [[ ${retval} -ne 0 ]] ; then
 		splash "critical" &
 
 		echo -e "${ENDCOL}${NORMAL}[${BAD} oops ${NORMAL}]"
@@ -86,8 +85,8 @@ start_critical_service() {
 
 	source "/etc/init.d/${service}" || eerror "Failed to source /etc/init.d/${service}"
 	retval=$?
-	[ "${retval}" -ne 0 ] && return "${retval}"
-	[ -e "/etc/conf.d/${service}" ] && source "/etc/conf.d/${service}"
+	[[ ${retval} -ne 0 ]] && return "${retval}"
+	[[ -e /etc/conf.d/${service} ]] && source "/etc/conf.d/${service}"
 	source /etc/rc.conf
 
 	start || eerror "Failed to start /etc/init.d/${service}"

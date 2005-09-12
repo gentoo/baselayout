@@ -4,8 +4,7 @@
 
 source /sbin/functions.sh || exit 1
 
-if [ "${EUID}" -ne 0 ]
-then
+if [[ ${EUID} -ne 0 ]] ; then
 	eerror "$0: must be root."
 	exit 1
 fi
@@ -20,17 +19,15 @@ note:
 	exit 1
 }
 
-export SVCDIR="${svcdir}"
+export SVCDIR=${svcdir}
 
 # Only update if files have actually changed
-if [ "$1" == "-u" ]
-then
+if [[ $1 == "-u" ]] ; then
 	is_older_than "${svcdir}/envcache" /etc/env.d && exit 0
 	shift
 fi
 
-if [ "$#" -ne 0 ]
-then
+if [[ $# -ne 0 ]] ; then
 	usage
 else
 	/bin/gawk \

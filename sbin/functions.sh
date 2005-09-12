@@ -73,7 +73,7 @@ splash() {
 }
 # This will override the splash() function...
 if ! import_addon splash-functions.sh ; then
-	[ -f /sbin/splash-functions.sh ] && source /sbin/splash-functions.sh
+	[[ -f /sbin/splash-functions.sh ]] && source /sbin/splash-functions.sh
 fi
 
 # void profiling(...)
@@ -142,18 +142,17 @@ setup_defaultlevels() {
 		export RC_USE_CONFIG_PROFILE="yes"
 	fi
 
-	if [ "${RC_USE_CONFIG_PROFILE}" = "yes" -a -n "${DEFAULTLEVEL}" ] && \
-	   [ -d "/etc/runlevels/${BOOTLEVEL}.${DEFAULTLEVEL}" -o \
-	     -L "/etc/runlevels/${BOOTLEVEL}.${DEFAULTLEVEL}" ]
-	then
+	if [[ ${RC_USE_CONFIG_PROFILE} == "yes" && -n ${DEFAULTLEVEL} ]] && \
+	   [[ -d /etc/runlevels/${BOOTLEVEL}.${DEFAULTLEVEL} || \
+	      -L /etc/runlevels/${BOOTLEVEL}.${DEFAULTLEVEL} ]] ; then
 		export BOOTLEVEL="${BOOTLEVEL}.${DEFAULTLEVEL}"
 	fi
 
-	if [ -z "${SOFTLEVEL}" ] ; then
-		if [ -f "${svcdir}/softlevel" ] ; then
-			export SOFTLEVEL="$(< ${svcdir}/softlevel)"
+	if [[ -z ${SOFTLEVEL} ]] ; then
+		if [[ -f ${svcdir}/softlevel ]] ; then
+			export SOFTLEVEL=$(< "${svcdir}/softlevel")
 		else
-			export SOFTLEVEL="${BOOTLEVEL}"
+			export SOFTLEVEL=${BOOTLEVEL}
 		fi
 	fi
 
@@ -165,10 +164,10 @@ setup_defaultlevels() {
 #    prints the current libdir {lib,lib32,lib64}
 #
 get_libdir() {
-	if [ -n "${CONF_LIBDIR_OVERRIDE}" ] ; then
-		CONF_LIBDIR="${CONF_LIBDIR_OVERRIDE}"
-	elif [ -x "/usr/bin/portageq" ] ; then
-		CONF_LIBDIR="$(/usr/bin/portageq envvar CONF_LIBDIR)"
+	if [[ -n ${CONF_LIBDIR_OVERRIDE} ]] ; then
+		CONF_LIBDIR=${CONF_LIBDIR_OVERRIDE}
+	elif [[ -x /usr/bin/portageq ]] ; then
+		CONF_LIBDIR=$(/usr/bin/portageq envvar CONF_LIBDIR)
 	fi
 	echo ${CONF_LIBDIR:=lib}
 }
@@ -181,10 +180,9 @@ esyslog() {
 	local pri=
 	local tag=
 
-	if [ -x /usr/bin/logger ]
-	then
-		pri="$1"
-		tag="$2"
+	if [[ -x /usr/bin/logger ]] ; then
+		pri=$1
+		tag=$2
 
 		shift 2
 		[[ -z "$*" ]] && return 0
@@ -232,7 +230,7 @@ esetdent() {
 #
 einfo() {
 	einfon "$*\n"
-	LAST_E_CMD=einfo
+	LAST_E_CMD="einfo"
 	return 0
 }
 
@@ -241,10 +239,10 @@ einfo() {
 #    show an informative message (without a newline)
 #
 einfon() {
-	[[ ${RC_QUIET_STDOUT} == yes ]] && return 0
-	[[ ${RC_ENDCOL} != yes && ${LAST_E_CMD} == ebegin ]] && echo
+	[[ ${RC_QUIET_STDOUT} == "yes" ]] && return 0
+	[[ ${RC_ENDCOL} != "yes" && ${LAST_E_CMD} == "ebegin" ]] && echo
 	echo -ne " ${GOOD}*${NORMAL} ${RC_INDENTATION}$*"
-	LAST_E_CMD=einfon
+	LAST_E_CMD="einfon"
 	return 0
 }
 
@@ -253,17 +251,17 @@ einfon() {
 #    show a warning message + log it
 #
 ewarn() {
-	if [[ ${RC_QUIET_STDOUT} == yes ]]; then
+	if [[ ${RC_QUIET_STDOUT} == "yes" ]] ; then
 		echo " $*"
 	else
-		[[ ${RC_ENDCOL} != yes && ${LAST_E_CMD} == ebegin ]] && echo
+		[[ ${RC_ENDCOL} != "yes" && ${LAST_E_CMD} == "ebegin" ]] && echo
 		echo -e " ${WARN}*${NORMAL} ${RC_INDENTATION}$*"
 	fi
 
 	# Log warnings to system log
 	esyslog "daemon.warning" "rc-scripts" "$*"
 
-	LAST_E_CMD=ewarn
+	LAST_E_CMD="ewarn"
 	return 0
 }
 
@@ -272,17 +270,17 @@ ewarn() {
 #    show an error message + log it
 #
 eerror() {
-	if [[ ${RC_QUIET_STDOUT} == yes ]]; then
+	if [[ ${RC_QUIET_STDOUT} == "yes" ]] ; then
 		echo " $*" >/dev/stderr
 	else
-		[[ ${RC_ENDCOL} != yes && ${LAST_E_CMD} == ebegin ]] && echo
+		[[ ${RC_ENDCOL} != "yes" && ${LAST_E_CMD} == "ebegin" ]] && echo
 		echo -e " ${BAD}*${NORMAL} ${RC_INDENTATION}$*"
 	fi
 
 	# Log errors to system log
 	esyslog "daemon.err" "rc-scripts" "$*"
 
-	LAST_E_CMD=eerror
+	LAST_E_CMD="eerror"
 	return 0
 }
 
@@ -292,9 +290,9 @@ eerror() {
 #
 ebegin() {
 	local msg="$*" dots spaces=${RC_DOT_PATTERN//?/ }
-	[[ ${RC_QUIET_STDOUT} == yes ]] && return 0
+	[[ ${RC_QUIET_STDOUT} == "yes" ]] && return 0
 
-	if [[ -n ${RC_DOT_PATTERN} ]]; then
+	if [[ -n ${RC_DOT_PATTERN} ]] ; then
 		dots=$(printf "%$(( COLS - 3 - ${#RC_INDENTATION} - ${#msg} - 7 ))s" '')
 		dots=${dots//${spaces}/${RC_DOT_PATTERN}}
 		msg="${msg}${dots}"
@@ -302,10 +300,10 @@ ebegin() {
 		msg="${msg} ..."
 	fi
 	einfon "${msg}"
-	[[ ${RC_ENDCOL} == yes ]] && echo
+	[[ ${RC_ENDCOL} == "yes" ]] && echo
 
 	LAST_E_LEN=$(( 3 + ${#RC_INDENTATION} + ${#msg} ))
-	LAST_E_CMD=ebegin
+	LAST_E_CMD="ebegin"
 	return 0
 }
 
@@ -321,22 +319,22 @@ _eend() {
 	local retval=${1:-0} efunc=${2:-eerror} msg
 	shift 2
 
-	if [[ ${retval} == 0 ]]; then
-		[[ ${RC_QUIET_STDOUT} == yes ]] && return 0
+	if [[ ${retval} == "0" ]]; then
+		[[ ${RC_QUIET_STDOUT} == "yes" ]] && return 0
 		msg="${BRACKET}[ ${GOOD}ok${BRACKET} ]${NORMAL}"
 	else
-		if [[ -c /dev/null ]]; then
+		if [[ -c /dev/null ]] ; then
 			rc_splash "stop" &>/dev/null &
 		else
 			rc_splash "stop" &
 		fi
-		if [[ -n "$*" ]]; then
+		if [[ -n $* ]] ; then
 			${efunc} "$*"
 		fi
 		msg="${BRACKET}[ ${BAD}!!${BRACKET} ]${NORMAL}"
 	fi
 
-	if [[ ${RC_ENDCOL} == yes ]]; then
+	if [[ ${RC_ENDCOL} == "yes" ]] ; then
 		echo -e "${ENDCOL}  ${msg}"
 	else
 		[[ ${LAST_E_CMD} == ebegin ]] || LAST_E_LEN=0
@@ -357,8 +355,8 @@ eend() {
 
 	_eend ${retval} eerror "$*"
 
-	LAST_E_CMD=eend
-	return $retval
+	LAST_E_CMD="eend"
+	return ${retval}
 }
 
 # void ewend(int error, char* errstr)
@@ -372,23 +370,23 @@ ewend() {
 
 	_eend ${retval} ewarn "$*"
 
-	LAST_E_CMD=ewend
-	return $retval
+	LAST_E_CMD="ewend"
+	return ${retval}
 }
 
 # v-e-commands honor RC_VERBOSE which defaults to no.
 # The condition is negated so the return value will be zero.
-veinfo() { [[ "${RC_VERBOSE}" != yes ]] || einfo "$@"; }
-veinfon() { [[ "${RC_VERBOSE}" != yes ]] || einfon "$@"; }
-vewarn() { [[ "${RC_VERBOSE}" != yes ]] || ewarn "$@"; }
-veerror() { [[ "${RC_VERBOSE}" != yes ]] || eerror "$@"; }
-vebegin() { [[ "${RC_VERBOSE}" != yes ]] || ebegin "$@"; }
+veinfo() { [[ ${RC_VERBOSE} != "yes" ]] || einfo "$@"; }
+veinfon() { [[ ${RC_VERBOSE} != "yes" ]] || einfon "$@"; }
+vewarn() { [[ ${RC_VERBOSE} != "yes" ]] || ewarn "$@"; }
+veerror() { [[ ${RC_VERBOSE} != "yes" ]] || eerror "$@"; }
+vebegin() { [[ ${RC_VERBOSE} != "yes" ]] || ebegin "$@"; }
 veend() {
-	[[ "${RC_VERBOSE}" == yes ]] && { eend "$@"; return $?; }
+	[[ ${RC_VERBOSE} == "yes" ]] && { eend "$@"; return $?; }
 	return ${1:-0}
 }
 veend() {
-	[[ "${RC_VERBOSE}" == yes ]] && { ewend "$@"; return $?; }
+	[[ ${RC_VERBOSE} == "yes" ]] && { ewend "$@"; return $?; }
 	return ${1:-0}
 }
 
@@ -400,7 +398,7 @@ KV_major() {
 	[[ -z $1 ]] && return 1
 
 	local KV=$@
-	echo ${KV%%.*}
+	echo "${KV%%.*}"
 }
 
 # char *KV_minor(string)
@@ -412,7 +410,7 @@ KV_minor() {
 
 	local KV=$@
 	KV=${KV#*.}
-	echo ${KV%%.*}
+	echo "${KV%%.*}"
 }
 
 # char *KV_micro(string)
@@ -424,7 +422,7 @@ KV_micro() {
 
 	local KV=$@
 	KV=${KV#*.*.}
-	echo ${KV%%[^[:digit:]]*}
+	echo "${KV%%[^[:digit:]]*}"
 }
 
 # int KV_to_int(string)
@@ -460,7 +458,7 @@ KV_to_int() {
 get_KV() {
 	local KV=$(uname -r)
 
-	echo $(KV_to_int "${KV}")
+	echo "$(KV_to_int "${KV}")"
 
 	return $?
 }
@@ -474,24 +472,20 @@ get_KV() {
 get_bootparam() {
 	local x copt params retval=1
 
-	[ ! -r "/proc/cmdline" ] && return 1
+	[[ ! -r /proc/cmdline ]] && return 1
 
-	for copt in $(< /proc/cmdline)
-	do
-		if [ "${copt%=*}" = "gentoo" ]
-		then
-			params="$(gawk -v PARAMS="${copt##*=}" '
+	for copt in $(< /proc/cmdline) ; do
+		if [[ ${copt%=*} == "gentoo" ]] ; then
+			params=$(gawk -v PARAMS="${copt##*=}" '
 				BEGIN {
 					split(PARAMS, nodes, ",")
 					for (x in nodes)
 						print nodes[x]
-				}')"
+				}')
 
 			# Parse gentoo option
-			for x in ${params}
-			do
-				if [ "${x}" = "$1" ]
-				then
+			for x in ${params} ; do
+				if [[ ${x} == "$1" ]] ; then
 #					echo "YES"
 					retval=0
 				fi
@@ -519,25 +513,21 @@ dolisting() {
 	local mylist=
 	local mypath="$*"
 
-	if [ "${mypath%/\*}" != "${mypath}" ]
-	then
-		mypath="${mypath%/\*}"
+	if [[ ${mypath%/\*} != "${mypath}" ]] ; then
+		mypath=${mypath%/\*}
 	fi
 
-	for x in ${mypath}
-	do
-		[ ! -e "${x}" ] && continue
+	for x in ${mypath} ; do
+		[[ ! -e ${x} ]] && continue
 
-		if [ ! -d "${x}" ] && ( [ -L "${x}" -o -f "${x}" ] )
-		then
+		if [[ ! -d ${x} ]] && [[ -L ${x} || -f ${x} ]] ; then
 			mylist="${mylist} $(ls "${x}" 2> /dev/null)"
 		else
-			[ "${x%/}" != "${x}" ] && x="${x%/}"
+			[[ ${x%/} != "${x}" ]] && x=${x%/}
 
-			cd "${x}"; tmpstr="$(ls)"
+			cd "${x}"; tmpstr=$(ls)
 
-			for y in ${tmpstr}
-			do
+			for y in ${tmpstr} ; do
 				mylist="${mylist} ${x}/${y}"
 			done
 		fi
@@ -551,11 +541,10 @@ dolisting() {
 #    save the settings ("optstring") for "option"
 #
 save_options() {
-	local myopts="$1"
+	local myopts=$1
 
 	shift
-	if [ ! -d "${svcdir}/options/${myservice}" ]
-	then
+	if [[ ! -d ${svcdir}/options/${myservice} ]] ; then
 		mkdir -p -m 0755 "${svcdir}/options/${myservice}"
 	fi
 
@@ -570,8 +559,7 @@ save_options() {
 #    by calling the save_options function
 #
 get_options() {
-	if [ -f "${svcdir}/options/${myservice}/$1" ]
-	then
+	if [[ -f ${svcdir}/options/${myservice}/$1 ]] ; then
 		echo "$(< ${svcdir}/options/${myservice}/$1)"
 	fi
 
@@ -583,8 +571,7 @@ get_options() {
 #    Returns a config file name with the softlevel suffix
 #    appended to it.  For use with multi-config services.
 add_suffix() {
-	if [ "${RC_USE_CONFIG_PROFILE}" = "yes" -a -e "$1.${DEFAULTLEVEL}" ]
-	then
+	if [[ ${RC_USE_CONFIG_PROFILE} == "yes" && -e $1.${DEFAULTLEVEL} ]] ; then
 		echo "$1.${DEFAULTLEVEL}"
 	else
 		echo "$1"
@@ -600,7 +587,7 @@ add_suffix() {
 get_base_ver() {
 	[[ ! -r /etc/gentoo-release ]] && return 0
 	local ver=$(</etc/gentoo-release)
-	echo ${ver##* }
+	echo "${ver##* }"
 }
 
 # Network filesystems list for common use in rc-scripts.
@@ -667,7 +654,7 @@ is_xenU_sys() {
 #            mount -n ${cmd}
 #
 get_mount_fstab() {
-	awk '$1 ~ "^#" { next }
+	gawk '$1 ~ "^#" { next }
 	     $2 == "'$*'" { stab="-t "$3" -o "$4" "$1" "$2; }
 	     END { print stab; }
 	' /etc/fstab
@@ -678,7 +665,7 @@ get_mount_fstab() {
 #   Returns the reversed order of list
 #
 reverse_list() {
-	for (( i = $# ; i > 0 ; --i )); do
+	for (( i = $# ; i > 0 ; --i )) ; do
 		echo -n "${!i} "
 	done
 }
@@ -689,7 +676,7 @@ reverse_list() {
 #
 start_addon() {
 	local addon=$1
-	(import_addon ${addon}-start.sh)
+	(import_addon "${addon}-start.sh")
 	return 0
 }
 
@@ -700,7 +687,7 @@ start_addon() {
 start_volumes() {
 	local x=
 
-	for x in ${RC_VOLUME_ORDER}; do
+	for x in ${RC_VOLUME_ORDER} ; do
 		start_addon "${x}"
 	done
 
@@ -713,7 +700,7 @@ start_volumes() {
 #
 stop_addon() {
 	local addon=$1
-	(import_addon ${addon}-stop.sh)
+	(import_addon "${addon}-stop.sh")
 	return 0
 }
 
@@ -724,7 +711,7 @@ stop_addon() {
 stop_volumes() {
 	local x=
 
-	for x in $(reverse_list ${RC_VOLUME_ORDER}); do
+	for x in $(reverse_list ${RC_VOLUME_ORDER}) ; do
 		stop_addon "${x}"
 	done
 
@@ -785,7 +772,7 @@ requote() {
 #                                                                            #
 ##############################################################################
 
-if [ -z "${EBUILD}" ] ; then
+if [[ -z ${EBUILD} ]] ; then
 	# Setup a basic $PATH.  Just add system default to existing.
 	# This should solve both /sbin and /usr/sbin not present when
 	# doing 'su -c foo', or for something like:  PATH= rcscript start
@@ -794,7 +781,7 @@ if [ -z "${EBUILD}" ] ; then
 	# Cache the CONSOLETYPE - this is important as backgrounded shells don't
 	# have a TTY. rc unsets it at the end of running so it shouldn't hang
 	# around
-	if [[ -z ${CONSOLETYPE} ]]; then
+	if [[ -z ${CONSOLETYPE} ]] ; then
 		export CONSOLETYPE=$( /sbin/consoletype 2>/dev/null )
 	fi
 	if [[ ${CONSOLETYPE} == "serial" ]] ; then
@@ -811,15 +798,15 @@ if [ -z "${EBUILD}" ] ; then
 		esac
 	done
 
-	if [ -r "/proc/cmdline" ] ; then
+	if [ -r /proc/cmdline ] ; then
 		setup_defaultlevels
 	fi
 else
 	# Should we use colors ?
-	if [[ $* != *depend* ]]; then
+	if [[ $* != *depend* ]] ; then
 		# Check user pref in portage
 		RC_NOCOLOR="$(portageq envvar NOCOLOR 2>/dev/null)"
-		[ "${RC_NOCOLOR}" = "true" ] && RC_NOCOLOR="yes"
+		[[ ${RC_NOCOLOR} == "true" ]] && RC_NOCOLOR="yes"
 	else
 		# We do not want colors during emerge depend
 		RC_NOCOLOR="yes"
@@ -828,7 +815,7 @@ else
 	fi
 fi
 
-if [[ -n ${EBUILD} && $* = *depend* ]]; then
+if [[ -n ${EBUILD} && $* == *depend* ]]; then
 	# We do not want stty to run during emerge depend
 	COLS=80
 else
@@ -838,14 +825,14 @@ else
 	(( COLS > 0 )) || (( COLS = 80 ))	# width of [ ok ] == 7
 fi
 
-if [[ ${RC_ENDCOL} == yes ]]; then
+if [[ ${RC_ENDCOL} == "yes" ]]; then
 	ENDCOL=$'\e[A\e['$(( COLS - 8 ))'C'
 else
 	ENDCOL=''
 fi
 
 # Setup the colors so our messages all look pretty
-if [[ ${RC_NOCOLOR} == yes ]]; then
+if [[ ${RC_NOCOLOR} == "yes" ]]; then
 	unset GOOD WARN BAD NORMAL HILITE BRACKET
 else
 	GOOD=$'\e[32;01m'

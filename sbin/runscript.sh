@@ -20,7 +20,7 @@ svcpause="no"
 svcrestart="no"
 
 myscript=$1
-if [[ -L $1 ]] && [[ ! -L /etc/init.d/${1##*/} ]] ; then
+if [[ -L $1 && ! -L /etc/init.d/${1##*/} ]] ; then
 	myservice=$(readlink "$1")
 else
 	myservice=$1
@@ -31,7 +31,7 @@ export SVCNAME=${myservice}
 mylevel=$(<"${svcdir}/softlevel")
 
 # Set $IFACE to the name of the network interface if it is a 'net.*' script
-if [[ ${myservice%%.*} == "net" ]] && [[ ${myservice##*.} != ${myservice} ]] ; then
+if [[ ${myservice%%.*} == "net" && ${myservice##*.} != "${myservice}" ]] ; then
 	IFACE=${myservice##*.}
 	NETSERVICE="yes"
 else
@@ -110,8 +110,7 @@ svc_stop() {
 
 	if in_runlevel "${myservice}" "${BOOTLEVEL}" && \
 	   [[ ${SOFTLEVEL} != "reboot" && ${SOFTLEVEL} != "shutdown" && \
-	      ${SOFTLEVEL} != "single" ]]
-	then
+	      ${SOFTLEVEL} != "single" ]] ; then
 		ewarn "WARNING:  you are stopping a boot service."
 	fi
 	
@@ -119,8 +118,7 @@ svc_stop() {
 		if [[ ${NETSERVICE} == "yes" ]] ; then
 			# A net.* service
 			if in_runlevel "${myservice}" "${BOOTLEVEL}" || \
-			   in_runlevel "${myservice}" "${mylevel}"
-			then
+			   in_runlevel "${myservice}" "${mylevel}" ; then
 				# Only worry about net.* services if this is the last one running,
 				# or if RC_NET_STRICT_CHECKING is set ...
 				if ! is_net_up ; then
@@ -143,8 +141,7 @@ svc_stop() {
 		# If some service 'need' $mydep, stop it first; or if it is a runlevel change,
 		# first stop all services that is started 'after' $mydep.
 		if needsme "${mydep}" >/dev/null || \
-		   (is_runlevel_stop && ibefore "${mydep}" >/dev/null)
-		then
+		   (is_runlevel_stop && ibefore "${mydep}" >/dev/null) ; then
 			local -a sl=( $(needsme "${mydep}") )
 
 			# On runlevel change, stop all services "after $mydep" first ...
@@ -161,8 +158,7 @@ svc_stop() {
 				fi
 
 				if ibefore -t "${mydep}" "${x}" >/dev/null && \
-				   [[ -L ${svcdir}/softscripts.new/${x} ]]
-				then
+				   [[ -L ${svcdir}/softscripts.new/${x} ]] ; then
 					# Service do not 'need' $mydep, and is still present in
 					# new runlevel ...
 					unset sl[x]
@@ -182,8 +178,7 @@ svc_stop() {
 			service_stopped "${x}" && continue
 
 			if ibefore -t "${mydep}" "${x}" >/dev/null && \
-				[[ -L "${svcdir}/softscripts.new/${x}" ]]
-			then
+			   [[ -L ${svcdir}/softscripts.new/${x} ]] ; then
 				# Service do not 'need' $mydep, and is still present in
 				# new runlevel ...
 				continue
@@ -196,8 +191,8 @@ svc_stop() {
 				# clean as possible, else do not stop our service if
 				# a dependent service did not stop.
 				if needsme -t "${mydep}" "${x}" >/dev/null && \
-					[[ ${SOFTLEVEL} != "reboot" && ${SOFTLEVEL} != "shutdown" ]]
-				then
+				   [[ ${SOFTLEVEL} != "reboot" && \
+				      ${SOFTLEVEL} != "shutdown" ]] ; then
 					retval=1
 				fi
 				break
@@ -309,7 +304,7 @@ svc_start() {
 				fi
 			done	
 		elif [[ ${x} != "net" ]] ; then
-			if service_stopped "${x}"; then
+			if service_stopped "${x}" ; then
 				start_service "${x}"
 			fi
 		fi
@@ -378,7 +373,7 @@ svc_start() {
 		service_inactive "${myservice}" && return 1 
 	fi
 
-	if [[ ${retval} != 0 ]]; then
+	if [[ ${retval} != 0 ]] ; then
 		is_runlevel_start && mark_service_failed "${myservice}"
 
 		# Remove link if service didn't start; but only if we're not booting
@@ -463,7 +458,7 @@ svc_homegrown() {
 	# Walk through the list of available options, looking for the
 	# requested one.
 	for x in ${opts} ; do
-		if [[ ${x} == ${arg} ]] ; then
+		if [[ ${x} == "${arg}" ]] ; then
 			if typeset -F "${x}" &>/dev/null ; then
 				# Run the homegrown function
 				"${x}"
@@ -531,9 +526,8 @@ for arg in $* ; do
 		# Simple way to try and detect if the service use svc_{start,stop}
 		# to restart if it have a custom restart() funtion.
 		if [[ -n $(egrep '^[[:space:]]*restart[[:space:]]*()' "/etc/init.d/${myservice}") ]] ; then
-			if [[ -z $(egrep 'svc_stop' "/etc/init.d/${myservice}") ]] || \
-			   [[ -z $(egrep 'svc_start' "/etc/init.d/${myservice}") ]]
-			then
+			if [[ -z $(egrep 'svc_stop' "/etc/init.d/${myservice}") || \
+			      -z $(egrep 'svc_start' "/etc/init.d/${myservice}") ]] ; then
 				echo
 				ewarn "Please use 'svc_stop; svc_start' and not 'stop; start' to"
 				ewarn "restart the service in its custom 'restart()' function."

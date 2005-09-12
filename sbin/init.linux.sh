@@ -8,7 +8,7 @@
 single_user() {
 	/sbin/sulogin ${CONSOLE}
 	einfo "Unmounting filesystems"
-	if [ -c /dev/null ]; then
+	if [[ -c /dev/null ]] ; then
 		/bin/mount -a -o remount,ro &>/dev/null
 	else
 		/bin/mount -a -o remount,ro
@@ -40,12 +40,12 @@ eend $?
 # Read off the kernel commandline to see if there's any special settings
 # especially check to see if we need to set the  CDBOOT environment variable
 # Note: /proc MUST be mounted
-[ -f /sbin/livecd-functions.sh ] && livecd_read_commandline
+[[ -f /sbin/livecd-functions.sh ]] && livecd_read_commandline
 
-if [ "$(get_KV)" -ge "$(KV_to_int '2.6.0')" ] ; then
+if [[ $(get_KV) -ge "$(KV_to_int '2.6.0')" ]] ; then
 	if [[ -d /sys ]] ; then
 		ebegin "Mounting sysfs at /sys"
-		if [[ ${RC_USE_FSTAB} = "yes" ]] ; then
+		if [[ ${RC_USE_FSTAB} == "yes" ]] ; then
 			mntcmd=$(get_mount_fstab /sys)
 		else
 			unset mntcmd
@@ -59,13 +59,12 @@ fi
 
 check_statedir /dev
 
-# Fix weird bug where there is a /dev/.devfsd in a unmounted /dev
 devfs_automounted="no"
-if [ -e "/dev/.devfsd" ]
-then
+if [[ -e "/dev/.devfsd" ]] ; then
 	mymounts="$(awk '($3 == "devfs") { print "yes"; exit 0 }' /proc/mounts)"
 	if [ "${mymounts}" != "yes" ]
 	then
+		# Fix weird bug where there is a /dev/.devfsd in a unmounted /dev
 		rm -f /dev/.devfsd
 	else
 		devfs_automounted="yes"
@@ -148,17 +147,14 @@ else
 fi
 
 # From linux-2.5.68 we need to mount /dev/pts again ...
-if [ "$(get_KV)" -ge "$(KV_to_int '2.5.68')" ]
-then
+if [[ "$(get_KV)" -ge "$(KV_to_int '2.5.68')" ]] ; then
 	have_devpts="$(awk '($2 == "devpts") { print "yes"; exit 0 }' /proc/filesystems)"
 
-	if [ "${have_devpts}" = "yes" ]
-	then
+	if [[ "${have_devpts}" = "yes" ]] ; then
 		# Only try to create /dev/pts if we have /dev mounted dynamically,
 		# else it might fail as / might be still mounted readonly.
-		if [ ! -d /dev/pts ] && \
-		   [ "${devfs}" = "yes" -o "${udev}" = "yes" ]
-		then
+		if [[ ! -d /dev/pts ]] && \
+		   [[ ${devfs} == "yes" || ${udev} == "yes" ]] ; then
 			# Make sure we have /dev/pts
 			mkdir -p /dev/pts &>/dev/null || \
 				ewarn "Could not create /dev/pts!"
@@ -166,7 +162,7 @@ then
 
 		if [[ -d /dev/pts ]] ; then
 			ebegin "Mounting devpts at /dev/pts"
-			if [[ ${RC_USE_FSTAB} = "yes" ]] ; then
+			if [[ ${RC_USE_FSTAB} == "yes" ]] ; then
 				mntcmd=$(get_mount_fstab /dev/pts)
 			else
 				unset mntcmd
@@ -188,8 +184,7 @@ eend 0
 source "${svclib}"/sh/init-common-post.sh
 
 # Have to run this after /var/run is mounted rw, bug #85304
-if [ -x /sbin/irqbalance -a "$(get_KV)" -ge "$(KV_to_int '2.5.0')" ]
-then
+if [[ -x /sbin/irqbalance && $(get_KV) -ge "$(KV_to_int '2.5.0')" ]] ; then
 	ebegin "Starting irqbalance"
 	/sbin/irqbalance
 	eend $?
@@ -198,8 +193,7 @@ fi
 # Setup login records ... this has to be done here because when 
 # we exit this runlevel, init will write a boot record to utmp
 # If /var/run is readonly, then print a warning, not errors
-if touch /var/run/utmp 2>/dev/null
-then
+if touch /var/run/utmp 2>/dev/null ; then
 	> /var/run/utmp
 	touch /var/log/wtmp
 	chgrp utmp /var/run/utmp /var/log/wtmp
