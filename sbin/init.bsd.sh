@@ -9,6 +9,24 @@ single_user() {
 	exit 1
 }
 
+mount_ro() {
+	mount -u -o ro "$@"
+}
+
+mount_rw() {
+	mount -u -o rw "$@"
+}
+
+fsck_progress() {
+	# -p enables preen mode
+	fsck -p "$@"
+}
+
+fsck_all() {
+	# Needs to find a way to enable background fs checking..
+	fsck_progress "$@"
+}
+
 source "${svclib}"/sh/init-functions.sh
 source "${svclib}"/sh/init-common-pre.sh
 

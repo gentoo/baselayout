@@ -2,18 +2,6 @@
 # Copyright 1999-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
-fsck_progress() {
-	# -p enables preen mode
-	fsck -p "$@"
-	# fsck -C -T -a "$@"
-}
-
-fsck_all() {
-	# Needs to find a way to enable background fs checking..
-	fsck_progress "$@"
-	# fsck_progress -R -A "$@"
-}
-
 depend() {
 	need checkroot modules
 }
@@ -57,7 +45,7 @@ start() {
 			if [[ ${retval} -gt 3 ]] ; then
 				eend 2 "Fsck could not correct all errors, manual repair needed"
 				#as above..
-				#/sbin/sulogin ${CONSOLE}
+				single_user
 			fi
 		fi
 	fi

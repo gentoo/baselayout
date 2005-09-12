@@ -17,6 +17,22 @@ single_user() {
 	/sbin/reboot -f
 }
 
+mount_ro() {
+	mount -n -o remount,ro "$@"
+}
+
+mount_rw() {
+	mount -n -o remount,rw "$@"
+}
+
+fsck_progress() {
+	fsck -C -T -a "$@"
+}
+
+fsck_all() {
+	fsck_progress -R -A "$@"
+}
+
 udev_version() {
 	local version=0
 

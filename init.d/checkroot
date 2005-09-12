@@ -2,27 +2,6 @@
 # Copyright 1999-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
-mount_ro() {
-	mount -u -o ro "$@"
-	# mount -n -o remount,ro "$@"
-}
-
-mount_rw() {
-	mount -u -o rw "$@"
-	# mount -n -o remount,rw "$@"
-}
-
-fsck_progress() {
-	# -p enables preen mode
-	fsck -p "$@"
-	# fsck -C -T -a "$@"
-}
-
-# This will always return false on g/fbsd for now
-is_net_fs() {
-	return 1
-}
-
 depend() {
 	before *
 }
@@ -78,8 +57,7 @@ start() {
 				fsck_progress -y /
 			else
 				eend 2 "Filesystem couldn't be fixed :("
-				# This won't work on FreeBSD
-				# /sbin/sulogin ${CONSOLE}
+				single_user
 			fi
 			einfo "Unmounting filesystems"
 			mount_ro -a &> /dev/null
@@ -98,9 +76,7 @@ start() {
 		if [[ $? -ne 0 ]] ; then
 			eend 2 "Root filesystem could not be mounted read/write :("
 			if [[ ${RC_FORCE_AUTO} != "yes" ]] ; then
-				# This won't work on FreeBSD
-				# /sbin/sulogin ${CONSOLE}
-				eend 3 "Trying to do something that does not work."
+				single_user
 			fi
 		else
 			eend 0
