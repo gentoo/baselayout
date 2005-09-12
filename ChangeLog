@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  12 Sep 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Fixed force_any associate order option, #99256
+
   08 Sep 2005; Roy Marples <uberlord@gentoo.org>:
 
     Added ifplugd module, but we prefer netplug by default
