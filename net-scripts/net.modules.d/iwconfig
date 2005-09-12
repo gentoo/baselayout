@@ -198,17 +198,8 @@ iwconfig_setup_specific() {
 	fi
 	dessid="${ESSID//\\\\/\\\\}"
 	ESSIDVAR=$( bash_variable "${ESSID}" )
-
-	# We only change the mode if it's not the same
-	local cur_mode=$( iwconfig_get_mode "${iface}" )
-	if [[ ${cur_mode} != "${mode}" ]]; then
-		if ! iwconfig "${iface}" mode "${mode}" ; then
-			eerror "${iface} does not support setting the mode to \"${mode}\""
-			return 1
-		fi
-	fi
-
 	key=$( iwconfig_get_wep_key )
+	
 	if ! eval iwconfig "${iface}" key ${key} ; then
 		if [[ ${key} != "off" ]]; then
 			ewarn "${iface} does not support setting keys"
@@ -221,6 +212,15 @@ iwconfig_setup_specific() {
 		return 1
 	fi
 	iwconfig "${iface}" nick "${ESSID}" 2>/dev/null
+
+	# We only change the mode if it's not the same
+	local cur_mode=$( iwconfig_get_mode "${iface}" )
+	if [[ ${cur_mode} != "${mode}" ]]; then
+		if ! iwconfig "${iface}" mode "${mode}" ; then
+			eerror "${iface} does not support setting the mode to \"${mode}\""
+			return 1
+		fi
+	fi
 
 	eval channel=\"\$\{channel_${ifvar}\}\"
 	# We default the channel to 3

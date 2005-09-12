@@ -4,9 +4,11 @@
   12 Sep 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     Split /sbin/rc into more modular pieces to allow easy porting to the bsd's.
-    Thanks goes to Mike who did the initual version.
+    Thanks goes to Mike who did the initial version.
 
   12 Sep 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Set essid before mode for ad-hoc/master configurations, #105452
 
     Fixed force_any associate order option, #99256
 
