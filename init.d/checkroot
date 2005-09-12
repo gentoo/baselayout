@@ -13,7 +13,8 @@ mount_rw() {
 }
 
 fsck_progress() {
-	fsck "$@"
+	# -p enables preen mode
+	fsck -p "$@"
 	# fsck -C -T -a "$@"
 }
 
