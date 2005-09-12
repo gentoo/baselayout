@@ -2,6 +2,18 @@
 # Copyright 1999-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
+fsck_progress() {
+	# -p enables preen mode
+	fsck -p "$@"
+	# fsck -C -T -a "$@"
+}
+
+fsck_all() {
+	# Needs to find a way to enable background fs checking..
+	fsck_progress "$@"
+	# fsck_progress -R -A "$@"
+}
+
 depend() {
 	need checkroot modules
 }
@@ -22,11 +34,11 @@ start() {
 		ebegin "Checking all filesystems"
 		if [[ -f /forcefsck ]] ; then
 			ewarn "A full fsck has been forced"
-			fsck -C -R -A -a -f
+			fsck_all -f
 			retval=$?
 			rm -f /forcefsck
 		else
-			fsck -C -T -R -A -a
+			fsck_all
 			retval=$?
 		fi
 		if [[ ${retval} -eq 0 ]] ; then
@@ -38,13 +50,14 @@ start() {
 		else
 			if [[ ${RC_FORCE_AUTO} == "yes" ]] ; then
 				eend 2 "Fsck could not correct all errors, rerunning"
-				fsck -C -T -R -A -a -y
+				fsck_all -y
 				retval=$?
 			fi
 
 			if [[ ${retval} -gt 3 ]] ; then
 				eend 2 "Fsck could not correct all errors, manual repair needed"
-				/sbin/sulogin ${CONSOLE}
+				#as above..
+				#/sbin/sulogin ${CONSOLE}
 			fi
 		fi
 	fi
