@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  12 Sep 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Split /sbin/rc into more modular pieces to allow easy porting to the bsd's.
+    Thanks goes to Mike who did the initual version.
+
   12 Sep 2005; Roy Marples <uberlord@gentoo.org>:
 
     Fixed force_any associate order option, #99256
