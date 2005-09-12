@@ -10,6 +10,8 @@
 
     Lots of syntax and quoting fixes.
 
+    Move noblock_read() back to /sbin/rc, as its used there.
+
   12 Sep 2005; Roy Marples <uberlord@gentoo.org>:
 
     Set essid before mode for ad-hoc/master configurations, #105452

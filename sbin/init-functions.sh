@@ -60,18 +60,6 @@ check_statedir() {
 	return 0
 }
 
-# void noblock_read(var)
-#
-#   reads a line of input into var like regular read
-#   but it does not block waiting for input
-#
-noblock_read() {
-	local old_tty_settings="$(stty -g)"
-	stty -icanon min 0 time 0
-	read "$@"
-	stty "${old_tty_settings}"
-}
-
 # void start_critical_service()
 #
 #   Start critical services needed for bootup
