@@ -6,6 +6,8 @@
     Split /sbin/rc into more modular pieces to allow easy porting to the bsd's.
     Thanks goes to Mike who did the initial version.
 
+    Split out devfs and udev stuff to addons.
+
   12 Sep 2005; Roy Marples <uberlord@gentoo.org>:
 
     Set essid before mode for ad-hoc/master configurations, #105452
