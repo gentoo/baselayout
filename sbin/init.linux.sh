@@ -17,46 +17,6 @@ single_user() {
 	/sbin/reboot -f
 }
 
-udev_version() {
-	local version=0
-
-	if [ -x "/sbin/udev" ]
-	then
-		version=$(/sbin/udev -V)
-		# We need it without a leading '0', else bash do the wrong thing
-		version="${version##0}"
-		# Older udev's will print nothing
-		[ -z "${version}" ] && version=0
-	fi
-
-	echo "${version}"
-}
-
-populate_udev() {
-	# Now populate /dev
-	/sbin/udevstart
-
-	# Not provided by sysfs but needed
-	ln -snf /proc/self/fd /dev/fd
-	ln -snf fd/0 /dev/stdin
-	ln -snf fd/1 /dev/stdout
-	ln -snf fd/2 /dev/stderr
-	[ -e /proc/kcore ] && ln -snf /proc/kcore /dev/core
-
-	# Create nodes that udev can't
-	[ -x /sbin/dmsetup ] && /sbin/dmsetup mknodes &>/dev/null
-	[ -x /sbin/lvm ] && /sbin/lvm vgscan -P --mknodes --ignorelockingfailure &>/dev/null
-	[ -x /sbin/evms_activate ] && /sbin/evms_activate -q &>/dev/null
-
-	# Create problematic directories
-	mkdir -p /dev/{pts,shm}
-
-	# Same thing as /dev/.devfsd
-	touch /dev/.udev
-
-	return 0
-}
-
 source "${svclib}"/sh/init-functions.sh
 source "${svclib}"/sh/init-common-pre.sh
 
@@ -117,8 +77,7 @@ fi
 #  - check boot parameters
 #  - make sure the required binaries exist
 #  - make sure the kernel has support
-if [ "${RC_DEVICES}" = "static" ]
-then
+if [[ ${RC_DEVICES} == "static" ]] ; then
 	ebegin "Using existing device nodes in /dev"
 	eend 0
 else
@@ -137,123 +96,54 @@ else
 	esac
 
 	# Check udev prerequisites and kernel params
-	if [ "${udev}" = "yes" ]
-	then
+	if [[ ${udev} == "yes" ]] ; then
 		if get_bootparam "noudev" || \
-		   [ ! -x /sbin/udev -o -e "/dev/.devfsd" ] || \
-		   [ "$(get_KV)" -lt "$(KV_to_int '2.6.0')" ]
-		then
+		   [[ ! -x /sbin/udev || -e /dev/.devfsd || \
+		      $(get_KV) -lt "$(KV_to_int '2.6.0')" ]] ; then
 			udev="no"
 		fi
 	fi
 
 	# Check devfs prerequisites and kernel params
-	if [ "${devfs}" = "yes" ]
-	then
-		if get_bootparam "nodevfs" || [ "${udev}" = "yes" ]
-		then
+	if [[ ${devfs} == "yes" ]] ; then
+		if get_bootparam "nodevfs" || [[ ${udev} == "yes" ]] ; then
 			devfs="no"
 		fi
 	fi
 
 	# Actually start setting up /dev now
-	if [[ ${udev} = "yes" ]] ; then
-		# Setup temporary storage for /dev
-		ebegin "Mounting /dev for udev"
-		if [[ ${RC_USE_FSTAB} = "yes" ]] ; then
-			mntcmd=$(get_mount_fstab /dev)
-		else
-			unset mntcmd
-		fi
-		if [[ -n ${mntcmd} ]] ; then
-			try mount -n ${mntcmd}
-		else
-			if egrep -qs tmpfs /proc/filesystems ; then
-				mntcmd="tmpfs"
-			else
-				mntcmd="ramfs"
-			fi
-			# many video drivers require exec access in /dev #92921
-			try mount -n -t ${mntcmd} udev /dev -o exec,nosuid,mode=0755
-		fi
-		eend $?
-
-		# Selinux lovin; /selinux should be mounted by selinux-patched init
-		if [[ -x /sbin/restorecon ]] && [[ -c /selinux/null ]] ; then
-			restorecon /dev &> /selinux/null
-		fi
-
-		# Actually get udev rolling
-		ebegin "Configuring system to use udev"
-		if [[ ${RC_DEVICE_TARBALL} = "yes" ]] && [[ -s /lib/udev-state/devices.tar.bz2 ]]
-		then
-			einfo "  Populating /dev with device nodes ..."
-			try tar -jxpf /lib/udev-state/devices.tar.bz2 -C /dev
-		fi
-		populate_udev
-
-		# Setup hotplugging (if possible)
-		if [ -e /proc/sys/kernel/hotplug ] ; then
-			if [ "$(udev_version)" -ge "48" ] ; then
-				einfo "  Setting /sbin/udevsend as hotplug agent ..."
-				echo "/sbin/udevsend" > /proc/sys/kernel/hotplug
-			elif [ -x /sbin/hotplug ] ; then
-				einfo "  Using /sbin/hotplug as hotplug agent ..."
-			else
-				einfo "  Setting /sbin/udev as hotplug agent ..."
-				echo "/sbin/udev" > /proc/sys/kernel/hotplug
-			fi
-		fi
-		eend 0
+	if [[ ${udev} == "yes" ]] ; then
+			start_addon udev
 
 	# With devfs, /dev can be mounted by the kernel ...
-	elif [ "${devfs}" = "yes" ]
-	then
-		mymounts="$(awk '($2 == "devfs") { print "yes"; exit 0 }' /proc/filesystems)"
-		# Is devfs support compiled in?
-		if [ "${mymounts}" = "yes" ]
-		then
-			if [ "${devfs_automounted}" = "no" ]
-			then
-				ebegin "Mounting devfs at /dev"
-				try mount -n -t devfs devfs /dev
-				eend $?
-			else
-				ebegin "Kernel automatically mounted devfs at /dev"
-				eend 0
-			fi
-			ebegin "Starting devfsd"
-			/sbin/devfsd /dev >/dev/null
-			eend $? "Could not start /sbin/devfsd"
-		else
-			devfs="no"
-		fi
+	elif [[ ${devfs} == "yes" ]] ; then
+		start_addon devfs
 
 		# Did the user want udev in the config file but for 
 		# some reason, udev support didnt work out ?
-		if [ "${fellback_to_devfs}" = "yes" ]
-		then
+		if [[ ${fellback_to_devfs} == "yes" ]] ; then
 			ewarn "You wanted udev but support for it was not available!"
 			ewarn "Please review your system after it's booted!"
 		fi
 	fi
 
 	# OK, if we got here, things are probably not right :)
-	if [ "${devfs}" = "no" ] && [ "${udev}" = "no" ]
-	then
-		clear
-		echo
-		einfo "The Gentoo Linux system initialization scripts have detected that"
-		einfo "your system does not support DEVFS or UDEV.  Since Gentoo Linux"
-		einfo "has been designed with these dynamic /dev managers in mind, it is"
-		einfo "highly suggested that you build support for it into your kernel."
-		einfo "Please read the Gentoo Handbook for more information!"
-		echo
-		einfo "    http://www.gentoo.org/doc/en/handbook/"
-		echo
-		einfo "Thanks for using Gentoo! :)"
-		echo
-		read -t 15 -p "(hit Enter to continue or wait 15 seconds ...)"
+	if [[ ${devfs} == "no" && ${udev} == "no" ]] ; then
+# High time to take this out ?
+#		clear
+#		echo
+#		einfo "The Gentoo Linux system initialization scripts have detected that"
+#		einfo "your system does not support DEVFS or UDEV.  Since Gentoo Linux"
+#		einfo "has been designed with these dynamic /dev managers in mind, it is"
+#		einfo "highly suggested that you build support for it into your kernel."
+#		einfo "Please read the Gentoo Handbook for more information!"
+#		echo
+#		einfo "    http://www.gentoo.org/doc/en/handbook/"
+#		echo
+#		einfo "Thanks for using Gentoo! :)"
+#		echo
+#		read -t 15 -p "(hit Enter to continue or wait 15 seconds ...)"
+		:
 	fi
 fi
 
