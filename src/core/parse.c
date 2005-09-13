@@ -43,13 +43,23 @@
 #include "parse.h"
 #include "simple-regex.h"
 
-#define READ_PIPE 0
-#define WRITE_PIPE 1
+#define READ_PIPE			0
+#define WRITE_PIPE			1
 
-#define PARSE_BUFFER_SIZE 256
+/* _pipe[0] is used to send data to the parent (thus the parent only use the
+ * read pipe, and the child uses the write pipe)
+ * _pipe[1] is used to send data to the child (thus the child only use the read
+ * pipe, and the parent uses the write pipe)
+ */
+#define PARENT_READ_PIPE(_pipe)		(_pipe[0][READ_PIPE])
+#define PARENT_WRITE_PIPE(_pipe)	(_pipe[1][WRITE_PIPE])
+#define CHILD_READ_PIPE(_pipe)		(_pipe[1][READ_PIPE])
+#define CHILD_WRITE_PIPE(_pipe)		(_pipe[0][WRITE_PIPE])
 
-#define OUTPUT_MAX_LINE_LENGHT 256
-#define OUTPUT_BUFFER_SIZE (60 * 1024)
+#define PARSE_BUFFER_SIZE		256
+
+#define OUTPUT_MAX_LINE_LENGHT		256
+#define OUTPUT_BUFFER_SIZE		(60 * 1024)
 
 /* void PRINT_TO_BUFFER(char **_buf, int _count, label _error, format) */
 #define PRINT_TO_BUFFER(_buf, _count, _error, _output...) \
@@ -366,30 +376,21 @@ static void sig_handler(int signum)
 /* Returns data's lenght on success, else -1 on error. */
 size_t generate_stage2(char **data)
 {
-	/* parent_pfds is used to send data to the parent
-	 * (thus the parent only use the read pipe, and the
-	 *  child uses the write pipe)
-	 */
-	int parent_pfds[2];
-	/* child_pfds is used to send data to the child
-	 * (thus the child only use the read pipe, and the
-	 *  parent uses the write pipe)
-	 */
-	int child_pfds[2];
+	int pipe_fds[2][2] = { { 0, 0 }, { 0, 0 } };
 	pid_t child_pid;
 	size_t write_count = 0;
 	int old_errno = 0;
 
 	/* Pipe to send data to parent */
-	if (-1 == pipe(parent_pfds)) {
-		DBG_MSG("Failed to open 'parent_pfds' pipe!\n");
+	if (-1 == pipe(pipe_fds[0])) {
+		DBG_MSG("Failed to open pipe!\n");
 		goto error;
 	}
-	/* Pipe to send data to childd */
-	if (-1 == pipe(child_pfds)) {
-		DBG_MSG("Failed to open 'child_pfds' pipe!\n");
+	/* Pipe to send data to child */
+	if (-1 == pipe(pipe_fds[1])) {
+		DBG_MSG("Failed to open pipe!\n");
 		/* Close parent_pfds */
-		goto error_c_parent;
+		goto error;
 	}
 
 	/* Zero data */
@@ -399,7 +400,7 @@ size_t generate_stage2(char **data)
 	if (-1 == child_pid) {
 		DBG_MSG("Failed to fork()!\n");
 		/* Close all pipes */
-		goto error_c_all;
+		goto error;
 	}
 	if (0 == child_pid) {
 		/***
@@ -415,13 +416,13 @@ size_t generate_stage2(char **data)
 		};
 
 		/* Close the sides of the pipes we do not use */
-		close(child_pfds[WRITE_PIPE]); /* Only used for reading */
-		close(parent_pfds[READ_PIPE]); /* Only used for writing */
+		close(PARENT_WRITE_PIPE(pipe_fds));
+		close(PARENT_READ_PIPE(pipe_fds));
 
 		/* dup2 child side read pipe to STDIN */
-		dup2(child_pfds[READ_PIPE], STDIN_FILENO);
+		dup2(CHILD_READ_PIPE(pipe_fds), STDIN_FILENO);
 		/* dup2 child side write pipe to STDOUT */
-		dup2(parent_pfds[WRITE_PIPE], STDOUT_FILENO);
+		dup2(CHILD_WRITE_PIPE(pipe_fds), STDOUT_FILENO);
 
 		/* We need to be in INITD_DIR_NAME for 'before'/'after' '*' to work */
 		if (-1 == chdir(INITD_DIR_NAME)) {
@@ -446,7 +447,6 @@ size_t generate_stage2(char **data)
 		size_t stage1_write_count = 0;
 		size_t stage1_written = 0;
 		int status = 0;
-		int closed_write_pipe = 0;
 		int tmp_pid = 0;
 
 		DBG_MSG("Child pid = %i\n", child_pid);
@@ -462,20 +462,22 @@ size_t generate_stage2(char **data)
 		sigaction(SIGPIPE, &act_new, &act_old);
 
 		/* Close the sides of the pipes we do not use */
-		close(parent_pfds[WRITE_PIPE]); /* Only used for reading */
-		close(child_pfds[READ_PIPE]); /* Only used for writing */
+		close(CHILD_WRITE_PIPE(pipe_fds));
+		CHILD_WRITE_PIPE(pipe_fds) = 0;
+		close(CHILD_READ_PIPE(pipe_fds));
+		CHILD_READ_PIPE(pipe_fds) = 0;
 
 		stage1_data = malloc(OUTPUT_BUFFER_SIZE + 1);
 		if (NULL == stage1_data) {
 			DBG_MSG("Failed to allocate buffer!\n");
-			goto error_c_p_side;
+			goto error;
 		}
 
 		/* Pipe parse_rcscripts() to bash */
 		stage1_write_count = generate_stage1(&stage1_data);
 		if (-1 == stage1_write_count) {
 			DBG_MSG("Failed to generate stage1!\n");
-			goto error_c_p_side;
+			goto error;
 		}
 
 #if 0
@@ -490,9 +492,9 @@ size_t generate_stage2(char **data)
 			int do_read = 0;
 
 			/* Check if we can write or read */
-			poll_fds[WRITE_PIPE].fd = child_pfds[WRITE_PIPE];
+			poll_fds[WRITE_PIPE].fd = PARENT_WRITE_PIPE(pipe_fds);
 			poll_fds[WRITE_PIPE].events = POLLOUT;
-			poll_fds[READ_PIPE].fd = parent_pfds[READ_PIPE];
+			poll_fds[READ_PIPE].fd = PARENT_READ_PIPE(pipe_fds);
 			poll_fds[READ_PIPE].events = POLLIN | POLLPRI;
 			if (stage1_written < stage1_write_count) {
 				poll(poll_fds, 2, -1);
@@ -513,11 +515,11 @@ size_t generate_stage2(char **data)
 				    || (1 != do_write))
 					goto cont_do_read;
 
-				tmp_count = write(child_pfds[WRITE_PIPE],
+				tmp_count = write(PARENT_WRITE_PIPE(pipe_fds),
 				                  &stage1_data[stage1_written],
 				                  strlen(&stage1_data[stage1_written]));
 				if ((-1 == tmp_count) && (EINTR != errno)) {
-					DBG_MSG("Error writing to child_pfds[WRITE_PIPE]!\n");
+					DBG_MSG("Error writing to PARENT_WRITE_PIPE!\n");
 					goto failed;
 				}
 				/* What was written before, plus what
@@ -529,8 +531,8 @@ size_t generate_stage2(char **data)
 				 * writing to get a EOF signaled to
 				 * bash */
 				if (stage1_written >= stage1_write_count) {
-					closed_write_pipe = 1;
-					close(child_pfds[WRITE_PIPE]);
+					close(PARENT_WRITE_PIPE(pipe_fds));
+					PARENT_WRITE_PIPE(pipe_fds) = 0;
 				}
 			} while ((tmp_count > 0) && (stage1_written < stage1_write_count));
 		
@@ -542,10 +544,10 @@ cont_do_read:
 				if (1 != do_read)
 					continue;
 				
-				tmp_count = read(parent_pfds[READ_PIPE], buf,
+				tmp_count = read(PARENT_READ_PIPE(pipe_fds), buf,
 				                 PARSE_BUFFER_SIZE);
 				if ((-1 == tmp_count) && (EINTR != errno)) {
-					DBG_MSG("Error reading parent_pfds[READ_PIPE]!\n");
+					DBG_MSG("Error reading PARENT_READ_PIPE!\n");
 					goto failed;
 				}
 				if (tmp_count > 0) {
@@ -572,9 +574,9 @@ failed:
 
 		free(stage1_data);
 
-		if (1 != closed_write_pipe)
-			close(child_pfds[WRITE_PIPE]);
-		close(parent_pfds[READ_PIPE]);
+		if (0 != PARENT_WRITE_PIPE(pipe_fds))
+			close(PARENT_WRITE_PIPE(pipe_fds));
+		close(PARENT_READ_PIPE(pipe_fds));
 
 		/* Restore the old signal handler for SIGPIPE */
 		sigaction(SIGPIPE, &act_old, NULL);
@@ -599,31 +601,20 @@ failed:
 	return write_count;
 
 	/* Close parent side pipes */
-error_c_p_side:
-	old_errno = errno;
-	close(child_pfds[WRITE_PIPE]);
-	close(parent_pfds[READ_PIPE]);
-	/* close() might have changed it */
-	errno = old_errno;	
-	goto error;
-	
-	/* Close all pipes */
-error_c_all:
-	old_errno = errno;
-	close(child_pfds[READ_PIPE]);
-	close(child_pfds[WRITE_PIPE]);
-	/* close() might have changed it */
-	errno = old_errno;	
-	
-	/* Only close parent's pipes */
-error_c_parent:
-	old_errno = errno;
-	close(parent_pfds[READ_PIPE]);
-	close(parent_pfds[WRITE_PIPE]);
-	/* close() might have changed it */
-	errno = old_errno;	
-	
 error:
+	/* Close all pipes */
+	old_errno = errno;
+	if (0 != CHILD_READ_PIPE(pipe_fds))
+		close(CHILD_READ_PIPE(pipe_fds));
+	if (0 != CHILD_WRITE_PIPE(pipe_fds))
+		close(CHILD_WRITE_PIPE(pipe_fds));
+	if (0 != PARENT_READ_PIPE(pipe_fds))
+		close(PARENT_READ_PIPE(pipe_fds));
+	if (0 != PARENT_WRITE_PIPE(pipe_fds))
+		close(PARENT_WRITE_PIPE(pipe_fds));
+	/* close() might have changed it */
+	errno = old_errno;	
+	
 	return -1;
 }
 
