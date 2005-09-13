@@ -539,6 +539,8 @@ size_t generate_stage2(char **data)
 			tmp_count = 0;
 			
 			do {
+				char *tmp_p;
+
 				if (1 != do_read)
 					continue;
 				
@@ -548,20 +550,19 @@ size_t generate_stage2(char **data)
 					DBG_MSG("Error reading PARENT_READ_PIPE!\n");
 					goto failed;
 				}
-				if (tmp_count > 0) {
-					char *tmp_p;
+				if (0 == tmp_count)
+					continue;
 
-					tmp_p = realloc(*data, write_count + tmp_count);
-					if (NULL == tmp_p) {
-						DBG_MSG("Failed to allocate buffer!\n");
-						goto failed;
-					}
-					
-					memcpy(&tmp_p[write_count], buf, tmp_count);
-
-					*data = tmp_p;
-					write_count += tmp_count;
+				tmp_p = realloc(*data, write_count + tmp_count);
+				if (NULL == tmp_p) {
+					DBG_MSG("Failed to allocate buffer!\n");
+					goto failed;
 				}
+				
+				memcpy(&tmp_p[write_count], buf, tmp_count);
+
+				*data = tmp_p;
+				write_count += tmp_count;
 			} while (tmp_count > 0);
 		} while (!(poll_fds[READ_PIPE].revents & POLLHUP));
 
