@@ -576,6 +576,7 @@ failed:
 		if (0 != PARENT_WRITE_PIPE(pipe_fds)) {
 			close(PARENT_WRITE_PIPE(pipe_fds));
 			PARENT_WRITE_PIPE(pipe_fds) = 0;
+		}
 		close(PARENT_READ_PIPE(pipe_fds));
 		PARENT_READ_PIPE(pipe_fds) = 0;
 
