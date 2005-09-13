@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  13 Sep 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Don't mount ${svcdir} with -n since / is writable at that point.
+
   13 Sep 2005; Roy Marples <uberlord@gentoo.org>:
 
     Changed net.lo depend from isdn4linux to isdn, #102846
