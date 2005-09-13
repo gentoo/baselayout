@@ -64,12 +64,13 @@ then
 		if [[ -s ${devices_totar} ]]; then
 			try tar --one-file-system -jcpf "${device_tarball}" -T "${devices_totar}"
 			try mv -f "${device_tarball}" /lib/udev-state/devices.tar.bz2
-			try rm -f "${devices_udev}" "${devices_real}"
 		else
 			rm -f /lib/udev-state/devices.tar.bz2
 		fi
 		eend 0
 	fi
+
+	rm -f "${devices_udev}" "${devices_real}" "${devices_totar}" "${device_tarball}"
 fi
 
 # Try to unmount all tmpfs filesystems not in use, else a deadlock may
