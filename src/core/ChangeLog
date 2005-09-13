@@ -13,6 +13,10 @@
         * parse.c: Make sure we do not close the pipes twice if the child
         returns with error exit status.
 
+        * parse.c: Remove label 'cont_do_read' in favour of just a simple break.
+        No need to jump to the error label if the child did not exit cleanly,
+        as we already cleaned up.
+
 07 Sep 2005 Martin Schlemmer <azarah@gentoo.org>
 
         * debug.h

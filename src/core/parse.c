@@ -512,7 +512,7 @@ size_t generate_stage2(char **data)
 				if ((stage1_written >= stage1_write_count)
 				    || (1 == do_read)
 				    || (1 != do_write))
-					goto cont_do_read;
+					break;
 
 				tmp_count = write(PARENT_WRITE_PIPE(pipe_fds),
 				                  &stage1_data[stage1_written],
@@ -535,7 +535,6 @@ size_t generate_stage2(char **data)
 				}
 			} while ((tmp_count > 0) && (stage1_written < stage1_write_count));
 		
-cont_do_read:
 			/* Reset tmp_count for below read loop */
 			tmp_count = 0;
 			
@@ -573,12 +572,9 @@ failed:
 
 		free(stage1_data);
 
-		if (0 != PARENT_WRITE_PIPE(pipe_fds)) {
+		if (0 != PARENT_WRITE_PIPE(pipe_fds))
 			close(PARENT_WRITE_PIPE(pipe_fds));
-			PARENT_WRITE_PIPE(pipe_fds) = 0;
-		}
 		close(PARENT_READ_PIPE(pipe_fds));
-		PARENT_READ_PIPE(pipe_fds) = 0;
 
 		/* Restore the old signal handler for SIGPIPE */
 		sigaction(SIGPIPE, &act_old, NULL);
@@ -590,12 +586,12 @@ failed:
 		if (0 == old_errno) {
 			if ((!WIFEXITED(status)) || (0 != WEXITSTATUS(status))) {
 				DBG_MSG("Bash failed with status 0x%x!\n", status);
-				goto error;
+				return -1;
 			}
 		} else {
 			/* Right, we had an error, so set errno, and exit */
 			errno = old_errno;
-			goto error;
+			return -1;
 		}
 	}
 
