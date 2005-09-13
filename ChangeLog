@@ -5,6 +5,8 @@
 
     Don't mount ${svcdir} with -n since / is writable at that point.
 
+    Clean up udev tarball temp files in halt.sh #105827 by Robert Forsman.
+
   13 Sep 2005; Roy Marples <uberlord@gentoo.org>:
 
     Changed net.lo depend from isdn4linux to isdn, #102846
