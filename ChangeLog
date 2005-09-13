@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  14 Sep 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Need to source init-functions.sh to provid try() for halt.sh.
+
   13 Sep 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Don't mount ${svcdir} with -n since / is writable at that point.

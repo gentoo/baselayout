@@ -342,6 +342,9 @@ if [[ ${SOFTLEVEL} == "reboot" || ${SOFTLEVEL} == "shutdown" ]] ; then
 	rm -rf $(ls -d1 "${svcdir}/"* 2>/dev/null | \
 	         grep -ve '\(depcache\|deptree\|envcache\)')
 	
+	# Need try(), etc
+	source "${svclib}"/sh/init-functions.sh
+
 	source /etc/init.d/halt.sh
 	
 	if [[ ${SOFTLEVEL} == "reboot" ]] ; then
