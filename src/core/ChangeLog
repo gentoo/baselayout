@@ -10,6 +10,9 @@
         * parse.c: Remove unused tmp_pid from generate_stage2(), also fixing
         waitpid() not getting called.
 
+        * parse.c: Make sure we do not close the pipes twice if the child
+        returns with error exit status.
+
 07 Sep 2005 Martin Schlemmer <azarah@gentoo.org>
 
         * debug.h

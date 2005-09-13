@@ -573,9 +573,11 @@ failed:
 
 		free(stage1_data);
 
-		if (0 != PARENT_WRITE_PIPE(pipe_fds))
+		if (0 != PARENT_WRITE_PIPE(pipe_fds)) {
 			close(PARENT_WRITE_PIPE(pipe_fds));
+			PARENT_WRITE_PIPE(pipe_fds) = 0;
 		close(PARENT_READ_PIPE(pipe_fds));
+		PARENT_READ_PIPE(pipe_fds) = 0;
 
 		/* Restore the old signal handler for SIGPIPE */
 		sigaction(SIGPIPE, &act_old, NULL);
