@@ -112,7 +112,7 @@ else
 
 	# Actually start setting up /dev now
 	if [[ ${udev} == "yes" ]] ; then
-			start_addon udev
+		start_addon udev
 
 	# With devfs, /dev can be mounted by the kernel ...
 	elif [[ ${devfs} == "yes" ]] ; then
