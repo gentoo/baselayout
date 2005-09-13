@@ -549,16 +549,16 @@ then
 		ebegin "Mounting ${svcfstype} at ${svcdir}"
 		case "${svcfstype}" in
 		ramfs)
-			try mount -n -t ramfs svcdir "${svcdir}" \
+			try mount -t ramfs svcdir "${svcdir}" \
 				-o rw,mode=0755,size="${svcsize}"k
 			;;
 		ramdisk)
 			try dd if=/dev/zero of=/dev/ram0 bs=1k count="${svcsize}"
 			try /sbin/mke2fs -i 1024 -vm0 /dev/ram0 "${svcsize}"
-			try mount -n -t ext2 /dev/ram0 "${svcdir}" -o rw
+			try mount -t ext2 /dev/ram0 "${svcdir}" -o rw
 			;;
 		tmpfs|*)
-			try mount -n -t tmpfs svcdir "${svcdir}" \
+			try mount -t tmpfs svcdir "${svcdir}" \
 				-o rw,mode=0755,size="${svcsize}"k
 			;;
 		esac
