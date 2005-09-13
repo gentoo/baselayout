@@ -447,7 +447,6 @@ size_t generate_stage2(char **data)
 		size_t stage1_write_count = 0;
 		size_t stage1_written = 0;
 		int status = 0;
-		int tmp_pid = 0;
 
 		DBG_MSG("Child pid = %i\n", child_pid);
 
@@ -581,9 +580,8 @@ failed:
 		/* Restore the old signal handler for SIGPIPE */
 		sigaction(SIGPIPE, &act_old, NULL);
 
-		if (tmp_pid != child_pid)
-			/* Wait for bash to finish */
-			waitpid(child_pid, &status, 0);
+		/* Wait for bash to finish */
+		waitpid(child_pid, &status, 0);
 		/* If old_errno is set, we had an error in the read loop, so do
 		 * not worry about the child's exit code */
 		if (0 == old_errno) {
