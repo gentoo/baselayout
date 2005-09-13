@@ -17,6 +17,9 @@
         No need to jump to the error label if the child did not exit cleanly,
         as we already cleaned up.
 
+        * parse.c: Cleanup parse_cache().  Do not parse MTIME - we have it
+        already.
+
 07 Sep 2005 Martin Schlemmer <azarah@gentoo.org>
 
         * debug.h

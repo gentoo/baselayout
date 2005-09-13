@@ -78,10 +78,10 @@
 
 LIST_HEAD(rcscript_list);
 
-size_t parse_rcscript(char *scriptname, time_t mtime, char **data, size_t index);
+size_t parse_rcscript(char *scriptname, char **data, size_t index);
 
 size_t parse_print_start(char **data, size_t index);
-size_t parse_print_header(char *scriptname, time_t mtime, char **data, size_t index);
+size_t parse_print_header(char *scriptname, char **data, size_t index);
 size_t parse_print_body(char *scriptname, char **data, size_t index);
 
 int get_rcscripts(void)
@@ -234,7 +234,7 @@ int check_rcscripts_mtime(char *cachefile)
 }
 
 /* Return count on success, -1 on error.  If it was critical, errno will be set. */
-size_t parse_rcscript(char *scriptname, time_t mtime, char **data, size_t index)
+size_t parse_rcscript(char *scriptname, char **data, size_t index)
 {
 	regex_data_t tmp_data;
 	char *buf = NULL;
@@ -284,7 +284,7 @@ size_t parse_rcscript(char *scriptname, time_t mtime, char **data, size_t index)
 			DBG_MSG("Parsing '%s'.\n", gbasename(scriptname));
 
 			write_count = parse_print_header(gbasename(scriptname),
-			                                 mtime, data, write_count);
+			                                 data, write_count);
 			if (-1 == write_count) {
 				DBG_MSG("Failed to call parse_print_header()!\n");
 				goto error;
@@ -350,8 +350,7 @@ size_t generate_stage1(char **data)
 	}
 
 	list_for_each_entry(info, &rcscript_list, node) {
-		tmp_count = parse_rcscript(info->filename, info->mtime,
-		                           data, write_count);
+		tmp_count = parse_rcscript(info->filename, data, write_count);
 		if (-1 == tmp_count) {
 			DBG_MSG("Failed to parse '%s'!\n",
 			        gbasename(info->filename));
@@ -701,6 +700,7 @@ int parse_cache(const char *data, size_t lenght)
 {
 	service_info_t *info;
 	service_type_t type = ALL_SERVICE_TYPE_T;
+	rcscript_info_t *rs_info;
 	char *tmp_buf = NULL;
 	char *rc_name = NULL;
 	char *tmp_p;
@@ -770,47 +770,25 @@ int parse_cache(const char *data, size_t lenght)
 			goto error;
 		}
 
-		if (0 == strcmp(token, FIELD_FAILED)) {
-			EWARN("'%s' has syntax errors, please correct!\n", rc_name);
+		if (0 == strcmp(token, FIELD_NEED))
+			type = NEED;
+		else if (0 == strcmp(token, FIELD_USE))
+			type = USE;
+		else if (0 == strcmp(token, FIELD_BEFORE))
+			type = BEFORE;
+		else if (0 == strcmp(token, FIELD_AFTER))
+			type = AFTER;
+		else if (0 == strcmp(token, FIELD_PROVIDE))
+			type = PROVIDE;
+		else if (0 == strcmp(token, FIELD_FAILED)) {
+			type = BROKEN;
+
 			/* FIXME: Need to think about what to do syntax BROKEN
 			 * services */
-			retval = service_add_dependency(rc_name, rc_name, BROKEN);
-			if (-1 == retval) {
-				field = service_type_names[type];
-				DBG_MSG("Failed to add dependency '%s' to service '%s', type '%s'!\n",
-				        token, rc_name, field);
-				goto error;
-			}
-			goto _continue;
-		}
-
-		if (0 == strcmp(token, FIELD_NEED)) {
-			type = NEED;
-			goto have_dep_field;
-		}
-
-		if (0 == strcmp(token, FIELD_USE)) {
-			type = USE;
-			goto have_dep_field;
-		}
-
-		if (0 == strcmp(token, FIELD_BEFORE)) {
-			type = BEFORE;
-			goto have_dep_field;
-		}
-
-		if (0 == strcmp(token, FIELD_AFTER)) {
-			type = AFTER;
-			goto have_dep_field;
-		}
-
-		if (0 == strcmp(token, FIELD_PROVIDE)) {
-			type = PROVIDE;
-			goto have_dep_field;
+			EWARN("'%s' has syntax errors, please correct!\n", rc_name);
 		}
 
 		if (type < ALL_SERVICE_TYPE_T) {
-have_dep_field:
 			/* Get the first value *
 			 * As the values are passed to a bash function, and we
 			 * then use 'echo $*' to parse them, they should only
@@ -838,32 +816,6 @@ have_dep_field:
 			goto _continue;
 		}
 
-		if (0 == strcmp(token, FIELD_MTIME)) {
-			time_t mtime = 0;
-			
-			/* Just use the first value, and ignore the rest */
-			token = strsep(&tmp_p, " ");
-
-			if (NULL != token)
-				mtime = atoi(token);
-			
-			retval = service_set_mtime(rc_name, mtime);
-			if (-1 == retval) {
-				DBG_MSG("Failed to set mtime for service '%s'!\n",
-				        rc_name);
-				goto error;
-			}
-
-			/* Some debugging in case we have some corruption or
-			 * other issues */
-			token = strsep(&tmp_p, " ");
-			if (NULL != token)
-				DBG_MSG("Too many falues for field '%s'!\n",
-				        FIELD_MTIME);
-			
-			goto _continue;
-		}
-
 		/* Fall through */
 		DBG_MSG("Unknown FIELD in data!\n");
 
@@ -873,6 +825,20 @@ _continue:
 		free(tmp_buf);
 		/* Do not free 'rc_name', as it should be consistant
 		 * across loops */
+	}
+
+	/* Set the mtimes
+	 * FIXME: Can drop this when we no longer need write_legacy_stage3() */
+	list_for_each_entry(rs_info, &rcscript_list, node) {
+		rc_name = gbasename(rs_info->filename);
+		if (NULL == service_get_info(rc_name))
+			continue;
+		
+		retval = service_set_mtime(rc_name, rs_info->mtime);
+		if (-1 == retval) {
+			DBG_MSG("Failed to set mtime for service '%s'!\n", rc_name);
+			return -1;
+		}
 	}
 
 	return 0;
@@ -900,7 +866,7 @@ error:
 	return -1;
 }
 
-size_t parse_print_header(char *scriptname, time_t mtime, char **data, size_t index)
+size_t parse_print_header(char *scriptname, char **data, size_t index)
 {
 	size_t write_count = index;
 	
@@ -909,10 +875,8 @@ size_t parse_print_header(char *scriptname, time_t mtime, char **data, size_t in
 		"\n"
 		"myservice=\"%s\"\n"
 		"echo \"RCSCRIPT ${myservice}\"\n"
-		"\n"
-		"echo \"MTIME %li\"\n"
 		"\n",
-		scriptname, scriptname, mtime);
+		scriptname, scriptname);
 
 	return write_count;
 
@@ -994,7 +958,7 @@ size_t parse_print_body(char *scriptname, char **data, size_t index)
 		"    }\n"
 		"    \n"
 		"    depend\n"
-		"  ) || echo \"FAILED source\"\n"
+		"  ) || echo \"FAILED ${myservice}\"\n"
 		")\n"
 		"\n\n",
 		base, ext, scriptname);

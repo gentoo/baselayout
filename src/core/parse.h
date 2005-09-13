@@ -45,7 +45,6 @@
 #define FIELD_BEFORE	"BEFORE"
 #define FIELD_AFTER	"AFTER"
 #define FIELD_PROVIDE	"PROVIDE"
-#define FIELD_MTIME	"MTIME"
 #define FIELD_FAILED	"FAILED"
 
 typedef struct {
