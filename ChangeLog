@@ -1,6 +1,12 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  14 Sep 2005; Roy Marples <uberlord@gentoo.org>:
+
+    netplug module renamed to netplugd for consistency
+
+    pppd module added, #53954 thanks to Alin Nastac
+
   14 Sep 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     Need to source init-functions.sh to provid try() for halt.sh.

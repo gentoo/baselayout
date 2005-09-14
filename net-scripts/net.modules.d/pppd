@@ -1,0 +1,268 @@
+#!/bin/bash
+# Copyright (c) 2004-2005 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+
+# char* pppd_provides(void)
+#
+# Returns a string to change module definition for starting up
+pppd_provides() {
+    echo "ppp"
+}
+
+# void pppd_depend(void)
+#
+# Sets up the dependancies for the module
+pppd_depend() {
+    after interface
+    before dhcp
+}
+
+# bool pppd_check_installed(void)
+#
+# Returns 1 if pppd is installed, otherwise 0
+pppd_check_installed() {
+    if [[ ! -x /usr/sbin/pppd ]]; then
+    ${1:-false} && eerror "For PPP support, emerge net-dialup/ppp"
+    return 1
+    fi
+    return 0
+}
+
+# bool pppd_check_depends(void)
+#
+# Checks to see if we have the needed functions
+pppd_check_depends() {
+    return 0
+}
+
+# char *pppd_regex_escape(char *string)
+#
+# Returns the supplied string with any special regex
+# characters escaped so they don't provide regex intructions
+# This may be a candidate for adding to /sbin/functions.sh or
+# net-scripts functions at some point
+pppd_regex_escape() {
+    local escaped_result="$*"
+    escaped_result=${escaped_result//\\/\\\\}
+    escaped_result=${escaped_result//./\\.}
+    escaped_result=${escaped_result//+/\\+}
+    escaped_result=${escaped_result//(/\\(}
+    escaped_result=${escaped_result//)/\\)}
+    escaped_result=${escaped_result//[/\\[}
+    escaped_result=${escaped_result//]/\\]}
+    escaped_result=${escaped_result//\{/\\\{}
+    escaped_result=${escaped_result//\}/\\\}}
+    escaped_result=${escaped_result//\?/\\\?}
+    escaped_result=${escaped_result//\*/\\\*}
+    escaped_result=${escaped_result//\//\\/} 
+    escaped_result=${escaped_result//|/\\|} 
+    escaped_result=${escaped_result//&/\\&} 
+    escaped_result=${escaped_result//~/\\~} 
+    escaped_result=${escaped_result//^/\\^} 
+    escaped_result=${escaped_result//$/\\$} 
+    echo $escaped_result
+}
+
+# bool pppd_update_secrets_file(char* filepath, char* username, \
+#    char* remotename, char* password)
+#
+# Add/update PAP/CHAP authentication information 
+pppd_update_secrets_file() {
+    local filepath="$1" username="$2" remotename="$3" password="$4"
+    if [[ ! -f ${filepath} ]]; then
+        touch ${filepath} && \
+            chmod 0600 ${filepath} || \
+            return 1
+    fi
+    
+    #escape username and remotename, used in following sed calls
+    local regex_username=$(pppd_regex_escape ${username})
+    local regex_remotename=$(pppd_regex_escape ${remotename})
+    local regex_password
+    local regex_filter="[ \t]*\"?${regex_username}\"?[ \t]*\"?${regex_remotename}\"?[ \t]*"
+    
+    #read old password, including " chars 
+    #for being able to distinct when we need to add or update auth info
+    local old_password=$(
+        sed -r -e "/^${regex_filter}\".*\"[ \t]*\$/\
+            {s/^${regex_filter}(\".*\")[ \t]*\$/\1/;q;};\
+            d;" \
+                ${filepath}
+        )
+
+    if [[ -z "${old_password}" ]]; then
+        regex_username=${username//\\/\\\\}
+        regex_remotename=${remotename//\\/\\\\}
+        regex_password=${password//\\/\\\\}
+        regex_password=${password//"/\\"}
+        sed -r -i -e "\$a\"${regex_username}\" ${regex_remotename} \"${regex_password}\"" ${filepath}
+        vewarn "Authentication info has been added to ${filepath}"
+    elif [[ "\"${password//\"/\\\"}\"" != "${old_password}" ]]; then
+        regex_password=${password//\\/\\\\}
+        regex_password=${regex_password//\//\\/}
+        regex_password=${regex_password//&/\\&}
+        regex_password=${regex_password//\"/\\\\\"}
+        sed -r -i -e "s/^(${regex_filter}\").*(\"[ \t]*)\$/\1${regex_password}\2/" ${filepath}
+        vewarn "Authentication info has been updated in ${filepath}"
+    fi
+    return 0
+}
+
+# bool pppd_start(char *iface)
+#
+# Start PPP on an interface by calling pppd
+#
+# Returns 0 (true) when successful, otherwise 1
+pppd_start() {
+    local iface="$1" ifvar=$( bash_variable "$1" ) opts="" link
+    if [[ ${iface%%[0-9]*} != "ppp" ]]; then
+        eerror "PPP can only be invoked from net.ppp[0-9]"
+        return 1
+    fi
+
+    local unit="${iface#ppp}"
+    if [[ -z ${unit} ]] ; then
+        eerror "PPP requires a unit - use net.ppp[0-9] instead of net.ppp"
+        return 1
+    fi
+
+    # PPP requires a link to communicate over - normally a serial port
+    # PPPoE communicates over ethernet
+    # PPPoA communictes over ATM
+    # In all cases, the link needs to be available before we start PPP
+    eval link=\"\$\{link_${ifvar}\}\"
+    if [[ -z ${link} ]]; then
+        eerror "link_${ifvar} has not been set in /etc/conf.d/net"
+        return 1
+    fi
+
+    # Might or might not be set in conf.d/net
+    local user password i
+    eval username=\"\$\{username_${ifvar}\}\"
+    eval password=\"\$\{password_${ifvar}\}\"
+
+    #Add/update info in PAP/CHAP secrets files
+    if [[ -n ${username} && -n ${password} ]]; then
+        for i in chap pap ; do
+            if ! pppd_update_secrets_file "/etc/ppp/${i}-secrets" \
+                    "${username}" "${iface}" "${password}" ; then
+                eerror "Failed to update /etc/ppp/${i}-secrets"
+                return 1
+            fi
+        done
+    fi
+
+    # Load any commandline options
+    eval opts=\"\$\{pppd_${ifvar}\[@\]}\"
+
+    # We don't work if nodetach or unit is set
+    for i in nodetach updetach unit ; do
+        if [[ " ${opts} " == *" ${i} "* ]]; then
+            eerror "The option \"${i}\" is not allowed"
+            return 1
+        fi
+    done
+
+    # Check for mtu/mru
+    local mtu
+    eval mtu=\"\$\{mtu_${ifvar}\}\"
+    if [[ -n ${mtu} ]]; then
+        [[ " ${opts} " != *" mtu "* ]] && opts="${opts} mtu ${mtu}"
+        [[ " ${opts} " != *" mru "* ]] && opts="${opts} mru ${mtu}"
+    fi
+
+    # Detach if we're not idling
+    [[ " ${opts} " != *" idle "* && " ${opts} " != *" updetach "* ]] \
+        && opts="${opts} updetach"
+
+    # Setup auth info
+    [[ -n ${username} ]] && opts="user \"${username}\" ${opts}"
+    opts="remotename ${iface} ${opts}"
+
+    # Load a custom interface configuration file if it exists
+    [[ -f "/etc/ppp/options.${iface}" ]] \
+        && opts="${opts} file /etc/ppp/options.${iface}"
+
+    # Set forced options
+    opts="unit ${unit} persist maxfail 0 ${opts}"
+
+    # Setup connect script
+    local -a chat
+    eval chat=( \"\$\{chat_${ifvar}\[@\]\}\" )
+    if [[ -n "${chat[@]}" ]]; then
+        opts="${opts} connect \"/usr/sbin/chat -e -E -v"
+
+        local -a phone_number
+        eval phone_number=( \"\$\{phone_number_${ifvar}\}\" )
+        if [[ ${#phone_number[@]} -ge 1 ]]; then
+            opts="${opts} -T '${phone_number[0]}'"
+            if [[ ${#phone_number[@]} -ge 2 ]]; then
+                opts="${opts} -U '${phone_number[1]}'"
+            fi
+        fi
+
+        for (( i=0; i<${#chat[@]}; i++ )); do
+            opts="${opts} '${chat[i]}'"
+        done
+
+        opts="${opts}\""
+    fi
+
+    # Add plugins
+    local -a plugins
+    eval plugins=( \"\$\{plugins_${ifvar}\[@\]\}\" )
+    if [[ -n "${plugins[@]}" ]]; then
+        for (( i=0; i<${#plugins[@]}; i++ )); do
+            local -a plugin=( ${plugins[i]} )
+            # Bound to be some users who do this
+            [[ ${plugin[0]} == "pppoe" ]] && plugin[0]="rp-pppoe"
+            [[ ${plugin[0]} == "pppoa" ]] && plugin[0]="pppoatm"
+            [[ ${plugin[0]} == "capi" ]] && plugin[0]="capiplugin"
+
+            [[ ${plugin[0]} == "rp-pppoe" ]] && opts="${opts} connect true"
+            opts="${opts} plugin ${plugin[0]}.so ${plugin[@]:1}"
+            [[ ${plugin[0]} == "rp-pppoe" ]] && opts="${opts} ${link}"
+        done
+    fi
+
+    #Specialized stuff. Insert here actions particular to connection type (pppoe,pppoa,capi)
+    local insert_link_in_opts=1
+    if [[ " ${opts} " == *" plugin rp-pppoe.so "* ]]; then
+        # Ensure that the link exists and is up
+        interface_exists "${link}" true || return 1
+        interface_up "${link}"
+
+        # Load the pppoe kernel module - if this fails, we have to hope
+        # that pppoe support is compiled into the kernel
+        modprobe pppoe 2>/dev/null
+
+        insert_link_in_opts=0
+    fi
+    [[ ${insert_link_in_opts} -eq 0 ]] || opts="${link} ${opts}"
+    
+    ebegin "Running pppd"
+    i=$( eval /usr/sbin/pppd ${opts}  )
+    eend $? "${i}" || return 1
+
+    local addr=$( interface_get_address "${iface}" )
+    einfo "${iface} received address ${addr}"
+}
+
+# bool pppd_stop(char *iface)
+#
+# Stop PPP link by killing the associated pppd process
+#
+# Returns 0 (true) if no process to kill or it terminates successfully,
+# otherwise non-zero (false)
+pppd_stop() {
+    local iface="$1" pidfile="/var/run/$1.pid"
+
+    [[ ! -s ${pidfile} ]] && return 0 
+
+    local pid=$(<"${pidfile}")
+    einfo "Stopping pppd on ${iface}"
+    kill -s TERM "${pid}"
+    process_finished "${pid}" /usr/sbin/pppd
+    
+    eend $?
+}
