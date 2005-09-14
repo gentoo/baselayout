@@ -181,7 +181,7 @@ modules_check_user() {
 
 	# Add our preferred modules
 	npref=3
-	umods=( "${umods[@]}" "iproute2" "dhcpcd" "iwconfig" "netplug" )
+	umods=( "${umods[@]}" "iproute2" "dhcpcd" "iwconfig" "netplugd" )
 
 	# First we strip any modules that conflict from user settings
 	# So if the user specifies pump then we don't use dhcpcd
