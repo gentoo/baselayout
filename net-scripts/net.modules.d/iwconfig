@@ -32,8 +32,18 @@ iwconfig_depend() {
 #
 # Returns 1 if wireless-tools is installed, otherwise 0
 iwconfig_check_installed() {
+	local report=${1:-false}
 	[[ -x /sbin/iwconfig ]] && return 0
-	${1:-false} && eerror "For Wireless (802.11) support, emerge net-wireless/wireless-tools"
+	${report} && eerror "For Wireless (802.11) support, emerge net-wireless/wireless-tools"
+   
+ 	if [[ ! -e /proc/net/wireless ]]; then
+        installed="1"
+        if ${report} ; then
+            eerror "wpa_supplicant requires wireless support"
+            eerror "(CONFIG_NET_WIRELESS=y) enabled in the kernel"
+        fi
+    fi
+	
 	return 1
 }
 
@@ -63,7 +73,11 @@ iwconfig_check_depends() {
 #
 # Checks to see if wireless extensions are enabled on the interface
 iwconfig_check_extensions() {
-	grep -q "^[ \t]*$1:[ \t]" /proc/net/wireless
+	if [[ -e /proc/net/wireless ]]; then
+		grep -q "^[ \t]*$1:[ \t]" /proc/net/wireless
+	else
+		return 1
+	fi
 }
 
 # char* iwconfig_get_wep_status(char *interface)
