@@ -47,7 +47,10 @@ wpa_supplicant_check_installed() {
 	fi
 	if [[ ! -e /proc/net/packet ]]; then
 		installed="1"
-		${report} && eerror "wpa_supplicant requires Packet Socket (CONFIG_PACKET=y) enabled in the kernel"
+		if ${report} ; then
+			eerror "wpa_supplicant requires Packet Socket"
+			eerror "(CONFIG_PACKET=y) enabled in the kernel"
+		fi
 	fi
 	return "${installed}"
 }
@@ -71,11 +74,8 @@ wpa_supplicant_check_depends() {
 #
 # Checks to see if wireless extensions are enabled on the interface
 wpa_supplicant_check_extensions() {
-	if [[ -e /proc/net/wireless ]]; then
-		grep -q "^[ \t]*$1:[ \t]" /proc/net/wireless
-	else
-		return 1
-	fi
+	[[ ! -e /proc/net/wireless ]] && return 1
+	grep -q "^[ \t]*$1:[ \t]" /proc/net/wireless
 }
 
 # char* wpa_supplicant_get_essid(char *interface)
