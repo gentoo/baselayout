@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  16 Sep 2005; Roy Marples <uberlord@gentoo.org>:
+
+    iwconfig and wpa_supplicant now check to see if /proc/net/wireless exists
+    before checking for extensions, #106036
+
   14 Sep 2005; Roy Marples <uberlord@gentoo.org>:
 
     netplug module renamed to netplugd for consistency
