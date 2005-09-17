@@ -18,23 +18,9 @@
  *                 and Andreas Schuldei <andreas@schuldei.org>
  *
  * Changes by Ian Jackson: added --retry (and associated rearrangements).
- *
- * Modified for Gentoo rc-scripts by Donny Davies <woodchip@gentoo.org>:
- *   I removed the BSD/Hurd/OtherOS stuff, added #include <stddef.h>
- *   and stuck in a #define VERSION "1.9.18".  Now it compiles without
- *   the whole automake/config.h dance.
- *
- * Updated by Aron Griffis <agriffis@gentoo.org>:
- *   Fetched updates from Debian's dpkg-1.10.20, including fix for
- *   Gentoo bug 22686 (start-stop-daemon in baselayout doesn't allow
- *   altered nicelevel).
- * Updated by Kito <kito@gentoo.org>:
- *   Add support for Darwin, additional patches from opendarwin.org
- * 	 fix for Gentoo bug 72145 from eldad@gentoo.org
  */
 
-#define VERSION "1.10.20"
-#include <stddef.h>
+#define VERSION "1.13.11+gentoo"
 
 #define NONRETURNPRINTFFORMAT(x, y) \
 	__attribute__((noreturn, format(printf, x, y)))
@@ -107,6 +93,8 @@
 #include <assert.h>
 #include <ctype.h>
 
+#include <stddef.h>
+
 #include "headers.h"
 
 #ifdef HURD_IHASH_H
@@ -129,7 +117,7 @@ static const char *userspec = NULL;
 static char *changeuser = NULL;
 static const char *changegroup = NULL;
 static char *changeroot = NULL;
-static const char *changedir = NULL;
+static const char *changedir = "/";
 static const char *cmdname = NULL;
 static char *execname = NULL;
 static char *startas = NULL;
@@ -141,7 +129,7 @@ static int nicelevel = 0;
 
 static struct stat exec_stat;
 #if defined(OSHURD)
-static struct proc_stat_list *procset;
+static struct proc_stat_list *procset = NULL;
 #endif
 
 
@@ -226,7 +214,7 @@ fatal(const char *format, ...)
 	va_start(arglist, format);
 	vfprintf(stderr, format, arglist);
 	va_end(arglist);
-	putc('\n', stderr);
+	fprintf(stderr, " (%s)\n", strerror (errno));
 	exit(2);
 }
 
@@ -493,7 +481,7 @@ parse_options(int argc, char * const *argv)
 	int c;
 
 	for (;;) {
-		c = getopt_long(argc, argv, "HKSV:a:n:op:qr:s:tu:vx:c:N:bmR:g:d:",
+		c = getopt_long(argc, argv, "HKSVa:n:op:qr:s:tu:vx:c:N:bmR:g:d:",
 				longopts, (int *) 0);
 		if (c == -1)
 			break;
@@ -657,36 +645,70 @@ pid_is_cmd(pid_t pid, const char *name)
 
 
 #if defined(OSHURD)
+static void
+init_procset(void)
+{
+	struct ps_context *context;
+	error_t err;
+
+	err = ps_context_create(getproc(), &context);
+	if (err)
+		error(1, err, "ps_context_create");
+
+	err = proc_stat_list_create(context, &procset);
+	if (err)
+		error(1, err, "proc_stat_list_create");
+
+	err = proc_stat_list_add_all(procset, 0, 0);
+	if (err)
+		error(1, err, "proc_stat_list_add_all");
+}
+
+static struct proc_stat *
+get_proc_stat (pid_t pid, ps_flags_t flags)
+{
+	struct proc_stat *ps;
+	ps_flags_t wanted_flags = PSTAT_PID | flags;
+
+	if (!procset)
+		init_procset();
+
+	ps = proc_stat_list_pid_proc_stat(procset, pid);
+	if (!ps)
+		return NULL;
+	if (proc_stat_set_flags(ps, wanted_flags))
+		return NULL;
+	if ((proc_stat_flags(ps) & wanted_flags) != wanted_flags)
+		return NULL;
+
+	return ps;
+}
+
 static int
 pid_is_user(pid_t pid, uid_t uid)
 {
-	struct stat sb;
-	char buf[32];
-	struct proc_stat *pstat;
+	struct proc_stat *ps;
 
-	sprintf(buf, "/proc/%d", pid);
-	if (stat(buf, &sb) != 0)
-		return 0;
-	return (sb.st_uid == uid);
-	pstat = proc_stat_list_pid_proc_stat (procset, pid);
-	if (pstat == NULL)
-		fatal ("Error getting process information: NULL proc_stat struct");
-	proc_stat_set_flags (pstat, PSTAT_PID | PSTAT_OWNER_UID);
-	return (pstat->owner_uid == uid);
+	ps = get_proc_stat(pid, PSTAT_OWNER_UID);
+	return ps && proc_stat_owner_uid(ps) == uid;
 }
 
 static int
 pid_is_cmd(pid_t pid, const char *name)
 {
-	struct proc_stat *pstat;
-	pstat = proc_stat_list_pid_proc_stat (procset, pid);
-	if (pstat == NULL)
-		fatal ("Error getting process information: NULL proc_stat struct");
-	proc_stat_set_flags (pstat, PSTAT_PID | PSTAT_ARGS);
-	return (!strcmp (name, pstat->args));
-}
-#endif /* OSHURD */
+	struct proc_stat *ps;
 
+	ps = get_proc_stat(pid, PSTAT_ARGS);
+	return ps && !strcmp(proc_stat_args(ps), name);
+}
+
+static int
+pid_is_running(pid_t pid)
+{
+	return get_proc_stat(pid, 0) != NULL;
+}
+
+#else /* !OSHURD */
 
 static int
 pid_is_running(pid_t pid)
@@ -703,6 +725,8 @@ pid_is_running(pid_t pid)
 
 	return 1;
 }
+
+#endif /* OSHURD */
 
 static void
 check(pid_t pid)
@@ -771,40 +795,36 @@ do_procinit(void)
 
 
 #if defined(OSHURD)
-error_t
-check_all(void *ptr)
+static int
+check_proc_stat (struct proc_stat *ps)
 {
-	struct proc_stat *pstat = ptr;
-
-	check(pstat->pid);
+	check(ps->pid);
 	return 0;
 }
 
 static void
 do_procinit(void)
 {
-	struct ps_context *context;
-	error_t err;
+	if (!procset)
+		init_procset();
 
-	err = ps_context_create(getproc(), &context);
-	if (err)
-		error(1, err, "ps_context_create");
-
-	err = proc_stat_list_create(context, &procset);
-	if (err)
-		error(1, err, "proc_stat_list_create");
-
-	err = proc_stat_list_add_all(procset, 0, 0);
-	if (err)
-		error(1, err, "proc_stat_list_add_all");
-
-	/* Check all pids */
-	ihash_iterate(context->procs, check_all);
+	proc_stat_list_for_each (procset, check_proc_stat);
 }
 #endif /* OSHURD */
 
 
 #if defined(OSOpenBSD) || defined(OSFreeBSD) || defined(OSNetBSD)
+
+# if defined(OSNetBSD)
+#  define _KINFO_PROC2 kinfo_proc2
+#  define _GET_KINFO_UID(kp) (kp->p_ruid)
+#  define _GET_KINFO_COMM(kp) (kp->p_comm)
+# else
+#  define _KINFO_PROC2 kinfo_proc
+#  define _GET_KINFO_UID(kp) (kp->ki_ruid)
+#  define _GET_KINFO_COMM(kp) (kp->ki_comm)
+# endif
+
 static int
 pid_is_cmd(pid_t pid, const char *name)
 {
@@ -851,7 +871,7 @@ pid_is_user(pid_t pid, uid_t uid)
 	kvm_t *kd;
 	int nentries;   /* Value not used */
 	uid_t proc_uid;
-	struct kinfo_proc *kp;
+	struct _KINFO_PROC2 *kp;
 	char  errbuf[_POSIX2_LINE_MAX];
 
 	kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, errbuf);
@@ -859,8 +879,8 @@ pid_is_user(pid_t pid, uid_t uid)
 		errx(1, "%s", errbuf);
 	if ((kp = kvm_getprocs(kd, KERN_PROC_PID, pid, &nentries)) == 0)
 		errx(1, "%s", kvm_geterr(kd));
-	if (kp->ki_ruid )
-		kvm_read(kd, (u_long)&(kp->ki_ruid),
+	if (_GET_KINFO_UID(kp))
+		kvm_read(kd, (u_long)&(_GET_KINFO_UID(kp)),
 			&proc_uid, sizeof(uid_t));
 	else
 		return 0;
@@ -872,7 +892,7 @@ pid_is_exec(pid_t pid, const char *name)
 {
 	kvm_t *kd;
 	int nentries;
-	struct kinfo_proc *kp;
+	struct _KINFO_PROC2 *kp;
 	char errbuf[_POSIX2_LINE_MAX], *pidexec;
 
 	kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, errbuf);
@@ -880,7 +900,7 @@ pid_is_exec(pid_t pid, const char *name)
 		errx(1, "%s", errbuf);
 	if ((kp = kvm_getprocs(kd, KERN_PROC_PID, pid, &nentries)) == 0)
 		errx(1, "%s", kvm_geterr(kd));
-	pidexec = kp->ki_comm;
+	pidexec = _GET_KINFO_COMM(kp);
 	if (strlen(name) != strlen(pidexec))
 		return 0;
 	return (strcmp(name, pidexec) == 0) ? 1 : 0;
@@ -1214,7 +1234,6 @@ x_finished:
 }
 
 
-int main(int argc, char **argv) NONRETURNING;
 int
 main(int argc, char **argv)
 {
@@ -1294,7 +1313,7 @@ main(int argc, char **argv)
 	if (background) { /* ok, we need to detach this process */
 		int i;
 		if (quietmode < 0)
-			printf("Detatching to start %s...", startas);
+			printf("Detaching to start %s...", startas);
 		i = fork();
 		if (i<0) {
 			fatal("Unable to fork.\n");
@@ -1332,7 +1351,7 @@ main(int argc, char **argv)
 		if (chroot(changeroot) < 0)
 			fatal("Unable to chroot() to %s", changeroot);
 	}
-	if (changedir != NULL && chdir(changedir) < 0)
+	if (chdir(changedir) < 0)
 		fatal("Unable to chdir() to %s", changedir);
 	if (changeuser != NULL) {
 		if (setgid(runas_gid))
