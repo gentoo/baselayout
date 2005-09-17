@@ -22,7 +22,7 @@ start() {
 		ebegin "Checking all filesystems"
 		if [[ -f /forcefsck ]] ; then
 			ewarn "A full fsck has been forced"
-			fsck -C -R -A -a -f
+			fsck -C -T -R -A -a -f
 			retval=$?
 			rm -f /forcefsck
 		else
