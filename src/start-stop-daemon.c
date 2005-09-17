@@ -805,6 +805,17 @@ do_procinit(void)
 
 
 #if defined(OSOpenBSD) || defined(OSFreeBSD) || defined(OSNetBSD)
+
+# if defined(OSNetBSD)
+#  define _KINFO_PROC2 kinfo_proc2
+#  define _GET_KINFO_UID(kp) (kp->p_ruid)
+#  define _GET_KINFO_COMM(kp) (kp->p_comm)
+# else
+#  define _KINFO_PROC2 kinfo_proc
+#  define _GET_KINFO_UID(kp) (kp->ki_ruid)
+#  define _GET_KINFO_COMM(kp) (kp->ki_comm)
+# endif
+
 static int
 pid_is_cmd(pid_t pid, const char *name)
 {
@@ -852,7 +863,7 @@ pid_is_user(pid_t pid, uid_t uid)
 	kvm_t *kd;
 	int nentries;   /* Value not used */
 	uid_t proc_uid;
-	struct kinfo_proc *kp;
+	struct _KINFO_PROC2 *kp;
 	char  errbuf[_POSIX2_LINE_MAX];
 
 
@@ -861,8 +872,8 @@ pid_is_user(pid_t pid, uid_t uid)
 		errx(1, "%s", errbuf);
 	if ((kp = kvm_getprocs(kd, KERN_PROC_PID, pid, &nentries)) == 0)
 		errx(1, "%s", kvm_geterr(kd));
-	if (kp->ki_ruid )
-		kvm_read(kd, (u_long)&(kp->ki_ruid),
+	if (_GET_KINFO_UID(kp))
+		kvm_read(kd, (u_long)&(_GET_KINFO_UID(kp)),
 			&proc_uid, sizeof(uid_t));
 	else
 		return 0;
@@ -874,7 +885,7 @@ pid_is_exec(pid_t pid, const char *name)
 {
 	kvm_t *kd;
 	int nentries;
-	struct kinfo_proc *kp;
+	struct _KINFO_PROC2 *kp;
 	char errbuf[_POSIX2_LINE_MAX], *pidexec;
 
 	kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, errbuf);
@@ -882,7 +893,7 @@ pid_is_exec(pid_t pid, const char *name)
 		errx(1, "%s", errbuf);
 	if ((kp = kvm_getprocs(kd, KERN_PROC_PID, pid, &nentries)) == 0)
 		errx(1, "%s", kvm_geterr(kd));
-	pidexec = kp->ki_comm;
+	pidexec = _GET_KINFO_COMM(kp);
 	if (strlen(name) != strlen(pidexec))
 		return 0;
 	return (strcmp(name, pidexec) == 0) ? 1 : 0;
