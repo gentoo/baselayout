@@ -520,6 +520,13 @@ size_t generate_stage2(char **data)
 					DBG_MSG("Error writing to PARENT_WRITE_PIPE!\n");
 					goto failed;
 				}
+				/* We were interrupted, try to write again */
+				if (-1 == tmp_count) {
+					errno = 0;
+					/* Make sure we retry */
+					tmp_count = 1;
+					continue;
+				}
 				/* What was written before, plus what
 				 * we wrote now as well as the ending
 				 * '\0' of the line */
@@ -549,8 +556,11 @@ size_t generate_stage2(char **data)
 					DBG_MSG("Error reading PARENT_READ_PIPE!\n");
 					goto failed;
 				}
-				if (0 == tmp_count)
+				/* We were interrupted, try to read again */
+				if ((-1 == tmp_count) || (0 == tmp_count)) {
+					errno = 0;
 					continue;
+				}
 
 				tmp_p = realloc(*data, write_count + tmp_count);
 				if (NULL == tmp_p) {

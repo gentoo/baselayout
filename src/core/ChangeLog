@@ -2,6 +2,10 @@
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 # $Header$
 
+20 Sep 2005 Martin Schlemmer <azarah@gentoo.org>
+
+        * parse.c: Hopefully handle interrupted reads/writes properly.
+
 13 Sep 2005 Martin Schlemmer <azarah@gentoo.org>
 
         * parse.c: Cleanup the pipe usage and naming in generate_stage2() for
