@@ -5,6 +5,8 @@
 
     Fix up support for NetBSD #106112 by Damian Florczyk.
 
+    When doing a forced fsck, don't show title at startup (-T).
+
   16 Sep 2005; Roy Marples <uberlord@gentoo.org>:
 
     iwconfig and wpa_supplicant now check to see if /proc/net/wireless exists
