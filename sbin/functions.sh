@@ -3,15 +3,18 @@
 
 RC_GOT_FUNCTIONS="yes"
 
+# Override defaults with user settings ...
+[ -f /etc/conf.d/rc ] && source /etc/conf.d/rc
+
 # daemontools dir
 SVCDIR="/var/lib/supervise"
 
 # Check /etc/conf.d/rc for a description of these ...
-svcdir="/var/lib/init.d"
 svclib="/lib/rcscripts"
-svcmount="no"
-svcfstype="tmpfs"
-svcsize=1024
+svcdir=${svcdir:-/var/lib/init.d}
+svcmount=${svcmount:-no}
+svcfstype=${svcfstype:-tmpfs}
+svcsize=${svcsize:-1024}
 
 # Different types of dependencies
 deptypes="need use"
@@ -34,10 +37,14 @@ RC_ENDCOL="yes"
 #
 # Default values for rc system
 #
-RC_TTY_NUMBER=11
-RC_NET_STRICT_CHECKING="no"
-RC_PARALLEL_STARTUP="no"
-RC_USE_CONFIG_PROFILE="yes"
+RC_TTY_NUMBER=${RC_TTY_NUMBER:-11}
+RC_PARALLEL_STARTUP=${RC_PARALLEL_STARTUP:-no}
+RC_NET_STRICT_CHECKING=${RC_NET_STRICT_CHECKING:-no}
+RC_VOLUME_ORDER=${RC_VOLUME_ORDER:-raid evms lvm dm}
+RC_USE_FSTAB=${RC_USE_FSTAB:-no}
+RC_USE_CONFIG_PROFILE=${RC_USE_CONFIG_PROFILE:-yes}
+RC_FORCE_AUTO=${RC_FORCE_AUTO:-no}
+RC_DEVICES=${RC_DEVICES:-auto}
 
 #
 # Default values for e-message indentation and dots
@@ -46,9 +53,6 @@ RC_INDENTATION=''
 RC_DEFAULT_INDENT=2
 #RC_DOT_PATTERN=' .'
 RC_DOT_PATTERN=''
-
-# Override defaults with user settings ...
-[ -f /etc/conf.d/rc ] && source /etc/conf.d/rc
 
 # void import_addon(char *addon)
 #
