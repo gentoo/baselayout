@@ -7,6 +7,9 @@
 
     Touchup comments in conf.d/domainname to help clear confusion.
 
+    Rework how we setup default rc variables in sbin/functions.sh to help
+    keep users from doing stupid things and destroying their system.
+
   17 Sep 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Fix up support for NetBSD #106112 by Damian Florczyk.
