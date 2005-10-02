@@ -6,6 +6,9 @@
     Add support for running some features of rc-update as non-root.
     Patch by RiverRat #107775.
 
+    Drop -a and keep -y from the forced fsck since -a and -y can't be used at 
+    the same time #107812.
+
   23 Sep 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Add a note to conf.d/clock for people who dual boot with Windows.
