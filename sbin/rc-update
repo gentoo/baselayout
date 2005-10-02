@@ -1,20 +1,14 @@
 #!/bin/bash
-# Copyright 1999-2004 Gentoo Foundation
+# Copyright 1999-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header$
 
 source /sbin/functions.sh
-if [ "${EUID}" -ne 0 ]
-then
-	eerror "$0: must be root."
-	exit 1
-fi
 
 usage() {
 cat << FOO
-usage: rc-update -a|add script runlevel2 [runlevel2...]
-       rc-update -d|del script [runlevel1...]
-       rc-update -s|show [runlevel1...]
+usage: rc-update -a|add script runlevel2 [runlevel2 ...]
+       rc-update -d|del script [runlevel1 ...]
+       rc-update -s|show [runlevel1 ...]
 
 note:  After rc-update executes, the script dependency cache is automatically
        updated.
@@ -157,6 +151,13 @@ show() {
 	done
 }
 
+check_is_root() {
+	if [[ ${EUID} -ne 0 ]] ; then
+		eerror "$0: must be root."
+		exit 1
+	fi
+}
+
 if [ $# -lt 1 ]
 then
 	usage
@@ -167,9 +168,11 @@ regen=0
 
 case "$1" in
 	add|-a)
+		check_is_root
 		add "$@"
 		;;
 	del|delete|-d)
+		check_is_root
 		del "$@"
 		;;
 	show|-s)
