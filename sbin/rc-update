@@ -1,12 +1,8 @@
 #!/bin/bash
-# Copyright 1999-2004 Gentoo Foundation
+# Copyright 1999-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 source /sbin/functions.sh
-if [[ ${EUID} -ne 0 ]] ; then
-	eerror "$0: must be root."
-	exit 1
-fi
 
 usage() {
 cat << FOO
@@ -68,7 +64,6 @@ add() {
 			eerror "$0: failed to add ${myscript} to ${x}."
 			exit 1
 		fi
-		regen=1
 		einfo "${myscript} added to runlevel ${x}"
 	done
 }
@@ -94,7 +89,6 @@ del() {
 	remlevels=""
 	for x in ${mylevels} ; do
 		if [[ -L /etc/runlevels/${x}/${myscript} ]] ; then
-			regen=1
 			rm -f "/etc/runlevels/${x}/${myscript}"
 			remlevels="${remlevels} ${x}"
 		fi
@@ -135,18 +129,25 @@ show() {
 	done
 }
 
+check_is_root() {
+	if [[ ${EUID} -ne 0 ]] ; then
+		eerror "$0: must be root."
+		exit 1
+	fi
+}
+
 if [[ $# -lt 1 ]] ; then
 	usage
 	exit 1
 fi
 
-regen=0
-
 case "$1" in
 	add|-a)
+		check_is_root
 		add "$@"
 		;;
 	del|delete|-d)
+		check_is_root
 		del "$@"
 		;;
 	show|-s)
@@ -157,6 +158,5 @@ case "$1" in
 		exit 1
 		;;
 esac
-
 
 # vim:ts=4
