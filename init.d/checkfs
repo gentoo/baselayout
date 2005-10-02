@@ -38,7 +38,7 @@ start() {
 		else
 			if [[ ${RC_FORCE_AUTO} == "yes" ]] ; then
 				eend 2 "Fsck could not correct all errors, rerunning"
-				fsck -C -T -R -A -a -y
+				fsck -C -T -R -A -y
 				retval=$?
 			fi
 
