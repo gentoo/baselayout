@@ -16,7 +16,6 @@
 
 int main(int argc, char *argv[])
 {
-	unsigned char twelve = 12;
 	int maj;
 	struct stat sb;
 
@@ -24,6 +23,7 @@ int main(int argc, char *argv[])
 	maj = major(sb.st_rdev);
 	if (maj != 3 && (maj < 136 || maj > 143)) {
 #if defined(__linux__)
+		unsigned char twelve = 12;
 		if (ioctl (0, TIOCLINUX, &twelve) < 0) {
 			printf("serial\n");
 			return 1;
