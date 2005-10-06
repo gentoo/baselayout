@@ -325,7 +325,10 @@ ifconfig_post_start() {
 		[[ " ${x} " != *" -net "* && " ${x} " != *" -host "* ]] && x="-net ${x}"
 
 		# Support adding IPv6 addresses easily
-		[[ ${x} == *:* && ${x} != *"-A inet6"* ]] && x="-A inet6 ${x}"
+		if [[ ${x} == *:* ]]; then
+			[[ ${x} != *"-A inet6"* ]] && x="-A inet6 ${x}"
+			x="${x// -net / }"
+		fi
 
 		# Add a metric if we don't have one
 		[[ ${x} != *" metric "* ]] && x="${x} metric ${metric}"
