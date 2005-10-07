@@ -80,7 +80,7 @@ start() {
 	if [ -z "${CDBOOT}" ] && touch /etc/modules.conf 2> /dev/null
 	then
 		ebegin "Calculating module dependencies"
-		/sbin/modules-update &>/dev/null
+		/sbin/modules-update
 		eend $? "Failed to calculate module dependencies"
 	fi
 
