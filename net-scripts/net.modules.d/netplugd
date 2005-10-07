@@ -64,6 +64,14 @@ netplugd_pre_start() {
 		vewarn "netplug only works on interfaces with a valid MAC address"
 		return 0
 	fi
+
+	# We don't work on bridges
+	if [[ $(type -t bridge_exists) == "function" ]]; then
+		if bridge_exists "${iface}"; then
+			veinfo "netplug does not work on bridges"
+			return 0
+		fi
+	fi
 	
 	# We don't work on wirelesss interfaces
 	if [[ $(type -t wireless_check_extensions) == "function" ]]; then

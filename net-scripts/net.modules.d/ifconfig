@@ -117,7 +117,12 @@ ifconfig_get_address() {
 #
 # Fetch the mac address assingned to the network card
 ifconfig_get_mac_address() {
-	ifconfig "$1" | sed -n -e 's/.*HWaddr .*\<\(..:..:..:..:..:..\)\>.*/\U\1/p'
+	local mac=$( ifconfig "$1" | sed -n -e \
+		's/.*HWaddr[ \t]*\<\(..:..:..:..:..:..\)\>.*/\U\1/p' )
+	[[ ${mac} != '00:00:00:00:00:00' \
+	&& ${mac} != '44:44:44:44:44:44' \
+	&& ${mac} != 'FF:FF:FF:FF:FF:FF' ]] \
+		&& echo "${mac}"
 }
 
 # void ifconfig_set_mac_address(char *interface, char *mac)
@@ -288,6 +293,8 @@ ifconfig_post_start() {
 	local iface="$1" ifvar=$( bash_variable "$1" ) routes x metric mtu cidr
 	eval metric=\"\$\{metric_${ifvar}\}\"
 
+	ifconfig_exists "${iface}" || return 0
+	
 	# Make sure interface is marked UP
 	ifconfig_up "${iface}"
 

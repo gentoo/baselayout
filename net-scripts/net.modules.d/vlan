@@ -83,11 +83,12 @@ vlan_check_kernel() {
 # Setup vconfig
 vlan_pre_start() {
 	local iface="$1" opts i x e ifvar=$( bash_variable "$1" )
-
+	
 	eval opts=( \"\$\{vconfig_${ifvar}\[@\]\}\" )
 	[[ -z ${opts} ]] && return 0
 
 	vlan_check_kernel || return 1
+	interface_exists "${iface}" || return 1
 
 	for (( i=0; i<${#opts[@]}; i++ )); do
 		if [[ ${opts[i]} == "set_name_type "* ]]; then
@@ -123,6 +124,7 @@ vlan_post_start() {
 	[[ -z ${vlans} ]] && return 0
 
 	vlan_check_kernel || return 1
+	interface_exists "${iface}" true || return 1
 
 	# Start vlans for this interface
 	for vlan in ${vlans}; do
