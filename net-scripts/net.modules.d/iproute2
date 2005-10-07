@@ -127,8 +127,12 @@ iproute2_get_address() {
 #
 # Fetch the mac address assingned to the network card
 iproute2_get_mac_address() {
-	ip link show "$1" \
-	| sed -n -e 's/^.*\<\(..:..:..:..:..:..\)\>.*/\U\1/p'
+	local mac=$( ip link show "$1" | sed -n -e \
+		's/^.*\<\(..:..:..:..:..:..\)\>.*/\U\1/p' )
+	[[ ${mac} != '00:00:00:00:00:00' \
+	&& ${mac} != '44:44:44:44:44:44' \
+	&& ${mac} != 'FF:FF:FF:FF:FF:FF' ]] \
+		&& echo "${mac}"
 }
 
 # void iproute2_set_mac_address(char *interface, char *mac)
@@ -312,6 +316,8 @@ iproute2_pre_start() {
 iproute2_post_start() {
 	local iface="$1" ifvar=$( bash_variable "$1" ) routes metric mtu x netmask
 
+	iproute2_exists "${iface}" || return 0
+	
 	# Make sure interface is marked UP
 	iproute2_up "${iface}"
 

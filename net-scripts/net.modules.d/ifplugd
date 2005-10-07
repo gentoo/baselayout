@@ -71,6 +71,14 @@ ifplugd_pre_start() {
 		return 0
 	fi
 
+	# We don't work on bridges
+	if [[ $(type -t bridge_exists) == "function" ]]; then
+		if bridge_exists "${iface}"; then
+			veinfo "netplug does not work on bridges"
+			return 0
+		fi
+	fi
+	
 	# Do some options
 	eval opts=\" \$\{ifplugd_${ifvar}\} \"
 	

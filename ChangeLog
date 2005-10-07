@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  07 Oct 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Fix some vlan/bridge/tap/neplugd/ifplugd interdependencies #107406.   
+
   06 Oct 2005; Roy Marples <uberlord@gentoo.org>:
 
     Fixup IPv6 documentation and support, #108143.
