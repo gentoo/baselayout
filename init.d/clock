@@ -79,7 +79,7 @@ start() {
 		done
 	fi
 
-	ebegin "Setting system clock to hardware clock [${TBLURB}]"
+	ebegin "Setting system clock using the hardware clock [${TBLURB}]"
 	if [[ ${fakeit} -eq 1 ]] ; then
 		ret=0
 
@@ -115,7 +115,7 @@ stop() {
 
 	setupopts
 
-	ebegin "Syncing system clock to hardware clock [${TBLURB}]"
+	ebegin "Setting hardware clock using the system clock [${TBLURB}]"
 	if [[ ${fakeit} -eq 1 ]] ; then
 		ret=0
 
