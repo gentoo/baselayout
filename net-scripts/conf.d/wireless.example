@@ -188,7 +188,7 @@
 # This is used when the Access Point is not broadcasting it's ESSID
 # WARNING: This will override the ESSID being broadcast due to some
 # Access Points sending an ESSID even when they have been configured
-# not too!
+# not to!
 # Change 001122334455 to the MAC address and ESSID to the ESSID
 # it should map to
 #essid_001122334455="ESSID"
