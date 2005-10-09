@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  09 Oct 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Fix chroot handling and enable custom env vars for start-stop-daemon
+    binary #101642, thanks to Quequero. 
+
   07 Oct 2005; Roy Marples <uberlord@gentoo.org>:
 
     Fix some vlan/bridge/tap/neplugd/ifplugd interdependencies #107406.

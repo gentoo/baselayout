@@ -18,6 +18,16 @@
  *                 and Andreas Schuldei <andreas@schuldei.org>
  *
  * Changes by Ian Jackson: added --retry (and associated rearrangements).
+ *
+ * 
+ * Changes by Quequero <quequero@bitchx.it>:
+ * Added -e|--env for setting an environment variable before starting the
+ * process.
+ * Moved --make-pidfile after chrooting process (pid file will be wrote in
+ * new root if -r option is used!).
+ * Daemon binary will be stat()ed correctly if it's going to be chrooted
+ * with -r|--chroot.
+ * 
  */
 
 #define VERSION "1.13.11+gentoo"
@@ -113,6 +123,7 @@ static const char *signal_str = NULL;
 static int user_id = -1;
 static int runas_uid = -1;
 static int runas_gid = -1;
+static char *env = NULL;
 static const char *userspec = NULL;
 static char *changeuser = NULL;
 static const char *changegroup = NULL;
@@ -291,6 +302,8 @@ do_help(void)
 "  -b|--background               force the process to detach\n"
 "  -m|--make-pidfile             create the pidfile before starting\n"
 "  -R|--retry <schedule>         check whether processes die, and retry\n"
+"  -e|--env <env-name>           set an environment variable (PWD=\"/\")\n"
+"  -r|--chroot <path>            chroot process to given directory\n"
 "  -t|--test                     test mode, don't do anything\n"
 "  -o|--oknodo                   exit status 0 (not 1) if nothing done\n"
 "  -q|--quiet                    be more quiet\n"
@@ -459,6 +472,7 @@ parse_options(int argc, char * const *argv)
 		{ "start",        0, NULL, 'S'},
 		{ "version",      0, NULL, 'V'},
 		{ "startas",      1, NULL, 'a'},
+		{ "env",          1, NULL, 'e'},
 		{ "name",         1, NULL, 'n'},
 		{ "oknodo",       0, NULL, 'o'},
 		{ "pidfile",      1, NULL, 'p'},
@@ -481,7 +495,7 @@ parse_options(int argc, char * const *argv)
 	int c;
 
 	for (;;) {
-		c = getopt_long(argc, argv, "HKSVa:n:op:qr:s:tu:vx:c:N:bmR:g:d:",
+		c = getopt_long(argc, argv, "HKSVa:n:op:qr:e:s:tu:vx:c:N:bmR:g:d:",
 				longopts, (int *) 0);
 		if (c == -1)
 			break;
@@ -540,6 +554,9 @@ parse_options(int argc, char * const *argv)
 			break;
 		case 'r':  /* --chroot /new/root */
 			changeroot = optarg;
+			break;
+		case 'e':  /* --env <env-name> */
+			env = optarg;
 			break;
 		case 'N':  /* --nice */
 			nicelevel = atoi(optarg);
@@ -1247,8 +1264,25 @@ main(int argc, char **argv)
 	argc -= optind;
 	argv += optind;
 
-	if (execname && stat(execname, &exec_stat))
-		fatal("stat %s: %s", execname, strerror(errno));
+	if (changeroot == NULL) {
+		if (execname && stat(execname, &exec_stat))
+			fatal("stat %s: %s", execname, strerror(errno));
+	} else {
+		if (execname) {
+			char *tmp = NULL;
+
+			tmp = malloc(strlen(changeroot) + strlen(execname) + 1);
+			strncpy(tmp, changeroot, strlen(changeroot));
+			strncat(tmp, execname, strlen(execname));
+
+			if (stat(tmp, &exec_stat)) {
+				fatal("stat %s: %s", tmp, strerror(errno));
+				free(tmp);
+			} else {
+				free(tmp);
+			}
+		}
+	}
 
 	if (userspec && sscanf(userspec, "%d", &user_id) != 1) {
 		struct passwd *pw;
@@ -1336,15 +1370,6 @@ main(int argc, char **argv)
 			fatal("Unable to alter nice level by %i: %s", nicelevel,
 				strerror(errno));
 	}
-	if (mpidfile && pidfile != NULL) { /* user wants _us_ to make the pidfile :) */
-		FILE *pidf = fopen(pidfile, "w");
-		pid_t pidt = getpid();
-		if (pidf == NULL)
-			fatal("Unable to open pidfile `%s' for writing: %s", pidfile,
-				strerror(errno));
-		fprintf(pidf, "%d\n", pidt);
-		fclose(pidf);
-	}
 	if (changeroot != NULL) {
 		if (chdir(changeroot) < 0)
 			fatal("Unable to chdir() to %s", changeroot);
@@ -1353,6 +1378,15 @@ main(int argc, char **argv)
 	}
 	if (chdir(changedir) < 0)
 		fatal("Unable to chdir() to %s", changedir);
+        if (mpidfile && pidfile != NULL) { /* user wants _us_ to make the pidfile :) */
+                FILE *pidf = fopen(pidfile, "w");
+                pid_t pidt = getpid();
+                if (pidf == NULL)
+                        fatal("Unable to open pidfile `%s' for writing: %s", pidfile,
+                                strerror(errno));
+                fprintf(pidf, "%d\n", pidt);
+                fclose(pidf);
+        }
 	if (changeuser != NULL) {
 		if (setgid(runas_gid))
 			fatal("Unable to set gid to %d", runas_gid);
@@ -1360,6 +1394,10 @@ main(int argc, char **argv)
 			fatal("Unable to set initgroups() with gid %d", runas_gid);
 		if (setuid(runas_uid))
 			fatal("Unable to set uid to %s", changeuser);
+	}
+	if (env != NULL) {
+		if(putenv(env))
+			fatal("Unable to set variable: %s", env);
 	}
 	if (background) { /* continue background setup */
 		int i;

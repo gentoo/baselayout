@@ -186,6 +186,14 @@ Chdir and chroot to
 before starting the process. Please note that the pidfile is also written
 after the chroot.
 .TP
+\fB-e\fP|\fB--env\fP \fIenv-name\fP
+Set an environment variable whose name and value is
+.I env-name
+before starting 
+.I executable. 
+Example: -e HOME="/home/user" exports an environment variable whose name
+is HOME with value "/home/user".
+.TP
 .BR -b | --background
 Typically used with programs that don't detach on their own. This option
 will force
