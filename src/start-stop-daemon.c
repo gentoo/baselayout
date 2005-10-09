@@ -19,22 +19,18 @@
  *
  * Changes by Ian Jackson: added --retry (and associated rearrangements).
  *
- * Modified for Gentoo rc-scripts by Donny Davies <woodchip@gentoo.org>:
- *   I removed the BSD/Hurd/OtherOS stuff, added #include <stddef.h>
- *   and stuck in a #define VERSION "1.9.18".  Now it compiles without
- *   the whole automake/config.h dance.
- *
- * Updated by Aron Griffis <agriffis@gentoo.org>:
- *   Fetched updates from Debian's dpkg-1.10.20, including fix for
- *   Gentoo bug 22686 (start-stop-daemon in baselayout doesn't allow
- *   altered nicelevel).
- * Updated by Kito <kito@gentoo.org>:
- *   Add support for Darwin, additional patches from opendarwin.org
- * 	 fix for Gentoo bug 72145 from eldad@gentoo.org
+ * 
+ * Changes by Quequero <quequero@bitchx.it>:
+ * Added -e|--env for setting an environment variable before starting the
+ * process.
+ * Moved --make-pidfile after chrooting process (pid file will be wrote in
+ * new root if -r option is used!).
+ * Daemon binary will be stat()ed correctly if it's going to be chrooted
+ * with -r|--chroot.
+ * 
  */
 
-#define VERSION "1.10.20"
-#include <stddef.h>
+#define VERSION "1.13.11+gentoo"
 
 #define NONRETURNPRINTFFORMAT(x, y) \
 	__attribute__((noreturn, format(printf, x, y)))
@@ -75,7 +71,7 @@
 #include <sys/stat.h>
 #include <sys/sysctl.h>
 #include <sys/types.h>
- 
+
 #include <err.h>
 #include <kvm.h>
 #include <limits.h>
@@ -107,6 +103,8 @@
 #include <assert.h>
 #include <ctype.h>
 
+#include <stddef.h>
+
 #include "headers.h"
 
 #ifdef HURD_IHASH_H
@@ -125,11 +123,12 @@ static const char *signal_str = NULL;
 static int user_id = -1;
 static int runas_uid = -1;
 static int runas_gid = -1;
+static char *env = NULL;
 static const char *userspec = NULL;
 static char *changeuser = NULL;
 static const char *changegroup = NULL;
 static char *changeroot = NULL;
-static const char *changedir = NULL;
+static const char *changedir = "/";
 static const char *cmdname = NULL;
 static char *execname = NULL;
 static char *startas = NULL;
@@ -141,7 +140,7 @@ static int nicelevel = 0;
 
 static struct stat exec_stat;
 #if defined(OSHURD)
-static struct proc_stat_list *procset;
+static struct proc_stat_list *procset = NULL;
 #endif
 
 
@@ -202,18 +201,18 @@ static void badusage(const char *msg);
 typedef long tvselector(const struct timeval*);
 static long tvselector_sec(const struct timeval *tv) { return tv->tv_sec; }
 static long tvselector_usec(const struct timeval *tv) { return tv->tv_usec; }
-#define TVCALC_ELEM(result, expr, sec, adj)                           \
-{								      \
-  const long TVADJUST = adj;					      \
-  long (*const TVELEM)(const struct timeval*) = tvselector_##sec;     \
-  (result).tv_##sec = (expr);					      \
+#define TVCALC_ELEM(result, expr, sec, adj) \
+{ \
+  const long TVADJUST = adj; \
+  long (*const TVELEM)(const struct timeval*) = tvselector_##sec; \
+  (result).tv_##sec = (expr); \
 }
-#define TVCALC(result,expr)					      \
-do {								      \
-  TVCALC_ELEM(result, expr, sec, (-1));				      \
-  TVCALC_ELEM(result, expr, usec, (+1000000));			      \
-  (result).tv_sec += (result).tv_usec / 1000000;		      \
-  (result).tv_usec %= 1000000;					      \
+#define TVCALC(result,expr) \
+do { \
+  TVCALC_ELEM(result, expr, sec, (-1)); \
+  TVCALC_ELEM(result, expr, usec, (+1000000)); \
+  (result).tv_sec += (result).tv_usec / 1000000; \
+  (result).tv_usec %= 1000000; \
 } while(0)
 
 
@@ -226,7 +225,7 @@ fatal(const char *format, ...)
 	va_start(arglist, format);
 	vfprintf(stderr, format, arglist);
 	va_end(arglist);
-	putc('\n', stderr);
+	fprintf(stderr, " (%s)\n", strerror (errno));
 	exit(2);
 }
 
@@ -303,6 +302,8 @@ do_help(void)
 "  -b|--background               force the process to detach\n"
 "  -m|--make-pidfile             create the pidfile before starting\n"
 "  -R|--retry <schedule>         check whether processes die, and retry\n"
+"  -e|--env <env-name>           set an environment variable (PWD=\"/\")\n"
+"  -r|--chroot <path>            chroot process to given directory\n"
 "  -t|--test                     test mode, don't do anything\n"
 "  -o|--oknodo                   exit status 0 (not 1) if nothing done\n"
 "  -q|--quiet                    be more quiet\n"
@@ -466,34 +467,35 @@ static void
 parse_options(int argc, char * const *argv)
 {
 	static struct option longopts[] = {
-		{ "help",	  0, NULL, 'H'},
-		{ "stop",	  0, NULL, 'K'},
-		{ "start",	  0, NULL, 'S'},
-		{ "version",	  0, NULL, 'V'},
-		{ "startas",	  1, NULL, 'a'},
-		{ "name",	  1, NULL, 'n'},
-		{ "oknodo",	  0, NULL, 'o'},
-		{ "pidfile",	  1, NULL, 'p'},
-		{ "quiet",	  0, NULL, 'q'},
-		{ "signal",	  1, NULL, 's'},
-		{ "test",	  0, NULL, 't'},
-		{ "user",	  1, NULL, 'u'},
-		{ "group",	  1, NULL, 'g'},
-		{ "chroot",	  1, NULL, 'r'},
-		{ "verbose",	  0, NULL, 'v'},
-		{ "exec",	  1, NULL, 'x'},
-		{ "chuid",	  1, NULL, 'c'},
-		{ "nicelevel",	  1, NULL, 'N'},
+		{ "help",         0, NULL, 'H'},
+		{ "stop",         0, NULL, 'K'},
+		{ "start",        0, NULL, 'S'},
+		{ "version",      0, NULL, 'V'},
+		{ "startas",      1, NULL, 'a'},
+		{ "env",          1, NULL, 'e'},
+		{ "name",         1, NULL, 'n'},
+		{ "oknodo",       0, NULL, 'o'},
+		{ "pidfile",      1, NULL, 'p'},
+		{ "quiet",        0, NULL, 'q'},
+		{ "signal",       1, NULL, 's'},
+		{ "test",         0, NULL, 't'},
+		{ "user",         1, NULL, 'u'},
+		{ "group",        1, NULL, 'g'},
+		{ "chroot",       1, NULL, 'r'},
+		{ "verbose",      0, NULL, 'v'},
+		{ "exec",         1, NULL, 'x'},
+		{ "chuid",        1, NULL, 'c'},
+		{ "nicelevel",    1, NULL, 'N'},
 		{ "background",   0, NULL, 'b'},
 		{ "make-pidfile", 0, NULL, 'm'},
- 		{ "retry",        1, NULL, 'R'},
+		{ "retry",        1, NULL, 'R'},
 		{ "chdir",        1, NULL, 'd'},
-		{ NULL,		0, NULL, 0}
+		{ NULL,           0, NULL, 0}
 	};
 	int c;
 
 	for (;;) {
-		c = getopt_long(argc, argv, "HKSV:a:n:op:qr:s:tu:vx:c:N:bmR:g:d:",
+		c = getopt_long(argc, argv, "HKSVa:n:op:qr:e:s:tu:vx:c:N:bmR:g:d:",
 				longopts, (int *) 0);
 		if (c == -1)
 			break;
@@ -552,6 +554,9 @@ parse_options(int argc, char * const *argv)
 			break;
 		case 'r':  /* --chroot /new/root */
 			changeroot = optarg;
+			break;
+		case 'e':  /* --env <env-name> */
+			env = optarg;
 			break;
 		case 'N':  /* --nice */
 			nicelevel = atoi(optarg);
@@ -657,36 +662,70 @@ pid_is_cmd(pid_t pid, const char *name)
 
 
 #if defined(OSHURD)
+static void
+init_procset(void)
+{
+	struct ps_context *context;
+	error_t err;
+
+	err = ps_context_create(getproc(), &context);
+	if (err)
+		error(1, err, "ps_context_create");
+
+	err = proc_stat_list_create(context, &procset);
+	if (err)
+		error(1, err, "proc_stat_list_create");
+
+	err = proc_stat_list_add_all(procset, 0, 0);
+	if (err)
+		error(1, err, "proc_stat_list_add_all");
+}
+
+static struct proc_stat *
+get_proc_stat (pid_t pid, ps_flags_t flags)
+{
+	struct proc_stat *ps;
+	ps_flags_t wanted_flags = PSTAT_PID | flags;
+
+	if (!procset)
+		init_procset();
+
+	ps = proc_stat_list_pid_proc_stat(procset, pid);
+	if (!ps)
+		return NULL;
+	if (proc_stat_set_flags(ps, wanted_flags))
+		return NULL;
+	if ((proc_stat_flags(ps) & wanted_flags) != wanted_flags)
+		return NULL;
+
+	return ps;
+}
+
 static int
 pid_is_user(pid_t pid, uid_t uid)
 {
-	struct stat sb;
-	char buf[32];
-	struct proc_stat *pstat;
+	struct proc_stat *ps;
 
-	sprintf(buf, "/proc/%d", pid);
-	if (stat(buf, &sb) != 0)
-		return 0;
-	return (sb.st_uid == uid);
-	pstat = proc_stat_list_pid_proc_stat (procset, pid);
-	if (pstat == NULL)
-		fatal ("Error getting process information: NULL proc_stat struct");
-	proc_stat_set_flags (pstat, PSTAT_PID | PSTAT_OWNER_UID);
-	return (pstat->owner_uid == uid);
+	ps = get_proc_stat(pid, PSTAT_OWNER_UID);
+	return ps && proc_stat_owner_uid(ps) == uid;
 }
 
 static int
 pid_is_cmd(pid_t pid, const char *name)
 {
-	struct proc_stat *pstat;
-	pstat = proc_stat_list_pid_proc_stat (procset, pid);
-	if (pstat == NULL)
-		fatal ("Error getting process information: NULL proc_stat struct");
-	proc_stat_set_flags (pstat, PSTAT_PID | PSTAT_ARGS);
-	return (!strcmp (name, pstat->args));
-}
-#endif /* OSHURD */
+	struct proc_stat *ps;
 
+	ps = get_proc_stat(pid, PSTAT_ARGS);
+	return ps && !strcmp(proc_stat_args(ps), name);
+}
+
+static int
+pid_is_running(pid_t pid)
+{
+	return get_proc_stat(pid, 0) != NULL;
+}
+
+#else /* !OSHURD */
 
 static int
 pid_is_running(pid_t pid)
@@ -704,6 +743,8 @@ pid_is_running(pid_t pid)
 	return 1;
 }
 
+#endif /* OSHURD */
+
 static void
 check(pid_t pid)
 {
@@ -711,7 +752,7 @@ check(pid_t pid)
 	if (execname && !pid_is_exec(pid, &exec_stat))
 		return;
 #elif defined(OSHURD) || defined(OSFreeBSD) || defined(OSNetBSD) || defined(OSDarwin)
-    /* I will try this to see if it works */
+	/* I will try this to see if it works */
 	if (execname && !pid_is_cmd(pid, execname))
 		return;
 #endif
@@ -771,98 +812,92 @@ do_procinit(void)
 
 
 #if defined(OSHURD)
-error_t
-check_all(void *ptr)
+static int
+check_proc_stat (struct proc_stat *ps)
 {
-	struct proc_stat *pstat = ptr;
-
-	check(pstat->pid);
+	check(ps->pid);
 	return 0;
 }
 
 static void
 do_procinit(void)
 {
-	struct ps_context *context;
-	error_t err;
+	if (!procset)
+		init_procset();
 
-	err = ps_context_create(getproc(), &context);
-	if (err)
-		error(1, err, "ps_context_create");
-
-	err = proc_stat_list_create(context, &procset);
-	if (err)
-		error(1, err, "proc_stat_list_create");
-
-	err = proc_stat_list_add_all(procset, 0, 0);
-	if (err)
-		error(1, err, "proc_stat_list_add_all");
-
-	/* Check all pids */
-	ihash_iterate(context->procs, check_all);
+	proc_stat_list_for_each (procset, check_proc_stat);
 }
 #endif /* OSHURD */
 
 
 #if defined(OSOpenBSD) || defined(OSFreeBSD) || defined(OSNetBSD)
+
+# if defined(OSNetBSD)
+#  define _KINFO_PROC2 kinfo_proc2
+#  define _GET_KINFO_UID(kp) (kp->p_ruid)
+#  define _GET_KINFO_COMM(kp) (kp->p_comm)
+# else
+#  define _KINFO_PROC2 kinfo_proc
+#  define _GET_KINFO_UID(kp) (kp->ki_ruid)
+#  define _GET_KINFO_COMM(kp) (kp->ki_comm)
+# endif
+
 static int
 pid_is_cmd(pid_t pid, const char *name)
 {
-        kvm_t *kd;
-        int nentries, argv_len=0;
-        struct kinfo_proc *kp;
-        char  errbuf[_POSIX2_LINE_MAX], buf[_POSIX2_LINE_MAX];
+	kvm_t *kd;
+	int nentries, argv_len=0;
+	struct kinfo_proc *kp;
+	char  errbuf[_POSIX2_LINE_MAX], buf[_POSIX2_LINE_MAX];
 	char  **pid_argv_p;
 	char  *start_argv_0_p, *end_argv_0_p;
- 
- 
-        kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, errbuf);
-        if (kd == 0)
-                errx(1, "%s", errbuf);
-        if ((kp = kvm_getprocs(kd, KERN_PROC_PID, pid, &nentries)) == 0)
-                errx(1, "%s", kvm_geterr(kd));
-	if ((pid_argv_p = kvm_getargv(kd, kp, argv_len)) == 0)
-		errx(1, "%s", kvm_geterr(kd)); 
-
-	start_argv_0_p = *pid_argv_p;
-	/* find and compare string */
-	  
-	/* find end of argv[0] then copy and cut of str there. */
-	if ((end_argv_0_p = strchr(*pid_argv_p, ' ')) == 0 ) 	
-	/* There seems to be no space, so we have the command
-	 * allready in its desired form. */
-	  start_argv_0_p = *pid_argv_p;
-	else {
-	  /* Tests indicate that this never happens, since
-	   * kvm_getargv itselfe cuts of tailing stuff. This is
-	   * not what the manpage says, however. */
-	  strncpy(buf, *pid_argv_p, (end_argv_0_p - start_argv_0_p));
-	  buf[(end_argv_0_p - start_argv_0_p) + 1] = '\0';
-	  start_argv_0_p = buf;
-	}
-        
-	if (strlen(name) != strlen(start_argv_0_p))
-               return 0;
-        return (strcmp(name, start_argv_0_p) == 0) ? 1 : 0;
-}
- 
-static int
-pid_is_user(pid_t pid, uid_t uid)
-{
-	kvm_t *kd;
-	int nentries;   /* Value not used */
-	uid_t proc_uid;
-	struct kinfo_proc *kp;
-	char  errbuf[_POSIX2_LINE_MAX];
-
 
 	kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, errbuf);
 	if (kd == 0)
 		errx(1, "%s", errbuf);
 	if ((kp = kvm_getprocs(kd, KERN_PROC_PID, pid, &nentries)) == 0)
 		errx(1, "%s", kvm_geterr(kd));
-	if (kp->ki_ruid )
-		kvm_read(kd, (u_long)&(kp->ki_ruid),
+	if ((pid_argv_p = kvm_getargv(kd, kp, argv_len)) == 0)
+		errx(1, "%s", kvm_geterr(kd));
+
+	start_argv_0_p = *pid_argv_p;
+	/* find and compare string */
+
+	/* find end of argv[0] then copy and cut of str there. */
+	if ((end_argv_0_p = strchr(*pid_argv_p, ' ')) == 0 )
+		/* There seems to be no space, so we have the command
+		 * allready in its desired form. */
+		start_argv_0_p = *pid_argv_p;
+	else {
+		/* Tests indicate that this never happens, since
+		 * kvm_getargv itselfe cuts of tailing stuff. This is
+		 * not what the manpage says, however. */
+		strncpy(buf, *pid_argv_p, (end_argv_0_p - start_argv_0_p));
+		buf[(end_argv_0_p - start_argv_0_p) + 1] = '\0';
+		start_argv_0_p = buf;
+	}
+
+	if (strlen(name) != strlen(start_argv_0_p))
+		return 0;
+	return (strcmp(name, start_argv_0_p) == 0) ? 1 : 0;
+}
+
+static int
+pid_is_user(pid_t pid, uid_t uid)
+{
+	kvm_t *kd;
+	int nentries;   /* Value not used */
+	uid_t proc_uid;
+	struct _KINFO_PROC2 *kp;
+	char  errbuf[_POSIX2_LINE_MAX];
+
+	kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, errbuf);
+	if (kd == 0)
+		errx(1, "%s", errbuf);
+	if ((kp = kvm_getprocs(kd, KERN_PROC_PID, pid, &nentries)) == 0)
+		errx(1, "%s", kvm_geterr(kd));
+	if (_GET_KINFO_UID(kp))
+		kvm_read(kd, (u_long)&(_GET_KINFO_UID(kp)),
 			&proc_uid, sizeof(uid_t));
 	else
 		return 0;
@@ -874,7 +909,7 @@ pid_is_exec(pid_t pid, const char *name)
 {
 	kvm_t *kd;
 	int nentries;
-	struct kinfo_proc *kp;
+	struct _KINFO_PROC2 *kp;
 	char errbuf[_POSIX2_LINE_MAX], *pidexec;
 
 	kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, errbuf);
@@ -882,7 +917,7 @@ pid_is_exec(pid_t pid, const char *name)
 		errx(1, "%s", errbuf);
 	if ((kp = kvm_getprocs(kd, KERN_PROC_PID, pid, &nentries)) == 0)
 		errx(1, "%s", kvm_geterr(kd));
-	pidexec = kp->ki_comm;
+	pidexec = _GET_KINFO_COMM(kp);
 	if (strlen(name) != strlen(pidexec))
 		return 0;
 	return (strcmp(name, pidexec) == 0) ? 1 : 0;
@@ -921,7 +956,7 @@ pid_is_cmd(pid_t pid, const char *name)
 	int mib[4];
 	size_t size;
 	struct kinfo_proc ki;
-	
+
 	size = sizeof(ki);
 	mib[0] = CTL_KERN;
 	mib[1] = KERN_PROC;
@@ -939,7 +974,7 @@ do_procinit(void)
 	size_t size;
 	int nprocs, ret, i;
 	struct kinfo_proc *procs = NULL, *newprocs;
-	
+
 	mib[0] = CTL_KERN;
 	mib[1] = KERN_PROC;
 	mib[2] = KERN_PROC_ALL;
@@ -969,6 +1004,7 @@ do_procinit(void)
 	}
 }
 #endif /* OSDarwin */
+
 #if defined(OShpux)
 static int
 pid_is_user(pid_t pid, uid_t uid)
@@ -1009,9 +1045,9 @@ do_procinit(void)
 	int idx = 0;
 
 	while ((count = pstat_getproc(pst, sizeof(pst[0]), 10, idx)) > 0) {
-                for (i = 0; i < count; i++)
+		for (i = 0; i < count; i++)
 			check(pst[i].pst_pid);
-                idx = pst[count - 1].pst_idx + 1;
+		idx = pst[count - 1].pst_idx + 1;
 	}
 }
 #endif /* OShpux */
@@ -1021,7 +1057,7 @@ static void
 do_findprocs(void)
 {
 	clear(&found);
-	
+
 	if (pidfile)
 		do_pidfile(pidfile);
 	else
@@ -1034,15 +1070,15 @@ do_stop(int signal_nr, int quietmode, int *n_killed, int *n_notkilled, int retry
 {
 	struct pid_list *p;
 
- 	do_findprocs();
- 
- 	*n_killed = 0;
- 	*n_notkilled = 0;
- 
- 	if (!found)
- 		return;
- 
- 	clear(&killed);
+	do_findprocs();
+
+	*n_killed = 0;
+	*n_notkilled = 0;
+
+	if (!found)
+		return;
+
+	clear(&killed);
 
 	for (p = found; p; p = p->next) {
 		if (testmode) {
@@ -1051,21 +1087,21 @@ do_stop(int signal_nr, int quietmode, int *n_killed, int *n_notkilled, int retry
 			(*n_killed)++;
 		} else if (kill(p->pid, signal_nr) == 0) {
 			push(&killed, p->pid);
- 			(*n_killed)++;
+			(*n_killed)++;
 		} else {
 			printf("%s: warning: failed to kill %d: %s\n",
 			       progname, p->pid, strerror(errno));
- 			(*n_notkilled)++;
+			(*n_notkilled)++;
 		}
 	}
 	if (quietmode < 0 && killed) {
- 		printf("Stopped %s (pid", what_stop);
+		printf("Stopped %s (pid", what_stop);
 		for (p = killed; p; p = p->next)
 			printf(" %d", p->pid);
- 		putchar(')');
- 		if (retry_nr > 0)
- 			printf(", retry #%d", retry_nr);
- 		printf(".\n");
+		putchar(')');
+		if (retry_nr > 0)
+			printf(", retry #%d", retry_nr);
+		printf(".\n");
 	}
 }
 
@@ -1181,7 +1217,7 @@ run_stop_schedule(void)
 
 				if (interval.tv_sec == 0 &&
 				    interval.tv_usec <= MIN_POLL_INTERVAL)
-				        interval.tv_usec = MIN_POLL_INTERVAL;
+					interval.tv_usec = MIN_POLL_INTERVAL;
 
 				r = select(0,0,0,0,&interval);
 				if (r < 0 && errno != EINTR)
@@ -1215,7 +1251,6 @@ x_finished:
 }
 
 
-int main(int argc, char **argv) NONRETURNING;
 int
 main(int argc, char **argv)
 {
@@ -1229,8 +1264,25 @@ main(int argc, char **argv)
 	argc -= optind;
 	argv += optind;
 
-	if (execname && stat(execname, &exec_stat))
-		fatal("stat %s: %s", execname, strerror(errno));
+	if (changeroot == NULL) {
+		if (execname && stat(execname, &exec_stat))
+			fatal("stat %s: %s", execname, strerror(errno));
+	} else {
+		if (execname) {
+			char *tmp = NULL;
+
+			tmp = malloc(strlen(changeroot) + strlen(execname) + 1);
+			strncpy(tmp, changeroot, strlen(changeroot));
+			strncat(tmp, execname, strlen(execname));
+
+			if (stat(tmp, &exec_stat)) {
+				fatal("stat %s: %s", tmp, strerror(errno));
+				free(tmp);
+			} else {
+				free(tmp);
+			}
+		}
+	}
 
 	if (userspec && sscanf(userspec, "%d", &user_id) != 1) {
 		struct passwd *pw;
@@ -1295,7 +1347,7 @@ main(int argc, char **argv)
 	if (background) { /* ok, we need to detach this process */
 		int i;
 		if (quietmode < 0)
-			printf("Detatching to start %s...", startas);
+			printf("Detaching to start %s...", startas);
 		i = fork();
 		if (i<0) {
 			fatal("Unable to fork.\n");
@@ -1318,30 +1370,34 @@ main(int argc, char **argv)
 			fatal("Unable to alter nice level by %i: %s", nicelevel,
 				strerror(errno));
 	}
-	if (mpidfile && pidfile != NULL) { /* user wants _us_ to make the pidfile :) */
-		FILE *pidf = fopen(pidfile, "w");
-		pid_t pidt = getpid();
-		if (pidf == NULL)
-			fatal("Unable to open pidfile `%s' for writing: %s", pidfile,
-				strerror(errno));
-		fprintf(pidf, "%d\n", pidt);
-		fclose(pidf);
-	}
 	if (changeroot != NULL) {
 		if (chdir(changeroot) < 0)
 			fatal("Unable to chdir() to %s", changeroot);
 		if (chroot(changeroot) < 0)
 			fatal("Unable to chroot() to %s", changeroot);
 	}
-	if (changedir != NULL && chdir(changedir) < 0)
+	if (chdir(changedir) < 0)
 		fatal("Unable to chdir() to %s", changedir);
+        if (mpidfile && pidfile != NULL) { /* user wants _us_ to make the pidfile :) */
+                FILE *pidf = fopen(pidfile, "w");
+                pid_t pidt = getpid();
+                if (pidf == NULL)
+                        fatal("Unable to open pidfile `%s' for writing: %s", pidfile,
+                                strerror(errno));
+                fprintf(pidf, "%d\n", pidt);
+                fclose(pidf);
+        }
 	if (changeuser != NULL) {
- 		if (setgid(runas_gid))
- 			fatal("Unable to set gid to %d", runas_gid);
+		if (setgid(runas_gid))
+			fatal("Unable to set gid to %d", runas_gid);
 		if (initgroups(changeuser, runas_gid))
 			fatal("Unable to set initgroups() with gid %d", runas_gid);
 		if (setuid(runas_uid))
 			fatal("Unable to set uid to %s", changeuser);
+	}
+	if (env != NULL) {
+		if(putenv(env))
+			fatal("Unable to set variable: %s", env);
 	}
 	if (background) { /* continue background setup */
 		int i;
@@ -1372,4 +1428,3 @@ main(int argc, char **argv)
 	execv(startas, argv);
 	fatal("Unable to start %s: %s", startas, strerror(errno));
 }
-
