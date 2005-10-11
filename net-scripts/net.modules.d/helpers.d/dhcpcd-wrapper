@@ -15,24 +15,25 @@ fi
 
 . /lib/rcscripts/net.modules.d/helpers.d/module-loader
 
-if [[ ${action} == "up" ]]; then
-	# Map MAC address variables to interface variables
-	macnet_pre_start "${interface}" 1>/dev/null
+# Map MAC address variables to interface variables
+macnet_pre_start "${interface}" 1>/dev/null
 
-	# Map wireless ESSID variables to interface variables
-	if [[ -n ${wireless_module} ]]; then
-		if wireless_check_extensions "${interface}" ; then
-			essidnet_pre_start "${interface}" 1>/dev/null
-		fi
+# Map wireless ESSID variables to interface variables
+if [[ -n ${wireless_module} ]]; then
+	if wireless_check_extensions "${interface}" ; then
+		essidnet_pre_start "${interface}" 1>/dev/null
 	fi
+fi
 
-	# Add any search paths if we have any defined
-	ifvar=$( bash_variable "${interface}" )
+# Add any search paths if we have any defined
+ifvar=$( bash_variable "${interface}" )
+
+if [[ ${action} == "up" ]]; then
 	eval d=\" \$\{dhcp_${ifvar}\} \"
 	[[ ${d} == "  " ]] && d=" ${dhcp} "
 
 	resolv="${statedir}/${interface}/resolv.conf"
-	
+
 	if [[ ${d} != *" nodns "* ]]; then
 		eval search=\"\$\{dns_search_${ifvar}\}\"
 		if [[ -n ${search} ]]; then
@@ -45,6 +46,16 @@ if [[ ${action} == "up" ]]; then
 
 	system_dns_extra "${interface}" "${resolv}"
 fi
+
+# As we override the -c option, we need to call the specified script ourself
+eval opts=\"\$\{dhcpcd_${ifvar}\}\"
+exe="${opts##* -c }"
+if [[ -n ${exe} && ${exe} != "${opts}" ]]; then
+	exe="${exe%% *}"
+else
+	exe="/etc/dhcpc/dhcpcd.exe"
+fi
+[[ -x ${exe} ]] && ( ${exe} "$@" 1>/dev/null )
 
 . /lib/rcscripts/net.modules.d/helpers.d/dhcp-state
 

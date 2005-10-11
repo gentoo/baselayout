@@ -1,6 +1,15 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  11 Oct 2005; Roy Marples <uberlord@gentoo.org>:
+
+    arping now dis-regards 0.0.0.0 and 0 addresses, #108737.
+
+    dhcpcd now allows the user to configure the -c script option, #108345.
+
+    bash doesn't handle floats, so we eumlate it. Fixes the issue
+    where some daemons didn't stop, #107492. Thanks to Giampaolo Tomassoni.
+
   09 Oct 2005; Roy Marples <uberlord@gentoo.org>:
 
     Fix chroot handling and enable custom env vars for start-stop-daemon

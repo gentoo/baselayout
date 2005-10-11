@@ -68,6 +68,10 @@ rc_shift_args() {
 			--pid=*)
 				pidfile="${1##--pid=}"
 				;;
+			-R|--retry)
+				unset RC_RETRY_COUNT
+				addvar="RC_RETRY_COUNT"
+				;;
 			-s|--signal)
 				addvar="signal"
 				;;
@@ -77,6 +81,8 @@ rc_shift_args() {
 		esac
 		shift
 	done
+
+	[[ -z ${RC_RETRY_COUNT} ]] && RC_RETRY_COUNT=5
 }	
 
 # void rc_setup_daemon_vars(void)
@@ -128,23 +134,33 @@ rc_setup_daemon_vars() {
 # via pkill
 # Returns 0 if successfuly otherwise 1
 rc_try_kill_pid() {
-	local pid="$1" signal="${2:-TERM}" session="${3:-false}"  i s
+	local pid="$1" signal="${2:-TERM}" session="${3:-false}" i s p e
 
 	# We split RC_RETRY_TIMEOUT into tenths of seconds
 	# So we return as fast as possible
-	(( s=${RC_RETRY_TIMEOUT}/10 ))
+	s=$(( ${RC_RETRY_TIMEOUT}/10 )).$(( ${RC_RETRY_TIMEOUT}%10 ))
 
 	for (( i=0; i<RC_RETRY_COUNT*10; i++ )); do
 		if ${session} ; then
 			if [[ -x /usr/bin/pkill ]]; then
-				/usr/bin/pkill "-${signal}" -s "${pid}" || return 0
+				pkill "-${signal}" -s "${pid}"
+				pgrep -s "${pid}" >/dev/null || return 0
 			else
-				local pids=$(/bin/ps -eo pid,sid | /bin/sed -n 's/'${pid}'$//p')
+				local pids=$(ps -eo pid,sid | sed -n 's/'${pid}'$//p')
 				[[ -z ${pids} ]] && return 0
-				/bin/kill -s "${signal}" ${pids} 2>/dev/null
+				kill -s "${signal}" ${pids} 2>/dev/null
+				e=false
+				for p in ${pids}; do
+					if [[ -d "/proc/${p}" ]]; then
+						e=true
+						break
+					fi
+				done
+				${e} || return 0
 			fi
 		else
-			/bin/kill -s "${signal}" "${pid}" 2>/dev/null || return 0
+			kill -s "${signal}" "${pid}" 2>/dev/null
+			[[ ! -d "/proc/${pid}" ]] && return 0
 		fi
 		LC_ALL=C /bin/sleep "${s}"
 	done
@@ -267,12 +283,12 @@ rc_stop_daemon() {
 
 	for pid in ${pids}; do
 		if [[ ${RC_FAIL_ON_ZOMBIE} == "yes" ]]; then
-			/bin/ps -p "${pid}" &>/dev/null || return 1
+			ps -p "${pid}" &>/dev/null || return 1
 		fi
 
 		if rc_kill_pid "${pid}" false ; then
 			# Remove the pidfile if the process didn't
-			[[ -f ${pidfile} ]] && /bin/rm -f "${pidfile}"
+			[[ -f ${pidfile} ]] && rm -f "${pidfile}"
 		else
 			retval=1
 		fi
