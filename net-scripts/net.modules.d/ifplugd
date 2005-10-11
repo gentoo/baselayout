@@ -78,6 +78,14 @@ ifplugd_pre_start() {
 			return 0
 		fi
 	fi
+
+	# We don't work on tun/tap interfaces
+	if [[ $(type -t tuntap_exists) == "function" ]]; then
+		if tuntap_exists "${iface}"; then
+			veinfo "netplug does not work on tun/tap interfaces"
+			return 0
+		fi
+	fi
 	
 	# Do some options
 	eval opts=\" \$\{ifplugd_${ifvar}\} \"
@@ -124,7 +132,7 @@ ifplugd_pre_start() {
 	while true ; do
 		if service_started "net.${iface}"; then
 			local addr=$( interface_get_address "${iface}" )
-			einfo "${iface} configured with address ${addr}"			
+			einfo "${iface} configured with address ${addr}"
 			exit 0
 		fi
 		sleep 1

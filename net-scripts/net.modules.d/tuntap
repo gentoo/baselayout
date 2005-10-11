@@ -69,6 +69,13 @@ tuntap_get_vars() {
 	echo "tunctl_$1"
 }
 
+# bool tuntap_exists(char *interface)
+#
+# Returns 0 if the tun/tap interface exists, otherwise 1
+tuntap_exists() {
+	tunctl -d "$1" &>/dev/null
+}
+
 # bool tuntap_pre_start(char *iface)
 #
 # Create the device, give it the right perms
@@ -105,7 +112,7 @@ tuntap_stop() {
 
 	# tunctl doesn't always error on on tun/tap
 	# interfaces (mainly aliases, etc)
-	if tunctl -d "${iface}" &>/dev/null ; then
+	if tuntap_exists "${iface}" ; then
 		interface_exists "${iface}" \
 		|| einfo "Destroyed Tun/Tap interface ${iface}"
 	fi

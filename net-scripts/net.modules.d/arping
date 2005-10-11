@@ -56,6 +56,9 @@ address_exists() {
 	# We only handle IPv4 addresses
 	[[ ${address} != *.*.*.* ]] && return 1
 
+	# 0.0.0.0 isn't a valid address - and some lusers have configured this
+	[[ ${address} == "0.0.0.0" || ${address} == "0" ]] && return 1
+
 	# We need to bring the interface up to test
 	interface_up "${iface}"
 
