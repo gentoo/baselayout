@@ -1,6 +1,8 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+* baselayout-1.12.0_pre9 (11 Oct 2005)
+
   11 Oct 2005; Roy Marples <uberlord@gentoo.org>:
 
     arping now dis-regards 0.0.0.0 and 0 addresses, #108737.
