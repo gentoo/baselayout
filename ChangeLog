@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  12 Oct 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Changed number of preferred modules from 3 to 4 in net.lo, #108960.
+
 * baselayout-1.12.0_pre9 (11 Oct 2005)
 
   11 Oct 2005; Roy Marples <uberlord@gentoo.org>:

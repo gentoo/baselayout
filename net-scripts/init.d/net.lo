@@ -180,7 +180,7 @@ modules_check_user() {
 	umods=( "${umods[@]}" "${modules[@]}" )
 
 	# Add our preferred modules
-	npref=3
+	npref=4
 	umods=( "${umods[@]}" "iproute2" "dhcpcd" "iwconfig" "netplugd" )
 
 	# First we strip any modules that conflict from user settings
