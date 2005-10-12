@@ -33,7 +33,8 @@ RC_VOLUME_ORDER="raid evms lvm dm"
 
 # RC_BOOTLOG will generate a log of the boot messages shown on the console.  
 # Useful for headless machines or debugging.  You need to emerge the 
-# app-admin/showconsole package for this to work.
+# app-admin/showconsole package for this to work.  Note that this probably
+# won't work correctly with boot splash.
 
 RC_BOOTLOG="no"
 
