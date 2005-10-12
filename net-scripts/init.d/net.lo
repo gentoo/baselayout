@@ -171,7 +171,7 @@ modules_check_installed() {
 # bool modules_check_user(void)
 modules_check_user() {
 	local -a umods 
-	local i j k l npref nmods="${#MODULES[@]}"
+	local i j k l nmods="${#MODULES[@]}"
 
 	# Has the interface got any specific modules?
 	eval umods=( \"\$\{modules_${iface}\[@\]\}\" )
@@ -180,8 +180,8 @@ modules_check_user() {
 	umods=( "${umods[@]}" "${modules[@]}" )
 
 	# Add our preferred modules
-	npref=4
-	umods=( "${umods[@]}" "iproute2" "dhcpcd" "iwconfig" "netplugd" )
+	local -a pmods=( "iproute2" "dhcpcd" "iwconfig" "netplugd" )
+	umods=( "${umods[@]}" "${pmods[@]}" )
 
 	# First we strip any modules that conflict from user settings
 	# So if the user specifies pump then we don't use dhcpcd
@@ -219,7 +219,7 @@ modules_check_user() {
 			# If the module is one of our preferred modules, then
 			# ignore this error; whatever is available will be
 			# used instead.
-			(( i < ${#umods[@]} - npref )) || continue
+			(( i < ${#umods[@]} - ${#pmods[@]} )) || continue
 
 			# The function may not exist because the modules software is
 			# not installed. Load the module and report its error
