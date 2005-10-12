@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  11 Oct 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Note that RC_BOOTLOG won't work with boot splash stuff #108645.
+
 * baselayout-1.12.0_pre9 (11 Oct 2005)
 
   11 Oct 2005; Roy Marples <uberlord@gentoo.org>:
