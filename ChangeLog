@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  13 Oct 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Fix test_service_state() so it always returns 1 when it's not in that
+    state.
+
   12 Oct 2005; Roy Marples <uberlord@gentoo.org>:
 
     Changed number of preferred modules from 3 to 4 in net.lo, #108960.

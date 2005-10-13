@@ -540,12 +540,8 @@ test_service_state() {
 	# Service is in the state requested
 	[[ -L ${f} ]] && return 0
 	
-	if [[ ! -e ${f} ]]; then
-		rm -f "${f}"
-		return 1
-	fi
-	
-	return 0
+	[[ ! -e ${f} ]] && rm -f "${f}"
+	return 1
 }
 
 # bool service_starting(service)
