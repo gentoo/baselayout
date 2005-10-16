@@ -23,7 +23,7 @@ adsl_depend() {
 #
 # Returns 1 if rp-pppoe is installed, otherwise 0
 adsl_check_installed() {
-	[[ -x /usr/sbin/adsl-start ]] && return 0
+	[[ -x /usr/sbin/adsl-start || -x /usr/sbin/pppoe-start ]] && return 0
 	${1:-false} && eerror "For ADSL support, emerge net-dialup/rp-pppoe"
 	return 1
 }
@@ -47,12 +47,22 @@ adsl_check_depends() {
 #
 # Checks to see if the ADSL script has been created or not
 adsl_setup_vars() {
-	local iface=${1}
+	local iface=${1} startstop=${2} cfgfile
+
+	if [[ -x /usr/sbin/pppoe-start ]]; then
+	    exe=/usr/sbin/pppoe-${startstop}
+	else
+	    exe=/usr/sbin/adsl-${startstop}
+	fi
 
 	# Decide which configuration to use.  Hopefully there is an
 	# interface-specific one
 	cfgfile=/etc/ppp/pppoe-${iface}.conf
-	[[ -f ${cfgfile} ]] || cfgfile=/etc/ppp/pppoe.conf
+	if [[ -f ${cfgfile} ]]; then
+	    exe="${exe} ${iface}"
+	else
+	    cfgfile=/etc/ppp/pppoe.conf
+	fi
 
 	if [[ ! -f ${cfgfile} ]]; then
 		eerror "no pppoe.conf file found!"
@@ -69,22 +79,13 @@ adsl_setup_vars() {
 #
 # Returns 0 (true) when successful, non-zero otherwise
 adsl_start() {
-	local iface=${1} user ifvar=$( interface_variable ${1} ) cfgfile
+	local iface=${1} exe
 
-	adsl_setup_vars ${iface} || return 1
+	adsl_setup_vars ${iface} start || return 1
 
-	# Might or might not be set in conf.d/net
-	eval user=\"\$\{adsl_user_${ifvar}\}\"
-
-	# Start ADSL with the cfgfile, but override ETH and PIDFILE
 	einfo "Starting ADSL for ${iface}"
-	/usr/sbin/adsl-start <(cat ${cfgfile}; \
-		echo "ETH=${iface}"; \
-		echo "PIDFILE=/var/run/adsl-${iface}.pid"; \
-		[[ -n ${user} ]] && echo "USER=${user}") \
-		>${devnull}
-	eend $? || return $?
-	return 0
+	${exe}
+	eend $?
 }
 
 # bool adsl_stop(char *iface)
@@ -96,17 +97,15 @@ adsl_start() {
 # that adsl-stop was successful.  Returns non-zero when there was
 # nothing to stop.
 adsl_stop() {
-	local iface=${1} cfgfile
+	local iface=${1} exe
 
 	adsl_check_installed || return 1
 	[[ ! -f /var/run/adsl-${iface}.pid ]] && return 1
 
-	adsl_setup_vars ${iface} || return 1
+	adsl_setup_vars ${iface} stop || return 1
 
 	einfo "Stopping ADSL for ${iface}"
-	/usr/sbin/adsl-stop <(cat ${cfgfile}; \
-		echo "ETH=${iface}"; echo "PIDFILE=/var/run/adsl-${iface}.pid") \
-		>${devnull}
+	${exe}
 	eend $?
 
 	return 0  # we did *attempt* to stop adsl
