@@ -1,6 +1,12 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  16 Oct 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Fixed typo in dhcpcd-wrapper so the new resolv.conf gets created
+    in /var/lib/net-scripts and not the current directory. Thanks to
+    Mark-Dominik Bürkle for the patch.
+
   13 Oct 2005; Roy Marples <uberlord@gentoo.org>:
 
     Fix test_service_state() so it always returns 1 when it's not in that
