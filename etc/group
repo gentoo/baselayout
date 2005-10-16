@@ -19,7 +19,6 @@ cdrom::19:
 dialout::20:root
 tape::26:root
 video::27:root
-xfs::33:xfs
 postgres::70:
 cdrw::80:
 nut::84:
