@@ -37,7 +37,7 @@ if [[ ${action} == "up" ]]; then
 	if [[ ${d} != *" nodns "* ]]; then
 		eval search=\"\$\{dns_search_${ifvar}\}\"
 		if [[ -n ${search} ]]; then
-			tmp="${revolv}.$$"
+			tmp="${resolv}.$$"
 			egrep -v "^[ \t]*(search|domain)[ \t]*" "${resolv}" > "${tmp}"
 			echo "search ${search}" >> "${tmp}" 
 			mv "${tmp}" "${resolv}"
