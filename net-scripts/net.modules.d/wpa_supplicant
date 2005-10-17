@@ -25,7 +25,7 @@ wpa_supplicant_provides() {
 #
 # Sets up the dependancies for the module
 wpa_supplicant_depend() {
-	after macnet
+	after macnet plug
 	before interface
 }
 
@@ -37,13 +37,6 @@ wpa_supplicant_check_installed() {
 	if [[ ! -x /sbin/wpa_supplicant ]]; then
 		installed="1"
 		${report} && eerror "For WPA support (wpa_supplicant) support, emerge net-wireless/wpa_supplicant"
-	fi
-	if [[ ! -e /proc/net/wireless ]]; then
-		installed="1"
-		if ${report} ; then
-			eerror "wpa_supplicant requires wireless support"
-			eerror "(CONFIG_NET_WIRELESS=y) enabled in the kernel"
-		fi
 	fi
 	if [[ ! -e /proc/net/packet ]]; then
 		installed="1"
@@ -109,14 +102,13 @@ wpa_supplicant_get_ap_mac_address() {
 # Returns 0 if we're associated correctly or 1 if not
 # Note that just because we are associated does not mean we are using the
 # correct encryption keys
-# We only need this for wpa_supplicant-0.3.x
 wpa_supplicant_associated() {
 	local -a status=( "$( wpa_cli -i"$1" status | sed -n -e 's/^\(key_mgmt\|wpa_state\|EAP state\)=\([^=]\+\).*/\U\2/p' )" )
 
 	case "${status[0]}" in
-		"NONE")			[[ ${status[1]} == "ASSOCIATED" ]] ;;
+		"NONE")					[[ ${status[1]} == "ASSOCIATED" ]] ;;
 		"IEEE 802.1X (no WPA)")	[[ ${status[2]} == "SUCCESS" ]] ;;
-		*)			[[ ${status[1]} == "COMPLETED" ]] ;;
+		*)						[[ ${status[1]} == "COMPLETED" ]] ;;
 	esac
 
 	return $?
@@ -220,23 +212,34 @@ wpa_supplicant_pre_start() {
 	local actfile="/sbin/wpa_cli.action"
 
 	# We don't configure wireless if we're being called from
-	# the background
+	# the background unless we're not currently running
 	if ${IN_BACKGROUND} ; then
-		ESSID=$( wpa_supplicant_get_essid "${iface}" )
-		ESSIDVAR=$( bash_variable "${ESSID}" )
-		save_options "ESSID" "${ESSID}"
-		return 0
+		if service_started_daemon "net.${iface}" /sbin/wpa_supplicant ; then
+			if wpa_supplicant_check_extensions "${iface}" ; then
+				ESSID=$( wpa_supplicant_get_essid "${iface}" )
+				ESSIDVAR=$( bash_variable "${ESSID}" )
+				save_options "ESSID" "${ESSID}"
+			fi
+			return 0
+		fi
 	fi
 
 	save_options "ESSID" ""
 
-	# We only work on wirelesss interfaces
-	wpa_supplicant_check_extensions "${iface}" || return 0
-
-	# Kill off any existing wpa_supplicant on this interface
-	# This is so we can re-read the configuration file and clean any stale
-	# directories
-	wpa_supplicant_kill "${iface}" true
+	local ifvar=$( bash_variable "${iface}" )
+	eval opts=\" \$\{wpa_supplicant_${ifvar}\} \"
+	[[ ${opts} != *" -D"* ]] \
+		&& ewarn "wpa_supplicant_${ifvar} does not define a driver"
+	
+	# We only work on wirelesss interfaces unless a driver for wired
+	# has been defined
+	if [[ ${opts} != *" -Dwired "* && ${opts} != *" -D wired "* ]]; then
+		if ! wpa_supplicant_check_extensions "${iface}" ; then
+			veinfo "wpa_supplicant only works on wireless interfaces"
+			veinfo "unless the -D wired option is specified"
+			return 0
+		fi
+	fi
 
 	# Check for rf_kill - only ipw supports this at present, but other
 	# cards may in the future
@@ -251,8 +254,10 @@ wpa_supplicant_pre_start() {
 	# This is needed for some drivers - such as hostap because they start
 	# the card in Master mode which causes problems with wpa_supplicant.
 	if [[ $( type -t iwconfig_defaults ) == "function" ]]; then
-		iwconfig_defaults "${iface}"
-		iwconfig_user_config "${iface}"
+		if wpa_supplicant_check_extensions "${iface}" ; then
+			iwconfig_defaults "${iface}"
+			iwconfig_user_config "${iface}"
+		fi
 	fi	
 
 	ebegin "Starting wpa_supplicant on ${iface}"
@@ -269,11 +274,6 @@ wpa_supplicant_pre_start() {
 		eend 1
 		return 1
 	fi
-
-	local ifvar=$( bash_variable "${iface}" )
-	eval opts=\" \$\{wpa_supplicant_${ifvar}\}\"
-	[[ ${opts} != *" -D"* ]] \
-	&& ewarn "wpa_supplicant_${ifvar} does not define a driver"
 
 	# Some drivers require the interface to be up
 	interface_up "${iface}"
@@ -295,7 +295,7 @@ wpa_supplicant_pre_start() {
 	fi
 
 	start-stop-daemon --start --exec /sbin/wpa_supplicant \
-	-- ${opts} -B -c/etc/wpa_supplicant.conf -i"${iface}"
+		-- ${opts} -B -c/etc/wpa_supplicant.conf -i"${iface}"
 	eend "$?" || return 1
 
 	# Starting wpa_supplication-0.4.0, we can get wpa_cli to
@@ -304,8 +304,8 @@ wpa_supplicant_pre_start() {
 		mark_service_inactive "net.${iface}"
 		ebegin "Starting wpa_cli on ${iface}"
 		start-stop-daemon --start --exec /bin/wpa_cli \
-		-- -a"${actfile}" -i"${iface}" \
-		-P"/var/run/wpa_cli-${iface}.pid" -B
+			-- -a"${actfile}" -i"${iface}" \
+			-P"/var/run/wpa_cli-${iface}.pid" -B
 		eend "$?" || return 1
 	fi
 
@@ -325,24 +325,29 @@ wpa_supplicant_pre_start() {
 
 	wpa_supplicant_associate "${iface}" || return 1
 
-	# Set ESSID for essidnet and report
-	ESSID=$( wpa_supplicant_get_essid "${iface}" )
-	ESSIDVAR=$( bash_variable "${ESSID}" )
-	save_options "ESSID" "${ESSID}"
+	# Only report wireless info for wireless interfaces
+	if wpa_supplicant_check_extensions "${iface}" ; then
+		# Set ESSID for essidnet and report
+		ESSID=$( wpa_supplicant_get_essid "${iface}" )
+		ESSIDVAR=$( bash_variable "${ESSID}" )
+		save_options "ESSID" "${ESSID}"
 
-	local -a status=( "$( wpa_cli -i${iface} status | sed -n -e 's/^\(bssid\|pairwise_cipher\|key_mgmt\)=\([^=]\+\).*/\U\2/p' | tr '[:lower:]' '[:upper:]' )" )
-	einfo "${iface} connected to \"${ESSID//\\\\/\\\\}\" at ${status[0]}"
+		local -a status=( "$( wpa_cli -i${iface} status | sed -n -e 's/^\(bssid\|pairwise_cipher\|key_mgmt\)=\([^=]\+\).*/\U\2/p' | tr '[:lower:]' '[:upper:]' )" )
+		einfo "${iface} connected to \"${ESSID//\\\\/\\\\}\" at ${status[0]}"
 
-	if [[ ${status[2]} == "NONE" ]]; then
-		if [[ ${status[1]} == "NONE" ]]; then
-			ewarn "not using any encryption"
+		if [[ ${status[2]} == "NONE" ]]; then
+			if [[ ${status[1]} == "NONE" ]]; then
+				ewarn "not using any encryption"
+			else
+				veinfo "using ${status[1]}"
+			fi
 		else
-			veinfo "using ${status[1]}"
+			veinfo "using ${status[2]}/${status[1]}"
 		fi
+		eoutdent
 	else
-		veinfo "using ${status[2]}/${status[1]}"
+		einfo "${iface} connected"
 	fi
-	eoutdent
 
 	if ${action} ; then
 		local addr=$( interface_get_address "${iface}" )
@@ -358,7 +363,11 @@ wpa_supplicant_pre_start() {
 # Stops wpa_supplicant on an interface
 # Returns 0 (true) when successful, non-zero otherwise
 wpa_supplicant_post_stop() {
-	! ${IN_BACKGROUND} && wpa_supplicant_kill "$1" true
+	if ${IN_BACKGROUND} ; then
+		# Only stop wpa_supplicant if it's not the controlling daemon
+		! service_started_daemon "net.$1" /sbin/wpa_supplicant 0
+	fi
+	[[ $? == 0 ]] && wpa_supplicant_kill "$1" true
 	return 0
 }
 
