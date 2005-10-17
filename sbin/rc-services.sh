@@ -607,6 +607,19 @@ service_failed() {
 	[[ -n $1 && -L ${svcdir}/failed/$1 ]]
 }
 
+# bool service_started_daemon(char *interface, char *daemon, int index)
+# Returns 0 if the service started the given daemon
+# via start-stop-daemon, otherwise 1.
+# If index is emtpy, then we don't care what the first daemon launched
+# was, otherwise the daemon must also be at that index
+service_started_daemon() {
+	local service="$1" daemon="$2" index="${3:-[0-9]*}"
+	local daemonfile="${svcdir}/daemons/${service}"
+
+	[[ ! -e ${daemonfile} ]] && return 1
+	grep -q '^RC_DAEMONS\['"${index}"'\]="'${daemon}'"$' "${daemonfile}"
+}
+
 # bool net_service(service)
 #
 #   Returns true if 'service' is a service controlling a network interface

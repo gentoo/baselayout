@@ -25,6 +25,7 @@ iwpriv() {
 #
 # Sets up the dependancies for the module
 iwconfig_depend() {
+	after plug
 	before interface
 }
 
