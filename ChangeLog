@@ -4,6 +4,7 @@
   18 Oct 2005; Roy Marples <uberlord@gentoo.org>:
 
     You can now specify a custom wpa_supplicant configuration file.
+    wpa_supplicant now works on more than one interface.
 
   17 Oct 2005; Roy Marples <uberlord@gentoo.org>:
 
