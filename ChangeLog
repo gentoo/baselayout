@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  18 Oct 2005; Roy Marples <uberlord@gentoo.org>:
+
+    You can now specify a custom wpa_supplicant configuration file.
+
   17 Oct 2005; Roy Marples <uberlord@gentoo.org>:
 
     wpa_supplicant now works on wired interfaces, and can work with
