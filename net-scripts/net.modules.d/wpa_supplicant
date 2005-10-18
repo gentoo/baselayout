@@ -126,8 +126,7 @@ wpa_supplicant_kill() {
 	pidfile="/var/run/wpa_cli-${iface}.pid"
 	if ! clean_pidfile "${pidfile}" ; then
 		${report} && ebegin "Stopping wpa_cli on ${iface}"
-		start-stop-daemon --stop --exec /bin/wpa_cli \
-		--pidfile "${pidfile}"
+		start-stop-daemon --stop --exec /bin/wpa_cli --pidfile "${pidfile}"
 		${report} && eend "$?"
 	fi
 
@@ -136,7 +135,7 @@ wpa_supplicant_kill() {
 	if ! clean_pidfile "${pidfile}" ; then
 		${report} && ebegin "Stopping wpa_supplicant on ${iface}"
 		start-stop-daemon --stop --exec /sbin/wpa_supplicant \
-		--pidfile "${pidfile}"
+			--pidfile "${pidfile}"
 		${report} && eend "$?"
 	else
 		# Support wpa_supplicant-0.3.x
@@ -150,7 +149,7 @@ wpa_supplicant_kill() {
 
 	# If wpa_supplicant exits uncleanly, we need to remove the stale dir
 	[[ -S "/var/run/wpa_supplicant/${iface}" ]] \
-	&& rm -f "/var/run/wpa_supplicant/${iface}"
+		&& rm -f "/var/run/wpa_supplicant/${iface}"
 }
 
 # bool wpa_supplicant_associate(char *interface)
@@ -303,6 +302,7 @@ wpa_supplicant_pre_start() {
 	fi
 
 	start-stop-daemon --start --exec /sbin/wpa_supplicant \
+		--pidfile "/var/run/wpa_supplicant-${iface}.pid" \
 		-- ${opts} -B -i"${iface}"
 	eend "$?" || return 1
 
@@ -312,6 +312,7 @@ wpa_supplicant_pre_start() {
 		mark_service_inactive "net.${iface}"
 		ebegin "Starting wpa_cli on ${iface}"
 		start-stop-daemon --start --exec /bin/wpa_cli \
+			--pidfile "/var/run/wpa_cli-${iface}.pid" \
 			-- -a"${actfile}" -i"${iface}" \
 			-P"/var/run/wpa_cli-${iface}.pid" -B
 		eend "$?" || return 1
