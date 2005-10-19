@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  19 Oct 2005; Roy Marples <uberlord@gentoo.org>:
+
+    rc-daemon.sh now kills children correctly.
+
   18 Oct 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Touchup the devfsd init code to be a bit more resilient.
