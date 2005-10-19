@@ -291,7 +291,7 @@ then
 		if [ "${udev}" = "yes" ]
 		then
 			if get_bootparam "noudev" || \
-			   [ ! -x /sbin/udev -o -e "/dev/.devfsd" ] || \
+			   [ ! -x /sbin/udev -o ${devfs_automounted} = "yes" ] || \
 			   [ "$(get_KV)" -lt "$(KV_to_int '2.6.0')" ]
 			then
 				udev="no"
