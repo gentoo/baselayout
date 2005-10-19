@@ -97,7 +97,7 @@ else
 	# Check udev prerequisites and kernel params
 	if [[ ${udev} == "yes" ]] ; then
 		if get_bootparam "noudev" || \
-		   [[ ! -x /sbin/udev || -e /dev/.devfsd || \
+		   [[ ! -x /sbin/udev || ${devfs_automounted} == "yes" || \
 		      $(get_KV) -lt "$(KV_to_int '2.6.0')" ]] ; then
 			udev="no"
 		fi
