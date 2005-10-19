@@ -309,7 +309,6 @@ cvt () {
 }
 
 get_arch() {
-	local a=`uname -m`
 	case `uname -m` in
 		arm*)   echo arm;;
 		i?86)   echo i386;;
