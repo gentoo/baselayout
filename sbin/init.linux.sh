@@ -61,14 +61,8 @@ check_statedir /dev
 
 devfs_automounted="no"
 if [[ -e "/dev/.devfsd" ]] ; then
-	mymounts="$(awk '($3 == "devfs") { print "yes"; exit 0 }' /proc/mounts)"
-	if [ "${mymounts}" != "yes" ]
-	then
-		# Fix weird bug where there is a /dev/.devfsd in a unmounted /dev
-		rm -f /dev/.devfsd
-	else
-		devfs_automounted="yes"
-	fi
+	# make sure devfs is actually mounted and it isnt a bogus file
+	devfs_automounted=$(awk '($3 == "devfs") { print "yes"; exit 0 }' /proc/mounts)
 fi
 
 # Try to figure out how the user wants /dev handled
@@ -81,7 +75,7 @@ if [[ ${RC_DEVICES} == "static" ]] ; then
 	eend 0
 else
 	fellback_to_devfs="no"
-	case "${RC_DEVICES}" in
+	case ${RC_DEVICES} in
 		devfs)	devfs="yes"
 				udev="no"
 				;;
@@ -105,7 +99,8 @@ else
 
 	# Check devfs prerequisites and kernel params
 	if [[ ${devfs} == "yes" ]] ; then
-		if get_bootparam "nodevfs" || [[ ${udev} == "yes" ]] ; then
+		if get_bootparam "nodevfs" || [[ ${udev} == "yes" ]] || \
+		   ! grep -qs '[[:space:]]devfs$' /proc/filesystems ; then
 			devfs="no"
 		fi
 	fi
@@ -128,29 +123,15 @@ else
 
 	# OK, if we got here, things are probably not right :)
 	if [[ ${devfs} == "no" && ${udev} == "no" ]] ; then
-# High time to take this out ?
-#		clear
-#		echo
-#		einfo "The Gentoo Linux system initialization scripts have detected that"
-#		einfo "your system does not support DEVFS or UDEV.  Since Gentoo Linux"
-#		einfo "has been designed with these dynamic /dev managers in mind, it is"
-#		einfo "highly suggested that you build support for it into your kernel."
-#		einfo "Please read the Gentoo Handbook for more information!"
-#		echo
-#		einfo "    http://www.gentoo.org/doc/en/handbook/"
-#		echo
-#		einfo "Thanks for using Gentoo! :)"
-#		echo
-#		read -t 15 -p "(hit Enter to continue or wait 15 seconds ...)"
 		:
 	fi
 fi
 
 # From linux-2.5.68 we need to mount /dev/pts again ...
 if [[ "$(get_KV)" -ge "$(KV_to_int '2.5.68')" ]] ; then
-	have_devpts="$(awk '($2 == "devpts") { print "yes"; exit 0 }' /proc/filesystems)"
+	have_devpts=$(awk '($2 == "devpts") { print "yes"; exit 0 }' /proc/filesystems)
 
-	if [[ "${have_devpts}" = "yes" ]] ; then
+	if [[ ${have_devpts} = "yes" ]] ; then
 		# Only try to create /dev/pts if we have /dev mounted dynamically,
 		# else it might fail as / might be still mounted readonly.
 		if [[ ! -d /dev/pts ]] && \

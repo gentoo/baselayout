@@ -459,10 +459,12 @@ KV_to_int() {
 #    portion of Z is a number.
 #    e.g. 2.4.25, 2.6.10, 2.6.4-rc3, 2.2.40-poop, 2.0.15+foo
 #
+_RC_GET_KV_CACHE=""
 get_KV() {
-	local KV=$(uname -r)
+	[[ -z ${_RC_GET_KV_CACHE} ]] \
+		&& _RC_GET_KV_CACHE=$(uname -r)
 
-	echo "$(KV_to_int "${KV}")"
+	echo $(KV_to_int "${_RC_GET_KV_CACHE}")
 
 	return $?
 }

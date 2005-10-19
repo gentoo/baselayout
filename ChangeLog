@@ -1,6 +1,12 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  18 Oct 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Touchup the devfsd init code to be a bit more resilient.
+
+    Cache get_KV() so we don't keep calling `uname -r`.
+
   18 Oct 2005; Roy Marples <uberlord@gentoo.org>:
 
     You can now specify a custom wpa_supplicant configuration file.
