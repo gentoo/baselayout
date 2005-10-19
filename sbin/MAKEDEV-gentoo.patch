@@ -11,12 +11,11 @@
  	exit 0
  fi
  
-@@ -308,60 +308,26 @@
+@@ -308,60 +308,25 @@
  	done
  }
  
 +get_arch() {
-+	local a=`uname -m`
 +	case `uname -m` in
 +		arm*)   echo arm;;
 +		i?86)   echo i386;;
