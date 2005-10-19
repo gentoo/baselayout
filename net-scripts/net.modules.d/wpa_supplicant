@@ -226,8 +226,6 @@ wpa_supplicant_pre_start() {
 
 	local ifvar=$( bash_variable "${iface}" )
 	eval opts=\" \$\{wpa_supplicant_${ifvar}\} \"
-	[[ ${opts} != *" -D"* ]] \
-		&& ewarn "wpa_supplicant_${ifvar} does not define a driver"
 	
 	# We only work on wirelesss interfaces unless a driver for wired
 	# has been defined
@@ -239,6 +237,9 @@ wpa_supplicant_pre_start() {
 		fi
 	fi
 
+	[[ ${opts} != *" -D"* ]] \
+		&& ewarn "wpa_supplicant_${ifvar} does not define a driver"
+		
 	# Check for rf_kill - only ipw supports this at present, but other
 	# cards may in the future
 	if [[ -e "/sys/class/net/${iface}/device/rf_kill" ]]; then
