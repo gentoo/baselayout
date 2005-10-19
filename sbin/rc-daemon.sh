@@ -281,6 +281,20 @@ rc_stop_daemon() {
 		pids=${pid}
 	fi
 
+	# We may not have pgrep to find our children, so we provide
+	# two methods
+	if [[ ${RC_KILL_CHILDREN} == "yes" ]]; then
+		if [[ -x /usr/bin/pgrep ]]; then
+			pids="${pids} $(pgrep -P ${pids// /,})"
+		else
+			local npids
+			for pid in ${pids} ; do
+				npids="${npids} $(ps -eo pid,ppid | sed -n 's/'${pid}'$//p')"
+			done
+			pids="${pids} ${npids}"
+		fi
+	fi
+
 	for pid in ${pids}; do
 		if [[ ${RC_FAIL_ON_ZOMBIE} == "yes" ]]; then
 			ps -p "${pid}" &>/dev/null || return 1
