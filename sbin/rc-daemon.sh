@@ -281,6 +281,9 @@ rc_stop_daemon() {
 		pids=${pid}
 	fi
 
+	# If there's nothing to kill then return without error
+	[[ -z ${pids} ]] && return 0
+
 	# We may not have pgrep to find our children, so we provide
 	# two methods
 	if [[ ${RC_KILL_CHILDREN} == "yes" ]]; then
