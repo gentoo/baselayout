@@ -25,7 +25,7 @@ remove_net_fs() {
 	local fs
 	rcfilesystems=" ${rcfilesystems} "
 	for fs in "$@" ; do
-		rcfilesystems=${rcfilesystems// ${fs} /}
+		rcfilesystems=${rcfilesystems// ${fs} / }
 	done
 	rcfilesystems=${rcfilesystems# } # remove front and
 	rcfilesystems=${rcfilesystems% } #   back spaces
