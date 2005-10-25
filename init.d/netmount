@@ -31,8 +31,8 @@ start() {
 		rcfilesystems="${NET_FS_LIST// /,}"		# convert to comma-separated
 	else
 		rcfilesystems=" ${NET_FS_LIST} "
-		rcfilesystems=${rcfilesystems// nfs /}	# remove nfs
-		rcfilesystems=${rcfilesystems// nfs4 /}	# remove nfs4
+		rcfilesystems=${rcfilesystems// nfs / }	# remove nfs
+		rcfilesystems=${rcfilesystems// nfs4 / }# remove nfs4
 		rcfilesystems=${rcfilesystems# }		# remove front and
 		rcfilesystems=${rcfilesystems% }		#   back spaces
 		rcfilesystems=${rcfilesystems// /,}		# convert to comma-separated
