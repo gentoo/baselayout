@@ -1,5 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
+
+  26 Oct 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Tweak runscript error output to only show the invalid arg once rather than 
+    twice #110558 by Toralf Förster.
+
   24 Oct 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Fix remove_net_fs space handling in netmount script #110313 DominikBuerkle.
