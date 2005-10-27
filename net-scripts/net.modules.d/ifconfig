@@ -22,7 +22,9 @@ route() {
 #
 # Sets up the dependancies for the module
 ifconfig_depend() {
-	after macnet wireless
+	provide interface
+	variables config routes fallback metric ifconfig \
+		ifconfig_fallback routes inet6 iface alias broadcast netmask
 }
 
 # bool ifconfig_check_installed(void)
@@ -32,29 +34,6 @@ ifconfig_check_installed() {
 	[[ -x /sbin/ifconfig ]] && return 0
 	${1:-false} && eerror "For ifconfig support, emerge sys-apps/net-tools"
 	return 1
-}
-
-# char* ifconfig_provides(void)
-#
-# Returns a string to change module definition for starting up
-ifconfig_provides() {
-	echo "interface"
-}
-
-# char* ifconfig_module(void)
-#
-# Returns the module name
-# This is needed by dhclient as we run different scripts
-# based on the interface
-ifconfig_module() {
-	echo "ifconfig"
-}
-
-# bool ifconfig_check_depends(void)
-#
-# Checks to see if we have the needed functions
-ifconfig_check_depends() {
-	return 0
 }
 
 # bool ifconfig_exists(char *interface, bool report)
@@ -188,18 +167,6 @@ ifconfig_del_addresses() {
 		done
 	fi
 	return 0
-}
-
-# char* ifconfig_get_vars(char *interface)
-#
-# Returns a string spaced with possible user set
-# configuration variables
-ifconfig_get_vars() {
-	echo "config_$1 routes_$1 fallback_$1 metric_$1 ifconfig_$1 \
-	ifconfig_fallback_$1 routes_$1 inet6_$1 iface_$1 alias_$1 \
-	broadcast_$1 netmask_$1"
-	# The depreciated gateway var has to be handled by
-	# each module if needed
 }
 
 # bool ifconfig_get_old_config(char *iface)

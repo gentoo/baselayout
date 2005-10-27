@@ -107,7 +107,7 @@ if [[ -n ${hostname} ]]; then
 fi
 
 [[ ! -d "${statedir}/${interface}" ]] \
-&& mkdir -m 0755 -p "${statedir}/${interface}"
+	&& mkdir -m 0755 -p "${statedir}/${interface}"
 
 # Only setup the information we're told to
 # By default that's everything

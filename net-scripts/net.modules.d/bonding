@@ -4,19 +4,15 @@
 
 # Contributed by Roy Marples (uberlord@gentoo.org)
 
-# char* bonding_provides(void)
-#
-# Returns a string to change module definition for starting up
-bonding_provides() {
-	echo "bonding"
-}
-
 # void bonding_depend(void)
 #
 # Sets up the dependancies for the module
 bonding_depend() {
 	after interface
-	before vlan dhcp arping 
+	before vlan dhcp arping bridge
+	functions interface_exists interface_up interface_down \
+		interface_del_addresses
+	variables slaves
 }
 
 # bool bonding_check_installed(void)
@@ -26,21 +22,6 @@ bonding_check_installed() {
 	[[ -x /sbin/ifenslave ]] && return 0
 	${1:-false} && eerror "For link aggregation (bonding) support, emerge net-misc/ifenslave"
 	return 1
-}
-
-# bool bonding_check_depends(void)
-#
-# Checks to see if we have the needed functions
-bonding_check_depends() {
-	local f
-
-	for f in interface_exists interface_up interface_down interface_del_addresses; do
-		[[ $( type -t "${f}" ) == "function" ]] && continue
-		eerror "bonding: missing required function ${f}\n"
-		return 1
-	done
-
-	return 0
 }
 
 # bool bonding_post_start(char *iface)
@@ -87,14 +68,12 @@ bonding_pre_start() {
 	return 0 #important
 }
 
-# bool bonding_pre_stop(void)
+# bool bonding_stop(void)
 # Unbonds bonded interfaces
 #
 # Always returns 0 (true) 
-bonding_pre_stop() {
+bonding_stop() {
 	local iface="$1" slaves s
-
-	bonding_check_installed || return 0
 
 	# return silently if this is not a bonding interface
 	[[ ! -f "/proc/net/bonding/${iface}" ]] && return 0

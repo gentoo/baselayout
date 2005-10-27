@@ -17,7 +17,7 @@ depend() {
 	# Load any custom depend functions for the given interface
 	# For example, br0 may need eth0 and eth1
 	local iface="${myservice##*.}"
-	[[ $( type -t depend_${iface} ) == "function" ]] && depend_${iface}
+	[[ $(type -t "depend_${iface}") == "function" ]] && depend_${iface}
 
 	return 0
 }
@@ -49,11 +49,18 @@ need() {
 	eval "${MODULE}_need() { echo \"$x\"; }"
 }
 installed() {
-	local x="$*"
-	[[ $# -gt 1 ]] && x=$( echo -e "${x// /\n}" | sort | xargs )
 	# We deliberately misspell this as _installed will probably be used
 	# at some point
-	eval "${MODULE}_instlled() { echo \"$x\"; }"
+	eval "${MODULE}_instlled() { echo \"$*\"; }"
+}
+provide() {
+	eval "${MODULE}_provide() { echo \"$*\"; }"
+}
+functions() {
+	eval "${MODULE}_functions() { echo \"$*\"; }"
+}
+variables() {
+	eval "${MODULE}_variables() { echo \"$*\"; }"
 }
 
 sort() {
@@ -85,8 +92,8 @@ module_load_minimum() {
 		return 1
 	fi
 
-	for f in check_installed provides check_depends depend; do
-		[[ $( type -t "${MODULE}_${f}" ) == "function" ]] && continue
+	for f in depend; do
+		is_function "${MODULE}_${f}" && continue
 		eerror "${MODULE} does not support the required function ${f}"
 		return 1
 	done
@@ -99,7 +106,7 @@ module_load_minimum() {
 # Load and check each module for sanity
 # If the module is not installed, the functions are to be removed
 modules_load_auto() {
-	local i j
+	local i j inst
 
 	# Populate the MODULES array
 	# Basically we treat evey file in ${MODULES_DIR} as a module
@@ -122,10 +129,16 @@ modules_load_auto() {
 			eerror "interface is a reserved name - cannot load a module called interface"
 			return 1
 		fi
+		
 		(
 		u=0;
 		module_load_minimum "${MODULES[i]}" || u=1;
-		[[ ${u} == 0 ]] && ${MODULES[i]##*/}_check_installed false || u=1;
+		if [[ ${u} == 0 ]]; then
+			inst="${MODULES[i]##*/}_check_installed";
+			if is_function "${inst}" ; then
+				${inst} false || u=1;
+			fi
+		fi
 		exit "${u}";
 		)
 
@@ -154,11 +167,13 @@ modules_check_installed() {
 	local i j missingdeps nmods="${#MODULES[@]}"
 
 	for (( i=0; i<nmods; i++ )); do
-		[[ $( type -t "${MODULES[i]}_instlled" ) != "function" ]] && continue
+		is_function "${MODULES[i]}_instlled" || continue
 		for j in $( ${MODULES[i]}_instlled ); do
 			missingdeps=true
-			if [[ $( type -t "${j}_check_installed" ) == "function" ]]; then
+			if is_function "${j}_check_installed" ; then
 				${j}_check_installed && missingdeps=false
+			elif is_function "${j}_depend" ; then
+				missingdeps=false
 			fi
 			${missingdeps} && unset MODULES[i] && unset PROVIDES[i] && break
 		done
@@ -209,13 +224,12 @@ modules_check_user() {
 						)
 					unset MODULES[j]
 					unset PROVIDES[j]
-					break
 				fi
 			done
 			continue
 		fi
 
-		if [[ $( type -t "${umods[i]}_provides" ) != "function" ]]; then
+		if ! is_function "${umods[i]}_depend" ; then
 			# If the module is one of our preferred modules, then
 			# ignore this error; whatever is available will be
 			# used instead.
@@ -225,14 +239,19 @@ modules_check_user() {
 			# not installed. Load the module and report its error
 			if [[ -e "${MODULES_DIR}/${umods[i]}" ]]; then
 				source "${MODULES_DIR}/${umods[i]}"
-				${umods[i]}_check_installed true
+				is_function "${umods[i]}_check_installed" \
+					&& ${umods[i]}_check_installed true
 			else
 				eerror "The module \"${umods[i]}\" does not exist"
 			fi
 			return 1
 		fi
 
-		mod=$( ${umods[i]}_provides )
+		if is_function "${umods[i]}_provide" ; then
+			mod=$( ${umods[i]}_provide )
+		else
+			mod="${umods[i]}"
+		fi
 		for (( j=0; j<nmods; j++ )); do
 			[[ -z ${MODULES[j]} ]] && continue
 			if [[ ${PROVIDES[j]} == "${mod}" && ${umods[i]} != "${MODULES[j]}" ]]; then
@@ -273,7 +292,7 @@ modules_check_user() {
 modules_sort() {
 	local -a modnums sort_history modafter modbefore
 	local i j k p changed_something nmods="${#MODULES[@]}"
-
+	
 	# Sort our modules
 	# We do this by assigning numbers to each module
 	# We also assign modbefore and modafter so we don't
@@ -281,9 +300,9 @@ modules_sort() {
 	modnums=()
 	for (( i=0; i<nmods; i++ )); do
 		modnums[i]="${i}"
-		[[ $( type -t "${MODULES[i]}_after" ) == "function" ]] \
-			&& modafter[i]=$( ${MODULES[i]}_after )
-		[[ $( type -t "${MODULES[i]}_before" ) == "function" ]] \
+		is_function "${MODULES[i]}_after" \
+			&& modafter[i]=$(${MODULES[i]}_after)
+		is_function "${MODULES[i]}_before" \
 			&& modbefore[i]=$( ${MODULES[i]}_before )
 	done
 
@@ -355,7 +374,7 @@ modules_check_depends() {
 	local missingdeps p interface=false
 
 	for (( i=0; i<nmods; i++ )); do
-		if [[ $( type -t "${MODULES[i]}_need" ) == "function" ]]; then
+		if is_function "${MODULES[i]}_need" ; then
 			for needmod in $( ${MODULES[i]}_need ); do
 				missingdeps=true
 				for (( j=0; j<nmods; j++ )); do
@@ -372,7 +391,15 @@ modules_check_depends() {
 			done
 		fi
 
-		${MODULES[i]}_check_depends || return 1
+		if is_function "${MODULES[i]}_functions" ; then
+			for f in $( ${MODULES[i]}_functions ); do
+				if ! is_function "${f}" ; then
+					eerror "${MODULES[i]}: missing required function \"${f}\""
+					return 1
+				fi
+			done
+		fi
+
 		[[ ${PROVIDES[i]} == "interface" ]] && interface=true
 
 		if ${showprovides} ; then
@@ -418,7 +445,9 @@ modules_load()  {
 		j="${#modules_force[@]}"
 		for (( i=0; i<j; i++ )); do
 			module_load_minimum "${MODULES_DIR}/${modules_force[i]}" || return 1
-			${modules_force[i]}_check_installed || unset modules_force[i]
+			if is_function "${modules_force[i]}_check_installed" ; then
+				${modules_force[i]}_check_installed || unset modules_force[i]
+			fi
 		done
 		modules_force=( "${modules_force[@]}" )
 
@@ -428,19 +457,33 @@ modules_load()  {
 			[[ -z ${modules_force[i]} ]] && continue
 			for (( k=i+1; k<j; k++ )); do
 				[[ -z ${modules_force[k]} ]] && continue
-				[[ $( ${modules_force[i]}_provides ) \
-					== $( ${modules_force[k]}_provides ) ]] \
-					&& unset modules_force[k]
+				if is_function "${modules_force[i]}_provide" \
+					&& is_function "${modules_force[k]}_provide" ; then
+						[[ $( ${modules_force[i]}_provide ) \
+							== $( ${modules_force[k]}_provide ) ]] \
+								&& unset modules_force[k]
+				fi
 			done
 		done
 
 		MODULES=( "${modules_force[@]}" )
 	fi
 
-	# We now buffer the _provides functions for a big speed boost
 	j="${#MODULES[@]}"
 	for (( i=0; i<j; i++ )); do
-		PROVIDES[i]=$( ${MODULES[i]}_provides )
+		# Now load our dependencies - we need to use the MODULE variable
+		# here as the after/before/need functions use it
+		if [[ -z ${modules_force[@]} ]]; then
+			MODULE="${MODULES[i]}"
+			${MODULE}_depend
+		fi
+
+		# If no provide is given, assume module name
+		if is_function "${MODULES[i]}_provide" ; then
+			PROVIDES[i]=$( ${MODULES[i]}_provide )
+		else
+			PROVIDES[i]="${MODULES[i]}"
+		fi
 	done
 
 	if [[ -z ${modules_force[@]} ]]; then
@@ -448,27 +491,17 @@ modules_load()  {
 			modules_check_user || return 1
 		fi
 	fi
-
-	# Setup class wrappers: interface_up -> iproute2_up, for example
+	
+	# Wrap our modules
 	j="${#MODULES[@]}"
 	for (( i=0; i<j; i++ )); do
 		function_wrap "${MODULES[i]}" "${PROVIDES[i]}"
-
-		# Now load our dependencies - we need to use the MODULE variable
-		# here as the after/before/need functions use it
-		if [[ -z ${modules_force[@]} ]]; then
-			MODULE="${MODULES[i]}"
-			${MODULE}_depend
-		fi
 	done
-
-	# Some modules may be installed, but not selected by user preference
-	# so we wrap these if needed
 	j="${#WRAP_MODULES[@]}"
 	for (( i=0; i<j; i++ )); do
-		function_wrap "${WRAP_MODULES[i]}"
+		function_wrap ${WRAP_MODULES[i]}
 	done
-
+	
 	if [[ -z ${modules_force[@]} ]]; then
 		modules_check_installed || return 1
 		modules_sort || return 1
@@ -506,7 +539,7 @@ iface_start() {
 
 	# pre Start any modules with
 	for mod in ${MODULES[@]}; do
-		if [[ $( type -t "${mod}_pre_start" ) == "function" ]]; then
+		if is_function "${mod}_pre_start" ; then
 			${mod}_pre_start "${iface}" || { eend 1; return 1; }
 		fi
 	done
@@ -554,7 +587,7 @@ iface_start() {
 	# Otherwise a default of NULL
 	if [[ -z ${config} ]]; then
 #		if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
-			if [[ $( type -t "dhcp_start" ) == "function" ]]; then
+			if is_function "dhcp_start" ; then
 				config=( "dhcp" )
 				ewarn "Configuration not set for ${iface} - assuming dhcp"
 			else
@@ -585,7 +618,7 @@ iface_start() {
 		einfo "${conf[0]}"
 
 		# Do we have a function for our config?
-		if [[ $( type -t "${conf[0]}_start" ) == "function" ]]; then
+		if is_function "${conf[0]}_start" ; then
 			eindent
 			${conf[0]}_start "${iface}" ; x=$?
 			eoutdent
@@ -594,9 +627,9 @@ iface_start() {
 			# We do this by testing if the 1st character is a digit
 		elif [[ ${conf[0]:0:1} == [[:digit:]] || ${conf[0]} == *:* ]]; then
 			x="0"
-			if [[ ${RC_AUTO_INTERFACE} == "yes" \
-				&& $(type -t address_exists ) == "function" ]]; then
-				if address_exists "${iface}" "${conf[0]}" ; then
+			if [[ ${RC_AUTO_INTERFACE} == "yes" ]] \
+				&& is_function arping_address_exists ; then
+				if arping_address_exists "${iface}" "${conf[0]}" ; then
 					eerror "${conf[0]%%/*} already taken on ${iface}"
 					x="1"
 				fi
@@ -629,7 +662,7 @@ iface_start() {
 
 	# Start any modules with _post_start
 	for mod in ${MODULES[@]}; do
-		if [[ $( type -t "${mod}_post_start" ) == "function" ]]; then
+		if is_function "${mod}_post_start" ; then
 			${mod}_post_start "${iface}" || return 1
 		fi
 	done
@@ -649,8 +682,7 @@ iface_stop() {
 
 	# pre Stop any modules
 	for mod in ${MODULES[@]}; do
-		[[ $( type -t "${mod}_pre_stop" ) == "function" ]] \
-		&& ${mod}_pre_stop "${iface}"
+		is_function "${mod}_pre_stop" && ${mod}_pre_stop "${iface}"
 	done
 
 	einfo "Bringing down ${iface}"
@@ -667,7 +699,7 @@ iface_stop() {
 	for i in ${aliases} ${iface}; do
 		# Stop all our modules
 		for mod in ${MODULES[@]}; do
-			[[ $( type -t "${mod}_stop" ) == "function" ]] && ${mod}_stop "${i}"
+			is_function "${mod}_stop" && ${mod}_stop "${i}"
 		done
 
 		# A module may have removed the interface
@@ -690,8 +722,7 @@ iface_stop() {
 	# post Stop any modules
 	for mod in ${MODULES[@]}; do
 		# We have already taken down the interface, so no need to error
-		[[ $( type -t "${mod}_post_stop" ) == "function" ]] \
-		&& ${mod}_post_stop "${iface}"
+		is_function "${mod}_post_stop" && ${mod}_post_stop "${iface}"
 	done
 
 	return 0
@@ -730,7 +761,7 @@ run_start() {
 	fi
 
 	# Call user-defined preup function if it exists
-	if [[ $( type -t preup ) == "function" ]]; then
+	if is_function preup ; then
 		einfo "Running preup function"
 		eindent
 		( preup "${iface}" )
@@ -762,7 +793,7 @@ run_start() {
 	fi
 
 	# Call user-defined postup function if it exists
-	if [[ $( type -t postup ) == "function" ]]; then
+	if is_function postup ; then
 		einfo "Running postup function"
 		eindent
 		( postup "${iface}" )
@@ -786,7 +817,7 @@ run_stop() {
 	[[ -n ${ESSID} ]] && ESSIDVAR=$( bash_variable "${ESSID}" )
 
 	# Call user-defined predown function if it exists
-	if [[ $( type -t predown ) == "function" ]]; then
+	if is_function predown ; then
 		einfo "Running predown function"
 		eindent
 		( predown "${iface}" )
@@ -800,7 +831,7 @@ run_stop() {
 	iface_stop "${iface}" || return 1  # always succeeds, btw
 
 	# Call user-defined postdown function if it exists
-	if [[ $( type -t postdown ) == "function" ]]; then
+	if is_function postdown ; then
 		einfo "Running postdown function"
 		eindent
 		( postdown "${iface}" )
@@ -870,7 +901,7 @@ run() {
 	else
 		if [[ ${cmd} == "start" ]]; then
 			# Call user-defined failup if it exists
-			if [[ $( type -t failup ) == "function" ]]; then
+			if is_function failup ; then
 				einfo "Running failup function"
 				eindent
 				( failup "${iface}" )
@@ -878,7 +909,7 @@ run() {
 			fi
 		else
 			# Call user-defined faildown if it exists
-			if [[ $( type -t faildown ) == "function" ]]; then
+			if is_function faildown ; then
 				einfo "Running faildown function"
 				eindent
 				( faildown "${iface}" )

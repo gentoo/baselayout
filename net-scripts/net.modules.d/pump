@@ -10,18 +10,14 @@ pump() {
 	LC_ALL=C /sbin/pump "$@"
 }
 
-# char* pump_provides(void)
-#
-# Returns a string to change module definition for starting up
-pump_provides() {
-	echo "dhcp"
-}
-
 # void pump_depend(void)
 #
 # Sets up the dependancies for the module
 pump_depend() {
 	after interface
+	provide dhcp
+	functions interface_exists interface_get_address
+	variables pump dhcp
 }
 
 # bool pump_check_installed(void)
@@ -33,29 +29,6 @@ pump_check_installed() {
 	return 1
 }
 
-# bool pump_check_depends(void)
-#
-# Checks to see if we have the needed functions
-pump_check_depends() {
-	local f
-
-	for f in interface_exists interface_get_address; do
-		[[ $( type -t "${f}" ) == "function" ]] && continue
-		eerror "pump: missing required function ${f}\n"
-		return 1
-	done
-
-	return 0
-}
-
-# char* pump_get_vars(char *interface)
-#
-# Returns a string spaced with possible user set
-# configuration variables
-pump_get_vars() {
-	echo "pump_$1 dhcp_$1"
-}
-
 # bool pump_stop(char *iface)
 #
 # Stop pump on an interface
@@ -63,8 +36,6 @@ pump_get_vars() {
 # Otherwise 1
 pump_stop() {
 	local iface="$1" count e
-
-	pump_check_installed || return 0
 
 	# We check for a pump process first as querying for status
 	# causes pump to spawn a process

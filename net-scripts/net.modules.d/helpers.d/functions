@@ -508,6 +508,14 @@ process_finished() {
 	return 1
 }
 
+# bool is_function(char* name)
+#
+# Returns 0 if the given name is a shell function, otherwise 1
+is_function() {
+	[[ -z $1 ]] && return 1
+	[[ $(type -t "$1") == "function" ]]
+}
+
 # void function_wrap(char* source, char* target)
 #
 # wraps function calls - for example function_wrap(this, that)
@@ -515,7 +523,7 @@ process_finished() {
 function_wrap() {
 	local i
 
-	[[ $( type -t "${2}_provides" ) == "function" ]] && return
+	is_function "${2}_depend" && return
 
 	for i in $( typeset -f | grep -o '^'"${1}"'_[^ ]*' ); do
 		eval "${2}${i#${1}}() { ${i} \"\$@\"; }"
@@ -557,18 +565,13 @@ configure_variables() {
 	local ifvar=$( bash_variable "${iface}" )
 
 	for mod in ${MODULES[@]}; do
-		func="${mod}_get_vars"
-		if [[ $( type -t ${func} ) == "function" ]]; then
-			ivars=( $( "${func}" "${ifvar}" ) )
-			ovars1=( $( "${func}" "${option1}" ) )
-			[[ -n ${option2} ]] && ovars2=( $( "${func}" "${option2}" ) )
-			for ((i = 0; i<${#ivars[@]}; i++)); do
-				x=""
-				[[ -n ${ovars2[i]} ]] && eval x=( \"\$\{${ovars2[i]}\[@\]\}\" )
-				[[ -z ${x} ]] && eval x=( \"\$\{${ovars1[i]}\[@\]\}\" )
-				[[ -n ${x} ]] && eval "${ivars[i]}=( "\"\$\{x\[@\]\}\"" )"
-			done
-		fi
+		is_function ${mod}_variables || continue
+		for v in $(${mod}_variables) ; do
+			x=""
+			[[ -n ${option2} ]] && eval x=( \"\$\{${v}_${option2}\[@\]\}\" )
+			[[ -z ${x} ]] && eval x=( \"\$\{${v}_${option1}\[@\]\}\" )
+			[[ -n ${x} ]] && eval "${v}_${ifvar}=( "\"\$\{x\[@\]\}\"" )"
+		done
 	done
 
 	return 0

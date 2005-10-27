@@ -10,18 +10,14 @@ dhclient() {
 	LC_ALL=C /sbin/dhclient "$@"
 }
 
-# char* dhclient_provides(void)
-#
-# Returns a string to change module definition for starting up
-dhclient_provides() {
-	echo "dhcp"
-}
-
 # void dhclient_depend(void)
 #
 # Sets up the dependancies for the module
 dhclient_depend() {
 	after interface
+	provide dhcp
+	functions interface_exists interface_get_address
+	variables dhclient dhcp
 }
 
 # bool dhclient_check_installed(void)
@@ -33,29 +29,6 @@ dhclient_check_installed() {
 	return 1
 }
 
-# bool dhclient_check_depends(void)
-#
-# Checks to see if we have the needed functions
-dhclient_check_depends() {
-	local f
-
-	for f in interface_exists interface_get_address; do
-		[[ $( type -t "${f}" ) == "function" ]] && continue
-		eerror "dhclient: missing required function ${f}\n"
-		return 1
-	done
-
-	return 0
-}
-
-# char* dhclient_get_vars(char *interface)
-#
-# Returns a string spaced with possible user set
-# configuration variables
-dhclient_get_vars() {
-	echo "dhclient_$1 dhcp_$1"
-}
-
 # bool dhclient_stop(char *iface)
 #
 # Stop dhclient on an interface
@@ -64,7 +37,6 @@ dhclient_stop() {
 	local iface="$1" d
 	local pidfile="/var/run/dhclient-${iface}.pid"
 
-	dhclient_check_installed || return 0
 	[[ ! -f ${pidfile} ]] && return 0
 
 	# We check for a dhclient process first as if we attempt to release

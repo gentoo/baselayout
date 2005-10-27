@@ -8,44 +8,17 @@
 
 # Load our config if it exists
 [[ -f $(add_suffix "/etc/conf.d/wireless" ) ]] \
-&& source $(add_suffix "/etc/conf.d/wireless" )
+	&& source $(add_suffix "/etc/conf.d/wireless" )
 
 # void essidnet_depend(void)
 #
 # Sets up the dependancies for the module
 essidnet_depend() {
-	before interface
+	before interface system
 	after wireless
 	installed wireless
-}
-
-# bool essidnet_check_installed(void)
-#
-# Always returns 0 as we are "installed" by wireless in the depend function
-essidnet_check_installed() {
-	return 0
-}
-
-# char* essidnet_provides(void)
-#
-# Returns a string to change module definition for starting up
-essidnet_provides() {
-	echo "essidnet"
-}
-
-# bool essidnet_check_depends(void)
-#
-# Checks to see if we have the needed functions
-essidnet_check_depends() {
-	local f
-
-	for f in wireless_check_extensions wireless_get_essid wireless_get_ap_mac_address; do
-		[[ $( type -t "${f}" ) == "function" ]] && continue
-		eerror "essidnet: missing required function ${f}\n"
-		return 1
-	done
-
-	return 0
+	functions wireless_check_extensions wireless_get_essid \
+		wireless_get_ap_mac_address
 }
 
 # bool essidnet_start(char *iface)

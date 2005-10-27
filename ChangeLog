@@ -1,6 +1,25 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  27 Oct 2005; Roy Marples <uberlord@gentoo.org>:
+
+    New net scripts depend calls - functions, variables and provide.
+    This saves having to create 3 seperate functions in each module which means
+    a saving of around 600-800 bytes per module.
+
+    Split apipa out of arping module due to user demand for seperate
+    functionality.
+
+    arping module now works correctly.
+
+    runscript sets RC_KILL_CHILDREN="no" when restarting a service, otherwise
+    things like your ssh session get killed.
+
+    adsl module supports new rp-pppoe-3.6 ebuild, #102820
+
+    Config profile is now changed correctly when doing "rc foo" and you're in
+    the default runlevel, #101105
+
   26 Oct 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Tweak runscript error output to only show the invalid arg once rather than 
