@@ -47,26 +47,24 @@ adsl_check_depends() {
 #
 # Checks to see if the ADSL script has been created or not
 adsl_setup_vars() {
-	local iface=${1} startstop=${2} cfgfile
+	local iface=${1} startstop=${2} cfgexe
 
 	if [[ -x /usr/sbin/pppoe-start ]]; then
 	    exe=/usr/sbin/pppoe-${startstop}
+	    cfgexe=pppoe-setup
 	else
 	    exe=/usr/sbin/adsl-${startstop}
+	    cfgexe=adsl-setup
 	fi
 
 	# Decide which configuration to use.  Hopefully there is an
 	# interface-specific one
-	cfgfile=/etc/ppp/pppoe-${iface}.conf
-	if [[ -f ${cfgfile} ]]; then
-	    exe="${exe} ${iface}"
-	else
-	    cfgfile=/etc/ppp/pppoe.conf
-	fi
+	cfgfile="/etc/ppp/pppoe-${iface}.conf"
+	[[ -f ${cfgfile} ]] || cfgfile="/etc/ppp/pppoe.conf"
 
 	if [[ ! -f ${cfgfile} ]]; then
 		eerror "no pppoe.conf file found!"
-		eerror "Please run adsl-setup to create one"
+		eerror "Please run ${cfgexe} to create one"
 		return 1
 	fi
 
@@ -79,12 +77,17 @@ adsl_setup_vars() {
 #
 # Returns 0 (true) when successful, non-zero otherwise
 adsl_start() {
-	local iface=${1} exe
+	local iface=${1} exe cfgfile
 
 	adsl_setup_vars ${iface} start || return 1
 
+	# Start ADSL with the cfgfile, but override ETH and PIDFILE
 	einfo "Starting ADSL for ${iface}"
-	${exe}
+	${exe} <(cat "${cfgfile}"; \
+	    echo "ETH=${iface}"; \
+	    echo "PIDFILE=/var/run/rp-pppoe-${iface}.pid"; \
+	    [[ -n ${user} ]] && echo "USER=${user}") \
+	    >/dev/null
 	eend $?
 }
 
@@ -97,15 +100,17 @@ adsl_start() {
 # that adsl-stop was successful.  Returns non-zero when there was
 # nothing to stop.
 adsl_stop() {
-	local iface=${1} exe
+	local iface=${1} exe cfgfile
 
 	adsl_check_installed || return 1
-	[[ ! -f /var/run/adsl-${iface}.pid ]] && return 1
+	[[ ! -f /var/run/rp-pppoe-${iface}.pid ]] && return 1
 
 	adsl_setup_vars ${iface} stop || return 1
 
 	einfo "Stopping ADSL for ${iface}"
-	${exe}
+	${exe} <(cat "${cfgfile}"; \
+	    echo "ETH=${iface}"; echo "PIDFILE=/var/run/rp-pppoe-${iface}.pid") \
+	    >/dev/null
 	eend $?
 
 	return 0  # we did *attempt* to stop adsl
