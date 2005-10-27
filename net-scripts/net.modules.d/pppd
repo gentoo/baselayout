@@ -2,19 +2,13 @@
 # Copyright (c) 2004-2005 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
-# char* pppd_provides(void)
-#
-# Returns a string to change module definition for starting up
-pppd_provides() {
-    echo "ppp"
-}
-
 # void pppd_depend(void)
 #
 # Sets up the dependancies for the module
 pppd_depend() {
     after interface
     before dhcp
+    provide ppp
 }
 
 # bool pppd_check_installed(void)
@@ -25,13 +19,6 @@ pppd_check_installed() {
     ${1:-false} && eerror "For PPP support, emerge net-dialup/ppp"
     return 1
     fi
-    return 0
-}
-
-# bool pppd_check_depends(void)
-#
-# Checks to see if we have the needed functions
-pppd_check_depends() {
     return 0
 }
 

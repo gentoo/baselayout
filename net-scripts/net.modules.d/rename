@@ -4,41 +4,14 @@
 
 # Contributed by Roy Marples (uberlord@gentoo.org)
 
-# char* rename_provides(void)
-#
-# Returns a string to change module definition for starting up
-rename_provides() {
-	echo "rename"
-}
-
 # void rename_depend(void)
 #
 # Sets up the dependancies for the module
 rename_depend() {
-	after macchanger macnet
+	after macchanger
 	before wireless interface
-}
-
-# bool rename_check_installed(void)
-#
-# We are always installed
-rename_check_installed() {
-	return 0 
-}
-
-# bool rename_check_depends(void)
-#
-# Checks to see if we have the needed functions
-rename_check_depends() {
-	return 0
-}
-
-# char* rename_get_vars(char *interface)
-#
-# Returns a string spaced with possible user set
-# configuration variables
-rename_get_vars() {
-	echo "rename_$1"
+	functions interface_exists interface_down interface_del_addresses
+	variables rename
 }
 
 # bool rename_pre_start(char *iface)

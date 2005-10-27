@@ -27,6 +27,8 @@ iwpriv() {
 iwconfig_depend() {
 	after plug
 	before interface
+	provide wireless
+	functions interface_up interface_down interface_exists
 }
 
 # bool iwconfig_check_installed(void)
@@ -46,28 +48,6 @@ iwconfig_check_installed() {
 	fi
 	
 	return 1
-}
-
-# char* iwconfig_provides(void)
-#
-# Returns a string to change module definition for starting up
-iwconfig_provides() {
-	echo "wireless"
-}
-
-# bool iwconfig_check_depends(void)
-#
-# Checks to see if we have the needed functions
-iwconfig_check_depends() {
-	local f
-
-	for f in interface_up interface_down interface_exists; do
-		[[ $( type -t "${f}" ) == "function" ]] && continue
-		eerror "iwconfig: missing required function ${f}\n"
-		return 1
-	done
-
-	return 0
 }
 
 # bool iwconfig_check_extensions(char *interface)
@@ -383,7 +363,7 @@ iwconfig_associate() {
 
 	vebegin "Connecting to \"${dessid}\" ${w}"
 
-	if [[ ${ESSID} != "any" && $( type -t preassociate ) == "function" ]]; then
+	if [[ ${ESSID} != "any" ]] && is_function preassociate ; then
 		veinfo "Running preassociate function"
 		eindent
 		( preassociate "${iface}" )
@@ -410,7 +390,7 @@ iwconfig_associate() {
 	iwconfig_user_config "${iface}"
 	iwconfig_report "${iface}"
 
-	if [[ $( type -t postassociate ) == "function" ]]; then
+	if is_function postassociate ; then
 		veinfo "Running postassociate function"
 		eindent
 		( postassociate "${iface}" )

@@ -10,19 +10,14 @@ vconfig() {
 	LC_ALL=C /sbin/vconfig "$@"
 }
 
-# char* vlan_provides(void)
-#
-# Returns a string to change module definition for starting up
-vlan_provides() {
-	echo "vlan"
-}
-
 # void vlan_depend(void)
 #
 # Sets up the dependancies for the module
 vlan_depend() {
 	after interface
-	before dhcp arping
+	before dhcp
+	functions iface_start iface_stop
+	variables vlans
 }
 
 # bool vlan_check_installed(void)
@@ -34,36 +29,13 @@ vlan_check_installed() {
 	return 1
 }
 
-# bool vlan_check_depends(void)
-#
-# Checks to see if we have the needed functions
-vlan_check_depends() {
-	local f
-
-	for f in iface_start iface_stop; do
-		[[ $( type -t "${f}" ) == function ]] && continue
-		eerror "vlan: missing required function ${f}\n"
-		return 1
-	done
-
-	return 0
-}
-
-# char* vlan_get_vars(char *interface)
-#
-# Returns a string spaced with possible user set
-# configuration variables
-vlan_get_vars() {
-	echo "vlans_$1 iface_$1_vlans"
-}
-
 # char* vlan_get_vlans(char *interface)
 #
 # Fetch the configured vlans for an interface.  Outputs a space
 # separated list on stdout.  For example "eth0.1 eth0.2 eth0.3"
 vlan_get_vlans() {
 	sed -n -e 's/^\(.*[0-9]\) \(.* \) .*'"$1"'$/\1/p' \
-	/proc/net/vlan/config 2>/dev/null
+		/proc/net/vlan/config 2>/dev/null
 }
 
 # bool vlan_check_kernel(void)
@@ -147,12 +119,12 @@ vlan_post_start() {
 	return 0
 }
 
-# bool vlan_pre_stop(char *iface)
+# bool vlan_stop(char *iface)
 #
 # Stops VLANs for a given interface
 #
 # Always returns 0 (true) 
-vlan_pre_stop() {
+vlan_stop() {
 	local iface="$1" vlan
 
 	vlan_check_installed || return 0

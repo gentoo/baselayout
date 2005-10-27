@@ -11,36 +11,9 @@
 # Sets up the dependancies for the module
 macnet_depend() {
 	before interface wireless
-	after macchanger 
-}
-
-# bool macnet_check_installed(void)
-#
-# Always returns 0 as we are "installed" by wireless in the depend function
-macnet_check_installed() {
-	return 0
-}
-
-# char* macnet_provides(void)
-#
-# Returns a string to change module definition for starting up
-macnet_provides() {
-	echo "macnet"
-}
-
-# bool macnet_check_depends(void)
-#
-# Checks to see if we have the needed functions
-macnet_check_depends() {
-	local f
-
-	for f in interface_get_mac_address; do
-		[[ $( type -t "${f}" ) == "function" ]] && continue
-		eerror "macnet: missing required function ${f}\n"
-		return 1
-	done
-
-	return 0
+	after macchanger
+	installed macchanger
+	functions interface_get_mac_address
 }
 
 # bool macnet_start(char *iface)

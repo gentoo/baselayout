@@ -520,6 +520,10 @@ for arg in $* ; do
 	restart)
 		svcrestart="yes"
 
+        # We don't kill child processes if we're restarting
+		# This is especically important for sshd ....
+		RC_KILL_CHILDREN="no"				
+		
 		# Create a snapshot of started services
 		rm -rf "${svcdir}/snapshot/$$"
 		mkdir -p "${svcdir}/snapshot/$$"

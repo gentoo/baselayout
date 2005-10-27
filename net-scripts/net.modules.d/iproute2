@@ -18,7 +18,9 @@ iproute2_tunnel() {
 #
 # Sets up the dependancies for the module
 iproute2_depend() {
-	after macnet wireless
+	provide interface
+	functions interface_device
+	variables config routes fallback metric ipaddr ipaddr_fallback iproute inet6
 }
 
 # bool iproute2_check_installed(void)
@@ -35,37 +37,6 @@ iproute2_check_installed() {
 		${report} && eerror "iproute2 requires NetLink enabled in the kernel"
 	fi
 	return "${installed}"
-}
-
-# char* iproute2_provides(void)
-#
-# Returns a string to change module definition for starting up
-iproute2_provides() {
-	echo "interface"
-}
-
-# char* iproute2_module(void)
-#
-# Returns the module name
-# This is needed by dhclient as we run different scripts
-# based on the interface
-iproute2_module() {
-	echo "iproute2"
-}
-
-# bool iproute2_check_depends(void)
-#
-# Checks to see if we have the needed functions
-iproute2_check_depends() {
-	local f
-
-	for f in interface_device; do
-		[[ $( type -t "${f}" ) == "function" ]] && continue
-		eerror "iproute2: missing required function ${f}\n"
-		return 1
-	done
-
-	return 0
 }
 
 # bool iproute2_exists(char *interface, bool report)
@@ -172,14 +143,6 @@ iproute2_del_addresses() {
 	return 0
 }
 
-# char* iproute2_get_vars(char *interface)
-#
-# Returns a string spaced with possible user set
-# configuration variables
-iproute2_get_vars() {
-	echo "config_$1 routes_$1 fallback_$1 metric_$1 ipaddr_$1 ipaddr_fallback_$1 iproute_$1 inet6_$1"
-}
-
 # bool iproute2_get_old_config(char *iface)
 #
 # Returns config and config_fallback for the given interface
@@ -198,8 +161,11 @@ iproute2_get_old_config() {
 	[[ -n ${inet6} ]] && config=( "${config[@]}" "${inet6[@]}" )
 
 	# Support old style iface_xxx syntax
-	[[ -z ${config} && $(type -t ifconfig_get_old_config) == "function" ]] \
-		&& ifconfig_get_old_config "${iface}"
+	if [[ -z ${config} ]] ; then
+		if is_function ifconfig_get_old_config ; then
+			ifconfig_get_old_config "${iface}"
+		fi
+	fi
 
 	return 0
 }

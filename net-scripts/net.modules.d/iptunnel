@@ -4,49 +4,14 @@
 
 # Contributed by Roy Marples (uberlord@gentoo.org)
 
-# char* iptunnel_provides(void)
-#
-# Returns a string to change module definition for starting up
-iptunnel_provides() {
-	echo "iptunnel"
-}
-
 # void iptunnel_depend(void)
 #
 # Sets up the dependancies for the module
 iptunnel_depend() {
 	after wireless
 	before interface
-}
-
-# bool iptunnel_check_installed(void)
-#
-# Tunnelling is provided by the interface
-iptunnel_check_installed() {
-	return 0
-}
-
-# bool iptunnel_check_depends(void)
-#
-# Checks to see if we have the needed functions
-iptunnel_check_depends() {
-	local f
-
-	for f in interface_exists interface_tunnel; do
-		[[ $( type -t "${f}" ) == "function" ]] && continue
-		eerror "iptunnel: missing required function ${f}\n"
-		return 1
-	done
-
-	return 0
-}
-
-# char* iptunnel_get_vars(char *interface)
-#
-# Returns a string spaced with possible user set
-# configuration variables
-iptunnel_get_vars() {
-	echo "iptunnel_$1"
+	functions interface_exists interface_tunnel
+	variables iptunnel
 }
 
 # bool iptunnel_pre_start(char *iface)
@@ -62,8 +27,6 @@ iptunnel_pre_start() {
 	ebegin "Creating tunnel ${iface}"
 	interface_tunnel add "${iface}" ${opts}
 	eend "$?"
-	return "$?"
-
 }
 
 # bool iptunnel_stop(char *iface)
@@ -78,7 +41,6 @@ iptunnel_stop() {
 	ebegin "Destroying tunnel ${iface}"
 	interface_tunnel del "${iface}"
 	eend "$?"
-	return "$?"
 }
 
 # vim:ts=4

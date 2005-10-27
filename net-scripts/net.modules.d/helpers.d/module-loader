@@ -11,6 +11,15 @@
 conf=$(add_suffix "/etc/conf.d/net")
 [[ -e ${conf} ]] && source "${conf}"
 
+# Create some dummy functions, so we can depend on a module
+after() { return; }
+before() { return; }
+need() { return; }
+provide() { return; }
+installed() { return; }
+functions() { return; }
+variables() { eval "${MODULE}_variables() { echo \"$*\"; }"; }
+
 # Guess which interface module to load - we prefer iproute2
 if [[ -x /sbin/ip ]]; then
 	interface_module="iproute2"
@@ -34,14 +43,29 @@ MODULES=( "system" )
 
 # Load our modules
 . "${MODULES_DIR}/${interface_module}"
+MODULE="interface"
+${interface_module}_depend
 function_wrap "${interface_module}" interface
-. "${MODULES_DIR}/macnet"
+
+if [[ -e "${MODULES_DIR}/macnet" ]]; then
+	. "${MODULES_DIR}/macnet"
+	MODULE="macnet"
+	macnet_depend
+fi
+
 . "${MODULES_DIR}/system"
+MODULE="system"
+system_depend
 
 if [[ -n ${wireless_module} ]]; then
 	. "${MODULES_DIR}/${wireless_module}"
+	MODULE="${wireless_module}"
+	${wireless_module}_depend
 	function_wrap "${wireless_module}" wireless
 	. "${MODULES_DIR}/essidnet"
 fi
+
+# Dummy dhcp
+dhcp_variables() { echo "dhcp"; }
 
 # vim:ts=4

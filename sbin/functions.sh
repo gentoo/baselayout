@@ -587,9 +587,9 @@ get_options() {
 #    Returns a config file name with the softlevel suffix
 #    appended to it.  For use with multi-config services.
 add_suffix() {
-	if [ "${RC_USE_CONFIG_PROFILE}" = "yes" -a -e "$1.${DEFAULTLEVEL}" ]
+	if [ "${RC_USE_CONFIG_PROFILE}" = "yes" -a -e "$1.${SOFTLEVEL}" ]
 	then
-		echo "$1.${DEFAULTLEVEL}"
+		echo "$1.${SOFTLEVEL}"
 	else
 		echo "$1"
 	fi

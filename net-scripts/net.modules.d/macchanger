@@ -4,41 +4,13 @@
 
 # Contributed by Roy Marples (uberlord@gentoo.org)
 
-# char* macchanger_provides(void)
-#
-# Returns a string to change module definition for starting up
-macchanger_provides() {
-	echo "macchanger"
-}
-
 # void macchanger_depend(void)
 #
 # Sets up the dependancies for the module
 macchanger_depend() {
 	before macnet
-}
-
-# bool macchanger_check_installed(void)
-#
-# macchanger is always installed as an interface can change to a specific
-# mac address, and an interface is always installed
-macchanger_check_installed() {
-	return 0
-}
-
-# bool macchanger_check_depends(void)
-#
-# Checks to see if we have the needed functions
-macchanger_check_depends() {
-	local f
-
-	for f in interface_get_mac_address interface_set_mac_address; do
-		[[ $( type -t "${f}" ) == "function" ]] && continue
-		eerror "macchanger: missing required function ${f}\n"
-		return 1
-	done
-
-	return 0
+	functions interface_get_mac_address interface_set_mac_address
+	variables mac
 }
 
 # bool macchanger_pre_start(char *iface)

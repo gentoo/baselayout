@@ -10,18 +10,14 @@ udhcpc() {
 	LC_ALL=C /sbin/udhcpc "$@"
 }
 
-# char* udhcpc_provides(void)
-#
-# Returns a string to change module definition for starting up
-udhcpc_provides() {
-	echo "dhcp"
-}
-
 # void udhcpc_depend(void)
 #
 # Sets up the dependancies for the module
 udhcpc_depend() {
 	after interface
+	provide dhcp
+	functions interface_exists interface_get_address
+	variables udhcpc dhcp
 }
 
 # bool udhcpc_check_installed(void)
@@ -33,29 +29,6 @@ udhcpc_check_installed() {
 	return 1
 }
 
-# bool udhcpc_check_depends(void)
-#
-# Checks to see if we have the needed functions
-udhcpc_check_depends() {
-	local f
-
-	for f in interface_exists interface_get_address; do
-		[[ $( type -t "${f}" ) == "function" ]] && continue
-		eerror "udhcpc: missing required function ${f}\n"
-		return 1
-	done
-
-	return 0
-}
-
-# char* udhcpc_get_vars(char *interface)
-#
-# Returns a string spaced with possible user set
-# configuration variables
-udhcpc_get_vars() {
-	echo "udhcpc_$1 dhcp_$1"
-}
-
 # bool udhcpc_stop(char *iface)
 #
 # Stops udhcpc running on an interface
@@ -63,7 +36,6 @@ udhcpc_get_vars() {
 udhcpc_stop() {
 	local iface="$1" pidfile="/var/run/udhcpc-$1.pid" d
 
-	udhcpc_check_installed || return 0
 	[[ ! -f ${pidfile} ]] && return 0
 
 	ebegin "Stopping udhcpc on ${iface}"

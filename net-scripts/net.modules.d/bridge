@@ -9,20 +9,14 @@
 brctl() {
 	LC_ALL=C /sbin/brctl "$@"
 }
-
-# char* bridge_provides(void)
-#
-# Returns a string to change module definition for starting up
-bridge_provides() {
-	echo "bridge"
-}
-
 # void bridge_depend(void)
 #
 # Sets up the dependancies for the module
 bridge_depend() {
 	after interface tuntap
 	before dhcp arping
+	functions interface_down interface_del_addresses interface_set_flag
+	variables bridge bridge_add brctl
 }
 
 # bool bridge_check_installed(void)
@@ -34,35 +28,12 @@ bridge_check_installed() {
 	return 1
 }
 
-# bool bridge_check_depends(void)
-#
-# Checks to see if we have the needed functions
-bridge_check_depends() {
-	local f
-
-	for f in interface_down interface_del_addresses interface_set_flag; do
-		[[ $( type -t "${f}" ) == "function" ]] && continue
-		eerror "bridge: missing required function ${f}\n"
-		return 1
-	done
-
-	return 0
-}
-
-# char* bridge_get_vars(char *interface)
-#
-# Returns a string spaced with possible user set
-# configuration variables
-bridge_get_vars() {
-	echo "bridge_$1 brctl_$1"
-}
-
 # char* bridge_get_ports(char *interface)
 #
 # Returns the interfaces added to the given bridge
 bridge_get_ports() {
 	brctl show 2>/dev/null \
-	| sed -n -e '/^'"$1"'/,/^\S/ { /^\('"$1"'\|\t\)/s/^.*\t//p }'
+		| sed -n -e '/^'"$1"'/,/^\S/ { /^\('"$1"'\|\t\)/s/^.*\t//p }'
 }
 
 # char* bridge_get_bridge(char *interface)
@@ -192,8 +163,6 @@ bridge_pre_start() {
 # Removes the device
 # returns 0
 bridge_stop() {
-	bridge_check_installed || return 0
-
 	local iface="$1" ports i deletebridge=false extra=""
 
 	if bridge_exists "${iface}" ; then

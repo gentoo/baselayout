@@ -4,19 +4,15 @@
 
 # Contributed by Roy Marples (uberlord@gentoo.org)
 
-# char* ipppd_provides(void)
-#
-# Returns a string to change module definition for starting up
-ipppd_provides() {
-	echo "isdn"
-}
-
 # void ipppd_depend(void)
 #
 # Sets up the dependancies for the module
 ipppd_depend() {
 	after macnet
 	before interface
+	provide isdn
+	functions interface_exists interface_type clean_pidfile
+	variables ipppd
 }
 
 # bool ipppd_check_installed(void)
@@ -26,21 +22,6 @@ ipppd_check_installed() {
 	[[ -x /usr/sbin/ipppd ]] && return 0
 	${1:-false} && eerror "For ISDN (ipppd) support, emerge net-dialup/isdn4k-utils"
 	return 1
-}
-
-# bool ipppd_check_depends(void)
-#
-# Checks to see if we have the needed functions
-ipppd_check_depends() {
-	local f
-
-	for f in interface_exists interface_type clean_pidfile; do
-		[[ $( type -t "${f}" ) == "function" ]] && continue
-		eerror "ipppd: missing required function ${f}\n"
-		return 1
-	done
-
-	return 0
 }
 
 # bool ipppd_start(char *iface)
@@ -83,7 +64,6 @@ ipppd_pre_start() {
 ipppd_stop() {
 	local iface="$1" pidfile="/var/run/ipppd-$1.pid"
 
-	ipppd_check_installed || return 0
 	[[ ! -f ${pidfile} ]] && return 0
 
 	clean_pidfile "${pidfile}" && return 0
