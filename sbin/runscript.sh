@@ -457,13 +457,13 @@ if [[ -z ${opts} ]] ; then
 fi
 
 svc_homegrown() {
-	local arg=$1
-	local x=
+	local x arg=$1
+	shift
 
 	# Walk through the list of available options, looking for the
 	# requested one.
 	for x in ${opts} ; do
-		if [[ ${x} == ${arg} ]] ; then
+		if [[ ${x} == "${arg}" ]] ; then
 			if typeset -F "${x}" &>/dev/null ; then
 				# Run the homegrown function
 				"${x}"
@@ -472,9 +472,11 @@ svc_homegrown() {
 			fi
 		fi
 	done
+	x=""
 
 	# If we're here, then the function wasn't in $opts.
-	eerror "ERROR:  wrong args. (  "${arg}" / $* )"
+	[[ -n $* ]] && x="/ $* "
+	eerror "ERROR: wrong args ( "${arg}" ${x})"
 	# Do not quote this either ...
 	usage ${opts}
 	exit 1
