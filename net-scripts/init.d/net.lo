@@ -449,23 +449,6 @@ modules_load()  {
 				${modules_force[i]}_check_installed || unset modules_force[i]
 			fi
 		done
-		modules_force=( "${modules_force[@]}" )
-
-		# Strip any duplicate modules providing the same thing
-		j="${#modules_force[@]}"
-		for (( i=0; i<j-1; i++ )); do
-			[[ -z ${modules_force[i]} ]] && continue
-			for (( k=i+1; k<j; k++ )); do
-				[[ -z ${modules_force[k]} ]] && continue
-				if is_function "${modules_force[i]}_provide" \
-					&& is_function "${modules_force[k]}_provide" ; then
-						[[ $( ${modules_force[i]}_provide ) \
-							== $( ${modules_force[k]}_provide ) ]] \
-								&& unset modules_force[k]
-				fi
-			done
-		done
-
 		MODULES=( "${modules_force[@]}" )
 	fi
 
@@ -473,10 +456,8 @@ modules_load()  {
 	for (( i=0; i<j; i++ )); do
 		# Now load our dependencies - we need to use the MODULE variable
 		# here as the after/before/need functions use it
-		if [[ -z ${modules_force[@]} ]]; then
-			MODULE="${MODULES[i]}"
-			${MODULE}_depend
-		fi
+		MODULE="${MODULES[i]}"
+		${MODULE}_depend
 
 		# If no provide is given, assume module name
 		if is_function "${MODULES[i]}_provide" ; then
@@ -486,7 +467,21 @@ modules_load()  {
 		fi
 	done
 
-	if [[ -z ${modules_force[@]} ]]; then
+	if [[ -n ${modules_force[@]} ]]; then
+		# Strip any duplicate modules providing the same thing
+		j="${#MODULES[@]}"
+		for (( i=0; i<j-1; i++ )); do
+			[[ -z ${MODULES[i]} ]] && continue
+			for (( k=i+1; k<j; k++ )); do
+				if [[ ${PROVIDES[i]} == ${PROVIDES[k]} ]]; then
+					unset MODULES[k]
+					unset PROVIDES[k]
+				fi
+			done
+		done
+		MODULES=( "${MODULES[@]}" )
+		PROVIDES=( "${PROVIDES[@]}" )
+	else
 		if ${starting}; then
 			modules_check_user || return 1
 		fi
