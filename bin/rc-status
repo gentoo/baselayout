@@ -99,7 +99,7 @@ if [[ -z ${runlevel} ]] ; then
 			eerror "Your installation is probably broken ... please \`emerge baselayout\`"
 			exit 1
 		fi
-		ewarn "Assuming current runrevel is '${runlevel}'"
+		ewarn "Assuming current runlevel is '${runlevel}'"
 	fi
 fi
 if [[ ! -d ${runleveldir}/${runlevel} ]] ; then
