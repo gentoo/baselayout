@@ -1,6 +1,13 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  31 Oct 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Replace the bubble-esq sort routine with a tsort based one for
+    loading modules. This means that we are much faster than before :)
+
+    Fix ifconfig with multiple IP addresses, #110956          
+ 
   19 Oct 2005; Roy Marples <uberlord@gentoo.org>:
 
     rc-daemon.sh now kills children correctly.

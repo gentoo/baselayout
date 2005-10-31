@@ -13,8 +13,8 @@ brctl() {
 #
 # Sets up the dependancies for the module
 bridge_depend() {
-	after interface tuntap
-	before dhcp arping
+	after interface macnet tuntap
+	before dhcp
 	functions interface_down interface_del_addresses interface_set_flag
 	variables bridge bridge_add brctl
 }

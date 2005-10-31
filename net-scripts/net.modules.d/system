@@ -6,7 +6,7 @@
 #
 # Sets up the dependancies for the module
 system_depend() {
-	after interface
+	after interface dhcp
 	variables dns_servers dns_domain dns_options dns_search dns_sortlist \
 		ntp_servers nis_domain nis_servers
 }

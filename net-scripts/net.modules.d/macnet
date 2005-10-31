@@ -10,7 +10,7 @@
 #
 # Sets up the dependancies for the module
 macnet_depend() {
-	before interface wireless
+	before rename interface wireless
 	after macchanger
 	installed macchanger
 	functions interface_get_mac_address
