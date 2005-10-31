@@ -34,19 +34,13 @@ source "${MODULES_DIR}/helpers.d/functions"
 # Make some wrappers to fudge after/before/need/use depend flags.
 # These are callbacks so MODULE will be set.
 after() {
-	local x="$*"
-	[[ $# -gt 1 ]] && x=$( echo -e "${x// /\n}" | sort | xargs )
-	eval "${MODULE}_after() { echo \"$x\"; }"
+	eval "${MODULE}_after() { echo \"$*\"; }"
 }
 before() {
-	local x="$*"
-	[[ $# -gt 1 ]] && x=$( echo -e "${x// /\n}" | sort | xargs )
-	eval "${MODULE}_before() { echo \"$x\"; }"
+	eval "${MODULE}_before() { echo \"$*\"; }"
 }
 need() {
-	local x="$*"
-	[[ $# -gt 1 ]] && x=$( echo -e "${x// /\n}" | sort | xargs )
-	eval "${MODULE}_need() { echo \"$x\"; }"
+	eval "${MODULE}_need() { echo \"$*\"; }"
 }
 installed() {
 	# We deliberately misspell this as _installed will probably be used
@@ -61,10 +55,6 @@ functions() {
 }
 variables() {
 	eval "${MODULE}_variables() { echo \"$*\"; }"
-}
-
-sort() {
-	LC_ALL=C /bin/sort "$@"
 }
 
 # void go_background(void)
