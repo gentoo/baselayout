@@ -1,6 +1,13 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  31 Oct 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Replace the bubble-esq sort routine with a tsort based one for
+    loading modules. This means that we are much faster than before :)
+
+    Fix ifconfig with multiple IP addresses, #110956
+
   28 Oct 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Fix typo in rc-status error message #110685 by Eduardo Tongson.

@@ -288,84 +288,80 @@ modules_check_user() {
 }
 
 # void modules_sort(void)
-
+#
+# Sort our modules
 modules_sort() {
-	local -a modnums sort_history modafter modbefore
-	local i j k p changed_something nmods="${#MODULES[@]}"
-	
-	# Sort our modules
-	# We do this by assigning numbers to each module
-	# We also assign modbefore and modafter so we don't
-	# shell out as much because it's expensive on CPU.
-	modnums=()
-	for (( i=0; i<nmods; i++ )); do
-		modnums[i]="${i}"
-		is_function "${MODULES[i]}_after" \
-			&& modafter[i]=$(${MODULES[i]}_after)
-		is_function "${MODULES[i]}_before" \
-			&& modbefore[i]=$( ${MODULES[i]}_before )
-	done
+	local i j nmods=${#MODULES[@]} m
+	local -a provide=() provide_list=() after=() dead=() sorted=() sortedp=()
 
-	# Then we swap numbers based on and after/before flags
-	# until we don't swap anymore. The sort_history array prevents
-	# the possibility of an infinite loop
-	sort_history[0]="${modnums[*]}"
-	for (( k=1; 1; k++ )); do
-		changed_something=false
-		for (( i=0; i<nmods; i++ )); do
-			for p in ${modafter[i]}; do
-				for (( j=0; j<nmods; j++ )); do
-					[[ ${p} != "${MODULES[j]}" && ${p} != "${PROVIDES[j]}" ]] \
-						&& continue
-
-					if [[ ${modnums[i]} -lt "${modnums[j]}" ]]; then
-						tmp="${modnums[i]}"
-						modnums[i]="${modnums[j]}"
-						modnums[j]="${tmp}"
-						changed_something=true
-					fi
-				done
+	# Make our provide list
+	for ((i=0; i<nmods; i++)); do
+		dead[i]="false"
+		if [[ ${MODULES[i]} != "${PROVIDES[i]}" ]] ; then
+			local provided=false
+			for ((j=0; j<${#provide[@]}; j++)); do
+				if [[ ${provide[j]} == "${PROVIDES[i]}" ]]; then
+					provide_list[j]="${provide_list[j]} ${MODULES[i]}"
+					provided=true
+				fi
 			done
-			for p in ${modbefore[i]}; do
-				for (( j=0; j<nmods; j++ )); do
-					[[ ${p} != "${MODULES[j]}" && ${p} != "${PROVIDES[j]}" ]] \
-						&& continue
-
-					if [[ ${modnums[i]} -gt "${modnums[j]}" ]]; then
-						tmp="${modnums[i]}"
-						modnums[i]="${modnums[j]}"
-						modnums[j]="${tmp}"
-						changed_something=true
-					fi
-				done
-			done
-		done
-		${changed_something} || break
-
-		# Make sure we aren't repeating a previous state
-		# First time through, k=1, k/2=0
-		sort_history[k]="${modnums[*]}"
-		if [[ ${sort_history[k]} == "${sort_history[k/2]}" ]]; then
-			eerror "Detected an infinite loop sorting modules; blundering ahead"
-			break
+			if ! ${provided}; then
+				provide[j]="${PROVIDES[i]}"
+				provide_list[j]="${MODULES[i]}"
+			fi
 		fi
 	done
 
-	# Finally we sort our modules in number order
-	um=""
-	for (( i=0; i<nmods; i++ )); do
-		um="${um}${modnums[i]} ${MODULES[i]} ${PROVIDES[i]}\n"
+	# Create an after array, which holds which modules the module at
+	# index i must be after
+	for ((i=0; i<nmods; i++)); do
+		if is_function "${MODULES[i]}_after" ; then
+			after[i]=" $(${MODULES[i]}_after) "
+		fi
+		if is_function "${MODULES[i]}_before" ; then
+			for m in $(${MODULES[i]}_before); do
+				for ((j=0; j<nmods; j++)) ; do
+					if [[ ${PROVIDES[j]} == "${m}" ]]; then
+						after[j]=" ${after[j]} ${MODULES[i]} "
+						break
+					fi
+				done
+			done
+		fi
 	done
 
-	p=( $( echo -e "${um}" | sort -n | cut -d' ' -f2,3 ) )
-	MODULES=()
-	PROVIDES=()
-	j=0
-	for (( i=0; i<${#p[@]}; i+=2 )); do
-		MODULES[j]="${p[i]}"
-		PROVIDES[j]="${p[i+1]}"
-		(( j++ ))
+	# Replace the after list modules with real modules
+	for ((i=0; i<nmods; i++)); do
+		for ((j=0; j<${#provide[@]}; j++)); do
+			after[i]="${after[i]// ${provide[j]} / ${provide_list[j]} }"
+		done
 	done
+
+	# We then use the below code to provide a topologial sort
+    module_after_visit() {
+        local name=$1 i x
+
+		for ((i=0; i<nmods; i++)); do
+			[[ ${MODULES[i]} == "$1" ]] && break
+		done
+
+        ${dead[i]} && return
+        dead[i]="true"
+
+        for x in ${after[i]} ; do
+            module_after_visit "${x}"
+        done
+
+        sorted=( "${sorted[@]}" "${MODULES[i]}" )
+		sortedp=( "${sortedp[@]}" "${PROVIDES[i]}" )
+    }
+
+	for x in ${MODULES[@]}; do
+		module_after_visit "${x}"
+	done
+
+	MODULES=( "${sorted[@]}" )
+	PROVIDES=( "${sortedp[@]}" )
 }
 
 # bool modules_check_depends(bool showprovides)

@@ -319,9 +319,9 @@ ifconfig_post_start() {
 #
 # Adds the given address to the interface
 ifconfig_add_address() {
-	local iface="$1" i=0 r e
+	local iface="$1" i=0 r e real_iface=$(interface_device "$1")
 
-	ifconfig_exists "${iface}" true || return 1
+	ifconfig_exists "${real_iface}" true || return 1
 	
 	# Extract the config
 	local -a config=( "$@" )
@@ -357,18 +357,18 @@ ifconfig_add_address() {
 	fi
 
 	# Ensure that the interface is up so we can add IPv6 addresses
-	interface_up "${iface}"
+	interface_up "${real_iface}"
 
 	# Some kernels like to apply lo with an address when they are brought up
 	if [[ ${iface} == "lo" && ${config[@]} == "127.0.0.1 netmask 255.0.0.0 broadcast 127.255.255.255" ]]; then
 		ifconfig "${iface}" 0.0.0.0
 	fi
-		
+
 	ifconfig "${iface}" ${config[@]}
 	r="$?"
 	[[ ${r} != "0" ]] && return ${r}
 
-	local metric ifvar=$( bash_variable "${iface}" )
+	local metric ifvar=$(bash_variable "${real_iface}")
 	# Remove the newly added route and replace with our metric
 	eval metric=\"\$\{metric_${ifvar}\}\"
 	[[ ${metric} == "0" || ${RC_AUTO_INTERFACE} != "yes" ]] && return ${r}
