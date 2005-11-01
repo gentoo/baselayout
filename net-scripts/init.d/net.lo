@@ -306,7 +306,7 @@ modules_sort() {
 	# index i must be after
 	for ((i=0; i<nmods; i++)); do
 		if is_function "${MODULES[i]}_after" ; then
-			after[i]=" $(${MODULES[i]}_after) "
+			after[i]=" ${after[i]} $(${MODULES[i]}_after) "
 		fi
 		if is_function "${MODULES[i]}_before" ; then
 			for m in $(${MODULES[i]}_before); do
@@ -322,11 +322,13 @@ modules_sort() {
 
 	# Replace the after list modules with real modules
 	for ((i=0; i<nmods; i++)); do
-		for ((j=0; j<${#provide[@]}; j++)); do
-			after[i]="${after[i]// ${provide[j]} / ${provide_list[j]} }"
-		done
+		if [[ -n ${after[i]} ]]; then
+			for ((j=0; j<${#provide[@]}; j++)); do
+				after[i]="${after[i]// ${provide[j]} / ${provide_list[j]} }"
+			done
+		fi
 	done
-
+	
 	# We then use the below code to provide a topologial sort
     module_after_visit() {
         local name=$1 i x

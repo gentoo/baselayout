@@ -56,10 +56,10 @@
 #define CHILD_READ_PIPE(_pipe)		(_pipe[1][READ_PIPE])
 #define CHILD_WRITE_PIPE(_pipe)		(_pipe[0][WRITE_PIPE])
 
-#define PARSE_BUFFER_SIZE		256
+#define PARSE_BUFFER_SIZE		2048	
 
 #define OUTPUT_MAX_LINE_LENGHT		256
-#define OUTPUT_BUFFER_SIZE		(60 * 1024)
+#define OUTPUT_BUFFER_SIZE		(60 * 2048)
 
 /* void PRINT_TO_BUFFER(char **_buf, int _count, label _error, format) */
 #define PRINT_TO_BUFFER(_buf, _count, _error, _output...) \
