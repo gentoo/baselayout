@@ -56,7 +56,7 @@
 #define CHILD_READ_PIPE(_pipe)		(_pipe[1][READ_PIPE])
 #define CHILD_WRITE_PIPE(_pipe)		(_pipe[0][WRITE_PIPE])
 
-#define PARSE_BUFFER_SIZE		2048	
+#define PARSE_BUFFER_SIZE		256
 
 #define OUTPUT_MAX_LINE_LENGHT		256
 #define OUTPUT_BUFFER_SIZE		(60 * 2048)
