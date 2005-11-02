@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  02 Nov 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Grab updates from IANA for /etc/services including OpenVPN #111194.
+
   31 Oct 2005; Roy Marples <uberlord@gentoo.org>:
 
     Replace the bubble-esq sort routine with a tsort based one for
