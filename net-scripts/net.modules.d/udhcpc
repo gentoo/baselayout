@@ -71,7 +71,7 @@ udhcpc_start() {
 
 	interface_exists "${iface}" true || return 1
 
-	local ifvar=$( bash_variable "${iface}" ) opts hostname
+	local ifvar=$( bash_variable "${iface}" ) opts 
 	eval opts=\"\$\{udhcpc_${ifvar}\}\"
 
 	eval d=\" \$\{dhcp_${ifvar}\} \"
@@ -79,10 +79,9 @@ udhcpc_start() {
 
 	if [[ ${d} != *" nosendhost "* ]]; then
 		if [[ ! " ${opts}" =~ " -([hH] |-hostname=)" ]]; then
-			local hostname=$( hostname )
-			[[ -n ${hostname} && ${hostname} != "(none)" \
-			&& ${hostname} != "localhost" ]] \
-			&& opts="${opts} --hostname=${hostname}"
+			local hname=$( hostname )
+			[[ -n ${hname} && ${hname} != "(none)" && ${hname} != "localhost" ]] \
+				&& opts="${opts} --hostname=${hname}"
 		fi
 	fi
 

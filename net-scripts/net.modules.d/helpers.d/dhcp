@@ -102,8 +102,8 @@ fi
 
 # Configure our hostname - but only if we need it
 if [[ -n ${hostname} ]]; then
-	x=$( /bin/hostname )
-	[[ ${x} == "(none)" || ${x} == "localhost" ]] && /bin/hostname "${hostname}"
+	x=$( hostname )
+	[[ ${x} == "(none)" || ${x} == "localhost" ]] && hostname "${hostname}"
 fi
 
 [[ ! -d "${statedir}/${interface}" ]] \

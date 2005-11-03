@@ -335,11 +335,11 @@ iwconfig_associate() {
 	else
 		ESSIDVAR=$( bash_variable "${ESSID}" )
 		key=$( iwconfig_get_wep_key "${mac}" )
-		if [[ ${wep_required} == "yes" && ${key} == "off" ]]; then
+		if [[ ${wep_required} == "on" && ${key} == "off" ]]; then
 			vewarn "WEP key is not set for \"${dessid}\" - not connecting"
 			return 1
 		fi
-		if [[ ${wep_required} == "no" && ${key} != "off" ]]; then
+		if [[ ${wep_required} == "off" && ${key} != "off" ]]; then
 			key="off"
 			vewarn "\"${dessid}\" is not WEP enabled - ignoring setting"
 		fi
@@ -437,7 +437,7 @@ iwconfig_scan() {
 	veinfo "Scanning for access points"
 
 	# Sleep if required
-	eval x=\"\$\{sleep_scan_${ifvar}\}\"
+	eval x=\"\$\{sleep_scan_${ifvar}\:-1}\"
 	[[ -n ${x} ]] && sleep "${x}"
 
 	local error=true i=-1 line

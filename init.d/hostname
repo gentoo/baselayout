@@ -7,7 +7,10 @@ depend() {
 }
 
 start() {
-	local myhost=$(/bin/hostname 2>/dev/null)
+	# Ensure that we have a hostname binary or function
+	source /lib/rcscripts/net.modules.d/helpers.d/functions
+	
+	local myhost=$(hostname 2>/dev/null)
 	local retval=0
 
 	# If the hostname is already set via the kernel, and /etc/hostname 
@@ -24,7 +27,7 @@ start() {
 	fi
 
 	ebegin "Setting hostname to ${myhost}"
-	/bin/hostname "${myhost}"
+	hostname "${myhost}"
 	retval=$?
 	eend ${retval} "Failed to set the hostname"
 

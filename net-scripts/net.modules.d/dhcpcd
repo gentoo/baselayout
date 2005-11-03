@@ -81,7 +81,7 @@ dhcpcd_stop() {
 #
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 dhcpcd_start() {
-	local iface="$1" opts hostname pidfile="/var/run/dhcpcd-$1.pid"
+	local iface="$1" opts pidfile="/var/run/dhcpcd-$1.pid"
 	local ifvar=$( bash_variable "${iface}" ) metric d
 
 	interface_exists "${iface}" true || return 1
@@ -99,10 +99,9 @@ dhcpcd_start() {
 
 	# We transmit the hostname by default
 	if [[ ${d} != *" nosendhost "* && ${opts} != *" -h "* ]]; then
-		hostname=$( hostname )
-		[[ -n ${hostname} && ${hostname} != "(none)" \
-		&& ${hostname} != "localhost" ]] \
-		&& opts="-h \"${hostname}\" ${opts}"
+		local hname=$( hostname )
+		[[ -n ${hname} && ${hname} != "(none)" && ${hname} != "localhost" ]] \
+			&& opts="-h \"${hname}\" ${opts}"
 	fi
 
 	# Stop dhcpcd from bringing the interface down when we exit

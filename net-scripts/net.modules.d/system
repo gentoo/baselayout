@@ -101,7 +101,7 @@ system_nis() {
 	chmod 644 "${tmpfile}"
 
 	if [[ -n ${domain} ]]; then
-		/bin/hostname -y "${domain}"
+		hostname -y "${domain}"
 		if [[ -n ${servers} ]]; then
 			for x in ${servers}; do
 				echo "domain ${domain} server ${x}" >> "${tmpfile}"
