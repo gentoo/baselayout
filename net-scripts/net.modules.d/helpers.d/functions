@@ -577,4 +577,24 @@ configure_variables() {
 	return 0
 }
 
+# Provide a wrapper for hostname if it's not available
+if [[ -z $(type -p hostname) ]]; then
+	hostname() {
+		# Linux and *BSD seem to differ
+		local kernel="kern" ctl="hostname"
+		[[ $(uname) == "Linux" ]] && kernel="kernel"
+		
+		if [[ $1 == "-y" || $1 == "--yp" || $1 == "nis" ]]; then
+			ctl="domainname"
+			shift
+		fi
+		
+		if [[ -n $1 ]]; then
+			sysctl -q -w "${kernel}.${ctl}=$1"
+		else
+			sysctl -n "${kernel}.${ctl}"
+		fi
+	}
+fi
+
 # vim:ts=4
