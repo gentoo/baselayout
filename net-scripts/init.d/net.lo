@@ -472,6 +472,11 @@ modules_load()  {
 	else
 		if ${starting}; then
 			modules_check_user || return 1
+		else
+			# Always prefer iproute2 for taking down interfaces
+			if is_function iproute2_provide ; then
+				function_wrap iproute2 $(iproute2_provide)
+			fi
 		fi
 	fi
 	

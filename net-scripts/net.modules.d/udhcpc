@@ -95,7 +95,8 @@ udhcpc_start() {
 	if [[ -f ${cachefile} ]]; then
 		if [[ " ${opts}" != *" --request="* && " ${opts} " != *" -r "* ]]; then
 			local x=$( < "${cachefile}" )
-			[[ -n ${x} ]] && opts="${opts} --request=${x}"
+			# Check for a valid ip
+			[[ ${x} == *.*.*.* ]] && opts="${opts} --request=${x}"
 		fi
 	fi
 
@@ -107,9 +108,9 @@ udhcpc_start() {
 	fi
 
 	x=$( eval udhcpc ${opts} --now --pidfile="${pidfile}" \
-	--interface="${iface}" \
-	--script="${MODULES_DIR}/helpers.d/udhcpc-wrapper" 2>&1 \
-	| egrep -v '^info,' )
+		--interface="${iface}" \
+		--script="${MODULES_DIR}/helpers.d/udhcpc-wrapper" 2>&1 \
+		| egrep -v '^info,' )
 	# We just check the last 5 letters
 	[[ ${x:((${#x} - 5)):5} == "bound" ]]
 	eend "$?" "${x}" || return 1
