@@ -1,6 +1,12 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  04 Nov 2005; Roy Marples <uberlord@gentoo.org>:
+
+    udhcpc now checks the dhcp lease file for a valid IP address.
+
+    We prefer iproute2 when stopping an interface by default.
+
   03 Nov 2005; Roy Marples <uberlord@gentoo.org>:
 
     iwconfig now detects an unencrypted AP and doesn't apply any configured
