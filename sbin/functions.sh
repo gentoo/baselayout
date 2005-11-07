@@ -59,7 +59,7 @@ RC_DOT_PATTERN=''
 #  Import code from the specified addon if it exists
 #
 import_addon() {
-	local addon=${svclib}/addons/$1
+	local addon="${svclib}/addons/$1"
 	if [[ -r ${addon} ]] ; then
 		source "${addon}"
 		return 0
@@ -112,23 +112,23 @@ get_bootconfig() {
 		for copt in $(</proc/cmdline) ; do
 			case "${copt%=*}" in
 				bootlevel)
-					newbootlevel=${copt##*=}
+					newbootlevel="${copt##*=}"
 					;;
 				softlevel)
-					newsoftlevel=${copt##*=}
+					newsoftlevel="${copt##*=}"
 					;;
 			esac
 		done
 	fi
 
 	if [[ -n ${newbootlevel} ]] ; then
-		export BOOTLEVEL=${newbootlevel}
+		export BOOTLEVEL="${newbootlevel}"
 	else
 		export BOOTLEVEL="boot"
 	fi
 
 	if [[ -n ${newsoftlevel} ]] ; then
-		export DEFAULTLEVEL=${newsoftlevel}
+		export DEFAULTLEVEL="${newsoftlevel}"
 	else
 		export DEFAULTLEVEL="default"
 	fi
@@ -147,16 +147,16 @@ setup_defaultlevels() {
 	fi
 
 	if [[ ${RC_USE_CONFIG_PROFILE} == "yes" && -n ${DEFAULTLEVEL} ]] && \
-	   [[ -d /etc/runlevels/${BOOTLEVEL}.${DEFAULTLEVEL} || \
-	      -L /etc/runlevels/${BOOTLEVEL}.${DEFAULTLEVEL} ]] ; then
+	   [[ -d "/etc/runlevels/${BOOTLEVEL}.${DEFAULTLEVEL}" || \
+	      -L "/etc/runlevels/${BOOTLEVEL}.${DEFAULTLEVEL}" ]] ; then
 		export BOOTLEVEL="${BOOTLEVEL}.${DEFAULTLEVEL}"
 	fi
 
 	if [[ -z ${SOFTLEVEL} ]] ; then
-		if [[ -f ${svcdir}/softlevel ]] ; then
+		if [[ -f "${svcdir}/softlevel" ]] ; then
 			export SOFTLEVEL=$(< "${svcdir}/softlevel")
 		else
-			export SOFTLEVEL=${BOOTLEVEL}
+			export SOFTLEVEL="${BOOTLEVEL}"
 		fi
 	fi
 
@@ -169,7 +169,7 @@ setup_defaultlevels() {
 #
 get_libdir() {
 	if [[ -n ${CONF_LIBDIR_OVERRIDE} ]] ; then
-		CONF_LIBDIR=${CONF_LIBDIR_OVERRIDE}
+		CONF_LIBDIR="${CONF_LIBDIR_OVERRIDE}"
 	elif [[ -x /usr/bin/portageq ]] ; then
 		CONF_LIBDIR=$(/usr/bin/portageq envvar CONF_LIBDIR)
 	fi
@@ -185,8 +185,8 @@ esyslog() {
 	local tag=
 
 	if [[ -x /usr/bin/logger ]] ; then
-		pri=$1
-		tag=$2
+		pri="$1"
+		tag="$2"
 
 		shift 2
 		[[ -z "$*" ]] && return 0
@@ -202,7 +202,7 @@ esyslog() {
 #    increase the indent used for e-commands.
 #
 eindent() {
-	local i=$1
+	local i="$1"
 	(( i > 0 )) || (( i = RC_DEFAULT_INDENT ))
 	esetdent $(( ${#RC_INDENTATION} + i ))
 }
@@ -212,7 +212,7 @@ eindent() {
 #    decrease the indent used for e-commands.
 #
 eoutdent() {
-	local i=$1
+	local i="$1"
 	(( i > 0 )) || (( i = RC_DEFAULT_INDENT ))
 	esetdent $(( ${#RC_INDENTATION} - i ))
 }
@@ -223,7 +223,7 @@ eoutdent() {
 #    num defaults to 0
 #
 esetdent() {
-	local i=$1
+	local i="$1"
 	(( i < 0 )) && (( i = 0 ))
 	RC_INDENTATION=$(printf "%${i}s" '')
 }
@@ -547,10 +547,10 @@ dolisting() {
 #    save the settings ("optstring") for "option"
 #
 save_options() {
-	local myopts=$1
+	local myopts="$1"
 
 	shift
-	if [[ ! -d ${svcdir}/options/${myservice} ]] ; then
+	if [[ ! -d "${svcdir}/options/${myservice}" ]] ; then
 		mkdir -p -m 0755 "${svcdir}/options/${myservice}"
 	fi
 
@@ -565,7 +565,7 @@ save_options() {
 #    by calling the save_options function
 #
 get_options() {
-	if [[ -f ${svcdir}/options/${myservice}/$1 ]] ; then
+	if [[ -f "${svcdir}/options/${myservice}/$1" ]] ; then
 		echo "$(< ${svcdir}/options/${myservice}/$1)"
 	fi
 
@@ -577,7 +577,7 @@ get_options() {
 #    Returns a config file name with the softlevel suffix
 #    appended to it.  For use with multi-config services.
 add_suffix() {
-	if [[ ${RC_USE_CONFIG_PROFILE} == "yes" && -e $1.${SOFTLEVEL} ]] ; then
+	if [[ ${RC_USE_CONFIG_PROFILE} == "yes" && -e "$1.${SOFTLEVEL}" ]]; then
 		echo "$1.${SOFTLEVEL}"
 	else
 		echo "$1"
@@ -681,7 +681,7 @@ reverse_list() {
 #   Starts addon.
 #
 start_addon() {
-	local addon=$1
+	local addon="$1"
 	(import_addon "${addon}-start.sh")
 	return 0
 }
@@ -736,7 +736,7 @@ is_older_than() {
 	shift
 
 	for x in "$@" ; do
-		[[ ${x} -nt ${ref} ]] && return 0
+		[[ ${x} -nt "${ref}" ]] && return 0
 
 		if [[ -d ${x} ]] ; then
 			is_older_than "${ref}" "${x}"/* && return 0
@@ -804,9 +804,7 @@ if [[ -z ${EBUILD} ]] ; then
 		esac
 	done
 
-	if [ -r /proc/cmdline ] ; then
-		setup_defaultlevels
-	fi
+	setup_defaultlevels
 else
 	# Should we use colors ?
 	if [[ $* != *depend* ]] ; then
