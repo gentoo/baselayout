@@ -5,6 +5,9 @@
 
     documented pppd module settings, #53954
 
+    rc-status now warns about broken symbolic links in /etc/runlevels and
+    trace_dependencies got a bit of a revamp, attempts to fix #104394
+
   04 Nov 2005; Roy Marples <uberlord@gentoo.org>:
 
     udhcpc now checks the dhcp lease file for a valid IP address.
