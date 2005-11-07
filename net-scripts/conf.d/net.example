@@ -337,9 +337,83 @@
 #       need net.eth0 net.eth1
 #}
 
+
+#-----------------------------------------------------------------------------
+# PPP
+# For PPP support, emerge net-dialup/ppp
+# PPP is used for most dialup connections, including ADSL.
+# The older ADSL module is documented below, but you are encouraged to try
+# this module first.
+#
+# You need to create the PPP net script yourself. Make it like so
+#cd /etc/init.d
+#ln -s net.lo net.ppp0
+#
+# Each PPP interface requires an interface to use as a "Link"
+#link_ppp0="eth0"       # PPPoE requires an ethernet interface
+#link_ppp0="/dev/ttyS0" # Most PPP links will use a serial port
+#
+# PPP requires at least a username. You can optionally set a password here too
+# If you don't, then it will use the password specified in /etc/ppp/*-secrets
+# against the specified username
+#username_ppp0="user"
+#password_ppp0="password"
+#
+# The PPP daemon has many options you can specify - although there are many
+# and may seem daunting, it is recommended that you read the ppp man page
+# before enabling any of them
+#pppd_ppp0=(
+#	"debug" 	# Enables syslog debugging
+#	"noauth"	# Do not require the peer to authenticate itself
+#	"defaultroute"	# Make this PPP interface the default route
+#	"userpeerdns"	# Use the DNS settings provided by PPP
+#
+# On demand options
+#	"demand"	# Enable dial on demand
+#	"idle 30"	# The link will go down after 30 seconds of inactivity
+#	"10.112.112.112:10.112.112.113"	# Phony IP addresses
+#	"ipcp-accept-remote"	# Accept the peers idea of remote address
+#	"ipcp-accept-local"	# Accept the peers idea of local address
+#	"holdoff 3" 	# Wait 3 seconds after link dies before re-starting
+#	"lcp-echo-interval 15"	# Send a LCP echo every 15 seconds
+#	"lcp-echo-failure 3"	# Make peer dead after 3 seconds of in-activity
+#	
+# Compression options - use these to completely disable compression
+#	"noaccomp noccp nobsdcomp nodeflate nopcomp novj novjccomp"
+#
+# Dial-up settings
+#	"lock"				# Lock serial port
+#	"115200"			# Set the serial port baud rate
+#	"modem crtscts"			# Enable hardware flow control
+#	"192.168.0.1:192.168.0.2"	# Local and remote IP addresses
+#)
+#
+# Dial-up PPP users need to specify a telephone number
+#phone_number_ppp0=( "12345689" )
+# They will also need a chat script - here's a good one
+#chat_ppp0=(
+#	'ABORT' 'BUSY'
+#	'ABORT' 'ERROR'
+#	'ABORT' 'NO ANSWER'
+#	'ABORT' 'NO CARRIER'
+#	'ABORT' 'NO DIALTONE'
+#	'ABORT' 'Invalid Login'
+#	'ABORT' 'Login incorrect'
+#	'TIMEOUT' '5'
+#	'' 'ATZ'
+#	'OK' 'AT' # Put your modem initialization string here
+#	'OK' 'ATDT\T'
+#	'TIMEOUT' '60'
+#	'CONNECT' ''
+#	'TIMEOUT' '5'
+#	'~--' ''
+#)
+
 #-----------------------------------------------------------------------------
 # ADSL
-# For ADSL support, emerge net-dialup/rp-pppoe 
+# For ADSL support, emerge net-dialup/rp-pppoe
+# WARNING: This ADSL module is being deprecated in favour of the PPP module
+# above.
 # You should make the following settings and also put your
 # username/password information in /etc/ppp/pap-secrets
 
