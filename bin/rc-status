@@ -197,19 +197,33 @@ else
 	runlevelidxs="unused"
 fi
 
+if [[ -f "/etc/runlevels/${BOOTLEVEL}/.critical" ]]; then
+	boot_crit=
+	for x in $(< /etc/runlevels/${BOOTLEVEL}/.critical); do
+		boot_crit="${boot_crit} ${x##*/}"
+	done
+else
+	boot_crit="checkroot hostname modules checkfs localmount clock"
+fi
+
 for level in ${runlevelidxs} ; do
 	echo "Runlevel: ${HILITE}${level}${NORMAL}"
 	for service in ${runlevels[${arridx}]} ; do
-		if [[ -n ${inactive} && $(in_list "${inactive}" "${service}") -eq 1 ]] ; then
+		if [[ ! -e ${runleveldir}/${level}/${service} \
+			&& ${level} != "UNASSIGNED" \
+			&& ${level} != "${BOOTLEVEL}" \
+			&& " ${boot_crit} " != *" ${service} " ]]; then
+			print_msg "${service}" "${BAD}" 'broken  '
+		elif [[ -n ${inactive} && $(in_list "${inactive}" "${service}") -eq 1 ]] ; then
 			print_msg "${service}" "${WARN}" 'inactive'
 		elif [[ $(in_list "${started}" "${service}") -eq 1 ]] ; then
-			print_msg "${service}" "${GOOD}" 'started'
+			print_msg "${service}" "${GOOD}" 'started '
 		elif [[ -n ${starting} && $(in_list "${starting}" "${service}") -eq 1 ]] ; then
 			print_msg "${service}" "${GOOD}" 'starting'
 		elif [[ -n ${stopping} && $(in_list "${stopping}" "${service}") -eq 1 ]] ; then
 			print_msg "${service}" "${BAD}" 'stopping'
 		else
-			print_msg "${service}" "${BAD}" 'stopped'
+			print_msg "${service}" "${BAD}" 'stopped '
 		fi
 	done
 	let "arridx += 1"

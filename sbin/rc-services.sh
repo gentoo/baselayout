@@ -58,7 +58,7 @@ get_service_index() {
 		return 1
 	fi
 	
-	local x myservice=$1 index=$2
+	local x myservice="$1" index="$2"
 
 	# Do we already have the index?
 	if [[ -n ${index} && ${index} -gt 0 \
@@ -86,7 +86,7 @@ get_service_index() {
 get_dep_info() {
 	[[ -z $1 ]] && return 1
 	
-	local myservice=$1
+	local myservice="$1"
 
 	# We already have the right stuff ...
 	[[ ${myservice} == "${rc_name}" && -n ${rc_mtime} ]] && return 0
@@ -97,7 +97,7 @@ get_dep_info() {
 	# Verify that we have the correct index (rc_index) ...
 	# [[ ${rc_index} == "0" ]] && return 1
 		
-	rc_name=${RC_DEPEND_TREE[${rc_index}]}
+	rc_name="${RC_DEPEND_TREE[${rc_index}]}"
 	rc_ineed="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_ineed}))]}"
 	rc_needsme="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_needsme}))]}"
 	rc_iuse="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_iuse}))]}"
@@ -127,9 +127,9 @@ check_dependency() {
 	# Set the dependency variables to relate to 'service1'
 	if [[ $2 == "-t" ]] ; then
 		[[ -z $3 || -z $4 ]] && return 1
-		myservice=$3
+		myservice="$3"
 	else
-		myservice=$2
+		myservice="$2"
 	fi
 
 	if ! get_dep_info "${myservice}" >/dev/null ; then
@@ -213,10 +213,10 @@ is_fake_service() {
 
 	[[ -z $1 || -z $2 ]] && return 1
 
-	[[ $2 != "${BOOTLEVEL}" && -e /etc/runlevels/${BOOTLEVEL}/.fake ]] && \
-		fake_services=$( < /etc/runlevels/${BOOTLEVEL}/.fake )
+	[[ $2 != "${BOOTLEVEL}" && -e /etc/runlevels/"${BOOTLEVEL}"/.fake ]] && \
+		fake_services=$( < /etc/runlevels/"${BOOTLEVEL}"/.fake )
 
-	[[ -e /etc/runlevels/$2/.fake ]] && \
+	[[ -e /etc/runlevels/"$2"/.fake ]] && \
 		fake_services="${fake_services} $( < /etc/runlevels/$2/.fake )"
 
 	for x in ${fake_services} ; do
@@ -233,7 +233,7 @@ is_fake_service() {
 in_runlevel() {
 	[[ -z $1 || -z $2 ]] && return 1
 
-	[[ -L /etc/runlevels/$2/$1 ]] && return 0
+	[[ -L "/etc/runlevels/$2/$1" ]] && return 0
 
 	return 1
 }
@@ -244,7 +244,7 @@ in_runlevel() {
 #   starting services.
 #
 is_runlevel_start() {
-	[[ -d ${svcdir}/softscripts.old && \
+	[[ -d "${svcdir}/softscripts.old" && \
 	   ${SOFTLEVEL} != "${OLDSOFTLEVEL}" ]] && return 0
 
 	return 1
@@ -256,7 +256,7 @@ is_runlevel_start() {
 #   stopping services.
 #
 is_runlevel_stop() {
-	[[ -d ${svcdir}/softscripts.new && \
+	[[ -d "${svcdir}/softscripts.new" && \
 	   ${SOFTLEVEL} != "${OLDSOFTLEVEL}" ]] && return 0
 
 	return 1
@@ -274,7 +274,7 @@ service_message() {
 		shift
 	fi
 
-	local r=${RC_QUIET_STDOUT}
+	local r="${RC_QUIET_STDOUT}"
 	RC_QUIET_STDOUT="no"
 	${cmd} "$@"
 	RC_QUIET_STDOUT=${r}
@@ -302,7 +302,7 @@ begin_service() {
 #   wakes up anybody who is waiting for the exclusive region
 #
 end_service() {
-	local service=$1 exitstatus=$2
+	local service="$1" exitstatus="$2"
 
 	# if we are doing critical services, there is no fifo
 	[[ ${START_CRITICAL} == "yes" ]] && return
@@ -331,7 +331,7 @@ end_service() {
 # Otherwise, wait until we get an exit code via the fifo and return
 # that instead.
 wait_service() {
-	local service=$1
+	local service="$1"
 	local fifo="${svcdir}/exclusive/${service}"
 	
 	[[ ${START_CRITICAL} == "yes" || ${STOP_CRITICAL} == "yes" ]] && return 0
@@ -350,7 +350,7 @@ wait_service() {
 #   Start 'service' if it is not already running.
 #
 start_service() {
-	local service=$1
+	local service="$1"
 	[[ -z ${service} ]] && return 1
 
 	if [[ ! -e "/etc/init.d/${service}" ]] ; then
@@ -397,10 +397,10 @@ start_service() {
 #   Stop 'service' if it is not already running.
 #
 stop_service() {
-	local service=$1
+	local service="$1"
 	[[ -z ${service} ]] && return 1
 
-	if [[ ! -e /etc/init.d/${service} ]] ; then
+	if [[ ! -e "/etc/init.d/${service}" ]] ; then
 		mark_service_stopped "${service}"
 		return 0
 	fi
@@ -409,7 +409,7 @@ stop_service() {
 	service_stopped "${service}" && return 0
 	
 	local level="${SOFTLEVEL}"
-	is_runlevel_stop && level=${OLDSOFTLEVEL}
+	is_runlevel_stop && level="${OLDSOFTLEVEL}"
 
 	if is_fake_service "${service}" "${level}" ; then
 		splash "svc_stop" "${service}"
@@ -452,9 +452,9 @@ mark_service_starting() {
 	ln -snf "/etc/init.d/$1" "${svcdir}/starting/$1"
 	local retval=$?
 	
-	[[ -f ${svcdir}/started/$1 ]] && rm -f "${svcdir}/started/$1"
-	[[ -f ${svcdir}/inactive/$1 ]] && rm -f "${svcdir}/inactive/$1"
-	[[ -f ${svcdir}/stopping/$1 ]] && rm -f "${svcdir}/stopping/$1"
+	[[ -f "${svcdir}/started/$1" ]] && rm -f "${svcdir}/started/$1"
+	[[ -f "${svcdir}/inactive/$1" ]] && rm -f "${svcdir}/inactive/$1"
+	[[ -f "${svcdir}/stopping/$1" ]] && rm -f "${svcdir}/stopping/$1"
 	
 	return "${retval}"
 }
@@ -469,9 +469,9 @@ mark_service_started() {
 	ln -snf "/etc/init.d/$1" "${svcdir}/started/$1"
 	local retval=$?
 	
-	[[ -f ${svcdir}/starting/$1 ]] && rm -f "${svcdir}/starting/$1"
-	[[ -f ${svcdir}/inactive/$1 ]] && rm -f "${svcdir}/inactive/$1"
-	[[ -f ${svcdir}/stopping/$1 ]] && rm -f "${svcdir}/stopping/$1"
+	[[ -f "${svcdir}/starting/$1" ]] && rm -f "${svcdir}/starting/$1"
+	[[ -f "${svcdir}/inactive/$1" ]] && rm -f "${svcdir}/inactive/$1"
+	[[ -f "${svcdir}/stopping/$1" ]] && rm -f "${svcdir}/stopping/$1"
 
 	return "${retval}"
 }
@@ -485,9 +485,9 @@ mark_service_inactive() {
 
 	ln -snf "/etc/init.d/$1" "${svcdir}/inactive/$1"
 	local retval=$?
-	[[ -f ${svcdir}/started/$1 ]] && rm -f "${svcdir}/started/$1"
-	[[ -f ${svcdir}/starting/$1 ]] && rm -f "${svcdir}/starting/$1"
-	[[ -f ${svcdir}/stopping/$1 ]] && rm -f "${svcdir}/stopping/$1"
+	[[ -f "${svcdir}/started/$1" ]] && rm -f "${svcdir}/started/$1"
+	[[ -f "${svcdir}/starting/$1" ]] && rm -f "${svcdir}/starting/$1"
+	[[ -f "${svcdir}/stopping/$1" ]] && rm -f "${svcdir}/stopping/$1"
 
 	return "${retval}"
 }
@@ -502,9 +502,9 @@ mark_service_stopping() {
 	ln -snf "/etc/init.d/$1" "${svcdir}/stopping/$1"
 	local retval=$?
 	
-	[ -f ${svcdir}/starting/$1 ] && rm -f "${svcdir}/starting/$1"
-	[ -f ${svcdir}/started/$1 ] && rm -f "${svcdir}/started/$1"
-	[ -f ${svcdir}/inactive/$1 ] && rm -f "${svcdir}/inactive/$1"
+	[[ -f "${svcdir}/starting/$1" ]] && rm -f "${svcdir}/starting/$1"
+	[[ -f "${svcdir}/started/$1" ]] && rm -f "${svcdir}/started/$1"
+	[[ -f "${svcdir}/inactive/$1" ]] && rm -f "${svcdir}/inactive/$1"
 
 	return "${retval}"
 }
@@ -516,11 +516,11 @@ mark_service_stopping() {
 mark_service_stopped() {
 	[[ -z $1 ]] && return 1
 
-	[[ -f ${svcdir}/daemons/$1 ]] && rm -f "${svcdir}/daemons/$1"
-	[[ -f ${svcdir}/starting/$1 ]] && rm -f "${svcdir}/starting/$1"
-	[[ -f ${svcdir}/started/$1 ]] && rm -f "${svcdir}/started/$1"
-	[[ -f ${svcdir}/inactive/$1 ]] && rm -f "${svcdir}/inactive/$1"
-	[[ -f ${svcdir}/stopping/$1 ]] && rm -f "${svcdir}/stopping/$1"
+	[[ -f "${svcdir}/daemons/$1" ]] && rm -f "${svcdir}/daemons/$1"
+	[[ -f "${svcdir}/starting/$1" ]] && rm -f "${svcdir}/starting/$1"
+	[[ -f "${svcdir}/started/$1" ]] && rm -f "${svcdir}/started/$1"
+	[[ -f "${svcdir}/inactive/$1" ]] && rm -f "${svcdir}/inactive/$1"
+	[[ -f "${svcdir}/stopping/$1" ]] && rm -f "${svcdir}/stopping/$1"
 
 	return $?
 }
@@ -594,7 +594,7 @@ service_stopped() {
 #   this is only valid on runlevel change ...
 #
 mark_service_failed() {
-	[[ -z $1 || ! -d ${svcdir}/failed ]] && return 1
+	[[ -z $1 || ! -d "${svcdir}/failed" ]] && return 1
 
 	ln -snf "/etc/init.d/$1" "${svcdir}/failed/$1"
 }
@@ -604,7 +604,7 @@ mark_service_failed() {
 #   Return true if 'service' have failed during this runlevel.
 #
 service_failed() {
-	[[ -n $1 && -L ${svcdir}/failed/$1 ]]
+	[[ -n $1 && -L "${svcdir}/failed/$1" ]]
 }
 
 # bool service_started_daemon(char *interface, char *daemon, int index)
@@ -679,15 +679,15 @@ dependon() {
 valid_i() {
 	local x
 	# Just set to dummy for now (don't know if $svcdir/softlevel exists yet).
-	local mylevel=${BOOTLEVEL}
+	local mylevel="${BOOTLEVEL}"
 
 	[[ $1 != "after" && $1 != "use" ]] && return 1
 
 	# Cannot be SOFTLEVEL, as we need to know current runlevel
-	[[ -f ${svcdir}/softlevel ]] && mylevel=$( < "${svcdir}/softlevel" )
+	[[ -f "${svcdir}/softlevel" ]] && mylevel=$( < "${svcdir}/softlevel" )
 
 	for x in $( i$1 "$2" ) ; do
-		[[ -e /etc/runlevels/${BOOTLEVEL}/${x} || \
+		[[ -e "/etc/runlevels/${BOOTLEVEL}/${x}" || \
 		   -e "/etc/runlevels/${mylevel}/${x}" || \
 		   ${x} == "net" ]] \
 				&& echo "${x}"
@@ -719,11 +719,11 @@ valid_iafter() {
 #   Get and sort the dependencies of given service[s].
 #
 trace_dependencies() {
-	local -a services=( "$@" ) deps
-	local i j
+	local -a services=( "$@" )
+	local i j net_services
 
-	if [[ $1 == -* ]] ; then
-		deptype=${1/-}
+	if [[ $1 == -* ]]; then
+		deptype="${1/-}"
 		if net_service "${myservice}" ; then
 			services=( "net" "${myservice}" )
 		else
@@ -731,43 +731,48 @@ trace_dependencies() {
 		fi
 	fi
 
-	# If its a net service, just replace it with 'net'
-	if [[ -z ${deptype} ]] ; then
-		for (( i=0; i<${#services[@]} ; i++ )) ; do
-			net_service "${services[i]}" && services[i]="net"
-		done
-	fi
+	net_services=$( cd "${svcdir}"/started; ls net.* 2>/dev/null )
+	# If no net services are running or we only have net.lo up, then
+	# assume we are in boot runlevel or starting a new runlevel
+	if [[ -z ${net_services} || ${net_services} == "net.lo" ]]; then
+		get_net_services() {
+			local runlevel="$1"
 
-	sort_unique() {
-		set -- " ${@/%/\n}"
-		echo -e "$@" | sort -u
-	}
-
-	local last=""
-	while [[ ${services[@]} != "${last}" ]] ; do
-		last="${services[*]}"
-		for (( i=0; i<${#services[@]}; i++ )) ; do
-			if [[ -n ${deptype} ]] ; then
-				deps=( "${deps[@]}" $( "${deptype}" "${services[i]}" ) )
-			else
-				ndeps=( 
-					$( ineed "${services[i]}" )
-					$( valid_iuse "${services[i]}" )
-				)
-			
-				if is_runlevel_start || is_runlevel_stop ; then
-					ndeps=( "${ndeps[@]}" $( valid_iafter "${services[i]}" ) )
-				fi
-
-				#If its a net service, just replace it with 'net'
-				for (( j=0; j<${#ndeps[*]}; j++ )) ; do
-					net_service "${ndeps[j]}" && ndeps[j]="net"
-				done
-
-				deps=( "${deps[@]}" "${ndeps[@]}" )
+			if [[ -d "/etc/runlevels/${runlevel}" ]] ; then
+				cd "/etc/runlevels/${runlevel}"
+				ls net.* 2>/dev/null
 			fi
-		done
-		services=( $(sort_unique ${services[@]} ${deps[@]}) )
+		}
+
+		local mylevel="${BOOTLEVEL}"
+		local x=$( get_net_services "${mylevel}" )
+
+		[[ -f "${svcdir}/softlevel" ]] && mylevel=$( < "${svcdir}/softlevel" )
+		[[ ${BOOTLEVEL} != "${mylevel}" ]] && \
+			local x="${x} $( get_net_services "${mylevel}" )"
+		[[ -n ${x} ]] && net_services="${x}"
+	fi
+	
+	local -a visited
+	for (( i=0; i<${#services[@]}; i++)); do
+		[[ ${visited[@]} == *" ${services[i]} "* ]] && continue
+		if [[ -n ${deptype} ]] ; then
+			deps=( "${deps[@]}" $( "${deptype}" "${services[i]}" ) )
+		else
+			deps=( 
+				$( ineed "${services[i]}" )
+				$( valid_iuse "${services[i]}" )
+			)
+		
+			if is_runlevel_start || is_runlevel_stop ; then
+				deps=( "${deps[@]}" $( valid_iafter "${services[i]}" ) )
+			fi
+
+			local x=" ${deps[@]} "
+			deps=( ${x// net / ${net_services} } )
+		fi
+		services=( "${services[@]}" "${deps[@]}" )
+		visited=( "${visited[@]}" "${services[i]}" )
 	done
 
 	# Now, we sort our services
@@ -775,41 +780,39 @@ trace_dependencies() {
 	# revisit any dependencies. Finally we add ourselves to the sorted list.
 	# This should never get into an infinite loop, thanks to our dead array.
 	local -a dead=() deadname=() sorted=() 
-	for (( i=0; i<${#services[@]}; i++ )) ; do
-		dead[i]="false"
+	for (( i=0; i<${#services[@]}; i++ )); do
+		dead[i]="false";
 		deadname[i]="${services[i]}"
 	done
 
 	after_visit() {
-		local service=$1 i
+		local service="$1" i
 
-		for (( i=0; i<${#deadname[@]}; i++)) ; do
+		for (( i=0; i<${#deadname[@]}; i++)); do
 			[[ ${service} == ${deadname[i]} ]] && break
 		done
 
 		${dead[i]} && return
 		dead[i]="true"
 
-		local x deps="$( ineed ${service} ) $( valid_iuse ${service} )"
+		local x deps=" $( ineed ${service} ) $( valid_iuse ${service} ) "
 		if is_runlevel_start || is_runlevel_stop ; then
-			deps="${deps} $( valid_iafter ${service} )"
+			deps="${deps} $( valid_iafter ${service} ) "
 		fi
 
 		if [[ -z ${deptype} ]] ; then
 			# If its a net service, just replace it with 'net'
-			for (( j=0; j<${#deps[@]}; j++ )) ; do
-				net_service "${deps[j]}" && deps[j]="net"
-			done
+			deps="${deps// net / ${net_services} }"
 		fi
 
-		for x in ${deps} ; do
+		for x in ${deps}; do
 			after_visit "${x}"
 		done
 
 		sorted=( "${sorted[@]}" "${service}" )
 	}
 
-	for (( i=0; i<${#services[*]}; i++ )) ; do
+	for (( i=0; i<${#services[*]}; i++ )); do
 		after_visit "${services[i]}"
 	done
 	services=( "${sorted[@]}" )
@@ -824,37 +827,6 @@ trace_dependencies() {
 			x=" ${services[@]} "
 			sorted=( ${services// net / } )
 		fi
-	else
-		local netserv y
-
-		# XXX:  I dont think RC_NET_STRICT_CHECKING should be considered
-		#       here, but you never know ...
-		netserv=$( cd "${svcdir}"/started; ls net.* 2>/dev/null )
-
-		get_netservices() {
-			local runlevel=$1
-
-			if [[ -d /etc/runlevels/${runlevel} ]] ; then
-				cd "/etc/runlevels/${runlevel}"
-				ls net.* 2>/dev/null
-			fi
-		}
-
-		# If no net services are running or we only have net.lo up, then
-		# assume we are in boot runlevel or starting a new runlevel
-		if [[ -z ${netserv} || ${netserv} == "net.lo" ]] ; then
-			local mylevel=${BOOTLEVEL}
-			local startnetserv=$( get_netservices "${mylevel}" )
-
-			[[ -f ${svcdir}/softlevel ]] && mylevel=$( < "${svcdir}/softlevel" )
-			[[ ${BOOTLEVEL} != "${mylevel}" ]] && \
-			startnetserv="${startnetserv} $( get_netservices "${mylevel}" )"
-			[[ -n ${startnetserv} ]] && netserv=${startnetserv}
-		fi
-
-		# Replace 'net' with the actual net services
-		x=" ${services[@]} "
-		services=( ${x// net / ${netserv} } )
 	fi
 
 	echo "${services[@]}"
@@ -884,6 +856,5 @@ query_before() {
 
 	return 1
 }
-
 
 # vim:ts=4
