@@ -199,7 +199,7 @@ fi
 
 if [[ -f "/etc/runlevels/${BOOTLEVEL}/.critical" ]]; then
 	boot_crit=
-	for x in $(< /etc/runlevels/${BOOTLEVEL}/.critical); do
+	for x in $(< "/etc/runlevels/${BOOTLEVEL}/.critical"); do
 		boot_crit="${boot_crit} ${x##*/}"
 	done
 else
@@ -209,10 +209,10 @@ fi
 for level in ${runlevelidxs} ; do
 	echo "Runlevel: ${HILITE}${level}${NORMAL}"
 	for service in ${runlevels[${arridx}]} ; do
-		if [[ ! -e ${runleveldir}/${level}/${service} \
+		if [[ ! -e "${runleveldir}/${level}/${service}" \
 			&& ${level} != "UNASSIGNED" \
-			&& ${level} != "${BOOTLEVEL}" \
-			&& " ${boot_crit} " != *" ${service} " ]]; then
+			]] && [[ ${level} != "${BOOTLEVEL}" \
+			|| " ${boot_crit} " != *" ${service} "* ]]; then
 			print_msg "${service}" "${BAD}" 'broken  '
 		elif [[ -n ${inactive} && $(in_list "${inactive}" "${service}") -eq 1 ]] ; then
 			print_msg "${service}" "${WARN}" 'inactive'
