@@ -752,69 +752,45 @@ trace_dependencies() {
 			local x="${x} $( get_net_services "${mylevel}" )"
 		[[ -n ${x} ]] && net_services="${x}"
 	fi
-	
-	local -a visited
-	for (( i=0; i<${#services[@]}; i++)); do
-		[[ ${visited[@]} == *" ${services[i]} "* ]] && continue
+
+	# OK, this is a topological sort
+	# The bonus about doing it in bash is that we can calculate our sort
+	# order as we calculate our dependencies
+	local -a visited sorted
+	visit_service() {
+		local service="$1" dep
+		local -a deps
+
+		[[ " ${visited[@]} " == *" ${service} "* ]] && return
+		visited=( "${visited[@]}" "${service}" )
+
 		if [[ -n ${deptype} ]] ; then
-			deps=( "${deps[@]}" $( "${deptype}" "${services[i]}" ) )
+			deps=( "${deps[@]}" $( "${deptype}" "${service}" ) )
 		else
 			deps=( 
-				$( ineed "${services[i]}" )
-				$( valid_iuse "${services[i]}" )
+				$( ineed "${service}" )
+				$( valid_iuse "${service}" )
 			)
 		
 			if is_runlevel_start || is_runlevel_stop ; then
-				deps=( "${deps[@]}" $( valid_iafter "${services[i]}" ) )
+				deps=( "${deps[@]}" $( valid_iafter "${service}" ) )
 			fi
 
 			local x=" ${deps[@]} "
 			deps=( ${x// net / ${net_services} } )
 		fi
+
 		services=( "${services[@]}" "${deps[@]}" )
-		visited=( "${visited[@]}" "${services[i]}" )
-	done
-
-	# Now, we sort our services
-	# When a service is first visited, we mark it dead and then
-	# revisit any dependencies. Finally we add ourselves to the sorted list.
-	# This should never get into an infinite loop, thanks to our dead array.
-	local -a dead=() deadname=() sorted=() 
-	for (( i=0; i<${#services[@]}; i++ )); do
-		dead[i]="false";
-		deadname[i]="${services[i]}"
-	done
-
-	after_visit() {
-		local service="$1" i
-
-		for (( i=0; i<${#deadname[@]}; i++)); do
-			[[ ${service} == ${deadname[i]} ]] && break
+		for dep in ${deps[@]}; do
+			visit_service "${dep}"
 		done
-
-		${dead[i]} && return
-		dead[i]="true"
-
-		local x deps=" $( ineed ${service} ) $( valid_iuse ${service} ) "
-		if is_runlevel_start || is_runlevel_stop ; then
-			deps="${deps} $( valid_iafter ${service} ) "
-		fi
-
-		if [[ -z ${deptype} ]] ; then
-			# If its a net service, just replace it with 'net'
-			deps="${deps// net / ${net_services} }"
-		fi
-
-		for x in ${deps}; do
-			after_visit "${x}"
-		done
-
 		sorted=( "${sorted[@]}" "${service}" )
 	}
-
-	for (( i=0; i<${#services[*]}; i++ )); do
-		after_visit "${services[i]}"
+		
+	for (( i=0; i<${#services[@]}; i++)); do
+		visit_service "${services[i]}"
 	done
+
 	services=( "${sorted[@]}" )
 
 	if [[ -n ${deptype} ]] ; then
