@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+  08 Nov 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Backport changes needed for udev/devfs addons.
+
   13 Sep 2005; Roy Marples <uberlord@gentoo.org>:
 
     Changed net.lo depend from isdn4linux to isdn, #102846
