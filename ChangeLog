@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  08 Nov 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Backport changes needed for udev/devfs addons.
+
   31 Oct 2005; Roy Marples <uberlord@gentoo.org>:
 
     Replace the bubble-esq sort routine with a tsort based one for
