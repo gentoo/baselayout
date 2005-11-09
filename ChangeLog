@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  09 Nov 2005; Roy Marples <uberlord@gentoo.org>:
+
+    ifplugd and netplug now background automatically instead of waiting 10
+    seconds to see if the interface was configured OK
+
 * baselayout-1.12.0_pre10 (08 Nov 2005)
 
   08 Nov 2005; Roy Marples <uberlord@gentoo.org>:
