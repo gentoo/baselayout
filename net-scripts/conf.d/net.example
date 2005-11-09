@@ -160,9 +160,10 @@
 #wpa_supplicant_eth0="-Dprism54" # For Prism54 based cards
 #wpa_supplicant_ath0="-Dmadwifi" # For Atheros based cards
 # Consult wpa_supplicant for more drivers
-# By default we give wpa_suppliant 60 seconds to associate and authenticate
-# 0 means we wait indefinitely
+# By default don't wait for wpa_suppliant to associate and authenticate.
+# If you would like to, so can specify how long in seconds
 #associate_timeout_eth0=60
+# A value of 0 means wait forever.
 
 # GENERIC WIRELESS OPTIONS
 # PLEASE READ THE INSTRUCTIONS IN /etc/conf.d/wireless.example FOR
@@ -559,6 +560,7 @@
 # If you would like it to wait so that other services now that network is up
 # then you can specify a timeout here.
 #plug_timeout="10"
+# A value of 0 means wait forever.
 
 # If you don't want to use netplug on a specific interface but you have it
 # installed, you can disable it for that interface via the modules statement

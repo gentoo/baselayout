@@ -139,7 +139,7 @@ wpa_supplicant_kill() {
 wpa_supplicant_associate() {
 	local iface="$1" ifvar=$( bash_variable "$1" ) timeout i
 	eval timeout=\"\$\{associate_timeout_${ifvar}\}\"
-	[[ -z ${timeout} ]] && eval timeout=\"\$\{wpa_timeout_${ifvar}:-60\}\"
+	[[ -z ${timeout} ]] && eval timeout=\"\$\{wpa_timeout_${ifvar}:--1\}\"
 
 	if [[ ${timeout} == "0" ]]; then
 		ewarn "WARNING: infinite timeout set for association on ${iface}"
