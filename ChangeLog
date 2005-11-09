@@ -3,8 +3,8 @@
 
   09 Nov 2005; Roy Marples <uberlord@gentoo.org>:
 
-    ifplugd and netplug now background automatically instead of waiting 10
-    seconds to see if the interface was configured OK
+    ifplugd, netplug and wpa_supplicant  now background automatically
+    instead of waiting to see if the interface was configured OK
 
 * baselayout-1.12.0_pre10 (08 Nov 2005)
 
