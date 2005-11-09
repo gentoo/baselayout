@@ -106,8 +106,7 @@ wpa_supplicant_kill() {
 	pidfile="/var/run/wpa_cli-${iface}.pid"
 	if ! clean_pidfile "${pidfile}" ; then
 		${report} && ebegin "Stopping wpa_cli on ${iface}"
-		start-stop-daemon --stop --exec /bin/wpa_cli \
-		--pidfile "${pidfile}"
+		start-stop-daemon --stop --exec /bin/wpa_cli --pidfile "${pidfile}"
 		${report} && eend "$?"
 	fi
 
@@ -116,7 +115,7 @@ wpa_supplicant_kill() {
 	if ! clean_pidfile "${pidfile}" ; then
 		${report} && ebegin "Stopping wpa_supplicant on ${iface}"
 		start-stop-daemon --stop --exec /sbin/wpa_supplicant \
-		--pidfile "${pidfile}"
+			--pidfile "${pidfile}"
 		${report} && eend "$?"
 	else
 		# Support wpa_supplicant-0.3.x
@@ -130,7 +129,7 @@ wpa_supplicant_kill() {
 
 	# If wpa_supplicant exits uncleanly, we need to remove the stale dir
 	[[ -S "/var/run/wpa_supplicant/${iface}" ]] \
-	&& rm -f "/var/run/wpa_supplicant/${iface}"
+		&& rm -f "/var/run/wpa_supplicant/${iface}"
 }
 
 # bool wpa_supplicant_associate(char *interface)
@@ -145,7 +144,7 @@ wpa_supplicant_associate() {
 	if [[ ${timeout} == "0" ]]; then
 		ewarn "WARNING: infinite timeout set for association on ${iface}"
 	elif [[ ${timeout} -lt 0 ]]; then
-		ewarn "WARNING: negative timeout set for ${iface}"
+		einfo "Backgrounding ..."
 		exit 0
 	fi
 
@@ -187,8 +186,7 @@ wpa_supplicant_associate() {
 # Start wpa_supplicant on an interface and wait for association
 # Returns 0 (true) when successful, non-zero otherwise
 wpa_supplicant_pre_start() {
-	local iface="$1" opts timeout action=false
-	local cfgfile="/etc/wpa_supplicant.conf"
+	local iface="$1" opts timeout action=false cfgfile
 	local actfile="/sbin/wpa_cli.action"
 
 	# We don't configure wireless if we're being called from
@@ -242,6 +240,15 @@ wpa_supplicant_pre_start() {
 
 	ebegin "Starting wpa_supplicant on ${iface}"
 
+	cfgfile="${opts##* -c}"
+	if [[ -n ${cfgfile} && ${cfgfile} != "${opts}" ]]; then
+		[[ ${cfgfile:0:1} == " " ]] && cfgfile="${cfgfile# *}"
+		cfgfile="${cfgfile%% *}"
+	else
+		cfgfile="/etc/wpa_supplicant.conf"
+		opts="${opts} -c/etc/wpa_supplicant.conf"
+	fi
+
 	if [[ ! -f ${cfgfile} ]]; then
 		eend 1 "configuration file ${cfgfile} not found!"
 		return 1
@@ -275,7 +282,8 @@ wpa_supplicant_pre_start() {
 	fi
 
 	start-stop-daemon --start --exec /sbin/wpa_supplicant \
-		-- ${opts} -B -c/etc/wpa_supplicant.conf -i"${iface}"
+		--pidfile "/var/run/wpa_supplicant-${iface}.pid" \
+		-- ${opts} -B -i"${iface}"
 	eend "$?" || return 1
 
 	# Starting wpa_supplication-0.4.0, we can get wpa_cli to
@@ -284,6 +292,7 @@ wpa_supplicant_pre_start() {
 		mark_service_inactive "net.${iface}"
 		ebegin "Starting wpa_cli on ${iface}"
 		start-stop-daemon --start --exec /bin/wpa_cli \
+			--pidfile "/var/run/wpa_cli-${iface}.pid" \
 			-- -a"${actfile}" -i"${iface}" \
 			-P"/var/run/wpa_cli-${iface}.pid" -B
 		eend "$?" || return 1
