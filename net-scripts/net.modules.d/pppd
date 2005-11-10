@@ -142,8 +142,8 @@ pppd_start() {
     # Load any commandline options
     eval opts=\"\$\{pppd_${ifvar}\[@\]}\"
 
-    # We don't work if nodetach or unit is set
-    for i in nodetach updetach unit ; do
+    # We don't work if unit, no detach or linkname is set.
+    for i in unit nodetach linkname ; do
         if [[ " ${opts} " == *" ${i} "* ]]; then
             eerror "The option \"${i}\" is not allowed"
             return 1
@@ -158,9 +158,9 @@ pppd_start() {
         [[ " ${opts} " != *" mru "* ]] && opts="${opts} mru ${mtu}"
     fi
 
-    # Detach if we're not idling
-    [[ " ${opts} " != *" idle "* && " ${opts} " != *" updetach "* ]] \
-        && opts="${opts} updetach"
+    # Set linkname because we need /var/run/ppp-${linkname}.pid
+    # This pidfile has the advantage of being there, even if ${iface} interface was never started
+    opts="linkname ${iface} ${opts}"
 
     # Setup auth info
     [[ -n ${username} ]] && opts="user \"${username}\" ${opts}"
@@ -228,11 +228,13 @@ pppd_start() {
     [[ ${insert_link_in_opts} -eq 0 ]] || opts="${link} ${opts}"
     
     ebegin "Running pppd"
-    i=$( eval /usr/sbin/pppd ${opts}  )
+    i=$( eval /usr/sbin/pppd ${opts} 2>&1 )
     eend $? "${i}" || return 1
 
-    local addr=$( interface_get_address "${iface}" )
-    einfo "${iface} received address ${addr}"
+    if [[ " ${opts} " == *" updetach "* ]]; then
+        local addr=$( interface_get_address "${iface}" )
+        einfo "${iface} received address ${addr}"
+    fi
 }
 
 # bool pppd_stop(char *iface)
@@ -242,11 +244,12 @@ pppd_start() {
 # Returns 0 (true) if no process to kill or it terminates successfully,
 # otherwise non-zero (false)
 pppd_stop() {
-    local iface="$1" pidfile="/var/run/$1.pid"
+    local iface="$1" pidfile="/var/run/ppp-$1.pid"
 
     [[ ! -s ${pidfile} ]] && return 0 
 
-    local pid=$(<"${pidfile}")
+    local pid
+    read pid <"${pidfile}" #PID is the first line of the pidfile
     einfo "Stopping pppd on ${iface}"
     kill -s TERM "${pid}"
     process_finished "${pid}" /usr/sbin/pppd
