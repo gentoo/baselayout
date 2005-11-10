@@ -325,7 +325,6 @@ iwconfig_associate() {
 	local iface="$1" mode="${2:-managed}"
 	local mac="$3" wep_required="$4" w="(WEP Disabled)"
 	local dessid="${ESSID//\\\\/\\\\}" key
-	wep_required="${wep_required:-off}"
 
 	iwconfig "${iface}" mode "${mode}" 2>/dev/null
 	if [[ ${ESSID} == "any" ]]; then
