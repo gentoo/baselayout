@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  10 Nov 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix for bug #104288.  Update to modules-update from trunk.
+
   10 Nov 2005; Roy Marples <uberlord@gentoo.org>:
 
     Fix WEP for forced AP's, #112031
