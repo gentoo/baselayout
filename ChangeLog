@@ -3,7 +3,7 @@
 
   10 Nov 2005; Martin Schlemmer <azarah@gentoo.org>:
 
-    Fix for bug #104288.
+    Fix module-update searching for System.map in /usr/src/linux #104288.
 
   10 Nov 2005; Roy Marples <uberlord@gentoo.org>:
 
