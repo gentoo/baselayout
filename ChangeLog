@@ -7,6 +7,9 @@
 
     Change pppd behaviour for updetach, #112049
 
+    Fix "Device foo not found" error when stopping an interface and the
+    interface does not physically exist.
+
   09 Nov 2005; Roy Marples <uberlord@gentoo.org>:
 
     ifplugd, netplug and wpa_supplicant  now background automatically

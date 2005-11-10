@@ -678,7 +678,9 @@ iface_stop() {
 
 	# Collect list of aliases for this interface.
 	# List will be in reverse order.
-	aliases=$( interface_get_aliases_rev "${iface}" )
+	if interface_exists "${iface}" ; then
+		aliases=$( interface_get_aliases_rev "${iface}" )
+	fi
 
 	# Stop aliases before primary interface.
 	# Note this must be done in reverse order, since ifconfig eth0:1 
