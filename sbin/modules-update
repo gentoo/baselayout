@@ -227,10 +227,10 @@ fi
 # is more recent then modules.dep
 if [[ ${CFGFILE2} -nt /lib/modules/${KV}/modules.dep ]] ; then
 	if [[ -d $(depdir) && -f /proc/modules ]] ; then
-		if [[ -f /usr/src/linux/System.map ]] ; then
-			depmod -a -F /usr/src/linux/System.map ${KV}
+		if [[ -f /lib/modules/${KV}/build/System.map ]] ; then
+			depmod -a -F /lib/modules/${KV}/build/System.map ${KV}
 		else
-			ewarn "System.map not found - unable to check symbols"
+			depmod -a ${KV}
 		fi
 	fi
 fi
