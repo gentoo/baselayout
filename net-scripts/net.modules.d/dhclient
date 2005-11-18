@@ -45,17 +45,16 @@ dhclient_stop() {
 	local pid=$( < "${pidfile}" )
 
 	local ifvar=$( bash_variable "${iface}" )
-	eval d=\" \$\{dhcp_${ifvar}\} \"
-	[[ ${d} == "  " ]] && d=" ${dhcp} "
+	d="dhcp_${ifvar}[@]"
 
 	ebegin "Stopping dhclient on ${iface}"
-	if [[ ${d} == *" release "* ]]; then
+	if [[ " ${!d} " == *" release "* ]]; then
 		local r=$( dhclient -q -r -pf "${pidfile}" \
-		-sf "${MODULES_DIR}/helpers.d/dhclient-wrapper" "${iface}" )
+			-sf "${MODULES_DIR}/helpers.d/dhclient-wrapper" "${iface}" )
 		[[ ${r} == "deconfig" ]]
 		eend $? "dhclient returned a ${r}"
 		[[ -f "/var/cache/dhcp-${iface}.lease" ]] \
-		&& rm -f "/var/cache/dhcp-${iface}.lease"
+			&& rm -f "/var/cache/dhcp-${iface}.lease"
 	else
 		kill -s TERM "${pid}" 2>/dev/null
 		clean_pidfile "${pidfile}"
@@ -71,23 +70,23 @@ dhclient_stop() {
 #
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 dhclient_start() {
-	local iface="$1" opts ifvar=$( bash_variable "$1" )
+	local iface="$1" opts ifvar=$( bash_variable "$1" ) d
 	local pidfile="/var/run/dhclient-${iface}.pid" edit=""
 	local cffile="/etc/dhcp/dhclient.conf"
-	local d
 
 	interface_exists "${iface}" true || return 1
 
-	eval edit=\"\$\{dhclient_edit_config_${ifvar}\}\"
-	[[ -z ${edit} ]] && eval edit="${dhclient_edit_config:-no}"
-	if [[ ${edit} == "yes" || ${edit} == "true" ]]; then
+	edit="dhclient_edit_config_${ifvar}"
+	[[ -z ${!edit} ]] && edit="dhclient_edit_config"
+	if [[ ${!edit} == "yes" || ${!edit} == "true" ]]; then
 		edit=true
 	else
 		edit=false
 	fi
 
 	# Load our options
-	eval opts=\" \$\{dhclient_${ifvar}\} \"
+	opts="dhclient_${ifvar}"
+	opts="${!opts}"
 
 	# Work out our cffile
 	x="${opts##* -cf }"
@@ -115,11 +114,10 @@ dhclient_start() {
 		${edit} && touch "${cffile}" 2>/dev/null
 	fi
 
-	eval d=\" \$\{dhcp_${ifvar}\} \"
-	[[ ${d} == "  " ]] && d=" ${dhcp} "
+	d="dhcp_${ifvar}"
 
 	# Send our hostname by editing cffile
-	if ${edit} && [[ -e ${cffile} && ${d} != *" nosendhost "* ]] ; then
+	if ${edit} && [[ -e ${cffile} && " ${!d} " != *" nosendhost "* ]] ; then
 		local hname=$( hostname )
 		if [[ ${hname} != "(none)" && ${hname} != "localhost" ]]; then
 			sed -i '/^[ \t]*send[ \t]*host-name[ \t]*/d' "${cffile}"
@@ -138,15 +136,15 @@ dhclient_start() {
 	dhclient_stop "${iface}"
 
 	if [[ ${background} == "yes" ]]; then
-		eval dhclient ${opts} -pf "${pidfile}" -q \
-		-sf "${MODULES_DIR}/helpers.d/dhclient-wrapper" \
-		"${iface}" &>/dev/null &
+		eval dhclient "${opts}" -pf "${pidfile}" -q \
+			-sf "${MODULES_DIR}/helpers.d/dhclient-wrapper" \
+			"${iface}" &>/dev/null &
 		eend 0
 		go_background
 	fi
 
-	local x=$( eval dhclient ${opts} -1 -pf "${pidfile}" \
-	-sf "${MODULES_DIR}/helpers.d/dhclient-wrapper" -q "${iface}" 2>&1 )
+	local x=$( eval dhclient "${opts}" -1 -pf "${pidfile}" \
+		-sf "${MODULES_DIR}/helpers.d/dhclient-wrapper" -q "${iface}" 2>&1 )
 	# We just check the last 5 letters
 	[[ ${x:${#x} - 5:5} == "bound" ]]
 	if [[ $? != "0" ]]; then

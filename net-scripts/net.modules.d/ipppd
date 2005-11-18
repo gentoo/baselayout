@@ -47,11 +47,13 @@ ipppd_pre_start() {
 
 	local ifvar=$( bash_variable "${iface}" )
 	# Might or might not be set in conf.d/net
-	eval opts=\"\$\{ipppd_${ifvar}\}\"
+	opts="ipppd_${ifvar}"
 
 	einfo "Starting ipppd for ${iface}"
-	/usr/sbin/ipppd "${opts}" pidfile "${pidfile}" \
-	file "/etc/ppp/options.${iface}" >/dev/null
+	eval start-stop-daemon --start --exec /usr/sbin/ipppd \
+		--pidfile "${pidfile}" \
+		-- "${!opts}" pidfile "${pidfile}" \
+		file "/etc/ppp/options.${iface}" >/dev/null
 	eend $? || return $?
 
 	return 0
@@ -66,18 +68,10 @@ ipppd_stop() {
 
 	[[ ! -f ${pidfile} ]] && return 0
 
-	clean_pidfile "${pidfile}" && return 0
-	local pid=$( < "${pidfile}" ) r=0
-
 	einfo "Stopping ipppd for ${iface}"
-	kill -s TERM "${pid}"
-	if ! process_finished "${pid}" ipppd 10 ; then
-		kill -s KILL "${pid}"
-		process_finished "${pid}" ipppd 10 || r=1
-	fi
-
-	eend ${r}
-	return ${r}
+	start-stop-daemon --stop --exec /usr/sbin/ippd \
+		--pidfile "${pidfile}"
+	eend $?
 }
 
 # vim:ts=4

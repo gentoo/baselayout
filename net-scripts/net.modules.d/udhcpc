@@ -42,13 +42,12 @@ udhcpc_stop() {
 	local pid=$( < "${pidfile}" ) e=true
 
 	local ifvar=$( bash_variable "${iface}" )
-	eval d=\" \$\{dhcp_${ifvar}\} \"
-	[[ ${d} == "  " ]] && d=" ${dhcp} "
+	d="dhcp_${ifvar}"
 
-	if [[ ${d} == *" release "* ]]; then
+	if [[ " ${!d} " == *" release "* ]]; then
 		kill -s USR2 "${pid}" &>/dev/null
 		[[ -f "/var/cache/dhcp-${iface}.lease" ]] \
-		&& rm "/var/cache/dhcp-${iface}.lease"
+			&& rm "/var/cache/dhcp-${iface}.lease"
 	fi
 
 	kill -s TERM "${pid}" &>/dev/null
@@ -72,12 +71,12 @@ udhcpc_start() {
 	interface_exists "${iface}" true || return 1
 
 	local ifvar=$( bash_variable "${iface}" ) opts 
-	eval opts=\"\$\{udhcpc_${ifvar}\}\"
+	opts="udhcpc_${ifvar}"
+	opts="${!opts}"
 
-	eval d=\" \$\{dhcp_${ifvar}\} \"
-	[[ ${d} == "  " ]] && d=" ${dhcp} "
+	d="dhcp_${ifvar}"
 
-	if [[ ${d} != *" nosendhost "* ]]; then
+	if [[ " ${!d} " != *" nosendhost "* ]]; then
 		if [[ ! " ${opts}" =~ " -([hH] |-hostname=)" ]]; then
 			local hname=$( hostname )
 			[[ -n ${hname} && ${hname} != "(none)" && ${hname} != "localhost" ]] \
@@ -101,13 +100,13 @@ udhcpc_start() {
 	fi
 
 	if [[ ${background} == "yes" ]]; then
-		eval udhcpc ${opts} --script="${MODULES_DIR}/helpers.d/udhcpc-wrapper" \
-		--pidfile="${pidfile}" --interface="${iface}" &>/dev/null &
+		eval udhcpc "${opts}" --script="${MODULES_DIR}/helpers.d/udhcpc-wrapper" \
+			--pidfile="${pidfile}" --interface="${iface}" &>/dev/null &
 		eend 0
 		go_background
 	fi
 
-	x=$( eval udhcpc ${opts} --now --pidfile="${pidfile}" \
+	x=$( eval udhcpc "${opts}" --now --pidfile="${pidfile}" \
 		--interface="${iface}" \
 		--script="${MODULES_DIR}/helpers.d/udhcpc-wrapper" 2>&1 \
 		| egrep -v '^info,' )

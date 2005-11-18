@@ -68,12 +68,13 @@ ifplugd_pre_start() {
 	fi
 	
 	# Do some options
-	eval opts=\" \$\{ifplugd_${ifvar}\} \"
+	opts="ifplugd_${ifvar}"
 	
 	# We don't work on wirelesss interfaces
 	# Although ifplugd can, we prefer wpa_supplicant, unless explicitly told
 	# so via our options
-	if [[ ${opts} != *" -m wlan "* && ${opts} != *" --api-mode=wlan "* ]]; then
+	if [[ " ${!opts} " != *" -m wlan "* \
+		&& " ${!opts} " != *" --api-mode=wlan "* ]]; then
 		if is_function wireless_check_extensions ; then
 			if wireless_check_extensions "${iface}"; then
 				veinfo "ifplugd does not work on wireless interfaces"
@@ -91,14 +92,15 @@ ifplugd_pre_start() {
 	mark_service_inactive "net.${iface}"
 
 	# Start ifplugd
-	start-stop-daemon --start --exec /usr/sbin/ifplugd \
+	eval start-stop-daemon --start --exec /usr/sbin/ifplugd \
 		--pidfile "${pidfile}" \
-		-- ${opts} --iface="${iface}"
+		-- "${!opts}" --iface="${iface}"
 	eend "$?" || return 1
 
 	eindent
 
-	eval timeout=\"\$\{plug_timeout_${ifvar}\:--1}\"
+	timeout="timeout_${ifvar}"
+	timeout="${!timeout:--1}"
 	if [[ ${timeout} == "0" ]]; then
 		ewarn "WARNING: infinite timeout set for ${iface} to come up"
 	elif [[ ${timeout} -lt 0 ]]; then

@@ -42,8 +42,8 @@ essidnet_pre_start() {
 	configure_variables "${iface}" "${essid}" "${mac}"
 
 	# Backwards compat for old gateway var
-	eval x=\"\$\{gateway_${essid}\}\"
-	[[ -n ${x} ]] && gateway="${iface}/${x}"
+	x="gateway_${essid}}"
+	[[ -n ${!x} ]] && gateway="${iface}/${!x}"
 
 	veend 0 2>/dev/null
 	return 0

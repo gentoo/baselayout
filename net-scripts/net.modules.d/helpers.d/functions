@@ -96,21 +96,19 @@ apply_state() {
 # (ie a state dir exists)
 # require_gateway defaults to false
 order_interfaces() {
-	local ifaces
-	
-	if [[ ${1:-false} == "true" ]]; then
-		ifaces=$(awk '$2!="Gateway" { print $7, $1 }' /proc/net/route \
+	local ifaces extra
+
+	${1:-false} && extra=' && $2=="00000000"'
+	ifaces=$(awk '{if (NR>1 && $1!="lo"'"${extra}"') print $7, $1}' /proc/net/route \
 		| sort -n | cut -d' ' -f2 | uniq)
-	else
-		ifaces=$(awk '$2=="00000000" { print $7, $1 }' /proc/net/route \
-		| sort -n | cut -d' ' -f2 )
-	fi
 
 	# Append lo if it's up
-	if grep -q "^lo[ \t]*" /proc/net/route ; then
-		ifaces="${ifaces} lo"
+	if ! ${1:-false} ; then
+		if grep -q "^lo[ \t]*" /proc/net/route ; then
+			ifaces="${ifaces} lo"
+		fi
 	fi
-	
+
 	local i order
 	for i in ${ifaces}; do
 		[[ -d "${statedir}/${i}" ]] && order="${order}${i} "
@@ -132,7 +130,7 @@ merge_resolv() {
 		[[ ! -e "${statedir}/${ifaces[i]}/resolv.conf" ]] && unset ifaces[i]
 	done
 	ifaces=( "${ifaces[@]}" )
-	
+
 	# No point merging unless there are two or more interfaces
 	[[ ${#ifaces[@]} -lt 2 ]] && return
 
@@ -151,7 +149,7 @@ merge_resolv() {
 		opts[i]=$( sed -n -e 's/^[ \t]*options[ \t]*\([^#]*\).*/\1#/p;' "${f}" | xargs )
 		sortlist[i]=$( sed -n -e 's/^[ \t]*sortlist[ \t]*\([^#]*\).*/\1/p' "${f}" )
 		
-		if [[ -z ${srvs[i]} && -z ${opts[i]} && -z ${sortlist[i]} ]]; then
+		if [[ -z ${srvs[i]} && -z ${opts[i]} && -z ${sortlist[i]} && -z ${search[i]} ]]; then
 			unset srvs[i]
 			unset search[i]
 			unset opts[i]
@@ -568,9 +566,9 @@ configure_variables() {
 		is_function ${mod}_variables || continue
 		for v in $(${mod}_variables) ; do
 			x=""
-			[[ -n ${option2} ]] && eval x=( \"\$\{${v}_${option2}\[@\]\}\" )
-			[[ -z ${x} ]] && eval x=( \"\$\{${v}_${option1}\[@\]\}\" )
-			[[ -n ${x} ]] && eval "${v}_${ifvar}=( "\"\$\{x\[@\]\}\"" )"
+			[[ -n ${option2} ]] && x="${v}_${option2}[@]"
+			[[ -z ${!x} ]] && x="${v}_${option1}[@]"
+			[[ -n ${!x} ]] && eval "${v}_${ifvar}=( "${!x}" )"
 		done
 	done
 

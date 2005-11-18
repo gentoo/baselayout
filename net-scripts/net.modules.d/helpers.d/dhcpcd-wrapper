@@ -29,17 +29,15 @@ fi
 ifvar=$( bash_variable "${interface}" )
 
 if [[ ${action} == "up" ]]; then
-	eval d=\" \$\{dhcp_${ifvar}\} \"
-	[[ ${d} == "  " ]] && d=" ${dhcp} "
-
+	d="dhcp_${ifvar}"
 	resolv="${statedir}/${interface}/resolv.conf"
 
-	if [[ ${d} != *" nodns "* ]]; then
-		eval search=\"\$\{dns_search_${ifvar}\}\"
-		if [[ -n ${search} ]]; then
+	if [[ " ${!d} " != *" nodns "* ]]; then
+		search="dns_search_${ifvar}"
+		if [[ -n ${!search} ]]; then
 			tmp="${resolv}.$$"
 			egrep -v "^[ \t]*(search|domain)[ \t]*" "${resolv}" > "${tmp}"
-			echo "search ${search}" >> "${tmp}" 
+			echo "search ${!search}" >> "${tmp}" 
 			mv "${tmp}" "${resolv}"
 		fi
 	fi
@@ -48,9 +46,9 @@ if [[ ${action} == "up" ]]; then
 fi
 
 # As we override the -c option, we need to call the specified script ourself
-eval opts=\"\$\{dhcpcd_${ifvar}\}\"
-exe="${opts##* -c }"
-if [[ -n ${exe} && ${exe} != "${opts}" ]]; then
+opts="dhcpcd_${ifvar}"
+exe="${!opts##* -c }"
+if [[ -n ${exe} && ${exe} != "${!opts}" ]]; then
 	exe="${exe%% *}"
 else
 	exe="/etc/dhcpc/dhcpcd.exe"

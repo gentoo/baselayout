@@ -138,8 +138,9 @@ wpa_supplicant_kill() {
 # otherwise, 1
 wpa_supplicant_associate() {
 	local iface="$1" ifvar=$( bash_variable "$1" ) timeout i
-	eval timeout=\"\$\{associate_timeout_${ifvar}\}\"
-	[[ -z ${timeout} ]] && eval timeout=\"\$\{wpa_timeout_${ifvar}:--1\}\"
+	timeout="associate_timeout_${ifvar}"
+	[[ -z ${!timeout} ]] && timeout="wpa_timeout_${ifvar}"
+	timeout="${!timeout:--1}"
 
 	if [[ ${timeout} == "0" ]]; then
 		ewarn "WARNING: infinite timeout set for association on ${iface}"
@@ -205,7 +206,8 @@ wpa_supplicant_pre_start() {
 	save_options "ESSID" ""
 
 	local ifvar=$( bash_variable "${iface}" )
-	eval opts=\" \$\{wpa_supplicant_${ifvar}\} \"
+	opts="wpa_supplicant_${ifvar}"
+	opts=" ${!opts} "
 	[[ ${opts} != *" -D"* ]] \
 		&& ewarn "wpa_supplicant_${ifvar} does not define a driver"
 	
@@ -281,9 +283,9 @@ wpa_supplicant_pre_start() {
 		[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && background=no
 	fi
 
-	start-stop-daemon --start --exec /sbin/wpa_supplicant \
+	eval start-stop-daemon --start --exec /sbin/wpa_supplicant \
 		--pidfile "/var/run/wpa_supplicant-${iface}.pid" \
-		-- ${opts} -B -i"${iface}"
+		-- "${opts}" -B -i"${iface}"
 	eend "$?" || return 1
 
 	# Starting wpa_supplication-0.4.0, we can get wpa_cli to

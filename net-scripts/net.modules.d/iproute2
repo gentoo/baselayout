@@ -147,12 +147,15 @@ iproute2_del_addresses() {
 #
 # Returns config and config_fallback for the given interface
 iproute2_get_old_config() {
-	local ifvar=$( bash_variable "$1" ) inet6
+	local ifvar=$( bash_variable "$1" ) inet6 t
 
 	# iproute2-style config vars
-	eval config=( \"\$\{ipaddr_${ifvar}\[@\]\}\" )
-	eval config_fallback=( \"\$\{ipaddr_fallback_${ifvar}\[@\]\}\" )
-	eval inet6=( \"\$\{inet6_${ifvar}\[@\]\}\" )
+	t="ipaddr_${ifvar}[@]"
+	config=( "${!t}" )
+	t="config_fallback_${ifvar}[@]"
+	config_fallback=( "${!t}" )
+	t="inet6_${ifvar}[@]"
+	inet6=( "${!t}" )
 
 	# BACKWARD COMPATIBILITY: check for space-separated inet6 addresses
 	[[ ${#inet6[@]} == "1" && ${inet6} == *" "* ]] && inet6=( ${inet6} )
@@ -204,16 +207,16 @@ iproute2_add_address() {
 	for (( x=0; x<n; x++ )); do
 		case "${config[x]}" in
 			netmask)
-			config[0]="${config[0]}/$( netmask2cidr ${config[x+1]} )"
-			unset config[x] config[x+1]
-			;;
+				config[0]="${config[0]}/$( netmask2cidr ${config[x+1]} )"
+				unset config[x] config[x+1]
+				;;
 			mtu)
-			ip link set mtu "${config[x+1]}" dev "${iface}"
-			unset config[x] config[x+1]
-			;;
+				ip link set mtu "${config[x+1]}" dev "${iface}"
+				unset config[x] config[x+1]
+				;;
 		esac
 	done
-	config=( "${config[@]//pointtopoint/peer}" )
+	config=( "${config[@]//pointopoint/peer}" )
 
 	# Always scope lo addresses as host unless specified otherwise
 	[[ ${iface} == "lo" && " ${config[@]} " != *" scope "* ]] \
@@ -241,8 +244,8 @@ iproute2_add_address() {
 
 	local metric ifvar=$( bash_variable "${iface}" )
 	# Remove the newly added route and replace with our metric
-	eval metric=\"\$\{metric_${ifvar}\}\"
-	[[ ${metric} == "0" || ${RC_AUTO_INTERFACE} != "yes" ]] && return "${r}"
+	metric="metric_${ifvar}"
+	[[ ${!metric} == "0" || ${RC_AUTO_INTERFACE} != "yes" ]] && return "${r}"
 
 	local network=$( ip_network "${config[0]}" )
 	[[ -z ${network} ]] && return "${r}"
@@ -250,7 +253,7 @@ iproute2_add_address() {
 	local cidr="${config[0]##*/}"
 	if ip route del "${network}/${cidr}" metric 0 dev "${iface}" \
 		2>/dev/null ; then
-		ip route add "${network}/${cidr}" metric "${metric}" dev "${iface}"
+		ip route add "${network}/${cidr}" metric "${!metric}" dev "${iface}"
 	fi
 
 	return "${r}"
@@ -269,8 +272,8 @@ iproute2_pre_start() {
 	local ifvar=$( bash_variable "$1" ) mtu
 
 	# MTU support
-	eval mtu=\"\$\{mtu_${ifvar}\}\"
-	[[ -n ${mtu} ]] && ip link set mtu "${mtu}" dev "${iface}"
+	mtu="mtu_${ifvar}"
+	[[ -n ${!mtu} ]] && ip link set mtu "${!mtu}" dev "${iface}"
 
 	return 0
 }
@@ -288,15 +291,17 @@ iproute2_post_start() {
 	iproute2_up "${iface}"
 
 	# MTU support
-	eval mtu=\"\$\{mtu_${ifvar}\}\"
-	[[ -n ${mtu} ]] && ip link set mtu "${mtu}" dev "${iface}"
+	mtu="mtu_${ifvar}"
+	[[ -n ${!mtu} ]] && ip link set mtu "${!mtu}" dev "${iface}"
 
-	eval routes=( \"\$\{routes_${ifvar}\[@\]\}\" )
-	eval metric=\"\$\{metric_${ifvar}\:-0}\"
+	x="routes_${ifvar}[@]"
+	routes=( "${!x}" )
+	metric="metric_${ifvar}"
 
 	# Test for old style ipaddr variable
 	if [[ -z ${routes} ]]; then
-		eval routes=( \"\$\{iproute_${ifvar}\[@\]\}\" )
+		t="iproute_${ifvar}[@]"
+		routes=( "${!t}" )
 	fi
 
 	[[ -z ${routes} ]] && return 0
@@ -309,9 +314,9 @@ iproute2_post_start() {
 
 		# Support net-tools routing too
 		x="${x//gw/via}"
-		x="${x//-A inet6}"
-		x="${x//-net}"
-		[[ " ${x} " == *" -host "* ]] && x="${x//-host} scope host"
+		x="${x//-A inet6/}"
+		x="${x//-net/}"
+		[[ " ${x} " == *" -host "* ]] && x="${x//-host/} scope host"
 
 		# Attempt to support net-tools route netmask option
 		netmask="${x##* netmask }"
@@ -324,7 +329,7 @@ iproute2_post_start() {
 		fi
 
 		# Add a metric if we don't have one
-		[[ " ${x} " != *" metric "* ]] && x="${x} metric ${metric}"
+		[[ " ${x} " != *" metric "* ]] && x="${x} metric ${!metric}"
 
 		ip route append ${x} dev "${iface}"
 		eend $?
@@ -332,6 +337,19 @@ iproute2_post_start() {
 	eoutdent
 
 	return 0
+}
+
+# void iproute2_route_metric(char* interface, int metric)
+#
+# Change all routes for an interface to a given metric
+iproute2_route_metric() {
+	local route
+	ip route | grep " dev $1" | {
+		while read route ; do
+			ip route del ${route}
+			ip route add ${route} metric "$2"
+		done
+	}
 }
 
 # void iproute2_default_route(char* interface, char* gateway_ip, int metric)

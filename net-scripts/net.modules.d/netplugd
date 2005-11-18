@@ -85,7 +85,8 @@ netplugd_pre_start() {
 
 	eindent
 
-	eval timeout=\"\$\{plug_timeout_${ifvar}\:--1}\"
+	timeout="plug_timeout_${ifvar}"
+	timeout="${!timeout:--1}"
 	if [[ ${timeout} == "0" ]]; then
 		ewarn "WARNING: infinite timeout set for ${iface} to come up"
 	elif [[ ${timeout} -lt 0 ]]; then

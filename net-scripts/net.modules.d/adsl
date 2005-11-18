@@ -59,14 +59,14 @@ adsl_start() {
 	adsl_setup_vars "${iface}" start || return 1
 
 	# Might or might not be set in conf.d/net
-	eval user=\"\$\{adsl_user_${ifvar}\}\"
+	user="adsl_user_${ifvar}"
 
 	# Start ADSL with the cfgfile, but override ETH and PIDFILE
 	einfo "Starting ADSL for ${iface}"
 	${exe} <(cat "${cfgfile}"; \
 		echo "ETH=${iface}"; \
 		echo "PIDFILE=/var/run/rp-pppoe-${iface}.pid"; \
-		[[ -n ${user} ]] && echo "USER=${user}") \
+		[[ -n ${!user} ]] && echo "USER=${!user}") \
 		>/dev/null
 	eend $?
 }

@@ -22,14 +22,7 @@ if [[ ${action} == "up" ]]; then
 		fi
 	fi
 
-	# Add any search paths if we have any defined
-	ifvar=$( bash_variable "${interface}" )
-	eval d=\" \$\{dhcp_${ifvar}\} \"
-	[[ ${d} == "  " ]] && d=" ${dhcp} "
-
-	resolv="${statedir}/${interface}/resolv.conf"
-
-	system_dns_extra "${interface}" "${resolv}"
+	system_dns_extra "${interface}" "${statedir}/${interface}/resolv.conf" 
 fi
 
 . /lib/rcscripts/net.modules.d/helpers.d/dhcp-state

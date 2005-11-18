@@ -1,6 +1,16 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  18 Nov 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Changed from eval foo=\"\$config_$ifvar\" to foo=config_$ivar; foo=$!foo
+    This is to avoid using the eval statement to extract user configured vars.
+    
+    Enhanced pppd module so that it obeys metric routes, does not mess
+    with the system resolv.conf and works with updetach a bit better, #112049.
+
+    Fixed pointotpoint, #112757.
+
   10 Nov 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     Fix module-update searching for System.map in /usr/src/linux #104288.
