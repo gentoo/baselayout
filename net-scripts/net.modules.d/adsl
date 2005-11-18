@@ -47,7 +47,7 @@ adsl_check_depends() {
 #
 # Checks to see if the ADSL script has been created or not
 adsl_setup_vars() {
-	local iface=${1} startstop=${2} cfgexe
+	local iface=${1} ifvar=$( interface_variable ${1} ) startstop=${2} cfgexe
 
 	if [[ -x /usr/sbin/pppoe-start ]]; then
 	    exe=/usr/sbin/pppoe-${startstop}
@@ -68,6 +68,10 @@ adsl_setup_vars() {
 		return 1
 	fi
 
+	# Might or might not be set in conf.d/net
+	eval user=\"\$\{adsl_user_${ifvar}\}\"
+	[[ -z ${user} ]] && eval user=\"\$\{user_${ifvar}\}\"
+
 	return 0
 }
 
@@ -77,7 +81,7 @@ adsl_setup_vars() {
 #
 # Returns 0 (true) when successful, non-zero otherwise
 adsl_start() {
-	local iface=${1} exe cfgfile
+	local iface=${1} exe cfgfile user
 
 	adsl_setup_vars ${iface} start || return 1
 
@@ -87,7 +91,7 @@ adsl_start() {
 	    echo "ETH=${iface}"; \
 	    echo "PIDFILE=/var/run/rp-pppoe-${iface}.pid"; \
 	    [[ -n ${user} ]] && echo "USER=${user}") \
-	    >/dev/null
+	    >${devnull}
 	eend $?
 }
 
@@ -100,7 +104,7 @@ adsl_start() {
 # that adsl-stop was successful.  Returns non-zero when there was
 # nothing to stop.
 adsl_stop() {
-	local iface=${1} exe cfgfile
+	local iface=${1} exe cfgfile user
 
 	adsl_check_installed || return 1
 	[[ ! -f /var/run/rp-pppoe-${iface}.pid ]] && return 1
@@ -109,8 +113,10 @@ adsl_stop() {
 
 	einfo "Stopping ADSL for ${iface}"
 	${exe} <(cat "${cfgfile}"; \
-	    echo "ETH=${iface}"; echo "PIDFILE=/var/run/rp-pppoe-${iface}.pid") \
-	    >/dev/null
+		echo "ETH=${iface}"; \
+		echo "PIDFILE=/var/run/rp-pppoe-${iface}.pid" \
+		[[ -n ${user} ]] && echo "USER=${user}") \
+		>${devnull}
 	eend $?
 
 	return 0  # we did *attempt* to stop adsl
