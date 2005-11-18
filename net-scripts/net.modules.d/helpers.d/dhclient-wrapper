@@ -38,7 +38,7 @@ export nis_servers_${interface}="${new_nis_servers}"
 result="$?"
 
 [[ -e /etc/dhcp/dhclient-exit-hooks ]] \
-&& ( . /etc/dhcp/dhclient-exit-hooks ) 
+	&& ( . /etc/dhcp/dhclient-exit-hooks ) 
 
 exit "${result}"
 

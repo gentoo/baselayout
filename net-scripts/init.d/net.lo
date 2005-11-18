@@ -179,7 +179,8 @@ modules_check_user() {
 	local i j k l nmods="${#MODULES[@]}"
 
 	# Has the interface got any specific modules?
-	eval umods=( \"\$\{modules_${iface}\[@\]\}\" )
+	umods="modules_${iface}[@]"
+	umods=( "${!umods}" )
 
 	# Global setting follows interface-specific setting
 	umods=( "${umods[@]}" "${modules[@]}" )
@@ -415,8 +416,8 @@ modules_load()  {
 	local -a PROVIDES WRAP_MODULES
 
 	if [[ ${iface} != "lo" ]]; then
-		eval x=( \"\$\{modules_force_${iface}\[@\]\}\" )
-		[[ -n ${x} ]] && modules_force=( "${x[@]}" )
+		x="modules_force_${iface}[@]"
+		[[ -n ${!x} ]] && modules_force=( "${!x}" )
 		if [[ -n ${modules_force} ]]; then
 			ewarn "WARNING: You are forcing modules!"
 			ewarn "Do not complain or file bugs if things start breaking"
@@ -516,8 +517,8 @@ iface_start() {
 	local ifvar=$( bash_variable "$1" ) i j
 
 	# Try and work out a metric for the interface if we're on auto
-	eval x=\"\$\{metric_${ifvar}\}\"
-	if [[ -z ${x} ]]; then
+	x="metric_${ifvar}"
+	if [[ -z ${!x} ]]; then
 		if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
 			eval "metric_${ifvar}=\""$( calculate_metric ${iface} )"\""
 		else
@@ -535,20 +536,23 @@ iface_start() {
 	# We now expand the configuration parameters and pray that the
 	# fallbacks expand to the same number as config or there will be
 	# trouble!
-	eval a=( \"\$\{config_${ifvar}\[@\]\}\" )
+	a="config_${ifvar}[@]"
+	a=( "${!a}" )
 	for (( i=0; i<${#a[@]}; i++ )); do 
 		local -a b=( $( expand_parameters "${a[i]}" ) )
 		config=( "${config[@]}" "${b[@]}" )
 	done
 
-	eval a=( \"\$\{fallback_${ifvar}\[@\]\}\" )
+	a="fallback_${ifvar}[@]"
+	a=( "${!a}" )
 	for (( i=0; i<${#a[@]}; i++ )); do 
 		local -a b=( $( expand_parameters "${a[i]}" ) )
 		fallback=( "${fallback[@]}" "${b[@]}" )
 	done
 
 	# We don't expand routes
-	eval fallback_route=( \"\$\{fallback_route_${ifvar}\[@\]\}\" )
+	fallback_route="fallback_route_${ifvar}[@]"
+	fallback_route=( "${!fallback_route}" )
 	
 	# We must support old configs
 	if [[ -z ${config} ]]; then
@@ -635,7 +639,8 @@ iface_start() {
 
 			# Do we have a fallback route?
 			if [[ -n ${fallback_route[config_counter]} ]]; then
-				eval "routes_${ifvar}=( "\"\$\{fallback_route\[${config_counter}\]\[@\]\}\"" )"
+				x="fallback_route[config_counter]"
+				eval "routes_${ifvar}=( ${!x} )"
 				fallback_route[config_counter]=""
 			fi
 
@@ -762,17 +767,19 @@ run_start() {
 	# If config is set to noop and the interface is up with an address
 	# then we don't start it
 	local config
-	eval config=( \"\$\{config_${IFVAR}\[@\]\}\" )
+	config="config_${IFVAR}[@]"
+	config=( "${!config}" )
 	if [[ ${config[0]} == "noop" ]] && interface_is_up "${iface}" true ; then
 		einfo "Keeping current configuration for ${iface}"
 		eend 0
 	else
 		# Remove noop from the config var
 		[[ ${config[0]} == "noop" ]] \
-		&& eval "config_${IFVAR}=( "\"\$\{config\[@\]:1\}\"" )"
+			&& eval "config_${IFVAR}=( "\"\$\{config\[@\]:1\}\"" )"
 
 		# There may be existing ip address info - so we strip it
-		interface_del_addresses "${iface}"
+		[[ ${RC_INTERFACE_KEEP_CONFIG} != "yes" ]] \
+			&& interface_del_addresses "${iface}"
 
 		# Start the interface
 		if ! iface_start "${iface}" ; then
@@ -937,8 +944,8 @@ start() {
 		# If we've been called by hotplug, check if we have
 		# a policy for the interface for not starting
 		local x ifvar=$( bash_variable "${IFACE}" )
-		eval x=\"\$\{hotplug_${ifvar}\}\"
-		if [[ ${x} == "no" || ${x} == "false" ]]; then
+		x="hotplug_${ifvar}"
+		if [[ ${!x} == "no" || ${!x} == "false" ]]; then
 			eerror "Not starting interface ${IFACE} due to hotplug policy"
 			unset -f exit
 			mark_service_stopped "net.${IFACE}"

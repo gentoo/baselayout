@@ -63,8 +63,7 @@ bridge_exists() {
 # Creates the bridge - no ports are added here though
 # Returns 0 on success otherwise 1
 bridge_create() {
-	local iface="$1" ifvar=$( bash_variable "$1" ) x i
-	local -a opts
+	local iface="$1" ifvar=$( bash_variable "$1" ) x i opts
 
 	ebegin "Creating bridge ${iface}"
 	x=$( brctl addbr "${iface}" 2>&1 )
@@ -77,10 +76,10 @@ bridge_create() {
 		return 1
 	fi
 
-	eval opts=( \"\$\{brctl_${ifvar}\[@\]\}\" )
-	for (( i=0; i<${#opts[@]}; i++ )); do
-		x="${opts[i]/ / ${iface} }"
-		[[ ${x} == "${opts[i]}" ]] && x="${x} ${iface}"
+	opts="brctl_${ifvar}[@]"
+	for i in "${!opts}" ; do
+		x="${i/ / ${iface} }"
+		[[ ${x} == "${i}" ]] && x="${x} ${iface}"
 		x=$( brctl ${x} 2>&1 1>/dev/null )
 		[[ -n ${x} ]] && ewarn "${x}"
 	done
@@ -119,35 +118,35 @@ bridge_delete_port() {
 # dynamically
 bridge_pre_start() {
 	local iface="$1" ports briface i ifvar=$( bash_variable "$1" ) opts
-	eval ports=\"\$\{bridge_${ifvar}\[@\]\}\"
-	eval briface=\"\$\{bridge_add_${ifvar}\}\"
-	eval opts=\"\$\{brctl_${ifvar}\}\"
+	ports="bridge_${ifvar}[@]"
+	briface="bridge_add_${ifvar}"
+	opts="brctl_${ifvar}[@]"
 
-	[[ -z ${ports} && -z ${briface} && -z ${opts} ]] && return 0
+	[[ -z ${!ports} && -z ${!briface} && -z ${!opts} ]] && return 0
 
 	# Destroy the bridge if it exists
-	[[ -n ${ports} ]] && bridge_stop "${iface}"
+	[[ -n ${!ports} ]] && bridge_stop "${iface}"
 
 	# Allow ourselves to add to the bridge
-	if [[ -z ${ports} && -n ${briface} ]]; then
+	if [[ -z ${!ports} && -n ${!briface} ]]; then
 		ports="${iface}"
-		iface="${briface}"
+		iface="${!briface}"
 	fi
 
 	# Create the bridge if needed
 	bridge_exists "${iface}" || bridge_create "${iface}"
 
-	if [[ -n ${ports} ]]; then
+	if [[ -n ${!ports} ]]; then
 		einfo "Adding ports to ${iface}"
 		eindent
 
-		for i in ${ports}; do
+		for i in ${!ports}; do
 			interface_exists "${i}" && continue 
 			eerror "interface ${i} does not exist"
 			return 1
 		done
 
-		for i in ${ports}; do
+		for i in ${!ports}; do
 			ebegin "${i}"
 			bridge_add_port "${iface}" "${i}"
 			eend $? || return 1

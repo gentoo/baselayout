@@ -52,7 +52,7 @@ dhcpcd_get_vars() {
 # Returns 0 (true) when a DHCP address dropped
 # otherwise return 1
 dhcpcd_stop() {
-	local iface=$1 count signal pidfile="/var/run/dhcpcd-$1.pid" d
+	local iface=$1 count signal pidfile="/var/run/dhcpcd-$1.pid" opts
 
 	[[ ! -f ${pidfile} ]] && return 0
 
@@ -60,10 +60,9 @@ dhcpcd_stop() {
 	local pid=$( < "${pidfile}" )
 
 	local ifvar=$( bash_variable "${iface}" )
-	eval d=\" \$\{dhcp_${ifvar}\} \"
-	[[ ${d} == "  " ]] && d=" ${dhcp} "
+	opts="dhcp_${ifvar}"
 
-	if [[ ${d} == *" release "* ]]; then
+	if [[ " ${!opts} " == *" release "* ]]; then
 		signal="HUP"
 	else
 		signal="TERM"
@@ -87,18 +86,18 @@ dhcpcd_start() {
 	interface_exists "${iface}" true || return 1
 
 	# Get our options
-	eval opts=\" \$\{dhcpcd_${ifvar}\} \"
+	opts="dhcpcd_${ifvar}"
+	opts="${!opts}"
 
 	# Map some generic options to dhcpcd
-	eval d=\" \$\{dhcp_${ifvar}\} \"
-	[[ ${d} == "  " ]] && d=" ${dhcp} "
-	[[ ${d} == *" nodns "* ]] && opts="${opts} -R"
-	[[ ${d} == *" nontp "* ]] && opts="${opts} -N"
-	[[ ${d} == *" nonis "* ]] && opts="${opts} -Y"
-	[[ ${d} == *" nogateway "* ]] && opts="${opts} -G"
+	d="dhcp_${ifvar}"
+	[[ " ${d} " == *" nodns "* ]] && opts="${opts} -R"
+	[[ " ${d} " == *" nontp "* ]] && opts="${opts} -N"
+	[[ " ${d} " == *" nonis "* ]] && opts="${opts} -Y"
+	[[ " ${d} " == *" nogateway "* ]] && opts="${opts} -G"
 
-	# We transmit the hostname by default
-	if [[ ${d} != *" nosendhost "* && ${opts} != *" -h "* ]]; then
+	# We transmit the hostname by default:q
+	if [[ " ${d} " != *" nosendhost "* && " ${opts} " != *" -h "* ]]; then
 		local hname=$( hostname )
 		[[ -n ${hname} && ${hname} != "(none)" && ${hname} != "localhost" ]] \
 			&& opts="-h \"${hname}\" ${opts}"
@@ -108,8 +107,8 @@ dhcpcd_start() {
 	opts="${opts} -o"
 
 	# Add our route metric
-	eval metric=\"\$\{metric_${ifvar}\}\"
-	[[ -n ${metric} ]] && opts="${opts} -m ${metric}"
+	metric="metric_${ifvar}"
+	[[ -n ${!metric} && ${!metric} != "0" ]] && opts="${opts} -m ${!metric}"
 
 	# Instruct dhcpcd to use our wrapper 
 	opts="${opts} -c \"/lib/rcscripts/net.modules.d/helpers.d/dhcpcd-wrapper\""
@@ -126,12 +125,12 @@ dhcpcd_start() {
 	[[ ! -d "${statedir}/${iface}" ]] && mkdir -m 0755 -p "${statedir}/${iface}"
 
 	if [[ ${background} == "yes" ]]; then
-		eval dhcpcd ${opts} ${iface} &
+		eval dhcpcd "${opts}" "${iface}" &
 		eend 0
 		go_background
 	fi
 
-	eval dhcpcd ${opts} ${iface}
+	eval dhcpcd "${opts}" "${iface}"
 	eend $? || return 1
 
 	# DHCP succeeded, show address retrieved

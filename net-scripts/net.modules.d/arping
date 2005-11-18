@@ -63,15 +63,15 @@ arping_start() {
 
 	einfo "Pinging gateways on ${iface} for configuration"
 
-	eval gateways=\"\$\{arping_${ifvar}\}\"
-	if [[ -z ${gateways} ]]; then
+	gateways="gateways_${ifvar}"
+	if [[ -z ${!gateways} ]]; then
 		eerror "No gateways have been defined (gateways_${ifvar}=\"...\")"
 		return 1
 	fi
 
 	eindent
 	
-	for x in ${gateways}; do
+	for x in "${!gateways}"; do
 		vebegin "${x}"
 		if arping_address_exists "${iface}" "${x}" ; then
 			for i in ${x//./ } ; do
@@ -87,9 +87,17 @@ arping_start() {
 			eoutdent
 			veinfo "Configuring ${iface} for ${x}"
 			configure_variables "${iface}" "${conf}"
-			eval config=( \"\$\{config_${ifvar}\[@\]\}\" )
-			eval fallback_config=( \"\$\{fallback_config_${ifvar}\[@\]\}\" )
-			eval fallback_route=( \"\$\{fallback_route_${ifvar}\[@\]\}\" )
+
+			# Call the system module as we've aleady passed it by ....
+			# And it *has* to be pre_start for other things to work correctly
+			system_pre_start "${iface}"
+			
+			t="config_${ifvar}[@]"
+			config=( "${!t}" )
+			t="fallback_config_${ifvar}[@]"
+			fallback_config=( "${!t}" )
+			t="fallback_route_${ifvar}[@]"
+			fallback_route=( "${!t}" )
 			config_counter=-1
 			return 0
 		fi

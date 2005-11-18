@@ -8,9 +8,12 @@
 # NB: Do not modify below this line if you do not know what you are doing!!
 #
 
-# Hotplug ?
-IN_BACKGROUND
+# Hotplug
 IN_HOTPLUG
+
+# RC network script support
+IN_BACKGROUND
+RC_INTERFACE_KEEP_CONFIG
 
 # Default shell stuff
 SHELL

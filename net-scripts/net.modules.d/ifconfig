@@ -175,24 +175,30 @@ ifconfig_del_addresses() {
 ifconfig_get_old_config() {
 	local iface="$1" ifvar=$( bash_variable "$1" ) i inet6
 
-	eval config=( \"\$\{ifconfig_${ifvar}\[@\]\}\" )
-	eval config_fallback=( \"\$\{ifconfig_fallback_${ifvar}\[@\]\}\" )
-	eval inet6=( \"\$\{inet6_${ifvar}\[@\]\}\" )
+	config="ifconfig_${ifvar}[@\]"
+	config=( "${!config}" )
+	config_fallback="ifconfig_fallback_${ifvar}[@]"
+	config_fallback=( "${!config_fallback}" )
+	inet6="inet6_${ifvar}[@]"
+	inet6=( "${!inet6}" )
 
 	# BACKWARD COMPATIBILITY: populate the config_IFACE array
 	# if iface_IFACE is set (fex. iface_eth0 instead of ifconfig_eth0)
-	eval i=\"\$\{iface_${ifvar}\}\"
-	if [[ -n ${i} && -z ${config} ]]; then
+	i="iface_${ifvar}"
+	if [[ -n ${!i} && -z ${config} ]]; then
 		# Make sure these get evaluated as arrays
 		local -a aliases broadcasts netmasks
 
 		# Start with the primary interface
-		config=( "${i}" )
+		config=( ${!i} )
 
 		# ..then add aliases
-		eval aliases=( \$\{alias_${ifvar}\} )
-		eval broadcasts=( \$\{broadcast_${ifvar}\} )
-		eval netmasks=( \$\{netmask_${ifvar}\} )
+		aliases="alias_${ifvars}"
+		aliases=( ${!aliases} )
+		broadcasts="broadcast_${ifvar}"
+		broadcasts=( ${!broadcasts} )
+		netmasks="netmask_${ifvar}"
+		netmasks=( ${!netmasks} )
 		for (( i=0; i<${#aliases[@]}; i++ )); do
 			config[i+1]="${aliases[i]} ${broadcasts[i]:+broadcast ${broadcasts[i]}} ${netmasks[i]:+netmask ${netmasks[i]}}"
 		done
@@ -241,8 +247,8 @@ ifconfig_pre_start() {
 	local ifvar=$( bash_variable "$1" ) mtu
 
 	# MTU support
-	eval mtu=\"\$\{mtu_${ifvar}\}\"
-	[[ -n ${mtu} ]] && ifconfig "${iface}" mtu "${mtu}"
+	mtu="mtu_${ifvar}"
+	[[ -n ${!mtu} ]] && ifconfig "${iface}" mtu "${!mtu}"
 
 	return 0
 }
@@ -258,7 +264,7 @@ ifconfig_pre_start() {
 # net.eth0 was successful
 ifconfig_post_start() {
 	local iface="$1" ifvar=$( bash_variable "$1" ) routes x metric mtu cidr
-	eval metric=\"\$\{metric_${ifvar}\}\"
+	metric="metric_${ifvar}"
 
 	ifconfig_exists "${iface}" || return 0
 	
@@ -266,10 +272,11 @@ ifconfig_post_start() {
 	ifconfig_up "${iface}"
 
 	# MTU support
-	eval mtu=\"\$\{mtu_${ifvar}\}\"
-	[[ -n ${mtu} ]] && ifconfig "${iface}" mtu "${mtu}"
+	mtu="mtu_${ifvar}"
+	[[ -n ${!mtu} ]] && ifconfig "${iface}" mtu "${!mtu}"
 
-	eval routes=( \"\$\{routes_${ifvar}\[@\]\}\" )
+	routes="routes_${ifvar}[@]"
+	routes=( "${!routes}" )
 
 	# BACKWARD COMPATIBILITY: set the default gateway
 	if [[ ${gateway} == "${iface}/"* ]]; then
@@ -353,7 +360,7 @@ ifconfig_add_address() {
 		r="${config[@]}"
 		config=( ${r//brd +/} )
 		config=( "${config[@]//brd/broadcast}" )
-		config=( "${config[@]//peer/pointtopoint}" )
+		config=( "${config[@]//peer/pointopoint}" )
 	fi
 
 	# Ensure that the interface is up so we can add IPv6 addresses
@@ -370,8 +377,8 @@ ifconfig_add_address() {
 
 	local metric ifvar=$(bash_variable "${real_iface}")
 	# Remove the newly added route and replace with our metric
-	eval metric=\"\$\{metric_${ifvar}\}\"
-	[[ ${metric} == "0" || ${RC_AUTO_INTERFACE} != "yes" ]] && return ${r}
+	metric="metric_${ifvar}"
+	[[ ${!metric} == "0" || ${RC_AUTO_INTERFACE} != "yes" ]] && return ${r}
 
 	if [[ -z ${netmask} ]]; then
 		for (( i=1; i<${#config[@]}-1; i++ )); do
@@ -388,10 +395,28 @@ ifconfig_add_address() {
 
 	if route del -net "${network}/${cidr}" metric 0 dev "${iface}" \
 		2>/dev/null ; then
-		route add -net "${network}/${cidr}" metric "${metric}" dev "${iface}"
+		route add -net "${network}/${cidr}" metric "${!metric}" dev "${iface}"
 	fi
 
 	return ${r}
+}
+
+# void ifconfig_route_metric(char* interface, int metric)
+#
+# Change all routes for an interface to a given metric
+ifconfig_route_metric() {
+	local dest gateway mask flags metric ref use
+	route -n | grep " $1$" | {
+		while read dest gateway mask flags metric ref use ; do
+			if [[ ${gateway} != "0.0.0.0" ]]; then
+				gateway="gw ${gateway}"
+			else
+				unset gateway
+			fi
+			route del ${dest}
+			route add -net ${dest} netmask ${mask} ${gateway} metric "$2" dev "$1"
+		done
+	}
 }
 
 # void ifconfig_default_route(char* interface, char* gateway_ip, int metric)

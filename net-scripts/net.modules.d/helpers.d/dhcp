@@ -60,7 +60,8 @@ fi
 
 # Calculate the metric for our routes
 ifvar=$( bash_variable "${interface}" )
-eval metric=\"\$\{metric_${ifvar}\}\"
+metric="metric_${ifvar}"
+metric="${!metric}"
 if [[ -z ${metric} ]]; then
 	if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
 		metric=$( calculate_metric "${interface}" )
@@ -70,15 +71,11 @@ if [[ -z ${metric} ]]; then
 	eval metric_${ifvar}="${metric}"
 fi
 
-
-eval d=\" \$\{dhcp_${ifvar}\} \"
-[[ ${d} == "  " ]] && d=" ${dhcp} "
-
 # Configure our IP address
-ip="${ip// }"
-subnet="${subnet// }"
+ip="${ip// /}"
+subnet="${subnet// /}"
 cidr=$( netmask2cidr "${subnet}" )
-broadcast="${broadcast// }"
+broadcast="${broadcast// /}"
 [[ -n ${broadcast} ]] && broadcast="broadcast ${broadcast}"
 
 # If we don't have our address then we flush it and then add our new one
@@ -93,8 +90,9 @@ fi
 echo "${ip}" > "/var/cache/dhcp-${interface}.lease"
 chmod 600 "/var/cache/dhcp-${interface}.lease"
 
+d="dhcp_${ifvar}"
 # Configure our default route - we only have 1 default route
-if [[ ${d} != *" nogateway "* ]]; then
+if [[ " ${!d} " != *" nogateway "* ]]; then
 	for r in ${routers}; do
 		interface_default_route "${interface}" "${r}" "${metric:-0}" && break
 	done
@@ -111,9 +109,9 @@ fi
 
 # Only setup the information we're told to
 # By default that's everything
-[[ ${d} != *" nodns "* ]] && system_dns "${interface}"
-[[ ${d} != *" nontp "* ]] && system_ntp "${interface}"
-[[ ${d} != *" nonis "* ]] && system_nis "${interface}"
+[[ " ${!d} " != *" nodns "* ]] && system_dns "${interface}"
+[[ " ${!d} " != *" nontp "* ]] && system_ntp "${interface}"
+[[ " ${!d} " != *" nonis "* ]] && system_nis "${interface}"
 
 if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
 	best_interface=$( select_best_interface )

@@ -64,10 +64,10 @@ tuntap_pre_start() {
 	tuntap_check_kernel || return 1
 
 	# Get our options
-	eval opts=\"\$\{tunctl_${ifvar}\}\"
+	opts="tunctl_${ifvar}"
 
 	ebegin "Creating Tun/Tap interface ${iface}"
-	tunctl ${opts} -t "${iface}" >/dev/null
+	tunctl ${!opts} -t "${iface}" >/dev/null
 	eend "$?" || return 1
 
 	return 0
