@@ -9,7 +9,7 @@
     Enhanced pppd module so that it obeys metric routes, does not mess
     with the system resolv.conf and works with updetach a bit better, #112049.
 
-    Fixed pointotpoint, #112757.
+    Fixed pointotpoint, #112757 thanks to Felix Braun.
 
   10 Nov 2005; Martin Schlemmer <azarah@gentoo.org>:
 
