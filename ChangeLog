@@ -5,6 +5,8 @@
 
     Call reboot with -k to support people who want to use kexec #80220.
 
+    Source /etc/profile.d/*.sh files in /etc/profile #4854.
+
   18 Nov 2005; Roy Marples <uberlord@gentoo.org>:
 
     Changed from eval foo=\"\$config_$ifvar\" to foo=config_$ivar; foo=$!foo
