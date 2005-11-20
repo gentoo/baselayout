@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  20 Nov 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Call reboot with -k to support people who want to use kexec #80220.
+
   18 Nov 2005; Roy Marples <uberlord@gentoo.org>:
 
     Changed from eval foo=\"\$config_$ifvar\" to foo=config_$ivar; foo=$!foo
