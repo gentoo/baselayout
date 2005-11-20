@@ -56,3 +56,10 @@ else
 	# understand sequences such as \h, don't put anything special in it.
 	PS1="`whoami`@`uname -n | cut -f1 -d.` \$ "
 fi
+
+for sh in /etc/profile.d/*.sh ; do
+	if [ -r "$sh" ] ; then
+		. "$sh"
+	fi
+done
+unset sh
