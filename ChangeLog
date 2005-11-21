@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  21 Nov 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Fix wpa_suppicant error when auth is IEEE 802.1X (NO WPA) #112938.
+
   18 Nov 2005; Roy Marples <uberlord@gentoo.org>:
 
     Changed from eval foo=\"\$config_$ifvar\" to foo=config_$ivar; foo=$!foo
