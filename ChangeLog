@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  21 Nov 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Fix wpa_suppicant error when auth is IEEE 802.1X (NO WPA) #112938.
+ 
   20 Nov 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Call reboot with -k to support people who want to use kexec #80220.
