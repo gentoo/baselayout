@@ -51,21 +51,15 @@ ifplugd_pre_start() {
 		return 0
 	fi
 
-	# We don't work on bridges
-	if is_function bridge_exists ; then
-		if bridge_exists "${iface}"; then
-			veinfo "netplug does not work on bridges"
-			return 0
+	# We don't work on bonded, bridges, tun/tap, vlan or wireless
+	for f in bonding bridge tuntap vlan ; do
+		if is_function "${f}_exists" ; then
+			if ${f}_exists "${iface}" ; then
+				veinfo "ifplugd does not work with ${f}"
+				return 0
+			fi
 		fi
-	fi
-
-	# We don't work on tun/tap interfaces
-	if is_function tuntap_exists ; then
-		if tuntap_exists "${iface}"; then
-			veinfo "netplug does not work on tun/tap interfaces"
-			return 0
-		fi
-	fi
+	done
 	
 	# Do some options
 	opts="ifplugd_${ifvar}"
@@ -75,8 +69,8 @@ ifplugd_pre_start() {
 	# so via our options
 	if [[ " ${!opts} " != *" -m wlan "* \
 		&& " ${!opts} " != *" --api-mode=wlan "* ]]; then
-		if is_function wireless_check_extensions ; then
-			if wireless_check_extensions "${iface}"; then
+		if is_function wireless_exists ; then
+			if wireless_exists "${iface}"; then
 				veinfo "ifplugd does not work on wireless interfaces"
 				return 0
 			fi

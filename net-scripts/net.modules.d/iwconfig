@@ -50,10 +50,10 @@ iwconfig_check_installed() {
 	return 1
 }
 
-# bool iwconfig_check_extensions(char *interface)
+# bool iwconfig_exists(char *interface)
 #
 # Checks to see if wireless extensions are enabled on the interface
-iwconfig_check_extensions() {
+iwconfig_exists() {
 	[[ ! -e /proc/net/wireless ]] && return 1
 	grep -q "^[ \t]*$1:[ \t]" /proc/net/wireless
 }
@@ -870,7 +870,7 @@ iwconfig_pre_start() {
 	# in /proc/wireless until they are brought up.
 	interface_up "${iface}"
 
-	if ! iwconfig_check_extensions "${iface}" ; then
+	if ! iwconfig_exists "${iface}" ; then
 		veinfo "Wireless extensions not found for ${iface}"
 		return 0
 	fi

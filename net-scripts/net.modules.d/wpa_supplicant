@@ -43,10 +43,10 @@ wpa_supplicant_check_installed() {
 	return "${installed}"
 }
 
-# bool wpa_supplicant_check_extensions(char *interface)
+# bool wpa_supplicant_exists(char *interface)
 #
 # Checks to see if wireless extensions are enabled on the interface
-wpa_supplicant_check_extensions() {
+wpa_supplicant_exists() {
 	[[ ! -e /proc/net/wireless ]] && return 1
 	grep -q "^[ \t]*$1:[ \t]" /proc/net/wireless
 }
@@ -194,7 +194,7 @@ wpa_supplicant_pre_start() {
 	# the background unless we're not currently running
 	if ${IN_BACKGROUND} ; then
 		if service_started_daemon "net.${iface}" /sbin/wpa_supplicant ; then
-			if wpa_supplicant_check_extensions "${iface}" ; then
+			if wpa_supplicant_exists "${iface}" ; then
 				ESSID=$( wpa_supplicant_get_essid "${iface}" )
 				ESSIDVAR=$( bash_variable "${ESSID}" )
 				save_options "ESSID" "${ESSID}"
@@ -214,7 +214,7 @@ wpa_supplicant_pre_start() {
 	# We only work on wirelesss interfaces unless a driver for wired
 	# has been defined
 	if [[ ${opts} != *" -Dwired "* && ${opts} != *" -D wired "* ]]; then
-		if ! wpa_supplicant_check_extensions "${iface}" ; then
+		if ! wpa_supplicant_exists "${iface}" ; then
 			veinfo "wpa_supplicant only works on wireless interfaces"
 			veinfo "unless the -D wired option is specified"
 			return 0
@@ -234,7 +234,7 @@ wpa_supplicant_pre_start() {
 	# This is needed for some drivers - such as hostap because they start
 	# the card in Master mode which causes problems with wpa_supplicant.
 	if is_function iwconfig_defaults ; then
-		if wpa_supplicant_check_extensions "${iface}" ; then
+		if wpa_supplicant_exists "${iface}" ; then
 			iwconfig_defaults "${iface}"
 			iwconfig_user_config "${iface}"
 		fi
@@ -317,7 +317,7 @@ wpa_supplicant_pre_start() {
 	wpa_supplicant_associate "${iface}" || return 1
 
 	# Only report wireless info for wireless interfaces
-	if wpa_supplicant_check_extensions "${iface}" ; then
+	if wpa_supplicant_exists "${iface}" ; then
 		# Set ESSID for essidnet and report
 		ESSID=$( wpa_supplicant_get_essid "${iface}" )
 		ESSIDVAR=$( bash_variable "${ESSID}" )

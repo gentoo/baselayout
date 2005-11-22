@@ -17,11 +17,18 @@ bonding_depend() {
 
 # bool bonding_check_installed(void)
 #
-# Returns 1 if ifenslave is installed, otherwise 0
+# Returns 0 if ifenslave is installed, otherwise 1
 bonding_check_installed() {
 	[[ -x /sbin/ifenslave ]] && return 0
 	${1:-false} && eerror "For link aggregation (bonding) support, emerge net-misc/ifenslave"
 	return 1
+}
+
+# bonding_exists(char *interface)
+#
+# Returns 0 if we are a bonded interface, otherwise 1
+bonding_exists() {
+	[[ -f "/proc/net/bonding/$1" ]]
 }
 
 # bool bonding_post_start(char *iface)
@@ -36,7 +43,7 @@ bonding_pre_start() {
 
 	interface_exists "${iface}" true || return 1
 
-	if [[ ! -f "/proc/net/bonding/${iface}" ]]; then
+	if ! bonding_exists "${iface}" ; then
 		eerror "${iface} is not capable of bonding"
 		return 1
 	fi
@@ -77,7 +84,7 @@ bonding_stop() {
 	local iface="$1" slaves s
 
 	# return silently if this is not a bonding interface
-	[[ ! -f "/proc/net/bonding/${iface}" ]] && return 0
+	! bonding_exists "${iface}" && return 0
 
 	# don't trust the config, get the active list instead
 	slaves=$( sed -n -e 's/^Slave Interface: //p' "/proc/net/bonding/${iface}" )
