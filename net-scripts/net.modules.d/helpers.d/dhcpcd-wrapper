@@ -20,7 +20,7 @@ macnet_pre_start "${interface}" 1>/dev/null
 
 # Map wireless ESSID variables to interface variables
 if [[ -n ${wireless_module} ]]; then
-	if wireless_check_extensions "${interface}" ; then
+	if wireless_exists "${interface}" ; then
 		essidnet_pre_start "${interface}" 1>/dev/null
 	fi
 fi
