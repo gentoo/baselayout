@@ -311,6 +311,10 @@
 # Please ensure your VLAN IDs are NOT zero-padded
 #vlans_eth0="1 2"
 
+# You may not want to assign an IP the the physical interface, but we still
+# need it up.
+#config_eth0=( "null" )
+
 # You can also configure the VLAN - see for vconfig man page for more details
 #vconfig_eth0=( "set_name_type VLAN_PLUS_VID_NO_PAD" )
 #vconfig_vlan1=( "set_flag 1" "set_egress_map 2 6" )
@@ -321,6 +325,10 @@
 # When configuring vlans with this name type, you need to replace . with a _
 #config_eth0.1=( "dhcp" ) - does not work
 #config_eth0_1=( "dhcp" ) - does work
+
+# NOTE: Vlans are controlled by their physical interface and not per vlan
+# This means you do not need to create init scripts in /etc/init.d for each
+# vlan, you must need to create one for the physical interface.
 
 #-----------------------------------------------------------------------------
 # Bonding
