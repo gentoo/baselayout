@@ -22,11 +22,19 @@ vlan_depend() {
 
 # bool vlan_check_installed(void)
 #
-# Returns 1 if vconfig is installed, otherwise 0
+# Returns 0 if vconfig is installed, otherwise 1
 vlan_check_installed() {
 	[[ -x /sbin/vconfig ]] && return 0
 	${1:-false} && eerror "For VLAN (802.1q) support, emerge net-misc/vconfig"
 	return 1
+}
+
+# bool vlan_exists(char *interface)
+#
+# Returns 0 if the interface is a vlan, otherwise 1
+vlan_exists() {
+	[[ ! -d /proc/net/vlan ]] && return 1
+	egrep -q "^$1[[:space:]]+" /proc/net/vlan/config
 }
 
 # char* vlan_get_vlans(char *interface)
