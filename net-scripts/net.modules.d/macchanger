@@ -29,21 +29,24 @@ macchanger_pre_start() {
 
 	ebegin "Changing MAC address of ${iface}"
 
+	# The interface needs to be up for macchanger to work most of the time
+	interface_down "${iface}"
+	
 	mac=$( echo "${!mac}" | tr '[:upper:]' '[:lower:]' )
 	case "${mac}" in
 		# specific mac-addr, i wish there were a shorter way to specify this 
 		[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f])
-		# We don't need macchanger to change to a specific mac address
-		interface_set_mac_address "${iface}" "${mac}"
-		eend "$?"
-		if [[ $? == "0" ]]; then
-			mac=$( interface_get_mac_address "${iface}" )
-			eindent
-			einfo "changed to ${mac}"
-			eoutdent
-			return 0
-		fi
-		;;
+			# We don't need macchanger to change to a specific mac address
+			interface_set_mac_address "${iface}" "${mac}"
+			eend "$?"
+			if [[ $? == "0" ]]; then
+				mac=$( interface_get_mac_address "${iface}" )
+				eindent
+				einfo "changed to ${mac}"
+				eoutdent
+				return 0
+			fi
+			;;
 
 		# increment MAC address, default macchanger behavior
 		increment) opts="${opts}" ;;
@@ -69,17 +72,14 @@ macchanger_pre_start() {
 		return 1
 	fi
 
-	# The interface needs to be up for macchanger to work most of the time
-	interface_down "${iface}"
-
 	mac=$( /sbin/macchanger ${opts} "${iface}" \
-	| sed -n -e 's/^Faked MAC:.*\<\(..:..:..:..:..:..\)\>.*/\U\1/p' )
+		| sed -n -e 's/^Faked MAC:.*\<\(..:..:..:..:..:..\)\>.*/\U\1/p' )
 
 	# Sometimes the interface needs to be up ....
 	if [[ -z ${mac} ]]; then
 		interface_up "${iface}"
 		mac=$( /sbin/macchanger ${opts} "${iface}" \
-		| sed -n -e 's/^Faked MAC:.*\<\(..:..:..:..:..:..\)\>.*/\U\1/p' )
+			| sed -n -e 's/^Faked MAC:.*\<\(..:..:..:..:..:..\)\>.*/\U\1/p' )
 	fi
 
 	if [[ -z ${mac} ]]; then
