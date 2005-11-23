@@ -1,10 +1,15 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+* baselayout-1.12.0_pre11 (23 Nov 2005)
+
   23 Nov 2005; Roy Marples <uberlord@gentoo.org>:
 
     RC_KILL_CHILDREN now defaults to "no". This stops ssh children being
     killed when a network interface is restarted.
+
+    macchanger now ensures the interface is down before attempting to change
+    the mac address, #112333.
 
   22 Nov 2005; Roy Marples <uberlord@gentoo.org>:
 
