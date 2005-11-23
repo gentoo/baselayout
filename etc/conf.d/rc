@@ -121,9 +121,12 @@ RC_FAIL_ON_ZOMBIE="no"
 
 
 # Set to "yes" if stop_daemon() should attempt to kill
-# any children left in the system. This does not affect sshd.
+# any children left in the system.
+# Be careful with this as it really does what it was on the tin.
+# fex, if you're in an ssh process and you restart a service on which ssh
+# depends then your terminal will be killed also.
 
-RC_KILL_CHILDREN="yes"
+RC_KILL_CHILDREN="no"
 
 
 # Set the amount of seconds start_daemon() waits after starting

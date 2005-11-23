@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  23 Nov 2005; Roy Marples <uberlord@gentoo.org>:
+
+    RC_KILL_CHILDREN now defaults to "no". This stops ssh children being
+    killed when a network interface is restarted.
+
   22 Nov 2005; Roy Marples <uberlord@gentoo.org>:
 
     Stop ifplugd and netplugd from operating on bonded and vlan interfaces.
