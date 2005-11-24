@@ -56,10 +56,10 @@ pppd_regex_escape() {
 # Add/update PAP/CHAP authentication information 
 pppd_update_secrets_file() {
 	local filepath="$1" username="$2" remotename="$3" password="$4"
-	if [[ ! -f ${filepath} ]]; then
-		touch ${filepath} && \
-		chmod 0600 ${filepath} || \
-		return 1
+	if [[ ! -s ${filepath} ]]; then
+		echo '#'client$'\t'server$'\t'secret$'\t'IP addresses > "${filepath}" \
+			&& chmod 0600 "${filepath}" \
+			|| return 1
 	fi
 
 	#escape username and remotename, used in following sed calls
