@@ -6,7 +6,9 @@
     ifconfig routes now work with metrics and older configs again
     #113378 and #113406.
 
-    arping now works with multiple gateways #113402.
+    arping now works with multiple gateways, #113402.
+
+    pppd module now updates an emply secrets file, #113431.
 
 * baselayout-1.12.0_pre11 (23 Nov 2005)
 
