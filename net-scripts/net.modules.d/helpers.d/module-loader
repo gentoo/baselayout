@@ -4,10 +4,12 @@
 
 # Contributed by Roy Marples (uberlord@gentoo.org)
 
-[[ -z ${MODULES_DIR} ]] && MODULES_DIR="/lib/rcscripts/net.modules.d"
+. "${svclib}/sh/rc-services.sh"
+
+MODULES_DIR="${svclib}/net.modules.d"
 . "${MODULES_DIR}/system"
-. /lib/rcscripts/sh/rc-services.sh
 . "${MODULES_DIR}/helpers.d/functions"
+
 conf=$(add_suffix "/etc/conf.d/net")
 [[ -e ${conf} ]] && source "${conf}"
 

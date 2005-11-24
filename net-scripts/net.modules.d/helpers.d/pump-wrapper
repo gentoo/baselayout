@@ -9,8 +9,10 @@
 action="$1"
 interface="$2"
 
+. /sbin/functions.sh
+
 if [[ ${action} == "up" ]]; then
-	. /lib/rcscripts/net.modules.d/helpers.d/module-loader
+	. "${svclib}/net.modules.d/helpers.d/module-loader"
 
 	# Map MAC address variables to interface variables
 	macnet_pre_start "${interface}" 1>/dev/null
@@ -25,6 +27,6 @@ if [[ ${action} == "up" ]]; then
 	system_dns_extra "${interface}" "${statedir}/${interface}/resolv.conf" 
 fi
 
-. /lib/rcscripts/net.modules.d/helpers.d/dhcp-state
+. "${svclib}/net.modules.d/helpers.d/dhcp-state"
 
 # vim:ts=4

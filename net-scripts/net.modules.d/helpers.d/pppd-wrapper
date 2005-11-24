@@ -7,7 +7,8 @@
 action="$1"
 interface="$2"
 export IN_BACKGROUND="true"
-. /lib/rcscripts/net.modules.d/helpers.d/module-loader
+. /sbin/functions.sh
+. "${svclib}/net.modules.d/helpers.d/module-loader"
 resolv="${statedir}/${interface}/resolv.conf"
 
 if [[ ${action} == "up" ]]; then

@@ -10,6 +10,8 @@
 
     pppd module now updates an emply secrets file, #113431.
 
+    use ${svclib} instead of hardcoding /lib/rcscripts.
+
 * baselayout-1.12.0_pre11 (23 Nov 2005)
 
   23 Nov 2005; Roy Marples <uberlord@gentoo.org>:

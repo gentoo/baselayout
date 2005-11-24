@@ -13,7 +13,8 @@ else
 	action="up"
 fi
 
-. /lib/rcscripts/net.modules.d/helpers.d/module-loader
+. /sbin/functions.sh
+. "${svclib}/net.modules.d/helpers.d/module-loader"
 
 # Map MAC address variables to interface variables
 macnet_pre_start "${interface}" 1>/dev/null
@@ -55,6 +56,6 @@ else
 fi
 [[ -x ${exe} ]] && ( ${exe} "$@" 1>/dev/null )
 
-. /lib/rcscripts/net.modules.d/helpers.d/dhcp-state
+. "${svclib}/net.modules.d/helpers.d/dhcp-state"
 
 # vim:ts=4

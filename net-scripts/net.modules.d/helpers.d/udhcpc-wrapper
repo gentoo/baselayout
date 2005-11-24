@@ -15,6 +15,7 @@ export ntp_servers_${interface}="${ntpsrv}"
 export nis_domain_${interface}="${nisdomain}"
 export nis_servers_${interface}="${nissrv}"
 
-/lib/rcscripts/net.modules.d/helpers.d/dhcp "$@"
+. /sbin/functions.sh
+"${svclib}/net.modules.d/helpers.d/dhcp" "$@"
 
 # vim:ts=4
