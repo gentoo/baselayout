@@ -283,7 +283,7 @@
 # simply ensure that each ocet is zero padded and the dots are removed.
 # Below is an example.
 #
-#arping_eth0="192.168.0.1 10.0.0.1"
+#gateways_eth0="192.168.0.1 10.0.0.1"
 #config_192168000001=( "192.168.0.2/24" )
 #routes_192168000001=( "default via 192.168.0.1" )
 #dns_servers_192168000001=( "192.168.0.1" )

@@ -175,7 +175,7 @@ ifconfig_del_addresses() {
 ifconfig_get_old_config() {
 	local iface="$1" ifvar=$( bash_variable "$1" ) i inet6
 
-	config="ifconfig_${ifvar}[@\]"
+	config="ifconfig_${ifvar}[@]"
 	config=( "${!config}" )
 	config_fallback="ifconfig_fallback_${ifvar}[@]"
 	config_fallback=( "${!config_fallback}" )
@@ -312,7 +312,7 @@ ifconfig_post_start() {
 		fi
 
 		# Add a metric if we don't have one
-		[[ ${x} != *" metric "* ]] && x="${x} metric ${metric}"
+		[[ ${x} != *" metric "* ]] && x="${x} metric ${!metric}"
 
 		route add ${x} dev "${iface}"
 		eend $?

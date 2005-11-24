@@ -63,7 +63,7 @@ arping_start() {
 
 	einfo "Pinging gateways on ${iface} for configuration"
 
-	gateways="gateways_${ifvar}"
+	gateways="gateways_${ifvar}[@]"
 	if [[ -z ${!gateways} ]]; then
 		eerror "No gateways have been defined (gateways_${ifvar}=\"...\")"
 		return 1
@@ -71,7 +71,7 @@ arping_start() {
 
 	eindent
 	
-	for x in "${!gateways}"; do
+	for x in ${!gateways}; do
 		vebegin "${x}"
 		if arping_address_exists "${iface}" "${x}" ; then
 			for i in ${x//./ } ; do
