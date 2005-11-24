@@ -34,7 +34,8 @@ export ntp_servers_${interface}="${new_domain_name_servers}"
 export nis_domain_${interface}="${new_nis_domain}"
 export nis_servers_${interface}="${new_nis_servers}"
 
-/lib/rcscripts/net.modules.d/helpers.d/dhcp "${action}"
+. /sbin/functions.sh
+"${svclib}/net.modules.d/helpers.d/dhcp" "${action}"
 result="$?"
 
 [[ -e /etc/dhcp/dhclient-exit-hooks ]] \

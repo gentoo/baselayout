@@ -111,7 +111,7 @@ dhcpcd_start() {
 	[[ -n ${!metric} && ${!metric} != "0" ]] && opts="${opts} -m ${!metric}"
 
 	# Instruct dhcpcd to use our wrapper 
-	opts="${opts} -c \"/lib/rcscripts/net.modules.d/helpers.d/dhcpcd-wrapper\""
+	opts="${opts} -c \"${svcdir}/net.modules.d/helpers.d/dhcpcd-wrapper\""
 
 	# Instruct dhcpcd to create it's files in our state dir
 	opts="${opts} -e \"${statedir}/${iface}\""

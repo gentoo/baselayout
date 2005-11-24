@@ -7,7 +7,8 @@
 action="$1"
 service="net.${interface}"
 
-. /lib/rcscripts/net.modules.d/helpers.d/module-loader
+. /sbin/functions.sh
+. "${svclib}/net.modules.d/helpers.d/module-loader"
 
 # Bring the interface up
 interface_is_up "${interface}" || interface_up "${interface}"

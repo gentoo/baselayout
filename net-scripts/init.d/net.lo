@@ -23,7 +23,7 @@ depend() {
 }
 
 # Define where our modules are
-MODULES_DIR="/lib/rcscripts/net.modules.d"
+MODULES_DIR="${svclib}/net.modules.d"
 
 # Some defaults
 background="${background:-no}"
