@@ -568,7 +568,7 @@ configure_variables() {
 			x=""
 			[[ -n ${option2} ]] && x="${v}_${option2}[@]"
 			[[ -z ${!x} ]] && x="${v}_${option1}[@]"
-			[[ -n ${!x} ]] && eval "${v}_${ifvar}=( "${!x}" )"
+			[[ -n ${!x} ]] && eval "${v}_${ifvar}=( \"${!x}\" )"
 		done
 	done
 
