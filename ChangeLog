@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  27 Nov 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Don't set default RC_VOLUME_ORDER anymore in functions.sh #113700.
+
   24 Nov 2005; Roy Marples <uberlord@gentoo.org>:
 
     ifconfig routes now work with metrics and older configs again
