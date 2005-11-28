@@ -72,7 +72,7 @@ iproute2_down() {
 iproute2_is_up() {
 	local check="\<UP\>" addr="${2:-false}"
 	${addr} && check="${check}.*inet "
-	ip addr show "$1" | grep -Eq "${check}" && return 0
+	ip addr show "$1" | xargs | grep -Eq "${check}" && return 0
 	return 1
 }
 

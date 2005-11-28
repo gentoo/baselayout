@@ -130,7 +130,7 @@ iwconfig_report() {
 	local mode=$( iwconfig_get_mode "${iface}" )
 	if [[ ${mode} == "master" ]]; then
 		m="as"
-	else
+	elif [[ ${mode} != "ad-hoc" ]]; then
 		mac=$( iwconfig_get_ap_mac_address "${iface}" )
 		[[ -n ${mac} ]] && mac=" at ${mac}"
 	fi
@@ -752,7 +752,7 @@ iwconfig_configure() {
 
 	# Setup ad-hoc mode?
 	x="mode_${ifvar}"
-	x=$( echo "${!mode:-managed}" | tr '[:upper:]' '[:lower:]' )
+	x=$( echo "${!x:-managed}" | tr '[:upper:]' '[:lower:]' )
 	if [[ ${x} == "ad-hoc" || ${x} == "master" ]]; then
 		iwconfig_setup_specific "${iface}" "${x}"
 		return $?
