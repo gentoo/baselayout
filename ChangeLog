@@ -1,6 +1,13 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  28 Nov 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Fixed iwconfig mode selection, #113677 - thanks to Tuan Van.    
+    Fixed iproute2 is_up check, #113672 - thanks to Georgi Georgiev. 
+    Added information about the "broken" status as reported by rc-status to
+    its output, #113755.
+
   27 Nov 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Don't set default RC_VOLUME_ORDER anymore in functions.sh #113700.
