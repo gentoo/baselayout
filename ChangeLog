@@ -3,6 +3,7 @@
 
   28 Nov 2005; Roy Marples <uberlord@gentoo.org>:
 
+    Fixed fallback_routes, #113776.
     Fixed variable array references, #113661.
     Fixed iwconfig mode selection, #113677 - thanks to Tuan Van.
     Fixed iproute2 is_up check, #113672 - thanks to Georgi Georgiev.

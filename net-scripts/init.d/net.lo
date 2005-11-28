@@ -640,7 +640,7 @@ iface_start() {
 			# Do we have a fallback route?
 			if [[ -n ${fallback_route[config_counter]} ]]; then
 				x="fallback_route[config_counter]"
-				eval "routes_${ifvar}=( ${!x} )"
+				eval "routes_${ifvar}=( \"\${!x}\" )"
 				fallback_route[config_counter]=""
 			fi
 
