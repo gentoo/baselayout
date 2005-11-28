@@ -82,7 +82,7 @@ pump_start() {
 	[[ ! -d "${statedir}/${iface}" ]] && mkdir -m 0755 -p "${statedir}/${iface}"
 
 	opts="${opts} --win-client-ident --etc-dir=${statedir}/${iface}"
-	opts="${opts} --script ${svclib}/net.modules.d/helpers.d/pump-wrapper"
+	opts="${opts} --script \"${svclib}/net.modules.d/helpers.d/pump-wrapper\""
 	opts="${opts} --keep-up --interface ${iface}"
 
 	# Bring up DHCP for this interface (or alias)
