@@ -102,10 +102,8 @@ svc_stop() {
 	if ! service_started "${myservice}" ; then
 		if [[ ${RC_QUIET_STDOUT} != "yes" ]] ; then
 			eerror "ERROR:  \"${myservice}\" has not yet been started."
-			return 1
-		else
-			return 0
 		fi
+		return 0
 	fi
 
 	# Do not try to stop if it had already failed to do so on runlevel change
