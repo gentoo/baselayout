@@ -39,6 +39,12 @@ RC_AUTO_INTERFACE="no"
 # for various volume managers (MD, EVMS2, LVM, DM, etc).  Note that they are
 # stopped in reverse order.
 
+RC_VERBOSE="no"
+
+# RC_VERBOSE will make init scripts more verbose. Only networking scripts
+# really use this at this time, and this is useful for trouble shooting
+# any issues you may have.
+
 RC_VOLUME_ORDER="raid evms lvm dm"
 
 # RC_BOOTLOG will generate a log of the boot messages shown on the console.  
