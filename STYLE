@@ -56,6 +56,19 @@ or #gentoo-base on irc.freenode.net.
     Do not lead with 'function '
       e.g. function foo() {
 
+#######
+# NLS #
+#######
+- General -
+    When displaying strings that a user would read,
+    use the $"" form so that it can be localized.
+    However, you generally you dont want to localize
+    config files that only a program would parse.
+      e.g. ebegin $"Starting blahblah"
+      e.g. echo "SOMETHING=foobar" > /etc/config.file
+      e.g. echo $"Notice for user" > /etc/motd
+      e.g. ewarn $"Skipping running booga"
+
 ############
 # COMMENTS #
 ############
