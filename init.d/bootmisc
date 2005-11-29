@@ -16,23 +16,23 @@ start() {
 	# system startup is complete.
 	#
 	if [[ ${DELAYLOGIN} == "yes" ]] ; then
-		echo "System bootup in progress - please wait" > /etc/nologin
+		echo $"System bootup in progress - please wait" > /etc/nologin
 		cp /etc/nologin /etc/nologin.boot &> /dev/null
 	fi
 
 	if [[ -e /etc/sysctl.conf ]] ; then
-		ebegin "Configuring kernel parameters"
+		ebegin $"Configuring kernel parameters"
 		/sbin/sysctl -q -p /etc/sysctl.conf
 		eend 0
 	fi
 
 	if [[ -z ${CDBOOT} ]] && ! touch /var/run/.keep 2> /dev/null ; then
-		ewarn "Skipping /var and /tmp initialization (ro root?)"
+		ewarn $"Skipping /var and /tmp initialization (ro root?)"
 		return 0
 	fi
 
 	if [[ -x /sbin/env-update.sh ]] ; then
-		ebegin "Updating environment"
+		ebegin $"Updating environment"
 		/sbin/env-update.sh -u > /dev/null
 		eend 0
 	fi
@@ -42,12 +42,12 @@ start() {
 	#
 
 	if [[ -d /var/lib/net-scripts/state ]] ; then
-		ebegin "Cleaning /var/lib/net-scripts/state"
+		ebegin $"Cleaning" /var/lib/net-scripts/state
 		rm -rf /var/lib/net-scripts/state/*
 		eend 0
 	fi
 
-	ebegin "Cleaning /var/lock, /var/run"
+	ebegin $"Cleaning" /var/lock, /var/run
 	rm -rf /var/run/console.lock /var/run/console/*
 
 	if [[ -z ${CDBOOT} ]] ; then
@@ -86,7 +86,7 @@ start() {
 	if [[ -z ${CDBOOT} ]] && [[ -d /tmp ]] ; then
 		cd /tmp
 		if [[ ${WIPE_TMP} == "yes" ]] ; then
-			ebegin "Wiping /tmp directory"
+			ebegin $"Wiping /tmp directory"
 			# This eval stuff sucks, so if someone has a better *working*
 			# solution, please file a bug at http://bugs.gentoo.org/
 			# Originally ripped from Debian init scripts
@@ -107,7 +107,7 @@ start() {
 			eval find . -xdev -depth ${exceptions}   -type d -empty -exec rmdir '{}' \\';'
 			eend 0
 		else
-			ebegin "Cleaning /tmp directory"
+			ebegin $"Cleaning /tmp directory"
 			(
 				rm -f /tmp/.X*-lock /tmp/esrv* /tmp/kio* /tmp/jpsock.* /tmp/.fam*
 				rm -rf /tmp/.esd* /tmp/orbit-* /tmp/ssh-* /tmp/ksocket-* /tmp/.*-unix

@@ -9,7 +9,7 @@ depend() {
 
 checkconfig_nis() {
 	if [[ -f /etc/nisdomainname ]] ; then
-		ewarn "You should stop using /etc/nisdomainname and use /etc/conf.d/domainname"
+		ewarn $"You should stop using /etc/nisdomainname and use /etc/conf.d/domainname"
 		export NISDOMAIN=$(</etc/nisdomainname)
 		return 0
 	fi
@@ -18,13 +18,13 @@ checkconfig_nis() {
 
 checkconfig_dns() {
 	if [[ -f /etc/dnsdomainname ]] ; then
-		ewarn "You should stop using /etc/dnsdomainname and use /etc/conf.d/domainname"
+		ewarn $"You should stop using /etc/dnsdomainname and use /etc/conf.d/domainname"
 		export DNSDOMAIN=$(</etc/dnsdomainname)
 	fi
 	[[ -z ${DNSDOMAIN} ]] && return 1
 
 	if ! touch /etc/resolv.conf 2> /dev/null ; then
-		ewarn "Unable to set domain in resolv.conf (ro root?)"
+		ewarn $"Unable to set domain in resolv.conf (ro root?)"
 		return 1
 	else
 		return 0
@@ -39,21 +39,21 @@ start() {
 	local retval2=0
 
 	if checkconfig_nis ; then
-		ebegin "Setting NIS domainname to ${NISDOMAIN}"
+		ebegin $"Setting NIS domainname to" ${NISDOMAIN}
 		hostname -y "${NISDOMAIN}"
 		retval=$?
-		eend ${retval} "Failed to set the NIS domainname"
+		eend ${retval} $"Failed to set the NIS domainname"
 	fi
 
 	if checkconfig_dns ; then
-		ebegin "Setting DNS domainname to ${DNSDOMAIN}"
+		ebegin $"Setting DNS domainname to" ${DNSDOMAIN}
 		resolv=$(grep -v '^[[:space:]]*domain' /etc/resolv.conf)
 		[[ ${OVERRIDE} == "1" ]] \
 			&& resolv="${resolv}"$'\n'"domain ${DNSDOMAIN}" \
 			|| resolv="domain ${DNSDOMAIN}"$'\n'"${resolv}"
 		echo "${resolv}" > /etc/resolv.conf
 		retval2=$?
-		eend ${retval2} "Failed to set the DNS domainname"
+		eend ${retval2} $"Failed to set the DNS domainname"
 	fi
 
 	return $((retval + retval2))

@@ -8,19 +8,19 @@ depend() {
 
 checkconfig() {
 	if [[ -z ${KEYMAP} ]] ; then
-		eerror "You need to setup KEYMAP in /etc/conf.d/keymaps first"
+		eerror $"You need to setup KEYMAP in /etc/conf.d/keymaps first"
 		return 1
 	fi
 
 	# Make sure user isn't using rc.conf anymore
 	if grep -qs ^KEYMAP= /etc/rc.conf ; then
-		ewarn "KEYMAP should not be set in /etc/rc.conf but in /etc/conf.d/keymaps"
+		ewarn $"KEYMAP should not be set in /etc/rc.conf but in /etc/conf.d/keymaps"
 	fi
 }
 
 start() {
 	if is_uml_sys ; then
-		ebegin "Loading key mappings"
+		ebegin $"Loading key mappings"
 		eend 0
 		return 0
 	fi
@@ -39,12 +39,12 @@ start() {
 		/usr/bin/kbd_mode -u
 	fi
 
-	ebegin "Loading key mappings"
+	ebegin $"Loading key mappings"
 	if [[ -x /bin/loadkeys ]] ; then
 		[[ ${SET_WINDOWKEYS} == "yes" ]] && WINDOWKEYS_KEYMAP="windowkeys"
 		/bin/loadkeys -q ${WINDOWKEYS_KEYMAP} ${KEYMAP} \
 		                 ${EXTENDED_KEYMAPS} > /dev/null
-		eend $? "Error loading key mappings"
+		eend $? $"Error loading key mappings"
 	else
 		eend 1 "/bin/loadkeys not found"
 		return 1
@@ -68,7 +68,7 @@ start() {
 	[[ -d /dev/vc ]] \
 		&& ttydev=/dev/vc/ \
 		|| ttydev=/dev/tty
-	ebegin "Setting terminal encoding to ${termmsg}"
+	ebegin $"Setting terminal encoding to" ${termmsg}
 	for n in $(seq 1 "${RC_TTY_NUMBER}") ; do
 		echo -n -e ${termencoding} > ${ttydev}${n}
 	done

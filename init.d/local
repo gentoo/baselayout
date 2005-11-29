@@ -7,7 +7,7 @@ depend() {
 }
 
 start() {
-	ebegin "Starting local"
+	ebegin $"Starting local"
 
 	# Add any misc programs that should be started
 	# to /etc/conf.d/local.start
@@ -15,11 +15,11 @@ start() {
 		source /etc/conf.d/local.start
 	fi
 
-	eend $? "Failed to start local"
+	eend $? $"Failed to start local"
 }
 
 stop() {
-	ebegin "Stopping local"
+	ebegin $"Stopping local"
 
 	# Add any misc programs that should be stopped
 	# to /etc/conf.d/local.stop
@@ -27,7 +27,7 @@ stop() {
 		source /etc/conf.d/local.stop
 	fi
 
-	eend $? "Failed to stop local"
+	eend $? $"Failed to stop local"
 }
 
 

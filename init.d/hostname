@@ -20,16 +20,16 @@ start() {
 	fi
 
 	if [[ -f /etc/hostname ]] ; then
-		ewarn "You should stop using /etc/hostname and use /etc/conf.d/hostname"
+		ewarn $"You should stop using /etc/hostname and use /etc/conf.d/hostname"
 		myhost=$(</etc/hostname)
 	else
 		myhost=${HOSTNAME}
 	fi
 
-	ebegin "Setting hostname to ${myhost}"
+	ebegin $"Setting hostname to" ${myhost}
 	hostname "${myhost}"
 	retval=$?
-	eend ${retval} "Failed to set the hostname"
+	eend ${retval} $"Failed to set the hostname"
 
 	if [[ ${retval} -eq 0 ]] ; then
 		# setup $HOSTNAME, ignore errors in case /etc is readonly.

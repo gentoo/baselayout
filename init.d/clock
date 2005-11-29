@@ -46,7 +46,7 @@ setupopts() {
 
 	# Make sure user isn't using rc.conf anymore.
 	if grep -qs ^CLOCK= /etc/rc.conf ; then
-		ewarn "CLOCK should not be set in /etc/rc.conf but in /etc/conf.d/clock"
+		ewarn $"CLOCK should not be set in /etc/rc.conf but in /etc/conf.d/clock"
 	fi
 }
 
@@ -79,7 +79,7 @@ start() {
 		done
 	fi
 
-	ebegin "Setting system clock using the hardware clock [${TBLURB}]"
+	ebegin $"Setting system clock using the hardware clock" "[${TBLURB}]"
 	if [[ ${fakeit} -eq 1 ]] ; then
 		ret=0
 
@@ -115,7 +115,7 @@ stop() {
 
 	setupopts
 
-	ebegin "Setting hardware clock using the system clock [${TBLURB}]"
+	ebegin $"Setting hardware clock using the system clock" "[${TBLURB}]"
 	if [[ ${fakeit} -eq 1 ]] ; then
 		ret=0
 

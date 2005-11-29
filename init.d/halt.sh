@@ -21,7 +21,7 @@ stop_addon udev
 umount -at tmpfs &>/dev/null
 
 if [[ -n $(swapon -s 2>/dev/null) ]]; then
-	ebegin "Deactivating swap"
+	ebegin $"Deactivating swap"
 	swapoff -a
 	eend $?
 fi
@@ -52,13 +52,13 @@ remaining=$(awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mou
 
 	while [[ -n ${remaining} && ${retry} -gt 0 ]]; do
 		if [[ ${retry} -lt 3 ]]; then
-			ebegin "Unmounting loopback filesystems (retry)"
+			ebegin $"Unmounting loopback filesystems (retry)"
 			umount -d ${remaining} &>/dev/null
-			eend $? "Failed to unmount filesystems this retry"
+			eend $? $"Failed to unmount filesystems this retry"
 		else
-			ebegin "Unmounting loopback filesystems"
+			ebegin $"Unmounting loopback filesystems"
 			umount -d ${remaining} &>/dev/null
-			eend $? "Failed to unmount filesystems"
+			eend $? $"Failed to unmount filesystems"
 		fi
 
 		remaining=$(awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts | \
@@ -75,7 +75,7 @@ remaining=$(awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mou
 # Try to unmount all filesystems (no /proc,tmpfs,devfs,etc).
 # This is needed to make sure we dont have a mounted filesystem 
 # on a LVM volume when shutting LVM down ...
-ebegin "Unmounting filesystems"
+ebegin $"Unmounting filesystems"
 unmounts=$( \
 	awk '{ \
 	    if (($3 !~ /^(proc|devpts|sysfs|devfs|tmpfs|usb(dev)?fs)$/) && \
@@ -123,9 +123,9 @@ ups_kill_power() {
 		return 0
 	fi
 	if [[ -x ${UPS_CTL} ]] ; then
-		ewarn "Signalling ups driver(s) to kill the load!"
+		ewarn $"Signalling ups driver(s) to kill the load!"
 		${UPS_POWERDOWN}
-		ewarn "Halt system and wait for the UPS to kill our power"
+		ewarn $"Halt system and wait for the UPS to kill our power"
 		/sbin/halt -id
 		while [ 1 ]; do sleep 60; done
 	fi
@@ -157,7 +157,7 @@ mount_readonly() {
 # Since we use `mount` in mount_readonly(), but we parse /proc/mounts, we 
 # have to make sure our /etc/mtab and /proc/mounts agree
 cp /proc/mounts /etc/mtab &>/dev/null
-ebegin "Remounting remaining filesystems readonly"
+ebegin $"Remounting remaining filesystems readonly"
 mount_worked=0
 if ! mount_readonly ; then
 	if ! mount_readonly ; then
@@ -177,10 +177,10 @@ fi
 # Inform if there is a forced or skipped fsck
 if [[ -f /fastboot ]]; then
 	echo
-	ewarn "Fsck will be skipped on next startup"
+	ewarn $"Fsck will be skipped on next startup"
 elif [[ -f /forcefsck ]]; then
 	echo
-	ewarn "A full fsck will be forced on next startup"
+	ewarn $"A full fsck will be forced on next startup"
 fi
 
 ups_kill_power

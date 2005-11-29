@@ -7,7 +7,7 @@ depend() {
 }
 
 start() {
-	ebegin "Enabling numlock on ttys"
+	ebegin $"Enabling numlock on ttys"
 	local dev
 	[[ -d /dev/vc ]] \
 		&& dev=/dev/vc/ \
@@ -15,11 +15,11 @@ start() {
 	for tty in $(seq 1 "${RC_TTY_NUMBER}") ; do
 		setleds -D +num < ${dev}${tty} &> /dev/null
 	done
-	eend $? "Failed to enable numlock"
+	eend $? $"Failed to enable numlock"
 }
 
 stop() {
-	ebegin "Disabling numlock on ttys"
+	ebegin $"Disabling numlock on ttys"
 	local dev
 	[[ -d /dev/vc ]] \
 		&& dev=/dev/vc/ \
@@ -27,7 +27,7 @@ stop() {
 	for tty in $(seq 1 "${RC_TTY_NUMBER}") ; do
 		setleds -D -num < ${dev}${tty} &> /dev/null
 	done
-	eend $? "Failed to disable numlock"
+	eend $? $"Failed to disable numlock"
 }
 
 

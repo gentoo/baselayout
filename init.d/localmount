@@ -8,9 +8,9 @@ depend() {
 
 start() {
 	# Mount local filesystems in /etc/fstab.
-	ebegin "Mounting local filesystems"
+	ebegin $"Mounting local filesystems"
 	mount -at noproc,noshm,no${NET_FS_LIST// /,no} >/dev/null
-	eend $? "Some local filesystem failed to mount"
+	eend $? $"Some local filesystem failed to mount"
 
 	# Make sure we insert usbcore if its a module
 	if [[ -f /proc/modules && ! -d /proc/bus/usb ]] ; then
@@ -27,15 +27,15 @@ start() {
 	if [[ -n ${usbfs} ]] && \
 	   [[ -e /proc/bus/usb && ! -e /proc/bus/usb/devices ]]
 	then
-		ebegin "Mounting USB device filesystem (${usbfs})"
+		ebegin $"Mounting USB device filesystem" "(${usbfs})"
 		usbgid=$(awk -F: '/^usb:/{print $3; exit}' /etc/group)
 		mount -t ${usbfs} usbfs /proc/bus/usb \
 			${usbgid:+-o devmode=0664,devgid=${usbgid}}
-		eend $? "Failed to mount USB device filesystem"
+		eend $? $"Failed to mount USB device filesystem"
 	fi
 
 	# Swap on loopback devices, and other weirdnesses
-	ebegin "Activating (possibly) more swap"
+	ebegin $"Activating (possibly) more swap"
 	/sbin/swapon -a
 	eend $?
 

@@ -42,7 +42,7 @@ start() {
 	fi
 	rcfilesystems=${rcfilesystems// /,}   # convert to comma-separated
 
-	ebegin "Mounting network filesystems"
+	ebegin $"Mounting network filesystems"
 	mount -at ${rcfilesystems} >/dev/null
 
 	if [[ $? != 0 ]] ; then
@@ -67,10 +67,10 @@ stop() {
 	rcfilesystems=${rcfilesystems// /,}   # convert to comma-separated
 
 	local ret
-	ebegin "Unmounting network filesystems"
+	ebegin $"Unmounting network filesystems"
 	[[ -z $(umount -art ${rcfilesystems} 2>&1) ]]
 	ret=$?
-	eend ${ret} "Failed to simply unmount filesystems"
+	eend ${ret} $"Failed to simply unmount filesystems"
 	[[ ${ret} == 0 ]] && return 0
 
 	# `umount -a` will fail if the filesystems are in use.

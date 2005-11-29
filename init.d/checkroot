@@ -11,13 +11,13 @@ start() {
 
 	if [[ ! -f /fastboot && -z ${CDBOOT} ]] && ! is_net_fs / ; then
 		if touch -c / >& /dev/null ; then
-			ebegin "Remounting root filesystem read-only"
+			ebegin $"Remounting root filesystem read-only"
 			mount -n -o remount,ro /
 			eend $?
 		fi
 
 		if [[ -f /forcefsck ]] || get_bootparam "forcefsck" ; then
-			ebegin "Checking root filesystem (full fsck forced)"
+			ebegin $"Checking root filesystem (full fsck forced)"
 			fsck -C -a -f /
 			# /forcefsck isn't deleted because checkfs needs it.
 			# it'll be deleted in that script.
@@ -30,11 +30,11 @@ start() {
 			if [[ -n $(awk '($1 ~ /^(\/|UUID|LABEL)/ && $2 == "/" \
 			                && NF == 6 && $6 != 0) { print }' /etc/fstab) ]]
 			then
-				ebegin "Checking root filesystem"
+				ebegin $"Checking root filesystem"
 				fsck -C -T -a /
 				retval=$?
 			else
-				ebegin "Skipping root filesystem check (fstab's passno == 0)"
+				ebegin $"Skipping root filesystem check" "(fstab's passno == 0)"
 				retval=0
 			fi
 		fi
@@ -47,9 +47,9 @@ start() {
 			ewend 1 "Filesystem repaired, but reboot needed!"
 			echo -ne "\a"; sleep 1; echo -ne "\a"; sleep 1
 			echo -ne "\a"; sleep 1; echo -ne "\a"; sleep 1
-			ewarn "Rebooting in 10 seconds ..."
+			ewarn $"Rebooting in 10 seconds ..."
 			sleep 10
-			einfo "Rebooting"
+			einfo $"Rebooting"
 			/sbin/reboot -f
 		else
 			if [[ ${RC_FORCE_AUTO} == "yes" ]] ; then
@@ -59,9 +59,9 @@ start() {
 				eend 2 "Filesystem couldn't be fixed :("
 				/sbin/sulogin ${CONSOLE}
 			fi
-			einfo "Unmounting filesystems"
+			einfo $"Unmounting filesystems"
 			/bin/mount -a -o remount,ro &> /dev/null
-			einfo "Rebooting"
+			einfo $"Rebooting"
 			/sbin/reboot -f
 		fi
 	fi
@@ -70,7 +70,7 @@ start() {
 	if mount -vf -o remount / 2> /dev/null | \
 	   awk '{ if ($6 ~ /rw/) exit 0; else exit 1; }'
 	then
-		ebegin "Remounting root filesystem read/write"
+		ebegin $"Remounting root filesystem read/write"
 		mount -n -o remount,rw / &> /dev/null
 		if [[ $? -ne 0 ]] ; then
 			eend 2 "Root filesystem could not be mounted read/write :("
@@ -92,7 +92,7 @@ start() {
 
 		# Don't create mtab if /etc is readonly
 		if ! touch /etc/mtab 2> /dev/null ; then
-			ewarn "Skipping /etc/mtab initialization (ro root?)"
+			ewarn $"Skipping /etc/mtab initialization" "(ro root?)"
 			return 0
 		fi
 
