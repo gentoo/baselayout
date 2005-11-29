@@ -33,7 +33,6 @@ clean:
 	rm -f *.mo *~
 
 install: all
-	echo "localedir = $$localedir"
 	for lang in $(LINGUAS); do \
 	       install -d $(localedir)/$$lang/LC_MESSAGES ; \
 	       install -m 644 $$lang.mo \
