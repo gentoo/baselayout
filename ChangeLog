@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  29 Nov 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add po/Makefile, based mostly on work done by Rach Holmes <Rach.Holmes@GMX.net>
+    and James since Mike changed most rc-scripts to support it.
+
   28 Nov 2005; Roy Marples <uberlord@gentoo.org>:
 
     Fixed fallback_routes, #113776.
