@@ -4,7 +4,8 @@
   29 Nov 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     Add po/Makefile, based mostly on work done by Rach Holmes <Rach.Holmes@GMX.net>
-    and James since Mike changed most rc-scripts to support it.
+    and James Rowe <Jay@jnrowe.uklinux.net> since Mike changed most rc-scripts to
+    support it.
 
   28 Nov 2005; Roy Marples <uberlord@gentoo.org>:
 
