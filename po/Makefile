@@ -19,7 +19,7 @@ all: $(LINGUAS:%=%.mo)
 	msgfmt --statistics -o $@ $<
 
 %.po : rc-scripts.pot
-	msgmerge -o $@ $@ $^
+	msgmerge --update $@ $^
 
 rc-scripts.pot: $(initd_IN:%=../init.d/%) $(sbin_IN:%=../sbin/%)
 	rm -f rc-scripts.pot; touch rc-scripts.pot
