@@ -39,6 +39,10 @@ else
 	NETSERVICE=
 fi
 
+# Check if the textdomain is non-default
+[[ -f ${TEXTDOMAINDIR}/${LANG%.*}/LC_MESSAGES/${myservice}.mo ]] && \
+	TEXTDOMAIN=${myservice}
+
 # Source configuration files.
 # (1) Source /etc/conf.d/${myservice} to get initscript-specific
 #     configuration (if it exists).

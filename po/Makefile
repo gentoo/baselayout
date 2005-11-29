@@ -10,8 +10,8 @@ sbin_IN := \
 	functions.sh runscript.sh rc \
 	rc-daemon.sh rc-help.sh rc-services.sh
 
-localedir      := /usr/share/locale
-LINGUAS        :=
+localedir := $(shell eval `grep '^svclib' ../sbin/functions.sh`; echo "$${svclib}/locale")
+LINGUAS := 
 
 all: $(LINGUAS:%=%.mo)
 
@@ -33,6 +33,7 @@ clean:
 	rm -f *.mo *~
 
 install: all
+	echo "localedir = $$localedir"
 	for lang in $(LINGUAS); do \
 	       install -d $(localedir)/$$lang/LC_MESSAGES ; \
 	       install -m 644 $$lang.mo \

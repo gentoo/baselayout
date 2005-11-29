@@ -53,6 +53,10 @@ RC_DEFAULT_INDENT=2
 #RC_DOT_PATTERN=' .'
 RC_DOT_PATTERN=''
 
+# Setup i18n variables
+TEXTDOMAINDIR="${svclib}/locale"
+TEXTDOMAIN="rc-scripts"
+
 # void import_addon(char *addon)
 #
 #  Import code from the specified addon if it exists

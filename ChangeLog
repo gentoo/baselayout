@@ -7,6 +7,8 @@
     and James Rowe <Jay@jnrowe.uklinux.net> since Mike changed most rc-scripts to
     support it.
 
+    Set TEXTDOMAIN and TEXTDOMAINDIR.  Install locale into $svclib.
+
   28 Nov 2005; Roy Marples <uberlord@gentoo.org>:
 
     Fixed fallback_routes, #113776.
