@@ -2,7 +2,7 @@ initd_IN  := $(wildcard ../init.d/*)
 sbin_IN   := $(filter-out %.patch,$(wildcard ../sbin/*))
 ALL_IN    := $(initd_IN) $(sbin_IN)
 
-localedir   := $(libdir)/rcscripts/locale
+localedir   := $(shell eval `grep '^svclib' ../sbin/functions.sh`; echo "$${svclib}/locale")
 LINGUAS_ALL := $(patsubst %.po,%,$(wildcard *.po))
 LINGUAS     ?= $(LINGUAS_ALL)
 LINGUAS     := $(filter $(LINGUAS_ALL),$(LINGUAS))
