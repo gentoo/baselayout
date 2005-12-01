@@ -5,6 +5,7 @@ INCLUDES = $(RCSCRIPTS_DEFINES)
 lib_LTLIBRARIES = librcscripts.la
 
 librcscripts_la_SOURCES = \
+	rcscripts.h    \
 	debug.h        \
 	depend.c       \
 	depend.h       \

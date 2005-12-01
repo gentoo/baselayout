@@ -2,7 +2,9 @@ sbin_PROGRAMS = \
 	depscan   \
 	runscript
 
-INCLUDES = $(RCSCRIPTS_DEFINES)
+INCLUDES = \
+	-I$(top_srcdir)      \
+	$(RCSCRIPTS_DEFINES)
 
 LIBRCSCRIPTS = $(top_builddir)/librcscripts/librcscripts.la
 

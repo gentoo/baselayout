@@ -1,7 +1,10 @@
 AUTOMAKE_OPTIONS = dist-bzip2 no-dist-gzip
 
 SUBDIRS = \
+	data         \
+	scripts      \
 	librcscripts \
-	src
+	src          \
+	tests
 
-EXTRA_DIST = ChangeLog.*
+EXTRA_DIST = ChangeLog.0
