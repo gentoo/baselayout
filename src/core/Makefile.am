@@ -4,6 +4,4 @@ SUBDIRS = \
 	librcscripts \
 	src
 
-EXTRA_DIST = \
-	localdecls.h \
-	ChangeLog.*
+EXTRA_DIST = ChangeLog.*
