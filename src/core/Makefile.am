@@ -1,7 +1,7 @@
 AUTOMAKE_OPTIONS = dist-bzip2 no-dist-gzip
 
 SUBDIRS = \
-	librcscript \
+	librcscripts \
 	src
 
 EXTRA_DIST = \

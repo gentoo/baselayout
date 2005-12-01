@@ -57,7 +57,7 @@ AC_OUTPUT([
 	Makefile
 	scripts/Makefile
 	data/Makefile
-	librcscript/Makefile
+	librcscripts/Makefile
 	src/Makefile
 	tests/Makefile
 ])

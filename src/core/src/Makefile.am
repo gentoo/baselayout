@@ -2,7 +2,7 @@ sbin_PROGRAMS = \
 	depscan   \
 	runscript
 
-LIBRCSCRIPTS = $(top_builddir)/librcscript/librcscripts.la
+LIBRCSCRIPTS = $(top_builddir)/librcscripts/librcscripts.la
 
 depscan_CFLAGS = -DLEGACY_DEPSCAN
 depscan_LDADD = $(LIBRCSCRIPTS)
