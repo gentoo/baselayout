@@ -719,11 +719,11 @@ valid_iafter() {
 #   Get and sort the dependencies of given service[s].
 #
 trace_dependencies() {
-	local -a services=( "$@" )
-	local i j net_services
+	local -a services=( "$@" ) net_deps
+	local i j net_services x
 
 	if [[ $1 == -* ]]; then
-		deptype="${1/-}"
+		deptype="${1/-/}"
 		if net_service "${myservice}" ; then
 			services=( "net" "${myservice}" )
 		else
@@ -753,31 +753,37 @@ trace_dependencies() {
 		[[ -n ${x} ]] && net_services="${x}"
 	fi
 
+	# Cache the generic "net" depends
+	net_deps=( $( ineed net ) $( valid_iuse net )	)
+	if is_runlevel_start || is_runlevel_stop ; then
+		net_deps=( "${net_deps[@]}" $( valid_iafter net ) )
+	fi
+
 	# OK, this is a topological sort
 	# The bonus about doing it in bash is that we can calculate our sort
 	# order as we calculate our dependencies
 	local -a visited sorted
 	visit_service() {
-		local service="$1" dep
+		local service="$1" dep x
 		local -a deps
 
 		[[ " ${visited[@]} " == *" ${service} "* ]] && return
 		visited=( "${visited[@]}" "${service}" )
 
 		if [[ -n ${deptype} ]] ; then
-			deps=( "${deps[@]}" $( "${deptype}" "${service}" ) )
+			deps=( $( "${deptype}" "${service}" ) )
 		else
-			deps=( 
-				$( ineed "${service}" )
-				$( valid_iuse "${service}" )
-			)
-		
+			deps=( $( ineed "${service}" ) $( valid_iuse "${service}" ) ) 
 			if is_runlevel_start || is_runlevel_stop ; then
 				deps=( "${deps[@]}" $( valid_iafter "${service}" ) )
 			fi
 
-			local x=" ${deps[@]} "
-			deps=( ${x// net / ${net_services} } )
+			# If we're a net service, we have to get deps for ourself
+			# and the net service as we're both
+			net_service "${service}" && deps=( "${deps[@]}" "${net_deps[@]}" )
+			
+			x=" ${deps[@]} "
+			deps=( "${deps[@]}" ${x// net / ${net_services} } )
 		fi
 
 		services=( "${services[@]}" "${deps[@]}" )
