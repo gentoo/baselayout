@@ -20,7 +20,7 @@
 #include "librcscripts/debug.h"
 #include "librcscripts/misc.h"
 
-#define IS_SBIN_RC()	(0 == strcmp(caller, SBIN_RC))
+#define IS_SBIN_RC()	((caller) && (0 == strcmp(caller, SBIN_RC)))
 
 static void (*selinux_run_init_old) (void);
 static void (*selinux_run_init_new) (int argc, char **argv);
