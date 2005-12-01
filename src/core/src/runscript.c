@@ -16,8 +16,8 @@
 #include <sys/wait.h>
 #include <dlfcn.h>
 
-#include "core/debug.h"
-#include "core/misc.h"
+#include "librcscript/debug.h"
+#include "librcscript/misc.h"
 
 #ifndef LIBDIR
 # define LIBDIR		"lib"

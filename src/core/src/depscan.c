@@ -34,10 +34,10 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include "debug.h"
-#include "depend.h"
-#include "misc.h"
-#include "parse.h"
+#include "librcscript/debug.h"
+#include "librcscript/depend.h"
+#include "librcscript/misc.h"
+#include "librcscript/parse.h"
 
 char* svcdir_subdirs[] = {
 	"softscripts",
