@@ -1,5 +1,7 @@
 AUTOMAKE_OPTIONS = foreign
 
+INCLUDES = $(RCSCRIPTS_DEFINES)
+
 lib_LTLIBRARIES = librcscripts.la
 
 librcscripts_la_SOURCES = \

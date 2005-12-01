@@ -19,7 +19,7 @@ m4_undefine([AC_PROG_F77])
 m4_defun([AC_PROG_F77],[])
 AC_PROG_LIBTOOL
 
-AC_PREFIX_DEFAULT([/])
+AC_PREFIX_DEFAULT([])
 
 dnl Checks for libraries.
 dnl Checks for header files.
@@ -52,6 +52,9 @@ AC_ARG_ENABLE([debug],
 if test x"$enable_debug" != xno ; then
 	CFLAGS="$CFLAGS -ggdb -DRC_DEBUG"
 fi
+
+RCSCRIPTS_DEFINES='-DETCDIR="\"$(sysconfdir)\"" -DLIBDIR="\"$(libdir)\"" -DBINDIR="\"$(bindir)\"" -DSBINDIR="\"$(sbindir)\""'
+AC_SUBST([RCSCRIPTS_DEFINES])
 
 AC_OUTPUT([
 	Makefile

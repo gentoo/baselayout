@@ -28,15 +28,6 @@
 #include <sys/types.h>
 #include "list.h"
 
-#define RC_CONF_FILE_NAME	"/etc/rc.conf"
-#define RC_CONFD_FILE_NAME	"/etc/conf.d/rc"
-#define INITD_DIR_NAME		"/etc/init.d/"
-#define CONFD_DIR_NAME		"/etc/conf.d/"
-
-#define SVCDIR_CONFIG_ENTRY	"svcdir"
-
-#define SHELL_PARSER		"/bin/bash"
-
 #define LEGACY_CACHE_FILE_NAME	"deptree"
 
 #define FIELD_RCSCRIPT	"RCSCRIPT"

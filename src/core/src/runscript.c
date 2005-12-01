@@ -16,23 +16,9 @@
 #include <sys/wait.h>
 #include <dlfcn.h>
 
+#include "librcscripts/rcscripts.h"
 #include "librcscripts/debug.h"
 #include "librcscripts/misc.h"
-
-#ifndef LIBDIR
-# define LIBDIR		"lib"
-#endif
-
-#define SBIN_RC		"/sbin/rc"
-#define PROFILE_ENV	"/etc/profile.env"
-#define RCSCRIPTS_LIB	"/" LIBDIR "/rcscripts"
-#define SYS_WHITELIST	RCSCRIPTS_LIB "/conf.d/env_whitelist"
-#define USR_WHITELIST	"/etc/conf.d/env_whitelist"
-#define RCSCRIPT_HELP	RCSCRIPTS_LIB "/sh/rc-help.sh"
-#define SELINUX_LIB	RCSCRIPTS_LIB "/runscript_selinux.so"
-#define SOFTLEVEL	"SOFTLEVEL"
-
-#define DEFAULT_PATH	"PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/sbin"
 
 #define IS_SBIN_RC()	(0 == strcmp(caller, SBIN_RC))
 

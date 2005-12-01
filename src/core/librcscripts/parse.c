@@ -36,6 +36,7 @@
 #include <fcntl.h>
 #include <signal.h>
 
+#include "rcscripts.h"
 #include "debug.h"
 #include "depend.h"
 #include "list.h"
@@ -92,9 +93,9 @@ int get_rcscripts(void)
 	char *confd_file = NULL;
 	int count;
 
-	file_list = ls_dir(INITD_DIR_NAME, 0);
+	file_list = ls_dir(RCSCRIPTS_INITDDIR, 0);
 	if (NULL == file_list) {
-		DBG_MSG("'%s' is empty!\n", INITD_DIR_NAME);
+		DBG_MSG("'%s' is empty!\n", RCSCRIPTS_INITDDIR);
 		return -1;
 	}
 
@@ -134,7 +135,7 @@ int get_rcscripts(void)
 			}
 
 			/* File name for the conf.d config file (if any) */
-			confd_file = strcatpaths(CONFD_DIR_NAME, gbasename(rcscript));
+			confd_file = strcatpaths(RCSCRIPTS_CONFDDIR, gbasename(rcscript));
 			if (NULL == confd_file) {
 				DBG_MSG("Failed to allocate temporary buffer!\n");
 				goto loop_error;
@@ -423,9 +424,9 @@ size_t generate_stage2(char **data)
 		/* dup2 child side write pipe to STDOUT */
 		dup2(CHILD_WRITE_PIPE(pipe_fds), STDOUT_FILENO);
 
-		/* We need to be in INITD_DIR_NAME for 'before'/'after' '*' to work */
-		if (-1 == chdir(INITD_DIR_NAME)) {
-			DBG_MSG("Failed to chdir to '%s'!\n", INITD_DIR_NAME);
+		/* We need to be in RCSCRIPTS_INITDDIR for 'before'/'after' '*' to work */
+		if (-1 == chdir(RCSCRIPTS_INITDDIR)) {
+			DBG_MSG("Failed to chdir to '%s'!\n", RCSCRIPTS_INITDDIR);
 			exit(1);
 		}
 

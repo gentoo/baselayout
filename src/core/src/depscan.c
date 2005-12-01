@@ -34,6 +34,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#include "librcscripts/rcscripts.h"
 #include "librcscripts/debug.h"
 #include "librcscripts/depend.h"
 #include "librcscripts/misc.h"
