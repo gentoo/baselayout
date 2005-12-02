@@ -30,6 +30,8 @@
 
 #include "debug.h"
 
+static char log_domain[] = "rcscripts";
+
 void debug_message (const char *file, const char *func, size_t line,
 		    const char *format, ...)
 {
@@ -39,18 +41,18 @@ void debug_message (const char *file, const char *func, size_t line,
 
   save_errno ();
   
-  length = strlen (format) + strlen ("DEBUG(2): ") + 1;
+  length = strlen (log_domain) + strlen ("():       ") + 1;
   /* Do not use xmalloc() here, else we may have recursive issues */
   format_str = malloc (length);
   if (NULL == format_str)
     {
-      fprintf (stderr, "DEBUG(1): in %s, function %s(), line %i:\n", __FILE__,
-	       __FUNCTION__, __LINE__);
-      fprintf (stderr, "DEBUG(2): Failed to allocate buffer!\n");
+      fprintf (stderr, "(%s) error: in %s, function %s(), line %i:\n",
+	       log_domain, __FILE__, __FUNCTION__, __LINE__);
+      fprintf (stderr, "(%s)        Failed to allocate buffer!\n", log_domain);
       abort ();
     }
 
-  snprintf (format_str, length, "DEBUG(2): %s", format);
+  snprintf (format_str, length, "(%s)       ", log_domain);
 
   va_start (arg, format);
 		
@@ -58,21 +60,25 @@ void debug_message (const char *file, const char *func, size_t line,
   /* Bit of a hack, as how we do things tend to cause seek
    * errors when reading the parent/child pipes */
   /* if ((0 != errno) && (ESPIPE != errno)) { */
-  if (0 != errno)
+  if (0 != saved_errno)
     {
 #endif
-      fprintf (stderr, "DEBUG(1): in %s, function %s(), line %i:\n", __FILE__,
-	       __FUNCTION__, __LINE__);
-      vfprintf (stderr, format_str, arg);
-      restore_errno ();
+      if (0 != saved_errno)
+	fprintf (stderr, "(%s) error: ", log_domain);
+      else
+	fprintf (stderr, "(%s) debug: ", log_domain);
+      
+      fprintf (stderr, "in %s, function %s(), line %i:\n", file, func, line);
+
+      fprintf (stderr, "%s ", format_str);
+      vfprintf (stderr, format, arg);
       
 #if defined(RC_DEBUG)
-      if (0 != errno)
+      if (0 != saved_errno)
 	{
 #endif
-	  perror ("DEBUG(3)");
+	  perror (format_str);
 	  /* perror() for some reason sets errno to ESPIPE */
-	  restore_errno ();
 #if defined(RC_DEBUG)
 	}
 #else
@@ -82,6 +88,7 @@ void debug_message (const char *file, const char *func, size_t line,
   va_end (arg);
 
   free (format_str);
+  restore_errno ();
 }
 
 void *__xmalloc (size_t size, const char *file, const char *func, size_t line)

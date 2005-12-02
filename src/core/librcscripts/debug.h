@@ -27,11 +27,9 @@
 
 #include <errno.h>
 
-#define save_errno() \
- int old_errno = errno;
-
-#define restore_errno() \
- errno = old_errno;
+#define save_errno()	int old_errno = errno;
+#define restore_errno() errno = old_errno;
+#define saved_errno	old_errno
 
 void debug_message (const char *file, const char *func, size_t line,
 		    const char *format, ...);
