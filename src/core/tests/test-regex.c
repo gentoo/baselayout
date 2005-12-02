@@ -27,8 +27,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "debug.h"
-#include "simple-regex.h"
+#include "librcscripts/debug.h"
+#include "librcscripts/simple-regex.h"
 
 char *test_data[] = {
 	/* string, pattern, match (1 = yes, 0 = no) */
