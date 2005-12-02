@@ -186,10 +186,12 @@ int read_dyn_buf (dynamic_buffer_t *dynbuf, char *buf, size_t length)
   if (dynbuf->rd_index >= dynbuf->length)
     return 0;
 
-  if (dynbuf->length > (dynbuf->rd_index + length))
+  if (dynbuf->length < (dynbuf->rd_index + length))
     len = (dynbuf->rd_index + length) - dynbuf->length;
 
   snprintf(buf, len + 1, "%s", dynbuf->data);
+
+  dynbuf->rd_index += len;
 
   return len;
 }
