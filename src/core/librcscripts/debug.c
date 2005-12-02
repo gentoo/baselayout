@@ -43,7 +43,12 @@ void debug_message (const char *file, const char *func, size_t line,
   /* Do not use xmalloc() here, else we may have recursive issues */
   format_str = malloc (length);
   if (NULL == format_str)
-    return;
+    {
+      fprintf (stderr, "DEBUG(1): in %s, function %s(), line %i:\n", __FILE__,
+	       __FUNCTION__, __LINE__);
+      fprintf (stderr, "DEBUG(2): Failed to allocate buffer!\n");
+      abort ();
+    }
 
   snprintf (format_str, length, "DEBUG(2): %s", format);
 
