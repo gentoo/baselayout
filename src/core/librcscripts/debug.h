@@ -67,9 +67,9 @@ void *__xmalloc (size_t size, const char *file, const char *func, size_t line);
 void *__xrealloc (void *ptr, size_t size, const char *file, const char *func,
 		  size_t line);
 
-#define xmalloc (_size) \
+#define xmalloc(_size) \
 	__xmalloc (_size, __FILE__, __FUNCTION__, __LINE__)
-#define xrealloc (_ptr, _size) \
+#define xrealloc(_ptr, _size) \
 	__xrealloc (_ptr, _size, __FILE__, __FUNCTION__, __LINE__)
 
 #endif /* _DEBUG_H */
