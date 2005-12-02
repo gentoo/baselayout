@@ -105,7 +105,7 @@ void free_dyn_buf (dynamic_buffer_t *dynbuf)
   
 int write_dyn_buf (dynamic_buffer_t *dynbuf, const char *buf, size_t length)
 {
-  char *ptr;
+  int len;
   
   if ((NULL == dynbuf) || (NULL == dynbuf->data) || (0 == dynbuf->length))
     {
@@ -125,8 +125,9 @@ int write_dyn_buf (dynamic_buffer_t *dynbuf, const char *buf, size_t length)
       return -1;
     }
 
-  ptr = mempcpy ((dynbuf->data + dynbuf->wr_index), buf, length);
-  *ptr = '\0';
+  len = snprintf ((dynbuf->data + dynbuf->wr_index), length + 1, "%s", buf);
+  if (length > len)
+    length = len;
 
   dynbuf->wr_index += length;
 
@@ -189,10 +190,12 @@ int read_dyn_buf (dynamic_buffer_t *dynbuf, char *buf, size_t length)
   if (dynbuf->length < (dynbuf->rd_index + length))
     len = (dynbuf->rd_index + length) - dynbuf->length;
 
-  snprintf(buf, len + 1, "%s", dynbuf->data);
+  len = snprintf(buf, len + 1, "%s", (dynbuf->data + dynbuf->rd_index));
+  if (length > len)
+    length = len;
 
-  dynbuf->rd_index += len;
+  dynbuf->rd_index += length;
 
-  return len;
+  return length;
 }
 
