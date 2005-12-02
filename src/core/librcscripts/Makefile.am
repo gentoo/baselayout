@@ -7,6 +7,7 @@ lib_LTLIBRARIES = librcscripts.la
 librcscripts_la_SOURCES = \
 	rcscripts.h    \
 	debug.h        \
+	debug.c        \
 	depend.c       \
 	depend.h       \
 	list.h         \
