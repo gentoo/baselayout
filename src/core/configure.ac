@@ -41,6 +41,11 @@ AC_FUNC_REALLOC
 AC_TYPE_SIGNAL
 AC_FUNC_STAT
 AC_CHECK_FUNCS([strndup remove])
+AH_VERBATIM([va_copy],
+[/* Older gcc's have __va_copy */
+#ifndef va_copy
+# define va_copy __va_copy
+#endif])
 
 dnl check if we have 32bit or 64bit output
 AC_ARG_ENABLE([debug],
