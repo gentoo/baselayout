@@ -292,8 +292,6 @@ dyn_buf_rd_eof (dyn_buf_t *dynbuf)
       return 0;
     }
 
-  printf ("rd_index = %i, wr_index = %i\n", dynbuf->rd_index,
-	  dynbuf->wr_index);
   if (dynbuf->rd_index >= dynbuf->wr_index)
     return TRUE;
 
