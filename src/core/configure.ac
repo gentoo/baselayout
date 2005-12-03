@@ -40,6 +40,7 @@ AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_TYPE_SIGNAL
 AC_FUNC_STAT
+AC_CHECK_FUNCS([strndup remove])
 
 dnl check if we have 32bit or 64bit output
 AC_ARG_ENABLE([debug],

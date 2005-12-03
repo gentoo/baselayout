@@ -251,7 +251,9 @@ char *memrepchr (char **str, char old, char _new, size_t size);
 char *strcatpaths (const char *pathname1, const char *pathname2);
 
 /* Compat functions for GNU extensions */
+#if !defined(HAVE_STRNDUP)
 char *strndup (const char *str, size_t size);
+#endif
 /* Same as basename(3), but do not modify path */
 char *gbasename (const char *path);
 
@@ -269,7 +271,7 @@ int is_dir (const char *pathname, int follow_link);
 time_t get_mtime (const char *pathname, int follow_link);
 
 /* The following functions return 0 on success, or -1 with errno set on error. */
-#ifdef __KLIBC__
+#if !defined(HAVE_REMOVE)
 int remove (const char *pathname);
 #endif
 int mktree (const char *pathname, mode_t mode);
