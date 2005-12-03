@@ -130,6 +130,8 @@ int write_dyn_buf (dynamic_buffer_t *dynbuf, const char *buf, size_t length)
     }
 
   len = snprintf ((dynbuf->data + dynbuf->wr_index), length + 1, "%s", buf);
+  /* If len is less than length, it means the string was shorter than
+   * given length */
   if (length > len)
     length = len;
 
@@ -195,6 +197,8 @@ int read_dyn_buf (dynamic_buffer_t *dynbuf, char *buf, size_t length)
     len = dynbuf->length - dynbuf->rd_index;
 
   len = snprintf(buf, len + 1, "%s", (dynbuf->data + dynbuf->rd_index));
+  /* If len is less than length, it means the string was shorter than
+   * given length */
   if (length > len)
     length = len;
 
