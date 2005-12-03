@@ -29,16 +29,14 @@
 #include "debug.h"
 #include "dynbuf.h"
 
-#define DYNAMIC_BUFFER_SIZE (sizeof (char) * 2 * 1024)
-
-static dynamic_buffer_t *reallocate_dyn_buf (dynamic_buffer_t *dynbuf,
+static dyn_buf_t *reallocate_dyn_buf (dyn_buf_t *dynbuf,
 					     size_t needed);
 
-dynamic_buffer_t *new_dyn_buf (void)
+dyn_buf_t *new_dyn_buf (void)
 {
-  dynamic_buffer_t *dynbuf = NULL;
+  dyn_buf_t *dynbuf = NULL;
 
-  dynbuf = xmalloc (sizeof (dynamic_buffer_t));
+  dynbuf = xmalloc (sizeof (dyn_buf_t));
   if (NULL == dynbuf)
     return NULL;
 
@@ -56,7 +54,7 @@ dynamic_buffer_t *new_dyn_buf (void)
   return dynbuf;
 }
 
-dynamic_buffer_t *reallocate_dyn_buf (dynamic_buffer_t *dynbuf,
+dyn_buf_t *reallocate_dyn_buf (dyn_buf_t *dynbuf,
 				      size_t needed)
 {
   int len;
@@ -88,7 +86,7 @@ dynamic_buffer_t *reallocate_dyn_buf (dynamic_buffer_t *dynbuf,
   return dynbuf;
 }
 
-void free_dyn_buf (dynamic_buffer_t *dynbuf)
+void free_dyn_buf (dyn_buf_t *dynbuf)
 {
   if (NULL == dynbuf)
     return;
@@ -107,7 +105,7 @@ void free_dyn_buf (dynamic_buffer_t *dynbuf)
   dynbuf = NULL;
 }
 
-int write_dyn_buf (dynamic_buffer_t *dynbuf, const char *buf, size_t length)
+int write_dyn_buf (dyn_buf_t *dynbuf, const char *buf, size_t length)
 {
   int len;
 
@@ -140,7 +138,7 @@ int write_dyn_buf (dynamic_buffer_t *dynbuf, const char *buf, size_t length)
   return length;
 }
 
-int sprintf_dyn_buf (dynamic_buffer_t *dynbuf, const char *format, ...)
+int sprintf_dyn_buf (dyn_buf_t *dynbuf, const char *format, ...)
 {
   va_list arg1, arg2;
   char test_str[10];
@@ -174,7 +172,7 @@ int sprintf_dyn_buf (dynamic_buffer_t *dynbuf, const char *format, ...)
   return written;
 }
 
-int read_dyn_buf (dynamic_buffer_t *dynbuf, char *buf, size_t length)
+int read_dyn_buf (dyn_buf_t *dynbuf, char *buf, size_t length)
 {
   int len = length;
 

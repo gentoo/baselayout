@@ -36,7 +36,7 @@
 
 int main (void)
 {
-  dynamic_buffer_t *dynbuf;
+  dyn_buf_t *dynbuf;
   char buf[1024 * 4];
   int length, total = 0;
 
@@ -99,7 +99,7 @@ int main (void)
       goto error;
     }
 
-  while (strlen (dynbuf->data) < 2048)
+  while (strlen (dynbuf->data) < DYNAMIC_BUFFER_SIZE)
     {
       length = sprintf_dyn_buf (dynbuf, TEST_STRING_FULL);
       if (length != strlen (TEST_STRING_FULL))
