@@ -542,8 +542,8 @@ generate_stage2 (dyn_buf_t * data)
 		break;
 
 	      tmp_count = read_dyn_buf_to_fd (PARENT_WRITE_PIPE (pipe_fds),
-					       stage1_data,
-					       PARSE_BUFFER_SIZE);
+					      stage1_data,
+					      PARSE_BUFFER_SIZE);
 	      if ((-1 == tmp_count) && (EINTR != errno))
 		{
 		  DBG_MSG ("Error writing to PARENT_WRITE_PIPE!\n");
@@ -751,8 +751,6 @@ parse_cache (const dyn_buf_t * data)
   char *tmp_p;
   char *token;
   char *field;
-  int count;
-  int current = 0;
   int retval;
 
   if ((NULL == data) || (data->length <= 0))
@@ -762,16 +760,8 @@ parse_cache (const dyn_buf_t * data)
       goto error;
     }
 
-  while (current < data->wr_index)
+  while (NULL != (tmp_buf = read_line_dyn_buf ((dyn_buf_t *)data)))
     {
-      count = buf_get_line (data->data, data->length, current);
-
-      tmp_buf = strndup (&(data->data[current]), count);
-      if (NULL == tmp_buf)
-	{
-	  DBG_MSG ("Failed to allocate temporary buffer!\n");
-	  goto error;
-	}
       tmp_p = tmp_buf;
 
       /* Strip leading spaces/tabs */
@@ -786,8 +776,8 @@ parse_cache (const dyn_buf_t * data)
 	  /* We got an empty FIELD value */
 	  || (NULL == tmp_p) || (0 == strlen (tmp_p)))
 	{
-	  DBG_MSG ("Parsing stopped due to short read!\n");
 	  errno = EMSGSIZE;
+	  DBG_MSG ("Parsing stopped due to short read!\n");
 	  goto error;
 	}
 
@@ -877,11 +867,14 @@ parse_cache (const dyn_buf_t * data)
 
 _continue:
       type = ALL_SERVICE_TYPE_T;
-      current += count + 1;
       free (tmp_buf);
       /* Do not free 'rc_name', as it should be consistant
        * across loops */
     }
+
+  /* read_line_dyn_buf() returned NULL with errno set */
+  if (0 != errno)
+    goto error;
 
   /* Set the mtimes
    * FIXME: Can drop this when we no longer need write_legacy_stage3() */

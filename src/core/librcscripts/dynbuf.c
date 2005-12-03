@@ -22,15 +22,18 @@
  * $Header$
  */
 
+#define _GNU_SOURCE
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "config.h"
 
 #include "debug.h"
 #include "dynbuf.h"
+#include "misc.h"
 
 static dyn_buf_t *reallocate_dyn_buf (dyn_buf_t * dynbuf, size_t needed);
 
@@ -281,6 +284,32 @@ read_dyn_buf_to_fd (int fd, dyn_buf_t * dynbuf, size_t length)
     dynbuf->rd_index += length;
 
   return length;
+}
+
+char *
+read_line_dyn_buf (dyn_buf_t *dynbuf)
+{
+  char *buf = NULL;
+  size_t count = 0;
+
+  for (count = dynbuf->rd_index; count < dynbuf->wr_index && dynbuf->data[count] != '\n'; count++);
+
+  if (count > dynbuf->rd_index)
+    {
+      buf = strndup ((dynbuf->data + dynbuf->rd_index),
+		     (count - dynbuf->rd_index));
+      if (NULL == buf)
+	{
+	  errno = ENOMEM;
+	  DBG_MSG ("Failed to allocate buffer!\n");
+	  return NULL;
+	}
+
+      /* Also skip the '\n' .. */
+      dynbuf->rd_index = count + 1;
+    }
+
+  return buf;
 }
 
 bool

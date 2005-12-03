@@ -51,6 +51,8 @@ int read_dyn_buf (dyn_buf_t * dynbuf, char *buf, size_t length);
 
 int read_dyn_buf_to_fd (int fd, dyn_buf_t * dynbuf, size_t length);
 
+char *read_line_dyn_buf (dyn_buf_t *dynbuf);
+
 bool dyn_buf_rd_eof (dyn_buf_t *dynbuf);
 
 #endif /* _DYNBUF_H */
