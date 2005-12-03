@@ -32,7 +32,7 @@
 #define saved_errno	old_errno
 
 void
-debug_message (const char *file, const char *func, size_t line,
+debug_message (const char *file, const char *func, int line,
 	       const char *format, ...);
 
 #define DBG_MSG(_format, _arg...) \

@@ -33,7 +33,7 @@
 static char log_domain[] = "rcscripts";
 
 void
-debug_message (const char *file, const char *func, size_t line,
+debug_message (const char *file, const char *func, int line,
 	       const char *format, ...)
 {
   va_list arg;

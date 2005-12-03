@@ -54,6 +54,8 @@ if test x"$enable_debug" != xno ; then
 	CFLAGS="$CFLAGS -ggdb -DRC_DEBUG"
 fi
 
+CFLAGS="$CFLAGS -Wall"
+
 RCSCRIPTS_DEFINES='-DETCDIR="\"$(sysconfdir)\"" -DLIBDIR="\"$(libdir)\"" -DBINDIR="\"$(bindir)\"" -DSBINDIR="\"$(sbindir)\""'
 AC_SUBST([RCSCRIPTS_DEFINES])
 

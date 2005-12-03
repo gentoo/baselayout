@@ -106,7 +106,7 @@ main (void)
       if (length != strlen (TEST_STRING_FULL))
 	{
 	  fprintf (stderr, "sprintf_dyn_buf() returned wrong length (%i)!\n",
-		   dynbuf->length);
+		   (int)dynbuf->length);
 	  goto error;
 	}
       total += length;
@@ -116,7 +116,7 @@ main (void)
       if (length != strlen (TEST_STRING_FULL))
 	{
 	  fprintf (stderr, "write_dyn_buf() returned wrong length (%i)!\n",
-		   dynbuf->length);
+		   (int)dynbuf->length);
 	  goto error;
 	}
       total += length;
@@ -125,7 +125,7 @@ main (void)
   if (total != strlen (dynbuf->data))
     {
       fprintf (stderr, "Written string length should be %i, but is %i!\n",
-	       total, strlen (dynbuf->data));
+	       total, (int)strlen (dynbuf->data));
       goto error;
     }
 
