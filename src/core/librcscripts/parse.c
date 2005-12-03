@@ -38,6 +38,7 @@
 
 #include "rcscripts.h"
 #include "debug.h"
+#include "dynbuf.h"
 #include "depend.h"
 #include "list.h"
 #include "misc.h"
@@ -79,11 +80,11 @@
 
 LIST_HEAD(rcscript_list);
 
-size_t parse_rcscript(char *scriptname, char **data, size_t index);
+size_t parse_rcscript(char *scriptname, dyn_buf_t *data);
 
-size_t parse_print_start(char **data, size_t index);
-size_t parse_print_header(char *scriptname, char **data, size_t index);
-size_t parse_print_body(char *scriptname, char **data, size_t index);
+size_t parse_print_start(dyn_buf_t *data);
+size_t parse_print_header(char *scriptname, dyn_buf_t *data);
+size_t parse_print_body(char *scriptname, dyn_buf_t *data);
 
 int get_rcscripts(void)
 {
@@ -235,12 +236,13 @@ int check_rcscripts_mtime(char *cachefile)
 }
 
 /* Return count on success, -1 on error.  If it was critical, errno will be set. */
-size_t parse_rcscript(char *scriptname, char **data, size_t index)
+size_t parse_rcscript(char *scriptname, dyn_buf_t *data)
 {
 	regex_data_t tmp_data;
 	char *buf = NULL;
 	char *tmp_buf = NULL;
-	size_t write_count = index;
+	size_t write_count = 0;
+	size_t tmp_count;
 	size_t lenght;
 	int count;
 	int current = 0;
@@ -284,12 +286,14 @@ size_t parse_rcscript(char *scriptname, char **data, size_t index)
 			}
 			DBG_MSG("Parsing '%s'.\n", gbasename(scriptname));
 
-			write_count = parse_print_header(gbasename(scriptname),
-			                                 data, write_count);
-			if (-1 == write_count) {
+			tmp_count = parse_print_header(gbasename(scriptname),
+			                                 data);
+			if (-1 == tmp_count) {
 				DBG_MSG("Failed to call parse_print_header()!\n");
 				goto error;
 			}
+
+			write_count += tmp_count;
 
 			goto _continue;
 		}
@@ -304,12 +308,14 @@ size_t parse_rcscript(char *scriptname, char **data, size_t index)
 		if (REGEX_MATCH(tmp_data)) {
 			DBG_MSG("Got 'depend()' function.\n");
 
-			write_count = parse_print_body(gbasename(scriptname),
-			                               data, write_count);
-			if (-1 == write_count) {
+			tmp_count = parse_print_body(gbasename(scriptname),
+			                               data);
+			if (-1 == tmp_count) {
 				DBG_MSG("Failed to call parse_print_body()!\n");
 				goto error;
 			}
+
+			write_count += tmp_count;
 
 			/* Make sure this is the last loop */
 			current += lenght;
@@ -338,20 +344,20 @@ error:
 }
 
 
-size_t generate_stage1(char **data)
+size_t generate_stage1(dyn_buf_t *data)
 {
 	rcscript_info_t *info;
 	size_t write_count = 0;
 	size_t tmp_count;
 
-	write_count = parse_print_start(data, write_count);
+	write_count = parse_print_start(data);
 	if (-1 == write_count) {
 		DBG_MSG("Failed to call parse_print_start()!\n");
 		return -1;
 	}
 
 	list_for_each_entry(info, &rcscript_list, node) {
-		tmp_count = parse_rcscript(info->filename, data, write_count);
+		tmp_count = parse_rcscript(info->filename, data);
 		if (-1 == tmp_count) {
 			DBG_MSG("Failed to parse '%s'!\n",
 			        gbasename(info->filename));
@@ -360,7 +366,7 @@ size_t generate_stage1(char **data)
 			if (0 != errno)
 				return -1;
 		} else {
-			write_count = tmp_count;
+			write_count += tmp_count;
 		}
 	}
 		
@@ -374,7 +380,7 @@ static void sig_handler(int signum)
 }
 
 /* Returns data's lenght on success, else -1 on error. */
-size_t generate_stage2(char **data)
+size_t generate_stage2(dyn_buf_t *data)
 {
 	int pipe_fds[2][2] = { { 0, 0 }, { 0, 0 } };
 	pid_t child_pid;
@@ -392,9 +398,6 @@ size_t generate_stage2(char **data)
 		/* Close parent_pfds */
 		goto error;
 	}
-
-	/* Zero data */
-	*data = NULL;
 
 	child_pid = fork();
 	if (-1 == child_pid) {
@@ -439,11 +442,11 @@ size_t generate_stage2(char **data)
 		 ***   In parent
 		 ***/
 
+		dyn_buf_t *stage1_data;
 		struct sigaction act_new;
 		struct sigaction act_old;
 		struct pollfd poll_fds[2];
 		char buf[PARSE_BUFFER_SIZE+1];
-		char *stage1_data = NULL;
 		size_t stage1_write_count = 0;
 		size_t stage1_written = 0;
 		int status = 0;
@@ -466,14 +469,14 @@ size_t generate_stage2(char **data)
 		close(CHILD_READ_PIPE(pipe_fds));
 		CHILD_READ_PIPE(pipe_fds) = 0;
 
-		stage1_data = malloc(OUTPUT_BUFFER_SIZE + 1);
+		stage1_data = new_dyn_buf();
 		if (NULL == stage1_data) {
 			DBG_MSG("Failed to allocate buffer!\n");
 			goto error;
 		}
 
 		/* Pipe parse_rcscripts() to bash */
-		stage1_write_count = generate_stage1(&stage1_data);
+		stage1_write_count = generate_stage1(stage1_data);
 		if (-1 == stage1_write_count) {
 			DBG_MSG("Failed to generate stage1!\n");
 			goto error;
@@ -481,7 +484,7 @@ size_t generate_stage2(char **data)
 
 #if 0
 		int tmp_fd = open("bar", O_CREAT | O_TRUNC | O_RDWR, 0600);
-		write(tmp_fd, stage1_data, stage1_write_count);
+		write(tmp_fd, stage1_data->data, stage1_write_count);
 		close(tmp_fd);
 #endif
 
@@ -514,9 +517,9 @@ size_t generate_stage2(char **data)
 				    || (1 != do_write))
 					break;
 
-				tmp_count = write(PARENT_WRITE_PIPE(pipe_fds),
-				                  &stage1_data[stage1_written],
-				                  strlen(&stage1_data[stage1_written]));
+				tmp_count = write_dyn_buf_to_fd(PARENT_WRITE_PIPE(pipe_fds),
+								stage1_data,
+								stage1_write_count - stage1_written);
 				if ((-1 == tmp_count) && (EINTR != errno)) {
 					DBG_MSG("Error writing to PARENT_WRITE_PIPE!\n");
 					goto failed;
@@ -531,7 +534,7 @@ size_t generate_stage2(char **data)
 				/* What was written before, plus what
 				 * we wrote now as well as the ending
 				 * '\0' of the line */
-				stage1_written += tmp_count + 1;
+				stage1_written += tmp_count;
 			
 				/* Close the write pipe if we done
 				 * writing to get a EOF signaled to
@@ -563,15 +566,11 @@ size_t generate_stage2(char **data)
 					continue;
 				}
 
-				tmp_p = realloc(*data, write_count + tmp_count);
-				if (NULL == tmp_p) {
-					DBG_MSG("Failed to allocate buffer!\n");
+				if (tmp_count < write_dyn_buf(data, buf,
+							      tmp_count)) {
+					DBG_MSG("Failed to write to buffer!\n");
 					goto failed;
 				}
-				
-				memcpy(&tmp_p[write_count], buf, tmp_count);
-
-				*data = tmp_p;
 				write_count += tmp_count;
 			} while (tmp_count > 0);
 		} while (!(poll_fds[READ_PIPE].revents & POLLHUP));
@@ -581,7 +580,7 @@ failed:
 		if (0 != errno)
 			old_errno = errno;
 
-		free(stage1_data);
+		free_dyn_buf(stage1_data);
 
 		if (0 != PARENT_WRITE_PIPE(pipe_fds))
 			close(PARENT_WRITE_PIPE(pipe_fds));
@@ -707,7 +706,7 @@ int write_legacy_stage3(FILE *output)
 	return 0;
 }
 
-int parse_cache(const char *data, size_t lenght)
+int parse_cache(const dyn_buf_t *data)
 {
 	service_info_t *info;
 	service_type_t type = ALL_SERVICE_TYPE_T;
@@ -721,16 +720,16 @@ int parse_cache(const char *data, size_t lenght)
 	int current = 0;
 	int retval;
 
-	if ((NULL == data) || (lenght <= 0)) {
+	if ((NULL == data) || (data->length <= 0)) {
 		DBG_MSG("Invalid argument passed!\n");
 		errno = EINVAL;
 		goto error;
 	}
 
-	while (current < lenght) {
-		count = buf_get_line((char *)data, lenght, current);
+	while (current < data->wr_index) {
+		count = buf_get_line(data->data, data->length, current);
 
-		tmp_buf = strndup(&(data[current]), count);
+		tmp_buf = strndup(&(data->data[current]), count);
 		if (NULL == tmp_buf) {
 			DBG_MSG("Failed to allocate temporary buffer!\n");
 			goto error;
@@ -860,11 +859,11 @@ error:
 	return -1;
 }
 
-size_t parse_print_start(char **data, size_t index)
+size_t parse_print_start(dyn_buf_t *data)
 {
-	size_t write_count = index;
+	size_t write_count;
 	
-	PRINT_TO_BUFFER(data, write_count, error,
+	write_count = sprintf_dyn_buf(data,
 		". /sbin/functions.sh\n"
 		"[ -e /etc/rc.conf ] && . /etc/rc.conf\n"
 		"\n"
@@ -872,16 +871,13 @@ size_t parse_print_start(char **data, size_t index)
 		"\n");
 
 	return write_count;
-
-error:
-	return -1;
 }
 
-size_t parse_print_header(char *scriptname, char **data, size_t index)
+size_t parse_print_header(char *scriptname, dyn_buf_t *data)
 {
-	size_t write_count = index;
+	size_t write_count;
 	
-	PRINT_TO_BUFFER(data, write_count, error,
+	write_count = sprintf_dyn_buf(data,
 		"#*** %s ***\n"
 		"\n"
 		"myservice=\"%s\"\n"
@@ -890,14 +886,11 @@ size_t parse_print_header(char *scriptname, char **data, size_t index)
 		scriptname, scriptname);
 
 	return write_count;
-
-error:
-	return -1;
 }
 
-size_t parse_print_body(char *scriptname, char **data, size_t index)
+size_t parse_print_body(char *scriptname, dyn_buf_t *data)
 {
-	size_t write_count = index;
+	size_t write_count;
 	char *tmp_buf = NULL;
 	char *tmp_ptr;
 	char *base;
@@ -906,7 +899,7 @@ size_t parse_print_body(char *scriptname, char **data, size_t index)
 	tmp_buf = strndup(scriptname, strlen(scriptname));
 	if (NULL == tmp_buf) {
 		DBG_MSG("Failed to allocate temporary buffer!\n");
-		goto error;
+		return -1;
 	}
 
 	/*
@@ -928,7 +921,7 @@ size_t parse_print_body(char *scriptname, char **data, size_t index)
 	if (NULL == ext)
 		ext = tmp_ptr;
 	
-	PRINT_TO_BUFFER(data, write_count, error,
+	write_count = sprintf_dyn_buf(data,
 		"\n"
 		"(\n"
 		"  # Get settings for rc-script ...\n"
@@ -975,8 +968,5 @@ size_t parse_print_body(char *scriptname, char **data, size_t index)
 		base, ext, scriptname);
 
 	return write_count;
-
-error:
-	return -1;
 }
 

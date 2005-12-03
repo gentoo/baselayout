@@ -27,6 +27,7 @@
 
 #include <sys/types.h>
 #include "list.h"
+#include "dynbuf.h"
 
 #define LEGACY_CACHE_FILE_NAME	"deptree"
 
@@ -50,15 +51,15 @@ struct list_head rcscript_list;
 
 int get_rcscripts(void);
 int check_rcscripts_mtime(char *cachefile);
-size_t generate_stage1(char **data);
-size_t generate_stage2(char **data);
+size_t generate_stage1(dyn_buf_t *data);
+size_t generate_stage2(dyn_buf_t *data);
 size_t read_stage2(char **data);
 int write_stage2(FILE *outfile);
 size_t generate_stage3(char **data);
 size_t read_stage3(char **data);
 int write_stage3(FILE *outfile);
 int write_legacy_stage3(FILE *output);
-int parse_cache(const char *data, size_t lenght);
+int parse_cache(const dyn_buf_t *data);
 
 /*
  * 	get_rcscripts()

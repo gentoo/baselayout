@@ -36,6 +36,7 @@
 
 #include "librcscripts/rcscripts.h"
 #include "librcscripts/debug.h"
+#include "librcscripts/dynbuf.h"
 #include "librcscripts/depend.h"
 #include "librcscripts/misc.h"
 #include "librcscripts/parse.h"
@@ -169,8 +170,8 @@ _continue:
 #if defined(LEGACY_DEPSCAN)
 
 int main() {
+	dyn_buf_t *data;
 	FILE *cachefile_fd = NULL;
-	char *data = NULL;
 	char *svcdir = NULL;
 	char *cachefile = NULL;
 	char *tmp_cachefile = NULL;
@@ -233,25 +234,27 @@ int main() {
 		EINFO("Caching service dependencies ...\n");
 		DBG_MSG("Regenerating cache file '%s'.\n", cachefile);
 
-		datasize = generate_stage2(&data);
+		data = new_dyn_buf();
+
+		datasize = generate_stage2(data);
 		if (-1 == datasize) {
 			EERROR("Failed to generate stage2!\n");
 			exit(EXIT_FAILURE);
 		}
 		
-		if (-1 == parse_cache(data, datasize)) {
-			EERROR("Failed to parse stage2 output!\n");
-			free(data);
-			exit(EXIT_FAILURE);
-		}
-
 #if 0
 		tmp_cachefile_fd = open("foo", O_CREAT | O_TRUNC | O_RDWR, 0600);
-		write(tmp_cachefile_fd, data, datasize);
+		write(tmp_cachefile_fd, data->data, datasize);
 		close(tmp_cachefile_fd);
 #endif
 
-		free(data);
+		if (-1 == parse_cache(data)) {
+			EERROR("Failed to parse stage2 output!\n");
+			free_dyn_buf(data);
+			exit(EXIT_FAILURE);
+		}
+
+		free_dyn_buf(data);
 
 		if (-1 == service_resolve_dependencies()) {
 			EERROR("Failed to resolve dependencies!\n");
