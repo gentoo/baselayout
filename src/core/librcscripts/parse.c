@@ -60,24 +60,6 @@
 
 #define PARSE_BUFFER_SIZE		256
 
-#define OUTPUT_MAX_LINE_LENGHT		256
-#define OUTPUT_BUFFER_SIZE		(60 * 2048)
-
-/* void PRINT_TO_BUFFER(char **_buf, int _count, label _error, format) */
-#define PRINT_TO_BUFFER(_buf, _count, _error, _output...) \
-	do { \
-		int _i = 0; \
-		/* FIXME: Might do something more dynamic here */ \
-		if (OUTPUT_BUFFER_SIZE < (_count + OUTPUT_MAX_LINE_LENGHT)) { \
-			errno = ENOMEM; \
-			DBG_MSG("Output buffer size too small!\n"); \
-			goto _error; \
-		} \
-		_i = sprintf(&((*_buf)[_count]), _output); \
-		if (0 < _i) \
-			_count += _i + 1; \
-	} while (0)
-
 LIST_HEAD(rcscript_list);
 
 size_t parse_rcscript(char *scriptname, dyn_buf_t *data);
