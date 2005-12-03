@@ -32,15 +32,16 @@
 
 static char log_domain[] = "rcscripts";
 
-void debug_message (const char *file, const char *func, size_t line,
-		    const char *format, ...)
+void
+debug_message (const char *file, const char *func, size_t line,
+	       const char *format, ...)
 {
   va_list arg;
   char *format_str;
   int length;
 
   save_errno ();
-  
+
   length = strlen (log_domain) + strlen ("():       ") + 1;
   /* Do not use xmalloc() here, else we may have recursive issues */
   format_str = malloc (length);
@@ -48,14 +49,15 @@ void debug_message (const char *file, const char *func, size_t line,
     {
       fprintf (stderr, "(%s) error: in %s, function %s(), line %i:\n",
 	       log_domain, __FILE__, __FUNCTION__, __LINE__);
-      fprintf (stderr, "(%s)        Failed to allocate buffer!\n", log_domain);
+      fprintf (stderr, "(%s)        Failed to allocate buffer!\n",
+	       log_domain);
       abort ();
     }
 
   snprintf (format_str, length, "(%s)       ", log_domain);
 
   va_start (arg, format);
-		
+
 #if !defined(RC_DEBUG)
   /* Bit of a hack, as how we do things tend to cause seek
    * errors when reading the parent/child pipes */
@@ -67,21 +69,21 @@ void debug_message (const char *file, const char *func, size_t line,
 	fprintf (stderr, "(%s) error: ", log_domain);
       else
 	fprintf (stderr, "(%s) debug: ", log_domain);
-      
+
       fprintf (stderr, "in %s, function %s(), line %i:\n", file, func, line);
 
       fprintf (stderr, "%s ", format_str);
       vfprintf (stderr, format, arg);
-      
+
 #if defined(RC_DEBUG)
       if (0 != saved_errno)
 	{
 #endif
 	  perror (format_str);
-	  /* perror() for some reason sets errno to ESPIPE */
 #if defined(RC_DEBUG)
 	}
-#else
+#endif
+#if !defined(RC_DEBUG)
     }
 #endif
 
@@ -91,7 +93,8 @@ void debug_message (const char *file, const char *func, size_t line,
   restore_errno ();
 }
 
-void *__xmalloc (size_t size, const char *file, const char *func, size_t line)
+void *
+__xmalloc (size_t size, const char *file, const char *func, size_t line)
 {
   void *new_ptr;
 
@@ -100,17 +103,18 @@ void *__xmalloc (size_t size, const char *file, const char *func, size_t line)
     {
       /* Set errno in case specific malloc() implementation does not */
       errno = ENOMEM;
-      
+
       debug_message (file, func, line, "Failed to allocate buffer!\n");
-      
+
       return NULL;
     }
 
   return new_ptr;
 }
 
-void *__xrealloc (void *ptr, size_t size, const char *file, const char *func,
-		  size_t line)
+void *
+__xrealloc (void *ptr, size_t size, const char *file,
+	    const char *func, size_t line)
 {
   void *new_ptr;
 
@@ -119,12 +123,11 @@ void *__xrealloc (void *ptr, size_t size, const char *file, const char *func,
     {
       /* Set errno in case specific realloc() implementation does not */
       errno = ENOMEM;
-      
+
       debug_message (file, func, line, "Failed to reallocate buffer!\n");
-      
+
       return NULL;
     }
 
   return new_ptr;
 }
-

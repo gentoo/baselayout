@@ -31,41 +31,43 @@
 
 /* Macro to fill in .data and .regex */
 #define FILL_REGEX_DATA(_regex_data, _string, _regex) \
-	do { \
-		_regex_data.data = _string; \
-		_regex_data.regex = _regex; \
-	} while (0)
+ do { \
+   _regex_data.data = _string; \
+   _regex_data.regex = _regex; \
+ } while (0)
 
 /* Fill in _regex_data with _data and _regex, on failure goto _error */
 #define DO_REGEX(_regex_data, _data, _regex, _error) \
-	do { \
-		FILL_REGEX_DATA(_regex_data, _data, _regex); \
-		if (-1 == match(&_regex_data)) { \
-			DBG_MSG("Could not do regex match!\n"); \
-			goto _error; \
-		} \
-	} while (0)
+ do { \
+   FILL_REGEX_DATA(_regex_data, _data, _regex); \
+   if (-1 == match(&_regex_data)) \
+     { \
+       DBG_MSG("Could not do regex match!\n"); \
+       goto _error; \
+     } \
+ } while (0)
 
 /* Evaluate to true if we have some kind of match */
 #define REGEX_MATCH(_regex_data) \
-	((REGEX_FULL_MATCH == _regex_data.match) \
-	 || (REGEX_PARTIAL_MATCH == _regex_data.match))
+ ((REGEX_FULL_MATCH == _regex_data.match) \
+  || (REGEX_PARTIAL_MATCH == _regex_data.match))
 
 /* Same as above, but for use when _regex_data is a pointer */
 #define REGEX_MATCH_P(_regex_data) \
-	((REGEX_FULL_MATCH == _regex_data->match) \
-	 || (REGEX_PARTIAL_MATCH == _regex_data->match))
+ ((REGEX_FULL_MATCH == _regex_data->match) \
+  || (REGEX_PARTIAL_MATCH == _regex_data->match))
 
-typedef struct {
-	char *data;	/* String to perform regex operation on */
-	char *regex;	/* String containing regex to use */
-	int match;	/* Will be set if there was a match.  Check
-			 * REGEX_*_MATCH above for possible values */
-	char *where;	/* Pointer to where match starts in data */
-	size_t count;	/* Count characters from data matched by regex */
-	size_t r_count;	/* Count characters of regex used for match.  This
-			 * should normally be the lenght of regex, but might
-			 * not be for some internal functions ... */
+typedef struct
+{
+  char *data;			/* String to perform regex operation on */
+  char *regex;			/* String containing regex to use */
+  int match;			/* Will be set if there was a match.  Check
+				 * REGEX_*_MATCH above for possible values */
+  char *where;			/* Pointer to where match starts in data */
+  size_t count;			/* Count characters from data matched by regex */
+  size_t r_count;		/* Count characters of regex used for match.  This
+				 * should normally be the lenght of regex, but might
+				 * not be for some internal functions ... */
 } regex_data_t;
 
 /*
@@ -80,7 +82,6 @@ typedef struct {
  *  -1		- An error occured.  Check errno for more info.
  *
  */
-int match(regex_data_t *regex_data);
+int match (regex_data_t * regex_data);
 
 #endif /* _SIMPLE_REGEX_H */
-

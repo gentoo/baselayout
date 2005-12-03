@@ -31,46 +31,46 @@
 #define restore_errno() errno = old_errno;
 #define saved_errno	old_errno
 
-void debug_message (const char *file, const char *func, size_t line,
-		    const char *format, ...);
+void
+debug_message (const char *file, const char *func, size_t line,
+	       const char *format, ...);
 
 #define DBG_MSG(_format, _arg...) \
-	do { \
-		debug_message (__FILE__, __FUNCTION__, __LINE__, _format, \
-			       ## _arg); \
-	} while (0)
+ do { \
+   debug_message (__FILE__, __FUNCTION__, __LINE__, _format, ## _arg); \
+ } while (0)
 
 #define FATAL_ERROR() \
-	do { \
-		save_errno (); \
-		fprintf(stderr, "ERROR: file '%s', function '%s', line %i.\n", \
-		        __FILE__, __FUNCTION__, __LINE__); \
-		restore_errno (); \
-		if (0 != errno) \
-		 	perror("ERROR"); \
-		exit(EXIT_FAILURE); \
-	} while (0)
+ do { \
+   save_errno (); \
+   fprintf(stderr, "ERROR: file '%s', function '%s', line %i.\n", \
+	   __FILE__, __FUNCTION__, __LINE__); \
+   restore_errno (); \
+   if (0 != errno) \
+     perror("ERROR"); \
+   exit(EXIT_FAILURE); \
+ } while (0)
 
 #define NEG_FATAL_ERROR(_x) \
-	do { \
-		if (-1 == _x) \
-			FATAL_ERROR(); \
-	} while (0)
+ do { \
+   if (-1 == _x) \
+     FATAL_ERROR(); \
+ } while (0)
 
 #define NULL_FATAL_ERROR(_x) \
-	do { \
-		if (NULL == _x) \
-			FATAL_ERROR(); \
-	} while (0)
+ do { \
+   if (NULL == _x) \
+     FATAL_ERROR(); \
+ } while (0)
 
-void *__xmalloc (size_t size, const char *file, const char *func, size_t line);
+void *__xmalloc (size_t size, const char *file, const char *func,
+		 size_t line);
 void *__xrealloc (void *ptr, size_t size, const char *file, const char *func,
 		  size_t line);
 
 #define xmalloc(_size) \
-	__xmalloc (_size, __FILE__, __FUNCTION__, __LINE__)
+ __xmalloc (_size, __FILE__, __FUNCTION__, __LINE__)
 #define xrealloc(_ptr, _size) \
-	__xrealloc (_ptr, _size, __FILE__, __FUNCTION__, __LINE__)
+ __xrealloc (_ptr, _size, __FILE__, __FUNCTION__, __LINE__)
 
 #endif /* _DEBUG_H */
-

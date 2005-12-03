@@ -29,10 +29,10 @@
 #include "debug.h"
 #include "dynbuf.h"
 
-static dyn_buf_t *reallocate_dyn_buf (dyn_buf_t *dynbuf,
-					     size_t needed);
+static dyn_buf_t *reallocate_dyn_buf (dyn_buf_t * dynbuf, size_t needed);
 
-dyn_buf_t *new_dyn_buf (void)
+dyn_buf_t *
+new_dyn_buf (void)
 {
   dyn_buf_t *dynbuf = NULL;
 
@@ -54,8 +54,8 @@ dyn_buf_t *new_dyn_buf (void)
   return dynbuf;
 }
 
-dyn_buf_t *reallocate_dyn_buf (dyn_buf_t *dynbuf,
-				      size_t needed)
+dyn_buf_t *
+reallocate_dyn_buf (dyn_buf_t * dynbuf, size_t needed)
 {
   int len;
 
@@ -86,7 +86,8 @@ dyn_buf_t *reallocate_dyn_buf (dyn_buf_t *dynbuf,
   return dynbuf;
 }
 
-void free_dyn_buf (dyn_buf_t *dynbuf)
+void
+free_dyn_buf (dyn_buf_t * dynbuf)
 {
   if (NULL == dynbuf)
     return;
@@ -105,7 +106,8 @@ void free_dyn_buf (dyn_buf_t *dynbuf)
   dynbuf = NULL;
 }
 
-int write_dyn_buf (dyn_buf_t *dynbuf, const char *buf, size_t length)
+int
+write_dyn_buf (dyn_buf_t * dynbuf, const char *buf, size_t length)
 {
   int len;
 
@@ -139,7 +141,8 @@ int write_dyn_buf (dyn_buf_t *dynbuf, const char *buf, size_t length)
   return length;
 }
 
-int write_dyn_buf_to_fd (int fd, dyn_buf_t *dynbuf, size_t length)
+int
+write_dyn_buf_to_fd (int fd, dyn_buf_t * dynbuf, size_t length)
 {
   int len = length;
 
@@ -171,7 +174,8 @@ int write_dyn_buf_to_fd (int fd, dyn_buf_t *dynbuf, size_t length)
   return length;
 }
 
-int sprintf_dyn_buf (dyn_buf_t *dynbuf, const char *format, ...)
+int
+sprintf_dyn_buf (dyn_buf_t * dynbuf, const char *format, ...)
 {
   va_list arg1, arg2;
   char test_str[10];
@@ -206,7 +210,8 @@ int sprintf_dyn_buf (dyn_buf_t *dynbuf, const char *format, ...)
   return written;
 }
 
-int read_dyn_buf (dyn_buf_t *dynbuf, char *buf, size_t length)
+int
+read_dyn_buf (dyn_buf_t * dynbuf, char *buf, size_t length)
 {
   int len = length;
 
@@ -228,7 +233,7 @@ int read_dyn_buf (dyn_buf_t *dynbuf, char *buf, size_t length)
   if (dynbuf->length < (dynbuf->rd_index + length))
     len = dynbuf->length - dynbuf->rd_index;
 
-  len = snprintf(buf, len + 1, "%s", (dynbuf->data + dynbuf->rd_index));
+  len = snprintf (buf, len + 1, "%s", (dynbuf->data + dynbuf->rd_index));
   /* If len is less than length, it means the string was shorter than
    * given length */
   if (length > len)
@@ -239,4 +244,3 @@ int read_dyn_buf (dyn_buf_t *dynbuf, char *buf, size_t length)
 
   return length;
 }
-

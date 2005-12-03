@@ -51,4 +51,3 @@
 #define SOFTLEVEL		"SOFTLEVEL"
 
 #endif /* _RCSCRIPTS_H */
-

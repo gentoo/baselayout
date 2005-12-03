@@ -33,525 +33,624 @@
 #include "list.h"
 #include "misc.h"
 
-LIST_HEAD(service_info_list);
+LIST_HEAD (service_info_list);
 
 /* Names for service types (service_type_t) in depend.h.
  * Note that this should sync with service_type_t */
 char *service_type_names[] = {
-	"NEED",
-	"NEED_ME",
-	"USE",
-	"USE_ME",
-	"BEFORE",
-	"AFTER",
-	"BROKEN",
-	"PROVIDE",
-	NULL
+  "NEED",
+  "NEED_ME",
+  "USE",
+  "USE_ME",
+  "BEFORE",
+  "AFTER",
+  "BROKEN",
+  "PROVIDE",
+  NULL
 };
 
-int __service_resolve_dependency(char *servicename, char *dependency, service_type_t type);
+int __service_resolve_dependency (char *servicename, char *dependency,
+				  service_type_t type);
 
-service_info_t *service_get_info(char *servicename)
+service_info_t *
+service_get_info (char *servicename)
 {
-	service_info_t *info;
+  service_info_t *info;
 
-	if ((NULL == servicename) || (0 == strlen(servicename))) {
-		DBG_MSG("Invalid argument passed!\n");
-		return NULL;
-	}
-	
-	list_for_each_entry(info, &service_info_list, node) {
-		if (NULL != info->name)
-			if (0 == strcmp(info->name, servicename))
-				return info;
-	}
+  if ((NULL == servicename) || (0 == strlen (servicename)))
+    {
+      DBG_MSG ("Invalid argument passed!\n");
+      return NULL;
+    }
 
-	/* We use this to check if a service exists, so rather do not
-	 * add debugging, otherwise it is very noisy! */
-	/* DBG_MSG("Invalid service name '%s'!\n", servicename); */
-	
-	return NULL;
+  list_for_each_entry (info, &service_info_list, node)
+    {
+      if (NULL != info->name)
+	if (0 == strcmp (info->name, servicename))
+	  return info;
+    }
+
+  /* We use this to check if a service exists, so rather do not
+   * add debugging, otherwise it is very noisy! */
+  /* DBG_MSG("Invalid service name '%s'!\n", servicename); */
+
+  return NULL;
 }
 
-int service_add(char *servicename)
+int
+service_add (char *servicename)
 {
-	service_info_t *info;
-	service_info_t *sorted;
-	int count;
-	
-	if ((NULL == servicename) || (0 == strlen(servicename))) {
-		DBG_MSG("Invalid argument passed!\n");
-		return -1;
+  service_info_t *info;
+  service_info_t *sorted;
+  int count;
+
+  if ((NULL == servicename) || (0 == strlen (servicename)))
+    {
+      DBG_MSG ("Invalid argument passed!\n");
+      return -1;
+    }
+
+  info = service_get_info (servicename);
+  if (NULL == info)
+    {
+      DBG_MSG ("Adding service '%s'.\n", servicename);
+
+      info = malloc (sizeof (service_info_t));
+      if (NULL == info)
+	{
+	  DBG_MSG ("Failed to allocate service_info_t!\n");
+	  return -1;
 	}
 
-	info = service_get_info(servicename);
-	if (NULL == info) {
-		DBG_MSG("Adding service '%s'.\n", servicename);
-
-		info = malloc(sizeof(service_info_t));
-		if (NULL == info) {
-			DBG_MSG("Failed to allocate service_info_t!\n");
-			return -1;
-		}
-
-		info->name = strndup(servicename, strlen(servicename));
-		if (NULL == info->name) {
-			DBG_MSG("Failed to allocate buffer!\n");
-			free(info);
-			return -1;
-		}
-
-		for (count = 0; count < ALL_SERVICE_TYPE_T; count++)
-			info->depend_info[count] = NULL;
-		info->provide = NULL;
-
-		/* We want to keep the list sorted */
-		list_for_each_entry(sorted, &service_info_list, node) {
-			if (strcmp(sorted->name, servicename) > 0) {
-				break;
-			}
-		}
-		
-		list_add_tail(&info->node, &sorted->node);
-		
-		return 0;
-	} else {
-		DBG_MSG("Tried to add duplicate service '%s'!\n", servicename);
+      info->name = strndup (servicename, strlen (servicename));
+      if (NULL == info->name)
+	{
+	  DBG_MSG ("Failed to allocate buffer!\n");
+	  free (info);
+	  return -1;
 	}
-	
-	return -1;
+
+      for (count = 0; count < ALL_SERVICE_TYPE_T; count++)
+	info->depend_info[count] = NULL;
+      info->provide = NULL;
+
+      /* We want to keep the list sorted */
+      list_for_each_entry (sorted, &service_info_list, node)
+	{
+	  if (strcmp (sorted->name, servicename) > 0)
+	    {
+	      break;
+	    }
+	}
+
+      list_add_tail (&info->node, &sorted->node);
+
+      return 0;
+    }
+  else
+    {
+      DBG_MSG ("Tried to add duplicate service '%s'!\n", servicename);
+    }
+
+  return -1;
 }
 
-int service_is_dependency(char *servicename, char *dependency, service_type_t type)
+int
+service_is_dependency (char *servicename, char *dependency,
+		       service_type_t type)
 {
-	service_info_t *info;
-	char *service;
-	int count = 0;
-	
-	if ((NULL == servicename)
-	    || (0 == strlen(servicename))
-	    || (NULL == dependency)
-	    || (0 == strlen(dependency))) {
-		DBG_MSG("Invalid argument passed!\n");
-		return -1;
-	}
+  service_info_t *info;
+  char *service;
+  int count = 0;
 
-	info = service_get_info(servicename);
-	if (NULL != info) {
-		STRING_LIST_FOR_EACH(info->depend_info[type], service, count) {
-			if (0 == strcmp(dependency, service))
-				return 0;
-		}
-	} else {
-		DBG_MSG("Invalid service name '%s'!\n", servicename);
+  if ((NULL == servicename)
+      || (0 == strlen (servicename))
+      || (NULL == dependency)
+      || (0 == strlen (dependency)))
+    {
+      DBG_MSG ("Invalid argument passed!\n");
+      return -1;
+    }
+
+  info = service_get_info (servicename);
+  if (NULL != info)
+    {
+      STRING_LIST_FOR_EACH (info->depend_info[type], service, count)
+	{
+	  if (0 == strcmp (dependency, service))
+	    return 0;
 	}
-	
-	return -1;
+    }
+  else
+    {
+      DBG_MSG ("Invalid service name '%s'!\n", servicename);
+    }
+
+  return -1;
 }
 
-int service_add_dependency(char *servicename, char *dependency, service_type_t type)
+int
+service_add_dependency (char *servicename, char *dependency,
+			service_type_t type)
 {
-	service_info_t *info;
-	char *tmp_buf;
-	
-	if ((NULL == servicename)
-	    || (0 == strlen(servicename))
-	    || (NULL == dependency)
-	    || (0 == strlen(dependency))) {
-		DBG_MSG("Invalid argument passed!\n");
-		return -1;
+  service_info_t *info;
+  char *tmp_buf;
+
+  if ((NULL == servicename)
+      || (0 == strlen (servicename))
+      || (NULL == dependency)
+      || (0 == strlen (dependency)))
+    {
+      DBG_MSG ("Invalid argument passed!\n");
+      return -1;
+    }
+
+  info = service_get_info (servicename);
+  if (NULL != info)
+    {
+      /* Do not add duplicates */
+      if (-1 == service_is_dependency (servicename, dependency, type))
+	{
+	  DBG_MSG ("Adding dependency '%s' of service '%s', type '%s'.\n",
+		   dependency, servicename, service_type_names[type]);
+
+	  tmp_buf = strndup (dependency, strlen (dependency));
+	  if (NULL == tmp_buf)
+	    {
+	      DBG_MSG ("Failed to allocate buffer!\n");
+	      return -1;
+	    }
+
+	  STRING_LIST_ADD_SORT (info->depend_info[type], tmp_buf, error);
+	}
+      else
+	{
+	  DBG_MSG ("Duplicate dependency '%s' for service '%s', type '%s'!\n",
+		   dependency, servicename, service_type_names[type]);
+	  /* Rather do not fail here, as we add a lot of doubles
+	   * during resolving of dependencies */
 	}
 
-	info = service_get_info(servicename);
-	if (NULL != info) {
-		/* Do not add duplicates */
-		if (-1 == service_is_dependency(servicename, dependency, type)) {
-			DBG_MSG("Adding dependency '%s' of service '%s', type '%s'.\n",
-			        dependency, servicename, service_type_names[type]);
-
-			tmp_buf = strndup(dependency, strlen(dependency));
-			if (NULL == tmp_buf) {
-				DBG_MSG("Failed to allocate buffer!\n");
-				return -1;
-			}
-			
-			STRING_LIST_ADD_SORT(info->depend_info[type], tmp_buf, error);
-		} else {
-			DBG_MSG("Duplicate dependency '%s' for service '%s', type '%s'!\n",
-			        dependency, servicename, service_type_names[type]);
-			/* Rather do not fail here, as we add a lot of doubles
-			 * during resolving of dependencies */
-		}
-
-		return 0;
-	} else {
-		DBG_MSG("Invalid service name '%s'!\n", servicename);
-	}
-	
-error:
-	return -1;
-}
-
-int service_del_dependency(char *servicename, char *dependency, service_type_t type)
-{
-	service_info_t *info;
-	
-	if ((NULL == servicename)
-	    || (0 == strlen(servicename))
-	    || (NULL == dependency)
-	    || (0 == strlen(dependency))) {
-		DBG_MSG("Invalid argument passed!\n");
-		return -1;
-	}
-
-	if (-1 == service_is_dependency(servicename, dependency, type)) {
-		DBG_MSG("Tried to remove invalid dependency '%s'!\n", dependency);
-		return -1;
-	}
-
-	info = service_get_info(servicename);
-	if (NULL != info) {
-		DBG_MSG("Removing dependency '%s' of service '%s', type '%s'.\n",
-		        dependency , servicename, service_type_names[type]);
-
-		STRING_LIST_DEL(info->depend_info[type], dependency, error);
-		return 0;
-	} else {
-		DBG_MSG("Invalid service name '%s'!\n", servicename);
-	}
+      return 0;
+    }
+  else
+    {
+      DBG_MSG ("Invalid service name '%s'!\n", servicename);
+    }
 
 error:
-	return -1;
+  return -1;
 }
 
-service_info_t *service_get_virtual(char *virtual)
+int
+service_del_dependency (char *servicename, char *dependency,
+			service_type_t type)
 {
-	service_info_t *info;
-	
-	if ((NULL == virtual) || (0 == strlen(virtual))) {
-		DBG_MSG("Invalid argument passed!\n");
-		return NULL;
-	}
-	
-	list_for_each_entry(info, &service_info_list, node) {
-		if (NULL != info->provide)
-			if (0 == strcmp(info->provide, virtual))
-				return info;
-	}
-	
-	/* We use this to check if a virtual exists, so rather do not
-	 * add debugging, otherwise it is very noisy! */
-	/* DBG_MSG("Invalid service name '%s'!\n", virtual); */
-	
-	return NULL;
+  service_info_t *info;
+
+  if ((NULL == servicename)
+      || (0 == strlen (servicename))
+      || (NULL == dependency)
+      || (0 == strlen (dependency)))
+    {
+      DBG_MSG ("Invalid argument passed!\n");
+      return -1;
+    }
+
+  if (-1 == service_is_dependency (servicename, dependency, type))
+    {
+      DBG_MSG ("Tried to remove invalid dependency '%s'!\n", dependency);
+      return -1;
+    }
+
+  info = service_get_info (servicename);
+  if (NULL != info)
+    {
+      DBG_MSG ("Removing dependency '%s' of service '%s', type '%s'.\n",
+	       dependency, servicename, service_type_names[type]);
+
+      STRING_LIST_DEL (info->depend_info[type], dependency, error);
+      return 0;
+    }
+  else
+    {
+      DBG_MSG ("Invalid service name '%s'!\n", servicename);
+    }
+
+error:
+  return -1;
 }
 
-int service_add_virtual(char *servicename, char* virtual)
+service_info_t *
+service_get_virtual (char *virtual)
 {
-	service_info_t *info;
-	
-	if ((NULL == servicename)
-	    || (0 == strlen(servicename))
-	    || (NULL == virtual )
-	    || (0 == strlen(virtual))) {
-		DBG_MSG("Invalid argument passed!\n");
-		return -1;
-	}
+  service_info_t *info;
 
-	if (NULL != service_get_info(virtual)) {
-		EERROR(" Cannot add provide '%s', as a service with the same name exists!\n",
-		       virtual);
-		/* Do not fail here as we do have a service that resolves
-		 * the virtual */
-	}
+  if ((NULL == virtual) || (0 == strlen (virtual)))
+    {
+      DBG_MSG ("Invalid argument passed!\n");
+      return NULL;
+    }
 
-	info = service_get_virtual(virtual);
-	if (NULL != info) {
-		/* We cannot have more than one service Providing a virtual */
-		EWARN(" Service '%s' already provides '%s'!;\n",
-		      info->name, virtual);
-		EWARN(" Not adding service '%s'...\n", servicename);
-		/* Do not fail here as we do have a service that resolves
-		 * the virtual */
-	} else {
-		info = service_get_info(servicename);
-		if (NULL != info) {
-			DBG_MSG("Adding virtual '%s' of service '%s'.\n",
-			        virtual, servicename);
+  list_for_each_entry (info, &service_info_list, node)
+    {
+      if (NULL != info->provide)
+	if (0 == strcmp (info->provide, virtual))
+	  return info;
+    }
 
-			info->provide = strndup(virtual, strlen(virtual));
-			if (NULL == info->provide) {
-				DBG_MSG("Failed to allocate buffer!\n");
-				return -1;
-			}
-		} else {
-			DBG_MSG("Invalid service name '%s'!\n", servicename);
-			return -1;
-		}
-	}
+  /* We use this to check if a virtual exists, so rather do not
+   * add debugging, otherwise it is very noisy! */
+  /* DBG_MSG("Invalid service name '%s'!\n", virtual); */
 
-	return 0;
+  return NULL;
 }
 
-int service_set_mtime(char *servicename, time_t mtime)
+int
+service_add_virtual (char *servicename, char *virtual)
 {
-	service_info_t *info;
+  service_info_t *info;
 
-	if ((NULL == servicename) || (0 == strlen(servicename))) {
-		DBG_MSG("Invalid argument passed!\n");
-		return -1;
+  if ((NULL == servicename)
+      || (0 == strlen (servicename))
+      || (NULL == virtual)
+      || (0 == strlen (virtual)))
+    {
+      DBG_MSG ("Invalid argument passed!\n");
+      return -1;
+    }
+
+  if (NULL != service_get_info (virtual))
+    {
+      EERROR
+       (" Cannot add provide '%s', as a service with the same name exists!\n",
+	virtual);
+      /* Do not fail here as we do have a service that resolves
+       * the virtual */
+    }
+
+  info = service_get_virtual (virtual);
+  if (NULL != info)
+    {
+      /* We cannot have more than one service Providing a virtual */
+      EWARN (" Service '%s' already provides '%s'!;\n", info->name, virtual);
+      EWARN (" Not adding service '%s'...\n", servicename);
+      /* Do not fail here as we do have a service that resolves
+       * the virtual */
+    }
+  else
+    {
+      info = service_get_info (servicename);
+      if (NULL != info)
+	{
+	  DBG_MSG ("Adding virtual '%s' of service '%s'.\n",
+		   virtual, servicename);
+
+	  info->provide = strndup (virtual, strlen (virtual));
+	  if (NULL == info->provide)
+	    {
+	      DBG_MSG ("Failed to allocate buffer!\n");
+	      return -1;
+	    }
 	}
-
-	info = service_get_info(servicename);
-	if (NULL != info) {
-		DBG_MSG("Setting mtime '%li' of service '%s'.\n",
-		        mtime, servicename);
-		
-		info->mtime = mtime;
-
-		return 0;
-	} else {
-		DBG_MSG("Invalid service name '%s'!\n", servicename);
+      else
+	{
+	  DBG_MSG ("Invalid service name '%s'!\n", servicename);
+	  return -1;
 	}
-		
-	return -1;
+    }
+
+  return 0;
 }
 
-int __service_resolve_dependency(char *servicename, char *dependency, service_type_t type)
+int
+service_set_mtime (char *servicename, time_t mtime)
 {
-	service_info_t *info;
-	int retval;
-	
-	if ((NULL == servicename)
-	    || (0 == strlen(servicename))
-	    || (NULL == dependency)
-	    || (0 == strlen(dependency))) {
-		DBG_MSG("Invalid argument passed!\n");
-		return -1;
-	}
+  service_info_t *info;
 
-	info = service_get_info(servicename);
-	if (NULL == info) {
-		DBG_MSG("Invalid service name passed!\n");
-		return -1;
-	}
+  if ((NULL == servicename) || (0 == strlen (servicename)))
+    {
+      DBG_MSG ("Invalid argument passed!\n");
+      return -1;
+    }
 
-	DBG_MSG("Checking dependency '%s' of service '%s', type '%s'.\n",
-	        dependency, servicename, service_type_names[type]);
+  info = service_get_info (servicename);
+  if (NULL != info)
+    {
+      DBG_MSG ("Setting mtime '%li' of service '%s'.\n", mtime, servicename);
 
-	/* If there are no existing service 'dependency', try to resolve
-	 * possible virtual services */
-	info = service_get_info(dependency);
-	if (NULL == info) {
-		info = service_get_virtual(dependency);
-		if (NULL != info) {
-			DBG_MSG("Virtual '%s' -> '%s' for service '%s', type '%s'.\n",
-			        dependency, info->name, servicename,
-			        service_type_names[type]);
-		
-			retval = service_del_dependency(servicename, dependency, type);
-			if (-1 == retval) {
-				DBG_MSG("Failed to delete dependency!\n");
-				return -1;
-			}
-			
-			/* Add the actual service name for the virtual */
-			dependency = info->name;
-			retval = service_add_dependency(servicename, dependency, type);
-			if (-1 == retval) {
-				DBG_MSG("Failed to add dependency!\n");
-				return -1;
-			}
-		}
-	}
-	
-	/* Handle 'need', as it is the only dependency type that should
-	 * handle invalid database entries currently. */
-	if (NULL == info) {
-		if ((type == NEED) || (type == NEED_ME)) {
-			EWARN(" Can't find service '%s' needed by '%s';  continuing...\n",
-			      dependency, servicename);
+      info->mtime = mtime;
 
-			retval = service_add_dependency(servicename, dependency, BROKEN);
-			if (-1 == retval) {
-				DBG_MSG("Failed to add dependency!\n");
-				return -1;
-			}
+      return 0;
+    }
+  else
+    {
+      DBG_MSG ("Invalid service name '%s'!\n", servicename);
+    }
 
-			/* Delete invalid entry */
-			goto remove;
-		}
-		
-		/* For the rest, if the dependency is not 'net', just silently
-		 * die without error.  Should not be needed as we add a 'net'
-		 * service manually before we start, but you never know ... */
-		if (0 != strcmp(dependency, "net")) {
-			/* Delete invalid entry */
-			goto remove;
-		}
-	}
-
-	/* Ugly bug ... if a service depends on itself, it creates a
-	 * 'mini fork bomb' effect, and breaks things horribly ... */
-	if (0 == strcmp(servicename, dependency)) {
-		/* Dont work too well with the '*' before and after */
-		if ((type != BEFORE) && (type != AFTER))
-			EWARN(" Service '%s' can't depend on itself;  continuing...\n",
-			      servicename);
-
-		/* Delete invalid entry */
-		goto remove;
-	}
-
-	/* Currently only these depend/order types are supported */
-	if ((type == NEED)
-	    || (type == USE)
-	    || (type == BEFORE)
-	    || (type == AFTER)) {
-		if (type == BEFORE) {
-			/* NEED and USE override BEFORE
-			 * ('servicename' BEFORE 'dependency') */
-			if ((0 == service_is_dependency(servicename, dependency, NEED))
-			    || (0 == service_is_dependency(servicename, dependency, USE))) {
-				/* Delete invalid entry */
-				goto remove;
-			}
-		}
-
-		if (type == AFTER) {
-			/* NEED and USE override AFTER
-			 * ('servicename' AFTER 'dependency') */
-			if ((0 == service_is_dependency(dependency, servicename, NEED))
-			    || (0 == service_is_dependency(dependency, servicename, USE))) {
-				/* Delete invalid entry */
-				goto remove;
-			}
-		}
-
-		/* We do not want to add circular dependencies ... */
-		if (0 == service_is_dependency(dependency, servicename, type)) {
-			EWARN(" Services '%s' and '%s' have circular\n",
-			      servicename, dependency);
-			EWARN(" dependency of type '%s';  continuing...\n",
-			      service_type_names[type]);
-
-			/* For now remove this dependency */
-			goto remove;
-		}
-
-		/* Reverse mapping */
-		if (type == NEED) {
-			retval = service_add_dependency(dependency, servicename, NEED_ME);
-			if (-1 == retval) {
-				DBG_MSG("Failed to add dependency!\n");
-				return -1;
-			}
-		}
-
-		/* Reverse mapping */
-		if (type == USE) {
-			retval = service_add_dependency(dependency, servicename, USE_ME);
-			if (-1 == retval) {
-				DBG_MSG("Failed to add dependency!\n");
-				return -1;
-			}
-		}
-
-		/* Reverse mapping */
-		if (type == BEFORE) {
-			retval = service_add_dependency(dependency, servicename, AFTER);
-			if (-1 == retval) {
-				DBG_MSG("Failed to add dependency!\n");
-				return -1;
-			}
-		}
-
-		/* Reverse mapping */
-		if (type == AFTER) {
-			retval = service_add_dependency(dependency, servicename, BEFORE);
-			if (-1 == retval) {
-				DBG_MSG("Failed to add dependency!\n");
-				return -1;
-			}
-		}
-	}
-
-	return 0;
-			
-remove:		
-	/* Delete invalid entry */
-	DBG_MSG("Removing invalid dependency '%s' of service '%s', type '%s'.\n",
-		dependency, servicename, service_type_names[type]);
-
-	retval = service_del_dependency(servicename, dependency, type);
-	if (-1 == retval) {
-		DBG_MSG("Failed to delete dependency!\n");
-		return -1;
-	}
-
-	/* Here we should not die with error */
-	return 0;
+  return -1;
 }
 
-int service_resolve_dependencies(void)
+int
+__service_resolve_dependency (char *servicename, char *dependency,
+			      service_type_t type)
 {
-	service_info_t *info;
-	char *service;
-	char *next = NULL;
-	int count;
+  service_info_t *info;
+  int retval;
 
-	/* Add our 'net' service */
-	if (NULL == service_get_info("net")) {
-		if (-1 == service_add("net")) {
-			DBG_MSG("Failed to add virtual!\n");
-			return -1;
-		}
-		service_set_mtime("net", 0);
+  if ((NULL == servicename)
+      || (0 == strlen (servicename))
+      || (NULL == dependency)
+      || (0 == strlen (dependency)))
+    {
+      DBG_MSG ("Invalid argument passed!\n");
+      return -1;
+    }
+
+  info = service_get_info (servicename);
+  if (NULL == info)
+    {
+      DBG_MSG ("Invalid service name passed!\n");
+      return -1;
+    }
+
+  DBG_MSG ("Checking dependency '%s' of service '%s', type '%s'.\n",
+	   dependency, servicename, service_type_names[type]);
+
+  /* If there are no existing service 'dependency', try to resolve
+   * possible virtual services */
+  info = service_get_info (dependency);
+  if (NULL == info)
+    {
+      info = service_get_virtual (dependency);
+      if (NULL != info)
+	{
+	  DBG_MSG ("Virtual '%s' -> '%s' for service '%s', type '%s'.\n",
+		   dependency, info->name, servicename,
+		   service_type_names[type]);
+
+	  retval = service_del_dependency (servicename, dependency, type);
+	  if (-1 == retval)
+	    {
+	      DBG_MSG ("Failed to delete dependency!\n");
+	      return -1;
+	    }
+
+	  /* Add the actual service name for the virtual */
+	  dependency = info->name;
+	  retval = service_add_dependency (servicename, dependency, type);
+	  if (-1 == retval)
+	    {
+	      DBG_MSG ("Failed to add dependency!\n");
+	      return -1;
+	    }
+	}
+    }
+
+  /* Handle 'need', as it is the only dependency type that should
+   * handle invalid database entries currently. */
+  if (NULL == info)
+    {
+      if ((type == NEED) || (type == NEED_ME))
+	{
+	  EWARN (" Can't find service '%s' needed by '%s';  continuing...\n",
+		 dependency, servicename);
+
+	  retval = service_add_dependency (servicename, dependency, BROKEN);
+	  if (-1 == retval)
+	    {
+	      DBG_MSG ("Failed to add dependency!\n");
+	      return -1;
+	    }
+
+	  /* Delete invalid entry */
+	  goto remove;
 	}
 
-	/* Calculate all virtuals */
-	list_for_each_entry(info, &service_info_list, node) {
-		STRING_LIST_FOR_EACH_SAFE(info->depend_info[PROVIDE], service, next, count)
-				if (-1 == service_add_virtual(info->name, service)) {
-					DBG_MSG("Failed to add virtual!\n");
-					return -1;
-				}
+      /* For the rest, if the dependency is not 'net', just silently
+       * die without error.  Should not be needed as we add a 'net'
+       * service manually before we start, but you never know ... */
+      if (0 != strcmp (dependency, "net"))
+	{
+	  /* Delete invalid entry */
+	  goto remove;
+	}
+    }
+
+  /* Ugly bug ... if a service depends on itself, it creates a
+   * 'mini fork bomb' effect, and breaks things horribly ... */
+  if (0 == strcmp (servicename, dependency))
+    {
+      /* Dont work too well with the '*' before and after */
+      if ((type != BEFORE) && (type != AFTER))
+	EWARN (" Service '%s' can't depend on itself;  continuing...\n",
+	       servicename);
+
+      /* Delete invalid entry */
+      goto remove;
+    }
+
+  /* Currently only these depend/order types are supported */
+  if ((type == NEED) || (type == USE) || (type == BEFORE) || (type == AFTER))
+    {
+      if (type == BEFORE)
+	{
+	  /* NEED and USE override BEFORE
+	   * ('servicename' BEFORE 'dependency') */
+	  if ((0 == service_is_dependency (servicename, dependency, NEED))
+	      || (0 == service_is_dependency (servicename, dependency, USE)))
+	    {
+	      /* Delete invalid entry */
+	      goto remove;
+	    }
 	}
 
-	/* Now do NEED, USE, BEFORE and AFTER */
-	list_for_each_entry(info, &service_info_list, node) {
-		STRING_LIST_FOR_EACH_SAFE(info->depend_info[NEED], service, next, count) {
-			if (-1 == __service_resolve_dependency(info->name, service, NEED)) {
-				DBG_MSG("Failed to resolve dependency!\n");
-				return -1;
-			}
-		}
-	}
-	list_for_each_entry(info, &service_info_list, node) {
-		STRING_LIST_FOR_EACH_SAFE(info->depend_info[USE], service, next, count) {
-			if (-1 == __service_resolve_dependency(info->name, service, USE)) {
-				DBG_MSG("Failed to resolve dependency!\n");
-				return -1;
-			}
-		}
-	}
-	list_for_each_entry(info, &service_info_list, node) {
-		STRING_LIST_FOR_EACH_SAFE(info->depend_info[BEFORE], service, next, count) {
-			if (-1 == __service_resolve_dependency(info->name, service, BEFORE)) {
-				DBG_MSG("Failed to resolve dependency!\n");
-				return -1;
-			}
-		}
-	}
-	list_for_each_entry(info, &service_info_list, node) {
-		STRING_LIST_FOR_EACH_SAFE(info->depend_info[AFTER], service, next, count) {
-			if (-1 == __service_resolve_dependency(info->name, service, AFTER)) {
-				DBG_MSG("Failed to resolve dependency!\n");
-				return -1;
-			}
-		}
+      if (type == AFTER)
+	{
+	  /* NEED and USE override AFTER
+	   * ('servicename' AFTER 'dependency') */
+	  if ((0 == service_is_dependency (dependency, servicename, NEED))
+	      || (0 == service_is_dependency (dependency, servicename, USE)))
+	    {
+	      /* Delete invalid entry */
+	      goto remove;
+	    }
 	}
 
-	return 0;
+      /* We do not want to add circular dependencies ... */
+      if (0 == service_is_dependency (dependency, servicename, type))
+	{
+	  EWARN (" Services '%s' and '%s' have circular\n",
+		 servicename, dependency);
+	  EWARN (" dependency of type '%s';  continuing...\n",
+		 service_type_names[type]);
+
+	  /* For now remove this dependency */
+	  goto remove;
+	}
+
+      /* Reverse mapping */
+      if (type == NEED)
+	{
+	  retval = service_add_dependency (dependency, servicename, NEED_ME);
+	  if (-1 == retval)
+	    {
+	      DBG_MSG ("Failed to add dependency!\n");
+	      return -1;
+	    }
+	}
+
+      /* Reverse mapping */
+      if (type == USE)
+	{
+	  retval = service_add_dependency (dependency, servicename, USE_ME);
+	  if (-1 == retval)
+	    {
+	      DBG_MSG ("Failed to add dependency!\n");
+	      return -1;
+	    }
+	}
+
+      /* Reverse mapping */
+      if (type == BEFORE)
+	{
+	  retval = service_add_dependency (dependency, servicename, AFTER);
+	  if (-1 == retval)
+	    {
+	      DBG_MSG ("Failed to add dependency!\n");
+	      return -1;
+	    }
+	}
+
+      /* Reverse mapping */
+      if (type == AFTER)
+	{
+	  retval = service_add_dependency (dependency, servicename, BEFORE);
+	  if (-1 == retval)
+	    {
+	      DBG_MSG ("Failed to add dependency!\n");
+	      return -1;
+	    }
+	}
+    }
+
+  return 0;
+
+remove:
+  /* Delete invalid entry */
+  DBG_MSG ("Removing invalid dependency '%s' of service '%s', type '%s'.\n",
+	   dependency, servicename, service_type_names[type]);
+
+  retval = service_del_dependency (servicename, dependency, type);
+  if (-1 == retval)
+    {
+      DBG_MSG ("Failed to delete dependency!\n");
+      return -1;
+    }
+
+  /* Here we should not die with error */
+  return 0;
 }
 
+int
+service_resolve_dependencies (void)
+{
+  service_info_t *info;
+  char *service;
+  char *next = NULL;
+  int count;
+
+  /* Add our 'net' service */
+  if (NULL == service_get_info ("net"))
+    {
+      if (-1 == service_add ("net"))
+	{
+	  DBG_MSG ("Failed to add virtual!\n");
+	  return -1;
+	}
+      service_set_mtime ("net", 0);
+    }
+
+  /* Calculate all virtuals */
+  list_for_each_entry (info, &service_info_list, node)
+    {
+      STRING_LIST_FOR_EACH_SAFE (info->depend_info[PROVIDE], service, next,
+				 count)
+	{
+	  if (-1 == service_add_virtual (info->name, service))
+	    {
+	      DBG_MSG ("Failed to add virtual!\n");
+	      return -1;
+	    }
+	}
+    }
+
+  /* Now do NEED, USE, BEFORE and AFTER */
+  list_for_each_entry (info, &service_info_list, node)
+    {
+      STRING_LIST_FOR_EACH_SAFE (info->depend_info[NEED], service, next, count)
+	{
+	  if (-1 == __service_resolve_dependency (info->name, service, NEED))
+	    {
+	      DBG_MSG ("Failed to resolve dependency!\n");
+	      return -1;
+	    }
+	}
+    }
+  list_for_each_entry (info, &service_info_list, node)
+    {
+      STRING_LIST_FOR_EACH_SAFE (info->depend_info[USE], service, next, count)
+	{
+	  if (-1 == __service_resolve_dependency (info->name, service, USE))
+	    {
+	      DBG_MSG ("Failed to resolve dependency!\n");
+	      return -1;
+	    }
+	}
+    }
+  list_for_each_entry (info, &service_info_list, node)
+    {
+      STRING_LIST_FOR_EACH_SAFE (info->depend_info[BEFORE], service, next,
+				 count)
+	{
+	  if (-1 == __service_resolve_dependency (info->name, service, BEFORE))
+	    {
+	      DBG_MSG ("Failed to resolve dependency!\n");
+	      return -1;
+	    }
+	}
+    }
+  list_for_each_entry (info, &service_info_list, node)
+    {
+      STRING_LIST_FOR_EACH_SAFE (info->depend_info[AFTER], service, next, count)
+	{
+	  if (-1 == __service_resolve_dependency (info->name, service, AFTER))
+	    {
+	      DBG_MSG ("Failed to resolve dependency!\n");
+	      return -1;
+	    }
+	}
+    }
+
+  return 0;
+}

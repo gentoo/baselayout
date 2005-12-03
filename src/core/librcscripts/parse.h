@@ -39,27 +39,28 @@
 #define FIELD_PROVIDE	"PROVIDE"
 #define FIELD_FAILED	"FAILED"
 
-typedef struct {
-	struct list_head node;
+typedef struct
+{
+  struct list_head node;
 
-	char *filename;
-	time_t mtime;
-	time_t confd_mtime;
+  char *filename;
+  time_t mtime;
+  time_t confd_mtime;
 } rcscript_info_t;
 
 struct list_head rcscript_list;
 
-int get_rcscripts(void);
-int check_rcscripts_mtime(char *cachefile);
-size_t generate_stage1(dyn_buf_t *data);
-size_t generate_stage2(dyn_buf_t *data);
-size_t read_stage2(char **data);
-int write_stage2(FILE *outfile);
-size_t generate_stage3(char **data);
-size_t read_stage3(char **data);
-int write_stage3(FILE *outfile);
-int write_legacy_stage3(FILE *output);
-int parse_cache(const dyn_buf_t *data);
+int get_rcscripts (void);
+int check_rcscripts_mtime (char *cachefile);
+size_t generate_stage1 (dyn_buf_t * data);
+size_t generate_stage2 (dyn_buf_t * data);
+size_t read_stage2 (char **data);
+int write_stage2 (FILE * outfile);
+size_t generate_stage3 (char **data);
+size_t read_stage3 (char **data);
+int write_stage3 (FILE * outfile);
+int write_legacy_stage3 (FILE * output);
+int parse_cache (const dyn_buf_t * data);
 
 /*
  * 	get_rcscripts()
@@ -98,4 +99,3 @@ int parse_cache(const dyn_buf_t *data);
  */
 
 #endif /* _PARSE_H */
-

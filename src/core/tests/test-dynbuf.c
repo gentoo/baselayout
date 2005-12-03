@@ -34,7 +34,8 @@
 #define TEST_STRING4	 "!\n"
 #define TEST_STRING_FULL TEST_STRING1 TEST_STRING2 TEST_STRING3 TEST_STRING4
 
-int main (void)
+int
+main (void)
 {
   dyn_buf_t *dynbuf;
   char buf[1024 * 4];
@@ -76,7 +77,7 @@ int main (void)
     {
       fprintf (stderr, "write_dyn_buf() returned wrong length (pass 2)!\n");
       goto error;
-    }  
+    }
   total += length;
 
   length = read_dyn_buf (dynbuf, buf, total / 2);
@@ -84,14 +85,14 @@ int main (void)
     {
       fprintf (stderr, "read_dyn_buf() returned wrong length (pass 1)!\n");
       goto error;
-    }  
+    }
 
   length = read_dyn_buf (dynbuf, (buf + (total / 2)), total);
   if (length != (total - (total / 2)))
     {
       fprintf (stderr, "read_dyn_buf() returned wrong length (pass 2)!\n");
       goto error;
-    } 
+    }
 
   if (0 != strncmp (buf, TEST_STRING_FULL, strlen (TEST_STRING_FULL)))
     {
@@ -119,7 +120,7 @@ int main (void)
 	  goto error;
 	}
       total += length;
-    } 
+    }
 
   if (total != strlen (dynbuf->data))
     {
@@ -131,7 +132,7 @@ int main (void)
   free_dyn_buf (dynbuf);
 
   return 0;
-  
+
 error:
   free_dyn_buf (dynbuf);
   return 1;

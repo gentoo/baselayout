@@ -49,7 +49,8 @@ char *test_data[] = {
   NULL
 };
 
-int main (void)
+int
+main (void)
 {
   regex_data_t tmp_data;
   char buf[256], string[100], regex[100];
@@ -63,9 +64,9 @@ int main (void)
 #if TEST_VERBOSE
       printf ("%-60s", buf);
 #endif
-      
+
       DO_REGEX (tmp_data, test_data[i], test_data[i + 1], error);
-      
+
       if (REGEX_MATCH (tmp_data) && (REGEX_FULL_MATCH == tmp_data.match))
 	{
 	  if (0 != strncmp (test_data[i + 2], "1", 1))
@@ -83,7 +84,7 @@ int main (void)
     }
 
   return 0;
-  
+
 error:
 #if TEST_VERBOSE
   printf ("%s\n", "[ \033[31;01m!!\033[0m ]");
@@ -91,4 +92,3 @@ error:
 
   return 1;
 }
-

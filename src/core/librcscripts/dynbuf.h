@@ -27,23 +27,24 @@
 
 #define DYNAMIC_BUFFER_SIZE (sizeof (char) * 2 * 1024)
 
-typedef struct {
-  char *data;		/* Actual data */
-  size_t length;	/* Length of data block */
-  size_t rd_index;	/* Current read index */
-  size_t wr_index;	/* Current write index */
+typedef struct
+{
+  char *data;			/* Actual data */
+  size_t length;		/* Length of data block */
+  size_t rd_index;		/* Current read index */
+  size_t wr_index;		/* Current write index */
 } dyn_buf_t;
 
 dyn_buf_t *new_dyn_buf (void);
 
-void free_dyn_buf (dyn_buf_t *dynbuf);
+void free_dyn_buf (dyn_buf_t * dynbuf);
 
-int write_dyn_buf (dyn_buf_t *dynbuf, const char *buf, size_t length);
+int write_dyn_buf (dyn_buf_t * dynbuf, const char *buf, size_t length);
 
-int write_dyn_buf_to_fd (int fd, dyn_buf_t *dynbuf, size_t length);
+int write_dyn_buf_to_fd (int fd, dyn_buf_t * dynbuf, size_t length);
 
-int sprintf_dyn_buf (dyn_buf_t *dynbuf, const char *format, ...);
+int sprintf_dyn_buf (dyn_buf_t * dynbuf, const char *format, ...);
 
-int read_dyn_buf (dyn_buf_t *dynbuf, char *buf, size_t length);
+int read_dyn_buf (dyn_buf_t * dynbuf, char *buf, size_t length);
 
 #endif /* _DYNBUF_H */
