@@ -29,11 +29,11 @@
 #include "debug.h"
 #include "dynbuf.h"
 
-#define DYNAMIC_BUFFER_SIZE (20 * 1024)
+#define DYNAMIC_BUFFER_SIZE (sizeof (char) * 2 * 1024)
 
 static dynamic_buffer_t *reallocate_dyn_buf (dynamic_buffer_t *dynbuf,
 					     size_t needed);
- 
+
 dynamic_buffer_t *new_dyn_buf (void)
 {
   dynamic_buffer_t *dynbuf = NULL;
@@ -42,14 +42,14 @@ dynamic_buffer_t *new_dyn_buf (void)
   if (NULL == dynbuf)
     return NULL;
 
-  dynbuf->data = xmalloc (sizeof (char) * DYNAMIC_BUFFER_SIZE);
+  dynbuf->data = xmalloc (DYNAMIC_BUFFER_SIZE);
   if (NULL == dynbuf->data)
     {
       free (dynbuf);
       return NULL;
     }
 
-  dynbuf->length = sizeof (char) * DYNAMIC_BUFFER_SIZE;
+  dynbuf->length = DYNAMIC_BUFFER_SIZE;
   dynbuf->rd_index = 0;
   dynbuf->wr_index = 0;
 
@@ -69,11 +69,15 @@ dynamic_buffer_t *reallocate_dyn_buf (dynamic_buffer_t *dynbuf,
 
   len = sizeof (char) * (dynbuf->wr_index + needed + 1);
 
-  if (dynbuf->length > len)
+  if (dynbuf->length < len)
     {
       char *new_ptr;
 
-      new_ptr = xrealloc (dynbuf->data, dynbuf->length + len);
+      /* Increase size in chunks to minimize reallocations */
+      if (len < (dynbuf->length + DYNAMIC_BUFFER_SIZE))
+	len = dynbuf->length + DYNAMIC_BUFFER_SIZE;
+      
+      new_ptr = xrealloc (dynbuf->data, len);
       if (NULL == new_ptr)
 	return NULL;
 
@@ -102,11 +106,11 @@ void free_dyn_buf (dynamic_buffer_t *dynbuf)
   free (dynbuf);
   dynbuf = NULL;
 }
-  
+
 int write_dyn_buf (dynamic_buffer_t *dynbuf, const char *buf, size_t length)
 {
   int len;
-  
+
   if ((NULL == dynbuf) || (NULL == dynbuf->data) || (0 == dynbuf->length))
     {
       DBG_MSG ("Invalid dynamic buffer passed!\n");
@@ -148,7 +152,7 @@ int sprintf_dyn_buf (dynamic_buffer_t *dynbuf, const char *format, ...)
 
   va_start (arg1, format);
   va_copy (arg2, arg1);
-  
+
   /* XXX: Lame way to try and figure out how much space we need */
   needed = vsnprintf (test_str, sizeof (test_str), format, arg2);
   va_end (arg2);
@@ -171,7 +175,7 @@ int sprintf_dyn_buf (dynamic_buffer_t *dynbuf, const char *format, ...)
 int read_dyn_buf (dynamic_buffer_t *dynbuf, char *buf, size_t length)
 {
   int len = length;
-  
+
   if ((NULL == dynbuf) || (NULL == dynbuf->data) || (0 == dynbuf->length))
     {
       DBG_MSG ("Invalid dynamic buffer passed!\n");
@@ -183,12 +187,12 @@ int read_dyn_buf (dynamic_buffer_t *dynbuf, char *buf, size_t length)
       DBG_MSG ("Invalid destination buffer!\n");
       return -1;
     }
-  
+
   if (dynbuf->rd_index >= dynbuf->length)
     return 0;
 
   if (dynbuf->length < (dynbuf->rd_index + length))
-    len = (dynbuf->rd_index + length) - dynbuf->length;
+    len = dynbuf->length - dynbuf->rd_index;
 
   len = snprintf(buf, len + 1, "%s", (dynbuf->data + dynbuf->rd_index));
   if (length > len)
