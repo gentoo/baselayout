@@ -542,8 +542,7 @@ generate_stage2 (dyn_buf_t * data)
 		break;
 
 	      tmp_count = read_dyn_buf_to_fd (PARENT_WRITE_PIPE (pipe_fds),
-					      stage1_data,
-					      PARSE_BUFFER_SIZE);
+					      stage1_data, PARSE_BUFFER_SIZE);
 	      if ((-1 == tmp_count) && (EINTR != errno))
 		{
 		  DBG_MSG ("Error writing to PARENT_WRITE_PIPE!\n");
@@ -760,7 +759,7 @@ parse_cache (const dyn_buf_t * data)
       goto error;
     }
 
-  while (NULL != (tmp_buf = read_line_dyn_buf ((dyn_buf_t *)data)))
+  while (NULL != (tmp_buf = read_line_dyn_buf ((dyn_buf_t *) data)))
     {
       tmp_p = tmp_buf;
 
