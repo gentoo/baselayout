@@ -133,7 +133,40 @@ int write_dyn_buf (dyn_buf_t *dynbuf, const char *buf, size_t length)
   if (length > len)
     length = len;
 
-  dynbuf->wr_index += length;
+  if (0 < length)
+    dynbuf->wr_index += length;
+
+  return length;
+}
+
+int write_dyn_buf_to_fd (int fd, dyn_buf_t *dynbuf, size_t length)
+{
+  int len = length;
+
+  if ((NULL == dynbuf) || (NULL == dynbuf->data) || (0 == dynbuf->length))
+    {
+      DBG_MSG ("Invalid dynamic buffer passed!\n");
+      return 0;
+    }
+
+  if (0 >= fd)
+    {
+      DBG_MSG ("Invalid destination file descriptor!\n");
+      return -1;
+    }
+
+  if (dynbuf->rd_index >= dynbuf->length)
+    return 0;
+
+  if (dynbuf->length < (dynbuf->rd_index + length))
+    len = dynbuf->length - dynbuf->rd_index;
+
+  len = write (fd, dynbuf->data, length);
+  if (length > len)
+    length = len;
+
+  if (0 < length)
+    dynbuf->rd_index += length;
 
   return length;
 }
@@ -167,7 +200,8 @@ int sprintf_dyn_buf (dyn_buf_t *dynbuf, const char *format, ...)
 		       format, arg1);
   va_end (arg1);
 
-  dynbuf->wr_index += written;
+  if (0 < written)
+    dynbuf->wr_index += written;
 
   return written;
 }
@@ -200,7 +234,8 @@ int read_dyn_buf (dyn_buf_t *dynbuf, char *buf, size_t length)
   if (length > len)
     length = len;
 
-  dynbuf->rd_index += length;
+  if (0 < length)
+    dynbuf->rd_index += length;
 
   return length;
 }

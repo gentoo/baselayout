@@ -40,6 +40,8 @@ void free_dyn_buf (dyn_buf_t *dynbuf);
 
 int write_dyn_buf (dyn_buf_t *dynbuf, const char *buf, size_t length);
 
+int write_dyn_buf_to_fd (int fd, dyn_buf_t *dynbuf, size_t length);
+
 int sprintf_dyn_buf (dyn_buf_t *dynbuf, const char *format, ...);
 
 int read_dyn_buf (dyn_buf_t *dynbuf, char *buf, size_t length);
