@@ -95,7 +95,6 @@ strcatpaths (const char *pathname1, const char *pathname2)
   return new_path;
 }
 
-#if !defined(HAVE_STRNDUP)
 char *
 strndup (const char *str, size_t size)
 {
@@ -124,7 +123,6 @@ strndup (const char *str, size_t size)
 
   return (char *) memcpy (new_str, str, len);
 }
-#endif
 
 char *
 gbasename (const char *path)

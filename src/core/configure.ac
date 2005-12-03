@@ -40,7 +40,7 @@ AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_TYPE_SIGNAL
 AC_FUNC_STAT
-AC_CHECK_FUNCS([strndup remove])
+AC_CHECK_FUNCS([remove])
 AH_VERBATIM([va_copy],
 [/* Older gcc's have __va_copy */
 #ifndef va_copy

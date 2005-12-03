@@ -251,9 +251,7 @@ char *memrepchr (char **str, char old, char _new, size_t size);
 char *strcatpaths (const char *pathname1, const char *pathname2);
 
 /* Compat functions for GNU extensions */
-#if !defined(HAVE_STRNDUP)
 char *strndup (const char *str, size_t size);
-#endif
 /* Same as basename(3), but do not modify path */
 char *gbasename (const char *path);
 
