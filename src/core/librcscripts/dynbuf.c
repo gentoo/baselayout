@@ -141,8 +141,7 @@ write_dyn_buf (dyn_buf_t * dynbuf, const char *buf, size_t length)
   return length;
 }
 
-int
-write_dyn_buf_to_fd (int fd, dyn_buf_t * dynbuf, size_t length)
+int write_dyn_buf_from_fd (int fd, dyn_buf_t * dynbuf, size_t length)
 {
   int len = length;
 
@@ -158,18 +157,21 @@ write_dyn_buf_to_fd (int fd, dyn_buf_t * dynbuf, size_t length)
       return -1;
     }
 
-  if (dynbuf->rd_index >= dynbuf->length)
-    return 0;
+  if (NULL == reallocate_dyn_buf (dynbuf, length))
+    {
+      DBG_MSG ("Could not reallocate dynamic buffer!\n");
+      return -1;
+    }
 
-  if (dynbuf->length < (dynbuf->rd_index + length))
-    len = dynbuf->length - dynbuf->rd_index;
-
-  len = write (fd, dynbuf->data, length);
+  len = read (fd, (dynbuf->data + dynbuf->wr_index), len);
+  
   if (length > len)
     length = len;
 
   if (0 < length)
-    dynbuf->rd_index += length;
+    dynbuf->wr_index += length;
+
+  dynbuf->data[dynbuf->wr_index] = '\0';
 
   return length;
 }
@@ -244,3 +246,37 @@ read_dyn_buf (dyn_buf_t * dynbuf, char *buf, size_t length)
 
   return length;
 }
+
+int
+read_dyn_buf_to_fd (int fd, dyn_buf_t * dynbuf, size_t length)
+{
+  int len = length;
+
+  if ((NULL == dynbuf) || (NULL == dynbuf->data) || (0 == dynbuf->length))
+    {
+      DBG_MSG ("Invalid dynamic buffer passed!\n");
+      return 0;
+    }
+
+  if (0 >= fd)
+    {
+      DBG_MSG ("Invalid destination file descriptor!\n");
+      return -1;
+    }
+
+  if (dynbuf->rd_index >= dynbuf->length)
+    return 0;
+
+  if (dynbuf->length < (dynbuf->rd_index + length))
+    len = dynbuf->length - dynbuf->rd_index;
+
+  len = write (fd, (dynbuf->data + dynbuf->rd_index), length);
+  if (length > len)
+    length = len;
+
+  if (0 < length)
+    dynbuf->rd_index += length;
+
+  return length;
+}
+

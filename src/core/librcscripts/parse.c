@@ -544,7 +544,7 @@ generate_stage2 (dyn_buf_t * data)
 		  || (1 == do_read) || (1 != do_write))
 		break;
 
-	      tmp_count = write_dyn_buf_to_fd (PARENT_WRITE_PIPE (pipe_fds),
+	      tmp_count = read_dyn_buf_to_fd (PARENT_WRITE_PIPE (pipe_fds),
 					       stage1_data,
 					       stage1_write_count -
 					       stage1_written);
