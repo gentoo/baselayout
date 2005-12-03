@@ -54,7 +54,7 @@ debug_message (const char *file, const char *func, int line,
       abort ();
     }
 
-  snprintf (format_str, length, "(%s)       ", log_domain);
+  snprintf (format_str, length, "(%s)      ", log_domain);
 
   va_start (arg, format);
 
@@ -72,7 +72,7 @@ debug_message (const char *file, const char *func, int line,
 
       fprintf (stderr, "in %s, function %s(), line %i:\n", file, func, line);
 
-      fprintf (stderr, "%s ", format_str);
+      fprintf (stderr, "%s  ", format_str);
       vfprintf (stderr, format, arg);
 
 #if defined(RC_DEBUG)
