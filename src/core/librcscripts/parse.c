@@ -62,11 +62,11 @@
 
 LIST_HEAD (rcscript_list);
 
-size_t parse_rcscript (char *scriptname, dyn_buf_t * data);
+static size_t parse_rcscript (char *scriptname, dyn_buf_t * data);
 
-size_t parse_print_start (dyn_buf_t * data);
-size_t parse_print_header (char *scriptname, dyn_buf_t * data);
-size_t parse_print_body (char *scriptname, dyn_buf_t * data);
+static size_t parse_print_start (dyn_buf_t * data);
+static size_t parse_print_header (char *scriptname, dyn_buf_t * data);
+static size_t parse_print_body (char *scriptname, dyn_buf_t * data);
 
 int
 get_rcscripts (void)

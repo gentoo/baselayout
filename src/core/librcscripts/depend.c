@@ -49,8 +49,8 @@ char *service_type_names[] = {
   NULL
 };
 
-int __service_resolve_dependency (char *servicename, char *dependency,
-				  service_type_t type);
+static int __service_resolve_dependency (char *servicename, char *dependency,
+					 service_type_t type);
 
 service_info_t *
 service_get_info (char *servicename)

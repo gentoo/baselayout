@@ -88,18 +88,18 @@
      } \
  } while (0)
 
-size_t get_word (const char *regex, char **r_word);
-int match_word (regex_data_t * regex_data);
-size_t get_list_size (const char *regex);
-size_t get_list (const char *regex, char **r_list);
-int __match_list (regex_data_t * regex_data);
-int match_list (regex_data_t * regex_data);
-size_t get_wildcard (const char *regex, char *r_wildcard);
-int __match_wildcard (regex_data_t * regex_data,
-		      int (*match_func) (regex_data_t * regex_data),
-		      const char *regex);
-int match_wildcard (regex_data_t * regex_data);
-int __match (regex_data_t * regex_data);
+static size_t get_word (const char *regex, char **r_word);
+static int match_word (regex_data_t * regex_data);
+static size_t get_list_size (const char *regex);
+static size_t get_list (const char *regex, char **r_list);
+static int __match_list (regex_data_t * regex_data);
+static int match_list (regex_data_t * regex_data);
+static size_t get_wildcard (const char *regex, char *r_wildcard);
+static int __match_wildcard (regex_data_t * regex_data,
+			     int (*match_func) (regex_data_t * regex_data),
+			     const char *regex);
+static int match_wildcard (regex_data_t * regex_data);
+static int __match (regex_data_t * regex_data);
 
 /*
  * Return values for match_* functions
