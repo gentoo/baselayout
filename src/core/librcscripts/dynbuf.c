@@ -76,13 +76,13 @@ dynamic_buffer_t *reallocate_dyn_buf (dynamic_buffer_t *dynbuf,
       /* Increase size in chunks to minimize reallocations */
       if (len < (dynbuf->length + DYNAMIC_BUFFER_SIZE))
 	len = dynbuf->length + DYNAMIC_BUFFER_SIZE;
-      
+
       new_ptr = xrealloc (dynbuf->data, len);
       if (NULL == new_ptr)
 	return NULL;
 
       dynbuf->data = new_ptr;
-      dynbuf->length += len;
+      dynbuf->length = len;
     }
 
   return dynbuf;
