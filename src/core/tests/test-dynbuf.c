@@ -34,7 +34,7 @@
 #define TEST_STRING4	 "!\n"
 #define TEST_STRING_FULL TEST_STRING1 TEST_STRING2 TEST_STRING3 TEST_STRING4
 
-int main()
+int main (void)
 {
   dynamic_buffer_t *dynbuf;
   char buf[1024 * 4];

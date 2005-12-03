@@ -49,35 +49,36 @@ char *test_data[] = {
   NULL
 };
 
-int main() {
+int main (void)
+{
   regex_data_t tmp_data;
   char buf[256], string[100], regex[100];
   int i;
 
   for (i = 0; NULL != test_data[i]; i += 3)
     {
-      snprintf(string, 99, "'%s'", test_data[i]);
-      snprintf(regex, 99, "'%s'", test_data[i + 1]);
-      snprintf(buf, 255, "string = %s, pattern = %s", string, regex);
+      snprintf (string, 99, "'%s'", test_data[i]);
+      snprintf (regex, 99, "'%s'", test_data[i + 1]);
+      snprintf (buf, 255, "string = %s, pattern = %s", string, regex);
 #if TEST_VERBOSE
-      printf("%-60s", buf);
+      printf ("%-60s", buf);
 #endif
       
-      DO_REGEX(tmp_data, test_data[i], test_data[i + 1], error);
+      DO_REGEX (tmp_data, test_data[i], test_data[i + 1], error);
       
-      if (REGEX_MATCH(tmp_data) && (REGEX_FULL_MATCH == tmp_data.match))
+      if (REGEX_MATCH (tmp_data) && (REGEX_FULL_MATCH == tmp_data.match))
 	{
-	  if (0 != strncmp(test_data[i + 2], "1", 1))
+	  if (0 != strncmp (test_data[i + 2], "1", 1))
 	    goto error;
 	}
       else
 	{
-	  if (0 != strncmp(test_data[i + 2], "0", 1))
+	  if (0 != strncmp (test_data[i + 2], "0", 1))
 	    goto error;
 	}
 
 #if TEST_VERBOSE
-      printf("%s\n", "[ \033[32;01mOK\033[0m ]");
+      printf ("%s\n", "[ \033[32;01mOK\033[0m ]");
 #endif
     }
 
@@ -85,8 +86,9 @@ int main() {
   
 error:
 #if TEST_VERBOSE
-  printf("%s\n", "[ \033[31;01m!!\033[0m ]");
+  printf ("%s\n", "[ \033[31;01m!!\033[0m ]");
 #endif
 
   return 1;
 }
+
