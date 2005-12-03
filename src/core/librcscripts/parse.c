@@ -467,8 +467,6 @@ generate_stage2 (dyn_buf_t * data)
       struct sigaction act_new;
       struct sigaction act_old;
       struct pollfd poll_fds[2];
-      size_t stage1_write_count = 0;
-      size_t stage1_written = 0;
       int status = 0;
 
       DBG_MSG ("Child pid = %i\n", child_pid);
@@ -497,8 +495,7 @@ generate_stage2 (dyn_buf_t * data)
 	}
 
       /* Pipe parse_rcscripts() to bash */
-      stage1_write_count = generate_stage1 (stage1_data);
-      if (-1 == stage1_write_count)
+      if (-1 == generate_stage1 (stage1_data))
 	{
 	  DBG_MSG ("Failed to generate stage1!\n");
 	  goto error;
@@ -521,7 +518,7 @@ generate_stage2 (dyn_buf_t * data)
 	  poll_fds[WRITE_PIPE].events = POLLOUT;
 	  poll_fds[READ_PIPE].fd = PARENT_READ_PIPE (pipe_fds);
 	  poll_fds[READ_PIPE].events = POLLIN | POLLPRI;
-	  if (stage1_written < stage1_write_count)
+	  if (!dyn_buf_rd_eof (stage1_data))
 	    {
 	      poll (poll_fds, 2, -1);
 	      if (poll_fds[WRITE_PIPE].revents & POLLOUT)
@@ -537,16 +534,16 @@ generate_stage2 (dyn_buf_t * data)
 
 	  do
 	    {
-	      /* If we can write, or there is nothing to
+	      /* While we can write, or there is nothing to
 	       * read, keep feeding the write pipe */
-	      if ((stage1_written >= stage1_write_count)
-		  || (1 == do_read) || (1 != do_write))
+	      if ((dyn_buf_rd_eof (stage1_data))
+		  || (1 == do_read)
+		  || (1 != do_write))
 		break;
 
 	      tmp_count = read_dyn_buf_to_fd (PARENT_WRITE_PIPE (pipe_fds),
 					       stage1_data,
-					       stage1_write_count -
-					       stage1_written);
+					       PARSE_BUFFER_SIZE);
 	      if ((-1 == tmp_count) && (EINTR != errno))
 		{
 		  DBG_MSG ("Error writing to PARENT_WRITE_PIPE!\n");
@@ -560,21 +557,17 @@ generate_stage2 (dyn_buf_t * data)
 		  tmp_count = 1;
 		  continue;
 		}
-	      /* What was written before, plus what
-	       * we wrote now as well as the ending
-	       * '\0' of the line */
-	      stage1_written += tmp_count;
 
 	      /* Close the write pipe if we done
 	       * writing to get a EOF signaled to
 	       * bash */
-	      if (stage1_written >= stage1_write_count)
+	      if (dyn_buf_rd_eof (stage1_data))
 		{
 		  close (PARENT_WRITE_PIPE (pipe_fds));
 		  PARENT_WRITE_PIPE (pipe_fds) = 0;
 		}
 	    }
-	  while ((tmp_count > 0) && (stage1_written < stage1_write_count));
+	  while ((tmp_count > 0) && (!dyn_buf_rd_eof (stage1_data)));
 
 	  /* Reset tmp_count for below read loop */
 	  tmp_count = 0;

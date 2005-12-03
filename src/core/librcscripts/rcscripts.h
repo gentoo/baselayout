@@ -50,4 +50,9 @@
 
 #define SOFTLEVEL		"SOFTLEVEL"
 
+typedef enum {
+  FALSE,
+  TRUE
+} bool;
+
 #endif /* _RCSCRIPTS_H */

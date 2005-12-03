@@ -235,8 +235,8 @@ read_dyn_buf (dyn_buf_t * dynbuf, char *buf, size_t length)
   if (dynbuf->rd_index >= dynbuf->length)
     return 0;
 
-  if (dynbuf->length < (dynbuf->rd_index + length))
-    len = dynbuf->length - dynbuf->rd_index;
+  if (dynbuf->wr_index < (dynbuf->rd_index + length))
+    len = dynbuf->wr_index - dynbuf->rd_index;
 
   len = snprintf (buf, len + 1, "%s", (dynbuf->data + dynbuf->rd_index));
   /* If len is less than length, it means the string was shorter than
@@ -270,10 +270,10 @@ read_dyn_buf_to_fd (int fd, dyn_buf_t * dynbuf, size_t length)
   if (dynbuf->rd_index >= dynbuf->length)
     return 0;
 
-  if (dynbuf->length < (dynbuf->rd_index + length))
-    len = dynbuf->length - dynbuf->rd_index;
+  if (dynbuf->wr_index < (dynbuf->rd_index + length))
+    len = dynbuf->wr_index - dynbuf->rd_index;
 
-  len = write (fd, (dynbuf->data + dynbuf->rd_index), length);
+  len = write (fd, (dynbuf->data + dynbuf->rd_index), len);
   if (length > len)
     length = len;
 
@@ -281,5 +281,22 @@ read_dyn_buf_to_fd (int fd, dyn_buf_t * dynbuf, size_t length)
     dynbuf->rd_index += length;
 
   return length;
+}
+
+bool
+dyn_buf_rd_eof (dyn_buf_t *dynbuf)
+{
+  if ((NULL == dynbuf) || (NULL == dynbuf->data) || (0 == dynbuf->length))
+    {
+      DBG_MSG ("Invalid dynamic buffer passed!\n");
+      return 0;
+    }
+
+  printf ("rd_index = %i, wr_index = %i\n", dynbuf->rd_index,
+	  dynbuf->wr_index);
+  if (dynbuf->rd_index >= dynbuf->wr_index)
+    return TRUE;
+
+  return FALSE;
 }
 

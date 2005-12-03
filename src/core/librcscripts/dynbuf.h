@@ -25,6 +25,8 @@
 #ifndef _DYNBUF_H
 #define _DYNBUF_H
 
+#include "rcscripts.h"
+
 #define DYNAMIC_BUFFER_SIZE (sizeof (char) * 2 * 1024)
 
 typedef struct
@@ -48,5 +50,7 @@ int sprintf_dyn_buf (dyn_buf_t * dynbuf, const char *format, ...);
 int read_dyn_buf (dyn_buf_t * dynbuf, char *buf, size_t length);
 
 int read_dyn_buf_to_fd (int fd, dyn_buf_t * dynbuf, size_t length);
+
+bool dyn_buf_rd_eof (dyn_buf_t *dynbuf);
 
 #endif /* _DYNBUF_H */
