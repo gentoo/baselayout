@@ -467,7 +467,6 @@ generate_stage2 (dyn_buf_t * data)
       struct sigaction act_new;
       struct sigaction act_old;
       struct pollfd poll_fds[2];
-      char buf[PARSE_BUFFER_SIZE + 1];
       size_t stage1_write_count = 0;
       size_t stage1_written = 0;
       int status = 0;
@@ -582,13 +581,11 @@ generate_stage2 (dyn_buf_t * data)
 
 	  do
 	    {
-	      char *tmp_p;
-
 	      if (1 != do_read)
 		continue;
 
-	      tmp_count = read (PARENT_READ_PIPE (pipe_fds), buf,
-				PARSE_BUFFER_SIZE);
+	      tmp_count = write_dyn_buf_from_fd (PARENT_READ_PIPE (pipe_fds),
+						 data, PARSE_BUFFER_SIZE);
 	      if ((-1 == tmp_count) && (EINTR != errno))
 		{
 		  DBG_MSG ("Error reading PARENT_READ_PIPE!\n");
@@ -601,11 +598,6 @@ generate_stage2 (dyn_buf_t * data)
 		  continue;
 		}
 
-	      if (tmp_count < write_dyn_buf (data, buf, tmp_count))
-		{
-		  DBG_MSG ("Failed to write to buffer!\n");
-		  goto failed;
-		}
 	      write_count += tmp_count;
 	    }
 	  while (tmp_count > 0);
