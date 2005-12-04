@@ -87,7 +87,7 @@ get_whitelist (char **whitelist, char *filename)
       if (NULL != token && '\0' != token[0])
 	{
 	  tmp_p = xstrndup (token, strlen (token));
-	  if (NUL == tmp_p)
+	  if (NULL == tmp_p)
 	    goto error;
 
 	  STRING_LIST_ADD (whitelist, tmp_p, error);

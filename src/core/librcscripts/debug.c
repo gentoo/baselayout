@@ -27,6 +27,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 #include "debug.h"
 #include "misc.h"
@@ -92,6 +94,66 @@ debug_message (const char *file, const char *func, int line,
 
   free (format_str);
   restore_errno ();
+}
+
+bool
+__check_ptr (void *ptr, const char *file, const char *func, size_t line)
+{
+  if (NULL == ptr)
+    {
+      errno = EINVAL;
+
+      debug_message (file, func, line, "Invalid pointer passed!\n");
+
+      return FALSE;
+    }
+
+  return TRUE;
+}
+
+bool
+__check_str (char *str, const char *file, const char *func, size_t line)
+{
+  if ((NULL == str) || (0 == strlen (str)))
+    {
+      errno = EINVAL;
+
+      debug_message (file, func, line, "Invalid string passed!\n");
+
+      return FALSE;
+    }
+
+  return TRUE;
+}
+
+bool
+__check_fd (int fd, const char *file, const char *func, size_t line)
+{
+  if ((0 >= fd) || (-1 == fcntl (fd, F_GETFL)))
+    {
+      errno = EBADF;
+
+      debug_message (file, func, line, "Invalid file descriptor passed!\n");
+
+      return FALSE;
+    }
+
+  return TRUE;
+}
+
+bool
+__check_fp (FILE *fp, const char *file, const char *func, size_t line)
+{
+  if ((NULL == fp) || (-1 == fileno (fp)))
+    {
+      errno = EBADF;
+
+      debug_message (file, func, line, "Invalid file descriptor passed!\n");
+
+      return FALSE;
+    }
+
+  return TRUE;
 }
 
 void *

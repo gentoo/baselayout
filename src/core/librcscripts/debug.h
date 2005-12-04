@@ -26,6 +26,9 @@
 #define _DEBUG_H
 
 #include <errno.h>
+#include <stdio.h>
+
+#include "rcscripts.h"
 
 #define save_errno()	int old_errno = errno;
 #define restore_errno() errno = old_errno;
@@ -47,21 +50,41 @@ debug_message (const char *file, const char *func, int line,
 	   __FILE__, __FUNCTION__, __LINE__); \
    restore_errno (); \
    if (0 != errno) \
-     perror("ERROR"); \
+     { \
+       perror("ERROR"); \
+     } \
    exit(EXIT_FAILURE); \
  } while (0)
 
 #define NEG_FATAL_ERROR(_x) \
  do { \
    if (-1 == _x) \
-     FATAL_ERROR(); \
+     { \
+       FATAL_ERROR(); \
+     } \
  } while (0)
 
 #define NULL_FATAL_ERROR(_x) \
  do { \
    if (NULL == _x) \
-     FATAL_ERROR(); \
+     { \
+       FATAL_ERROR(); \
+     } \
  } while (0)
+
+bool __check_ptr (void *ptr, const char *file, const char *func, size_t line);
+bool __check_str (char *str, const char *file, const char *func, size_t line);
+bool __check_fd (int fd, const char *file, const char *func, size_t line);
+bool __check_fp (FILE *fp, const char *file, const char *func, size_t line);
+
+#define check_ptr(_ptr) \
+ __check_ptr (_ptr, __FILE__, __FUNCTION__, __LINE__)
+#define check_str(_str) \
+ __check_str (_str, __FILE__, __FUNCTION__, __LINE__)
+#define check_fd(_fd) \
+ __check_fd (_fd, __FILE__, __FUNCTION__, __LINE__)
+#define check_fp(_fp) \
+ __check_fp (_fp, __FILE__, __FUNCTION__, __LINE__)
 
 void *__xcalloc (size_t nmemb, size_t size, const char *file, const char *func,
 		 size_t line);

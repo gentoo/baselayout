@@ -80,6 +80,7 @@ get_rcscripts (void)
   file_list = ls_dir (RCSCRIPTS_INITDDIR, 0);
   if (NULL == file_list)
     {
+      errno = ENOENT;
       DBG_MSG ("'%s' is empty!\n", RCSCRIPTS_INITDDIR);
       return -1;
     }
@@ -154,8 +155,8 @@ loop_error:
   /* Final check if we have some entries */
   if ((NULL == file_list) || (NULL == file_list[0]))
     {
-      DBG_MSG ("No rc-scripts to parse!\n");
       errno = ENOENT;
+      DBG_MSG ("No rc-scripts to parse!\n");
       goto error;
     }
 
@@ -179,12 +180,8 @@ check_rcscripts_mtime (char *cachefile)
   time_t rc_conf_mtime;
   time_t rc_confd_mtime;
 
-  if ((NULL == cachefile) || (0 == strlen (cachefile)))
-    {
-      DBG_MSG ("Invalid argument passed!\n");
-      errno = EINVAL;
-      return -1;
-    }
+  if (!check_str (cachefile))
+    return -1;
 
   cache_mtime = get_mtime (cachefile, 1);
   if (0 == cache_mtime)
@@ -239,12 +236,11 @@ parse_rcscript (char *scriptname, dyn_buf_t * data)
   int count;
   int current = 0;
 
-  if ((NULL == scriptname) || (0 == strlen (scriptname)))
-    {
-      DBG_MSG ("Invalid argument passed!\n");
-      errno = EINVAL;
-      return -1;
-    }
+  if (!check_dyn_buf (data))
+    return -1;
+
+  if (!check_str (scriptname))
+    return -1;
 
   if (-1 == file_map (scriptname, &buf, &lenght))
     {
@@ -331,10 +327,10 @@ error:
   free (tmp_buf);
   if (NULL != buf)
     {
-      int old_errno = errno;
+      save_errno ();
       file_unmap (buf, lenght);
       /* file_unmap() might have changed it */
-      errno = old_errno;
+      restore_errno ();
     }
 
   return -1;
@@ -347,6 +343,9 @@ generate_stage1 (dyn_buf_t * data)
   rcscript_info_t *info;
   size_t write_count = 0;
   size_t tmp_count;
+
+  if (!check_dyn_buf (data))
+    return -1;
 
   write_count = parse_print_start (data);
   if (-1 == write_count)
@@ -390,6 +389,9 @@ generate_stage2 (dyn_buf_t * data)
   pid_t child_pid;
   size_t write_count = 0;
   int old_errno = 0;
+
+  if (!check_dyn_buf (data))
+    return -1;
 
   /* Pipe to send data to parent */
   if (-1 == pipe (pipe_fds[0]))
@@ -439,13 +441,13 @@ generate_stage2 (dyn_buf_t * data)
       if (-1 == chdir (RCSCRIPTS_INITDDIR))
 	{
 	  DBG_MSG ("Failed to chdir to '%s'!\n", RCSCRIPTS_INITDDIR);
-	  exit (1);
+	  exit (EXIT_FAILURE);
 	}
 
       if (-1 == execv (SHELL_PARSER, argv))
 	{
 	  DBG_MSG ("Failed to execv %s!\n", SHELL_PARSER);
-	  exit (1);
+	  exit (EXIT_FAILURE);
 	}
     }
   else
@@ -651,11 +653,8 @@ write_legacy_stage3 (FILE * output)
   int dep_count;
   int i;
 
-  if (-1 == fileno (output))
-    {
-      DBG_MSG ("Bad output stream!\n");
-      return -1;
-    }
+  if (!check_fp (output))
+    return -1;
 
   fprintf (output, "rc_type_ineed=2\n");
   fprintf (output, "rc_type_needsme=3\n");
@@ -743,12 +742,8 @@ parse_cache (const dyn_buf_t * data)
   char *field;
   int retval;
 
-  if ((NULL == data) || (data->length <= 0))
-    {
-      DBG_MSG ("Invalid argument passed!\n");
-      errno = EINVAL;
-      goto error;
-    }
+  if (!check_dyn_buf ((dyn_buf_t *) data))
+    goto error;
 
   while (NULL != (tmp_buf = read_line_dyn_buf ((dyn_buf_t *) data)))
     {
@@ -898,6 +893,9 @@ parse_print_start (dyn_buf_t * data)
 {
   size_t write_count;
 
+  if (!check_dyn_buf (data))
+    return -1;
+  
   write_count =
    sprintf_dyn_buf (data,
 		    ". /sbin/functions.sh\n"
@@ -914,6 +912,9 @@ parse_print_header (char *scriptname, dyn_buf_t * data)
 {
   size_t write_count;
 
+  if (!check_dyn_buf (data))
+    return -1;
+  
   write_count =
    sprintf_dyn_buf (data,
 		    "#*** %s ***\n"
@@ -934,6 +935,9 @@ parse_print_body (char *scriptname, dyn_buf_t * data)
   char *base;
   char *ext;
 
+  if (!check_dyn_buf (data))
+    return -1;
+  
   tmp_buf = xstrndup (scriptname, strlen (scriptname));
   if (NULL == tmp_buf)
     return -1;
