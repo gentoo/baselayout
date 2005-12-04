@@ -26,7 +26,7 @@
 #define _PARSE_H
 
 #include <sys/types.h>
-#include "list.h"
+
 #include "dynbuf.h"
 
 #define LEGACY_CACHE_FILE_NAME	"deptree"
@@ -39,19 +39,6 @@
 #define FIELD_PROVIDE	"PROVIDE"
 #define FIELD_FAILED	"FAILED"
 
-typedef struct
-{
-  struct list_head node;
-
-  char *filename;
-  time_t mtime;
-  time_t confd_mtime;
-} rcscript_info_t;
-
-struct list_head rcscript_list;
-
-int get_rcscripts (void);
-int check_rcscripts_mtime (char *cachefile);
 size_t generate_stage1 (dyn_buf_t * data);
 size_t generate_stage2 (dyn_buf_t * data);
 size_t read_stage2 (char **data);

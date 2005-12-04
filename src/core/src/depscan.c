@@ -37,9 +37,10 @@
 #include "librcscripts/rcscripts.h"
 #include "librcscripts/debug.h"
 #include "librcscripts/dynbuf.h"
-#include "librcscripts/depend.h"
 #include "librcscripts/misc.h"
+#include "librcscripts/scripts.h"
 #include "librcscripts/parse.h"
+#include "librcscripts/depend.h"
 
 char *svcdir_subdirs[] = {
   "softscripts",

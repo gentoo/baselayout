@@ -10,14 +10,16 @@ librcscripts_la_SOURCES = \
 	debug.h        \
 	dynbuf.c       \
 	dynbuf.h       \
-	depend.c       \
-	depend.h       \
 	list.h         \
 	str_list.h     \
 	misc.c         \
 	misc.h         \
+	scripts.c      \
+	scripts.h      \
 	parse.c        \
 	parse.h        \
+	depend.c       \
+	depend.h       \
 	runlevels.c    \
 	runlevels.h    \
 	simple-regex.c \
