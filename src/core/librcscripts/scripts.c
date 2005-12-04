@@ -190,3 +190,23 @@ check_rcscripts_mtime (const char *cachefile)
   return 0;
 }
 
+rcscript_info_t *
+get_rcscript_info (const char *scriptname)
+{
+  rcscript_info_t *info;
+
+  if (!check_str (scriptname))
+    return NULL;
+
+  list_for_each_entry (info, &rcscript_list, node)
+    {
+      if ((strlen (scriptname) == strlen (info->filename))
+	  && (0 == strncmp (scriptname, info->filename,
+			    strlen (info->filename))))
+	return info;
+    }
+
+  errno = ENOENT;
+  return NULL;
+}
+

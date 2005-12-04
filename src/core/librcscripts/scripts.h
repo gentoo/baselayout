@@ -42,5 +42,6 @@ struct list_head rcscript_list;
 
 int get_rcscripts (void);
 int check_rcscripts_mtime (const char *cachefile);
+rcscript_info_t *get_rcscript_info (const char *scriptname);
 
 #endif /* _SCRIPTS_H */
