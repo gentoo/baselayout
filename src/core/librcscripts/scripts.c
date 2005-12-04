@@ -89,16 +89,14 @@ get_rcscripts (void)
 	  /* Check if it starts with '#!/sbin/runscript' */
 	  DO_REGEX (tmp_data, tmp_buf, "[ \t]*#![ \t]*/sbin/runscript[ \t]*.*",
 		    check_error);
+	  free (tmp_buf);
 	  if (REGEX_FULL_MATCH != tmp_data.match)
 	    {
 	      DBG_MSG ("'%s' is not a valid rc-script!\n",
 		       gbasename (rcscript));
 
-	      free (tmp_buf);
 	      continue;
 	    }
-
-	  free (tmp_buf);
 
 	  /* We do not want rc-scripts ending in '.sh' */
 	  if (CHECK_FILE_EXTENSION (rcscript, ".sh"))
