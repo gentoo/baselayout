@@ -200,7 +200,10 @@
      { \
        int _i = 0; \
        while (NULL != _string_list[_i]) \
-       free (_string_list[_i++]); \
+	 { \
+	   free (_string_list[_i]); \
+	   _string_list[_i++] = NULL; \
+	 } \
        free (_string_list); \
        _string_list = NULL; \
      } \
