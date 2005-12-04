@@ -428,8 +428,13 @@ ls_dir (const char *pathname, int hidden)
     }
   while (NULL != dir_entry);
 
-  if ((NULL == dirlist) || (NULL == dirlist[0]))
-    DBG_MSG ("Directory is empty.\n");
+  if (!check_strv (dirlist))
+    {
+      if (NULL != dirlist)
+	str_list_free (dirlist);
+
+      DBG_MSG ("Directory is empty.\n");
+    }
 
   closedir (dirfd);
 
