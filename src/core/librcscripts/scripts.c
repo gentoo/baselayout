@@ -253,7 +253,6 @@ get_rcscript_info (const char *scriptname)
 	return info;
     }
 
-  errno = ENOENT;
   return NULL;
 }
 
