@@ -79,12 +79,9 @@ strcatpaths (const char *pathname1, const char *pathname2)
   /* Lenght of pathname1 + lenght of pathname2 + '/' if needed */
   lenght = strlen (pathname1) + strlen (pathname2) + 1;
   /* lenght + '\0' */
-  new_path = malloc (lenght + 1);
+  new_path = xmalloc (lenght + 1);
   if (NULL == new_path)
-    {
-      DBG_MSG ("Failed to allocate buffer!\n");
       return NULL;
-    }
 
   strncpy (new_path, pathname1, lenght);
   /* Should we add a '/' ? */
@@ -111,12 +108,9 @@ strndup (const char *str, size_t size)
   /* Check lenght of str without breaching the size limit */
   for (len = 0; (len < size) && ('\0' != str[len]); len++);
 
-  new_str = malloc (len + 1);
+  new_str = xmalloc (len + 1);
   if (NULL == new_str)
-    {
-      DBG_MSG ("Failed to allocate buffer!\n");
       return NULL;
-    }
 
   /* Make sure our string is NULL terminated */
   new_str[len] = '\0';
@@ -294,12 +288,9 @@ mktree (const char *pathname, mode_t mode)
   /* Lenght of 'pathname' + extra for "./" if needed */
   lenght = strlen (pathname) + 2;
   /* lenght + '\0' */
-  temp_name = malloc (lenght + 1);
+  temp_name = xmalloc (lenght + 1);
   if (NULL == temp_name)
-    {
-      DBG_MSG ("Failed to allocate temporary buffer!\n");
       return -1;
-    }
 
   temp_token = strndup (pathname, strlen (pathname));
   if (NULL == temp_token)

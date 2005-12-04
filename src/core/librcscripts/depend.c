@@ -95,12 +95,9 @@ service_add (char *servicename)
     {
       DBG_MSG ("Adding service '%s'.\n", servicename);
 
-      info = malloc (sizeof (service_info_t));
+      info = xmalloc (sizeof (service_info_t));
       if (NULL == info)
-	{
-	  DBG_MSG ("Failed to allocate service_info_t!\n");
 	  return -1;
-	}
 
       info->name = strndup (servicename, strlen (servicename));
       if (NULL == info->name)

@@ -99,12 +99,9 @@ get_rcscripts (void)
 	{
 	  DBG_MSG ("Adding rc-script '%s' to list.\n", gbasename (rcscript));
 
-	  info = malloc (sizeof (rcscript_info_t));
+	  info = xmalloc (sizeof (rcscript_info_t));
 	  if (NULL == info)
-	    {
-	      DBG_MSG ("Failed to allocate rcscript_info_t!\n");
 	      goto error;
-	    }
 
 	  /* Copy the name */
 	  info->filename = strndup (rcscript, strlen (rcscript));

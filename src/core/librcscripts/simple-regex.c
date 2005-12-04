@@ -129,12 +129,10 @@ get_word (const char *regex, char **r_word)
       return 0;
     }
 
-  *r_word = malloc (strlen (regex) + 1);
+  *r_word = xmalloc (strlen (regex) + 1);
   if (NULL == r_word)
-    {
-      DBG_MSG ("Failed to allocate buffer!\n");
       return 0;
-    }
+  
   tmp_p = *r_word;
 
   while (strlen (regex) > 0)
@@ -305,12 +303,10 @@ get_list (const char *regex, char **r_list)
       return 0;
     }
 
-  *r_list = malloc (size + 1);
+  *r_list = xmalloc (size + 1);
   if (NULL == *r_list)
-    {
-      DBG_MSG ("Failed to allocate buffer!\n");
       return -1;
-    }
+
   tmp_buf = *r_list;
 
   /* Take care of '[' */
