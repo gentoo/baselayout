@@ -17,9 +17,6 @@
 #include <dlfcn.h>
 
 #include "librcscripts/rcscripts.h"
-#include "librcscripts/debug.h"
-#include "librcscripts/misc.h"
-#include "librcscripts/str_list.h"
 
 #define IS_SBIN_RC()	((caller) && (0 == strcmp (caller, SBIN_RC)))
 

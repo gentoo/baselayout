@@ -25,6 +25,22 @@
 #ifndef _RCSCRIPTS_H
 #define _RCSCRIPTS_H
 
+#include <sys/types.h>
+
+#include "config.h"
+
+#include "api/rctypes.h"
+#include "api/debug.h"
+#include "api/misc.h"
+#include "api/list.h"
+#include "api/str_list.h"
+#include "api/dynbuf.h"
+#include "api/simple-regex.h"
+#include "api/scripts.h"
+#include "api/runlevels.h"
+#include "api/parse.h"
+#include "api/depend.h"
+
 #define RCSCRIPTS_CONFDDIR	ETCDIR "/conf.d"
 #define RCSCRIPTS_INITDDIR	ETCDIR "/init.d"
 #define RCSCRIPTS_LIBDIR	LIBDIR "/rcscripts"
@@ -51,10 +67,5 @@
 #define USR_WHITELIST		RCSCRIPTS_CONFDDIR "/env_whitelist"
 
 #define SOFTLEVEL		"SOFTLEVEL"
-
-typedef enum {
-  FALSE,
-  TRUE
-} bool;
 
 #endif /* _RCSCRIPTS_H */

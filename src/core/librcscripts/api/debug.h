@@ -28,8 +28,6 @@
 #include <errno.h>
 #include <stdio.h>
 
-#include "rcscripts.h"
-
 #define save_errno()	int old_errno = errno;
 #define restore_errno() errno = old_errno;
 #define saved_errno	old_errno

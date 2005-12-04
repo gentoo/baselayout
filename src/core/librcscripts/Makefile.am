@@ -5,22 +5,23 @@ INCLUDES = $(RCSCRIPTS_DEFINES)
 lib_LTLIBRARIES = librcscripts.la
 
 librcscripts_la_SOURCES = \
-	rcscripts.h    \
-	debug.c        \
-	debug.h        \
-	dynbuf.c       \
-	dynbuf.h       \
-	list.h         \
-	str_list.h     \
-	misc.c         \
-	misc.h         \
-	scripts.c      \
-	scripts.h      \
-	parse.c        \
-	parse.h        \
-	depend.c       \
-	depend.h       \
-	runlevels.c    \
-	runlevels.h    \
-	simple-regex.c \
-	simple-regex.h
+	rcscripts.h        \
+	api/rctypes.h      \
+	debug.c            \
+	api/debug.h        \
+	misc.c             \
+	api/misc.h         \
+	api/list.h         \
+	api/str_list.h     \
+	dynbuf.c           \
+	api/dynbuf.h       \
+	simple-regex.c     \
+	api/simple-regex.h \
+	scripts.c          \
+	api/scripts.h      \
+	runlevels.c        \
+	api/runlevels.h    \
+	parse.c            \
+	api/parse.h        \
+	depend.c           \
+	api/depend.h

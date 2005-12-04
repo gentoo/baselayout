@@ -25,9 +25,6 @@
 #ifndef _DEPEND_H
 #define _DEPEND_H
 
-#include <sys/types.h>
-#include "list.h"
-
 /* Dependency types supported or still to be implemented */
 typedef enum
 {

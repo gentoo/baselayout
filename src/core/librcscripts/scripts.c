@@ -27,11 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "debug.h"
-#include "misc.h"
-#include "list.h"
-#include "str_list.h"
-#include "scripts.h"
+#include "rcscripts.h"
 
 LIST_HEAD (rcscript_list);
 

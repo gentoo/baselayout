@@ -30,8 +30,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#include "debug.h"
-#include "misc.h"
+#include "rcscripts.h"
 
 static char log_domain[] = "rcscripts";
 

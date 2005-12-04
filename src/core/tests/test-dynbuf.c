@@ -26,7 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <librcscripts/dynbuf.h>
+#include "librcscripts/rcscripts.h"
 
 #define TEST_STRING1	 "Hello"
 #define TEST_STRING2	 " "

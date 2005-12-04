@@ -28,11 +28,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "config.h"
-
-#include "debug.h"
-#include "dynbuf.h"
-#include "misc.h"
+#include "rcscripts.h"
 
 static dyn_buf_t *reallocate_dyn_buf (dyn_buf_t * dynbuf, size_t needed);
 

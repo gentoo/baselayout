@@ -25,8 +25,6 @@
 #ifndef _DYNBUF_H
 #define _DYNBUF_H
 
-#include "rcscripts.h"
-
 #define DYNAMIC_BUFFER_SIZE (sizeof (char) * 2 * 1024)
 
 typedef struct

@@ -25,10 +25,6 @@
 #ifndef _PARSE_H
 #define _PARSE_H
 
-#include <sys/types.h>
-
-#include "dynbuf.h"
-
 #define LEGACY_CACHE_FILE_NAME	"deptree"
 
 #define FIELD_RCSCRIPT	"RCSCRIPT"

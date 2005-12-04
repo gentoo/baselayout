@@ -28,12 +28,6 @@
 #include <string.h>
 
 #include "rcscripts.h"
-#include "debug.h"
-#include "misc.h"
-#include "list.h"
-#include "str_list.h"
-#include "scripts.h"
-#include "runlevels.h"
 
 static char ** get_runlevel_dirs (void);
 

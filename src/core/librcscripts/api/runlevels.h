@@ -25,8 +25,6 @@
 #ifndef _RUNLEVELS_H
 #define _RUNLEVELS_H
 
-#include "rcscripts.h"
-
 typedef struct
 {
   struct list_head node;

@@ -34,11 +34,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#include "config.h"
-
-#include "debug.h"
-#include "misc.h"
-#include "str_list.h"
+#include "rcscripts.h"
 
 char *
 memrepchr (char **str, char old, char new, size_t size)

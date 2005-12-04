@@ -25,31 +25,30 @@
 #ifndef _MISC_H
 #define _MISC_H
 
-#include <sys/stat.h>
-#include <sys/types.h>
+#include <stdio.h>
 
 #include "config.h"
 
 /* Gentoo style e* printing macro's */
 #define EINFO(_args...) \
  do { \
-   int old_errno = errno; \
-   printf(" \033[32;01m*\033[0m " _args); \
-   errno = old_errno; \
+   save_errno (); \
+   printf (" \033[32;01m*\033[0m " _args); \
+   restore_errno (); \
  } while (0)
 
 #define EWARN(_args...) \
  do { \
-   int old_errno = errno; \
-   printf(" \033[33;01m*\033[0m " _args); \
-   errno = old_errno; \
+   save_errno (); \
+   printf (" \033[33;01m*\033[0m " _args); \
+   restore_errno (); \
  } while (0)
 
 #define EERROR(_args...) \
  do { \
-   int old_errno = errno; \
-   fprintf(stderr, " \033[31;01m*\033[0m " _args); \
-   errno = old_errno; \
+   save_errno (); \
+   fprintf (stderr, " \033[31;01m*\033[0m " _args); \
+   restore_errno (); \
  } while (0)
 
 /* Min/Max macro's */

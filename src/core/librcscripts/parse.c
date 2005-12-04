@@ -37,15 +37,6 @@
 #include <signal.h>
 
 #include "rcscripts.h"
-#include "debug.h"
-#include "dynbuf.h"
-#include "list.h"
-#include "str_list.h"
-#include "misc.h"
-#include "scripts.h"
-#include "parse.h"
-#include "depend.h"
-#include "simple-regex.h"
 
 #define READ_PIPE			0
 #define WRITE_PIPE			1

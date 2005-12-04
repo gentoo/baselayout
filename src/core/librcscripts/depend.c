@@ -28,11 +28,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "debug.h"
-#include "depend.h"
-#include "list.h"
-#include "str_list.h"
-#include "misc.h"
+#include "rcscripts.h"
 
 LIST_HEAD (service_info_list);
 

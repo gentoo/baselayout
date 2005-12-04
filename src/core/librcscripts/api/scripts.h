@@ -25,10 +25,6 @@
 #ifndef _SCRIPTS_H
 #define _SCRIPTS_H
 
-#include <sys/types.h>
-
-#include "list.h"
-
 typedef struct
 {
   struct list_head node;
