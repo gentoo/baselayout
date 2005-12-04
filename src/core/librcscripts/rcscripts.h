@@ -29,6 +29,8 @@
 #define RCSCRIPTS_INITDDIR	ETCDIR "/init.d"
 #define RCSCRIPTS_LIBDIR	LIBDIR "/rcscripts"
 
+#define RUNLEVELS_DIR		ETCDIR "/runlevels"
+
 #define SBIN_RC			SBINDIR "/rc"
 #define PROFILE_ENV		ETCDIR "/profile.env"
 

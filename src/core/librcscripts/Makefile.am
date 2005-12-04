@@ -18,5 +18,7 @@ librcscripts_la_SOURCES = \
 	misc.h         \
 	parse.c        \
 	parse.h        \
+	runlevels.c    \
+	runlevels.h    \
 	simple-regex.c \
 	simple-regex.h
