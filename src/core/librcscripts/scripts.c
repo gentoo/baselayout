@@ -200,9 +200,9 @@ get_rcscript_info (const char *scriptname)
 
   list_for_each_entry (info, &rcscript_list, node)
     {
-      if ((strlen (scriptname) == strlen (info->filename))
-	  && (0 == strncmp (scriptname, info->filename,
-			    strlen (info->filename))))
+      if ((strlen (scriptname) == strlen (gbasename (info->filename)))
+	  && (0 == strncmp (scriptname, gbasename (info->filename),
+			    strlen (scriptname))))
 	return info;
     }
 

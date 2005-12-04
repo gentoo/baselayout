@@ -138,8 +138,6 @@ get_runlevels (void)
 	{
 	  rcscript_info_t *script_info;
 	  rcscript_info_t *new_script_info = NULL;
-	  char *scriptname;
-	  int len;
 
 	  if (!is_link (dir_item))
 	    {
@@ -147,28 +145,13 @@ get_runlevels (void)
 	      continue;
 	    }
 
-	  len =
-	   strlen (RCSCRIPTS_INITDDIR) + strlen (gbasename (dir_item)) + 2;
-	  scriptname = xmalloc (sizeof (char) * len);
-	  if (NULL == scriptname)
-	    {
-	      str_list_free (dir_list);
-	      goto error;
-	    }
-
-	  snprintf (scriptname, len, "%s/%s", RCSCRIPTS_INITDDIR,
-		    gbasename (dir_item));
-
-	  script_info = get_rcscript_info (scriptname);
+	  script_info = get_rcscript_info (gbasename (dir_item));
 	  if (NULL == script_info)
 	    {
 	      DBG_MSG ("Skipping invalid entry '%s' !\n", dir_item);
-	      free (scriptname);
 	      continue;
 	    }
 
-	  free (scriptname);
-	  
 	  new_script_info = xmalloc (sizeof (rcscript_info_t));
 	  if (NULL == new_script_info)
 	    {
