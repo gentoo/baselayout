@@ -162,12 +162,10 @@ filter_environ (char *caller)
 	  /* The entries in PROFILE_ENV is of the form:
 	   * export VAR_NAME=value */
 	  tmp_len = strlen (env_name) + strlen ("export ") + 1;
-	  tmp_env_name = calloc (tmp_len, sizeof (char *));
+	  tmp_env_name = xcalloc (tmp_len, sizeof (char *));
 	  if (NULL == tmp_env_name)
-	    {
-	      DBG_MSG ("Failed to allocate temporary buffer!\n");
-	      goto error;
-	    }
+	    goto error;
+
 	  snprintf (tmp_env_name, tmp_len, "export %s", env_name);
 
 	  /* Clear errno so that subsequent calls do not trigger
@@ -185,12 +183,10 @@ filter_environ (char *caller)
 
 add_entry:
       env_len = strlen (env_name) + strlen (env_var) + 2;
-      tmp_p = calloc (env_len, sizeof (char *));
+      tmp_p = xcalloc (env_len, sizeof (char *));
       if (NULL == tmp_p)
-	{
-	  DBG_MSG ("Failed to allocate temporary buffer!\n");
-	  goto error;
-	}
+	goto error;
+
       snprintf (tmp_p, env_len, "%s=%s", env_name, env_var);
       STRING_LIST_ADD (myenv, tmp_p, error);
     }

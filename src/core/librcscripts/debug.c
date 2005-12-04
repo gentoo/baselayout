@@ -97,7 +97,7 @@ debug_message (const char *file, const char *func, int line,
 }
 
 bool
-__check_ptr (void *ptr, const char *file, const char *func, size_t line)
+__check_ptr (const void *ptr, const char *file, const char *func, size_t line)
 {
   if (NULL == ptr)
     {
@@ -112,13 +112,28 @@ __check_ptr (void *ptr, const char *file, const char *func, size_t line)
 }
 
 bool
-__check_str (char *str, const char *file, const char *func, size_t line)
+__check_str (const char *str, const char *file, const char *func, size_t line)
 {
   if ((NULL == str) || (0 == strlen (str)))
     {
       errno = EINVAL;
 
       debug_message (file, func, line, "Invalid string passed!\n");
+
+      return FALSE;
+    }
+
+  return TRUE;
+}
+
+bool
+__check_strv (char **str, const char *file, const char *func, size_t line)
+{
+  if ((NULL == str) || (NULL == *str) || (0 == strlen (*str)))
+    {
+      errno = EINVAL;
+
+      debug_message (file, func, line, "Invalid string array passed!\n");
 
       return FALSE;
     }

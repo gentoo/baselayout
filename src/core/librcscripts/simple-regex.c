@@ -122,12 +122,8 @@ get_word (const char *regex, char **r_word)
   size_t count = 0;
   size_t tmp_count;
 
-  /* NULL string means we do not have a word */
-  if ((NULL == regex) || (0 == strlen (regex)))
-    {
-      DBG_MSG ("Invalid argument passed!\n");
-      return 0;
-    }
+  if (!check_str (regex))
+    return 0;
 
   *r_word = xmalloc (strlen (regex) + 1);
   if (NULL == r_word)
@@ -244,9 +240,12 @@ get_list_size (const char *regex)
 {
   size_t count = 0;
 
-  /* NULL string means we do not have a list */
-  if ((NULL == regex) || (0 == strlen (regex)) || ('[' != regex[0]))
+  if (!check_str (regex))
+    return 0;
+
+  if ('[' != regex[0])
     {
+      errno = EINVAL;
       DBG_MSG ("Invalid argument passed!\n");
       return 0;
     }
@@ -282,12 +281,8 @@ get_list (const char *regex, char **r_list)
   size_t count = 0;
   size_t size;
 
-  /* NULL string means we do not have a list */
-  if ((NULL == regex) || (0 == strlen (regex)))
-    {
-      DBG_MSG ("Invalid argument passed!\n");
-      return 0;
-    }
+  if (!check_str (regex))
+    return 0;
 
   /* Bail if we do not have a list.  Do not add debugging, as
    * it is very noisy (used a lot when we call match_list() in
@@ -505,12 +500,8 @@ error:
 size_t
 get_wildcard (const char *regex, char *r_wildcard)
 {
-  /* NULL regex means we do not have a wildcard */
-  if ((NULL == regex) || (0 == strlen (regex)))
-    {
-      DBG_MSG ("Invalid argument passed!\n");
-      return 0;
-    }
+  if (!check_str (regex))
+    return 0;
 
   r_wildcard[0] = regex[0];
   r_wildcard[2] = '\0';
@@ -548,6 +539,7 @@ __match_wildcard (regex_data_t * regex_data,
 
   if (NULL == match_func)
     {
+      errno = EINVAL;
       DBG_MSG ("NULL match_func was passed!\n");
       goto exit;
     }

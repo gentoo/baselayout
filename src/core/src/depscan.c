@@ -65,12 +65,8 @@ int delete_var_dirs (const char *svcdir);
 int
 create_directory (const char *name)
 {
-  if ((NULL == name) || (0 == strlen (name)))
-    {
-      DBG_MSG ("Invalid argument passed!\n");
-      errno = EINVAL;
-      return -1;
-    }
+  if (!check_str (name))
+    return -1;
 
   /* Check if directory exist, and is not a symlink */
   if (!is_dir (name, 0))
@@ -101,12 +97,8 @@ create_var_dirs (const char *svcdir)
   char *tmp_path = NULL;
   int i = 0;
 
-  if ((NULL == svcdir) || (0 == strlen (svcdir)))
-    {
-      DBG_MSG ("Invalid argument passed!\n");
-      errno = EINVAL;
-      return -1;
-    }
+  if (!check_str (svcdir))
+    return -1;
 
   /* Check and create svcdir if needed */
   if (-1 == create_directory (svcdir))
@@ -145,12 +137,8 @@ delete_var_dirs (const char *svcdir)
   char *tmp_path = NULL;
   int i = 0;
 
-  if ((NULL == svcdir) || (0 == strlen (svcdir)))
-    {
-      DBG_MSG ("Invalid argument passed!\n");
-      errno = EINVAL;
-      return -1;
-    }
+  if (!check_str (svcdir))
+    return -1;
 
   /* Just quit if svcdir do not exist */
   if (!exists (svcdir))

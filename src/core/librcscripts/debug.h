@@ -72,26 +72,34 @@ debug_message (const char *file, const char *func, int line,
      } \
  } while (0)
 
-bool __check_ptr (void *ptr, const char *file, const char *func, size_t line);
-bool __check_str (char *str, const char *file, const char *func, size_t line);
-bool __check_fd (int fd, const char *file, const char *func, size_t line);
-bool __check_fp (FILE *fp, const char *file, const char *func, size_t line);
+inline bool __check_ptr (const void *ptr, const char *file, const char *func,
+			 size_t line);
+inline bool __check_str (const char *str, const char *file, const char *func,
+			 size_t line);
+inline bool __check_strv (char **str, const char *file, const char *func,
+			  size_t line);
+inline bool __check_fd (int fd, const char *file, const char *func,
+			size_t line);
+inline bool __check_fp (FILE * fp, const char *file, const char *func,
+			size_t line);
 
 #define check_ptr(_ptr) \
  __check_ptr (_ptr, __FILE__, __FUNCTION__, __LINE__)
 #define check_str(_str) \
  __check_str (_str, __FILE__, __FUNCTION__, __LINE__)
+#define check_strv(_str) \
+ __check_strv (_str, __FILE__, __FUNCTION__, __LINE__)
 #define check_fd(_fd) \
  __check_fd (_fd, __FILE__, __FUNCTION__, __LINE__)
 #define check_fp(_fp) \
  __check_fp (_fp, __FILE__, __FUNCTION__, __LINE__)
 
-void *__xcalloc (size_t nmemb, size_t size, const char *file, const char *func,
-		 size_t line);
-void *__xmalloc (size_t size, const char *file, const char *func,
-		 size_t line);
-void *__xrealloc (void *ptr, size_t size, const char *file, const char *func,
-		  size_t line);
+inline void *__xcalloc (size_t nmemb, size_t size, const char *file,
+			const char *func, size_t line);
+inline void *__xmalloc (size_t size, const char *file, const char *func,
+			size_t line);
+inline void *__xrealloc (void *ptr, size_t size, const char *file,
+			 const char *func, size_t line);
 
 #define xcalloc(_nmemb, _size) \
  __xcalloc (_nmemb, _size, __FILE__, __FUNCTION__, __LINE__)
@@ -100,8 +108,8 @@ void *__xrealloc (void *ptr, size_t size, const char *file, const char *func,
 #define xrealloc(_ptr, _size) \
  __xrealloc (_ptr, _size, __FILE__, __FUNCTION__, __LINE__)
 
-char *__xstrndup (const char *str, size_t size, const char *file,
-		  const char *func, size_t line);
+inline char *__xstrndup (const char *str, size_t size, const char *file,
+			 const char *func, size_t line);
 
 #define xstrndup(_str, _size) \
  __xstrndup (_str, _size, __FILE__, __FUNCTION__, __LINE__)

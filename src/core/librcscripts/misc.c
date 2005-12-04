@@ -42,12 +42,8 @@ memrepchr (char **str, char old, char new, size_t size)
 {
   char *str_p;
 
-  if ((NULL == str) || (NULL == *str) || (0 == strlen (*str)))
-    {
-      DBG_MSG ("Invalid argument passed!\n");
-      errno = EINVAL;
-      return NULL;
-    }
+  if (!check_strv (str))
+    return NULL;
 
   str_p = memchr (*str, old, size);
 
@@ -66,15 +62,8 @@ strcatpaths (const char *pathname1, const char *pathname2)
   char *new_path = NULL;
   int lenght;
 
-  if ((NULL == pathname1)
-      || (0 == strlen (pathname1))
-      || (NULL == pathname2)
-      || (0 == strlen (pathname2)))
-    {
-      DBG_MSG ("Invalid argument passed!\n");
-      errno = EINVAL;
-      return NULL;
-    }
+  if ((!check_str (pathname1)) || (!check_str (pathname2)))
+    return 0;
 
   /* Lenght of pathname1 + lenght of pathname2 + '/' if needed */
   lenght = strlen (pathname1) + strlen (pathname2) + 1;
@@ -98,12 +87,8 @@ strndup (const char *str, size_t size)
   char *new_str = NULL;
   size_t len;
 
-  if (NULL == str)
-    {
-      DBG_MSG ("Invalid argument passed!\n");
-      errno = EINVAL;
-      return NULL;
-    }
+  if (!check_str (str))
+    return NULL;
 
   /* Check lenght of str without breaching the size limit */
   for (len = 0; (len < size) && ('\0' != str[len]); len++);
@@ -123,12 +108,8 @@ gbasename (const char *path)
 {
   char *new_path = NULL;
 
-  if ((NULL == path) || (0 == strlen (path)))
-    {
-      DBG_MSG ("Invalid argument passed!\n");
-      errno = EINVAL;
-      return NULL;
-    }
+  if (!check_str (path))
+    return NULL;
 
   /* Copied from glibc */
   new_path = strrchr (path, '/');
@@ -142,11 +123,8 @@ exists (const char *pathname)
   struct stat buf;
   int retval;
 
-  if ((NULL == pathname) || (0 == strlen (pathname)))
-    {
-      DBG_MSG ("Invalid argument passed!\n");
-      return 0;
-    }
+  if (!check_str (pathname))
+    return -1;
 
   retval = lstat (pathname, &buf);
   if (-1 != retval)
@@ -164,11 +142,8 @@ is_file (const char *pathname, int follow_link)
   struct stat buf;
   int retval;
 
-  if ((NULL == pathname) || (0 == strlen (pathname)))
-    {
-      DBG_MSG ("Invalid argument passed!\n");
-      return 0;
-    }
+  if (!check_str (pathname))
+    return -1;
 
   retval = follow_link ? stat (pathname, &buf) : lstat (pathname, &buf);
   if ((-1 != retval) && (S_ISREG (buf.st_mode)))
@@ -186,11 +161,8 @@ is_link (const char *pathname)
   struct stat buf;
   int retval;
 
-  if ((NULL == pathname) || (0 == strlen (pathname)))
-    {
-      DBG_MSG ("Invalid argument passed!\n");
-      return 0;
-    }
+  if (!check_str (pathname))
+    return -1;
 
   retval = lstat (pathname, &buf);
   if ((-1 != retval) && (S_ISLNK (buf.st_mode)))
@@ -208,11 +180,8 @@ is_dir (const char *pathname, int follow_link)
   struct stat buf;
   int retval;
 
-  if ((NULL == pathname) || (0 == strlen (pathname)))
-    {
-      DBG_MSG ("Invalid argument passed!\n");
-      return 0;
-    }
+  if (!check_str (pathname))
+    return -1;
 
   retval = follow_link ? stat (pathname, &buf) : lstat (pathname, &buf);
   if ((-1 != retval) && (S_ISDIR (buf.st_mode)))
@@ -230,11 +199,8 @@ get_mtime (const char *pathname, int follow_link)
   struct stat buf;
   int retval;
 
-  if ((NULL == pathname) || (0 == strlen (pathname)))
-    {
-      DBG_MSG ("Invalid argument passed!\n");
-      return 0;
-    }
+  if (!check_str (pathname))
+    return -1;
 
   retval = follow_link ? stat (pathname, &buf) : lstat (pathname, &buf);
   if (-1 != retval)
@@ -252,12 +218,8 @@ remove (const char *pathname)
 {
   int retval;
 
-  if ((NULL == pathname) || (0 == strlen (pathname)))
-    {
-      DBG_MSG ("Invalid argument passed!\n");
-      errno = EINVAL;
-      return -1;
-    }
+  if (!check_str (pathname))
+    return -1;
 
   if (1 == is_dir (pathname, 0))
     retval = rmdir (pathname);
@@ -278,12 +240,8 @@ mktree (const char *pathname, mode_t mode)
   int retval;
   int lenght;
 
-  if ((NULL == pathname) || (0 == strlen (pathname)))
-    {
-      DBG_MSG ("Invalid argument passed!\n");
-      errno = EINVAL;
-      return -1;
-    }
+  if (!check_str (pathname))
+    return -1;
 
   /* Lenght of 'pathname' + extra for "./" if needed */
   lenght = strlen (pathname) + 2;
@@ -326,8 +284,8 @@ mktree (const char *pathname, mode_t mode)
 	}
       else if (1 != is_dir (temp_name, 1))
 	{
-	  DBG_MSG ("Component in pathname is not a directory!\n");
 	  errno = ENOTDIR;
+	  DBG_MSG ("Component in pathname is not a directory!\n");
 	  goto error;
 	}
 
@@ -357,23 +315,21 @@ rmtree (const char *pathname)
   char **dirlist = NULL;
   int i = 0;
 
-  if ((NULL == pathname) || (0 == strlen (pathname)))
-    {
-      DBG_MSG ("Invalid argument passed!\n");
-      errno = EINVAL;
-      return -1;
-    }
+  if (!check_str (pathname))
+    return -1;
 
   if (1 != exists (pathname))
     {
-      DBG_MSG ("'%s' does not exists!\n", pathname);
       errno = ENOENT;
+      DBG_MSG ("'%s' does not exists!\n", pathname);
       return -1;
     }
 
   dirlist = ls_dir (pathname, 1);
   if ((NULL == dirlist) && (0 != errno))
     {
+      /* Do not error out - caller should decide itself if it
+       * it is an issue */
       DBG_MSG ("Could not get listing for '%s'!\n", pathname);
       return -1;
     }
@@ -424,12 +380,8 @@ ls_dir (const char *pathname, int hidden)
   struct dirent *dir_entry;
   char **dirlist = NULL;
 
-  if ((NULL == pathname) || (0 == strlen (pathname)))
-    {
-      DBG_MSG ("Invalid argument passed!\n");
-      errno = EINVAL;
-      return NULL;
-    }
+  if (!check_str (pathname))
+    return NULL;
 
   dirfd = opendir (pathname);
   if (NULL == dirfd)
@@ -486,10 +438,10 @@ error:
 
   if (NULL != dirfd)
     {
-      int old_errno = errno;
+      save_errno ();
       closedir (dirfd);
       /* closedir() might have changed it */
-      errno = old_errno;
+      restore_errno ();
     }
 
   return NULL;
@@ -511,22 +463,14 @@ get_cnf_entry (const char *pathname, const char *entry)
   int current = 0;
 
 
-  if ((NULL == pathname)
-      || (0 == strlen (pathname))
-      || (NULL == entry)
-      || (0 == strlen (entry)))
-    {
-      DBG_MSG ("Invalid argument passed!\n");
-      errno = EINVAL;
-      return NULL;
-    }
+  if ((!check_str (pathname)) || (!check_str (entry)))
+    return NULL;
 
   /* If it is not a file or symlink pointing to a file, bail */
   if (1 != is_file (pathname, 1))
     {
-      DBG_MSG ("Given pathname is not a file or do not exist!\n");
-      /* FIXME: Might need to set this to something better? */
       errno = ENOENT;
+      DBG_MSG ("Given pathname is not a file or do not exist!\n");
       return NULL;
     }
 
@@ -618,10 +562,10 @@ error:
 
   if (NULL != buf)
     {
-      int old_errno = errno;
+      save_errno ();
       file_unmap (buf, lenght);
       /* unmmap() might have changed it */
-      errno = old_errno;
+      restore_errno ();
     }
 
   return NULL;
@@ -655,7 +599,6 @@ file_map (const char *filename, char **buf, size_t * bufsize)
 {
   struct stat stats;
   int fd;
-  int old_errno;
 
   fd = open (filename, O_RDONLY);
   if (fd < 0)
@@ -666,22 +609,24 @@ file_map (const char *filename, char **buf, size_t * bufsize)
 
   if (fstat (fd, &stats) < 0)
     {
+      save_errno ();
       DBG_MSG ("Failed to stat file!\n");
-      old_errno = errno;
       close (fd);
       /* close() might have changed it */
-      errno = old_errno;
+      restore_errno ();
+
       return -1;
     }
 
   *buf = mmap (NULL, stats.st_size, PROT_READ, MAP_SHARED, fd, 0);
   if (*buf == MAP_FAILED)
     {
+      save_errno ();
       DBG_MSG ("Failed to mmap file!\n");
-      old_errno = errno;
       close (fd);
       /* close() might have changed it */
-      errno = old_errno;
+      restore_errno ();
+
       return -1;
     }
   *bufsize = stats.st_size;
