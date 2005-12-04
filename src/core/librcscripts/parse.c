@@ -481,7 +481,7 @@ generate_stage2 (dyn_buf_t * data)
       stage1_data = new_dyn_buf ();
       if (NULL == stage1_data)
 	{
-	  DBG_MSG ("Failed to allocate buffer!\n");
+	  DBG_MSG ("Failed to allocate dynamic buffer!\n");
 	  goto error;
 	}
 
@@ -864,7 +864,10 @@ _continue:
 
   /* read_line_dyn_buf() returned NULL with errno set */
   if (0 != errno)
-    goto error;
+    {
+      DBG_MSG ("Failed to read line from dynamic buffer!\n");
+      goto error;
+    }
 
   /* Set the mtimes
    * FIXME: Can drop this when we no longer need write_legacy_stage3() */

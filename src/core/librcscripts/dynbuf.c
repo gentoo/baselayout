@@ -135,6 +135,7 @@ write_dyn_buf (dyn_buf_t * dynbuf, const char *buf, size_t length)
     }
 
   len = snprintf ((dynbuf->data + dynbuf->wr_index), length + 1, "%s", buf);
+
   /* If len is less than length, it means the string was shorter than
    * given length */
   if (length > len)
@@ -142,6 +143,9 @@ write_dyn_buf (dyn_buf_t * dynbuf, const char *buf, size_t length)
 
   if (0 < length)
     dynbuf->wr_index += length;
+
+  if (-1 == length)
+    DBG_MSG ("Failed to write to dynamic buffer!\n");
 
   return length;
 }
@@ -177,6 +181,9 @@ int write_dyn_buf_from_fd (int fd, dyn_buf_t * dynbuf, size_t length)
     dynbuf->wr_index += length;
 
   dynbuf->data[dynbuf->wr_index] = '\0';
+
+  if (-1 == length)
+    DBG_MSG ("Failed to write to dynamic buffer!\n");
 
   return length;
 }
@@ -214,6 +221,9 @@ sprintf_dyn_buf (dyn_buf_t * dynbuf, const char *format, ...)
   if (0 < written)
     dynbuf->wr_index += written;
 
+  if (-1 == length)
+    DBG_MSG ("Failed to write to dynamic buffer!\n");
+
   return written;
 }
 
@@ -241,6 +251,7 @@ read_dyn_buf (dyn_buf_t * dynbuf, char *buf, size_t length)
     len = dynbuf->wr_index - dynbuf->rd_index;
 
   len = snprintf (buf, len + 1, "%s", (dynbuf->data + dynbuf->rd_index));
+
   /* If len is less than length, it means the string was shorter than
    * given length */
   if (length > len)
@@ -248,6 +259,9 @@ read_dyn_buf (dyn_buf_t * dynbuf, char *buf, size_t length)
 
   if (0 < length)
     dynbuf->rd_index += length;
+
+  if (-1 == length)
+    DBG_MSG ("Failed to write from dynamic buffer!\n");
 
   return length;
 }
@@ -281,6 +295,9 @@ read_dyn_buf_to_fd (int fd, dyn_buf_t * dynbuf, size_t length)
 
   if (0 < length)
     dynbuf->rd_index += length;
+
+  if (-1 == length)
+    DBG_MSG ("Failed to write from dynamic buffer!\n");
 
   return length;
 }
