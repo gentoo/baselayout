@@ -31,6 +31,7 @@
 #include "debug.h"
 #include "depend.h"
 #include "list.h"
+#include "str_list.h"
 #include "misc.h"
 
 LIST_HEAD (service_info_list);
@@ -139,7 +140,7 @@ service_is_dependency (char *servicename, char *dependency,
   info = service_get_info (servicename);
   if (NULL != info)
     {
-      STRING_LIST_FOR_EACH (info->depend_info[type], service, count)
+      str_list_for_each_item (info->depend_info[type], service, count)
 	{
 	  if (0 == strcmp (dependency, service))
 	    return 0;
@@ -176,7 +177,7 @@ service_add_dependency (char *servicename, char *dependency,
 	  if (NULL == tmp_buf)
 	    return -1;
 
-	  STRING_LIST_ADD_SORT (info->depend_info[type], tmp_buf, error);
+	  str_list_add_item_sorted (info->depend_info[type], tmp_buf, error);
 	}
       else
 	{
@@ -218,7 +219,7 @@ service_del_dependency (char *servicename, char *dependency,
       DBG_MSG ("Removing dependency '%s' of service '%s', type '%s'.\n",
 	       dependency, servicename, service_type_names[type]);
 
-      STRING_LIST_DEL (info->depend_info[type], dependency, error);
+      str_list_del_item (info->depend_info[type], dependency, error);
       return 0;
     }
   else
@@ -542,7 +543,7 @@ service_resolve_dependencies (void)
   /* Calculate all virtuals */
   list_for_each_entry (info, &service_info_list, node)
     {
-      STRING_LIST_FOR_EACH_SAFE (info->depend_info[PROVIDE], service, next,
+      str_list_for_each_item_safe (info->depend_info[PROVIDE], service, next,
 				 count)
 	{
 	  if (-1 == service_add_virtual (info->name, service))
@@ -556,7 +557,7 @@ service_resolve_dependencies (void)
   /* Now do NEED, USE, BEFORE and AFTER */
   list_for_each_entry (info, &service_info_list, node)
     {
-      STRING_LIST_FOR_EACH_SAFE (info->depend_info[NEED], service, next, count)
+      str_list_for_each_item_safe (info->depend_info[NEED], service, next, count)
 	{
 	  if (-1 == __service_resolve_dependency (info->name, service, NEED))
 	    {
@@ -567,7 +568,7 @@ service_resolve_dependencies (void)
     }
   list_for_each_entry (info, &service_info_list, node)
     {
-      STRING_LIST_FOR_EACH_SAFE (info->depend_info[USE], service, next, count)
+      str_list_for_each_item_safe (info->depend_info[USE], service, next, count)
 	{
 	  if (-1 == __service_resolve_dependency (info->name, service, USE))
 	    {
@@ -578,7 +579,7 @@ service_resolve_dependencies (void)
     }
   list_for_each_entry (info, &service_info_list, node)
     {
-      STRING_LIST_FOR_EACH_SAFE (info->depend_info[BEFORE], service, next,
+      str_list_for_each_item_safe (info->depend_info[BEFORE], service, next,
 				 count)
 	{
 	  if (-1 == __service_resolve_dependency (info->name, service, BEFORE))
@@ -590,7 +591,7 @@ service_resolve_dependencies (void)
     }
   list_for_each_entry (info, &service_info_list, node)
     {
-      STRING_LIST_FOR_EACH_SAFE (info->depend_info[AFTER], service, next, count)
+      str_list_for_each_item_safe (info->depend_info[AFTER], service, next, count)
 	{
 	  if (-1 == __service_resolve_dependency (info->name, service, AFTER))
 	    {

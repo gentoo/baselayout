@@ -38,6 +38,7 @@
 
 #include "debug.h"
 #include "misc.h"
+#include "str_list.h"
 
 char *
 memrepchr (char **str, char old, char new, size_t size)
@@ -359,7 +360,7 @@ rmtree (const char *pathname)
       i++;
     }
 
-  STRING_LIST_FREE (dirlist);
+  str_list_free (dirlist);
 
   /* Now remove the parent */
   if (-1 == remove (pathname))
@@ -370,7 +371,7 @@ rmtree (const char *pathname)
 
   return 0;
 error:
-  STRING_LIST_FREE (dirlist);
+  str_list_free (dirlist);
 
   return -1;
 }
@@ -422,7 +423,7 @@ ls_dir (const char *pathname, int hidden)
 	      goto error;
 	    }
 
-	  STRING_LIST_ADD (dirlist, tmp_p, error);
+	  str_list_add_item (dirlist, tmp_p, error);
 	}
     }
   while (NULL != dir_entry);
@@ -436,7 +437,7 @@ ls_dir (const char *pathname, int hidden)
 
 error:
   /* Free dirlist on error */
-  STRING_LIST_FREE (dirlist);
+  str_list_free (dirlist);
 
   if (NULL != dirfd)
     {

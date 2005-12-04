@@ -19,6 +19,7 @@
 #include "librcscripts/rcscripts.h"
 #include "librcscripts/debug.h"
 #include "librcscripts/misc.h"
+#include "librcscripts/str_list.h"
 
 #define IS_SBIN_RC()	((caller) && (0 == strcmp (caller, SBIN_RC)))
 
@@ -90,7 +91,7 @@ get_whitelist (char **whitelist, char *filename)
 	  if (NULL == tmp_p)
 	    goto error;
 
-	  STRING_LIST_ADD (whitelist, tmp_p, error);
+	  str_list_add_item (whitelist, tmp_p, error);
 	}
 
       current += count + 1;
@@ -109,7 +110,7 @@ error:
   if (NULL != tmp_buf)
     free (tmp_buf);
   file_unmap (buf, lenght);
-  STRING_LIST_FREE (whitelist);
+  str_list_free (whitelist);
 
   return NULL;
 }
@@ -144,7 +145,7 @@ filter_environ (char *caller)
     /* XXX: Maybe warn here? */
     check_profile = 0;
 
-  STRING_LIST_FOR_EACH (whitelist, env_name, count)
+  str_list_for_each_item (whitelist, env_name, count)
     {
       char *env_var = NULL;
       char *tmp_p = NULL;
@@ -188,20 +189,20 @@ add_entry:
 	goto error;
 
       snprintf (tmp_p, env_len, "%s=%s", env_name, env_var);
-      STRING_LIST_ADD (myenv, tmp_p, error);
+      str_list_add_item (myenv, tmp_p, error);
     }
 
-  STRING_LIST_FREE (whitelist);
+  str_list_free (whitelist);
 
   if (NULL == myenv)
     /* If all else fails, just add a default PATH */
-    STRING_LIST_ADD (myenv, strdup (DEFAULT_PATH), error);
+    str_list_add_item (myenv, strdup (DEFAULT_PATH), error);
 
   return myenv;
 
 error:
-  STRING_LIST_FREE (myenv);
-  STRING_LIST_FREE (whitelist);
+  str_list_free (myenv);
+  str_list_free (whitelist);
 
   return NULL;
 }

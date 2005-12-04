@@ -13,6 +13,7 @@ librcscripts_la_SOURCES = \
 	depend.c       \
 	depend.h       \
 	list.h         \
+	str_list.h     \
 	misc.c         \
 	misc.h         \
 	parse.c        \

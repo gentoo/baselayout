@@ -41,6 +41,7 @@
 #include "dynbuf.h"
 #include "depend.h"
 #include "list.h"
+#include "str_list.h"
 #include "misc.h"
 #include "parse.h"
 #include "simple-regex.h"
@@ -85,7 +86,7 @@ get_rcscripts (void)
       return -1;
     }
 
-  STRING_LIST_FOR_EACH (file_list, rcscript, count)
+  str_list_for_each_item (file_list, rcscript, count)
     {
       /* Is it a file? */
       if (!(is_file (rcscript, 1))
@@ -160,12 +161,12 @@ loop_error:
       goto error;
     }
 
-  STRING_LIST_FREE (file_list);
+  str_list_free (file_list);
 
   return 0;
 
 error:
-  STRING_LIST_FREE (file_list);
+  str_list_free (file_list);
 
   return -1;
 }
@@ -691,7 +692,7 @@ write_legacy_stage3 (FILE * output)
 
 	  fprintf (output, "RC_DEPEND_TREE[%i+%i]=", (index * 10), (i + 2));
 
-	  STRING_LIST_FOR_EACH (info->depend_info[i], service, count)
+	  str_list_for_each_item (info->depend_info[i], service, count)
 	    {
 	      if (0 == dep_count)
 		fprintf (output, "\"%s", service);
