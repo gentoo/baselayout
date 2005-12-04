@@ -61,6 +61,53 @@ get_rcscripts (void)
 	}
       else
 	{
+	  regex_data_t tmp_data;
+	  char *buf = NULL;
+	  char *tmp_buf = NULL;
+	  size_t lenght;
+	  int count;
+	  int current = 0;
+
+	  if (-1 == file_map (rcscript, &buf, &lenght))
+	    {
+	      DBG_MSG ("Could not open '%s' for reading!\n",
+		       gbasename (rcscript));
+	      goto error;
+	    }
+
+	  count = buf_get_line (buf, lenght, current);
+
+	  tmp_buf = xstrndup (&(buf[current]), count);
+	  if (NULL == tmp_buf)
+	    {
+	      file_unmap (buf, lenght);
+	      goto error;
+	    }
+
+	  file_unmap (buf, lenght);
+
+	  /* Check if it starts with '#!/sbin/runscript' */
+	  DO_REGEX (tmp_data, tmp_buf, "[ \t]*#![ \t]*/sbin/runscript[ \t]*.*",
+		    check_error);
+	  if (REGEX_FULL_MATCH != tmp_data.match)
+	    {
+	      DBG_MSG ("'%s' is not a valid rc-script!\n",
+		       gbasename (rcscript));
+
+	      free (tmp_buf);
+	      continue;
+	    }
+
+	  free (tmp_buf);
+
+	  /* We do not want rc-scripts ending in '.sh' */
+	  if (CHECK_FILE_EXTENSION (rcscript, ".sh"))
+	    {
+	      EWARN ("'%s' is invalid (should not end with '.sh')!\n",
+		     gbasename (rcscript));
+	      continue;
+	    }
+
 	  DBG_MSG ("Adding rc-script '%s' to list.\n", gbasename (rcscript));
 
 	  info = xmalloc (sizeof (rcscript_info_t));
@@ -105,6 +152,10 @@ get_rcscripts (void)
 	  list_add_tail (&info->node, &rcscript_list);
 
 	  continue;
+
+check_error:
+	  free (tmp_buf);
+	  goto error;
 
 loop_error:
 	  if (NULL != info)

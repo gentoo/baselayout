@@ -94,23 +94,6 @@ parse_rcscript (char *scriptname, dyn_buf_t * data)
 
       if (0 == current)
 	{
-	  /* Check if it starts with '#!/sbin/runscript' */
-	  DO_REGEX (tmp_data, tmp_buf,
-		    "[ \t]*#![ \t]*/sbin/runscript[ \t]*.*", error);
-	  if (REGEX_FULL_MATCH != tmp_data.match)
-	    {
-	      DBG_MSG ("'%s' is not a valid rc-script!\n",
-		       gbasename (scriptname));
-	      goto error;
-	    }
-
-	  /* We do not want rc-scripts ending in '.sh' */
-	  if (CHECK_FILE_EXTENSION (scriptname, ".sh"))
-	    {
-	      EWARN ("'%s' is invalid (should not end with '.sh')!\n",
-		     gbasename (scriptname));
-	      goto error;
-	    }
 	  DBG_MSG ("Parsing '%s'.\n", gbasename (scriptname));
 
 	  tmp_count = parse_print_header (gbasename (scriptname), data);

@@ -46,6 +46,17 @@ main (void)
       exit (EXIT_FAILURE);
     }
 
+#if 0
+  EINFO ("Scripts:\n");
+
+  list_for_each_entry (script_info, &rcscript_list, node)
+    {
+      printf ("  - %s\n", gbasename (script_info->filename));
+    }
+
+  printf ("\n");
+#endif
+
   list_for_each_entry (runlevel_info, &runlevel_list, node)
     {
       EINFO ("Runlevel %s:\n", gbasename (runlevel_info->dirname));
