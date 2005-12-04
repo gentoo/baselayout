@@ -34,6 +34,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+#include "config.h"
+
 #include "debug.h"
 #include "misc.h"
 

@@ -28,6 +28,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include "config.h"
+
 /* Gentoo style e* printing macro's */
 #define EINFO(_args...) \
  do { \
