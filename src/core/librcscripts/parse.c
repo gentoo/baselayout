@@ -456,7 +456,10 @@ failed:
 	{
 	  if ((!WIFEXITED (status)) || (0 != WEXITSTATUS (status)))
 	    {
+	      /* FIXME: better errno ? */
+	      errno = ECANCELED;
 	      DBG_MSG ("Bash failed with status 0x%x!\n", status);
+	      
 	      return -1;
 	    }
 	}
