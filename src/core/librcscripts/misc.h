@@ -64,9 +64,10 @@
 
 /* Return true if filename '_name' ends in '_ext' */
 #define CHECK_FILE_EXTENSION(_name, _ext) \
- ((strlen(_name) > strlen(_ext)) \
-  && (0 == strncmp(&(_name[strlen(_name) - strlen(_ext)]), \
-		   _ext, strlen(_ext))))
+ ((check_str (_name)) && (check_str (_ext)) \
+  && (strlen (_name) > strlen (_ext)) \
+  && (0 == strncmp (&(_name[strlen(_name) - strlen(_ext)]), \
+		    _ext, strlen(_ext))))
 
 /* Add a new item to a string list.  If the pointer to the list is NULL,
  * allocate enough memory for the amount of entries needed.  Ditto for
@@ -79,10 +80,8 @@
  do { \
    char **_tmp_p; \
    int _i = 0; \
-   if ((NULL == _item) || (0 == strlen(_item))) \
+   if (!check_str (_item)) \
      { \
-       DBG_MSG("Invalid argument passed!\n"); \
-       errno = EINVAL; \
        goto _error; \
      } \
    while ((NULL != _string_list) && (NULL != _string_list[_i])) \
@@ -90,10 +89,9 @@
        _i++; \
      } \
    /* Amount of entries + new + terminator */ \
-   _tmp_p = realloc(_string_list, sizeof(char *) * (_i + 2)); \
+   _tmp_p = xrealloc (_string_list, sizeof (char *) * (_i + 2)); \
    if (NULL == _tmp_p) \
      { \
-       DBG_MSG("Failed to reallocate list!\n"); \
        goto _error; \
      } \
    _string_list = _tmp_p; \
@@ -110,27 +108,28 @@
    char *_str_p1; \
    char *_str_p2; \
    int _i = 0; \
-   if ((NULL == _item) || (0 == strlen(_item))) \
+   if (!check_str (_item)) \
      { \
-       DBG_MSG("Invalid argument passed!\n"); \
-       errno = EINVAL; \
        goto _error; \
      } \
    while ((NULL != _string_list) && (NULL != _string_list[_i])) \
-     _i++; \
+     { \
+       _i++; \
+     } \
    /* Amount of entries + new + terminator */ \
-   _tmp_p = realloc(_string_list, sizeof(char *) * (_i + 2)); \
+   _tmp_p = xrealloc (_string_list, sizeof (char *) * (_i + 2)); \
    if (NULL == _tmp_p) \
      { \
-       DBG_MSG("Failed to reallocate list!\n"); \
        goto _error; \
      } \
    _string_list = _tmp_p; \
    if (0 == _i) \
-     /* Needed so that the end NULL will propagate
-      * (iow, make sure our 'NULL != _str_p1' test below
-      *  do not fail) */ \
-     _string_list[_i] = NULL; \
+     { \
+       /* Needed so that the end NULL will propagate
+	* (iow, make sure our 'NULL != _str_p1' test below
+	*  do not fail) */ \
+       _string_list[_i] = NULL; \
+     } \
    /* Actual terminator that needs adding */ \
    _string_list[_i+1] = NULL; \
    _i = 0; \
@@ -138,7 +137,7 @@
     * alphabetically sorted */ \
    while (NULL != _string_list[_i]) \
      { \
-       if (strcmp(_string_list[_i], _item) > 0) \
+       if (strcmp (_string_list[_i], _item) > 0) \
 	 { \
            break; \
          } \
@@ -163,28 +162,34 @@
 #define STRING_LIST_DEL(_string_list, _item, _error) \
  do { \
    int _i = 0; \
-   if ((NULL == _item) \
-       || (0 == strlen(_item)) \
-       || (NULL == _string_list)) \
+   if (!check_str (_item)) \
      { \
-       DBG_MSG("Invalid argument passed!\n"); \
+       goto _error; \
+     } \
+   if (NULL == _string_list) \
+     { \
        errno = EINVAL; \
+       DBG_MSG ("Invalid string list passed!\n"); \
        goto _error; \
      } \
    while (NULL != _string_list[_i]) \
      { \
-       if (0 == strcmp(_item, _string_list[_i])) \
-         break; \
+       if (0 == strcmp (_item, _string_list[_i])) \
+	 { \
+	   break; \
+	 } \
        else \
-         _i++; \
+	 { \
+	   _i++; \
+	 } \
      } \
    if (NULL == _string_list[_i]) \
      { \
-       DBG_MSG("Invalid argument passed!\n"); \
        errno = EINVAL; \
+       DBG_MSG ("Invalid string list item passed!\n"); \
        goto _error; \
      } \
-   free(_string_list[_i]); \
+   free (_string_list[_i]); \
    /* Shift all the following items one forward */ \
    do { \
      _string_list[_i] = _string_list[_i+1]; \
@@ -239,8 +244,8 @@
      { \
        int _i = 0; \
        while (NULL != _string_list[_i]) \
-       free(_string_list[_i++]); \
-       free(_string_list); \
+       free (_string_list[_i++]); \
+       free (_string_list); \
        _string_list = NULL; \
      } \
  } while (0)
