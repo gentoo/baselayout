@@ -44,8 +44,7 @@ setup_selinux (int argc, char **argv)
       else
 	{
 	  /* This shouldnt happen... probably corrupt lib */
-	  fprintf (stderr,
-		   "Run_init is missing from runscript_selinux.so!\n");
+	  fprintf (stderr, "Run_init is missing from runscript_selinux.so!\n");
 	  exit (127);
 	}
     }
@@ -166,12 +165,9 @@ filter_environ (char *caller)
 
 	  snprintf (tmp_env_name, tmp_len, "export %s", env_name);
 
-	  /* Clear errno so that subsequent calls do not trigger
-	   * DBG_MSG */
-	  errno = 0;
 	  env_var = get_cnf_entry (PROFILE_ENV, tmp_env_name);
 	  free (tmp_env_name);
-	  if (NULL == env_var && ENOMSG != errno)
+	  if ((NULL == env_var) && (0 != errno) && (ENOMSG != errno))
 	    goto error;
 	  else if (NULL != env_var)
 	    goto add_entry;
@@ -192,8 +188,16 @@ add_entry:
   str_list_free (whitelist);
 
   if (NULL == myenv)
-    /* If all else fails, just add a default PATH */
-    str_list_add_item (myenv, strdup (DEFAULT_PATH), error);
+    {
+      char *tmp_str;
+
+      tmp_str = xstrndup (DEFAULT_PATH, strlen (DEFAULT_PATH));
+      if (NULL == tmp_str)
+	goto error;
+
+      /* If all else fails, just add a default PATH */
+      str_list_add_item (myenv, strdup (DEFAULT_PATH), error);
+    }
 
   return myenv;
 
