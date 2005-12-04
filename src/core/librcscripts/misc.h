@@ -257,7 +257,7 @@ char *gbasename (const char *path);
 
 /* The following functions do not care about errors - they only return
  * 1 if 'pathname' exist, and is the type requested, or else 0.
- * They also might clear errno */
+ * This is only if pathname is valid ...  They also might clear errno */
 int exists (const char *pathname);
 int is_file (const char *pathname, int follow_link);
 int is_link (const char *pathname);
