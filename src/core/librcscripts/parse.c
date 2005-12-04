@@ -101,15 +101,12 @@ get_rcscripts (void)
 
 	  info = xmalloc (sizeof (rcscript_info_t));
 	  if (NULL == info)
-	      goto error;
+	    goto error;
 
 	  /* Copy the name */
-	  info->filename = strndup (rcscript, strlen (rcscript));
+	  info->filename = xstrndup (rcscript, strlen (rcscript));
 	  if (NULL == info->filename)
-	    {
-	      DBG_MSG ("Failed to allocate buffer!\n");
-	      goto loop_error;
-	    }
+	    goto loop_error;
 
 	  /* Get the modification time */
 	  info->mtime = get_mtime (rcscript, 1);
@@ -259,12 +256,9 @@ parse_rcscript (char *scriptname, dyn_buf_t * data)
     {
       count = buf_get_line (buf, lenght, current);
 
-      tmp_buf = strndup (&(buf[current]), count);
+      tmp_buf = xstrndup (&(buf[current]), count);
       if (NULL == tmp_buf)
-	{
-	  DBG_MSG ("Failed to allocate temporary buffer!\n");
-	  goto error;
-	}
+	goto error;
 
       if (0 == current)
 	{
@@ -937,12 +931,9 @@ parse_print_body (char *scriptname, dyn_buf_t * data)
   char *base;
   char *ext;
 
-  tmp_buf = strndup (scriptname, strlen (scriptname));
+  tmp_buf = xstrndup (scriptname, strlen (scriptname));
   if (NULL == tmp_buf)
-    {
-      DBG_MSG ("Failed to allocate temporary buffer!\n");
-      return -1;
-    }
+    return -1;
 
   /*
    * Rather do the next block in C than bash, in case we want to

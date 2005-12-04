@@ -131,8 +131,8 @@ get_word (const char *regex, char **r_word)
 
   *r_word = xmalloc (strlen (regex) + 1);
   if (NULL == r_word)
-      return 0;
-  
+    return 0;
+
   tmp_p = *r_word;
 
   while (strlen (regex) > 0)
@@ -305,7 +305,7 @@ get_list (const char *regex, char **r_list)
 
   *r_list = xmalloc (size + 1);
   if (NULL == *r_list)
-      return -1;
+    return -1;
 
   tmp_buf = *r_list;
 
@@ -801,12 +801,10 @@ match (regex_data_t * regex_data)
   CHECK_REGEX_DATA_P (regex_data, failed);
 
   /* We might be modifying regex_p, so make a copy */
-  tmp_buf = strndup (regex_data->regex, strlen (regex_data->regex));
+  tmp_buf = xstrndup (regex_data->regex, strlen (regex_data->regex));
   if (NULL == tmp_buf)
-    {
-      DBG_MSG ("Failed to allocate temporary buffer!\n");
-      goto error;
-    }
+    goto error;
+
   regex_p = tmp_buf;
 
   /* Should we only match from the start? */

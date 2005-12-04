@@ -29,6 +29,7 @@
 #include <string.h>
 
 #include "debug.h"
+#include "misc.h"
 
 static char log_domain[] = "rcscripts";
 
@@ -94,6 +95,26 @@ debug_message (const char *file, const char *func, int line,
 }
 
 void *
+__xcalloc(size_t nmemb, size_t size, const char *file,
+	  const char *func, size_t line)
+{
+  void *new_ptr;
+
+  new_ptr = calloc (nmemb, size);
+  if (NULL == new_ptr)
+    {
+      /* Set errno in case specific malloc() implementation does not */
+      errno = ENOMEM;
+
+      debug_message (file, func, line, "Failed to allocate buffer!\n");
+
+      return NULL;
+    }
+
+  return new_ptr;
+}
+
+void *
 __xmalloc (size_t size, const char *file, const char *func, size_t line)
 {
   void *new_ptr;
@@ -131,3 +152,25 @@ __xrealloc (void *ptr, size_t size, const char *file,
 
   return new_ptr;
 }
+
+char *
+__xstrndup (const char *str, size_t size, const char *file,
+	    const char *func, size_t line)
+{
+  char *new_ptr;
+
+  new_ptr = strndup (str, size);
+  if (NULL == new_ptr)
+    {
+      /* Set errno in case specific realloc() implementation does not */
+      errno = ENOMEM;
+
+      debug_message (file, func, line,
+		     "Failed to duplicate string via strndup() !\n");
+
+      return NULL;
+    }
+
+  return new_ptr;
+}
+

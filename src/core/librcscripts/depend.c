@@ -97,12 +97,11 @@ service_add (char *servicename)
 
       info = xmalloc (sizeof (service_info_t));
       if (NULL == info)
-	  return -1;
+	return -1;
 
-      info->name = strndup (servicename, strlen (servicename));
+      info->name = xstrndup (servicename, strlen (servicename));
       if (NULL == info->name)
 	{
-	  DBG_MSG ("Failed to allocate buffer!\n");
 	  free (info);
 	  return -1;
 	}
@@ -191,12 +190,9 @@ service_add_dependency (char *servicename, char *dependency,
 	  DBG_MSG ("Adding dependency '%s' of service '%s', type '%s'.\n",
 		   dependency, servicename, service_type_names[type]);
 
-	  tmp_buf = strndup (dependency, strlen (dependency));
+	  tmp_buf = xstrndup (dependency, strlen (dependency));
 	  if (NULL == tmp_buf)
-	    {
-	      DBG_MSG ("Failed to allocate buffer!\n");
-	      return -1;
-	    }
+	    return -1;
 
 	  STRING_LIST_ADD_SORT (info->depend_info[type], tmp_buf, error);
 	}
@@ -323,12 +319,9 @@ service_add_virtual (char *servicename, char *virtual)
 	  DBG_MSG ("Adding virtual '%s' of service '%s'.\n",
 		   virtual, servicename);
 
-	  info->provide = strndup (virtual, strlen (virtual));
+	  info->provide = xstrndup (virtual, strlen (virtual));
 	  if (NULL == info->provide)
-	    {
-	      DBG_MSG ("Failed to allocate buffer!\n");
-	      return -1;
-	    }
+	    return -1;
 	}
       else
 	{

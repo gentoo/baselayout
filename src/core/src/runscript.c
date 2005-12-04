@@ -71,12 +71,10 @@ get_whitelist (char **whitelist, char *filename)
     {
       count = buf_get_line (buf, lenght, current);
 
-      tmp_buf = strndup (&buf[current], count);
+      tmp_buf = xstrndup (&buf[current], count);
       if (NULL == tmp_buf)
-	{
-	  DBG_MSG ("Failed to allocate temporary buffer!\n");
-	  goto error;
-	}
+	goto error;
+
       tmp_p = tmp_buf;
 
       /* Strip leading spaces/tabs */
@@ -88,7 +86,10 @@ get_whitelist (char **whitelist, char *filename)
       token = strsep (&tmp_p, "# \t");
       if (NULL != token && '\0' != token[0])
 	{
-	  tmp_p = strndup (token, strlen (token));
+	  tmp_p = xstrndup (token, strlen (token));
+	  if (NUL == tmp_p)
+	    goto error;
+
 	  STRING_LIST_ADD (whitelist, tmp_p, error);
 	}
 

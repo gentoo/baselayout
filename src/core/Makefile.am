@@ -7,4 +7,6 @@ SUBDIRS = \
 	src          \
 	tests
 
-EXTRA_DIST = ChangeLog.0
+EXTRA_DIST = \
+	autogen.sh  \
+	ChangeLog.0

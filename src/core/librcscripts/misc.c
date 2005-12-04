@@ -81,7 +81,7 @@ strcatpaths (const char *pathname1, const char *pathname2)
   /* lenght + '\0' */
   new_path = xmalloc (lenght + 1);
   if (NULL == new_path)
-      return NULL;
+    return NULL;
 
   strncpy (new_path, pathname1, lenght);
   /* Should we add a '/' ? */
@@ -110,7 +110,7 @@ strndup (const char *str, size_t size)
 
   new_str = xmalloc (len + 1);
   if (NULL == new_str)
-      return NULL;
+    return NULL;
 
   /* Make sure our string is NULL terminated */
   new_str[len] = '\0';
@@ -290,14 +290,12 @@ mktree (const char *pathname, mode_t mode)
   /* lenght + '\0' */
   temp_name = xmalloc (lenght + 1);
   if (NULL == temp_name)
-      return -1;
+    return -1;
 
-  temp_token = strndup (pathname, strlen (pathname));
+  temp_token = xstrndup (pathname, strlen (pathname));
   if (NULL == temp_token)
-    {
-      DBG_MSG ("Failed to allocate temporary buffer!\n");
-      goto error;
-    }
+    goto error;
+
   token_p = temp_token;
 
   if (pathname[0] == '/')
@@ -542,12 +540,10 @@ get_cnf_entry (const char *pathname, const char *entry)
     {
       count = buf_get_line (buf, lenght, current);
 
-      tmp_buf = strndup (&buf[current], count);
+      tmp_buf = xstrndup (&buf[current], count);
       if (NULL == tmp_buf)
-	{
-	  DBG_MSG ("Failed to allocate temporary buffer!\n");
-	  goto error;
-	}
+	goto error;
+
       tmp_p = tmp_buf;
 
       /* Strip leading spaces/tabs */
@@ -591,12 +587,9 @@ get_cnf_entry (const char *pathname, const char *entry)
 	  if (NULL != value)
 	    free (value);
 
-	  value = strndup (token, strlen (token));
+	  value = xstrndup (token, strlen (token));
 	  if (NULL == value)
-	    {
-	      DBG_MSG ("Failed to allocate temporary buffer!\n");
-	      goto error;
-	    }
+	    goto error;
 
 	  /* We do not break, as there might be more than one entry
 	   * defined, and as bash uses the last, so should we */

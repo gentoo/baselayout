@@ -169,7 +169,7 @@ int write_dyn_buf_from_fd (int fd, dyn_buf_t * dynbuf, size_t length)
     }
 
   len = read (fd, (dynbuf->data + dynbuf->wr_index), len);
-  
+
   if (length > len)
     length = len;
 
@@ -295,14 +295,10 @@ read_line_dyn_buf (dyn_buf_t *dynbuf)
 
   if (count > dynbuf->rd_index)
     {
-      buf = strndup ((dynbuf->data + dynbuf->rd_index),
-		     (count - dynbuf->rd_index));
+      buf = xstrndup ((dynbuf->data + dynbuf->rd_index),
+		      (count - dynbuf->rd_index));
       if (NULL == buf)
-	{
-	  errno = ENOMEM;
-	  DBG_MSG ("Failed to allocate buffer!\n");
-	  return NULL;
-	}
+	return NULL;
 
       /* Also skip the '\n' .. */
       dynbuf->rd_index = count + 1;

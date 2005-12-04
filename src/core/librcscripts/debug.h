@@ -63,14 +63,24 @@ debug_message (const char *file, const char *func, int line,
      FATAL_ERROR(); \
  } while (0)
 
+void *__xcalloc (size_t nmemb, size_t size, const char *file, const char *func,
+		 size_t line);
 void *__xmalloc (size_t size, const char *file, const char *func,
 		 size_t line);
 void *__xrealloc (void *ptr, size_t size, const char *file, const char *func,
 		  size_t line);
 
+#define xcalloc(_nmemb, _size) \
+ __xcalloc (_nmemb, _size, __FILE__, __FUNCTION__, __LINE__)
 #define xmalloc(_size) \
  __xmalloc (_size, __FILE__, __FUNCTION__, __LINE__)
 #define xrealloc(_ptr, _size) \
  __xrealloc (_ptr, _size, __FILE__, __FUNCTION__, __LINE__)
+
+char *__xstrndup (const char *str, size_t size, const char *file,
+		  const char *func, size_t line);
+
+#define xstrndup(_str, _size) \
+ __xstrndup (_str, _size, __FILE__, __FUNCTION__, __LINE__)
 
 #endif /* _DEBUG_H */
