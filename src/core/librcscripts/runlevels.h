@@ -31,13 +31,13 @@ typedef struct
 {
   struct list_head node;
 
-  char *name;
-  char **entries;
+  char *dirname;		/* Name of this runlevel */
+  struct list_head entries;	/* rcscript_info_t list of rc-scripts */
 } runlevel_info_t;
 
 struct list_head runlevel_list;
 
-char ** get_runlevels (void);
+int get_runlevels (void);
 
 bool is_runlevel (const char *runlevel);
 
