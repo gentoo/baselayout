@@ -39,6 +39,8 @@ struct list_head runlevel_list;
 
 int get_runlevels (void);
 
+runlevel_info_t * get_runlevel_info (const char *runlevel);
+
 bool is_runlevel (const char *runlevel);
 
 #endif /* _RUNLEVELS_H */

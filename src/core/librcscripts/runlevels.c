@@ -52,7 +52,7 @@ get_runlevel_dirs (void)
     {
       errno = ENOENT;
       DBG_MSG ("Failed to get any entries in '%' !\n", RUNLEVELS_DIR);
-      
+
       return NULL;
     }
 
@@ -76,7 +76,7 @@ get_runlevel_dirs (void)
     {
       if (NULL != runlvl_list)
 	str_list_free (runlvl_list);
-      
+
       errno = ENOENT;
     }
 
@@ -87,7 +87,7 @@ error:
     str_list_free (dir_list);
   if (NULL != runlvl_list)
     str_list_free (runlvl_list);
-  
+
   return NULL;
 }
 
@@ -183,6 +183,26 @@ error:
     str_list_free (runlvl_list);
 
   return -1;
+}
+
+runlevel_info_t *
+get_runlevel_info (const char *runlevel)
+{
+  runlevel_info_t *info;
+
+  if (!check_str (runlevel))
+    return NULL;
+
+  list_for_each_entry (info, &runlevel_list, node)
+    {
+      if ((strlen (runlevel) == strlen (gbasename (info->dirname)))
+	  && (0 == strncmp (runlevel, gbasename (info->dirname),
+			    strlen (runlevel))))
+	return info;
+    }
+
+  errno = ENOENT;
+  return NULL;
 }
 
 bool
