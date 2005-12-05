@@ -47,7 +47,6 @@ AC_TRY_COMPILE([
   ], [
     va_list ap, aq;
     va_copy(ap, aq);
-    return 0;
   ],
   [va_copy="va_copy"],
   [AC_TRY_COMPILE([
@@ -55,7 +54,6 @@ AC_TRY_COMPILE([
     ], [
       va_list ap, aq;
       __va_copy(ap, aq);
-      return 0;
     ],
     [va_copy="__va_copy"],
     [AC_MSG_ERROR([Unable to determine name of va_copy macro])]
