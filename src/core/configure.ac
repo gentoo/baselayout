@@ -45,25 +45,17 @@ AC_MSG_CHECKING([for va_copy])
 AC_TRY_COMPILE([
     #include <stdarg.h>
   ], [
-    int
-    main (void)
-    {
-      va_list ap, aq;
-      va_copy(ap, aq);
-      return 0;
-    }
+    va_list ap, aq;
+    va_copy(ap, aq);
+    return 0;
   ],
   [va_copy="va_copy"],
   [AC_TRY_COMPILE([
       #include <stdarg.h>
     ], [
-      int
-      main (void)
-      {
-        va_list ap, aq;
-        __va_copy(ap, aq);
-        return 0;
-      }
+      va_list ap, aq;
+      __va_copy(ap, aq);
+      return 0;
     ],
     [va_copy="__va_copy"],
     [AC_MSG_ERROR([Unable to determine name of va_copy macro])]
@@ -71,7 +63,7 @@ AC_TRY_COMPILE([
 )
 AC_MSG_RESULT([$va_copy])
 if test x"$va_copy" != xva_copy ; then
-  AC_DEFINE([va_copy], [__va_copy],
+  AC_DEFINE_UNQUOTED([va_copy], [$va_copy],
     [va_copy macro proviced by gcc (undefined if its va_copy, else defined
      to proper name)]    
   )
