@@ -375,15 +375,15 @@ error:
 char **
 ls_dir (const char *pathname, int hidden)
 {
-  DIR *dirfd;
+  DIR *dp;
   struct dirent *dir_entry;
   char **dirlist = NULL;
 
   if (!check_str (pathname))
     return NULL;
 
-  dirfd = opendir (pathname);
-  if (NULL == dirfd)
+  dp = opendir (pathname);
+  if (NULL == dp)
     {
       DBG_MSG ("Failed to call opendir()!\n");
       /* errno will be set by opendir() */
@@ -394,7 +394,7 @@ ls_dir (const char *pathname, int hidden)
     {
       /* Clear errno to distinguish between EOF and error */
       errno = 0;
-      dir_entry = readdir (dirfd);
+      dir_entry = readdir (dp);
       /* Only an error if 'errno' != 0, else EOF */
       if ((NULL == dir_entry) && (0 != errno))
 	{
@@ -432,7 +432,7 @@ ls_dir (const char *pathname, int hidden)
       DBG_MSG ("Directory is empty.\n");
     }
 
-  closedir (dirfd);
+  closedir (dp);
 
   return dirlist;
 
@@ -440,10 +440,10 @@ error:
   /* Free dirlist on error */
   str_list_free (dirlist);
 
-  if (NULL != dirfd)
+  if (NULL != dp)
     {
       save_errno ();
-      closedir (dirfd);
+      closedir (dp);
       /* closedir() might have changed it */
       restore_errno ();
     }

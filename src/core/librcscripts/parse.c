@@ -471,7 +471,7 @@ write_legacy_stage3 (FILE * output)
   service_info_t *info;
   char *service;
   int count;
-  int index = 0;
+  int sindex = 0;
   int dep_count;
   int i;
 
@@ -491,27 +491,27 @@ write_legacy_stage3 (FILE * output)
 
   list_for_each_entry (info, &service_info_list, node)
     {
-      index++;
+      sindex++;
     }
-  if (0 == index)
+  if (0 == sindex)
     {
       EERROR ("No services to generate dependency tree for!\n");
       return -1;
     }
 
-  fprintf (output, "RC_DEPEND_TREE[0]=%i\n\n", index);
+  fprintf (output, "RC_DEPEND_TREE[0]=%i\n\n", sindex);
 
-  index = 1;
+  sindex = 1;
 
   list_for_each_entry (info, &service_info_list, node)
     {
-      fprintf (output, "RC_DEPEND_TREE[%i]=\"%s\"\n", index * 10, info->name);
+      fprintf (output, "RC_DEPEND_TREE[%i]=\"%s\"\n", sindex * 10, info->name);
 
       for (i = 0; i <= BROKEN; i++)
 	{
 	  dep_count = 0;
 
-	  fprintf (output, "RC_DEPEND_TREE[%i+%i]=", (index * 10), (i + 2));
+	  fprintf (output, "RC_DEPEND_TREE[%i+%i]=", (sindex * 10), (i + 2));
 
 	  str_list_for_each_item (info->depend_info[i], service, count)
 	    {
@@ -530,8 +530,8 @@ write_legacy_stage3 (FILE * output)
 	}
 
       fprintf (output, "RC_DEPEND_TREE[%i+9]=\"%li\"\n\n",
-	       index * 10, info->mtime);
-      index++;
+	       sindex * 10, info->mtime);
+      sindex++;
     }
 
   fprintf (output, "RC_GOT_DEPTREE_INFO=\"yes\"\n");

@@ -65,7 +65,7 @@ get_rcscripts (void)
 	  char *buf = NULL;
 	  char *tmp_buf = NULL;
 	  size_t lenght;
-	  int count;
+	  int buf_count;
 	  int current = 0;
 
 	  if (-1 == file_map (rcscript, &buf, &lenght))
@@ -75,9 +75,9 @@ get_rcscripts (void)
 	      goto error;
 	    }
 
-	  count = buf_get_line (buf, lenght, current);
+	  buf_count = buf_get_line (buf, lenght, current);
 
-	  tmp_buf = xstrndup (&(buf[current]), count);
+	  tmp_buf = xstrndup (&(buf[current]), buf_count);
 	  if (NULL == tmp_buf)
 	    {
 	      file_unmap (buf, lenght);

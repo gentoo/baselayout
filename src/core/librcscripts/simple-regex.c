@@ -355,7 +355,7 @@ __match_list (regex_data_t * regex_data)
   char *list_p = regex_data->regex;
   char test_regex[2] = { '\0', '\0' };
   int invert = 0;
-  int match;
+  int lmatch;
   int retval;
 
   CHECK_REGEX_DATA_P (regex_data, failed);
@@ -370,10 +370,10 @@ __match_list (regex_data_t * regex_data)
 
   if (invert)
     /* All should be a match if not in the list */
-    match = 1;
+    lmatch = 1;
   else
     /* We only have a match if in the list */
-    match = 0;
+    lmatch = 0;
 
   while (strlen (list_p) > 0)
     {
@@ -391,19 +391,19 @@ __match_list (regex_data_t * regex_data)
 	     * characters we try to match, we
 	     * have a match until one of the
 	     * list is found. */
-	    match = 0;
+	    lmatch = 0;
 	  else
 	    /* If not, we have to keep looking
 	     * until one from the list match
 	     * before we have a match */
-	    match = 1;
+	    lmatch = 1;
 	  break;
 	}
       list_p++;
     }
 
   /* Fill in our structure */
-  if (match)
+  if (lmatch)
     {
       regex_data->match = REGEX_PARTIAL_MATCH;
       regex_data->where = regex_data->data;
@@ -694,7 +694,7 @@ __match (regex_data_t * regex_data)
   char *regex_p = regex_data->regex;
   size_t count = 0;
   size_t r_count = 0;
-  int match = 0;
+  int rmatch = 0;
   int retval;
 
   CHECK_REGEX_DATA_P (regex_data, failed);
@@ -710,30 +710,30 @@ __match (regex_data_t * regex_data)
       if (-1 == retval)
 	goto error;
       if (REGEX_MATCH (tmp_data))
-	goto match;
+	goto have_match;
 
       FILL_REGEX_DATA (tmp_data, data_p, regex_p);
       retval = match_wildcard (&tmp_data);
       if (-1 == retval)
 	goto error;
       if (REGEX_MATCH (tmp_data))
-	goto match;
+	goto have_match;
 
       FILL_REGEX_DATA (tmp_data, data_p, regex_p);
       retval = match_word (&tmp_data);
       if (-1 == retval)
 	goto error;
       if (REGEX_MATCH (tmp_data))
-	goto match;
+	goto have_match;
 
       break;
 
-match:
+have_match:
       data_p += tmp_data.count;
       count += tmp_data.count;
       regex_p += tmp_data.r_count;
       r_count += tmp_data.r_count;
-      match = 1;
+      rmatch = 1;
 
       /* Check that we do not go out of bounds */
       if (((data_p - regex_data->data) > strlen (regex_data->data))
@@ -751,12 +751,12 @@ failed:
   /* We will fill in regex_data below */
   count = 0;
   r_count = 0;
-  match = 0;
+  rmatch = 0;
 
 exit:
   /* Fill in our structure */
   /* We can still have a match ('*' and '?'), although count == 0 */
-  if ((0 == count) && (0 == match))
+  if ((0 == count) && (0 == rmatch))
     regex_data->match = REGEX_NO_MATCH;
   else if (strlen (regex_data->data) == count)
     regex_data->match = REGEX_FULL_MATCH;
