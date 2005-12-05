@@ -66,7 +66,7 @@ get_runlevel_dirs (void)
 
   str_list_free (dir_list);
 
-  if (!check_strv (runlvl_list))
+  if (!check_arg_strv (runlvl_list))
     {
       if (NULL != runlvl_list)
 	str_list_free (runlvl_list);
@@ -184,7 +184,7 @@ get_runlevel_info (const char *runlevel)
 {
   runlevel_info_t *info;
 
-  if (!check_str (runlevel))
+  if (!check_arg_str (runlevel))
     return NULL;
 
   list_for_each_entry (info, &runlevel_list, node)

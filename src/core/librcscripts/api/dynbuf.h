@@ -53,10 +53,11 @@ char *read_line_dyn_buf (dyn_buf_t *dynbuf);
 
 bool dyn_buf_rd_eof (dyn_buf_t *dynbuf);
 
-bool __check_dyn_buf (dyn_buf_t *dynbuf, const char *file, const char *func,
-		      size_t line);
+inline bool check_dyn_buf (dyn_buf_t *dynbuf);
+inline bool __check_arg_dyn_buf (dyn_buf_t *dynbuf, const char *file,
+				 const char *func, size_t line);
 
-#define check_dyn_buf(_dynbuf) \
- __check_dyn_buf (_dynbuf, __FILE__, __FUNCTION__, __LINE__)
+#define check_arg_dyn_buf(_dynbuf) \
+ __check_arg_dyn_buf (_dynbuf, __FILE__, __FUNCTION__, __LINE__)
 
 #endif /* _DYNBUF_H */

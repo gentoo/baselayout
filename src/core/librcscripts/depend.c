@@ -57,7 +57,7 @@ service_get_info (char *servicename)
 {
   service_info_t *info;
 
-  if (!check_str (servicename))
+  if (!check_arg_str (servicename))
     return NULL;
 
   list_for_each_entry (info, &service_info_list, node)
@@ -81,7 +81,7 @@ service_add (char *servicename)
   service_info_t *sorted;
   int count;
 
-  if (!check_str (servicename))
+  if (!check_arg_str (servicename))
     return -1;
 
   info = service_get_info (servicename);
@@ -133,7 +133,7 @@ service_is_dependency (char *servicename, char *dependency,
   char *service;
   int count = 0;
 
-  if ((!check_str (servicename)) || (!check_str (dependency)))
+  if ((!check_arg_str (servicename)) || (!check_arg_str (dependency)))
     return -1;
 
   info = service_get_info (servicename);
@@ -161,7 +161,7 @@ service_is_recursive_dependency (char *servicename, char *dependency,
   char *depend;
   int count = 0;
 
-  if ((!check_str (servicename)) || (!check_str (dependency)))
+  if ((!check_arg_str (servicename)) || (!check_arg_str (dependency)))
     return NULL;
 
   info = service_get_info (dependency);
@@ -198,7 +198,7 @@ service_add_dependency (char *servicename, char *dependency,
   service_info_t *info;
   char *tmp_buf;
 
-  if ((!check_str (servicename)) || (!check_str (dependency)))
+  if ((!check_arg_str (servicename)) || (!check_arg_str (dependency)))
     return -1;
 
   info = service_get_info (servicename);
@@ -241,7 +241,7 @@ service_del_dependency (char *servicename, char *dependency,
 {
   service_info_t *info;
 
-  if ((!check_str (servicename)) || (!check_str (dependency)))
+  if ((!check_arg_str (servicename)) || (!check_arg_str (dependency)))
     return -1;
 
   if (-1 == service_is_dependency (servicename, dependency, type))
@@ -273,7 +273,7 @@ service_get_virtual (char *virtual)
 {
   service_info_t *info;
 
-  if (!check_str (virtual))
+  if (!check_arg_str (virtual))
     return NULL;
 
   list_for_each_entry (info, &service_info_list, node)
@@ -295,7 +295,7 @@ service_add_virtual (char *servicename, char *virtual)
 {
   service_info_t *info;
 
-  if ((!check_str (servicename)) || (!check_str (virtual)))
+  if ((!check_arg_str (servicename)) || (!check_arg_str (virtual)))
     return -1;
 
   if (NULL != service_get_info (virtual))
@@ -343,7 +343,7 @@ service_set_mtime (char *servicename, time_t mtime)
 {
   service_info_t *info;
 
-  if (!check_str (servicename))
+  if (!check_arg_str (servicename))
     return -1;
 
   info = service_get_info (servicename);
@@ -370,7 +370,7 @@ __service_resolve_dependency (char *servicename, char *dependency,
   service_info_t *info;
   int retval;
 
-  if ((!check_str (servicename)) || (!check_str (dependency)))
+  if ((!check_arg_str (servicename)) || (!check_arg_str (dependency)))
     return -1;
 
   info = service_get_info (servicename);

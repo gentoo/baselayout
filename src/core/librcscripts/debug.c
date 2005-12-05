@@ -95,10 +95,55 @@ debug_message (const char *file, const char *func, int line,
   restore_errno ();
 }
 
-bool
-__check_ptr (const void *ptr, const char *file, const char *func, size_t line)
+inline bool
+check_ptr (const void *ptr)
 {
   if (NULL == ptr)
+    return FALSE;
+
+  return TRUE;
+}
+
+inline bool
+check_str (const char *str)
+{
+  if ((NULL == str) || (0 == strlen (str)))
+    return FALSE;
+
+  return TRUE;
+}
+
+inline bool
+check_strv (char **str)
+{
+  if ((NULL == str) || (NULL == *str) || (0 == strlen (*str)))
+    return FALSE;
+
+  return TRUE;
+}
+
+inline bool
+check_fd (int fd)
+{
+  if ((0 >= fd) || (-1 == fcntl (fd, F_GETFL)))
+    return FALSE;
+
+  return TRUE;
+}
+
+inline bool
+check_fp (FILE *fp)
+{
+  if ((NULL == fp) || (-1 == fileno (fp)))
+    return FALSE;
+
+  return TRUE;
+}
+
+inline bool
+__check_arg_ptr (const void *ptr, const char *file, const char *func, size_t line)
+{
+  if (!check_ptr (ptr))
     {
       errno = EINVAL;
 
@@ -110,10 +155,10 @@ __check_ptr (const void *ptr, const char *file, const char *func, size_t line)
   return TRUE;
 }
 
-bool
-__check_str (const char *str, const char *file, const char *func, size_t line)
+inline bool
+__check_arg_str (const char *str, const char *file, const char *func, size_t line)
 {
-  if ((NULL == str) || (0 == strlen (str)))
+  if (!check_str (str))
     {
       errno = EINVAL;
 
@@ -125,10 +170,10 @@ __check_str (const char *str, const char *file, const char *func, size_t line)
   return TRUE;
 }
 
-bool
-__check_strv (char **str, const char *file, const char *func, size_t line)
+inline bool
+__check_arg_strv (char **str, const char *file, const char *func, size_t line)
 {
-  if ((NULL == str) || (NULL == *str) || (0 == strlen (*str)))
+  if (!check_strv (str))
     {
       errno = EINVAL;
 
@@ -140,10 +185,10 @@ __check_strv (char **str, const char *file, const char *func, size_t line)
   return TRUE;
 }
 
-bool
-__check_fd (int fd, const char *file, const char *func, size_t line)
+inline bool
+__check_arg_fd (int fd, const char *file, const char *func, size_t line)
 {
-  if ((0 >= fd) || (-1 == fcntl (fd, F_GETFL)))
+  if (!check_fd (fd))
     {
       errno = EBADF;
 
@@ -155,10 +200,10 @@ __check_fd (int fd, const char *file, const char *func, size_t line)
   return TRUE;
 }
 
-bool
-__check_fp (FILE *fp, const char *file, const char *func, size_t line)
+inline bool
+__check_arg_fp (FILE *fp, const char *file, const char *func, size_t line)
 {
-  if ((NULL == fp) || (-1 == fileno (fp)))
+  if (!check_fp (fp))
     {
       errno = EBADF;
 
@@ -170,7 +215,7 @@ __check_fp (FILE *fp, const char *file, const char *func, size_t line)
   return TRUE;
 }
 
-void *
+inline void *
 __xcalloc(size_t nmemb, size_t size, const char *file,
 	  const char *func, size_t line)
 {
@@ -190,7 +235,7 @@ __xcalloc(size_t nmemb, size_t size, const char *file,
   return new_ptr;
 }
 
-void *
+inline void *
 __xmalloc (size_t size, const char *file, const char *func, size_t line)
 {
   void *new_ptr;
@@ -209,7 +254,7 @@ __xmalloc (size_t size, const char *file, const char *func, size_t line)
   return new_ptr;
 }
 
-void *
+inline void *
 __xrealloc (void *ptr, size_t size, const char *file,
 	    const char *func, size_t line)
 {
@@ -229,7 +274,7 @@ __xrealloc (void *ptr, size_t size, const char *file,
   return new_ptr;
 }
 
-char *
+inline char *
 __xstrndup (const char *str, size_t size, const char *file,
 	    const char *func, size_t line)
 {

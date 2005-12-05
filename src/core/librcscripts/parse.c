@@ -72,10 +72,10 @@ parse_rcscript (char *scriptname, dyn_buf_t * data)
   int count;
   int current = 0;
 
-  if (!check_dyn_buf (data))
+  if (!check_arg_dyn_buf (data))
     return -1;
 
-  if (!check_str (scriptname))
+  if (!check_arg_str (scriptname))
     return -1;
 
   if (-1 == file_map (scriptname, &buf, &lenght))
@@ -163,7 +163,7 @@ generate_stage1 (dyn_buf_t * data)
   size_t write_count = 0;
   size_t tmp_count;
 
-  if (!check_dyn_buf (data))
+  if (!check_arg_dyn_buf (data))
     return -1;
 
   write_count = parse_print_start (data);
@@ -209,7 +209,7 @@ generate_stage2 (dyn_buf_t * data)
   size_t write_count = 0;
   int old_errno = 0;
 
-  if (!check_dyn_buf (data))
+  if (!check_arg_dyn_buf (data))
     return -1;
 
   /* Pipe to send data to parent */
@@ -475,7 +475,7 @@ write_legacy_stage3 (FILE * output)
   int dep_count;
   int i;
 
-  if (!check_fp (output))
+  if (!check_arg_fp (output))
     return -1;
 
   fprintf (output, "rc_type_ineed=2\n");
@@ -564,7 +564,7 @@ parse_cache (const dyn_buf_t * data)
   char *field;
   int retval;
 
-  if (!check_dyn_buf ((dyn_buf_t *) data))
+  if (!check_arg_dyn_buf ((dyn_buf_t *) data))
     goto error;
 
   while (NULL != (tmp_buf = read_line_dyn_buf ((dyn_buf_t *) data)))
@@ -715,7 +715,7 @@ parse_print_start (dyn_buf_t * data)
 {
   size_t write_count;
 
-  if (!check_dyn_buf (data))
+  if (!check_arg_dyn_buf (data))
     return -1;
   
   write_count =
@@ -734,7 +734,7 @@ parse_print_header (char *scriptname, dyn_buf_t * data)
 {
   size_t write_count;
 
-  if (!check_dyn_buf (data))
+  if (!check_arg_dyn_buf (data))
     return -1;
   
   write_count =
@@ -757,7 +757,7 @@ parse_print_body (char *scriptname, dyn_buf_t * data)
   char *base;
   char *ext;
 
-  if (!check_dyn_buf (data))
+  if (!check_arg_dyn_buf (data))
     return -1;
   
   tmp_buf = xstrndup (scriptname, strlen (scriptname));

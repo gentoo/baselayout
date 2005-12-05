@@ -41,7 +41,7 @@ memrepchr (char **str, char old, char new, size_t size)
 {
   char *str_p;
 
-  if (!check_strv (str))
+  if (!check_arg_strv (str))
     return NULL;
 
   str_p = memchr (*str, old, size);
@@ -61,7 +61,7 @@ strcatpaths (const char *pathname1, const char *pathname2)
   char *new_path = NULL;
   int lenght;
 
-  if ((!check_str (pathname1)) || (!check_str (pathname2)))
+  if ((!check_arg_str (pathname1)) || (!check_arg_str (pathname2)))
     return 0;
 
   /* Lenght of pathname1 + lenght of pathname2 + '/' if needed */
@@ -86,7 +86,7 @@ strndup (const char *str, size_t size)
   char *new_str = NULL;
   size_t len;
 
-  if (!check_str (str))
+  if (!check_arg_str (str))
     return NULL;
 
   /* Check lenght of str without breaching the size limit */
@@ -107,7 +107,7 @@ gbasename (const char *path)
 {
   char *new_path = NULL;
 
-  if (!check_str (path))
+  if (!check_arg_str (path))
     return NULL;
 
   /* Copied from glibc */
@@ -122,7 +122,7 @@ exists (const char *pathname)
   struct stat buf;
   int retval;
 
-  if (!check_str (pathname))
+  if (!check_arg_str (pathname))
     return -1;
 
   retval = lstat (pathname, &buf);
@@ -141,7 +141,7 @@ is_file (const char *pathname, int follow_link)
   struct stat buf;
   int retval;
 
-  if (!check_str (pathname))
+  if (!check_arg_str (pathname))
     return -1;
 
   retval = follow_link ? stat (pathname, &buf) : lstat (pathname, &buf);
@@ -160,7 +160,7 @@ is_link (const char *pathname)
   struct stat buf;
   int retval;
 
-  if (!check_str (pathname))
+  if (!check_arg_str (pathname))
     return -1;
 
   retval = lstat (pathname, &buf);
@@ -179,7 +179,7 @@ is_dir (const char *pathname, int follow_link)
   struct stat buf;
   int retval;
 
-  if (!check_str (pathname))
+  if (!check_arg_str (pathname))
     return -1;
 
   retval = follow_link ? stat (pathname, &buf) : lstat (pathname, &buf);
@@ -198,7 +198,7 @@ get_mtime (const char *pathname, int follow_link)
   struct stat buf;
   int retval;
 
-  if (!check_str (pathname))
+  if (!check_arg_str (pathname))
     return -1;
 
   retval = follow_link ? stat (pathname, &buf) : lstat (pathname, &buf);
@@ -217,7 +217,7 @@ remove (const char *pathname)
 {
   int retval;
 
-  if (!check_str (pathname))
+  if (!check_arg_str (pathname))
     return -1;
 
   if (1 == is_dir (pathname, 0))
@@ -239,7 +239,7 @@ mktree (const char *pathname, mode_t mode)
   int retval;
   int lenght;
 
-  if (!check_str (pathname))
+  if (!check_arg_str (pathname))
     return -1;
 
   /* Lenght of 'pathname' + extra for "./" if needed */
@@ -314,7 +314,7 @@ rmtree (const char *pathname)
   char **dirlist = NULL;
   int i = 0;
 
-  if (!check_str (pathname))
+  if (!check_arg_str (pathname))
     return -1;
 
   if (1 != exists (pathname))
@@ -379,7 +379,7 @@ ls_dir (const char *pathname, int hidden)
   struct dirent *dir_entry;
   char **dirlist = NULL;
 
-  if (!check_str (pathname))
+  if (!check_arg_str (pathname))
     return NULL;
 
   dp = opendir (pathname);
@@ -467,7 +467,7 @@ get_cnf_entry (const char *pathname, const char *entry)
   int current = 0;
 
 
-  if ((!check_str (pathname)) || (!check_str (entry)))
+  if ((!check_arg_str (pathname)) || (!check_arg_str (entry)))
     return NULL;
 
   /* If it is not a file or symlink pointing to a file, bail */

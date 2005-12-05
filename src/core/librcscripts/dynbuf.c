@@ -60,7 +60,7 @@ reallocate_dyn_buf (dyn_buf_t * dynbuf, size_t needed)
 {
   int len;
 
-  if (!check_dyn_buf (dynbuf))
+  if (!check_arg_dyn_buf (dynbuf))
     return NULL;
 
   len = sizeof (char) * (dynbuf->wr_index + needed + 1);
@@ -109,10 +109,10 @@ write_dyn_buf (dyn_buf_t * dynbuf, const char *buf, size_t length)
 {
   int len;
 
-  if (!check_dyn_buf (dynbuf))
+  if (!check_arg_dyn_buf (dynbuf))
     return -1;
 
-  if (!check_ptr ((char *) buf))
+  if (!check_arg_ptr ((char *) buf))
     return -1;
 
   if (NULL == reallocate_dyn_buf (dynbuf, length))
@@ -141,10 +141,10 @@ int write_dyn_buf_from_fd (int fd, dyn_buf_t * dynbuf, size_t length)
 {
   int len = length;
 
-  if (!check_dyn_buf (dynbuf))
+  if (!check_arg_dyn_buf (dynbuf))
     return -1;
 
-  if (!check_fd (fd))
+  if (!check_arg_fd (fd))
     return -1;
 
   if (NULL == reallocate_dyn_buf (dynbuf, length))
@@ -176,7 +176,7 @@ sprintf_dyn_buf (dyn_buf_t * dynbuf, const char *format, ...)
   char test_str[10];
   int needed, written = 0;
 
-  if (!check_dyn_buf (dynbuf))
+  if (!check_arg_dyn_buf (dynbuf))
     return -1;
 
   va_start (arg1, format);
@@ -210,10 +210,10 @@ read_dyn_buf (dyn_buf_t * dynbuf, char *buf, size_t length)
 {
   int len = length;
 
-  if (!check_dyn_buf (dynbuf))
+  if (!check_arg_dyn_buf (dynbuf))
     return -1;
 
-  if (!check_ptr (buf))
+  if (!check_arg_ptr (buf))
     return -1;
 
   if (dynbuf->rd_index >= dynbuf->length)
@@ -243,10 +243,10 @@ read_dyn_buf_to_fd (int fd, dyn_buf_t * dynbuf, size_t length)
 {
   int len = length;
 
-  if (!check_dyn_buf (dynbuf))
+  if (!check_arg_dyn_buf (dynbuf))
     return -1;
 
-  if (!check_fd (fd))
+  if (!check_arg_fd (fd))
     return -1;
 
   if (dynbuf->rd_index >= dynbuf->length)
@@ -274,7 +274,7 @@ read_line_dyn_buf (dyn_buf_t *dynbuf)
   char *buf = NULL;
   size_t count = 0;
 
-  if (!check_dyn_buf (dynbuf))
+  if (!check_arg_dyn_buf (dynbuf))
     return NULL;
 
   for (count = dynbuf->rd_index; count < dynbuf->wr_index && dynbuf->data[count] != '\n'; count++);
@@ -296,7 +296,7 @@ read_line_dyn_buf (dyn_buf_t *dynbuf)
 bool
 dyn_buf_rd_eof (dyn_buf_t *dynbuf)
 {
-  if (!check_dyn_buf (dynbuf))
+  if (!check_arg_dyn_buf (dynbuf))
     return FALSE;
 
   if (dynbuf->rd_index >= dynbuf->wr_index)
@@ -305,11 +305,20 @@ dyn_buf_rd_eof (dyn_buf_t *dynbuf)
   return FALSE;
 }
 
-bool
-__check_dyn_buf (dyn_buf_t *dynbuf, const char *file, const char *func,
-		 size_t line)
+inline bool
+check_dyn_buf (dyn_buf_t *dynbuf)
 {
   if ((NULL == dynbuf) || (NULL == dynbuf->data) || (0 == dynbuf->length))
+    return FALSE;
+
+  return TRUE;
+}
+
+inline bool
+__check_arg_dyn_buf (dyn_buf_t *dynbuf, const char *file, const char *func,
+		 size_t line)
+{
+  if (!check_dyn_buf (dynbuf))
     {
       errno = EINVAL;
 

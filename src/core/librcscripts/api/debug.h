@@ -70,27 +70,48 @@ debug_message (const char *file, const char *func, int line,
      } \
  } while (0)
 
-inline bool __check_ptr (const void *ptr, const char *file, const char *func,
+/*
+ * Functions to check validity of some types.
+ * They do not set errno.
+ */
+
+inline bool check_ptr (const void *ptr);
+inline bool check_str (const char *str);
+inline bool check_strv (char **str);
+inline bool check_fd (int fd);
+inline bool check_fp (FILE * fp);
+
+/*
+ * Functions and macro's to check validity of some types.
+ * They DO set errno to EINVAL.
+ */
+
+inline bool __check_arg_ptr (const void *ptr, const char *file, const char *func,
 			 size_t line);
-inline bool __check_str (const char *str, const char *file, const char *func,
+inline bool __check_arg_str (const char *str, const char *file, const char *func,
 			 size_t line);
-inline bool __check_strv (char **str, const char *file, const char *func,
+inline bool __check_arg_strv (char **str, const char *file, const char *func,
 			  size_t line);
-inline bool __check_fd (int fd, const char *file, const char *func,
+inline bool __check_arg_fd (int fd, const char *file, const char *func,
 			size_t line);
-inline bool __check_fp (FILE * fp, const char *file, const char *func,
+inline bool __check_arg_fp (FILE * fp, const char *file, const char *func,
 			size_t line);
 
-#define check_ptr(_ptr) \
- __check_ptr (_ptr, __FILE__, __FUNCTION__, __LINE__)
-#define check_str(_str) \
- __check_str (_str, __FILE__, __FUNCTION__, __LINE__)
-#define check_strv(_str) \
- __check_strv (_str, __FILE__, __FUNCTION__, __LINE__)
-#define check_fd(_fd) \
- __check_fd (_fd, __FILE__, __FUNCTION__, __LINE__)
-#define check_fp(_fp) \
- __check_fp (_fp, __FILE__, __FUNCTION__, __LINE__)
+#define check_arg_ptr(_ptr) \
+ __check_arg_ptr (_ptr, __FILE__, __FUNCTION__, __LINE__)
+#define check_arg_str(_str) \
+ __check_arg_str (_str, __FILE__, __FUNCTION__, __LINE__)
+#define check_arg_strv(_str) \
+ __check_arg_strv (_str, __FILE__, __FUNCTION__, __LINE__)
+#define check_arg_fd(_fd) \
+ __check_arg_fd (_fd, __FILE__, __FUNCTION__, __LINE__)
+#define check_arg_fp(_fp) \
+ __check_arg_fp (_fp, __FILE__, __FUNCTION__, __LINE__)
+
+/*
+ * Various memory allocation functions and macro's.
+ * They set errno to ENOMEM and print debug info.
+ */
 
 inline void *__xcalloc (size_t nmemb, size_t size, const char *file,
 			const char *func, size_t line);

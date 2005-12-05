@@ -120,7 +120,7 @@ get_word (const char *regex, char **r_word)
   size_t count = 0;
   size_t tmp_count;
 
-  if (!check_str (regex))
+  if (!check_arg_str (regex))
     return 0;
 
   *r_word = xmalloc (strlen (regex) + 1);
@@ -238,7 +238,7 @@ get_list_size (const char *regex)
 {
   size_t count = 0;
 
-  if (!check_str (regex))
+  if (!check_arg_str (regex))
     return 0;
 
   if ('[' != regex[0])
@@ -279,7 +279,7 @@ get_list (const char *regex, char **r_list)
   size_t count = 0;
   size_t size;
 
-  if (!check_str (regex))
+  if (!check_arg_str (regex))
     return 0;
 
   /* Bail if we do not have a list.  Do not add debugging, as
@@ -498,7 +498,7 @@ error:
 size_t
 get_wildcard (const char *regex, char *r_wildcard)
 {
-  if (!check_str (regex))
+  if (!check_arg_str (regex))
     return 0;
 
   r_wildcard[0] = regex[0];

@@ -60,7 +60,7 @@ int delete_var_dirs (const char *svcdir);
 int
 create_directory (const char *name)
 {
-  if (!check_str (name))
+  if (!check_arg_str (name))
     return -1;
 
   /* Check if directory exist, and is not a symlink */
@@ -92,7 +92,7 @@ create_var_dirs (const char *svcdir)
   char *tmp_path = NULL;
   int i = 0;
 
-  if (!check_str (svcdir))
+  if (!check_arg_str (svcdir))
     return -1;
 
   /* Check and create svcdir if needed */
@@ -132,7 +132,7 @@ delete_var_dirs (const char *svcdir)
   char *tmp_path = NULL;
   int i = 0;
 
-  if (!check_str (svcdir))
+  if (!check_arg_str (svcdir))
     return -1;
 
   /* Just quit if svcdir do not exist */

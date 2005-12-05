@@ -165,7 +165,7 @@ loop_error:
     }
 
   /* Final check if we have some entries */
-  if (!check_strv (file_list))
+  if (!check_arg_strv (file_list))
     {
       errno = ENOENT;
       DBG_MSG ("No rc-scripts to parse!\n");
@@ -192,7 +192,7 @@ check_rcscripts_mtime (const char *cachefile)
   time_t rc_conf_mtime;
   time_t rc_confd_mtime;
 
-  if (!check_str (cachefile))
+  if (!check_arg_str (cachefile))
     return -1;
 
   cache_mtime = get_mtime (cachefile, 1);
@@ -240,7 +240,7 @@ get_rcscript_info (const char *scriptname)
 {
   rcscript_info_t *info;
 
-  if (!check_str (scriptname))
+  if (!check_arg_str (scriptname))
     return NULL;
 
   list_for_each_entry (info, &rcscript_list, node)
