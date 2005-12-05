@@ -67,10 +67,11 @@ pump_start() {
 
 	# Map some generic options to pump
 	d="dhcp_${ifvar}"
-	[[ " ${!d} " == "  " ]] && d=" ${dhcp} "
-	[[ " ${!d} " == *" nodns "* ]] && opts="${opts} --no-dns"
-	[[ " ${!d} " == *" nogateway "* ]] && opts="${opts} --no-gateway"
-	[[ " ${!d} " == *" nontp "* ]] && opts="${opts} --no-ntp"
+	d=" ${!d} "
+	[[ ${d} == "  " ]] && d=" ${dhcp} "
+	[[ ${d} == *" nodns "* ]] && opts="${opts} --no-dns"
+	[[ ${d} == *" nogateway "* ]] && opts="${opts} --no-gateway"
+	[[ ${d} == *" nontp "* ]] && opts="${opts} --no-ntp"
 
 	search="dns_search_${ifvar}"
 	[[ -n ${!search} ]] && opts="${opts} --search-path='"${!search}"'"
