@@ -39,11 +39,43 @@ AC_FUNC_LSTAT_FOLLOWS_SLASHED_SYMLINK
 AC_TYPE_SIGNAL
 AC_FUNC_STAT
 AC_CHECK_FUNCS([remove])
-AH_VERBATIM([va_copy],
-[/* Older gcc's have __va_copy */
-#ifndef va_copy
-# define va_copy __va_copy
-#endif])
+
+dnl Check if gcc provides va_copy or __va_copy
+AC_MSG_CHECKING([for va_copy])
+AC_TRY_COMPILE([
+    #include <stdarg.h>
+  ], [
+    int
+    main (void)
+    {
+      va_list ap, aq;
+      va_copy(ap, aq);
+      return 0;
+    }
+  ],
+  [va_copy="va_copy"],
+  [AC_TRY_COMPILE([
+      #include <stdarg.h>
+    ], [
+      int
+      main (void)
+      {
+        va_list ap, aq;
+        __va_copy(ap, aq);
+        return 0;
+      }
+    ],
+    [va_copy="__va_copy"],
+    [AC_MSG_ERROR([Unable to determine name of va_copy macro])]
+  )]
+)
+AC_MSG_RESULT([$va_copy])
+if test x"$va_copy" != xva_copy ; then
+  AC_DEFINE([va_copy], [__va_copy],
+    [va_copy macro proviced by gcc (undefined if its va_copy, else defined
+     to proper name)]    
+  )
+fi
 
 dnl check if we have 32bit or 64bit output
 AC_ARG_ENABLE([debug],
@@ -54,7 +86,7 @@ AC_ARG_ENABLE([debug],
 )
 
 if test x"$enable_debug" != xno ; then
-	CFLAGS="$CFLAGS -ggdb -DRC_DEBUG"
+	CFLAGS="$CFLAGS -ggdb -Wshadow -DRC_DEBUG"
 fi
 
 CFLAGS="$CFLAGS -Wall"
