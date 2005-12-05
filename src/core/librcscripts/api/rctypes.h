@@ -1,7 +1,7 @@
 /*
  * rctypes.h
  *
- * Misc types.
+ * Misc types and macro's.
  *
  * Copyright (C) 2004,2005 Martin Schlemmer <azarah@nosferatu.za.org>
  *
@@ -24,6 +24,16 @@
 
 #ifndef _RCTYPES_H
 #define _RCTYPES_H
+
+/* Min/Max macro's */
+#ifdef MAX
+#  undef MAX
+#endif
+#define MAX(_a, _b)	(((_a) > (_b)) ? (_a) : (_b))
+#ifdef MIN
+#  undef MIN
+#endif
+#define MIN(_a, _b)	((_a) > (_b) ? (_b) : (_a))
 
 typedef enum {
   FALSE,

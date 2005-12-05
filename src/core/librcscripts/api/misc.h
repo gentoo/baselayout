@@ -51,16 +51,6 @@
    restore_errno (); \
  } while (0)
 
-/* Min/Max macro's */
-#ifdef MAX
-#  undef MAX
-#endif
-#define MAX(_a, _b)	(((_a) > (_b)) ? (_a) : (_b))
-#ifdef MIN
-#  undef MIN
-#endif
-#define MIN(_a, _b)	((_a) > (_b) ? (_b) : (_a))
-
 /* Return true if filename '_name' ends in '_ext' */
 #define CHECK_FILE_EXTENSION(_name, _ext) \
  ((check_str (_name)) && (check_str (_ext)) \
