@@ -76,7 +76,7 @@ AC_ARG_ENABLE([debug],
 )
 
 if test x"$enable_debug" != xno ; then
-  CFLAGS="$CFLAGS -ggdb -Wshadow -DRC_DEBUG"
+  CFLAGS="$CFLAGS -ggdb -DRC_DEBUG -Wshadow -Wmissing-prototypes -Wmissing-declarations -Wredundant-decls -Wnested-externs"
 fi
 
 CFLAGS="$CFLAGS -Wall"

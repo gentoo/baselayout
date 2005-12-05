@@ -23,6 +23,10 @@
 static void (*selinux_run_init_old) (void);
 static void (*selinux_run_init_new) (int argc, char **argv);
 
+void setup_selinux (int argc, char **argv);
+char ** get_whitelist (char **whitelist, char *filename);
+char ** filter_environ (char *caller);
+
 extern char **environ;
 
 void
