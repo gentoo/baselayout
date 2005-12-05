@@ -22,8 +22,8 @@
  * $Header$
  */
 
-#ifndef _RCSCRIPTS_H
-#define _RCSCRIPTS_H
+#ifndef __RCSCRIPTS_H__
+#define __RCSCRIPTS_H__
 
 #include <stddef.h>
 #include <sys/types.h>
@@ -69,4 +69,4 @@
 
 #define SOFTLEVEL		"SOFTLEVEL"
 
-#endif /* _RCSCRIPTS_H */
+#endif /* __RCSCRIPTS_H__ */

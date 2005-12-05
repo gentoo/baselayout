@@ -22,8 +22,8 @@
  * $Header$
  */
 
-#ifndef _RCTYPES_H
-#define _RCTYPES_H
+#ifndef __RCTYPES_H__
+#define __RCTYPES_H__
 
 /* Min/Max macro's */
 #ifdef MAX
@@ -40,4 +40,4 @@ typedef enum {
   TRUE
 } bool;
 
-#endif /* _RCTYPES_H */
+#endif /* __RCTYPES_H__ */

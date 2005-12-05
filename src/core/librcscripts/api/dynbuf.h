@@ -22,8 +22,8 @@
  * $Header$
  */
 
-#ifndef _DYNBUF_H
-#define _DYNBUF_H
+#ifndef __DYNBUF_H__
+#define __DYNBUF_H__
 
 #define DYNAMIC_BUFFER_SIZE (sizeof (char) * 2 * 1024)
 
@@ -60,4 +60,4 @@ inline bool __check_arg_dyn_buf (dyn_buf_t *dynbuf, const char *file,
 #define check_arg_dyn_buf(_dynbuf) \
  __check_arg_dyn_buf (_dynbuf, __FILE__, __FUNCTION__, __LINE__)
 
-#endif /* _DYNBUF_H */
+#endif /* __DYNBUF_H__ */

@@ -22,8 +22,8 @@
  * $Header$
  */
 
-#ifndef _DEBUG_H
-#define _DEBUG_H
+#ifndef __DEBUG_H__
+#define __DEBUG_H__
 
 #include <errno.h>
 #include <stdio.h>
@@ -133,4 +133,4 @@ inline char *__xstrndup (const char *str, size_t size, const char *file,
 #define xstrndup(_str, _size) \
  __xstrndup (_str, _size, __FILE__, __FUNCTION__, __LINE__)
 
-#endif /* _DEBUG_H */
+#endif /* __DEBUG_H__ */

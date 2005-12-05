@@ -22,8 +22,8 @@
  * $Header$
  */
 
-#ifndef _MISC_H
-#define _MISC_H
+#ifndef __MISC_H__
+#define __MISC_H__
 
 #include <stdio.h>
 
@@ -103,4 +103,4 @@ int file_map (const char *filename, char **buf, size_t * bufsize);
 void file_unmap (char *buf, size_t bufsize);
 size_t buf_get_line (char *buf, size_t buflen, size_t cur);
 
-#endif /* _MISC_H */
+#endif /* __MISC_H__ */

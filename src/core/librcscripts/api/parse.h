@@ -22,8 +22,8 @@
  * $Header$
  */
 
-#ifndef _PARSE_H
-#define _PARSE_H
+#ifndef __PARSE_H__
+#define __PARSE_H__
 
 #define LEGACY_CACHE_FILE_NAME	"deptree"
 
@@ -81,4 +81,4 @@ int parse_cache (const dyn_buf_t * data);
  *
  */
 
-#endif /* _PARSE_H */
+#endif /* __PARSE_H__ */

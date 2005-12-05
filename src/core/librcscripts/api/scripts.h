@@ -22,8 +22,8 @@
  * $Header$
  */
 
-#ifndef _SCRIPTS_H
-#define _SCRIPTS_H
+#ifndef __SCRIPTS_H__
+#define __SCRIPTS_H__
 
 typedef struct
 {
@@ -40,4 +40,4 @@ int get_rcscripts (void);
 int check_rcscripts_mtime (const char *cachefile);
 rcscript_info_t *get_rcscript_info (const char *scriptname);
 
-#endif /* _SCRIPTS_H */
+#endif /* __SCRIPTS_H__ */

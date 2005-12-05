@@ -22,8 +22,8 @@
  * $Header$
  */
 
-#ifndef _DEPEND_H
-#define _DEPEND_H
+#ifndef __DEPEND_H__
+#define __DEPEND_H__
 
 /* Dependency types supported or still to be implemented */
 typedef enum
@@ -73,4 +73,4 @@ int service_add_virtual (char *servicename, char *virtual);
 int service_set_mtime (char *servicename, time_t mtime);
 int service_resolve_dependencies (void);
 
-#endif /* _DEPEND_H */
+#endif /* __DEPEND_H__ */

@@ -22,8 +22,8 @@
  * $Header$
  */
 
-#ifndef _STR_LIST_H
-#define _STR_LIST_H
+#ifndef __STR_LIST_H__
+#define __STR_LIST_H__
 
 /* Add a new item to a string list.  If the pointer to the list is NULL,
  * allocate enough memory for the amount of entries needed.  Ditto for
@@ -209,4 +209,4 @@
      } \
  } while (0)
 
-#endif /* _STR_LIST_H */
+#endif /* __STR_LIST_H__ */

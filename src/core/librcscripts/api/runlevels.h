@@ -22,8 +22,8 @@
  * $Header$
  */
 
-#ifndef _RUNLEVELS_H
-#define _RUNLEVELS_H
+#ifndef __RUNLEVELS_H__
+#define __RUNLEVELS_H__
 
 typedef struct
 {
@@ -41,4 +41,4 @@ runlevel_info_t * get_runlevel_info (const char *runlevel);
 
 bool is_runlevel (const char *runlevel);
 
-#endif /* _RUNLEVELS_H */
+#endif /* __RUNLEVELS_H__ */

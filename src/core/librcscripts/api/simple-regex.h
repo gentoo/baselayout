@@ -22,8 +22,8 @@
  * $Header$
  */
 
-#ifndef _SIMPLE_REGEX_H
-#define _SIMPLE_REGEX_H
+#ifndef __SIMPLE_REGEX_H__
+#define __SIMPLE_REGEX_H__
 
 #define REGEX_NO_MATCH 0	/* We have no match */
 #define REGEX_PARTIAL_MATCH 1	/* Some of the string matches the regex */
@@ -84,4 +84,4 @@ typedef struct
  */
 int match (regex_data_t * regex_data);
 
-#endif /* _SIMPLE_REGEX_H */
+#endif /* __SIMPLE_REGEX_H__ */
