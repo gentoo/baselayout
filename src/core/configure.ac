@@ -79,14 +79,14 @@ fi
 
 dnl check if we have 32bit or 64bit output
 AC_ARG_ENABLE([debug],
-	AS_HELP_STRING([--enable-debug],
-		[enable debugging - very verbose (default=disabled)]),
-	[enable_debug="$enableval"],
-	[enable_debug="no"]
+  AS_HELP_STRING([--enable-debug],
+    [enable debugging - very verbose (default=disabled)]),
+  [enable_debug="$enableval"],
+  [enable_debug="no"]
 )
 
 if test x"$enable_debug" != xno ; then
-	CFLAGS="$CFLAGS -ggdb -Wshadow -DRC_DEBUG"
+  CFLAGS="$CFLAGS -ggdb -Wshadow -DRC_DEBUG"
 fi
 
 CFLAGS="$CFLAGS -Wall"
@@ -95,10 +95,11 @@ RCSCRIPTS_DEFINES='-DETCDIR="\"$(sysconfdir)\"" -DLIBDIR="\"$(libdir)\"" -DBINDI
 AC_SUBST([RCSCRIPTS_DEFINES])
 
 AC_OUTPUT([
-	Makefile
-	scripts/Makefile
-	data/Makefile
-	librcscripts/Makefile
-	src/Makefile
-	tests/Makefile
+  Makefile
+  scripts/Makefile
+  data/Makefile
+  librcscripts/Makefile
+  src/Makefile
+  tests/Makefile
 ])
+
