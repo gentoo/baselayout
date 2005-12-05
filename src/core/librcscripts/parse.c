@@ -579,9 +579,9 @@ parse_cache (const dyn_buf_t * data)
       token = strsep (&tmp_p, " ");
 
       /* FIELD name empty/bogus? */
-      if ((NULL == token) || (0 == strlen (token))
+      if ((!check_str (token))
 	  /* We got an empty FIELD value */
-	  || (NULL == tmp_p) || (0 == strlen (tmp_p)))
+	  || (!check_str (tmp_p)))
 	{
 	  errno = EMSGSIZE;
 	  DBG_MSG ("Parsing stopped due to short read!\n");

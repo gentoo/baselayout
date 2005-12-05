@@ -424,7 +424,7 @@ ls_dir (const char *pathname, int hidden)
     }
   while (NULL != dir_entry);
 
-  if ((NULL == dirlist) || (NULL == dirlist[0]))
+  if (!check_strv (dirlist))
     {
       if (NULL != dirlist)
 	str_list_free (dirlist);

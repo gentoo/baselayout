@@ -66,12 +66,10 @@ get_runlevel_dirs (void)
 
   str_list_free (dir_list);
 
-  if (!check_arg_strv (runlvl_list))
+  if (!check_strv (runlvl_list))
     {
       if (NULL != runlvl_list)
 	str_list_free (runlvl_list);
-
-      errno = ENOENT;
     }
 
   return runlvl_list;
@@ -195,7 +193,6 @@ get_runlevel_info (const char *runlevel)
 	return info;
     }
 
-  errno = ENOENT;
   return NULL;
 }
 

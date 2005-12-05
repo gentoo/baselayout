@@ -85,7 +85,7 @@ get_whitelist (char **whitelist, char *filename)
       /* Get entry - we do not want comments, and only the first word
        * on a line is valid */
       token = strsep (&tmp_p, "# \t");
-      if (NULL != token && '\0' != token[0])
+      if (check_str (token))
 	{
 	  tmp_p = xstrndup (token, strlen (token));
 	  if (NULL == tmp_p)

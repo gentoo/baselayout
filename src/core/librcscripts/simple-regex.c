@@ -81,6 +81,7 @@
        || (NULL == _regex_data->regex) \
        || (0 == strlen(_regex_data->regex))) \
      { \
+       errno = EINVAL; \
        DBG_MSG("Invalid argument passed!\n"); \
        goto _on_error; \
      } \

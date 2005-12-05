@@ -165,7 +165,7 @@ loop_error:
     }
 
   /* Final check if we have some entries */
-  if (!check_arg_strv (file_list))
+  if (!check_strv (file_list))
     {
       errno = ENOENT;
       DBG_MSG ("No rc-scripts to parse!\n");
