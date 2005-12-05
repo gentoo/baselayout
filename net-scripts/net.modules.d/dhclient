@@ -45,10 +45,12 @@ dhclient_stop() {
 	local pid=$( < "${pidfile}" )
 
 	local ifvar=$( bash_variable "${iface}" )
-	d="dhcp_${ifvar}[@]"
+	d="dhcp_${ifvar}"
+	d=" ${!d} "
+	[[ ${d} == "  " ]] && d=" ${dhcp} "
 
 	ebegin "Stopping dhclient on ${iface}"
-	if [[ " ${!d} " == *" release "* ]]; then
+	if [[ ${d} == *" release "* ]]; then
 		local r=$( dhclient -q -r -pf "${pidfile}" \
 			-sf "${MODULES_DIR}/helpers.d/dhclient-wrapper" "${iface}" )
 		[[ ${r} == "deconfig" ]]
@@ -115,9 +117,11 @@ dhclient_start() {
 	fi
 
 	d="dhcp_${ifvar}"
+	d=" ${!d} "
+	[[ ${d} == "  " ]] && d=" ${dhcp} "
 
 	# Send our hostname by editing cffile
-	if ${edit} && [[ -e ${cffile} && " ${!d} " != *" nosendhost "* ]] ; then
+	if ${edit} && [[ -e ${cffile} && ${d} != *" nosendhost "* ]] ; then
 		local hname=$( hostname )
 		if [[ ${hname} != "(none)" && ${hname} != "localhost" ]]; then
 			sed -i '/^[ \t]*send[ \t]*host-name[ \t]*/d' "${cffile}"

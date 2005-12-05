@@ -43,8 +43,10 @@ udhcpc_stop() {
 
 	local ifvar=$( bash_variable "${iface}" )
 	d="dhcp_${ifvar}"
+	d=" ${!d} "
+	[[ ${d} == "  " ]] && d=" ${dhcp} "
 
-	if [[ " ${!d} " == *" release "* ]]; then
+	if [[ ${d} == *" release "* ]]; then
 		kill -s USR2 "${pid}" &>/dev/null
 		[[ -f "/var/cache/dhcp-${iface}.lease" ]] \
 			&& rm "/var/cache/dhcp-${iface}.lease"
@@ -75,8 +77,10 @@ udhcpc_start() {
 	opts="${!opts}"
 
 	d="dhcp_${ifvar}"
+	d=" ${!d} "
+	[[ ${d} == "  " ]] && d=" ${dhcp} "
 
-	if [[ " ${!d} " != *" nosendhost "* ]]; then
+	if [[ " ${d} " != *" nosendhost "* ]]; then
 		if [[ ! " ${opts}" =~ " -([hH] |-hostname=)" ]]; then
 			local hname=$( hostname )
 			[[ -n ${hname} && ${hname} != "(none)" && ${hname} != "localhost" ]] \

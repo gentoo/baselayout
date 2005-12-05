@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  05 Dec 2005; Roy Marpels <uberlord@gentoo.org>:
+
+    Fix dhcp options, #114519.
+
   29 Nov 2005; Martin Schlemmer <azarah@gentoo.org>:
 
     Add po/Makefile, based mostly on work done by Rach Holmes <Rach.Holmes@GMX.net>

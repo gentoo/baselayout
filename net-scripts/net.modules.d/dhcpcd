@@ -52,7 +52,7 @@ dhcpcd_get_vars() {
 # Returns 0 (true) when a DHCP address dropped
 # otherwise return 1
 dhcpcd_stop() {
-	local iface=$1 count signal pidfile="/var/run/dhcpcd-$1.pid" opts
+	local iface=$1 count signal pidfile="/var/run/dhcpcd-$1.pid" d
 
 	[[ ! -f ${pidfile} ]] && return 0
 
@@ -60,9 +60,11 @@ dhcpcd_stop() {
 	local pid=$( < "${pidfile}" )
 
 	local ifvar=$( bash_variable "${iface}" )
-	opts="dhcp_${ifvar}"
+	d="dhcp_${ifvar}"
+	d=" ${!d} "
+	[[ ${d} == "  " ]] && d=" ${dhcp} "
 
-	if [[ " ${!opts} " == *" release "* ]]; then
+	if [[ ${d} == *" release "* ]]; then
 		signal="HUP"
 	else
 		signal="TERM"
@@ -91,10 +93,12 @@ dhcpcd_start() {
 
 	# Map some generic options to dhcpcd
 	d="dhcp_${ifvar}"
-	[[ " ${d} " == *" nodns "* ]] && opts="${opts} -R"
-	[[ " ${d} " == *" nontp "* ]] && opts="${opts} -N"
-	[[ " ${d} " == *" nonis "* ]] && opts="${opts} -Y"
-	[[ " ${d} " == *" nogateway "* ]] && opts="${opts} -G"
+	d=" ${!d} "
+	[[ ${d} == "  " ]] && d=" ${dhcp} "
+	[[ ${d} == *" nodns "* ]] && opts="${opts} -R"
+	[[ ${d} == *" nontp "* ]] && opts="${opts} -N"
+	[[ ${d} == *" nonis "* ]] && opts="${opts} -Y"
+	[[ ${d} == *" nogateway "* ]] && opts="${opts} -G"
 
 	# We transmit the hostname by default:q
 	if [[ " ${d} " != *" nosendhost "* && " ${opts} " != *" -h "* ]]; then
