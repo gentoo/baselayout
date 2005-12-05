@@ -46,6 +46,9 @@ char *service_type_names[] = {
   NULL
 };
 
+static char *
+service_is_recursive_dependency (char *servicename, char *dependency,
+				 bool checkuse);
 static int __service_resolve_dependency (char *servicename, char *dependency,
 					 service_type_t type);
 
@@ -148,6 +151,44 @@ service_is_dependency (char *servicename, char *dependency,
     }
 
   return -1;
+}
+
+char *
+service_is_recursive_dependency (char *servicename, char *dependency,
+				 bool checkuse)
+{
+  service_info_t *info;
+  char *depend;
+  int count = 0;
+
+  if ((!check_str (servicename)) || (!check_str (dependency)))
+    return NULL;
+
+  info = service_get_info (dependency);
+  if (NULL != info)
+    {
+      str_list_for_each_item (info->depend_info[NEED_ME], depend, count)
+	{
+	  if ((0 == service_is_dependency (servicename, depend, NEED))
+	      || (0 == service_is_dependency (servicename, depend, USE)))
+	    return depend;
+	}
+      if (checkuse)
+	{
+	  str_list_for_each_item (info->depend_info[USE_ME], depend, count)
+	    {
+	      if ((0 == service_is_dependency (servicename, depend, NEED))
+		  || (0 == service_is_dependency (servicename, depend, USE)))
+		return depend;
+	    }
+	}
+    }
+  else
+    {
+      DBG_MSG ("Invalid service name '%s'!\n", servicename);
+    }
+
+  return NULL;
 }
 
 int
@@ -420,6 +461,8 @@ __service_resolve_dependency (char *servicename, char *dependency,
     {
       if (type == BEFORE)
 	{
+	  char *depend;
+	  
 	  /* NEED and USE override BEFORE
 	   * ('servicename' BEFORE 'dependency') */
 	  if ((0 == service_is_dependency (servicename, dependency, NEED))
@@ -428,15 +471,43 @@ __service_resolve_dependency (char *servicename, char *dependency,
 	      /* Delete invalid entry */
 	      goto remove;
 	    }
+
+	  depend = service_is_recursive_dependency (servicename, dependency,
+						    TRUE);
+	  if (NULL != depend)
+	    {
+	      EWARN (" Service '%s' should be BEFORE service '%s', but '%s'\n",
+		     servicename, dependency, depend);
+	      EWARN (" needed by '%s', depends in return on '%s'!\n",
+		     servicename, dependency);
+
+	      /* Delete invalid entry */
+	      goto remove;
+	    }
 	}
 
       if (type == AFTER)
 	{
+	  char *depend;
+	  
 	  /* NEED and USE override AFTER
 	   * ('servicename' AFTER 'dependency') */
 	  if ((0 == service_is_dependency (dependency, servicename, NEED))
 	      || (0 == service_is_dependency (dependency, servicename, USE)))
 	    {
+	      /* Delete invalid entry */
+	      goto remove;
+	    }
+
+	  depend = service_is_recursive_dependency (dependency, servicename,
+						    TRUE);
+	  if (NULL != depend)
+	    {
+	      EWARN (" Service '%s' should be AFTER service '%s', but '%s'\n",
+		     servicename, dependency, depend);
+	      EWARN (" needed by '%s', depends in return on '%s'!\n",
+		     dependency, servicename);
+
 	      /* Delete invalid entry */
 	      goto remove;
 	    }
@@ -540,7 +611,7 @@ service_resolve_dependencies (void)
   list_for_each_entry (info, &service_info_list, node)
     {
       str_list_for_each_item_safe (info->depend_info[PROVIDE], service, next,
-				 count)
+				   count)
 	{
 	  if (-1 == service_add_virtual (info->name, service))
 	    {
@@ -576,7 +647,7 @@ service_resolve_dependencies (void)
   list_for_each_entry (info, &service_info_list, node)
     {
       str_list_for_each_item_safe (info->depend_info[BEFORE], service, next,
-				 count)
+				   count)
 	{
 	  if (-1 == __service_resolve_dependency (info->name, service, BEFORE))
 	    {
