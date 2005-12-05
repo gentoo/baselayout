@@ -25,6 +25,7 @@
 #ifndef _RCSCRIPTS_H
 #define _RCSCRIPTS_H
 
+#include <stddef.h>
 #include <sys/types.h>
 
 #include "config.h"
