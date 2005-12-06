@@ -46,9 +46,9 @@ char *service_type_names[] = {
   NULL
 };
 
-static char *
-service_is_recursive_dependency (char *servicename, char *dependency,
-				 bool checkuse);
+static char *service_is_recursive_dependency (char *servicename,
+					      char *dependency,
+					      bool checkuse);
 static int __service_resolve_dependency (char *servicename, char *dependency,
 					 service_type_t type);
 
@@ -462,7 +462,7 @@ __service_resolve_dependency (char *servicename, char *dependency,
       if (type == BEFORE)
 	{
 	  char *depend;
-	  
+
 	  /* NEED and USE override BEFORE
 	   * ('servicename' BEFORE 'dependency') */
 	  if ((0 == service_is_dependency (servicename, dependency, NEED))
@@ -489,7 +489,7 @@ __service_resolve_dependency (char *servicename, char *dependency,
       if (type == AFTER)
 	{
 	  char *depend;
-	  
+
 	  /* NEED and USE override AFTER
 	   * ('servicename' AFTER 'dependency') */
 	  if ((0 == service_is_dependency (dependency, servicename, NEED))

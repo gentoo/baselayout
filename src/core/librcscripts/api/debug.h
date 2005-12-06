@@ -87,15 +87,15 @@ inline bool check_fp (FILE * fp);
  */
 
 inline bool __check_arg_ptr (const void *ptr, const char *file, const char *func,
-			 size_t line);
+			     size_t line);
 inline bool __check_arg_str (const char *str, const char *file, const char *func,
-			 size_t line);
+			     size_t line);
 inline bool __check_arg_strv (char **str, const char *file, const char *func,
-			  size_t line);
+			      size_t line);
 inline bool __check_arg_fd (int fd, const char *file, const char *func,
-			size_t line);
+			    size_t line);
 inline bool __check_arg_fp (FILE * fp, const char *file, const char *func,
-			size_t line);
+			    size_t line);
 
 #define check_arg_ptr(_ptr) \
  __check_arg_ptr (_ptr, __FILE__, __FUNCTION__, __LINE__)

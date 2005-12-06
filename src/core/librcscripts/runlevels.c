@@ -29,7 +29,7 @@
 
 #include "rcscripts.h"
 
-static char ** get_runlevel_dirs (void);
+static char **get_runlevel_dirs (void);
 
 LIST_HEAD (runlevel_list);
 

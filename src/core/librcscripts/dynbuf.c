@@ -30,7 +30,7 @@
 
 #include "rcscripts.h"
 
-static dyn_buf_t *reallocate_dyn_buf (dyn_buf_t * dynbuf, size_t needed);
+static dyn_buf_t *reallocate_dyn_buf (dynbuf_t *dynbuf, size_t needed);
 
 dyn_buf_t *
 new_dyn_buf (void)
@@ -69,7 +69,7 @@ new_dyn_buf_mmap_file (const char *name)
     {
       DBG_MSG ("Failed to mmap file '%s'\n", name);
       free (dynbuf);
-      
+
       return NULL;
     }
 
@@ -81,7 +81,7 @@ new_dyn_buf_mmap_file (const char *name)
 }
 
 dyn_buf_t *
-reallocate_dyn_buf (dyn_buf_t * dynbuf, size_t needed)
+reallocate_dyn_buf (dynbuf_t *dynbuf, size_t needed)
 {
   int len;
 
@@ -118,7 +118,7 @@ reallocate_dyn_buf (dyn_buf_t * dynbuf, size_t needed)
 }
 
 void
-free_dyn_buf (dyn_buf_t * dynbuf)
+free_dyn_buf (dynbuf_t *dynbuf)
 {
   if (NULL == dynbuf)
     return;
@@ -147,7 +147,7 @@ free_dyn_buf (dyn_buf_t * dynbuf)
 }
 
 int
-write_dyn_buf (dyn_buf_t * dynbuf, const char *buf, size_t length)
+write_dyn_buf (dynbuf_t *dynbuf, const char *buf, size_t length)
 {
   int len;
 
@@ -187,7 +187,7 @@ write_dyn_buf (dyn_buf_t * dynbuf, const char *buf, size_t length)
   return length;
 }
 
-int write_dyn_buf_from_fd (int fd, dyn_buf_t * dynbuf, size_t length)
+int write_dyn_buf_from_fd (int fd, dynbuf_t *dynbuf, size_t length)
 {
   int len = length;
 
@@ -228,7 +228,7 @@ int write_dyn_buf_from_fd (int fd, dyn_buf_t * dynbuf, size_t length)
 }
 
 int
-sprintf_dyn_buf (dyn_buf_t * dynbuf, const char *format, ...)
+sprintf_dyn_buf (dynbuf_t *dynbuf, const char *format, ...)
 {
   va_list arg1, arg2;
   char test_str[10];
@@ -275,7 +275,7 @@ sprintf_dyn_buf (dyn_buf_t * dynbuf, const char *format, ...)
 }
 
 int
-read_dyn_buf (dyn_buf_t * dynbuf, char *buf, size_t length)
+read_dyn_buf (dynbuf_t *dynbuf, char *buf, size_t length)
 {
   int len = length;
 
@@ -308,7 +308,7 @@ read_dyn_buf (dyn_buf_t * dynbuf, char *buf, size_t length)
 }
 
 int
-read_dyn_buf_to_fd (int fd, dyn_buf_t * dynbuf, size_t length)
+read_dyn_buf_to_fd (int fd, dynbuf_t *dynbuf, size_t length)
 {
   int len = length;
 
@@ -391,7 +391,7 @@ check_dyn_buf (dyn_buf_t *dynbuf)
 
 inline bool
 __check_arg_dyn_buf (dyn_buf_t *dynbuf, const char *file, const char *func,
-		 size_t line)
+		     size_t line)
 {
   if (!check_dyn_buf (dynbuf))
     {

@@ -606,7 +606,7 @@ file_map (const char *filename, char **buf, size_t * bufsize)
   if (fstat (fd, &stats) < 0)
     {
       DBG_MSG ("Failed to stat file!\n");
-      
+
       save_errno ();
       close (fd);
       restore_errno ();
@@ -618,7 +618,7 @@ file_map (const char *filename, char **buf, size_t * bufsize)
     {
       errno = EINVAL;
       DBG_MSG ("Failed to mmap file with 0 size!\n");
-      
+
       save_errno ();
       close (fd);
       restore_errno ();
@@ -630,7 +630,7 @@ file_map (const char *filename, char **buf, size_t * bufsize)
   if (*buf == MAP_FAILED)
     {
       DBG_MSG ("Failed to mmap file!\n");
-      
+
       save_errno ();
       close (fd);
       restore_errno ();

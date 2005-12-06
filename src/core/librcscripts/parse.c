@@ -53,15 +53,15 @@
 
 #define PARSE_BUFFER_SIZE		256
 
-static size_t parse_rcscript (char *scriptname, dyn_buf_t * data);
+static size_t parse_rcscript (char *scriptname, dynbuf_t *data);
 
-static size_t parse_print_start (dyn_buf_t * data);
-static size_t parse_print_header (char *scriptname, dyn_buf_t * data);
-static size_t parse_print_body (char *scriptname, dyn_buf_t * data);
+static size_t parse_print_start (dynbuf_t *data);
+static size_t parse_print_header (char *scriptname, dynbuf_t *data);
+static size_t parse_print_body (char *scriptname, dynbuf_t *data);
 
 /* Return count on success, -1 on error.  If it was critical, errno will be set. */
 size_t
-parse_rcscript (char *scriptname, dyn_buf_t * data)
+parse_rcscript (char *scriptname, dynbuf_t *data)
 {
   regex_data_t tmp_data;
   dyn_buf_t *dynbuf = NULL;
@@ -133,7 +133,7 @@ parse_rcscript (char *scriptname, dyn_buf_t * data)
 
       return -1;
     }
-  
+
   free_dyn_buf (dynbuf);
 
   return write_count;
@@ -149,7 +149,7 @@ error:
 
 
 size_t
-generate_stage1 (dyn_buf_t * data)
+generate_stage1 (dynbuf_t *data)
 {
   rcscript_info_t *info;
   size_t write_count = 0;
@@ -194,7 +194,7 @@ sig_handler (int signum)
 
 /* Returns data's lenght on success, else -1 on error. */
 size_t
-generate_stage2 (dyn_buf_t * data)
+generate_stage2 (dynbuf_t *data)
 {
   int pipe_fds[2][2] = { {0, 0}, {0, 0} };
   pid_t child_pid;
@@ -425,7 +425,7 @@ failed:
 	      /* FIXME: better errno ? */
 	      errno = ECANCELED;
 	      DBG_MSG ("Bash failed with status 0x%x!\n", status);
-	      
+
 	      return -1;
 	    }
 	}
@@ -544,7 +544,7 @@ write_legacy_stage3 (FILE * output)
 }
 
 int
-parse_cache (const dyn_buf_t * data)
+parse_cache (const dynbuf_t *data)
 {
   service_info_t *info;
   service_type_t type = ALL_SERVICE_TYPE_T;
@@ -577,7 +577,7 @@ parse_cache (const dyn_buf_t * data)
 	{
 	  errno = EMSGSIZE;
 	  DBG_MSG ("Parsing stopped due to short read!\n");
-	  
+
 	  goto error;
 	}
 
@@ -704,13 +704,13 @@ error:
 }
 
 size_t
-parse_print_start (dyn_buf_t * data)
+parse_print_start (dynbuf_t *data)
 {
   size_t write_count;
 
   if (!check_arg_dyn_buf (data))
     return -1;
-  
+
   write_count =
    sprintf_dyn_buf (data,
 		    ". /sbin/functions.sh\n"
@@ -723,13 +723,13 @@ parse_print_start (dyn_buf_t * data)
 }
 
 size_t
-parse_print_header (char *scriptname, dyn_buf_t * data)
+parse_print_header (char *scriptname, dynbuf_t *data)
 {
   size_t write_count;
 
   if (!check_arg_dyn_buf (data))
     return -1;
-  
+
   write_count =
    sprintf_dyn_buf (data,
 		    "#*** %s ***\n"
@@ -742,7 +742,7 @@ parse_print_header (char *scriptname, dyn_buf_t * data)
 }
 
 size_t
-parse_print_body (char *scriptname, dyn_buf_t * data)
+parse_print_body (char *scriptname, dynbuf_t *data)
 {
   size_t write_count;
   char *buf = NULL;
@@ -752,7 +752,7 @@ parse_print_body (char *scriptname, dyn_buf_t * data)
 
   if (!check_arg_dyn_buf (data))
     return -1;
-  
+
   buf = xstrndup (scriptname, strlen (scriptname));
   if (NULL == buf)
     return -1;

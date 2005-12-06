@@ -45,7 +45,7 @@ get_rcscripts (void)
     {
       errno = ENOENT;
       DBG_MSG ("'%s' is empty!\n", RCSCRIPTS_INITDDIR);
-      
+
       return -1;
     }
 

@@ -35,15 +35,15 @@
 #define FIELD_PROVIDE	"PROVIDE"
 #define FIELD_FAILED	"FAILED"
 
-size_t generate_stage1 (dyn_buf_t * data);
-size_t generate_stage2 (dyn_buf_t * data);
+size_t generate_stage1 (dynbuf_t *data);
+size_t generate_stage2 (dynbuf_t *data);
 size_t read_stage2 (char **data);
 int write_stage2 (FILE * outfile);
 size_t generate_stage3 (char **data);
 size_t read_stage3 (char **data);
 int write_stage3 (FILE * outfile);
 int write_legacy_stage3 (FILE * output);
-int parse_cache (const dyn_buf_t * data);
+int parse_cache (const dynbuf_t *data);
 
 /*
  * 	get_rcscripts()
