@@ -280,7 +280,7 @@ read_dyn_buf (dyn_buf_t * dynbuf, char *buf, size_t length)
   if (!check_arg_dyn_buf (dynbuf))
     return -1;
 
-  if (!check_arg_str (buf))
+  if (!check_arg_ptr (buf))
     return -1;
 
   if (dynbuf->rd_index >= dynbuf->length)
