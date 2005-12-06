@@ -33,9 +33,12 @@ typedef struct
   size_t length;		/* Length of data block */
   size_t rd_index;		/* Current read index */
   size_t wr_index;		/* Current write index */
+  bool file_map;		/* File mapped as dynbuf */
 } dyn_buf_t;
 
 dyn_buf_t *new_dyn_buf (void);
+
+dyn_buf_t *new_dyn_buf_from_file (const char *name);
 
 void free_dyn_buf (dyn_buf_t * dynbuf);
 

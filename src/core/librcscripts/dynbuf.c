@@ -51,6 +51,31 @@ new_dyn_buf (void)
   dynbuf->length = DYNAMIC_BUFFER_SIZE;
   dynbuf->rd_index = 0;
   dynbuf->wr_index = 0;
+  dynbuf->file_map = FALSE;
+
+  return dynbuf;
+}
+
+dyn_buf_t *
+new_dyn_buf_from_file (const char *name)
+{
+  dyn_buf_t *dynbuf = NULL;
+
+  dynbuf = xmalloc (sizeof (dyn_buf_t));
+  if (NULL == dynbuf)
+    return NULL;
+
+  if (-1 == file_map (name, &dynbuf->data, &dynbuf->length))
+    {
+      DBG_MSG ("Failed to mmap file '%s'\n", name);
+      free (dynbuf);
+      
+      return NULL;
+    }
+
+  dynbuf->wr_index = dynbuf->length;
+  dynbuf->rd_index = 0;
+  dynbuf->file_map = TRUE;
 
   return dynbuf;
 }
@@ -62,6 +87,14 @@ reallocate_dyn_buf (dyn_buf_t * dynbuf, size_t needed)
 
   if (!check_arg_dyn_buf (dynbuf))
     return NULL;
+
+  if (dynbuf->file_map)
+    {
+      errno = EPERM;
+      DBG_MSG ("Cannot reallocate mmap()'d file!\n");
+
+      return NULL;
+    }
 
   len = sizeof (char) * (dynbuf->wr_index + needed + 1);
 
@@ -90,10 +123,17 @@ free_dyn_buf (dyn_buf_t * dynbuf)
   if (NULL == dynbuf)
     return;
 
-  if (NULL != dynbuf->data)
+  if (!dynbuf->file_map)
     {
-      free (dynbuf->data);
-      dynbuf->data = NULL;
+      if (NULL != dynbuf->data)
+	{
+	  free (dynbuf->data);
+	  dynbuf->data = NULL;
+	}
+    }
+  else
+    {
+      file_unmap (dynbuf->data, dynbuf->length);
     }
 
   dynbuf->length = 0;
@@ -112,8 +152,16 @@ write_dyn_buf (dyn_buf_t * dynbuf, const char *buf, size_t length)
   if (!check_arg_dyn_buf (dynbuf))
     return -1;
 
-  if (!check_arg_ptr ((char *) buf))
+  if (!check_arg_str (buf))
     return -1;
+
+  if (dynbuf->file_map)
+    {
+      errno = EPERM;
+      DBG_MSG ("Cannot write to readonly mmap()'d file!\n");
+
+      return -1;
+    }
 
   if (NULL == reallocate_dyn_buf (dynbuf, length))
     {
@@ -147,6 +195,14 @@ int write_dyn_buf_from_fd (int fd, dyn_buf_t * dynbuf, size_t length)
   if (!check_arg_fd (fd))
     return -1;
 
+  if (dynbuf->file_map)
+    {
+      errno = EPERM;
+      DBG_MSG ("Cannot write to readonly mmap()'d file!\n");
+
+      return -1;
+    }
+
   if (NULL == reallocate_dyn_buf (dynbuf, length))
     {
       DBG_MSG ("Could not reallocate dynamic buffer!\n");
@@ -178,6 +234,17 @@ sprintf_dyn_buf (dyn_buf_t * dynbuf, const char *format, ...)
 
   if (!check_arg_dyn_buf (dynbuf))
     return -1;
+
+  if (!check_arg_str (format))
+    return -1;
+
+  if (dynbuf->file_map)
+    {
+      errno = EPERM;
+      DBG_MSG ("Cannot write to readonly mmap()'d file!\n");
+
+      return -1;
+    }
 
   va_start (arg1, format);
   va_copy (arg2, arg1);
@@ -213,7 +280,7 @@ read_dyn_buf (dyn_buf_t * dynbuf, char *buf, size_t length)
   if (!check_arg_dyn_buf (dynbuf))
     return -1;
 
-  if (!check_arg_ptr (buf))
+  if (!check_arg_str (buf))
     return -1;
 
   if (dynbuf->rd_index >= dynbuf->length)
