@@ -547,7 +547,8 @@ _continue:
       free (buf);
     }
 
-  if (0 != errno)
+  /* read_line_dyn_buf() returned NULL with errno set */
+  if ((NULL == buf) && (0 != errno))
     {
       DBG_MSG ("Failed to read line from dynamic buffer!\n");
       free_dyn_buf (dynbuf);

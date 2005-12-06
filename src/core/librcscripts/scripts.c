@@ -76,8 +76,14 @@ get_rcscripts (void)
 
 	  buf = read_line_dyn_buf (dynbuf);
 	  free_dyn_buf (dynbuf);
-	  if (NULL == buf)
+	  if ((NULL == buf) && (0 != errno))
 	    goto error;
+	  if (NULL == buf)
+	    {
+	      DBG_MSG ("'%s' is not a valid rc-script!\n",
+		       gbasename (rcscript));
+	      continue;
+	    }
 
 	  /* Check if it starts with '#!/sbin/runscript' */
 	  DO_REGEX (tmp_data, buf, "[ \t]*#![ \t]*/sbin/runscript[ \t]*.*",

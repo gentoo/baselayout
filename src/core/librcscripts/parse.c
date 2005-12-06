@@ -126,7 +126,7 @@ parse_rcscript (char *scriptname, dyn_buf_t * data)
     }
 
   /* read_line_dyn_buf() returned NULL with errno set */
-  if (0 != errno)
+  if ((NULL == buf) && (0 != errno))
     {
       DBG_MSG ("Failed to read line from dynamic buffer!\n");
       free_dyn_buf (dynbuf);
@@ -673,7 +673,7 @@ _continue:
     }
 
   /* read_line_dyn_buf() returned NULL with errno set */
-  if (0 != errno)
+  if ((NULL == buf) && (0 != errno))
     {
       DBG_MSG ("Failed to read line from dynamic buffer!\n");
       return -1;
