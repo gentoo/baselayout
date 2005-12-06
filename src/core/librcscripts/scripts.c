@@ -66,7 +66,7 @@ get_rcscripts (void)
 	  dyn_buf_t *dynbuf = NULL;
 	  char *buf = NULL;
 
-	  dynbuf = new_dyn_buf_from_file (rcscript);
+	  dynbuf = new_dyn_buf_mmap_file (rcscript);
 	  if (NULL == dynbuf)
 	    {
 	      DBG_MSG ("Could not open '%s' for reading!\n",

@@ -75,7 +75,7 @@ parse_rcscript (char *scriptname, dyn_buf_t * data)
   if (!check_arg_str (scriptname))
     return -1;
 
-  dynbuf = new_dyn_buf_from_file (scriptname);
+  dynbuf = new_dyn_buf_mmap_file (scriptname);
   if (NULL == dynbuf)
     {
       DBG_MSG ("Could not open '%s' for reading!\n", gbasename (scriptname));

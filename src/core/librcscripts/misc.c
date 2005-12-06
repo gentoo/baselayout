@@ -477,7 +477,7 @@ get_cnf_entry (const char *pathname, const char *entry)
       return NULL;
     }
 
-  dynbuf = new_dyn_buf_from_file (pathname);
+  dynbuf = new_dyn_buf_mmap_file (pathname);
   if (NULL == dynbuf)
     {
       DBG_MSG ("Could not open config file for reading!\n");

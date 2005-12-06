@@ -38,7 +38,7 @@ typedef struct
 
 dyn_buf_t *new_dyn_buf (void);
 
-dyn_buf_t *new_dyn_buf_from_file (const char *name);
+dyn_buf_t *new_dyn_buf_mmap_file (const char *name);
 
 void free_dyn_buf (dyn_buf_t * dynbuf);
 
