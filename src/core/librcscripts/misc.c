@@ -408,20 +408,20 @@ ls_dir (const char *pathname, int hidden)
 	  && (hidden ? 1 : dir_entry->d_name[0] != '.'))
 	{
 	  char *d_name = dir_entry->d_name;
-	  char *tmp_p;
+	  char *tmp_ptr;
 
 	  /* Do not list current or parent entries */
 	  if ((0 == strcmp (d_name, ".")) || (0 == strcmp (d_name, "..")))
 	    continue;
 
-	  tmp_p = strcatpaths (pathname, d_name);
-	  if (NULL == tmp_p)
+	  tmp_ptr = strcatpaths (pathname, d_name);
+	  if (NULL == tmp_ptr)
 	    {
 	      DBG_MSG ("Failed to allocate buffer!\n");
 	      goto error;
 	    }
 
-	  str_list_add_item (dirlist, tmp_p, error);
+	  str_list_add_item (dirlist, tmp_ptr, error);
 	}
     }
   while (NULL != dir_entry);
@@ -459,14 +459,11 @@ error:
 char *
 get_cnf_entry (const char *pathname, const char *entry)
 {
+  dyn_buf_t *dynbuf = NULL;
   char *buf = NULL;
-  char *tmp_buf = NULL;
-  char *tmp_p;
+  char *tmp_ptr;
   char *value = NULL;
   char *token;
-  size_t lenght;
-  int count;
-  int current = 0;
 
 
   if ((!check_arg_str (pathname)) || (!check_arg_str (entry)))
@@ -480,28 +477,23 @@ get_cnf_entry (const char *pathname, const char *entry)
       return NULL;
     }
 
-  if (-1 == file_map (pathname, &buf, &lenght))
+  dynbuf = new_dyn_buf_from_file (pathname);
+  if (NULL == dynbuf)
     {
       DBG_MSG ("Could not open config file for reading!\n");
       return NULL;
     }
 
-  while (current < lenght)
+  while (NULL != (buf = read_line_dyn_buf (dynbuf)))
     {
-      count = buf_get_line (buf, lenght, current);
-
-      tmp_buf = xstrndup (&buf[current], count);
-      if (NULL == tmp_buf)
-	goto error;
-
-      tmp_p = tmp_buf;
+      tmp_ptr = buf;
 
       /* Strip leading spaces/tabs */
-      while ((tmp_p[0] == ' ') || (tmp_p[0] == '\t'))
-	tmp_p++;
+      while ((tmp_ptr[0] == ' ') || (tmp_ptr[0] == '\t'))
+	tmp_ptr++;
 
       /* Get entry and value */
-      token = strsep (&tmp_p, "=");
+      token = strsep (&tmp_ptr, "=");
       /* Bogus entry or value */
       if (NULL == token)
 	goto _continue;
@@ -513,7 +505,7 @@ get_cnf_entry (const char *pathname, const char *entry)
 	  do
 	    {
 	      /* Bash variables are usually quoted */
-	      token = strsep (&tmp_p, "\"\'");
+	      token = strsep (&tmp_ptr, "\"\'");
 	      /* If quoted, the first match will be "" */
 	    }
 	  while ((NULL != token) && (0 == strlen (token)));
@@ -539,7 +531,12 @@ get_cnf_entry (const char *pathname, const char *entry)
 
 	  value = xstrndup (token, strlen (token));
 	  if (NULL == value)
-	    goto error;
+	    {
+	      free_dyn_buf (dynbuf);
+	      free (buf);
+
+	      return NULL;
+	    }
 
 	  /* We do not break, as there might be more than one entry
 	   * defined, and as bash uses the last, so should we */
@@ -547,34 +544,26 @@ get_cnf_entry (const char *pathname, const char *entry)
 	}
 
 _continue:
-      current += count + 1;
-      free (tmp_buf);
-      /* Set to NULL in case we error out above and have
-       * to free below */
-      tmp_buf = NULL;
+      free (buf);
+    }
+
+  if (0 != errno)
+    {
+      DBG_MSG ("Failed to read line from dynamic buffer!\n");
+      free_dyn_buf (dynbuf);
+      if (NULL != value)
+	free (value);
+
+      return NULL;
     }
 
 
   if (NULL == value)
     DBG_MSG ("Failed to get value for config entry '%s'!\n", entry);
 
-  file_unmap (buf, lenght);
+  free_dyn_buf (dynbuf);
 
   return value;
-
-error:
-  free (tmp_buf);
-  free (value);
-
-  if (NULL != buf)
-    {
-      save_errno ();
-      file_unmap (buf, lenght);
-      /* unmmap() might have changed it */
-      restore_errno ();
-    }
-
-  return NULL;
 }
 
 
