@@ -86,7 +86,9 @@ strndup (const char *str, size_t size)
   char *new_str = NULL;
   size_t len;
 
-  if (!check_arg_str (str))
+  /* We cannot check if its a valid string here, as it might
+   * not be '\0' terminated ... */
+  if (!check_arg_ptr (str))
     return NULL;
 
   /* Check lenght of str without breaching the size limit */
