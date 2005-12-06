@@ -1,7 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
-  05 Dec 2005; Roy Marpels <uberlord@gentoo.org>:
+  06 Dec 2005; Roy Marples <uberlord@gentoo.org>:
+
+     ppp documentation updated, #114551.
+
+  05 Dec 2005; Roy Marples <uberlord@gentoo.org>:
 
      Fix dhcp options, #114519.
 
