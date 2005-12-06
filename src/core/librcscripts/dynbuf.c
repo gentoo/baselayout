@@ -346,17 +346,23 @@ read_line_dyn_buf (dyn_buf_t *dynbuf)
   if (!check_arg_dyn_buf (dynbuf))
     return NULL;
 
+  if (dynbuf->rd_index == dynbuf->wr_index)
+    return NULL;
+
   for (count = dynbuf->rd_index; count < dynbuf->wr_index && dynbuf->data[count] != '\n'; count++);
 
-  if (count > dynbuf->rd_index)
+  if (count <= dynbuf->wr_index)
     {
       buf = xstrndup ((dynbuf->data + dynbuf->rd_index),
 		      (count - dynbuf->rd_index));
       if (NULL == buf)
 	return NULL;
 
+      dynbuf->rd_index = count;
+
       /* Also skip the '\n' .. */
-      dynbuf->rd_index = count + 1;
+      if (dynbuf->rd_index < dynbuf->wr_index)
+	dynbuf->rd_index++;
     }
 
   return buf;
