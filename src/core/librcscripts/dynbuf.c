@@ -133,7 +133,9 @@ free_dyn_buf (dyn_buf_t * dynbuf)
     }
   else
     {
+      save_errno ();
       file_unmap (dynbuf->data, dynbuf->length);
+      restore_errno ();
     }
 
   dynbuf->length = 0;
