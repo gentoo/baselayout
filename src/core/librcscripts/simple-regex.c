@@ -117,7 +117,7 @@ size_t
 get_word (const char *regex, char **r_word)
 {
   char *r_list;
-  char *tmp_p;
+  char *str_ptr;
   size_t count = 0;
   size_t tmp_count;
 
@@ -128,7 +128,7 @@ get_word (const char *regex, char **r_word)
   if (NULL == r_word)
     return 0;
 
-  tmp_p = *r_word;
+  str_ptr = *r_word;
 
   while (strlen (regex) > 0)
     {
@@ -138,7 +138,7 @@ get_word (const char *regex, char **r_word)
 	case '+':
 	case '?':
 	  /* If its a wildcard, backup one step */
-	  *(--tmp_p) = '\0';
+	  *(--str_ptr) = '\0';
 	  count--;
 	  return count;
 	case '[':
@@ -152,17 +152,17 @@ get_word (const char *regex, char **r_word)
 	  /* Bail if we have a list */
 	  if (tmp_count > 0)
 	    {
-	      tmp_p[0] = '\0';
+	      str_ptr[0] = '\0';
 	      return count;
 	    }
 	default:
-	  *tmp_p++ = *regex++;
+	  *str_ptr++ = *regex++;
 	  count++;
 	  break;
 	}
     }
 
-  tmp_p[0] = '\0';
+  str_ptr[0] = '\0';
 
   return count;
 
@@ -276,7 +276,7 @@ get_list_size (const char *regex)
 size_t
 get_list (const char *regex, char **r_list)
 {
-  char *tmp_buf = NULL;
+  char *buf = NULL;
   size_t count = 0;
   size_t size;
 
@@ -301,7 +301,7 @@ get_list (const char *regex, char **r_list)
   if (NULL == *r_list)
     return -1;
 
-  tmp_buf = *r_list;
+  buf = *r_list;
 
   /* Take care of '[' */
   regex++;
@@ -315,10 +315,10 @@ get_list (const char *regex, char **r_list)
 	  && (strlen (regex) >= 2) && (regex[-1] < regex[1]))
 	{
 	  /* Fill in missing chars in sequence */
-	  while (tmp_buf[-1] < regex[1])
+	  while (buf[-1] < regex[1])
 	    {
-	      tmp_buf[0] = (char) (tmp_buf[-1] + 1);
-	      tmp_buf++;
+	      buf[0] = (char) (buf[-1] + 1);
+	      buf++;
 	      /* We do not increase count */
 	    }
 	  /* Take care of '-' and next char */
@@ -327,12 +327,12 @@ get_list (const char *regex, char **r_list)
 	}
       else
 	{
-	  *tmp_buf++ = *regex++;
+	  *buf++ = *regex++;
 	  count++;
 	}
     }
 
-  tmp_buf[0] = '\0';
+  buf[0] = '\0';
   /* Take care of ']' */
   count++;
 
@@ -784,7 +784,7 @@ match (regex_data_t * regex_data)
   regex_data_t tmp_data;
   char *data_p = regex_data->data;
   char *regex_p;
-  char *tmp_buf = NULL;
+  char *buf = NULL;
   int from_start = 0;
   int to_end = 0;
   int retval;
@@ -792,11 +792,11 @@ match (regex_data_t * regex_data)
   CHECK_REGEX_DATA_P (regex_data, failed);
 
   /* We might be modifying regex_p, so make a copy */
-  tmp_buf = xstrndup (regex_data->regex, strlen (regex_data->regex));
-  if (NULL == tmp_buf)
+  buf = xstrndup (regex_data->regex, strlen (regex_data->regex));
+  if (NULL == buf)
     goto error;
 
-  regex_p = tmp_buf;
+  regex_p = buf;
 
   /* Should we only match from the start? */
   if ('^' == regex_p[0])
@@ -857,13 +857,13 @@ failed:
       regex_data->r_count = 0;
     }
 
-  free (tmp_buf);
+  free (buf);
 
   return 0;
 
 error:
   regex_data->match = REGEX_NO_MATCH;
-  free (tmp_buf);
+  free (buf);
 
   return -1;
 }

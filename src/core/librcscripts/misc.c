@@ -408,20 +408,20 @@ ls_dir (const char *pathname, int hidden)
 	  && (hidden ? 1 : dir_entry->d_name[0] != '.'))
 	{
 	  char *d_name = dir_entry->d_name;
-	  char *tmp_ptr;
+	  char *str_ptr;
 
 	  /* Do not list current or parent entries */
 	  if ((0 == strcmp (d_name, ".")) || (0 == strcmp (d_name, "..")))
 	    continue;
 
-	  tmp_ptr = strcatpaths (pathname, d_name);
-	  if (NULL == tmp_ptr)
+	  str_ptr = strcatpaths (pathname, d_name);
+	  if (NULL == str_ptr)
 	    {
 	      DBG_MSG ("Failed to allocate buffer!\n");
 	      goto error;
 	    }
 
-	  str_list_add_item (dirlist, tmp_ptr, error);
+	  str_list_add_item (dirlist, str_ptr, error);
 	}
     }
   while (NULL != dir_entry);
@@ -461,7 +461,7 @@ get_cnf_entry (const char *pathname, const char *entry)
 {
   dyn_buf_t *dynbuf = NULL;
   char *buf = NULL;
-  char *tmp_ptr;
+  char *str_ptr;
   char *value = NULL;
   char *token;
 
@@ -486,14 +486,14 @@ get_cnf_entry (const char *pathname, const char *entry)
 
   while (NULL != (buf = read_line_dyn_buf (dynbuf)))
     {
-      tmp_ptr = buf;
+      str_ptr = buf;
 
       /* Strip leading spaces/tabs */
-      while ((tmp_ptr[0] == ' ') || (tmp_ptr[0] == '\t'))
-	tmp_ptr++;
+      while ((str_ptr[0] == ' ') || (str_ptr[0] == '\t'))
+	str_ptr++;
 
       /* Get entry and value */
-      token = strsep (&tmp_ptr, "=");
+      token = strsep (&str_ptr, "=");
       /* Bogus entry or value */
       if (NULL == token)
 	goto _continue;
@@ -505,7 +505,7 @@ get_cnf_entry (const char *pathname, const char *entry)
 	  do
 	    {
 	      /* Bash variables are usually quoted */
-	      token = strsep (&tmp_ptr, "\"\'");
+	      token = strsep (&str_ptr, "\"\'");
 	      /* If quoted, the first match will be "" */
 	    }
 	  while ((NULL != token) && (0 == strlen (token)));

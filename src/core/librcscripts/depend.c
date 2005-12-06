@@ -196,7 +196,7 @@ service_add_dependency (char *servicename, char *dependency,
 			service_type_t type)
 {
   service_info_t *info;
-  char *tmp_buf;
+  char *buf;
 
   if ((!check_arg_str (servicename)) || (!check_arg_str (dependency)))
     return -1;
@@ -210,11 +210,11 @@ service_add_dependency (char *servicename, char *dependency,
 	  DBG_MSG ("Adding dependency '%s' of service '%s', type '%s'.\n",
 		   dependency, servicename, service_type_names[type]);
 
-	  tmp_buf = xstrndup (dependency, strlen (dependency));
-	  if (NULL == tmp_buf)
+	  buf = xstrndup (dependency, strlen (dependency));
+	  if (NULL == buf)
 	    return -1;
 
-	  str_list_add_item_sorted (info->depend_info[type], tmp_buf, error);
+	  str_list_add_item_sorted (info->depend_info[type], buf, error);
 	}
       else
 	{

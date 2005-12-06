@@ -551,7 +551,7 @@ parse_cache (const dyn_buf_t * data)
   rcscript_info_t *rs_info;
   char *buf = NULL;
   char *rc_name = NULL;
-  char *tmp_ptr;
+  char *str_ptr;
   char *token;
   char *field;
   int retval;
@@ -561,19 +561,19 @@ parse_cache (const dyn_buf_t * data)
 
   while (NULL != (buf = read_line_dyn_buf ((dyn_buf_t *) data)))
     {
-      tmp_ptr = buf;
+      str_ptr = buf;
 
       /* Strip leading spaces/tabs */
-      while ((tmp_ptr[0] == ' ') || (tmp_ptr[0] == '\t'))
-	tmp_ptr++;
+      while ((str_ptr[0] == ' ') || (str_ptr[0] == '\t'))
+	str_ptr++;
 
       /* Get FIELD name and FIELD value */
-      token = strsep (&tmp_ptr, " ");
+      token = strsep (&str_ptr, " ");
 
       /* FIELD name empty/bogus? */
       if ((!check_str (token))
 	  /* We got an empty FIELD value */
-	  || (!check_str (tmp_ptr)))
+	  || (!check_str (str_ptr)))
 	{
 	  errno = EMSGSIZE;
 	  DBG_MSG ("Parsing stopped due to short read!\n");
@@ -583,20 +583,20 @@ parse_cache (const dyn_buf_t * data)
 
       if (0 == strcmp (token, FIELD_RCSCRIPT))
 	{
-	  DBG_MSG ("Field = '%s', value = '%s'\n", token, tmp_ptr);
+	  DBG_MSG ("Field = '%s', value = '%s'\n", token, str_ptr);
 
 	  /* Add the service to the list, and initialize all data */
-	  retval = service_add (tmp_ptr);
+	  retval = service_add (str_ptr);
 	  if (-1 == retval)
 	    {
-	      DBG_MSG ("Failed to add %s to service list!\n", tmp_ptr);
+	      DBG_MSG ("Failed to add %s to service list!\n", str_ptr);
 	      goto error;
 	    }
 
-	  info = service_get_info (tmp_ptr);
+	  info = service_get_info (str_ptr);
 	  if (NULL == info)
 	    {
-	      DBG_MSG ("Failed to get info for '%s'!\n", tmp_ptr);
+	      DBG_MSG ("Failed to get info for '%s'!\n", str_ptr);
 	      goto error;
 	    }
 	  /* Save the rc-script name for next passes of loop */
@@ -636,7 +636,7 @@ parse_cache (const dyn_buf_t * data)
 	   * As the values are passed to a bash function, and we
 	   * then use 'echo $*' to parse them, they should only
 	   * have one space between each value ... */
-	  token = strsep (&tmp_ptr, " ");
+	  token = strsep (&str_ptr, " ");
 
 	  /* Get the correct type name */
 	  field = service_type_names[type];
@@ -656,7 +656,7 @@ parse_cache (const dyn_buf_t * data)
 		}
 
 	      /* Get the next value (if any) */
-	      token = strsep (&tmp_ptr, " ");
+	      token = strsep (&str_ptr, " ");
 	    }
 
 	  goto _continue;
@@ -745,16 +745,16 @@ size_t
 parse_print_body (char *scriptname, dyn_buf_t * data)
 {
   size_t write_count;
-  char *tmp_buf = NULL;
-  char *tmp_ptr;
+  char *buf = NULL;
+  char *str_ptr;
   char *base;
   char *ext;
 
   if (!check_arg_dyn_buf (data))
     return -1;
   
-  tmp_buf = xstrndup (scriptname, strlen (scriptname));
-  if (NULL == tmp_buf)
+  buf = xstrndup (scriptname, strlen (scriptname));
+  if (NULL == buf)
     return -1;
 
   /*
@@ -763,21 +763,21 @@ parse_print_body (char *scriptname, dyn_buf_t * data)
    */
 
   /* bash: base="${myservice%%.*}" */
-  base = tmp_buf;
-  tmp_ptr = strchr (tmp_buf, '.');
-  if (NULL != tmp_ptr)
+  base = buf;
+  str_ptr = strchr (buf, '.');
+  if (NULL != str_ptr)
     {
-      tmp_ptr[0] = '\0';
-      tmp_ptr++;
+      str_ptr[0] = '\0';
+      str_ptr++;
     }
   else
     {
-      tmp_ptr = tmp_buf;
+      str_ptr = buf;
     }
   /* bash: ext="${myservice##*.}" */
-  ext = strrchr (tmp_ptr, '.');
+  ext = strrchr (str_ptr, '.');
   if (NULL == ext)
-    ext = tmp_ptr;
+    ext = str_ptr;
 
   write_count =
    sprintf_dyn_buf (data,
