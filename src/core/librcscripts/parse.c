@@ -549,9 +549,9 @@ parse_cache (const dyn_buf_t * data)
   service_info_t *info;
   service_type_t type = ALL_SERVICE_TYPE_T;
   rcscript_info_t *rs_info;
-  char *tmp_buf = NULL;
+  char *buf = NULL;
   char *rc_name = NULL;
-  char *tmp_p;
+  char *tmp_ptr;
   char *token;
   char *field;
   int retval;
@@ -559,43 +559,44 @@ parse_cache (const dyn_buf_t * data)
   if (!check_arg_dyn_buf ((dyn_buf_t *) data))
     goto error;
 
-  while (NULL != (tmp_buf = read_line_dyn_buf ((dyn_buf_t *) data)))
+  while (NULL != (buf = read_line_dyn_buf ((dyn_buf_t *) data)))
     {
-      tmp_p = tmp_buf;
+      tmp_ptr = buf;
 
       /* Strip leading spaces/tabs */
-      while ((tmp_p[0] == ' ') || (tmp_p[0] == '\t'))
-	tmp_p++;
+      while ((tmp_ptr[0] == ' ') || (tmp_ptr[0] == '\t'))
+	tmp_ptr++;
 
       /* Get FIELD name and FIELD value */
-      token = strsep (&tmp_p, " ");
+      token = strsep (&tmp_ptr, " ");
 
       /* FIELD name empty/bogus? */
       if ((!check_str (token))
 	  /* We got an empty FIELD value */
-	  || (!check_str (tmp_p)))
+	  || (!check_str (tmp_ptr)))
 	{
 	  errno = EMSGSIZE;
 	  DBG_MSG ("Parsing stopped due to short read!\n");
+	  
 	  goto error;
 	}
 
       if (0 == strcmp (token, FIELD_RCSCRIPT))
 	{
-	  DBG_MSG ("Field = '%s', value = '%s'\n", token, tmp_p);
+	  DBG_MSG ("Field = '%s', value = '%s'\n", token, tmp_ptr);
 
 	  /* Add the service to the list, and initialize all data */
-	  retval = service_add (tmp_p);
+	  retval = service_add (tmp_ptr);
 	  if (-1 == retval)
 	    {
-	      DBG_MSG ("Failed to add %s to service list!\n", tmp_p);
+	      DBG_MSG ("Failed to add %s to service list!\n", tmp_ptr);
 	      goto error;
 	    }
 
-	  info = service_get_info (tmp_p);
+	  info = service_get_info (tmp_ptr);
 	  if (NULL == info)
 	    {
-	      DBG_MSG ("Failed to get info for '%s'!\n", tmp_p);
+	      DBG_MSG ("Failed to get info for '%s'!\n", tmp_ptr);
 	      goto error;
 	    }
 	  /* Save the rc-script name for next passes of loop */
@@ -635,7 +636,7 @@ parse_cache (const dyn_buf_t * data)
 	   * As the values are passed to a bash function, and we
 	   * then use 'echo $*' to parse them, they should only
 	   * have one space between each value ... */
-	  token = strsep (&tmp_p, " ");
+	  token = strsep (&tmp_ptr, " ");
 
 	  /* Get the correct type name */
 	  field = service_type_names[type];
@@ -655,7 +656,7 @@ parse_cache (const dyn_buf_t * data)
 		}
 
 	      /* Get the next value (if any) */
-	      token = strsep (&tmp_p, " ");
+	      token = strsep (&tmp_ptr, " ");
 	    }
 
 	  goto _continue;
@@ -666,7 +667,7 @@ parse_cache (const dyn_buf_t * data)
 
 _continue:
       type = ALL_SERVICE_TYPE_T;
-      free (tmp_buf);
+      free (buf);
       /* Do not free 'rc_name', as it should be consistant
        * across loops */
     }
@@ -697,7 +698,7 @@ _continue:
   return 0;
 
 error:
-  free (tmp_buf);
+  free (buf);
 
   return -1;
 }
