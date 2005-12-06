@@ -358,6 +358,9 @@
 #cd /etc/init.d
 #ln -s net.lo net.ppp0
 #
+# We have to instruct ppp0 to actually use ppp
+#config_ppp0=( "ppp" )
+#
 # Each PPP interface requires an interface to use as a "Link"
 #link_ppp0="/dev/ttyS0" # Most PPP links will use a serial port
 #link_ppp0="eth0"       # PPPoE requires an ethernet interface
@@ -387,7 +390,7 @@
 #	"debug" 	# Enables syslog debugging
 #	"noauth"	# Do not require the peer to authenticate itself
 #	"defaultroute"	# Make this PPP interface the default route
-#	"userpeerdns"	# Use the DNS settings provided by PPP
+#	"usepeerdns"	# Use the DNS settings provided by PPP
 #
 # On demand options
 #	"demand"	# Enable dial on demand
