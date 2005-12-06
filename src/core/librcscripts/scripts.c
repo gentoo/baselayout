@@ -45,6 +45,7 @@ get_rcscripts (void)
     {
       errno = ENOENT;
       DBG_MSG ("'%s' is empty!\n", RCSCRIPTS_INITDDIR);
+      
       return -1;
     }
 
@@ -62,39 +63,30 @@ get_rcscripts (void)
       else
 	{
 	  regex_data_t tmp_data;
+	  dyn_buf_t *dynbuf = NULL;
 	  char *buf = NULL;
-	  char *tmp_buf = NULL;
-	  size_t lenght;
-	  int buf_count;
-	  int current = 0;
 
-	  if (-1 == file_map (rcscript, &buf, &lenght))
+	  dynbuf = new_dyn_buf_from_file (rcscript);
+	  if (NULL == dynbuf)
 	    {
 	      DBG_MSG ("Could not open '%s' for reading!\n",
 		       gbasename (rcscript));
 	      goto error;
 	    }
 
-	  buf_count = buf_get_line (buf, lenght, current);
-
-	  tmp_buf = xstrndup (&(buf[current]), buf_count);
-	  if (NULL == tmp_buf)
-	    {
-	      file_unmap (buf, lenght);
-	      goto error;
-	    }
-
-	  file_unmap (buf, lenght);
+	  buf = read_line_dyn_buf (dynbuf);
+	  free_dyn_buf (dynbuf);
+	  if (NULL == buf)
+	    goto error;
 
 	  /* Check if it starts with '#!/sbin/runscript' */
-	  DO_REGEX (tmp_data, tmp_buf, "[ \t]*#![ \t]*/sbin/runscript[ \t]*.*",
+	  DO_REGEX (tmp_data, buf, "[ \t]*#![ \t]*/sbin/runscript[ \t]*.*",
 		    check_error);
-	  free (tmp_buf);
+	  free (buf);
 	  if (REGEX_FULL_MATCH != tmp_data.match)
 	    {
 	      DBG_MSG ("'%s' is not a valid rc-script!\n",
 		       gbasename (rcscript));
-
 	      continue;
 	    }
 
@@ -152,7 +144,7 @@ get_rcscripts (void)
 	  continue;
 
 check_error:
-	  free (tmp_buf);
+	  free (buf);
 	  goto error;
 
 loop_error:

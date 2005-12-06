@@ -64,13 +64,10 @@ size_t
 parse_rcscript (char *scriptname, dyn_buf_t * data)
 {
   regex_data_t tmp_data;
+  dyn_buf_t *dynbuf = NULL;
   char *buf = NULL;
-  char *tmp_buf = NULL;
   size_t write_count = 0;
   size_t tmp_count;
-  size_t lenght;
-  int count;
-  int current = 0;
 
   if (!check_arg_dyn_buf (data))
     return -1;
@@ -78,43 +75,35 @@ parse_rcscript (char *scriptname, dyn_buf_t * data)
   if (!check_arg_str (scriptname))
     return -1;
 
-  if (-1 == file_map (scriptname, &buf, &lenght))
+  dynbuf = new_dyn_buf_from_file (scriptname);
+  if (NULL == dynbuf)
     {
       DBG_MSG ("Could not open '%s' for reading!\n", gbasename (scriptname));
       return -1;
     }
 
-  while (current < lenght)
+  DBG_MSG ("Parsing '%s'.\n", gbasename (scriptname));
+
+  tmp_count = parse_print_header (gbasename (scriptname), data);
+  if (-1 == tmp_count)
     {
-      count = buf_get_line (buf, lenght, current);
+      DBG_MSG ("Failed to call parse_print_header()!\n");
+      goto error;
+    }
+  write_count += tmp_count;
 
-      tmp_buf = xstrndup (&(buf[current]), count);
-      if (NULL == tmp_buf)
-	goto error;
-
-      if (0 == current)
+  while (NULL != (buf = read_line_dyn_buf(dynbuf)))
+    {
+      /* Check for lines with comments, and skip them */
+      DO_REGEX (tmp_data, buf, "^[ \t]*#", error);
+      if (REGEX_MATCH (tmp_data))
 	{
-	  DBG_MSG ("Parsing '%s'.\n", gbasename (scriptname));
-
-	  tmp_count = parse_print_header (gbasename (scriptname), data);
-	  if (-1 == tmp_count)
-	    {
-	      DBG_MSG ("Failed to call parse_print_header()!\n");
-	      goto error;
-	    }
-
-	  write_count += tmp_count;
-
-	  goto _continue;
+	  free (buf);
+	  continue;
 	}
 
-      /* Check for lines with comments, and skip them */
-      DO_REGEX (tmp_data, tmp_buf, "^[ \t]*#", error);
-      if (REGEX_MATCH (tmp_data))
-	goto _continue;
-
-      /* If the line contains 'depend()', set 'got_depend' */
-      DO_REGEX (tmp_data, tmp_buf, "depend[ \t]*()[ \t]*{?", error);
+      /* If the line contains 'depend()', call parse_print_body () and break */
+      DO_REGEX (tmp_data, buf, "depend[ \t]*()[ \t]*{?", error);
       if (REGEX_MATCH (tmp_data))
 	{
 	  DBG_MSG ("Got 'depend()' function.\n");
@@ -128,29 +117,32 @@ parse_rcscript (char *scriptname, dyn_buf_t * data)
 
 	  write_count += tmp_count;
 
-	  /* Make sure this is the last loop */
-	  current += lenght;
-	  goto _continue;
+	  /* This is the last loop */
+	  free (buf);
+	  break;
 	}
 
-_continue:
-      current += count + 1;
-      free (tmp_buf);
+      free (buf);
     }
 
-  file_unmap (buf, lenght);
+  /* read_line_dyn_buf() returned NULL with errno set */
+  if (0 != errno)
+    {
+      DBG_MSG ("Failed to read line from dynamic buffer!\n");
+      free_dyn_buf (dynbuf);
+
+      return -1;
+    }
+  
+  free_dyn_buf (dynbuf);
 
   return write_count;
 
 error:
-  free (tmp_buf);
   if (NULL != buf)
-    {
-      save_errno ();
-      file_unmap (buf, lenght);
-      /* file_unmap() might have changed it */
-      restore_errno ();
-    }
+    free (buf);
+  if (NULL != dynbuf)
+    free_dyn_buf (dynbuf);
 
   return -1;
 }
@@ -315,7 +307,7 @@ generate_stage2 (dyn_buf_t * data)
 
 #if 0
       int tmp_fd = open ("bar", O_CREAT | O_TRUNC | O_RDWR, 0600);
-      write (tmp_fd, stage1_data->data, stage1_write_count);
+      write (tmp_fd, stage1_data->data, stage1_data->wr_index);
       close (tmp_fd);
 #endif
 
@@ -683,7 +675,7 @@ _continue:
   if (0 != errno)
     {
       DBG_MSG ("Failed to read line from dynamic buffer!\n");
-      goto error;
+      return -1;
     }
 
   /* Set the mtimes
