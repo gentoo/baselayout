@@ -900,17 +900,6 @@ iwconfig_pre_start() {
 	# Setup IFS incase parent script has modified it
 	local IFS=$' '$'\n'$'\t'
 
-	if [[ ${background} == "yes" ]]; then
-		IN_BACKGROUND=true
-		iwconfig_configure "${iface}" &>/dev/null \
-			&& save_options "ESSID" "${ESSID}" \
-			|| iwconfig_defaults "${iface}" \
-			&& interface_down "${iface}" \
-			&& mark_service_stopped "net.${iface}" \
-			&
-		go_background
-	fi
-
 	if iwconfig_configure "${iface}" ; then
 		save_options "ESSID" "${ESSID}"
 		return 0

@@ -57,15 +57,6 @@ variables() {
 	eval "${MODULE}_variables() { echo \"$*\"; }"
 }
 
-# void go_background(void)
-#
-# Setup for backgrounding network script
-go_background() {
-	einfo "Backgrounding ..."
-	mark_service_inactive "net.${iface}"
-	exit 0
-}
-
 # bool module_load_minimum(char *module)
 #
 # Does the minimum checking on a module - even when forcing

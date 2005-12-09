@@ -12,9 +12,7 @@ conf=$(add_suffix "/etc/conf.d/net")
 service="net.${interface}"
 
 if [[ ${action} != "up" ]]; then
-	if service_starting "${service}" || service_started "${service}" ; then
-		mark_service_inactive "${service}"
-	fi
+	service_started "${service}" && mark_service_inactive "${service}"
 	remove_state "${interface}" false
 else
 	! service_stopping "${service}" && mark_service_started "${service}"

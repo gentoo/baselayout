@@ -139,14 +139,6 @@ dhclient_start() {
 	# Stop dhclient if it's already running
 	dhclient_stop "${iface}"
 
-	if [[ ${background} == "yes" ]]; then
-		eval dhclient "${opts}" -pf "${pidfile}" -q \
-			-sf "${MODULES_DIR}/helpers.d/dhclient-wrapper" \
-			"${iface}" &>/dev/null &
-		eend 0
-		go_background
-	fi
-
 	local x=$( eval dhclient "${opts}" -1 -pf "${pidfile}" \
 		-sf "${MODULES_DIR}/helpers.d/dhclient-wrapper" -q "${iface}" 2>&1 )
 	# We just check the last 5 letters

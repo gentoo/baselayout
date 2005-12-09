@@ -127,13 +127,6 @@ dhcpcd_start() {
 	dhcpcd_stop "${iface}"
 
 	[[ ! -d "${statedir}/${iface}" ]] && mkdir -m 0755 -p "${statedir}/${iface}"
-
-	if [[ ${background} == "yes" ]]; then
-		eval dhcpcd "${opts}" "${iface}" &
-		eend 0
-		go_background
-	fi
-
 	eval dhcpcd "${opts}" "${iface}"
 	eend $? || return 1
 
