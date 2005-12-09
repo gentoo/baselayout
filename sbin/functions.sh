@@ -115,23 +115,23 @@ get_bootconfig() {
 		for copt in $(</proc/cmdline) ; do
 			case "${copt%=*}" in
 				bootlevel)
-					newbootlevel="${copt##*=}"
+					newbootlevel=${copt##*=}
 					;;
 				softlevel)
-					newsoftlevel="${copt##*=}"
+					newsoftlevel=${copt##*=}
 					;;
 			esac
 		done
 	fi
 
 	if [[ -n ${newbootlevel} ]] ; then
-		export BOOTLEVEL="${newbootlevel}"
+		export BOOTLEVEL=${newbootlevel}
 	else
 		export BOOTLEVEL="boot"
 	fi
 
 	if [[ -n ${newsoftlevel} ]] ; then
-		export DEFAULTLEVEL="${newsoftlevel}"
+		export DEFAULTLEVEL=${newsoftlevel}
 	else
 		export DEFAULTLEVEL="default"
 	fi
@@ -159,7 +159,7 @@ setup_defaultlevels() {
 		if [[ -f "${svcdir}/softlevel" ]] ; then
 			export SOFTLEVEL=$(< "${svcdir}/softlevel")
 		else
-			export SOFTLEVEL="${BOOTLEVEL}"
+			export SOFTLEVEL=${BOOTLEVEL}
 		fi
 	fi
 
@@ -172,7 +172,7 @@ setup_defaultlevels() {
 #
 get_libdir() {
 	if [[ -n ${CONF_LIBDIR_OVERRIDE} ]] ; then
-		CONF_LIBDIR="${CONF_LIBDIR_OVERRIDE}"
+		CONF_LIBDIR=${CONF_LIBDIR_OVERRIDE}
 	elif [[ -x /usr/bin/portageq ]] ; then
 		CONF_LIBDIR=$(/usr/bin/portageq envvar CONF_LIBDIR)
 	fi
@@ -188,8 +188,8 @@ esyslog() {
 	local tag=
 
 	if [[ -x /usr/bin/logger ]] ; then
-		pri="$1"
-		tag="$2"
+		pri=$1
+		tag=$2
 
 		shift 2
 		[[ -z "$*" ]] && return 0
@@ -205,7 +205,7 @@ esyslog() {
 #    increase the indent used for e-commands.
 #
 eindent() {
-	local i="$1"
+	local i=$1
 	(( i > 0 )) || (( i = RC_DEFAULT_INDENT ))
 	esetdent $(( ${#RC_INDENTATION} + i ))
 }
@@ -215,7 +215,7 @@ eindent() {
 #    decrease the indent used for e-commands.
 #
 eoutdent() {
-	local i="$1"
+	local i=$1
 	(( i > 0 )) || (( i = RC_DEFAULT_INDENT ))
 	esetdent $(( ${#RC_INDENTATION} - i ))
 }
@@ -226,7 +226,7 @@ eoutdent() {
 #    num defaults to 0
 #
 esetdent() {
-	local i="$1"
+	local i=$1
 	(( i < 0 )) && (( i = 0 ))
 	RC_INDENTATION=$(printf "%${i}s" '')
 }
@@ -326,7 +326,7 @@ _eend() {
 	local retval=${1:-0} efunc=${2:-eerror} msg
 	shift 2
 
-	if [[ ${retval} == "0" ]]; then
+	if [[ ${retval} == "0" ]] ; then
 		[[ ${RC_QUIET_STDOUT} == "yes" ]] && return 0
 		msg="${BRACKET}[ ${GOOD}ok${BRACKET} ]${NORMAL}"
 	else
@@ -550,7 +550,7 @@ dolisting() {
 #    save the settings ("optstring") for "option"
 #
 save_options() {
-	local myopts="$1"
+	local myopts=$1
 
 	shift
 	if [[ ! -d "${svcdir}/options/${myservice}" ]] ; then
@@ -580,7 +580,7 @@ get_options() {
 #    Returns a config file name with the softlevel suffix
 #    appended to it.  For use with multi-config services.
 add_suffix() {
-	if [[ ${RC_USE_CONFIG_PROFILE} == "yes" && -e "$1.${SOFTLEVEL}" ]]; then
+	if [[ ${RC_USE_CONFIG_PROFILE} == "yes" && -e "$1.${SOFTLEVEL}" ]] ; then
 		echo "$1.${SOFTLEVEL}"
 	else
 		echo "$1"
@@ -613,7 +613,7 @@ NET_FS_LIST="afs cifs coda davfs gfs ncpfs nfs nfs4 ocfs2 shfs smbfs"
 is_net_fs() {
 	local fstype
 	# /proc/mounts is always accurate but may not always be available
-	if [[ -e /proc/mounts ]]; then
+	if [[ -e /proc/mounts ]] ; then
 		fstype=$( sed -n -e '/^rootfs/!s:.* '"$1"' \([^ ]*\).*:\1:p' /proc/mounts )
 	else
 		fstype=$( mount | sed -n -e 's:.* on '"$1"' type \([^ ]*\).*:\1:p' )
@@ -684,7 +684,7 @@ reverse_list() {
 #   Starts addon.
 #
 start_addon() {
-	local addon="$1"
+	local addon=$1
 	(import_addon "${addon}-start.sh")
 	return 0
 }
@@ -735,7 +735,7 @@ stop_volumes() {
 #   EXAMPLE: if is_older_than a.out *.o ; then ...
 is_older_than() {
 	local x=
-	local ref="$1"
+	local ref=$1
 	shift
 
 	for x in "$@" ; do
@@ -812,7 +812,7 @@ else
 	# Should we use colors ?
 	if [[ $* != *depend* ]] ; then
 		# Check user pref in portage
-		RC_NOCOLOR="$(portageq envvar NOCOLOR 2>/dev/null)"
+		RC_NOCOLOR=$(portageq envvar NOCOLOR 2>/dev/null)
 		[[ ${RC_NOCOLOR} == "true" ]] && RC_NOCOLOR="yes"
 	else
 		# We do not want colors during emerge depend
@@ -822,7 +822,7 @@ else
 	fi
 fi
 
-if [[ -n ${EBUILD} && $* == *depend* ]]; then
+if [[ -n ${EBUILD} && $* == *depend* ]] ; then
 	# We do not want stty to run during emerge depend
 	COLS=80
 else
@@ -832,17 +832,21 @@ else
 	(( COLS > 0 )) || (( COLS = 80 ))	# width of [ ok ] == 7
 fi
 
-if [[ ${RC_ENDCOL} == "yes" ]]; then
+if [[ ${RC_ENDCOL} == "yes" ]] ; then
 	ENDCOL=$'\e[A\e['$(( COLS - 8 ))'C'
 else
 	ENDCOL=''
 fi
 
 # Setup the colors so our messages all look pretty
-if [[ ${RC_NOCOLOR} == "yes" ]]; then
+if [[ ${RC_NOCOLOR} == "yes" ]] ; then
 	unset GOOD WARN BAD NORMAL HILITE BRACKET
 else
-	GOOD=$'\e[32;01m'
+	if [[ ${RC_COLORS} == "pink" ]] ; then
+		GOOD=$'\e[35;01m'
+	else
+		GOOD=$'\e[32;01m'
+	fi
 	WARN=$'\e[33;01m'
 	BAD=$'\e[31;01m'
 	HILITE=$'\e[36;01m'
