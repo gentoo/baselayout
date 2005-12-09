@@ -66,17 +66,8 @@ start() {
 
 	setupopts
 
-	if [[ ${fakeit} -ne 1 && ! -e /dev/rtc ]] ; then
-		local x		
-		einfon "Waiting for /dev/rtc to appear"
-		for x in $(seq 10) ; do
-			if [[ ! -e /dev/rtc ]] ; then
-				echo -n "."
-				sleep 1
-			else
-				echo
-			fi
-		done
+	if [[ ${fakeit} -ne 1 && -e /proc/modules && ! -e /dev/rtc ]] ; then
+		modprobe rtc &> /dev/null
 	fi
 
 	ebegin $"Setting system clock using the hardware clock" "[${TBLURB}]"
