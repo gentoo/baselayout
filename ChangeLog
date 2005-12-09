@@ -9,6 +9,8 @@
     Make modules-update a little more friendly by adding --help, --verbose,
     and --debug runtime options.
 
+    Remove rtc clock sleep hack for udev and replace with a modprobe rtc.
+
   06 Dec 2005; Roy Marples <uberlord@gentoo.org>:
 
     ppp documentation updated, #114551.
