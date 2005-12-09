@@ -15,7 +15,7 @@ if [[ ${action} != "up" ]]; then
 	service_started "${service}" && mark_service_inactive "${service}"
 	remove_state "${interface}" false
 else
-	! service_stopping "${service}" && mark_service_started "${service}"
+	service_inactive "${service}" && mark_service_started "${service}"
 fi
 
 if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then

@@ -91,9 +91,6 @@ udhcpc_start() {
 	# Bring up DHCP for this interface (or alias)
 	ebegin "Running udhcpc"
 
-	# Stop any instance of udhcpc on this interface
-	udhcpc_stop "${interface}"
-
 	# Try and load the cache if it exists
 	if [[ -f ${cachefile} ]]; then
 		if [[ " ${opts}" != *" --request="* && " ${opts} " != *" -r "* ]]; then
