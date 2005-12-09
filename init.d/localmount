@@ -28,7 +28,7 @@ start() {
 	   [[ -e /proc/bus/usb && ! -e /proc/bus/usb/devices ]]
 	then
 		ebegin $"Mounting USB device filesystem" "(${usbfs})"
-		usbgid=$(awk -F: '/^usb:/{print $3; exit}' /etc/group)
+		usbgid=$(echo $(getent group usb) | awk -F: '{print $3}')
 		mount -t ${usbfs} usbfs /proc/bus/usb \
 			${usbgid:+-o devmode=0664,devgid=${usbgid}}
 		eend $? $"Failed to mount USB device filesystem"
