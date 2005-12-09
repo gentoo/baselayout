@@ -103,13 +103,6 @@ udhcpc_start() {
 		fi
 	fi
 
-	if [[ ${background} == "yes" ]]; then
-		eval udhcpc "${opts}" --script="${MODULES_DIR}/helpers.d/udhcpc-wrapper" \
-			--pidfile="${pidfile}" --interface="${iface}" &>/dev/null &
-		eend 0
-		go_background
-	fi
-
 	x=$( eval udhcpc "${opts}" --now --pidfile="${pidfile}" \
 		--interface="${iface}" \
 		--script="${MODULES_DIR}/helpers.d/udhcpc-wrapper" 2>&1 \

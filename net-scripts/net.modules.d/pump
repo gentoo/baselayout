@@ -88,13 +88,6 @@ pump_start() {
 
 	# Bring up DHCP for this interface (or alias)
 	ebegin "Running pump"
-
-	if [[ ${background} == "yes" ]]; then
-		eval pump "${opts}" &
-		eend 0
-		go_background
-	fi
-
 	eval pump "${opts}"
 	eend $? || return $?
 

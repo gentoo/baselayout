@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  09 Dec 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Remove nasty undocumented backgrounding as we now support
+    ifplugd, netplug and wpa_supplicant-0.4.x which do much better jobs.
+
   08 Dec 2005; Mike Frysinger <vapier@gentoo.org>:
 
     Use getent instead of trying to read /etc/groups directly in localmount 

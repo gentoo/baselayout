@@ -165,12 +165,10 @@ wpa_supplicant_associate() {
 	done
 
 	# Spit out an appropriate error
-	if [[ ${background} != "yes" ]]; then
-		if ${action} ; then
-			eend 1 "Failed to configure ${iface} in the background"
-		else
-			eend 1 "Timed out"
-		fi
+	if ${action} ; then
+		eend 1 "Failed to configure ${iface} in the background"
+	else
+		eend 1 "Timed out"
 	fi
 
 	# exit without error with wpa_supplicant-0.4.x as we may get kickstarted
@@ -280,7 +278,6 @@ wpa_supplicant_pre_start() {
 	if [[ ${version} -gt 399 && -x ${actfile} ]]; then
 		opts="${opts} -W -P/var/run/wpa_supplicant-${iface}.pid"
 		action=true
-		[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && background=no
 	fi
 
 	eval start-stop-daemon --start --exec /sbin/wpa_supplicant \
@@ -298,16 +295,6 @@ wpa_supplicant_pre_start() {
 			-- -a"${actfile}" -i"${iface}" \
 			-P"/var/run/wpa_cli-${iface}.pid" -B
 		eend "$?" || return 1
-	fi
-
-	# Background wpa_supplication if required
-	if [[ ${background} == "yes" ]]; then
-		if ! ${action} ; then
-			wpa_supplicant_associate "${iface}" \
-			&& export IN_BACKGROUND=true \
-			&& /etc/init.d/net.${iface} start >/dev/null &
-		fi
-		go_background
 	fi
 
 	eindent
