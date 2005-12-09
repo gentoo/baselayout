@@ -17,12 +17,10 @@ case "${action}" in
 	bound|renew)
 		# We handle these actions below
 		;;
-	deconfig)
+	deconfig|leasefail)
 		# Just remove IPv4 / inet addresses
 		interface_del_addresses "${interface}" true
-		if service_starting "${service}" || service_started "${service}" ; then
-			mark_service_inactive "net.${interface}"
-		fi
+		service_started "${service}" && mark_service_inactive "net.${interface}"
 		remove_state "${interface}"
 		if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
 			best_interface=$( select_best_interface )
@@ -32,13 +30,6 @@ case "${action}" in
 		exit 0
 		;;
 	nak)
-		echo "${action}"
-		exit 0
-		;;
-	leasefail)
-		if service_starting "${service}" || service_started "${service}" ; then
-			mark_service_inactive "net.${interface}"
-		fi
 		echo "${action}"
 		exit 0
 		;;

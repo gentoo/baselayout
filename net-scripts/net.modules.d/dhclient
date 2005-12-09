@@ -135,18 +135,13 @@ dhclient_start() {
 
 	# Bring up DHCP for this interface (or alias)
 	ebegin "Running dhclient"
-
-	# Stop dhclient if it's already running
-	dhclient_stop "${iface}"
-
 	local x=$( eval dhclient "${opts}" -1 -pf "${pidfile}" \
 		-sf "${MODULES_DIR}/helpers.d/dhclient-wrapper" -q "${iface}" 2>&1 )
 	# We just check the last 5 letters
 	[[ ${x:${#x} - 5:5} == "bound" ]]
 	if [[ $? != "0" ]]; then
 		echo "${x}"
-		# We need to kill the process if we fail
-		[[ -e ${pidfile} ]] && kill -s TERM $( < "${pidfile}" ) 2>/dev/null
+		dhclient_stop "${iface}" &>/dev/null
 		eend 1
 		return 1
 	fi

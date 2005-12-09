@@ -123,9 +123,6 @@ dhcpcd_start() {
 	# Bring up DHCP for this interface (or alias)
 	ebegin "Running dhcpcd"
 
-	# Halt any existing dhcpcd process
-	dhcpcd_stop "${iface}"
-
 	[[ ! -d "${statedir}/${iface}" ]] && mkdir -m 0755 -p "${statedir}/${iface}"
 	eval dhcpcd "${opts}" "${iface}"
 	eend $? || return 1
