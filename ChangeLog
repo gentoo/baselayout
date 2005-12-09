@@ -6,6 +6,9 @@
     Use getent instead of trying to read /etc/groups directly in localmount 
     #114833 by Justin Sanchez.
 
+    Make modules-update a little more friendly by adding --help, --verbose,
+    and --debug runtime options.
+
   06 Dec 2005; Roy Marples <uberlord@gentoo.org>:
 
     ppp documentation updated, #114551.

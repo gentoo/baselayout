@@ -37,17 +37,44 @@ FULLHEADER="${HEADER}
 "
 
 source /sbin/functions.sh
+esyslog() { :; }
 
 # Parse command-line
-FORCE=false
+VERBOSE=0
+DEBUG=0
+FORCE="false"
 ASSUME_KV=
 while [[ -n $1 ]] ; do
 	case "$1" in
-		force)
+		-f|--force|force)
 			FORCE="true"
 			;;
 		--assume-kernel=*)
 			ASSUME_KV=${1#*=}
+			;;
+		-v|--verbose)
+			((++VERBOSE))
+			;;
+		-d|--debug)
+			DEBUG=1
+			;;
+		-V|--version)
+			cat /etc/gentoo-release
+			exit 0
+			;;
+		-h|--help)
+			cat <<-EOF
+			Usage: modules-update [options]
+
+			Options:
+			 --assume-kernel=KV  Assume the kernel is at least version KV
+			 -f, --force         Force execution in face of bad things
+			 -v, --verbose       Be a bit more verbose in what we do
+			 -d, --debug         Helpful debug output
+			 -V, --version       Dump version info
+			 -h, --help          This help screen, duh
+			EOF
+			exit 0
 			;;
 		*)
 			eerror "Error: I don't understand $1"
@@ -56,6 +83,8 @@ while [[ -n $1 ]] ; do
 	esac
 	shift
 done
+
+[[ ${DEBUG} == "1" ]] && set -x
 
 # Set kernel version, either from --assume-kernel or uname -r
 KV=${ASSUME_KV:-$(uname -r)}
@@ -168,7 +197,7 @@ if ${FORCE} || is_older_than ${CFGFILE2} ${MODDIR} || [[ ! -e ${CFGFILE2} ]] ; t
 		ebegin "Updating ${CFGFILE2}"
 		echo "${FULLHEADER/modules.d/modprobe.d}" > "${TMPFILE2}"
 		if /sbin/generate-modprobe.conf ${ASSUME_KV:+--assume-kernel=${KV}} \
-			>> "${TMPFILE2}" 2>/dev/null ; then
+			>> "${TMPFILE2}" 2> "${TMPFILE2}.err" ; then
 			[[ -e ${CFGFILE2} ]] && mv -f "${CFGFILE2}" "${CFGFILE2}.old"
 			mv -f "${TMPFILE2}" "${CFGFILE2}"
 			eend 0
@@ -181,22 +210,25 @@ if ${FORCE} || is_older_than ${CFGFILE2} ${MODDIR} || [[ ! -e ${CFGFILE2} ]] ; t
 			#
 			rm -f "${TMPFILE2}"
 			if type -p modprobe.old > /dev/null ; then
+				[[ ${VERBOSE} -gt 0 ]] && cat "${TMPFILE2}.err"
 				eend 1 "Warning: could not generate ${CFGFILE2}!"
 			else
 				echo "${FULLHEADER/modules.d/modprobe.d}" > "${TMPFILE2B}"
 				generate_config "${CONF}" "${MODDIR}" "${TMPFILE2}" 1
 				export TESTING_MODPROBE_CONF="${TMPFILE2}"
 				if /sbin/generate-modprobe.conf ${ASSUME_KV:+--assume-kernel=${KV}} \
-					>> "${TMPFILE2B}" 2> /dev/null ; then
+				   >> "${TMPFILE2B}" 2> "${TMPFILE2B}.err" ; then
 					[[ -e ${CFGFILE2} ]] && mv -f "${CFGFILE2}" "${CFGFILE2}.old"
 					mv -f "${TMPFILE2B}" "${CFGFILE2}"
 					eend 0
 				else
+					[[ ${VERBOSE} -gt 0 ]] && cat "${TMPFILE2B}.err"
 					eend 1 "Warning: could not generate ${CFGFILE2}!"
 					rm -f "${TMPFILE2B}"
 				fi
-				rm -f "${TMPFILE2}"
+				rm -f "${TMPFILE2}" "${TMPFILE2B}.err"
 			fi
+			rm -f "${TMPFILE2}.err"
 		fi
 
 		if [[ -f ${CFGFILE3} ]] ; then
@@ -207,7 +239,7 @@ if ${FORCE} || is_older_than ${CFGFILE2} ${MODDIR} || [[ ! -e ${CFGFILE2} ]] ; t
 			echo "${FULLHEADER/modules.d/modprobe.d}" > "${TMPFILE4}"
 			export TESTING_MODPROBE_CONF="${TMPFILE3}"
 			if /sbin/generate-modprobe.conf ${ASSUME_KV:+--assume-kernel=${KV}} \
-				>> "${TMPFILE4}" 2> /dev/null ; then
+			   >> "${TMPFILE4}" 2> "${TMPFILE4}.err" ; then
 				[[ -e ${CFGFILE4} ]] && mv -f "${CFGFILE4}" "${CFGFILE4}.old"
 				mv -f "${TMPFILE4}" "${CFGFILE4}"
 
@@ -215,10 +247,11 @@ if ${FORCE} || is_older_than ${CFGFILE2} ${MODDIR} || [[ ! -e ${CFGFILE2} ]] ; t
 				echo "include /etc/modprobe.conf" >> "${CFGFILE4}"
 				eend 0
 			else
+				[[ ${VERBOSE} -gt 0 ]] && cat "${TMPFILE4}.err"
 				eend 1 "Warning: could not generate ${CFGFILE4}!"
 				rm -f "${TMPFILE4}"
 			fi
-			rm -f "${TMPFILE3}"
+			rm -f "${TMPFILE3}" "${TMPFILE4}.err"
 		fi
 	fi
 fi
