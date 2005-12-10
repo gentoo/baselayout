@@ -65,17 +65,15 @@ strcatpaths (const char *pathname1, const char *pathname2)
     return 0;
 
   /* Lenght of pathname1 + lenght of pathname2 + '/' if needed */
-  lenght = strlen (pathname1) + strlen (pathname2) + 1;
+  lenght = strlen (pathname1) + strlen (pathname2) + 2;
   /* lenght + '\0' */
-  new_path = xmalloc (lenght + 1);
+  new_path = xmalloc (lenght);
   if (NULL == new_path)
     return NULL;
 
-  strncpy (new_path, pathname1, lenght);
-  /* Should we add a '/' ? */
-  if (new_path[strlen (new_path) - 1] != '/')
-    strncat (new_path, "/", lenght - strlen (new_path));
-  strncat (new_path, pathname2, lenght - strlen (new_path));
+  snprintf (new_path, lenght, "%s%s%s", pathname1,
+	    (new_path[strlen (new_path) - 1] != '/') ? "/" : "",
+	    pathname2);
 
   return new_path;
 }
