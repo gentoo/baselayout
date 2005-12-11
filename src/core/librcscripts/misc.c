@@ -573,6 +573,9 @@ get_list_file (char **list, char *filename)
   char *tmp_p = NULL;
   char *token = NULL;
 
+  if (!check_arg_str (filename))
+    return NULL;
+
   dynbuf = new_dyn_buf_mmap_file (filename);
   if (NULL == dynbuf)
     return NULL;
