@@ -568,26 +568,18 @@ _continue:
 char **
 get_list_file (char **list, char *filename)
 {
+  dyn_buf_t *dynbuf = NULL;
   char *buf = NULL;
-  char *tmp_buf = NULL;
   char *tmp_p = NULL;
   char *token = NULL;
-  size_t lenght = 0;
-  int count = 0;
-  int current = 0;
 
-  if (-1 == file_map (filename, &buf, &lenght))
+  dynbuf = new_dyn_buf_mmap_file (filename);
+  if (NULL == dynbuf)
     return NULL;
 
-  while (current < lenght)
+  while (NULL != (buf = read_line_dyn_buf (dynbuf)))
     {
-      count = buf_get_line (buf, lenght, current);
-
-      tmp_buf = xstrndup (&buf[current], count);
-      if (NULL == tmp_buf)
-	goto error;
-
-      tmp_p = tmp_buf;
+      tmp_p = buf;
 
       /* Strip leading spaces/tabs */
       while ((tmp_p[0] == ' ') || (tmp_p[0] == '\t'))
@@ -600,30 +592,36 @@ get_list_file (char **list, char *filename)
 	{
 	  tmp_p = xstrndup (token, strlen (token));
 	  if (NULL == tmp_p)
-	    goto error;
+	    {
+	      if (NULL != list)
+		str_list_free (list);
+	      free_dyn_buf (dynbuf);
+	      free (buf);
+
+	      return NULL;
+	    }
 
 	  str_list_add_item (list, tmp_p, error);
 	}
 
-      current += count + 1;
-      free (tmp_buf);
-      /* Set to NULL in case we error out above and have
-       * to free below */
-      tmp_buf = NULL;
+      free (buf);
     }
 
+  /* read_line_dyn_buf() returned NULL with errno set */
+  if ((NULL == buf) && (0 != errno))
+    {
+      DBG_MSG ("Failed to read line from dynamic buffer!\n");
+error:
+      if (NULL != list)
+	str_list_free (list);
+      free_dyn_buf (dynbuf);
 
-  file_unmap (buf, lenght);
+      return NULL;
+    }
+
+  free_dyn_buf (dynbuf);
 
   return list;
-
-error:
-  if (NULL != tmp_buf)
-    free (tmp_buf);
-  file_unmap (buf, lenght);
-  str_list_free (list);
-
-  return NULL;
 }
 
 
