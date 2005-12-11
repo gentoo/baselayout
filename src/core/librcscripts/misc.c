@@ -565,6 +565,67 @@ _continue:
   return value;
 }
 
+char **
+get_list_file (char **list, char *filename)
+{
+  char *buf = NULL;
+  char *tmp_buf = NULL;
+  char *tmp_p = NULL;
+  char *token = NULL;
+  size_t lenght = 0;
+  int count = 0;
+  int current = 0;
+
+  if (-1 == file_map (filename, &buf, &lenght))
+    return NULL;
+
+  while (current < lenght)
+    {
+      count = buf_get_line (buf, lenght, current);
+
+      tmp_buf = xstrndup (&buf[current], count);
+      if (NULL == tmp_buf)
+	goto error;
+
+      tmp_p = tmp_buf;
+
+      /* Strip leading spaces/tabs */
+      while ((tmp_p[0] == ' ') || (tmp_p[0] == '\t'))
+	tmp_p++;
+
+      /* Get entry - we do not want comments, and only the first word
+       * on a line is valid */
+      token = strsep (&tmp_p, "# \t");
+      if (check_str (token))
+	{
+	  tmp_p = xstrndup (token, strlen (token));
+	  if (NULL == tmp_p)
+	    goto error;
+
+	  str_list_add_item (list, tmp_p, error);
+	}
+
+      current += count + 1;
+      free (tmp_buf);
+      /* Set to NULL in case we error out above and have
+       * to free below */
+      tmp_buf = NULL;
+    }
+
+
+  file_unmap (buf, lenght);
+
+  return list;
+
+error:
+  if (NULL != tmp_buf)
+    free (tmp_buf);
+  file_unmap (buf, lenght);
+  str_list_free (list);
+
+  return NULL;
+}
+
 
 /*
  * Below three functions (file_map, file_unmap and buf_get_line) are

@@ -95,6 +95,7 @@ int rmtree (const char *pathname);
  * there is nothing to return. */
 char **ls_dir (const char *pathname, int hidden);
 char *get_cnf_entry (const char *pathname, const char *entry);
+char ** get_list_file (char **list, char *filename);
 
 /* Below three functions (file_map, file_unmap and buf_get_line) are from
  * udev-050 (udev_utils.c).  Please see misc.c for copyright info.

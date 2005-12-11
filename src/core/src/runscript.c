@@ -24,7 +24,6 @@ static void (*selinux_run_init_old) (void);
 static void (*selinux_run_init_new) (int argc, char **argv);
 
 void setup_selinux (int argc, char **argv);
-char ** get_whitelist (char **whitelist, char *filename);
 char ** filter_environ (char *caller);
 
 extern char **environ;
@@ -55,67 +54,6 @@ setup_selinux (int argc, char **argv)
 }
 
 char **
-get_whitelist (char **whitelist, char *filename)
-{
-  char *buf = NULL;
-  char *tmp_buf = NULL;
-  char *tmp_p = NULL;
-  char *token = NULL;
-  size_t lenght = 0;
-  int count = 0;
-  int current = 0;
-
-  if (-1 == file_map (filename, &buf, &lenght))
-    return NULL;
-
-  while (current < lenght)
-    {
-      count = buf_get_line (buf, lenght, current);
-
-      tmp_buf = xstrndup (&buf[current], count);
-      if (NULL == tmp_buf)
-	goto error;
-
-      tmp_p = tmp_buf;
-
-      /* Strip leading spaces/tabs */
-      while ((tmp_p[0] == ' ') || (tmp_p[0] == '\t'))
-	tmp_p++;
-
-      /* Get entry - we do not want comments, and only the first word
-       * on a line is valid */
-      token = strsep (&tmp_p, "# \t");
-      if (check_str (token))
-	{
-	  tmp_p = xstrndup (token, strlen (token));
-	  if (NULL == tmp_p)
-	    goto error;
-
-	  str_list_add_item (whitelist, tmp_p, error);
-	}
-
-      current += count + 1;
-      free (tmp_buf);
-      /* Set to NULL in case we error out above and have
-       * to free below */
-      tmp_buf = NULL;
-    }
-
-
-  file_unmap (buf, lenght);
-
-  return whitelist;
-
-error:
-  if (NULL != tmp_buf)
-    free (tmp_buf);
-  file_unmap (buf, lenght);
-  str_list_free (whitelist);
-
-  return NULL;
-}
-
-char **
 filter_environ (char *caller)
 {
   char **myenv = NULL;
@@ -130,12 +68,12 @@ filter_environ (char *caller)
     return environ;
 
   if (1 == is_file (SYS_WHITELIST, 1))
-    whitelist = get_whitelist (whitelist, SYS_WHITELIST);
+    whitelist = get_list_file (whitelist, SYS_WHITELIST);
   else
     EWARN ("System environment whitelist missing!\n");
 
   if (1 == is_file (USR_WHITELIST, 1))
-    whitelist = get_whitelist (whitelist, USR_WHITELIST);
+    whitelist = get_list_file (whitelist, USR_WHITELIST);
 
   if (NULL == whitelist)
     /* If no whitelist is present, revert to old behaviour */
