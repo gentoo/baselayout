@@ -226,13 +226,6 @@ iwconfig_setup_specific() {
 	iwconfig_user_config "${iface}"
 	iwconfig_report "${iface}"
 
-	if ${IN_BACKGROUND}; then
-		mark_service_inactive "net.${iface}"
-		export IN_BACKGROUND
-		/etc/init.d/net.${iface} start &
-		exit 0
-	fi
-
 	return 0
 }
 
@@ -396,14 +389,6 @@ iwconfig_associate() {
 		eindent
 		( postassociate "${iface}" )
 		eoutdent
-	fi
-
-	if ${IN_BACKGROUND}; then
-		mark_service_started "net.${iface}"
-		mark_service_inactive "net.${iface}"
-		export IN_BACKGROUND
-		/etc/init.d/net.${iface} start &
-		exit 0
 	fi
 
 	return 0
@@ -839,12 +824,6 @@ iwconfig_configure() {
 		ewarn "${e}"
 		iwconfig_setup_specific "${iface}" ad-hoc
 		return $?
-	fi
-
-	if ${IN_BACKGROUND}; then
-		export IN_BACKGROUND
-		/etc/init.d/net.${iface} stop &
-		exit 0
 	fi
 
 	eerror "${e}"
