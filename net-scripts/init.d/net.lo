@@ -698,7 +698,7 @@ iface_stop() {
 		interface_del_addresses "${i}"
 
 		# Do final shut down of this alias
-		if ! ${IN_BACKGROUND}; then
+		if [[ ${IN_BACKGROUND} != "true" ]]; then
 			ebegin "Shutting down ${i}"
 			interface_iface_stop "${i}"
 			eend "$?"
@@ -774,7 +774,9 @@ run_start() {
 
 		# Start the interface
 		if ! iface_start "${iface}" ; then
-			interface_exists "${iface}" && interface_down "${iface}"
+			if [[ ${IN_BACKGROUND} != "true" ]]; then
+				interface_exists "${iface}" && interface_down "${iface}"
+			fi
 			eend 1
 			return 1
 		fi
@@ -904,6 +906,8 @@ run() {
 				eoutdent
 			fi
 		fi
+		[[ ${IN_BACKGROUND} == "true" ]] \
+			&& mark_service_inactive "net.${iface}"
 	fi
 
 	return "${r}"
