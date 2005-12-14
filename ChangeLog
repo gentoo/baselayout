@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  14 Dec 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Add great big warning in documentation advising people not to use the
+    IPv6 examples if they don't have IPv6 enabled in their kernel, #115396.
+
   09 Dec 2005; Roy Marples <uberlord@gentoo.org>:
 
     Remove nasty undocumented backgrounding as we now support
