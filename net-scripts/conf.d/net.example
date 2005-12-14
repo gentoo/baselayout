@@ -5,6 +5,14 @@
 # In that case, everything should work out of the box, no configuration
 # necessary, though the startup script will warn you that you haven't
 # specified anything.
+
+#
+# WARNING :- some examples have a mixture of IPv4 (ie 192.168.0.1) and IPv6
+# (ie 4321:0:1:2:3:4:567:89ab) internet addresses. They only work if you have
+# the relevant kernel option enabled. So if you don't have an IPv6 enabled
+# kernel then remove the IPv6 address from your config.
+#
+
 #
 # If you want to use a static address or use DHCP explicitly, jump
 # down to the section labelled INTERFACE HANDLERS.
@@ -391,6 +399,9 @@
 #	"noauth"	# Do not require the peer to authenticate itself
 #	"defaultroute"	# Make this PPP interface the default route
 #	"usepeerdns"	# Use the DNS settings provided by PPP
+#	"sync"		# Enables synchronous line discipline for HDLC
+#			# equipments or for PPPoE connections. Requires
+#			# CONFIG_PPP_SYNC_TTY support in your kernel.
 #
 # On demand options
 #	"demand"	# Enable dial on demand
@@ -400,7 +411,8 @@
 #	"ipcp-accept-local"	# Accept the peers idea of local address
 #	"holdoff 3" 	# Wait 3 seconds after link dies before re-starting
 #	"lcp-echo-interval 15"	# Send a LCP echo every 15 seconds
-#	"lcp-echo-failure 3"	# Make peer dead after 3 seconds of in-activity
+#	"lcp-echo-failure 3"	# Make peer dead after 3 consective
+#				# echo-requests
 #	
 # Compression options - use these to completely disable compression
 #	"noaccomp noccp nobsdcomp nodeflate nopcomp novj novjccomp"
