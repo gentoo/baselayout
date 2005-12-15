@@ -191,19 +191,6 @@ iwconfig_setup_specific() {
 	dessid="${ESSID//\\\\/\\\\}"
 	ESSIDVAR=$( bash_variable "${ESSID}" )
 	key=$( iwconfig_get_wep_key )
-	
-	if ! eval iwconfig "${iface}" key "${key}" ; then
-		if [[ ${key} != "off" ]]; then
-			ewarn "${iface} does not support setting keys"
-			ewarn "or the parameter \"mac_key_${ESSIDVAR}\" or \"key_${ESSIDVAR}\" is incorrect"
-		fi
-	fi
-
-	if ! iwconfig "${iface}" essid "${ESSID}" ; then
-		eerror "${iface} does not support setting ESSID to \"${dessid}\""
-		return 1
-	fi
-	iwconfig "${iface}" nick "${ESSID}" 2>/dev/null
 
 	# We only change the mode if it's not the same
 	local cur_mode=$( iwconfig_get_mode "${iface}" )
@@ -217,11 +204,25 @@ iwconfig_setup_specific() {
 	channel="channel_${ifvar}"
 	# We default the channel to 3
 	channel="${!channel:-3}"
-
 	if ! iwconfig "${iface}" channel "${channel}" ; then
 		ewarn "${iface} does not support setting the channel to \"${channel}\""
 		return 1
 	fi
+
+	# Now set the key
+	if ! eval iwconfig "${iface}" key "${key}" ; then
+		if [[ ${key} != "off" ]]; then
+			ewarn "${iface} does not support setting keys"
+			ewarn "or the parameter \"mac_key_${ESSIDVAR}\" or \"key_${ESSIDVAR}\" is incorrect"
+		fi
+	fi
+
+	# Finally set the ESSID
+	if ! iwconfig "${iface}" essid "${ESSID}" ; then
+		eerror "${iface} does not support setting ESSID to \"${dessid}\""
+		return 1
+	fi
+	iwconfig "${iface}" nick "${ESSID}" 2>/dev/null
 
 	iwconfig_user_config "${iface}"
 	iwconfig_report "${iface}"

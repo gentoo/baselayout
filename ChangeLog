@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  15 Dec 2005; Roy Marples <uberlord@gentoo.org>:
+
+    When setting ad-hoc or master modes, set the mode before anything else,
+    #115664 thanks to Oldrich Jedlicka.
+
   14 Dec 2005; Roy Marples <uberlord@gentoo.org>:
 
     Add great big warning in documentation advising people not to use the
