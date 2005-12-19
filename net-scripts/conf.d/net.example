@@ -370,9 +370,10 @@
 #config_ppp0=( "ppp" )
 #
 # Each PPP interface requires an interface to use as a "Link"
-#link_ppp0="/dev/ttyS0" # Most PPP links will use a serial port
-#link_ppp0="eth0"       # PPPoE requires an ethernet interface
-#link_ppp0="/dev/null"	# PPPoA and ISDN links should have this
+#link_ppp0="/dev/ttyS0" 		# Most PPP links will use a serial port
+#link_ppp0="eth0"       		# PPPoE requires an ethernet interface
+#link_ppp0="/dev/null"			# PPPoA and ISDN links should have this
+#link_ppp0="pty $(your_link_command)"	# PPP links over ssh, rsh, etc
 #
 # Here you should specify what pppd plugins you want to use
 # Available plugins are: pppoe, pppoa, capi, dhcpc, minconn, radius,
@@ -401,18 +402,20 @@
 #	"usepeerdns"	# Use the DNS settings provided by PPP
 #
 # On demand options
-#	"demand"	# Enable dial on demand
-#	"idle 30"	# The link will go down after 30 seconds of inactivity
+#	"demand"		# Enable dial on demand
+#	"idle 30"		# Link goes down after 30 seconds of inactivity
 #	"10.112.112.112:10.112.112.113"	# Phony IP addresses
 #	"ipcp-accept-remote"	# Accept the peers idea of remote address
 #	"ipcp-accept-local"	# Accept the peers idea of local address
 #	"holdoff 3" 	# Wait 3 seconds after link dies before re-starting
+#
+# Dead peer detection
 #	"lcp-echo-interval 15"	# Send a LCP echo every 15 seconds
 #	"lcp-echo-failure 3"	# Make peer dead after 3 consective
 #				# echo-requests
 #	
 # Compression options - use these to completely disable compression
-#	"noaccomp noccp nobsdcomp nodeflate nopcomp novj novjccomp"
+#	noaccomp noccp nobsdcomp nodeflate nopcomp novj novjccomp
 #
 # Dial-up settings
 #	"lock"				# Lock serial port
