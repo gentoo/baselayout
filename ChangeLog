@@ -1,6 +1,8 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+* baselayout-1.12.0_pre12 (20 Dec 2005)
+
   20 Dec 2005; Roy Marples <uberlord@gentoo.org>:
 
     Ensure that tty has keyboard and stty reports icanon before enabling
