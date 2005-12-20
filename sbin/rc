@@ -28,6 +28,15 @@ noblock_read() {
 #   return 0 if user wants interactive mode
 #
 user_want_interactive() {
+	if [[ -z ${can_do_interactive} ]]; then
+		# Test to see if we can use interactive or not
+		# Basically there has to be a keyboard attached AND icanon set.
+		# Is there a better way?
+		tty -s && stty -a | grep -q " icanon"
+		can_do_interactive="$?"
+	fi
+	[[ ${can_do_interactive} == "0" ]] || return 1
+
 	local user_input
 	noblock_read user_input
 	[[ ${user_input} == *"I"* || ${user_input} == *"i"* ]]

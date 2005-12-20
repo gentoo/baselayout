@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  20 Dec 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Ensure that tty has keyboard and stty reports icanon before enabling
+    interactive rc, #112161.
+
   15 Dec 2005; Roy Marples <uberlord@gentoo.org>:
 
     When setting ad-hoc or master modes, set the mode before anything else,
