@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  21 Dec 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Make sure /etc/profile.d exists before using it #116232 by Saleem A.
+
 * baselayout-1.12.0_pre12 (20 Dec 2005)
 
   20 Dec 2005; Roy Marples <uberlord@gentoo.org>:
