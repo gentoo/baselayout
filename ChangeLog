@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  21 Dec 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Add new variable RC_DOWN_INTERFACE and documentation so that interfaces
+    are kept up for Wake On LAN support, #113880.
+
 * baselayout-1.12.0_pre12 (20 Dec 2005)
 
   20 Dec 2005; Roy Marples <uberlord@gentoo.org>:

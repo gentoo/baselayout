@@ -44,6 +44,7 @@ RC_USE_FSTAB=${RC_USE_FSTAB:-no}
 RC_USE_CONFIG_PROFILE=${RC_USE_CONFIG_PROFILE:-yes}
 RC_FORCE_AUTO=${RC_FORCE_AUTO:-no}
 RC_DEVICES=${RC_DEVICES:-auto}
+RC_DOWN_INTERFACE=${RC_DOWN_INTERFACE:-yes}
 
 #
 # Default values for e-message indentation and dots
