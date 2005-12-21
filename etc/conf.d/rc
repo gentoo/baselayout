@@ -35,6 +35,12 @@ RC_NET_STRICT_CHECKING="no"
 
 RC_AUTO_INTERFACE="no"
 
+# RC_DOWN_INTERFACE allows you to specify if RC will bring the interface
+# compeletly down when it stops. The default is yes, but there are some
+# instances where you may not want this to happen such as using Wake On LAN.
+
+RC_DOWN_INTERFACE="yes"
+
 # RC_VOLUME_ORDER allows you to specify, or even remove the volume setup
 # for various volume managers (MD, EVMS2, LVM, DM, etc).  Note that they are
 # stopped in reverse order.

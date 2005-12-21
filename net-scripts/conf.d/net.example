@@ -634,7 +634,7 @@
 #	# Test for link on the interface prior to bringing it up.  This
 #	# only works on some network adapters and requires the mii-diag
 #	# package to be installed.
-#	if mii-tool ${IFACE} 2> /dev/null | grep -q 'no link'; then
+#	if mii-tool "${IFACE}" 2> /dev/null | grep -q 'no link'; then
 #		ewarn "No link on ${IFACE}, aborting configuration"
 #		return 1
 #	fi 
@@ -642,10 +642,11 @@
 #	# Test for link on the interface prior to bringing it up.  This
 #	# only works on some network adapters and requires the ethtool
 #	# package to be installed.
-#	if ethtool ${IFACE} | grep -q 'Link detected: no'; then
+#	if ethtool "${IFACE}" | grep -q 'Link detected: no'; then
 #		ewarn "No link on ${IFACE}, aborting configuration"
 #		return 1
 #	fi
+#
 #
 #	# Remember to return 0 on success
 #	return 0
@@ -673,8 +674,11 @@
 #}
 
 #postdown() {
-#	# This function is mostly here for completeness... I haven't
-#	# thought of anything nifty to do with it yet ;-)
+#	# Enable Wake-On-LAN for the interface
+#	# Probably a good idea to set RC_DOWN_INTERFACE="no" in /etc/conf.d/rc
+#	# as well ;)
+#	ethtool -s "${IFACE}" wol g
+#
 #	# Return 0 always
 #	return 0
 #}

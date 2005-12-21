@@ -698,7 +698,8 @@ iface_stop() {
 		interface_del_addresses "${i}"
 
 		# Do final shut down of this alias
-		if [[ ${IN_BACKGROUND} != "true" ]]; then
+		if [[ ${IN_BACKGROUND} != "true" \
+			&& ${RC_DOWN_INTERFACE} == "yes" ]]; then
 			ebegin "Shutting down ${i}"
 			interface_iface_stop "${i}"
 			eend "$?"
