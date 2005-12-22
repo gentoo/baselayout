@@ -317,7 +317,7 @@ merge_configs() {
 # Selects the best interface to apply state information to
 # This is currently based on routing metrics
 select_best_interface() {
-	local -a ifs=( $(order_interfaces true) )
+	local -a ifs=( $(order_interfaces) )
 
 	# Move lo to the back of the pecking order of it's active
 	local x=" ${ifs[@]} "
