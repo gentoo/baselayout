@@ -139,6 +139,7 @@ iproute2_del_addresses() {
 	local pre=""
 	${2:-false} && pre="-f inet"
 	ip ${pre} addr flush label "$1" scope global &>/dev/null
+	ip ${pre} addr flush label "$1" scope site &>/dev/null
 	ip ${pre} addr flush label "$1" scope host &>/dev/null
 	return 0
 }
