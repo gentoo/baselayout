@@ -57,11 +57,9 @@ else
 	PS1="`whoami`@`uname -n | cut -f1 -d.` \$ "
 fi
 
-if [ -d /etc/profile.d ] ; then
-	for sh in /etc/profile.d/*.sh ; do
-		if [ -r "$sh" ] ; then
-			. "$sh"
-		fi
-	done
-	unset sh
-fi
+for sh in /etc/profile.d/*.sh ; do
+	if [ -r "$sh" ] ; then
+		. "$sh"
+	fi
+done
+unset sh
