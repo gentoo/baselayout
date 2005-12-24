@@ -45,13 +45,13 @@ RC_DOWN_INTERFACE="yes"
 # for various volume managers (MD, EVMS2, LVM, DM, etc).  Note that they are
 # stopped in reverse order.
 
-RC_VERBOSE="no"
+RC_VOLUME_ORDER="raid evms lvm dm"
 
 # RC_VERBOSE will make init scripts more verbose. Only networking scripts
 # really use this at this time, and this is useful for trouble shooting
 # any issues you may have.
 
-RC_VOLUME_ORDER="raid evms lvm dm"
+RC_VERBOSE="no"
 
 # RC_BOOTLOG will generate a log of the boot messages shown on the console.  
 # Useful for headless machines or debugging.  You need to emerge the 
