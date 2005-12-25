@@ -10,5 +10,5 @@
 
 # Keep the last '*' intact as it directs mount to use the
 # filesystems list available at /proc/filesystems also.
-# Don't remove it unless you REALLY knows what you are doing!
+# Don't remove it unless you REALLY know what you are doing!
 *
