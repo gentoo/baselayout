@@ -208,6 +208,7 @@ if ${FORCE} || is_older_than ${CFGFILE2} ${MODDIR} || [[ ! -e ${CFGFILE2} ]] ; t
 			# If the latter is true, then we should generate modprobe.conf 
 			# ourselves with any old files laying around in /etc/modules.d.
 			#
+			[[ ${VERBOSE} -gt 0 ]] && cat "${TMPFILE2}.err"
 			rm -f "${TMPFILE2}"
 			if type -p modprobe.old > /dev/null ; then
 				[[ ${VERBOSE} -gt 0 ]] && cat "${TMPFILE2}.err"
@@ -228,8 +229,8 @@ if ${FORCE} || is_older_than ${CFGFILE2} ${MODDIR} || [[ ! -e ${CFGFILE2} ]] ; t
 				fi
 				rm -f "${TMPFILE2}" "${TMPFILE2B}.err"
 			fi
-			rm -f "${TMPFILE2}.err"
 		fi
+		rm -f "${TMPFILE2}.err"
 
 		if [[ -f ${CFGFILE3} ]] ; then
 			ebegin "Updating ${CFGFILE4}"
