@@ -9,10 +9,6 @@ depend() {
 start() {
 	local retval=0
 
-	# Start RAID/LVM/EVMS/DM volumes for /usr, /var, etc.
-	# NOTE: this should be done *before* mounting anything
-	[[ -z ${CDBOOT} ]] && start_volumes
-
 	# Setup dm-crypt mappings if any
 	start_addon dm-crypt
 
