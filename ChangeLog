@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  29 Dec 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Support old gateway var again for ifconfig, #116761.
+
   21 Dec 2005; Roy Marples <uberlord@gentoo.org>:
 
     Add new variable RC_DOWN_INTERFACE and documentation so that interfaces
