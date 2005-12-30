@@ -11,10 +11,10 @@ OVERRIDE=1
 #
 # DNSDOMAIN merely sets the domain entry in /etc/resolv.conf, see 
 # the resolv.conf(5) manpage for more info.
- 
+
 DNSDOMAIN=""
 
 # For information on setting up NIS, please see:
 #   http://www.linux-nis.org/nis-howto/HOWTO/
- 
+
 NISDOMAIN=""
