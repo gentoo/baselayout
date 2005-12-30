@@ -32,7 +32,7 @@ checkconfig_dns() {
 }
 
 start() {
-    # Ensure that we have a hostname binary or function
+	# Ensure that we have a hostname binary or function
 	source /lib/rcscripts/net.modules.d/helpers.d/functions
 
 	local retval=0
