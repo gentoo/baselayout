@@ -1,4 +1,4 @@
-# Copyright 1999-2005 Gentoo Foundation
+# Copyright 1999-2006 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 # void single_user()
@@ -14,7 +14,7 @@ source "${svclib}"/sh/init-common-pre.sh
 
 echo
 echo -e "${GOOD}Gentoo/FreeBSD $(get_base_ver); ${BRACKET}http://gentoo-alt.gentoo.org/${NORMAL}"
-echo -e " Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2"
+echo -e " Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2"
 echo
 
 check_statedir /proc
