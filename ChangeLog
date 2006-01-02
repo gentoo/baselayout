@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2005 Gentoo Foundation; Distributed under the GPLv2
 
+  02 Jan 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Interfaces can be dynamically added to bridges again, #117406.
+    Updated copyright to 2006.
+
   29 Dec 2005; Roy Marples <uberlord@gentoo.org>:
 
     Support old gateway var again for ifconfig, #116761.
