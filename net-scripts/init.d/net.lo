@@ -504,7 +504,7 @@ modules_load()  {
 iface_start() {
 	local iface="$1" mod config_counter="-1" x config_worked=false
 	local RC_INDENTATION="${RC_INDENTATION}"
-	local -a config fallback fallback_route conf a 
+	local -a config fallback fallback_route conf a b 
 	local ifvar=$( bash_variable "$1" ) i j
 
 	# Try and work out a metric for the interface if we're on auto
@@ -530,14 +530,14 @@ iface_start() {
 	a="config_${ifvar}[@]"
 	a=( "${!a}" )
 	for (( i=0; i<${#a[@]}; i++ )); do 
-		local -a b=( $( expand_parameters "${a[i]}" ) )
+		eval b=( $( expand_parameters "${a[i]}" ) )
 		config=( "${config[@]}" "${b[@]}" )
 	done
 
 	a="fallback_${ifvar}[@]"
 	a=( "${!a}" )
 	for (( i=0; i<${#a[@]}; i++ )); do 
-		local -a b=( $( expand_parameters "${a[i]}" ) )
+		eval b=( $( expand_parameters "${a[i]}" ) )
 		fallback=( "${fallback[@]}" "${b[@]}" )
 	done
 
