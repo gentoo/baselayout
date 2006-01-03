@@ -829,7 +829,7 @@ if [[ -n ${EBUILD} && $* == *depend* ]] ; then
 else
 	# Setup COLS and ENDCOL so eend can line up the [ ok ]
 	COLS=${COLUMNS:-0}		# bash's internal COLUMNS variable
-	(( COLS == 0 )) && COLS=$(stty size 2>/dev/null | cut -d' ' -f2)
+	(( COLS == 0 )) && COLS=$(set -- `stty size 2>/dev/null` ; echo $2)
 	(( COLS > 0 )) || (( COLS = 80 ))	# width of [ ok ] == 7
 fi
 
