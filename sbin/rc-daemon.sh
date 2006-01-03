@@ -1,4 +1,4 @@
-# Copyright 1999-2006 Gentoo Foundation 
+# Copyright 1999-2005 Gentoo Foundation 
 # Distributed under the terms of the GNU General Public License v2
 
 # RC functions to work with daemons
@@ -35,6 +35,8 @@ RC_WAIT_ON_START="0.1"
 # Proccess vars - makes things easier by using the shift command
 # and indirect variables
 rc_shift_args() {
+	local addvar
+	
 	while [[ $# != "0" ]]; do
 		if [[ $1 != "-"* && -n ${addvar} ]]; then
 			if [[ -z ${!addvar} ]]; then
@@ -95,7 +97,7 @@ rc_setup_daemon_vars() {
 	local x="${args// \'--\' /}"
 	[[ ${x} != "${args}" ]] && eargs=( "${args##* \'--\' }" )
 
-	rc_shift_args ${sargs[@]}
+	eval rc_shift_args "${sargs[@]}"
 
 	[[ -z ${cmd} ]] && cmd="${name}"
 
@@ -224,7 +226,7 @@ is_daemon_running() {
 
 	read pid < "${pidfile}"
 	pids=" ${pids} "
-	[[ ${pids// ${pid} } != "${pids}" ]]
+	[[ ${pids// ${pid} /} != "${pids}" ]]
 }
 
 # int rc_start_daemon(void)
@@ -276,9 +278,9 @@ rc_stop_daemon() {
 		# Check that the given program is actually running the pid
 		if [[ -n ${pids} ]]; then
 			pids=" ${pids} "
-			[[ ${pids// ${pid} } == ${pids} ]] && return 1
+			[[ ${pids// ${pid} /} == "${pids}" ]] && return 1
 		fi
-		pids=${pid}
+		pids="${pid}"
 	fi
 
 	# If there's nothing to kill then return without error
