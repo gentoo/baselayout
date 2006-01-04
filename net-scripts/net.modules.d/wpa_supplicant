@@ -83,7 +83,8 @@ wpa_supplicant_get_ap_mac_address() {
 # Note that just because we are associated does not mean we are using the
 # correct encryption keys
 wpa_supplicant_associated() {
-	local -a status=( "$( wpa_cli -i"$1" status | sed -n -e 's/^\(key_mgmt\|wpa_state\|EAP state\)=\([^=]\+\).*/\U\"\2\"/p' )" )
+	local -a status
+	eval status=( $( wpa_cli -i"$1" status | sed -n -e 's/^\(key_mgmt\|wpa_state\|EAP state\)=\([^=]\+\).*/\U\"\2\"/p' ) )
 
 	case "${status[0]}" in
 		"NONE")					[[ ${status[1]} == "ASSOCIATED" || ${status[1]} == "COMPLETED" ]] ;;
@@ -310,7 +311,8 @@ wpa_supplicant_pre_start() {
 		ESSIDVAR=$( bash_variable "${ESSID}" )
 		save_options "ESSID" "${ESSID}"
 
-		local -a status=( "$( wpa_cli -i${iface} status | sed -n -e 's/^\(bssid\|pairwise_cipher\|key_mgmt\)=\([^=]\+\).*/\"\U\2\"/p' | tr '[:lower:]' '[:upper:]' )" )
+		local -a status
+		eval status=( $( wpa_cli -i"${iface}" status | sed -n -e 's/^\(bssid\|pairwise_cipher\|key_mgmt\)=\([^=]\+\).*/\"\U\2\"/p' | tr '[:lower:]' '[:upper:]' ) )
 		einfo "${iface} connected to \"${ESSID//\\\\/\\\\}\" at ${status[0]}"
 
 		if [[ ${status[2]} == "NONE" ]]; then
