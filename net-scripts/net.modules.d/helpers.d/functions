@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (c) 2004-2005 Gentoo Foundation
+# Copyright (c) 2004-2006 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 # We will be loaded after conf.d/rc and conf.d/net so we can set a default
