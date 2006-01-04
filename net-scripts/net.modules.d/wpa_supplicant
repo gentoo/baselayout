@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (c) 2004-2005 Gentoo Foundation
+# Copyright (c) 2004-2006 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -83,10 +83,10 @@ wpa_supplicant_get_ap_mac_address() {
 # Note that just because we are associated does not mean we are using the
 # correct encryption keys
 wpa_supplicant_associated() {
-	local -a status=( "$( wpa_cli -i"$1" status | sed -n -e 's/^\(key_mgmt\|wpa_state\|EAP state\)=\([^=]\+\).*/\U\2/p' )" )
+	local -a status=( "$( wpa_cli -i"$1" status | sed -n -e 's/^\(key_mgmt\|wpa_state\|EAP state\)=\([^=]\+\).*/\U\"\2\"/p' )" )
 
 	case "${status[0]}" in
-		"NONE")					[[ ${status[1]} == "ASSOCIATED" ]] ;;
+		"NONE")					[[ ${status[1]} == "ASSOCIATED" || ${status[1]} == "COMPLETED" ]] ;;
 		"IEEE 802.1X (no WPA)")	[[ ${status[2]} == "SUCCESS" ]] ;;
 		*)						[[ ${status[1]} == "COMPLETED" ]] ;;
 	esac
