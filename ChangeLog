@@ -5,6 +5,8 @@
 
     iproute deletes addresses again, fixes #117799.
 
+    dhclient now supports dhclient-enter-hooks, #117763.
+
 * baselayout-1.12.0_pre13 (04 Jan 2006)
 
   03 Jan 2006; Roy Marples <uberlord@gentoo.org>:
