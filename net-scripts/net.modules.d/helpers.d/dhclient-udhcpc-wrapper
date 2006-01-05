@@ -10,6 +10,9 @@
 
 iface_type=${1}
 
+[[ -e /etc/dhcp/dhclient-enter-hooks ]] \
+    && ( . /etc/dhcp/dhclient-enter-hooks )
+
 echo ${reason}
 case "${reason}" in
 	BOUND|REBOOT|REBIND) action=bound ;;
