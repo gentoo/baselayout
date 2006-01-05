@@ -770,8 +770,10 @@ run_start() {
 			&& eval "config_${IFVAR}=( "\"\$\{config\[@\]:1\}\"" )"
 
 		# There may be existing ip address info - so we strip it
-		[[ ${RC_INTERFACE_KEEP_CONFIG} != "yes" ]] \
-			&& interface_del_addresses "${iface}"
+		if [[ ${RC_INTERFACE_KEEP_CONFIG} != "yes" \
+			&& ${IN_BACKGROUND} != "true" ]]; then
+			interface_del_addresses "${iface}"
+		fi
 
 		# Start the interface
 		if ! iface_start "${iface}" ; then
