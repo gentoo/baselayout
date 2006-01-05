@@ -49,7 +49,7 @@
 # For ifconfig support, emerge sys-apps/net-tools
 # For iproute2 support, emerge sys-apps/iproute2
 
-# If you don't specify an interface then we prefer ifconfig it it's installed
+# If you don't specify an interface then we prefer ifconfig if it's installed
 # Prefer iproute2 over ifconfig
 #modules=( "iproute2" )
 
