@@ -7,6 +7,9 @@
 # Instead of writing new functions for dhclient, we simply map their variables
 # over to udhcpc style ones and call those scripts!
 
+[[ -e /etc/dhcp/dhclient-enter-hooks ]] \
+	&& ( . /etc/dhcp/dhclient-enter-hooks ) 
+
 case "${reason}" in
 	BOUND|REBOOT|REBIND) action="bound" ;;
 	RENEW) action="renew" ;;
