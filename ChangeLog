@@ -1,6 +1,13 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  06 Jan 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Use ${DEFAULTLEVEL} if ${SOFTLEVEL} is boot, shutdown, reboot or single
+    in add_suffix.
+
+    Sync style changes in functions.sh
+
   05 Jan 2006; Roy Marples <uberlord@gentoo.org>:
 
     iproute deletes addresses again, fixes #117799.

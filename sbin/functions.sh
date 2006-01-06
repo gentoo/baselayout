@@ -116,23 +116,23 @@ get_bootconfig() {
 		for copt in $(</proc/cmdline) ; do
 			case "${copt%=*}" in
 				bootlevel)
-					newbootlevel=${copt##*=}
+					newbootlevel="${copt##*=}"
 					;;
 				softlevel)
-					newsoftlevel=${copt##*=}
+					newsoftlevel="${copt##*=}"
 					;;
 			esac
 		done
 	fi
 
 	if [[ -n ${newbootlevel} ]] ; then
-		export BOOTLEVEL=${newbootlevel}
+		export BOOTLEVEL="${newbootlevel}"
 	else
 		export BOOTLEVEL="boot"
 	fi
 
 	if [[ -n ${newsoftlevel} ]] ; then
-		export DEFAULTLEVEL=${newsoftlevel}
+		export DEFAULTLEVEL="${newsoftlevel}"
 	else
 		export DEFAULTLEVEL="default"
 	fi
@@ -160,7 +160,7 @@ setup_defaultlevels() {
 		if [[ -f "${svcdir}/softlevel" ]] ; then
 			export SOFTLEVEL=$(< "${svcdir}/softlevel")
 		else
-			export SOFTLEVEL=${BOOTLEVEL}
+			export SOFTLEVEL="${BOOTLEVEL}"
 		fi
 	fi
 
@@ -173,7 +173,7 @@ setup_defaultlevels() {
 #
 get_libdir() {
 	if [[ -n ${CONF_LIBDIR_OVERRIDE} ]] ; then
-		CONF_LIBDIR=${CONF_LIBDIR_OVERRIDE}
+		CONF_LIBDIR="${CONF_LIBDIR_OVERRIDE}"
 	elif [[ -x /usr/bin/portageq ]] ; then
 		CONF_LIBDIR=$(/usr/bin/portageq envvar CONF_LIBDIR)
 	fi
@@ -189,8 +189,8 @@ esyslog() {
 	local tag=
 
 	if [[ -x /usr/bin/logger ]] ; then
-		pri=$1
-		tag=$2
+		pri="$1"
+		tag="$2"
 
 		shift 2
 		[[ -z "$*" ]] && return 0
@@ -206,7 +206,7 @@ esyslog() {
 #    increase the indent used for e-commands.
 #
 eindent() {
-	local i=$1
+	local i="$1"
 	(( i > 0 )) || (( i = RC_DEFAULT_INDENT ))
 	esetdent $(( ${#RC_INDENTATION} + i ))
 }
@@ -216,7 +216,7 @@ eindent() {
 #    decrease the indent used for e-commands.
 #
 eoutdent() {
-	local i=$1
+	local i="$1"
 	(( i > 0 )) || (( i = RC_DEFAULT_INDENT ))
 	esetdent $(( ${#RC_INDENTATION} - i ))
 }
@@ -227,7 +227,7 @@ eoutdent() {
 #    num defaults to 0
 #
 esetdent() {
-	local i=$1
+	local i="$1"
 	(( i < 0 )) && (( i = 0 ))
 	RC_INDENTATION=$(printf "%${i}s" '')
 }
@@ -551,7 +551,7 @@ dolisting() {
 #    save the settings ("optstring") for "option"
 #
 save_options() {
-	local myopts=$1
+	local myopts="$1"
 
 	shift
 	if [[ ! -d "${svcdir}/options/${myservice}" ]] ; then
@@ -581,8 +581,19 @@ get_options() {
 #    Returns a config file name with the softlevel suffix
 #    appended to it.  For use with multi-config services.
 add_suffix() {
-	if [[ ${RC_USE_CONFIG_PROFILE} == "yes" && -e "$1.${SOFTLEVEL}" ]] ; then
-		echo "$1.${SOFTLEVEL}"
+	if [[ ${RC_USE_CONFIG_PROFILE} != "yes" ]] ; then
+		echo "$1"
+		return 0
+	fi
+
+	local suffix="${SOFTLEVEL}"
+	[[ ${SOFTLEVEL} == "${BOOTLEVEL}" \
+	|| ${SOFTLEVEL} == "reboot" \
+	|| ${SOFTLEVEL} == "shutdown" \
+	|| ${SOFTLEVEL} == "single" ]] \
+		&& suffix="${DEFAULTLEVEL}"
+	if [[ -e "$1.${suffix}" ]] ; then
+		echo "$1.${suffix}"
 	else
 		echo "$1"
 	fi
@@ -685,7 +696,7 @@ reverse_list() {
 #   Starts addon.
 #
 start_addon() {
-	local addon=$1
+	local addon="$1"
 	(import_addon "${addon}-start.sh")
 	return 0
 }
@@ -736,7 +747,7 @@ stop_volumes() {
 #   EXAMPLE: if is_older_than a.out *.o ; then ...
 is_older_than() {
 	local x=
-	local ref=$1
+	local ref="$1"
 	shift
 
 	for x in "$@" ; do
@@ -813,7 +824,7 @@ else
 	# Should we use colors ?
 	if [[ $* != *depend* ]] ; then
 		# Check user pref in portage
-		RC_NOCOLOR=$(portageq envvar NOCOLOR 2>/dev/null)
+		RC_NOCOLOR="$(portageq envvar NOCOLOR 2>/dev/null)"
 		[[ ${RC_NOCOLOR} == "true" ]] && RC_NOCOLOR="yes"
 	else
 		# We do not want colors during emerge depend
