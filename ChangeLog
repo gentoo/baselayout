@@ -8,6 +8,8 @@
 
     Sync style changes in functions.sh
 
+    Critical services now load a suffixed config and fail gracefully.
+
   05 Jan 2006; Roy Marples <uberlord@gentoo.org>:
 
     iproute deletes addresses again, fixes #117799.
