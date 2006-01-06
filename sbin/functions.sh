@@ -323,7 +323,7 @@ _eend() {
 	local retval=${1:-0} efunc=${2:-eerror} msg
 	shift 2
 
-	if [[ ${retval} == "0" ]]; then
+	if [[ ${retval} == "0" ]] ; then
 		[[ ${RC_QUIET_STDOUT} == "yes" ]] && return 0
 		msg="${BRACKET}[ ${GOOD}ok${BRACKET} ]${NORMAL}"
 	else
@@ -577,8 +577,19 @@ get_options() {
 #    Returns a config file name with the softlevel suffix
 #    appended to it.  For use with multi-config services.
 add_suffix() {
-	if [[ ${RC_USE_CONFIG_PROFILE} == "yes" && -e "$1.${SOFTLEVEL}" ]]; then
-		echo "$1.${SOFTLEVEL}"
+	if [[ ${RC_USE_CONFIG_PROFILE} != "yes" ]] ; then
+		echo "$1"
+		return 0
+	fi
+
+	local suffix="${SOFTLEVEL}"
+	[[ ${SOFTLEVEL} == "${BOOTLEVEL}" \
+	|| ${SOFTLEVEL} == "reboot" \
+	|| ${SOFTLEVEL} == "shutdown" \
+	|| ${SOFTLEVEL} == "single" ]] \
+		&& suffix="${DEFAULTLEVEL}"
+	if [[ -e "$1.${suffix}" ]] ; then
+		echo "$1.${suffix}"
 	else
 		echo "$1"
 	fi
@@ -610,7 +621,7 @@ NET_FS_LIST="afs cifs coda davfs gfs ncpfs nfs nfs4 ocfs2 shfs smbfs"
 is_net_fs() {
 	local fstype
 	# /proc/mounts is always accurate but may not always be available
-	if [[ -e /proc/mounts ]]; then
+	if [[ -e /proc/mounts ]] ; then
 		fstype=$( sed -n -e '/^rootfs/!s:.* '"$1"' \([^ ]*\).*:\1:p' /proc/mounts )
 	else
 		fstype=$( mount | sed -n -e 's:.* on '"$1"' type \([^ ]*\).*:\1:p' )
@@ -819,7 +830,7 @@ else
 	fi
 fi
 
-if [[ -n ${EBUILD} && $* == *depend* ]]; then
+if [[ -n ${EBUILD} && $* == *depend* ]] ; then
 	# We do not want stty to run during emerge depend
 	COLS=80
 else
@@ -829,14 +840,14 @@ else
 	(( COLS > 0 )) || (( COLS = 80 ))	# width of [ ok ] == 7
 fi
 
-if [[ ${RC_ENDCOL} == "yes" ]]; then
+if [[ ${RC_ENDCOL} == "yes" ]] ; then
 	ENDCOL=$'\e[A\e['$(( COLS - 8 ))'C'
 else
 	ENDCOL=''
 fi
 
 # Setup the colors so our messages all look pretty
-if [[ ${RC_NOCOLOR} == "yes" ]]; then
+if [[ ${RC_NOCOLOR} == "yes" ]] ; then
 	unset GOOD WARN BAD NORMAL HILITE BRACKET
 else
 	GOOD=$'\e[32;01m'
