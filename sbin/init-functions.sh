@@ -71,14 +71,21 @@ start_critical_service() {
 	# Needed for some addons like dm-crypt that starts in critical services
 	local myservice=$1
 
-	source "/etc/init.d/${service}" || eerror "Failed to source /etc/init.d/${service}"
+	source "/etc/init.d/${service}"
 	retval=$?
-	[[ ${retval} -ne 0 ]] && return "${retval}"
-	[[ -e /etc/conf.d/${service} ]] && source "/etc/conf.d/${service}"
-	source /etc/rc.conf
+	if [[ ${retval} -ne 0 ]]; then
+		eerror "Failed to source /etc/init.d/${service}"
+		return "${retval}"
+	fi
 
-	start || eerror "Failed to start /etc/init.d/${service}"
+	[[ -e $(add_suffix /etc/conf.d/${service}) ]] \
+		&& source "$(add_suffix /etc/conf.d/${service})"
+	[[ -e $(add_suffix /etc/rc.conf) ]] \
+		&& source "$(add_suffix /etc/rc.conf)"
+	
+	start
 	retval=$?
+	[[ ${retval} -ne 0 ]] && eerror "Failed to start /etc/init.d/${service}"
 
 	return "${retval}"
 	)
