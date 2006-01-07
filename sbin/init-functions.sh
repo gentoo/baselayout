@@ -78,10 +78,10 @@ start_critical_service() {
 		return "${retval}"
 	fi
 
-	[[ -e $(add_suffix /etc/conf.d/${service}) ]] \
-		&& source "$(add_suffix /etc/conf.d/${service})"
-	[[ -e $(add_suffix /etc/rc.conf) ]] \
-		&& source "$(add_suffix /etc/rc.conf)"
+	local conf="$(add_suffix /etc/conf.d/${service})"
+	[[ -e ${conf} ]] && source "${conf}"
+	conf="$(add_suffix /etc/rc.conf)"
+	[[ -e ${conf} ]] && source "${conf}"
 	
 	start
 	retval=$?
