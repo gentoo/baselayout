@@ -19,20 +19,20 @@ fi
 svcpause="no"
 svcrestart="no"
 
-myscript=$1
+myscript="$1"
 if [[ -L $1 && ! -L /etc/init.d/${1##*/} ]] ; then
-	myservice=$(readlink "$1")
+	myservice="$(readlink $1)"
 else
-	myservice=$1
+	myservice="$1"
 fi
 
-myservice=${myservice##*/}
-export SVCNAME=${myservice}
-mylevel=$(<"${svcdir}/softlevel")
+myservice="${myservice##*/}"
+export SVCNAME="${myservice}"
+mylevel="$(<${svcdir}/softlevel)"
 
 # Set $IFACE to the name of the network interface if it is a 'net.*' script
 if [[ ${myservice%%.*} == "net" && ${myservice##*.} != "${myservice}" ]] ; then
-	IFACE=${myservice##*.}
+	IFACE="${myservice##*.}"
 	NETSERVICE="yes"
 else
 	IFACE=
@@ -46,11 +46,14 @@ fi
 # (3) Source /etc/rc.conf to pick up potentially overriding
 #     configuration, if the system administrator chose to put it
 #     there (if it exists).
-
-[[ -e $(add_suffix /etc/conf.d/${myservice}) ]] && source "$(add_suffix /etc/conf.d/${myservice})"
-[[ -e $(add_suffix /etc/conf.d/net) ]]          && \
-[[ ${NETSERVICE} == "yes" ]]                    && source "$(add_suffix /etc/conf.d/net)"
-[[ -e $(add_suffix /etc/rc.conf) ]]             && source "$(add_suffix /etc/rc.conf)"
+conf="$(add_suffix /etc/conf.d/${myservice})"
+[[ -e ${conf} ]] && source "${conf}"
+if [[ ${NETSERVICE} == "yes" ]]; then
+	conf="$(add_suffix /etc/conf.d/net)"
+	[[ -e ${conf} ]] && source "${conf}"
+fi
+conf="$(add_suffix /etc/rc.conf)"
+[[ -e ${conf} ]] && source "${conf}"
 
 usage() {
 	local IFS="|"
@@ -128,7 +131,7 @@ svc_stop() {
 
 			mydeps="${mydeps} ${myservice}"
 		else
-			mydeps=${myservice}
+			mydeps="${myservice}"
 		fi
 	fi
 
@@ -298,7 +301,7 @@ svc_start() {
 				$(dolisting "/etc/runlevels/${mylevel}/net.*")"
 
 			for y in ${netservices} ; do
-				mynetservice=${y##*/}
+				mynetservice="${y##*/}"
 				if service_stopped "${mynetservice}" ; then
 					start_service "${mynetservice}"
 				fi
