@@ -10,7 +10,9 @@ MODULES_DIR="${svclib}/net.modules.d"
 . "${MODULES_DIR}/system"
 . "${MODULES_DIR}/helpers.d/functions"
 
-conf=$(add_suffix "/etc/conf.d/net")
+conf="$(add_suffix /etc/conf.d/net)"
+[[ -e ${conf} ]] && source "${conf}"
+conf="$(add_suffix /etc/conf.d/net.${interface})"
 [[ -e ${conf} ]] && source "${conf}"
 
 # Create some dummy functions, so we can depend on a module

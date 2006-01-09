@@ -68,7 +68,8 @@ iwconfig_get_wep_status() {
 
 	if [[ -n ${key} ]]; then
 		status="enabled"
-		mode=" - $( iwconfig "$1" | sed -n -e 's/^.*Security mode:\(.*[^ ]\).*/\1/p' )"
+		mode="$( iwconfig $1 | sed -n -e 's/^.*Security mode:\(.*[^ ]\).*/\1/p' )"
+		[[ -n ${mode} ]] && mode=" - ${mode}"
 	fi
 
 	echo "(WEP ${status}${mode})"
@@ -81,7 +82,7 @@ iwconfig_get_essid() {
 	local i essid
 
 	for (( i=0; i<5; i++ )); do
-		essid=$( iwgetid "$1" 2>/dev/null | sed -n -e 's/^.*ESSID:"\(.*\)"$/\1/p' )
+		essid="$( iwgetid $1 2>/dev/null | sed -n -e 's/^.*ESSID:"\(.*\)"$/\1/p' )"
 		if [[ -n ${essid} ]]; then
 			echo "${essid}"
 			return 0
@@ -152,27 +153,34 @@ iwconfig_get_wep_key() {
 	echo "${!key:-off}"
 }
 
-# void iwconfig_user_config(char *iface)
+# void iwconfig_user_config(char *iface, char *ifvar)
 #
 # Applies the user configuration to the interface
 iwconfig_user_config() {
-	local iface="$1" conf ifvar=$( bash_variable "$1" )
+	local iface="$1" conf aconf ifvar="$2"
+	[[ -z ${ifvar} ]] && ifvar=$( bash_variable "$1" )
 
 	# Apply the user configuration
 	conf="iwconfig_${ifvar}"
 	if [[ -n ${!conf} ]]; then
-		if ! eval iwconfig "${iface}" "${!conf}" ; then
-			ewarn "${iface} does not support the following configuration commands"
-			eval ewarn "  ${!conf}"
-		fi
+		aconf=( "${!conf} ")
+		for conf in "${aconf[@]}" ; do
+			if ! eval iwconfig "${iface}" "${conf}" ; then
+				ewarn "${iface} does not support the following configuration commands"
+				ewarn "  ${conf}"
+			fi
+		done
 	fi
 
-	conf="iwpriv_${ifvar}"
+	conf="iwpriv_${ifvar}[@]"
 	if [[ -n ${!conf} ]]; then
-		if ! eval iwpriv "${iface}" "${!conf}" ; then
-			ewarn "${iface} does not support the following private ioctls"
-			ewarn "  ${!conf}"
-		fi
+		aconf=( "${!conf}" )
+		for conf in "${aconf[@]}" ; do
+			if ! eval iwpriv "${iface}" "${conf}" ; then
+				ewarn "${iface} does not support the following private ioctls"
+				ewarn "  ${conf}"
+			fi
+		done
 	fi
 }
 
@@ -217,6 +225,8 @@ iwconfig_setup_specific() {
 		fi
 	fi
 
+	iwconfig_user_config "${iface}" "${ESSIDVAR}"
+
 	# Finally set the ESSID
 	if ! iwconfig "${iface}" essid "${ESSID}" ; then
 		eerror "${iface} does not support setting ESSID to \"${dessid}\""
@@ -224,7 +234,6 @@ iwconfig_setup_specific() {
 	fi
 	iwconfig "${iface}" nick "${ESSID}" 2>/dev/null
 
-	iwconfig_user_config "${iface}"
 	iwconfig_report "${iface}"
 
 	return 0
@@ -331,12 +340,11 @@ iwconfig_associate() {
 		ESSIDVAR=$( bash_variable "${ESSID}" )
 		key=$( iwconfig_get_wep_key "${mac}" )
 		if [[ ${wep_required} == "on" && ${key} == "off" ]]; then
-			vewarn "WEP key is not set for \"${dessid}\" - not connecting"
-			return 1
+			ewarn "WEP key is not set for \"${dessid}\""
 		fi
 		if [[ ${wep_required} == "off" && ${key} != "off" ]]; then
 			key="off"
-			vewarn "\"${dessid}\" is not WEP enabled - ignoring setting"
+			ewarn "\"${dessid}\" is not WEP enabled - ignoring setting"
 		fi
 
 		if ! eval iwconfig "${iface}" key "${key}" ; then
@@ -348,6 +356,8 @@ iwconfig_associate() {
 		fi
 		[[ ${key} != "off" ]] && w=$( iwconfig_get_wep_status "${iface}" )
 	fi
+
+	iwconfig_user_config "${iface}" "${ESSIDVAR}"
 
 	if ! iwconfig "${iface}" essid "${ESSID}" ; then
 		if [[ ${ESSID} != "any" ]]; then
@@ -382,7 +392,6 @@ iwconfig_associate() {
 		return $?
 	fi
 
-	iwconfig_user_config "${iface}"
 	iwconfig_report "${iface}"
 
 	if is_function postassociate ; then
