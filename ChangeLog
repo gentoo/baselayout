@@ -3,7 +3,13 @@
 
   09 Jan 2006; Roy Marples <uberlord@gentoo.org>:
 
-    Ensure that specific configuration is loaded after net.
+    Ensure that specific configuration is loaded after net, #118368.
+
+    iwconfig now supports multiple iwconfig_* and iwpriv_* statements and is
+    also configurable for specific ESSIDs. This allows use to use the inbuilt
+    WPA support in the rt2500 driver.
+
+    module-loader now loads interface specific configuration files, #118366.
 
   07 Jan 2006; Roy Marples <uberlord@gentoo.org>:
 

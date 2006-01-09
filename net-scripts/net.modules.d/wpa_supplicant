@@ -58,7 +58,7 @@ wpa_supplicant_get_essid() {
 	local i essid
 
 	for (( i=0; i<5; i++ )); do
-		essid=$( wpa_cli -i"$1" status | sed -n -e 's/^ssid=//p' )
+		essid="$( wpa_cli -i$1 status | sed -n -e 's/^ssid=//p' )"
 		if [[ -n ${essid} ]]; then
 			echo "${essid}"
 			return 0

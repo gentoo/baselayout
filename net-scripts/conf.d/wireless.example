@@ -92,12 +92,18 @@
 #channel_eth0="3"
 
 # Setup any other config commands. This is basically the iwconfig argument
-# without the iwconfig $iface
+# without the iwconfig $iface.
 #iwconfig_eth0=""
 
 # Set private driver ioctls. This is basically the iwpriv argument without
-# the iwpriv $iface
+# the iwpriv $iface. If you use the rt2500 driver (not the rt2x00 one) then
+# you can set WPA here, below is an example.
 #iwpriv_eth0=""
+#iwpriv_ESSID=(
+#	"set AuthMode=WPAPSK"
+#	"set EncrypType=TKIP"
+#	"set WPAPSK=yourpasskey"
+#)
 
 # Seconds to wait before scanning
 # Some drivers need to wait until they have finished "loading"
@@ -106,7 +112,7 @@
 #sleep_scan_eth0="1"
 
 # Seconds to wait until associated. The default is to wait 10 seconds.
-# 0 means wait indefinitely. WARNING : this can cause an infinite delay when
+# 0 means wait indefinitely. WARNING: this can cause an infinite delay when
 # booting.
 #associate_timeout_eth0="5"
 
