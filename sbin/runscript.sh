@@ -45,18 +45,18 @@ search_lang="${LC_ALL:-${LC_MESSAGES:-${LANG}}}"
 	&& TEXTDOMAIN="${myservice}"
 
 # Source configuration files.
-# (1) Source /etc/conf.d/${myservice} to get initscript-specific
+# (1) Source /etc/conf.d/net if it is a net.* service
+# (2) Source /etc/conf.d/${myservice} to get initscript-specific
 #     configuration (if it exists).
-# (2) Source /etc/conf.d/net if it is a net.* service
 # (3) Source /etc/rc.conf to pick up potentially overriding
 #     configuration, if the system administrator chose to put it
 #     there (if it exists).
-conf="$(add_suffix /etc/conf.d/${myservice})"
-[[ -e ${conf} ]] && source "${conf}"
 if [[ ${NETSERVICE} == "yes" ]]; then
 	conf="$(add_suffix /etc/conf.d/net)"
 	[[ -e ${conf} ]] && source "${conf}"
 fi
+conf="$(add_suffix /etc/conf.d/${myservice})"
+[[ -e ${conf} ]] && source "${conf}"
 conf="$(add_suffix /etc/rc.conf)"
 [[ -e ${conf} ]] && source "${conf}"
 
