@@ -104,6 +104,9 @@
 #	"set EncrypType=TKIP"
 #	"set WPAPSK=yourpasskey"
 #)
+#NOTE: Even though you can use WPA like so, you may have to set a WEP key
+#if your driver claims the AP is encrypted. The WEP key itself will not be
+#used though.
 
 # Seconds to wait before scanning
 # Some drivers need to wait until they have finished "loading"

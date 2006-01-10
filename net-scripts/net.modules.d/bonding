@@ -53,14 +53,14 @@ bonding_pre_start() {
 	einfo "${!slaves}"
 
 	# Check that our slaves exist
-	for s in "${!slaves}" ; do
+	for s in ${!slaves} ; do
 		interface_exists "${s}" && continue
 		ewarn "interface ${s} does not exist"
 		return 1
 	done
 
 	# Must force the slaves to a particular state before adding them
-	for s in "${!slaves}" ; do
+	for s in ${!slaves} ; do
 		interface_del_addresses "${s}"
 		interface_up "${s}"
 	done
@@ -70,7 +70,7 @@ bonding_pre_start() {
 
 	# finally add in slaves
 	eoutdent
-	/sbin/ifenslave "${iface}" "${!slaves}" >/dev/null
+	eval /sbin/ifenslave "${iface}" "${!slaves}" >/dev/null
 	eend $?
 
 	return 0 #important
@@ -95,7 +95,7 @@ bonding_stop() {
 	eindent
 	einfo "${slaves}"
 	eoutdent
-	/sbin/ifenslave -d "${iface}" ${slaves} &>${devnull}
+	/sbin/ifenslave -d "${iface}" ${slaves}
 
 	# reset all slaves
 	for s in ${slaves}; do

@@ -208,7 +208,7 @@ wpa_supplicant_pre_start() {
 	opts="wpa_supplicant_${ifvar}"
 	opts=" ${!opts} "
 	[[ ${opts} != *" -D"* ]] \
-		&& ewarn "wpa_supplicant_${ifvar} does not define a driver"
+		&& vewarn "wpa_supplicant_${ifvar} does not define a driver"
 	
 	# We only work on wirelesss interfaces unless a driver for wired
 	# has been defined
