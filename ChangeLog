@@ -1,6 +1,23 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  10 Jan 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Removed runlevel dependancies from runscript.sh as they're now in rc.
+    
+    runscript.sh now has much better locking, #118418.
+
+    We now store services to restart when we end up as inactive from a restart
+    or we were stopped with IN_BACKGROUND=true, #112088.
+
+    We no longer stop and start services already running on runlevel change if
+    they're in the runlevel we're changing too.
+
+    We can now wait_sevice on services started outside of rc.
+
+    rc-status now reports "Could not locate" instead of "Could not local",
+    thanks to Christian Heim.
+
   09 Jan 2006; Roy Marples <uberlord@gentoo.org>:
 
     Ensure that specific configuration is loaded after net, #118368.

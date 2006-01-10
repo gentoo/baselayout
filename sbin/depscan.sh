@@ -9,7 +9,7 @@ if [[ $1 == "--debug" ]] ; then
 	set -x
 fi
 
-if [[ ! -d ${svcdir} ]]; then
+if [[ ! -d ${svcdir} ]] ; then
 	if ! mkdir -p -m 0755 "${svcdir}" 2>/dev/null ; then
 		eerror "Could not create needed directory '${svcdir}'!"
 	fi
@@ -17,7 +17,7 @@ fi
 
 for x in softscripts snapshot options daemons \
 	started starting inactive stopping failed \
-	exclusive exitcodes ; do
+	exclusive exitcodes restart ; do
 	if [[ ! -d "${svcdir}/${x}" ]] ; then
 		if ! mkdir -p -m 0755 "${svcdir}/${x}" 2>/dev/null ; then
 			eerror "Could not create needed directory '${svcdir}/${x}'!"

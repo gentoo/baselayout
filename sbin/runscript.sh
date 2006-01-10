@@ -84,31 +84,29 @@ status() {
 }
 			
 svc_stop() {
-	local x=
-	local mydep=
-	local mydeps=
-	local retval=0
-	local ordservice=
-	local was_inactive=false
-
-	if service_stopping "${myservice}" ; then
-		eerror "ERROR:  \"${myservice}\" is already stopping."
-		return 0
-	elif service_stopped "${myservice}" ; then
-		eerror "ERROR:  \"${myservice}\" has not yet been started."
-		return 0
-	fi
-
+	local x= mydep= mydeps= retval=0 was_inactive=false
+	local -a servicelist=()
+	
 	# Do not try to stop if it had already failed to do so on runlevel change
 	if is_runlevel_stop && service_failed "${myservice}" ; then
 		return 1
 	fi
+	
+	if service_stopped "${myservice}" ; then
+		ewarn "WARNING:  \"${myservice}\" has not yet been started."
+		return 0
+	fi
 
 	service_inactive "${myservice}" && was_inactive=true
-
-	# Remove symlink to prevent recursion
-	mark_service_stopping "${myservice}"
-
+	if ! mark_service_stopping "${myservice}" ; then
+		ewarn "WARNING:  \"${myservice}\" is already stopping."
+		return 0
+	fi
+	# Lock service starting too ...
+	mark_service_starting "${myservice}"
+	begin_service "${myservice}"
+	local begun=$?
+	
 	service_message "Stopping service ${myservice}"
 
 	if in_runlevel "${myservice}" "${BOOTLEVEL}" && \
@@ -138,95 +136,51 @@ svc_stop() {
 	# Save the IN_BACKGROUND var as we need to clear it for stopping depends
 	local ib_save="${IN_BACKGROUND}"
 	unset IN_BACKGROUND
-	local -a servicelist=() index=0
 
 	for mydep in ${mydeps} ; do
-		# If some service 'need' $mydep, stop it first; or if it is a runlevel change,
-		# first stop all services that is started 'after' $mydep.
-		if needsme "${mydep}" >/dev/null || \
-		   (is_runlevel_stop && ibefore "${mydep}" >/dev/null) ; then
-			local -a sl=( $(needsme "${mydep}") )
-
-			# On runlevel change, stop all services "after $mydep" first ...
-			if is_runlevel_stop ; then
-				sl=( "${sl[@]}" $(ibefore "${mydep}") )
-			fi
-
-			local z="${#sl[@]}"
-			for (( x=0; x<z; x++ )); do
-				# Service not currently running, continue
-				if ! service_started "${sl[x]}" ; then
-					unset sl[x]
-					continue
-				fi
-
-				if ibefore -t "${mydep}" "${x}" >/dev/null && \
-				   [[ -L ${svcdir}/softscripts.new/${x} ]] ; then
-					# Service do not 'need' $mydep, and is still present in
-					# new runlevel ...
-					unset sl[x]
-					continue
-				fi
-				
-				stop_service "${sl[x]}"
-			done
-		fi
-		servicelist[index]="${sl[index]}"
-		(( index++ ))
-	done
-
-	index=0
-	for mydep in ${mydeps} ; do
-		for x in ${servicelist[index]} ; do
-			service_stopped "${x}" && continue
-
-			if ibefore -t "${mydep}" "${x}" >/dev/null && \
-			   [[ -L ${svcdir}/softscripts.new/${x} ]] ; then
-				# Service do not 'need' $mydep, and is still present in
-				# new runlevel ...
-				continue
-			fi
-
-			wait_service "${x}"
-
-			if ! service_stopped "${x}" ; then
-				# If we are halting the system, try and get it down as
-				# clean as possible, else do not stop our service if
-				# a dependent service did not stop.
-				if needsme -t "${mydep}" "${x}" >/dev/null && \
-				   [[ ${SOFTLEVEL} != "reboot" && \
-				      ${SOFTLEVEL} != "shutdown" ]] ; then
-					retval=1
-				fi
-				break
+		for x in $(needsme "${mydep}") ; do
+			# Service not currently running, continue
+			if service_started "${x}" ; then
+				stop_service "${x}"
+				service_list=( "${service_list[@]}" "${x}" )
 			fi
 		done
-		(( index++ ))
+	done
+
+	for x in "${service_list[@]}" ; do
+		service_stopped "${x}" && continue
+		wait_service "${x}"
+		if ! service_stopped "${x}" ; then
+			retval=1
+			break
+		fi
 	done
 
 	IN_BACKGROUND="${ib_save}"
 
-	if [[ ${retval} -ne 0 ]] ; then
+	if [[ ${retval} != 0 ]] ; then
 		eerror "ERROR:  problems stopping dependent services."
 		eerror "        \"${myservice}\" is still up."
 	else
 		# Stop einfo/ebegin/eend from working as parallel messes us up
 		[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && RC_QUIET_STDOUT="yes"
+
 		# Now that deps are stopped, stop our service
 		( stop )
 		retval=$?
 
 		# If a service has been marked inactive, exit now as something
 		# may attempt to start it again later
-		service_inactive "${myservice}" && return 0
+		if service_inactive "${myservice}" ; then
+			[[ ${begun} == 0 ]] && end_service "${myservice}" 0
+			return 0
+		fi
 	fi
 
-	if [[ ${retval} -ne 0 ]] ; then
+	if [[ ${retval} != 0 ]] ; then
 		# Did we fail to stop? create symlink to stop multible attempts at
 		# runlevel change.  Note this is only used at runlevel change ...
-		if is_runlevel_stop ; then
-			mark_service_failed "${myservice}"
-		fi
+		is_runlevel_stop && mark_service_failed "${myservice}"
 		
 		# If we are halting the system, do it as cleanly as possible
 		if [[ ${SOFTLEVEL} != "reboot" && ${SOFTLEVEL} != "shutdown" ]] ; then
@@ -249,54 +203,47 @@ svc_stop() {
 		service_message "Stopped service ${myservice}"
 	fi
 
+	[[ ${begun} == 0 ]] && end_service "${myservice}" "${retval}"
 	return "${retval}"
 }
 
 svc_start() {
-	local retval=0
-	local startfail="no"
-	local x=
-	local y=
-	local myserv=
-	local ordservice=
-
-	if service_starting "${myservice}" ; then
-		ewarn "WARNING: \"${myservice}\" is already starting."
-		return 0
-	elif service_stopping "${myservice}" ; then
-		ewarn "WARNING: please wait for \"${myservice}\" to stop first."
-		return 0
-	elif service_inactive "${myservice}" ; then
-		if [[ ${IN_BACKGROUND} != "true" ]] ; then
-			ewarn "WARNING: \"${myservice}\" has already been started."
-			return 0
-		fi
-	elif service_started "${myservice}" ; then
-		ewarn "WARNING: \"${myservice}\" has already been started."
-		return 0
-	fi
+	local x= y= retval=0 was_inactive=false startfail="no"
 
 	# Do not try to start if i have done so already on runlevel change
 	if is_runlevel_start && service_failed "${myservice}" ; then
 		return 1
 	fi
 
-	mark_service_starting "${myservice}"
-	service_message "Starting service ${myservice}"
-
-	# On rc change, start all services "before $myservice" first
-	if is_runlevel_start ; then
-		startupservices="$(ineed "${myservice}") \
-			$(valid_iuse "${myservice}") \
-			$(valid_iafter "${myservice}")"
-	else
-		startupservices="$(ineed "${myservice}") \
-			$(valid_iuse "${myservice}")"
+	if service_started "${myservice}" ; then
+		ewarn "WARNING: \"${myservice}\" has already been started."
+		return 0
+	elif service_stopping "${myservice}" ; then
+		eerror "ERROR: please wait for \"${myservice}\" to stop first."
+		return 1
+	elif service_inactive "${myservice}" ; then
+		if [[ ${IN_BACKGROUND} != "true" ]] ; then
+			ewarn "WARNING: \"${myservice}\" has already been started."
+			return 0
+		fi
 	fi
+
+	service_inactive "${myservice}" && was_inactive=true
+	if ! mark_service_starting "${myservice}" ; then
+		ewarn "WARNING: \"${myservice}\" is already starting."
+		return 0
+	fi
+	begin_service "${myservice}"
+	local begun=$?
+
+	service_message "Starting service ${myservice}"
+	
+	local startupservices="$(trace_dependencies $(ineed "${myservice}") \
+			$(valid_iuse ${myservice}))"
 
 	# Start dependencies, if any
 	for x in ${startupservices} ; do
-		if [[ ${x} == "net" ]] && [[ ${NETSERVICE} != "yes" ]] && ! is_net_up ; then
+		if [[ ${x} == "net" && ${NETSERVICE} != "yes" ]] && ! is_net_up ; then
 			local netservices="$(dolisting "/etc/runlevels/${BOOTLEVEL}/net.*") \
 				$(dolisting "/etc/runlevels/${mylevel}/net.*")"
 
@@ -316,9 +263,6 @@ svc_start() {
 	# wait for dependencies to finish
 	for x in ${startupservices} ; do
 		if [ "${x}" = "net" -a "${NETSERVICE}" != "yes" ] ; then
-			local netservices="$(dolisting "/etc/runlevels/${BOOTLEVEL}/net.*") \
-			$(dolisting "/etc/runlevels/${mylevel}/net.*")"
-
 			for y in ${netservices} ; do
 				mynetservice="${y##*/}"
 
@@ -373,7 +317,10 @@ svc_start() {
 		
 		# If a service has been marked inactive, exit now as something
 		# may attempt to start it again later
-		service_inactive "${myservice}" && return 1 
+		if service_inactive "${myservice}" ; then
+			[[ ${begun} == 0 ]] && end_service "${myservice}" 1
+			return 1
+		fi
 	fi
 
 	if [[ ${retval} != 0 ]] ; then
@@ -383,7 +330,11 @@ svc_start() {
 		# If we're booting, we need to continue and do our best to get the
 		# system up.
 		if [[ ${SOFTLEVEL} != "${BOOTLEVEL}" ]]; then
-			mark_service_stopped "${myservice}"
+			if ${was_inactive} ; then
+				mark_service_inactive "${myservice}"
+			else
+				mark_service_stopped "${myservice}"
+			fi
 		fi
 
 		service_message "eerror" "FAILED to start service ${myservice}!"
@@ -393,6 +344,7 @@ svc_start() {
 		service_message "Service ${myservice} started OK"
 	fi
 
+	[[ ${begun} == 0 ]] && end_service "${myservice}" "${retval}"
 	return "${retval}"
 }
 
@@ -415,7 +367,10 @@ svc_status() {
 	# and update our status accordingly
 	[[ ${EUID} == 0 ]] && update_service_status "${myservice}"
 
-	if service_starting "${myservice}" ; then
+	if service_stopping "${myservice}" ; then
+		efunc="eerror"
+		state="stopping"
+	elif service_starting "${myservice}" ; then
 		efunc="einfo"
 		state="starting"
 	elif service_inactive "${myservice}" ; then
@@ -424,9 +379,6 @@ svc_status() {
 	elif service_started "${myservice}" ; then
 		efunc="einfo"
 		state="started"
-	elif service_stopping "${myservice}" ; then
-		efunc="eerror"
-		state="stopping"
 	else
 		efunc="eerror"
 		state="stopped"
@@ -503,10 +455,40 @@ done
 for arg in $* ; do
 	case "${arg}" in
 	stop)
+		if [[ -e "${svcdir}/restart/${myservice}" ]]; then
+			rm -f "${svcdir}/restart/${myservice}"
+		fi
+
+		# Stoped from the background - treat this as a restart so that
+		# stopped services come back up again when started.
+		if [[ ${IN_BACKGROUND} == "true" ]]; then
+			rm -rf "${svcdir}/snapshot/$$"
+			mkdir -p "${svcdir}/snapshot/$$"
+			cp -a "${svcdir}"/started/* "${svcdir}/snapshot/$$/"
+		fi
+	
 		svc_stop
+
+		if [[ ${IN_BACKGROUND} == "true" ]]; then
+			res=
+			for x in $(dolisting "${svcdir}/snapshot/$$/") ; do
+				if service_stopped "${x##*/}" ; then
+					res="${res}${x##*/} "
+				fi
+			done
+			echo "${res}" > "${svcdir}/restart/${myservice}"
+		fi
 		;;
 	start)
 		svc_start
+		retval=$?
+		if [[ -e "${svcdir}/restart/${myservice}" ]]; then
+			for x in $(trace_dependencies $(< "${svcdir}/restart/${myservice}")) ; do
+				service_stopped "${x}" && start_service "${x}"
+			done
+			rm -f "${svcdir}/restart/${myservice}"
+		fi
+		exit ${retval}
 		;;
 	needsme|ineed|usesme|iuse|broken)
 		trace_dependencies "-${arg}"
@@ -515,9 +497,13 @@ for arg in $* ; do
 		svc_status
 		;;
 	zap)
+		if [[ -e "${svcdir}/restart/${myservice}" ]]; then
+			rm -f "${svcdir}/restart/${myservice}"
+		fi
 		if ! service_stopped "${myservice}" ; then
 			einfo "Manually resetting ${myservice} to stopped state."
 			mark_service_stopped "${myservice}"
+			end_service "${myservice}"
 		fi
 		;;
 	restart)
@@ -540,7 +526,7 @@ for arg in $* ; do
 				echo
 				ewarn "Please use 'svc_stop; svc_start' and not 'stop; start' to"
 				ewarn "restart the service in its custom 'restart()' function."
-				ewarn "Run ${myservice} without arguments for more info."
+/var/lib/init.d/exclusive/net.lan				ewarn "Run ${myservice} without arguments for more info."
 				echo
 				svc_restart
 			else
@@ -558,6 +544,14 @@ for arg in $* ; do
 					start_service "${x##*/}"
 				fi
 			done
+		elif service_inactive "${myservice}" ; then
+			res=
+			for x in $(dolisting "${svcdir}/snapshot/$$/") ; do
+				if service_stopped "${x##*/}" ; then
+					res="${res}${x##*/} "
+				fi
+			done
+			echo "${res}" > "${svcdir}/restart/${myservice}"
 		fi
 
 		# Wait for any services that may still be running ...
@@ -582,6 +576,5 @@ for arg in $* ; do
 		;;
 	esac
 done
-
 
 # vim:ts=4
