@@ -244,7 +244,7 @@ iwconfig_setup_specific() {
 # Returns true if the AP MAC address is valid or not
 iwconfig_associate_mac() {
 	# Checks if a MAC address has been assigned
-	local mac=$( iwconfig_get_ap_mac_address "$1" ) i
+	local mac="$( iwconfig_get_ap_mac_address $1 )" i
 	local -a invalid_macs=(
 		"00:00:00:00:00:00"
 		"44:44:44:44:44:44"
@@ -340,7 +340,8 @@ iwconfig_associate() {
 		ESSIDVAR=$( bash_variable "${ESSID}" )
 		key=$( iwconfig_get_wep_key "${mac}" )
 		if [[ ${wep_required} == "on" && ${key} == "off" ]]; then
-			ewarn "WEP key is not set for \"${dessid}\""
+			eerror "WEP key is not set for \"${dessid}\" - not connecting"
+			return 1
 		fi
 		if [[ ${wep_required} == "off" && ${key} != "off" ]]; then
 			key="off"
@@ -429,7 +430,7 @@ iwconfig_scan() {
 	fi
 
 	# Set the essid to any. This is required for scanning
-	iwconfig "${iface}" essid any
+	#iwconfig "${iface}" essid any
 
 	veinfo "Scanning for access points"
 
