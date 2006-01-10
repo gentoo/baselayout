@@ -90,7 +90,7 @@ if [[ -z ${runlevel} ]] ; then
 	if [[ -e ${svcdir}/softlevel ]] ; then
 		runlevel=$(<${svcdir}/softlevel)
 	else
-		ewarn "Could not local current runlevel in ${svcdir}/softlevel"
+		ewarn "Could not locate current runlevel in ${svcdir}/softlevel"
 		if [[ -d ${runleveldir}/single ]] ; then
 			runlevel=single
 		elif [[ -d ${runleveldir}/default ]] ; then
@@ -216,14 +216,14 @@ for level in ${runlevelidxs} ; do
 			|| " ${boot_crit} " != *" ${service} "* ]]; then
 			print_msg "${service}" "${BAD}" 'broken  '
 			broken="${broken} ${service}"
+		elif [[ -n ${stopping} && $(in_list "${stopping}" "${service}") -eq 1 ]] ; then
+			print_msg "${service}" "${BAD}" 'stopping'
+		elif [[ -n ${starting} && $(in_list "${starting}" "${service}") -eq 1 ]] ; then
+			print_msg "${service}" "${GOOD}" 'starting'
 		elif [[ -n ${inactive} && $(in_list "${inactive}" "${service}") -eq 1 ]] ; then
 			print_msg "${service}" "${WARN}" 'inactive'
 		elif [[ $(in_list "${started}" "${service}") -eq 1 ]] ; then
 			print_msg "${service}" "${GOOD}" 'started '
-		elif [[ -n ${starting} && $(in_list "${starting}" "${service}") -eq 1 ]] ; then
-			print_msg "${service}" "${GOOD}" 'starting'
-		elif [[ -n ${stopping} && $(in_list "${stopping}" "${service}") -eq 1 ]] ; then
-			print_msg "${service}" "${BAD}" 'stopping'
 		else
 			print_msg "${service}" "${BAD}" 'stopped '
 		fi

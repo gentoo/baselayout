@@ -244,10 +244,7 @@ in_runlevel() {
 #   starting services.
 #
 is_runlevel_start() {
-	[[ -d "${svcdir}/softscripts.old" && \
-	   ${SOFTLEVEL} != "${OLDSOFTLEVEL}" ]] && return 0
-
-	return 1
+	[[ -d "${svcdir}/softscripts.old" ]]
 }
 
 # bool is_runlevel_stop()
@@ -256,10 +253,7 @@ is_runlevel_start() {
 #   stopping services.
 #
 is_runlevel_stop() {
-	[[ -d "${svcdir}/softscripts.new" && \
-	   ${SOFTLEVEL} != "${OLDSOFTLEVEL}" ]] && return 0
-
-	return 1
+	[[ -d "${svcdir}/softscripts.new" ]]
 }
 
 # void sevice_message([char *type] char *message)
@@ -290,10 +284,12 @@ service_message() {
 #         end_service service
 #   fi
 begin_service() {
-	[[ {$START_CRITICAL} == "yes" ]] && return 0
+	local service="$1"
+	[[ -z ${service} ]] && return 1
+	
+	[[ ${START_CRITICAL} == "yes" ]] && return 0
 
 	mkfifo "${svcdir}/exclusive/${service}" 2> /dev/null
-	return $?
 }
 
 # void end_service(service, exitcode)
@@ -303,6 +299,7 @@ begin_service() {
 #
 end_service() {
 	local service="$1" exitstatus="$2"
+	[[ -z ${service} ]] && return
 
 	# if we are doing critical services, there is no fifo
 	[[ ${START_CRITICAL} == "yes" ]] && return
@@ -357,7 +354,7 @@ start_service() {
 		mark_service_stopped "${service}"
 		return 1
 	fi
-	
+
 	service_starting "${service}" && return 0
 	service_started "${service}" && return 0
 	service_inactive "${service}" && return 1
@@ -449,14 +446,11 @@ stop_service() {
 mark_service_starting() {
 	[[ -z $1 ]] && return 1
 
-	ln -snf "/etc/init.d/$1" "${svcdir}/starting/$1"
-	local retval=$?
-	
-	[[ -f "${svcdir}/started/$1" ]] && rm -f "${svcdir}/started/$1"
+	ln -sn "/etc/init.d/$1" "${svcdir}/starting/$1" 2>/dev/null || return 1
+
 	[[ -f "${svcdir}/inactive/$1" ]] && rm -f "${svcdir}/inactive/$1"
-	[[ -f "${svcdir}/stopping/$1" ]] && rm -f "${svcdir}/stopping/$1"
-	
-	return "${retval}"
+	[[ -f "${svcdir}/started/$1" ]] && rm -f "${svcdir}/started/$1"
+	return 0
 }
 
 # bool mark_service_started(service)
@@ -467,13 +461,12 @@ mark_service_started() {
 	[[ -z $1 ]] && return 1
 
 	ln -snf "/etc/init.d/$1" "${svcdir}/started/$1"
-	local retval=$?
 	
 	[[ -f "${svcdir}/starting/$1" ]] && rm -f "${svcdir}/starting/$1"
 	[[ -f "${svcdir}/inactive/$1" ]] && rm -f "${svcdir}/inactive/$1"
 	[[ -f "${svcdir}/stopping/$1" ]] && rm -f "${svcdir}/stopping/$1"
 
-	return "${retval}"
+	return 0 
 }
 
 # bool mark_service_inactive(service)
@@ -484,12 +477,12 @@ mark_service_inactive() {
 	[[ -z $1 ]] && return 1
 
 	ln -snf "/etc/init.d/$1" "${svcdir}/inactive/$1"
-	local retval=$?
+	
 	[[ -f "${svcdir}/started/$1" ]] && rm -f "${svcdir}/started/$1"
 	[[ -f "${svcdir}/starting/$1" ]] && rm -f "${svcdir}/starting/$1"
 	[[ -f "${svcdir}/stopping/$1" ]] && rm -f "${svcdir}/stopping/$1"
 
-	return "${retval}"
+	return 0
 }
 
 # bool mark_service_stopping(service)
@@ -499,14 +492,11 @@ mark_service_inactive() {
 mark_service_stopping() {
 	[[ -z $1 ]] && return 1
 
-	ln -snf "/etc/init.d/$1" "${svcdir}/stopping/$1"
-	local retval=$?
-	
-	[[ -f "${svcdir}/starting/$1" ]] && rm -f "${svcdir}/starting/$1"
-	[[ -f "${svcdir}/started/$1" ]] && rm -f "${svcdir}/started/$1"
-	[[ -f "${svcdir}/inactive/$1" ]] && rm -f "${svcdir}/inactive/$1"
+	ln -sn "/etc/init.d/$1" "${svcdir}/stopping/$1" 2>/dev/null || return 1
 
-	return "${retval}"
+	[[ -f "${svcdir}/inactive/$1" ]] && rm -f "${svcdir}/inactive/$1"
+	[[ -f "${svcdir}/started/$1" ]] && rm -f "${svcdir}/started/$1"
+	return 0
 }
 
 # bool mark_service_stopped(service)
@@ -522,7 +512,7 @@ mark_service_stopped() {
 	[[ -f "${svcdir}/inactive/$1" ]] && rm -f "${svcdir}/inactive/$1"
 	[[ -f "${svcdir}/stopping/$1" ]] && rm -f "${svcdir}/stopping/$1"
 
-	return $?
+	return 0
 }
 
 # bool test_service_state(char *service, char *state)
