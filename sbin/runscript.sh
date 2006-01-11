@@ -184,6 +184,11 @@ svc_stop() {
 	done
 
 	for x in "${service_list[@]}" ; do
+		# We need to test if the service has been marked stopped
+		# as the fifo may still be around if called by custom code
+		# such as postup from a net script.
+		service_stopped "${mynetservice}" && continue
+		
 		wait_service "${x}"
 		if ! service_stopped "${x}" ; then
 			retval=1
@@ -320,6 +325,11 @@ svc_start() {
 			for y in ${netservices} ; do
 				mynetservice="${y##*/}"
 
+				# We need to test if the service has been marked started
+				# as the fifo may still be around if called by custom code
+				# such as postup from a net script.
+				service_started "${mynetservice}" && continue
+				
 				wait_service "${mynetservice}"
 
 				if ! service_started "${mynetservice}" ; then
@@ -335,6 +345,11 @@ svc_start() {
 				fi
 			done
 		elif [[ ${x} != "net" ]] ; then
+			# We need to test if the service has been marked started
+			# as the fifo may still be around if called by custom code
+			# such as postup from a net script.
+			service_started "${mynetservice}" && continue
+			
 			wait_service "${x}"
 			if ! service_started "${x}" ; then
 				# A 'need' dependacy is critical for startup
