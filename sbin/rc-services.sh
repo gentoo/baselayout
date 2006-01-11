@@ -287,7 +287,7 @@ begin_service() {
 	local service="$1"
 	[[ -z ${service} ]] && return 1
 	
-	[[ ${START_CRITICAL} == "yes" ]] && return 0
+	[[ ${START_CRITICAL} == "yes" || ${STOP_CRITICAL} == "yes" ]] && return 0
 
 	mkfifo "${svcdir}/exclusive/${service}" 2> /dev/null
 }
@@ -302,7 +302,7 @@ end_service() {
 	[[ -z ${service} ]] && return
 
 	# if we are doing critical services, there is no fifo
-	[[ ${START_CRITICAL} == "yes" ]] && return
+	[[ ${START_CRITICAL} == "yes" || ${STOP_CRITICAL} == "yes" ]] && return
 
 	if [[ -n ${exitstatus} ]] ; then
 		echo "${exitstatus}" > "${svcdir}/exitcodes/${service}"
@@ -336,7 +336,7 @@ wait_service() {
 
 	# This will block until the service fifo is touched
 	# Otheriwse we don't block
-	local tmp=$( < "${fifo}" &>/dev/null )
+	local tmp=$( < "${fifo}" 2>/dev/null ) 2>/dev/null
 	local exitstatus=$( < "${svcdir}/exitcodes/${service}" )
 
 	return "${exitstatus}"

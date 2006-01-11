@@ -4,10 +4,6 @@
 
 # Common functions
 [[ ${RC_GOT_FUNCTIONS} != "yes" ]] && source /sbin/functions.sh
-# Functions to handle dependencies and services
-[[ ${RC_GOT_SERVICES} != "yes" ]] && source "${svclib}/sh/rc-services.sh"
-# Functions to control daemons
-[[ ${RC_GOT_DAEMON} != "yes" ]] && source "${svclib}/sh/rc-daemon.sh"
 
 # User must be root to run most script stuff (except status)
 if [[ ${EUID} != 0 ]] && ! [[ $2 == "status" && $# -eq 2 ]] ; then
@@ -20,7 +16,7 @@ svcpause="no"
 svcrestart="no"
 
 myscript="$1"
-if [[ -L $1 && ! -L /etc/init.d/${1##*/} ]] ; then
+if [[ -L $1 && ! -L "/etc/init.d/${1##*/}" ]] ; then
 	myservice="$(readlink $1)"
 else
 	myservice="$1"
@@ -29,6 +25,19 @@ fi
 myservice="${myservice##*/}"
 export SVCNAME="${myservice}"
 mylevel="$(<${svcdir}/softlevel)"
+
+svc_trap() {
+	trap 'eerror "ERROR:  \"${myservice}\" caught an interrupt"; exit 1' \
+		INT QUIT TSTP
+}
+
+# Setup a default trap
+svc_trap
+
+# Functions to handle dependencies and services
+[[ ${RC_GOT_SERVICES} != "yes" ]] && source "${svclib}/sh/rc-services.sh"
+# Functions to control daemons
+[[ ${RC_GOT_DAEMON} != "yes" ]] && source "${svclib}/sh/rc-daemon.sh"
 
 # Set $IFACE to the name of the network interface if it is a 'net.*' script
 if [[ ${myservice%%.*} == "net" && ${myservice##*.} != "${myservice}" ]] ; then
@@ -51,7 +60,7 @@ search_lang="${LC_ALL:-${LC_MESSAGES:-${LANG}}}"
 # (3) Source /etc/rc.conf to pick up potentially overriding
 #     configuration, if the system administrator chose to put it
 #     there (if it exists).
-if [[ ${NETSERVICE} == "yes" ]]; then
+if [[ ${NETSERVICE} == "yes" ]] ; then
 	conf="$(add_suffix /etc/conf.d/net)"
 	[[ -e ${conf} ]] && source "${conf}"
 fi
@@ -59,6 +68,24 @@ conf="$(add_suffix /etc/conf.d/${myservice})"
 [[ -e ${conf} ]] && source "${conf}"
 conf="$(add_suffix /etc/rc.conf)"
 [[ -e ${conf} ]] && source "${conf}"
+
+# Call svc_quit if we abort AND we have obtained a lock
+svcbegun=1
+service_started "${myservice}"
+svcstarted=$?
+svc_quit() {
+	eerror "ERROR:  \"${myservice}\" caught an interrupt"
+	if [[ ${svcbegun} == 0 ]] ; then
+		end_service "${myservice}"
+		svcbegun=1
+	fi
+	if [[ ${svcstarted} == 0 ]] ; then
+		mark_service_started "${myservice}"
+	else
+		mark_service_stopped "${myservice}"
+	fi
+	exit 1
+}
 
 usage() {
 	local IFS="|"
@@ -87,7 +114,7 @@ status() {
 	# Dummy function
 	return 0
 }
-			
+
 svc_stop() {
 	local x= mydep= mydeps= retval=0 was_inactive=false
 	local -a servicelist=()
@@ -109,8 +136,12 @@ svc_stop() {
 	fi
 	# Lock service starting too ...
 	mark_service_starting "${myservice}"
+
+	# Ensure that we clean up if we abort for any reason
+	trap "svc_quit" INT QUIT TSTP
+	
 	begin_service "${myservice}"
-	local begun=$?
+	svcbegun=$?
 	
 	service_message "Stopping service ${myservice}"
 
@@ -153,7 +184,6 @@ svc_stop() {
 	done
 
 	for x in "${service_list[@]}" ; do
-		service_stopped "${x}" && continue
 		wait_service "${x}"
 		if ! service_stopped "${x}" ; then
 			retval=1
@@ -177,7 +207,7 @@ svc_stop() {
 		# If a service has been marked inactive, exit now as something
 		# may attempt to start it again later
 		if service_inactive "${myservice}" ; then
-			[[ ${begun} == 0 ]] && end_service "${myservice}" 0
+			[[ ${svcbegun} == 0 ]] && end_service "${myservice}" 0
 			return 0
 		fi
 	fi
@@ -200,6 +230,7 @@ svc_stop() {
 	else
 		# If we're stopped from a daemon that sets ${IN_BACKGROUND} such as
 		# wpa_monitor when we mark as inactive instead of taking the down
+		svcstarted=1
 		if ${IN_BACKGROUND:-false} ; then
 			mark_service_inactive "${myservice}"
 		else
@@ -208,7 +239,14 @@ svc_stop() {
 		service_message "Stopped service ${myservice}"
 	fi
 
-	[[ ${begun} == 0 ]] && end_service "${myservice}" "${retval}"
+	if [[ ${svcbegun} == 0 ]] ; then
+		end_service "${myservice}" "${retval}"
+		svcbegun=1
+	fi
+	
+	# Reset the trap
+	svc_trap
+	
 	return "${retval}"
 }
 
@@ -221,37 +259,42 @@ svc_start() {
 	fi
 
 	if service_started "${myservice}" ; then
-		ewarn "WARNING: \"${myservice}\" has already been started."
+		ewarn "WARNING:  \"${myservice}\" has already been started."
 		return 0
 	elif service_stopping "${myservice}" ; then
-		eerror "ERROR: please wait for \"${myservice}\" to stop first."
+		eerror "ERROR:  please wait for \"${myservice}\" to stop first."
 		return 1
 	elif service_inactive "${myservice}" ; then
 		if [[ ${IN_BACKGROUND} != "true" ]] ; then
-			ewarn "WARNING: \"${myservice}\" has already been started."
+			ewarn "WARNING:  \"${myservice}\" has already been started."
 			return 0
 		fi
 	fi
 
 	service_inactive "${myservice}" && was_inactive=true
 	if ! mark_service_starting "${myservice}" ; then
-		ewarn "WARNING: \"${myservice}\" is already starting."
+		ewarn "WARNING:  \"${myservice}\" is already starting."
 		return 0
 	fi
+
+	# Ensure that we clean up if we abort for any reason
+	trap "svc_quit" INT QUIT TSTP
+	
 	begin_service "${myservice}"
-	local begun=$?
+	svcbegun=$?
 
 	service_message "Starting service ${myservice}"
 	
 	local startupservices="$(trace_dependencies $(ineed "${myservice}") \
 			$(valid_iuse ${myservice}))"
+	local netservices="$(dolisting "/etc/runlevels/${BOOTLEVEL}/net.*") \
+			$(dolisting "/etc/runlevels/${mylevel}/net.*")"
+	local mynetservice=
 
-	# Start dependencies, if any
+	# Start dependencies, if any.
+	# We don't handle "after" deps here as it's the job of rc to start them.
 	for x in ${startupservices} ; do
 		if [[ ${x} == "net" && ${NETSERVICE} != "yes" ]] && ! is_net_up ; then
-			local netservices="$(dolisting "/etc/runlevels/${BOOTLEVEL}/net.*") \
-				$(dolisting "/etc/runlevels/${mylevel}/net.*")"
-
 			for y in ${netservices} ; do
 				mynetservice="${y##*/}"
 				if service_stopped "${mynetservice}" ; then
@@ -265,9 +308,15 @@ svc_start() {
 		fi
 	done
 
-	# wait for dependencies to finish
+	# We also wait for any services we're after to finish incase they
+	# have a "before" dep but we don't dep on them.
+	if is_runlevel_start ; then
+		startupservices="${startupservices} $(valid_iafter ${myservice})"
+	fi
+
+	# Wait for dependencies to finish.
 	for x in ${startupservices} ; do
-		if [ "${x}" = "net" -a "${NETSERVICE}" != "yes" ] ; then
+		if [[ ${x} == "net" && ${NETSERVICE} != "yes" ]] ; then
 			for y in ${netservices} ; do
 				mynetservice="${y##*/}"
 
@@ -285,7 +334,7 @@ svc_start() {
 					fi
 				fi
 			done
-		elif [ "${x}" != "net" ] ; then
+		elif [[ ${x} != "net" ]] ; then
 			wait_service "${x}"
 			if ! service_started "${x}" ; then
 				# A 'need' dependacy is critical for startup
@@ -323,7 +372,7 @@ svc_start() {
 		# If a service has been marked inactive, exit now as something
 		# may attempt to start it again later
 		if service_inactive "${myservice}" ; then
-			[[ ${begun} == 0 ]] && end_service "${myservice}" 1
+			[[ ${svcbegun} == 0 ]] && end_service "${myservice}" 1
 			return 1
 		fi
 	fi
@@ -334,7 +383,7 @@ svc_start() {
 		# Remove link if service didn't start; but only if we're not booting
 		# If we're booting, we need to continue and do our best to get the
 		# system up.
-		if [[ ${SOFTLEVEL} != "${BOOTLEVEL}" ]]; then
+		if [[ ${SOFTLEVEL} != "${BOOTLEVEL}" ]] ; then
 			if ${was_inactive} ; then
 				mark_service_inactive "${myservice}"
 			else
@@ -344,12 +393,20 @@ svc_start() {
 
 		service_message "eerror" "FAILED to start service ${myservice}!"
 	else
+		svcstarted=0
 		mark_service_started "${myservice}"
 
 		service_message "Service ${myservice} started OK"
 	fi
 
-	[[ ${begun} == 0 ]] && end_service "${myservice}" "${retval}"
+	if [[ ${svcbegun} == 0 ]] ; then
+		end_service "${myservice}" "${retval}"
+		svcbegun=1
+	fi
+	
+	# Reset the trap
+	svc_trap
+	
 	return "${retval}"
 }
 
@@ -395,7 +452,7 @@ svc_status() {
 	[[ ${efunc} != "eerror" ]]
 }
 
-rcscript_errors=$(bash -n "${myscript}" 2>&1) || {
+rcscript_errors="$(bash -n ${myscript} 2>&1)" || {
 	[[ -n ${rcscript_errors} ]] && echo "${rcscript_errors}" >&2
 	eerror "ERROR:  \"${myscript}\" has syntax errors in it; aborting ..."
 	exit 1
@@ -412,7 +469,7 @@ if [[ -z ${opts} ]] ; then
 fi
 
 svc_homegrown() {
-	local x arg=$1
+	local x arg="$1"
 	shift
 
 	# Walk through the list of available options, looking for the
@@ -460,13 +517,13 @@ done
 for arg in $* ; do
 	case "${arg}" in
 	stop)
-		if [[ -e "${svcdir}/restart/${myservice}" ]]; then
+		if [[ -e "${svcdir}/restart/${myservice}" ]] ; then
 			rm -f "${svcdir}/restart/${myservice}"
 		fi
 
 		# Stoped from the background - treat this as a restart so that
 		# stopped services come back up again when started.
-		if [[ ${IN_BACKGROUND} == "true" ]]; then
+		if [[ ${IN_BACKGROUND} == "true" ]] ; then
 			rm -rf "${svcdir}/snapshot/$$"
 			mkdir -p "${svcdir}/snapshot/$$"
 			cp -a "${svcdir}"/started/* "${svcdir}/snapshot/$$/"
@@ -474,23 +531,25 @@ for arg in $* ; do
 	
 		svc_stop
 
-		if [[ ${IN_BACKGROUND} == "true" ]]; then
+		if [[ ${IN_BACKGROUND} == "true" ]] ; then
 			res=
 			for x in $(dolisting "${svcdir}/snapshot/$$/") ; do
 				if service_stopped "${x##*/}" ; then
 					res="${res}${x##*/} "
 				fi
 			done
-			echo "${res}" > "${svcdir}/restart/${myservice}"
+			[[ -n ${res} ]] && echo "${res}" > "${svcdir}/restart/${myservice}"
 		fi
 		;;
 	start)
 		svc_start
 		retval=$?
-		if [[ -e "${svcdir}/restart/${myservice}" ]]; then
+		if ! is_runlevel_start && [[ -s "${svcdir}/restart/${myservice}" ]] ; then
 			for x in $(trace_dependencies $(< "${svcdir}/restart/${myservice}")) ; do
 				service_stopped "${x}" && start_service "${x}"
 			done
+		fi
+		if [[ -e "${svcdir}/restart/${myservice}" ]] ; then
 			rm -f "${svcdir}/restart/${myservice}"
 		fi
 		exit ${retval}
@@ -502,14 +561,14 @@ for arg in $* ; do
 		svc_status
 		;;
 	zap)
-		if [[ -e "${svcdir}/restart/${myservice}" ]]; then
+		if [[ -e "${svcdir}/restart/${myservice}" ]] ; then
 			rm -f "${svcdir}/restart/${myservice}"
 		fi
 		if ! service_stopped "${myservice}" ; then
 			einfo "Manually resetting ${myservice} to stopped state."
 			mark_service_stopped "${myservice}"
-			end_service "${myservice}"
 		fi
+		end_service "${myservice}"
 		;;
 	restart)
 		svcrestart="yes"
@@ -531,7 +590,7 @@ for arg in $* ; do
 				echo
 				ewarn "Please use 'svc_stop; svc_start' and not 'stop; start' to"
 				ewarn "restart the service in its custom 'restart()' function."
-/var/lib/init.d/exclusive/net.lan				ewarn "Run ${myservice} without arguments for more info."
+				ewarn "Run ${myservice} without arguments for more info."
 				echo
 				svc_restart
 			else
@@ -556,7 +615,7 @@ for arg in $* ; do
 					res="${res}${x##*/} "
 				fi
 			done
-			echo "${res}" > "${svcdir}/restart/${myservice}"
+			[[ -n ${res} ]] && echo "${res}" > "${svcdir}/restart/${myservice}"
 		fi
 
 		# Wait for any services that may still be running ...
