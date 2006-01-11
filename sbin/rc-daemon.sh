@@ -240,6 +240,15 @@ rc_start_daemon() {
 	[[ ${retval} != "0" ]] && return "${retval}"
 	[[ ${RC_WAIT_ON_START} == "0" ]] && return "${retval}"
 
+	# Give the daemon upto 1 second to fork after s-s-d returns
+	# Some daemons like acpid and vsftpd need this when system is under load
+	# Seems to be only daemons that do not create pid files though ...
+	local i=0
+	for ((i=0; i<10; i++)); do
+		is_daemon_running ${cmd} "${pidfile}" && break
+		LC_ALL=C /bin/sleep "0.1"
+	done
+
 	# We pause for RC_WAIT_ON_START seconds and then
 	# check if the daemon is still running - this is mainly
 	# to handle daemons who launch and then fail due to invalid
