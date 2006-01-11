@@ -143,9 +143,7 @@ bridge_pre_start() {
 		eindent
 
 		for i in ${ports}; do
-			interface_exists "${i}" && continue 
-			eerror "interface ${i} does not exist"
-			return 1
+			interface_exists "${i}" true || return 1 
 		done
 
 		for i in ${ports}; do

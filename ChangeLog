@@ -11,6 +11,8 @@
     start-stop-daemon now waits for upto 1 second if it returns 0 and we
     don't have a valid process.
 
+    A more user friendly message is reported when an interface does not exist.
+
   10 Jan 2006; Roy Marples <uberlord@gentoo.org>:
 
     Removed runlevel dependancies from runscript.sh as they're now in rc.

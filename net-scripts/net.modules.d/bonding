@@ -58,9 +58,7 @@ bonding_pre_start() {
 
 	# Check that our slaves exist
 	for s in "${slaves[@]}" ; do
-		interface_exists "${s}" && continue
-		ewarn "interface ${s} does not exist"
-		return 1
+		interface_exists "${s}" true || return 1
 	done
 
 	# Must force the slaves to a particular state before adding them
