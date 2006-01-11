@@ -108,31 +108,31 @@ RC_DEVICE_TARBALL="no"
 #
 # Controlling start-stop-daemon behavior
 
-# Set to "yes" if stop_daemon() should always retry killing the
+# Set to "yes" if start-stop-daemon should always retry killing the
 # service with sig KILL if it fails the first time.
 
 RC_RETRY_KILL="yes"
 
 
-# Set the amount of seconds stop_daemon() should wait between
+# Set the amount of seconds start-stop-daemon should wait between
 # retries.
 
 RC_RETRY_TIMEOUT=1
 
 
-# Set the amount of times stop_daemon() should try to kill
+# Set the amount of times start-stop-daemon should try to kill
 # a service before giving up.
 
 RC_RETRY_COUNT=5
 
 
-# Set to "yes" if stop_daemon() should fail if the service
+# Set to "yes" if start-stop-daemon should fail if the service
 # is marked as started, but not actually running on stop.
 
 RC_FAIL_ON_ZOMBIE="no"
 
 
-# Set to "yes" if stop_daemon() should attempt to kill
+# Set to "yes" if start-stop-daemon should attempt to kill
 # any children left in the system.
 # Be careful with this as it really does what it was on the tin.
 # fex, if you're in an ssh process and you restart a service on which ssh
@@ -141,13 +141,13 @@ RC_FAIL_ON_ZOMBIE="no"
 RC_KILL_CHILDREN="no"
 
 
-# Set the amount of seconds start_daemon() waits after starting
+# Set the amount of seconds start-stop-daemon waits after starting
 # the daemon to check it is still running. If it's not then we
 # try and stop any children if possible.
 RC_WAIT_ON_START="0.1"
 
 
-# Some daemons are started and stopped via start_stop_daemon.
+# Some daemons are started and stopped via start-stop-daemon.
 # We can change launch them through other daemons here, for example valgrind.
 # This is only useful for serious debugging of the daemon
 # Note non alphanumeric chars in the script name need to be changed to _
