@@ -336,7 +336,7 @@ wait_service() {
 
 	# This will block until the service fifo is touched
 	# Otheriwse we don't block
-	local tmp=$( < "${fifo}" 2>/dev/null ) 2>/dev/null
+	$( < "${fifo}" &>/dev/null )
 	local exitstatus=$( < "${svcdir}/exitcodes/${service}" )
 
 	return "${exitstatus}"
