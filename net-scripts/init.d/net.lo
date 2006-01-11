@@ -787,6 +787,9 @@ run_start() {
 
 	# Call user-defined postup function if it exists
 	if is_function postup ; then
+		# We need to mark the service as started incase a
+		# postdown function wants to restart services that depend on us
+		mark_service_started "net.${iface}"
 		einfo "Running postup function"
 		eindent
 		( postup "${iface}" )
@@ -823,8 +826,14 @@ run_stop() {
 
 	iface_stop "${iface}" || return 1  # always succeeds, btw
 
+	# Mark us as inactive if called from the background
+	[[ ${IN_BACKGROUND} == "true" ]] && mark_service_inactive "net.${iface}"
+
 	# Call user-defined postdown function if it exists
 	if is_function postdown ; then
+		# We need to mark the service as stopped incase a
+		# postdown function wants to restart services that depend on us
+		[[ ${IN_BACKGROUND} != "true" ]] && mark_service_stopped "net.${iface}"
 		einfo "Running postdown function"
 		eindent
 		( postdown "${iface}" )
