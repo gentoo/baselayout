@@ -1,6 +1,13 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  11 Jan 2006; Roy Marples <uberlord@gentoo.org>:
+
+    runscript.sh now traps interrupt signals and rolls back its status to what
+    it was when before it started.
+
+    bonding module now supports space seperated and array variables, #118590.
+
   10 Jan 2006; Roy Marples <uberlord@gentoo.org>:
 
     Removed runlevel dependancies from runscript.sh as they're now in rc.

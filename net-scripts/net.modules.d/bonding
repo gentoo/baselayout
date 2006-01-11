@@ -40,6 +40,10 @@ bonding_pre_start() {
 
 	slaves="slaves_${ifvar}[@]"
 	[[ -z ${!slaves} ]] && return 0
+	slaves=( "${!slaves}" )
+
+	# Support space seperated slaves
+	[[ ${#slaves[@]} == 1 ]] && slaves=( ${slaves} )
 
 	interface_exists "${iface}" true || return 1
 
@@ -50,17 +54,17 @@ bonding_pre_start() {
 
 	ebegin "Adding slaves to ${iface}"
 	eindent
-	einfo "${!slaves}"
+	einfo "${slaves[@]}"
 
 	# Check that our slaves exist
-	for s in ${!slaves} ; do
+	for s in "${slaves[@]}" ; do
 		interface_exists "${s}" && continue
 		ewarn "interface ${s} does not exist"
 		return 1
 	done
 
 	# Must force the slaves to a particular state before adding them
-	for s in ${!slaves} ; do
+	for s in "${slaves[@]}" ; do
 		interface_del_addresses "${s}"
 		interface_up "${s}"
 	done
@@ -70,7 +74,7 @@ bonding_pre_start() {
 
 	# finally add in slaves
 	eoutdent
-	eval /sbin/ifenslave "${iface}" "${!slaves}" >/dev/null
+	eval /sbin/ifenslave "${iface}" "${slaves[@]}" >/dev/null
 	eend $?
 
 	return 0 #important
@@ -87,7 +91,9 @@ bonding_stop() {
 	! bonding_exists "${iface}" && return 0
 
 	# don't trust the config, get the active list instead
-	slaves=$( sed -n -e 's/^Slave Interface: //p' "/proc/net/bonding/${iface}" )
+	slaves="$( \
+		sed -n -e 's/^Slave Interface: //p' /proc/net/bonding/${iface} | xargs \
+	)"
 	[[ -z ${slaves} ]] && return 0
 
 	# remove all slaves
