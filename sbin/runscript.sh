@@ -68,13 +68,17 @@ conf="$(add_suffix /etc/rc.conf)"
 svcbegun=1
 service_started "${myservice}"
 svcstarted=$?
+service_inactive "${myservice}"
+svcinactive=$?
 svc_quit() {
 	eerror "ERROR:  \"${myservice}\" caught an interrupt"
 	if [[ ${svcbegun} == 0 ]] ; then
 		end_service "${myservice}"
 		svcbegun=1
 	fi
-	if [[ ${svcstarted} == 0 ]] ; then
+	if service_inactive "${myservice}" || [[ ${svcinactive} == 0 ]] ; then
+		mark_service_inactive "${myservice}"
+	elif [[ ${svcstarted} == 0 ]] ; then
 		mark_service_started "${myservice}"
 	else
 		mark_service_stopped "${myservice}"
@@ -111,7 +115,7 @@ status() {
 }
 
 svc_stop() {
-	local x= mydep= mydeps= retval=0 was_inactive=false
+	local x= mydep= mydeps= retval=0
 	local -a servicelist=()
 	
 	# Do not try to stop if it had already failed to do so on runlevel change
@@ -124,7 +128,6 @@ svc_stop() {
 		return 0
 	fi
 
-	service_inactive "${myservice}" && was_inactive=true
 	if ! mark_service_stopping "${myservice}" ; then
 		ewarn "WARNING:  \"${myservice}\" is already stopping."
 		return 0
@@ -197,16 +200,25 @@ svc_stop() {
 		eerror "ERROR:  problems stopping dependent services."
 		eerror "        \"${myservice}\" is still up."
 	else
+		# Now that deps are stopped, stop our service
+		( 
+		exit() {
+			RC_QUIET_STDOUT="no"
+			eerror "DO NOT USE EXIT IN INIT.D SCRIPTS"
+			eerror "This IS a bug, please fix your broken init.d"
+			unset -f exit
+			exit $@
+		}
 		# Stop einfo/ebegin/eend from working as parallel messes us up
 		[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && RC_QUIET_STDOUT="yes"
-
-		# Now that deps are stopped, stop our service
-		( stop )
+		stop
+		)
 		retval=$?
 
 		# If a service has been marked inactive, exit now as something
 		# may attempt to start it again later
 		if service_inactive "${myservice}" ; then
+			svcinactive=0
 			[[ ${svcbegun} == 0 ]] && end_service "${myservice}" 0
 			return 0
 		fi
@@ -219,7 +231,7 @@ svc_stop() {
 		
 		# If we are halting the system, do it as cleanly as possible
 		if [[ ${SOFTLEVEL} != "reboot" && ${SOFTLEVEL} != "shutdown" ]] ; then
-			if ${was_inactive} ; then
+			if [[ ${svcinactive} == 0 ]] ; then
 				mark_service_inactive "${myservice}"
 			else
 				mark_service_started "${myservice}"
@@ -231,8 +243,8 @@ svc_stop() {
 		# If we're stopped from a daemon that sets ${IN_BACKGROUND} such as
 		# wpa_monitor when we mark as inactive instead of taking the down
 		svcstarted=1
-		if ${IN_BACKGROUND:-false} ; then
-			mark_service_inactive "${myservice}"
+		if service_inactive "${myservice}" ; then
+			svcinactive=0
 		else
 			mark_service_stopped "${myservice}"
 		fi
@@ -251,7 +263,7 @@ svc_stop() {
 }
 
 svc_start() {
-	local x= y= retval=0 was_inactive=false startfail="no"
+	local x= y= retval=0 startfail="no"
 
 	# Do not try to start if i have done so already on runlevel change
 	if is_runlevel_start && service_failed "${myservice}" ; then
@@ -271,7 +283,6 @@ svc_start() {
 		fi
 	fi
 
-	service_inactive "${myservice}" && was_inactive=true
 	if ! mark_service_starting "${myservice}" ; then
 		ewarn "WARNING:  \"${myservice}\" is already starting."
 		return 0
@@ -284,6 +295,10 @@ svc_start() {
 	svcbegun=$?
 
 	service_message "Starting service ${myservice}"
+
+	# Save the IN_BACKGROUND var as we need to clear it for starting depends
+	local ib_save="${IN_BACKGROUND}"
+	unset IN_BACKGROUND
 	
 	local startupservices="$(trace_dependencies $(ineed "${myservice}") \
 			$(valid_iuse ${myservice}))"
@@ -365,6 +380,7 @@ svc_start() {
 		eerror "        services.  \"${myservice}\" was not started."
 		retval=1
 	else
+		IN_BACKGROUND="${ib_save}"
 		(
 		exit() {
 			RC_QUIET_STDOUT="no"
@@ -382,6 +398,7 @@ svc_start() {
 		# If a service has been marked inactive, exit now as something
 		# may attempt to start it again later
 		if service_inactive "${myservice}" ; then
+			svcinactive=0
 			[[ ${svcbegun} == 0 ]] && end_service "${myservice}" 1
 			return 1
 		fi
@@ -394,7 +411,7 @@ svc_start() {
 		# If we're booting, we need to continue and do our best to get the
 		# system up.
 		if [[ ${SOFTLEVEL} != "${BOOTLEVEL}" ]] ; then
-			if ${was_inactive} ; then
+			if [[ ${svcinactive} == 0 ]] ; then
 				mark_service_inactive "${myservice}"
 			else
 				mark_service_stopped "${myservice}"
