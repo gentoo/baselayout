@@ -42,7 +42,12 @@ ifconfig_check_installed() {
 ifconfig_exists() {
 	local e=$( ifconfig -a | grep -o "^$1" ) report="${2:-false}"
 	[[ -n ${e} ]] && return 0
-	${report} && eerror "$1 does not exist"
+
+	if ${report} ; then
+		eerror "network interface $1 does not exist"
+		eerror "Please verify hardware or kernel module (driver)"
+	fi
+
 	return 1
 }
 
