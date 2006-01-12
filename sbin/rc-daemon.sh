@@ -256,9 +256,8 @@ rc_start_daemon() {
 	[[ ${retval} == "0" ]] && return 0
 
 	# Stop if we can to clean things up
-	if [[ ${RC_KILL_CHILDREN} == "yes" && -n ${pidfile} ]]; then
-		rc_stop_daemon
-	fi
+	[[ -n ${pidfile} ]] && rc_stop_daemon
+
 	return "${retval}"
 }
 
