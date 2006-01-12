@@ -545,7 +545,7 @@ for arg in $* ; do
 		if [[ ${IN_BACKGROUND} == "true" ]] ; then
 			rm -rf "${svcdir}/snapshot/$$"
 			mkdir -p "${svcdir}/snapshot/$$"
-			cp -a "${svcdir}"/started/* "${svcdir}/snapshot/$$/"
+			cp -pP "${svcdir}"/started/* "${svcdir}/snapshot/$$/"
 		fi
 	
 		svc_stop
@@ -599,7 +599,7 @@ for arg in $* ; do
 		# Create a snapshot of started services
 		rm -rf "${svcdir}/snapshot/$$"
 		mkdir -p "${svcdir}/snapshot/$$"
-		cp -a "${svcdir}"/started/* "${svcdir}/snapshot/$$/"
+		cp -pP "${svcdir}"/started/* "${svcdir}/snapshot/$$/"
 
 		# Simple way to try and detect if the service use svc_{start,stop}
 		# to restart if it have a custom restart() funtion.
