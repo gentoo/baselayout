@@ -195,7 +195,6 @@ then
 	if [[ ${RC_INTERACTIVE} == "yes" ]] ; then
 		echo -e "Press ${GOOD}I${NORMAL} to enter interactive boot mode"
 		echo
-		user_want_interactive && interactive="yes"
     fi
 	check_statedir /proc
 
@@ -421,7 +420,6 @@ then
 	for x in ${CRITICAL_SERVICES}
 	do
 		splash "svc_start" "${x}"
-		user_want_interactive && svcinteractive="yes"
 		if ! start_critical_service "${x}" ; then
 			splash "critical" &>/dev/null &
 			
@@ -503,7 +501,6 @@ then
 	         grep -ve '\(depcache\|deptree\|envcache\)')
 
 	echo "sysinit" > "${svcdir}/softlevel"
-	echo "${svcinteractive}" > "${svcdir}/interactive"
 
 	# Update the dependency cache
 	/sbin/depscan.sh -u
@@ -548,6 +545,10 @@ then
 	else
 		ewarn "Skipping /var/run/utmp initialization (ro root?)"
 	fi
+
+	# Check and save if the user wants interactive
+	user_want_interactive && svcinteractive="yes"
+	echo "${svcinteractive:-no}" > "${svcdir}/interactive"
 
 	# All done logging
 	bootlog quit
@@ -596,6 +597,8 @@ then
 fi
 
 source "${svclib}/sh/rc-services.sh"
+[[ -e "${svcdir}/interactive" ]] \
+	&& svcinteractive="$(<${svcdir}/interactive)"
 
 if [ -f "${svcdir}/softlevel" ]
 then
@@ -838,8 +841,6 @@ get_start_services() {
 	trace_dependencies ${list}
 }
 
-[[ -e "${svcdir}/interactive" ]] \
-	&& svcinteractive="$(<"${svcdir}/interactive")"
 
 # Start scripts
 for i in $(get_start_services) ; do
@@ -850,7 +851,6 @@ done
 
 # Wait for any services that may still be running ...
 [ "${RC_PARALLEL_STARTUP}" = "yes" ] && wait
-user_want_interactive && svcinteractive="yes"
 
 # Clean the old runlevel
 rm -rf "${svcdir}/softscripts.old" &>/dev/null
@@ -879,6 +879,7 @@ rm -rf "${svcdir}/failed" &>/dev/null
 if [[ -n ${BOOT} ]]; then
 	unset BOOT
 	# Save our interactive mode into the default runlevel
+	user_want_interactive && svcinteractive="yes"
 	echo "${svcinteractive}" > "${svcdir}/interactive"
 else
 	# As we're not boot, we remove the interactive file
