@@ -27,9 +27,6 @@ RC_FAIL_ON_ZOMBIE="no"
 RC_KILL_CHILDREN="no"
 RC_WAIT_ON_START="0.1"
 
-# Override default settings with user settings ...
-[[ -f /etc/conf.d/rc ]] && source /etc/conf.d/rc
-
 # void rc_shift_args(void)
 #
 # Proccess vars - makes things easier by using the shift command
@@ -259,9 +256,7 @@ rc_start_daemon() {
 	[[ ${retval} == "0" ]] && return 0
 
 	# Stop if we can to clean things up
-	if [[ $( type -t stop ) == "function" ]]; then
-		stop >/dev/null # We don't want to echo ebegin/eend
-	elif [[ -n ${pidfile} ]]; then
+	if [[ ${RC_KILL_CHILDREN} == "yes" && -n ${pidfile} ]]; then
 		rc_stop_daemon
 	fi
 	return "${retval}"
