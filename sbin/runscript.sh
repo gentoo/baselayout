@@ -309,16 +309,17 @@ svc_start() {
 			$(valid_iuse ${myservice}))"
 	local netservices="$(dolisting "/etc/runlevels/${BOOTLEVEL}/net.*") \
 			$(dolisting "/etc/runlevels/${mylevel}/net.*")"
-	local mynetservice=
+	local startupnetservices=
 
 	# Start dependencies, if any.
 	# We don't handle "after" deps here as it's the job of rc to start them.
 	for x in ${startupservices} ; do
 		if [[ ${x} == "net" && ${NETSERVICE} != "yes" ]] && ! is_net_up ; then
 			for y in ${netservices} ; do
-				mynetservice="${y##*/}"
+				local mynetservice="${y##*/}"
 				if service_stopped "${mynetservice}" ; then
 					start_service "${mynetservice}"
+					startupnetservices="${startupnetservices}${mynetservice} "
 				fi
 			done	
 		elif [[ ${x} != "net" ]] ; then
@@ -337,39 +338,29 @@ svc_start() {
 	# Wait for dependencies to finish.
 	for x in ${startupservices} ; do
 		if [[ ${x} == "net" && ${NETSERVICE} != "yes" ]] ; then
-			for y in ${netservices} ; do
-				mynetservice="${y##*/}"
-
-				# We need to test if the service has been marked started
-				# as the fifo may still be around if called by custom code
-				# such as postup from a net script.
-				service_started "${mynetservice}" && continue
-				
-				wait_service "${mynetservice}"
-
-				if ! service_started "${mynetservice}" ; then
+			for y in ${startupnetservices} ; do
+				# Don't wait if it's already been started
+				service_started "${y}" && continue
+				wait_service "${y}"
+				if ! service_started "${y}" ; then
 					# A 'need' dependency is critical for startup
 					if ineed -t "${myservice}" "${x}" >/dev/null ; then
-						# Only worry about a net.* service if we do not have one
-						# up and running already, or if RC_NET_STRICT_CHECKING
-						# is set ....
 						if ! is_net_up ; then
 							startfail="yes"
+							break
 						fi
 					fi
 				fi
 			done
 		elif [[ ${x} != "net" ]] ; then
-			# We need to test if the service has been marked started
-			# as the fifo may still be around if called by custom code
-			# such as postup from a net script.
-			service_started "${mynetservice}" && continue
-			
+			# Don't wait if it's already been started
+			service_started "${x}" && continue
 			wait_service "${x}"
 			if ! service_started "${x}" ; then
 				# A 'need' dependacy is critical for startup
 				if ineed -t "${myservice}" "${x}" >/dev/null ; then
 					startfail="yes"
+					break
 				fi
 			fi
 		fi
