@@ -190,6 +190,10 @@ if [[ ! -f ${svcdir}/softlevel ]] ; then
 	echo "${SOFTLEVEL}" > "${svcdir}/softlevel"
 fi
 
+[[ -e "${svcdir}/interactive" ]] && \
+	svcinteractive="$(< ${svcdir}/interactive)"
+
+
 # For keeping a list of services that fails during boot/halt
 if [[ ! -d ${svcdir}/failed ]] ; then
 	mkdir -p -m 0755 "${svcdir}/failed"
@@ -402,9 +406,6 @@ get_start_services() {
 	trace_dependencies ${list}
 }
 
-[[ -e "${svcdir}/interactive" ]] && \
-	svcinteractive=$(< "${svcdir}/interactive")
-
 # Start scripts
 for i in $(get_start_services) ; do
 	if service_stopped "${i}" ; then
@@ -414,7 +415,6 @@ done
 
 # Wait for any services that may still be running ...
 [[ ${RC_PARALLEL_STARTUP} == "yes" ]] && wait
-user_want_interactive && svcinteractive="yes"
 
 # Clean the old runlevel
 rm -rf "${svcdir}/softscripts.old" &>/dev/null
@@ -441,6 +441,7 @@ rm -rf "${svcdir}/failed" &>/dev/null
 if [[ -n ${BOOT} ]] ; then
 	unset BOOT
 	# Save our interactive mode into the default runlevel
+	user_want_interactive && svcinteractive="yes"
 	echo "${svcinteractive}" > "${svcdir}/interactive"
 else
 	# As we're not boot, we remove the interactive file

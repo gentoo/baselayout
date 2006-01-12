@@ -27,7 +27,6 @@ echo
 if [[ ${RC_INTERACTIVE} == "yes" ]] ; then
 	echo -e "Press ${GOOD}I${NORMAL} to enter interactive boot mode"
 	echo
-	user_want_interactive && svcinteractive="yes"
 fi
 check_statedir /proc
 

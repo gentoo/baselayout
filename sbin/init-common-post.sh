@@ -133,6 +133,10 @@ if [[ ${dev_null} -eq 0 || ${dev_console} -eq 0 ]] && \
 	cp -f /usr/share/baselayout/issue.devfix /etc/issue
 fi
 
+# Check and save if the user wants interactive
+user_want_interactive && svcinteractive="yes"
+echo "${svcinteractive:-no}" > "${svcdir}/interactive"
+
 # All done logging
 bootlog quit
 
