@@ -10,6 +10,12 @@ RC_TTY_NUMBER=11
 
 RC_PARALLEL_STARTUP="no"
 
+# Set RC_INTERACTIVE to "yes" and you'll be able to press the I key during
+# boot so you can choose to start specific services. Set to "no" to disable
+# this feature.
+
+RC_INTERACTIVE="yes"
+
 # RC_NET_STRICT_CHECKING allows some flexibility with the 'net' service.
 # The following values are allowed:
 #  none  - The 'net' service is always considered up.
