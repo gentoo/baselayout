@@ -549,6 +549,7 @@ for arg in $* ; do
 		fi
 	
 		svc_stop
+		retval="$?"
 
 		if [[ ${IN_BACKGROUND} == "true" ]] ; then
 			res=
@@ -559,6 +560,8 @@ for arg in $* ; do
 			done
 			[[ -n ${res} ]] && echo "${res}" > "${svcdir}/restart/${myservice}"
 		fi
+		
+		exit "${retval}"
 		;;
 	start)
 		svc_start
@@ -571,7 +574,7 @@ for arg in $* ; do
 		if [[ -e "${svcdir}/restart/${myservice}" ]] ; then
 			rm -f "${svcdir}/restart/${myservice}"
 		fi
-		exit ${retval}
+		exit "${retval}"
 		;;
 	needsme|ineed|usesme|iuse|broken)
 		trace_dependencies "-${arg}"
