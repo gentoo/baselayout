@@ -115,13 +115,14 @@ user_want_interactive() {
 #   depending on user selection
 #
 do_interactive() {
+	local service="$2"
+
 	user_want_interactive && svcinteractive="yes"
-	if [[ ${svcinteractive} != "yes" ]]; then
+	if [[ ${svcinteractive} != "yes" || ! -e "/etc/init.d/${service}" ]] ; then
 		"$@"
 		return $?
 	fi
 
-	local service="$2"
 	local start_text="Start service"
 	local skip_text="Skip service"
 	local continue_text="Continue boot process"
