@@ -38,7 +38,7 @@ save_state() {
 	local d="${statedir}/${iface}"
 
 	[[ ! -d ${d} ]] && mkdir -m 0755 -p "${d}"
-	cp -a /etc/resolv.conf /etc/ntp.conf /etc/yp.conf "${d}" 2>/dev/null
+	cp -p /etc/resolv.conf /etc/ntp.conf /etc/yp.conf "${d}" 2>/dev/null
 }
 
 # void remove_state(char *interface)
@@ -70,7 +70,7 @@ apply_state() {
 		local files=$( ls "${d}" )
 		if [[ -n ${files} ]] ; then
 			if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
-				cp -aR "${d}"/* "${netdir}"
+				cp -pPR "${d}"/* "${netdir}"
 				local file 
 				for file in ${files} ; do
 					# Skip .sv files
@@ -82,7 +82,7 @@ apply_state() {
 					fi
 				done
 			else
-				cp -ar "${d}"/* /etc
+				cp -pPR "${d}"/* /etc
 			fi
 		fi
 	fi
