@@ -35,7 +35,7 @@ export START_CRITICAL="yes"
 # these into /sbin/rc, but rather start them by hand ...
 for x in ${CRITICAL_SERVICES} ; do
 	splash "svc_start" "${x}"
-	user_want_interactive && interactive="yes"
+	user_want_interactive && svcinteractive="yes"
 	if ! start_critical_service "${x}" ; then
 		splash "critical" &>/dev/null &
 		
@@ -105,7 +105,7 @@ rm -rf $(ls -d1 "${svcdir}/"* 2>/dev/null | \
 	 grep -ve '\(depcache\|deptree\|envcache\)')
 
 echo "sysinit" > "${svcdir}/softlevel"
-echo "${interactive}" > "${svcdir}/interactive"
+echo "${svcinteractive}" > "${svcdir}/interactive"
 
 # Update the dependency cache
 /sbin/depscan.sh -u

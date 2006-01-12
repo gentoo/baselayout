@@ -24,8 +24,11 @@ echo
 echo -e "${GOOD}Gentoo Linux${GENTOO_VERS}; ${BRACKET}http://www.gentoo.org/${NORMAL}"
 echo -e " Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2"
 echo
-echo -e "Press ${GOOD}I${NORMAL} to enter interactive boot mode"
-echo
+if [[ ${RC_INTERACTIVE} == "yes" ]] ; then
+	echo -e "Press ${GOOD}I${NORMAL} to enter interactive boot mode"
+	echo
+	user_want_interactive && svcinteractive="yes"
+fi
 check_statedir /proc
 
 ebegin "Mounting proc at /proc"

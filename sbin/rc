@@ -11,6 +11,15 @@ source /sbin/functions.sh
 
 umask 022
 
+# Quick test to see if we can be interactive or not
+if [[ ${RC_INTERACTIVE:-yes} == "yes" ]] ; then
+	if tty -s && stty -a | grep -q " icanon" ; then
+		RC_INTERACTIVE="yes"
+	else
+		RC_INTERACTIVE="no"
+	fi
+fi
+
 # void noblock_read(var)
 #
 #   reads a line of input into var like regular read
@@ -18,7 +27,9 @@ umask 022
 #
 noblock_read() {
 	local old_tty_settings="$(stty -g)"
-	stty -icanon min 0 time 0
+	# sparc doesn't like this on the same line, bug #104067
+	stty -icanon
+	stty min 0 time 0
 	read "$@"
 	stty "${old_tty_settings}"
 }
@@ -28,14 +39,7 @@ noblock_read() {
 #   return 0 if user wants interactive mode
 #
 user_want_interactive() {
-	if [[ -z ${can_do_interactive} ]]; then
-		# Test to see if we can use interactive or not
-		# Basically there has to be a keyboard attached AND icanon set.
-		# Is there a better way?
-		tty -s && stty -a | grep -q " icanon"
-		can_do_interactive="$?"
-	fi
-	[[ ${can_do_interactive} == "0" ]] || return 1
+	[[ ${RC_INTERACTIVE} != "yes" ]] && return 1
 
 	local user_input
 	noblock_read user_input
@@ -48,9 +52,13 @@ user_want_interactive() {
 #   depending on user selection
 #
 do_interactive() {
-	local service=$1
-	shift
-
+	user_want_interactive && svcinteractive="yes"
+	if [[ ${svcinteractive} != "yes" ]]; then
+		"$@"
+		return $?
+	fi
+							
+	local service="$2"
 	local start_text="Start service"
 	local skip_text="Skip service"
 	local continue_text="Continue boot process"
@@ -71,7 +79,7 @@ do_interactive() {
 				break
 				;;
 			"${continue_text}")
-				interactive="no"
+				svcinteractive="no"
 				"$@"
 				break
 				;;
@@ -395,22 +403,18 @@ get_start_services() {
 }
 
 [[ -e "${svcdir}/interactive" ]] && \
-	interactive=$(< "${svcdir}/interactive")
+	svcinteractive=$(< "${svcdir}/interactive")
 
 # Start scripts
 for i in $(get_start_services) ; do
 	if service_stopped "${i}" ; then
-		user_want_interactive && interactive="yes"
-		if [[ ${interactive} == "yes" ]] ; then
-			do_interactive "${i}" start_service "${i}"
-		else
-			start_service "${i}"
-		fi
+		do_interactive start_service "${i}"
 	fi
 done
 
 # Wait for any services that may still be running ...
 [[ ${RC_PARALLEL_STARTUP} == "yes" ]] && wait
+user_want_interactive && svcinteractive="yes"
 
 # Clean the old runlevel
 rm -rf "${svcdir}/softscripts.old" &>/dev/null
@@ -437,7 +441,7 @@ rm -rf "${svcdir}/failed" &>/dev/null
 if [[ -n ${BOOT} ]] ; then
 	unset BOOT
 	# Save our interactive mode into the default runlevel
-	echo "${interactive}" > "${svcdir}/interactive"
+	echo "${svcinteractive}" > "${svcdir}/interactive"
 else
 	# As we're not boot, we remove the interactive file
 	[[ -e ${svcdir}/interactive ]] && rm -f "${svcdir}/interactive"
