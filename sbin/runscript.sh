@@ -472,7 +472,8 @@ svc_status() {
 		&& ${efunc} "status:  ${state}"
 
 	status
-	[[ ${efunc} != "eerror" ]]
+	# Return 0 if started, otherwise 1
+	[[ ${state} == "started" ]]
 }
 
 rcscript_errors="$(bash -n ${myscript} 2>&1)" || {
