@@ -100,7 +100,7 @@ get_critical_services() {
 	local x=
 	CRITICAL_SERVICES=
 	
-	if [[ -f /etc/runlevels/${BOOTLEVEL}/.critical ]] ; then
+	if [[ -f "/etc/runlevels/${BOOTLEVEL}/.critical" ]] ; then
 		for x in $(< "/etc/runlevels/${BOOTLEVEL}/.critical") ; do
 			CRITICAL_SERVICES="${CRITICAL_SERVICES} ${x##*/}"
 		done
@@ -145,11 +145,11 @@ then
 
 	# We reset argv1 to the bootlevel given on the kernel command line
 	# if there is one
-	argv1=${BOOTLEVEL}
+	argv1="${BOOTLEVEL}"
 	
-elif [[ ${RUNLEVEL} != "S" && ${RUNLEVEL} != "1" && -e ${svcdir}/ksoftlevel ]]
+elif [[ ${RUNLEVEL} != "S" && ${RUNLEVEL} != "1" && -e "${svcdir}/ksoftlevel" ]]
 then
-	argv1=$(< ${svcdir}/ksoftlevel)
+	argv1="$(< "${svcdir}"/ksoftlevel)"
 	rm -f "${svcdir}/ksoftlevel"
 elif [[ ${RUNLEVEL} != "S" && ${RUNLEVEL} != "1" && ${argv1} == "single" ]]
 then
@@ -170,33 +170,32 @@ fi
 
 source "${svclib}/sh/rc-services.sh"
 
-if [[ -f ${svcdir}/softlevel ]] ; then
+if [[ -f "${svcdir}/softlevel" ]] ; then
 	# Set OLDSOFTLEVEL if we had a valid SOFTLEVEL
-	export OLDSOFTLEVEL=$(< ${svcdir}/softlevel)
+	export OLDSOFTLEVEL="$(< "${svcdir}/softlevel")"
 else
 	export OLDSOFTLEVEL=
 fi
 	
 if [[ -z ${argv1} ]] ; then
-	if [[ -f ${svcdir}/softlevel ]] ; then
-		export SOFTLEVEL=$(< ${svcdir}/softlevel)
+	if [[ -f "${svcdir}/softlevel" ]] ; then
+		export SOFTLEVEL="$(< "${svcdir}/softlevel")"
 	else
-		export SOFTLEVEL=${BOOTLEVEL}
+		export SOFTLEVEL="${BOOTLEVEL}"
 	fi
 else
-	export SOFTLEVEL=${argv1}
+	export SOFTLEVEL="${argv1}"
 fi
 
-if [[ ! -f ${svcdir}/softlevel ]] ; then
+if [[ ! -f "${svcdir}/softlevel" ]] ; then
 	echo "${SOFTLEVEL}" > "${svcdir}/softlevel"
 fi
 
 [[ -e "${svcdir}/interactive" ]] && \
-	svcinteractive="$(< ${svcdir}/interactive)"
-
+	svcinteractive="$(< "${svcdir}/interactive")"
 
 # For keeping a list of services that fails during boot/halt
-if [[ ! -d ${svcdir}/failed ]] ; then
+if [[ ! -d "${svcdir}/failed" ]] ; then
 	mkdir -p -m 0755 "${svcdir}/failed"
 else
 	rm -rf "${svcdir}"/failed/*
@@ -210,20 +209,20 @@ if [[ ${SOFTLEVEL} == "reboot" || ${SOFTLEVEL} == "shutdown" ]] ; then
 elif [[ ${SOFTLEVEL} = "single" ]] ; then
 	get_critical_services
 
-	myscripts=${CRITICAL_SERVICES}
+	myscripts="${CRITICAL_SERVICES}"
 	
-elif [[ ! -d /etc/runlevels/${SOFTLEVEL} ]] ; then
+elif [[ ! -d "/etc/runlevels/${SOFTLEVEL}" ]] ; then
 	eerror "ERROR:  runlevel ${SOFTLEVEL} does not exist; exiting ..."
 	exit 1
 else
 	myscripts=
 	if [[ ${SOFTLEVEL} != "${BOOTLEVEL}" ]] ; then
 		# Normal runlevels *include* boot scripts
-		mylevels=$(dolisting "/etc/runlevels/${SOFTLEVEL}/")
-		mylevels="${mylevels} $(dolisting /etc/runlevels/${BOOTLEVEL}/)"
+		mylevels="$(dolisting "/etc/runlevels/${SOFTLEVEL}/")"
+		mylevels="${mylevels} $(dolisting "/etc/runlevels/${BOOTLEVEL}/")"
 	else
 		# Non-normal runlevels don't include boot scripts as default
-		mylevels=$(dolisting "/etc/runlevels/${SOFTLEVEL}/")
+		mylevels="$(dolisting "/etc/runlevels/${SOFTLEVEL}/")"
 	fi
 	
 	[[ ${OLDSOFTLEVEL} == "${BOOTLEVEL}" || ${OLDSOFTLEVEL} == "single" ]] && \
@@ -242,7 +241,7 @@ fi
 mkdir -p -m 0755 "${svcdir}/softscripts.new"
 
 for x in ${myscripts} ; do
-	if [[ ! -e /etc/init.d/${x} ]] ; then
+	if [[ ! -e "/etc/init.d/${x}" ]] ; then
 		ewarn "WARNING:  /etc/init.d/${x} missing; skipping ..."
 		continue
 	fi
@@ -265,12 +264,12 @@ get_stop_services() {
 
 dep_stop() {
 	local x dep needsme depservice
-	local myservice=${1##*/}
+	local myservice="${1##*/}"
 
 	service_stopped "${myservice}" && return 0
 	
 	# Candidate for zapping ?
-	[[ ! -L ${svcdir}/softscripts.new/${myservice} ]] || \
+	[[ ! -L "${svcdir}/softscripts.new/${myservice}" ]] || \
 		return 0
 
 	# If this is a 'net' service, we do not want to stop it if it was
@@ -298,11 +297,8 @@ dep_stop() {
 		needsme=0
 		
 		for dep in $(needsme "${myservice}") ; do
-			#if service_started "${dep}" && \
-			if [[ -L ${svcdir}/softscripts.new/${dep} ]] ; then
-				# This dep is valid
+			if [[ -L "${svcdir}/softscripts.new/${dep}" ]] ; then
 				needsme=1
-				
 				break
 			fi
 		done
@@ -320,13 +316,13 @@ if [[ ${SOFTLEVEL} != "single" && \
 	done
 	
 	# Wait for any services that may still be stopping ...
-	[ "${RC_PARALLEL_STARTUP}" = "yes" ] && wait
+	[[ ${RC_PARALLEL_STARTUP} = "yes" ]] && wait
 else
 	get_critical_services
 
 	is_critical_service() {
 		local x
-		local myservice=${1##*/}
+		local myservice="${1##*/}"
 
 		for x in ${CRITICAL_SERVICES} ${LOGGER_SERVICE} ; do
 			[[ ${myservice} == "${x}" ]] && return 0
@@ -394,10 +390,10 @@ get_start_services() {
 	local x list
 
 	get_critical_services
-	list=${CRITICAL_SERVICES}
+	list="${CRITICAL_SERVICES}"
 
 	[[ -n ${LOGGER_SERVICE} && \
-	   -L ${svcdir}/softscripts/${LOGGER_SERVICE} ]] && \
+	   -L "${svcdir}/softscripts/${LOGGER_SERVICE}" ]] && \
 		list="${list} ${LOGGER_SERVICE}"
 
 	for x in $(dolisting "${svcdir}/softscripts/") ; do
@@ -453,6 +449,5 @@ fi
 unset CONSOLETYPE
 
 splash "rc_exit"
-
 
 # vim:ts=4

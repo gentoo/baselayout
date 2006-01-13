@@ -17,14 +17,14 @@ svcrestart="no"
 
 myscript="$1"
 if [[ -L $1 && ! -L "/etc/init.d/${1##*/}" ]] ; then
-	myservice="$(readlink $1)"
+	myservice="$(readlink "$1")"
 else
 	myservice="$1"
 fi
 
 myservice="${myservice##*/}"
 export SVCNAME="${myservice}"
-mylevel="$(<${svcdir}/softlevel)"
+mylevel="$(< "${svcdir}/softlevel")"
 
 svc_trap() {
 	trap 'eerror "ERROR:  \"${myservice}\" caught an interrupt"; exit 1' \
@@ -64,7 +64,7 @@ if [[ ${NETSERVICE} == "yes" ]] ; then
 	conf="$(add_suffix /etc/conf.d/net)"
 	[[ -e ${conf} ]] && source "${conf}"
 fi
-conf="$(add_suffix /etc/conf.d/${myservice})"
+conf="$(add_suffix "/etc/conf.d/${myservice}")"
 [[ -e ${conf} ]] && source "${conf}"
 conf="$(add_suffix /etc/rc.conf)"
 [[ -e ${conf} ]] && source "${conf}"
@@ -72,11 +72,11 @@ conf="$(add_suffix /etc/rc.conf)"
 # Call svc_quit if we abort AND we have obtained a lock
 svcbegun=1
 service_started "${myservice}"
-svcstarted=$?
+svcstarted="$?"
 service_inactive "${myservice}"
-svcinactive=$?
+svcinactive="$?"
 svc_quit() {
-	eerror "ERROR:  \"${myservice}\" caught an interrupt"
+	eerror "ERROR:  ${myservice} caught an interrupt"
 	if [[ ${svcbegun} == 0 ]] ; then
 		end_service "${myservice}"
 		svcbegun=1
@@ -105,13 +105,13 @@ stop() {
 }
 
 start() {
-	eerror "ERROR:  \"${myservice}\" does not have a start function."
+	eerror "ERROR:  ${myservice} does not have a start function."
 	# Return failure so the symlink doesn't get created
 	return 1
 }
 
 restart() {
-	svc_restart || return $?
+	svc_restart
 }
 
 status() {
@@ -120,10 +120,10 @@ status() {
 }
 
 svc_schedule_restart() {
-	local service="$1"
+	local service="$1" restart="$2"
 	if [[ ! -e "${svcdir}/restart/${service}" ]] \
-		|| ! grep -q "^${myservice}$" "${svcdir}/restart/${service}" ; then
-		echo "${myservice}" >> "${svcdir}/restart/${service}"
+		|| ! grep -q "^${restart}$" "${svcdir}/restart/${service}" ; then
+		echo "${restart}" >> "${svcdir}/restart/${service}"
 	fi
 }
 
@@ -152,7 +152,7 @@ svc_stop() {
 	trap "svc_quit" INT QUIT TSTP
 	
 	begin_service "${myservice}"
-	svcbegun=$?
+	svcbegun="$?"
 	
 	service_message "Stopping service ${myservice}"
 
@@ -220,13 +220,13 @@ svc_stop() {
 			eerror "DO NOT USE EXIT IN INIT.D SCRIPTS"
 			eerror "This IS a bug, please fix your broken init.d"
 			unset -f exit
-			exit $@
+			exit "$@"
 		}
 		# Stop einfo/ebegin/eend from working as parallel messes us up
 		[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && RC_QUIET_STDOUT="yes"
 		stop
 		)
-		retval=$?
+		retval="$?"
 
 		# If a service has been marked inactive, exit now as something
 		# may attempt to start it again later
@@ -314,7 +314,7 @@ svc_start() {
 	unset IN_BACKGROUND
 	
 	local startupservices="$(trace_dependencies $(ineed "${myservice}") \
-			$(valid_iuse ${myservice}))"
+			$(valid_iuse "${myservice}"))"
 	local netservices="$(dolisting "/etc/runlevels/${BOOTLEVEL}/net.*") \
 			$(dolisting "/etc/runlevels/${mylevel}/net.*")"
 	local startupnetservices=
@@ -337,7 +337,7 @@ svc_start() {
 	# We also wait for any services we're after to finish incase they
 	# have a "before" dep but we don't dep on them.
 	if is_runlevel_start ; then
-		startupservices="${startupservices} $(valid_iafter ${myservice})"
+		startupservices="${startupservices} $(valid_iafter "${myservice}")"
 	fi
 
 	# Wait for dependencies to finish.
@@ -353,7 +353,7 @@ svc_start() {
 					if ineed -t "${myservice}" "${x}" >/dev/null ; then
 						if ! is_net_up ; then
 							if service_inactive "${y}" ; then
-								svc_schedule_restart "${y}"
+								svc_schedule_restart "${y}" "${myservice}"
 								startinactive="${y}"
 							else
 								startfail="${y}"
@@ -402,13 +402,13 @@ svc_start() {
 			eerror "DO NOT USE EXIT IN INIT.D SCRIPTS"
 			eerror "This IS a bug, please fix your broken init.d"
 			unset -f exit
-			exit $@
+			exit "$@"
 		}
 		# Stop einfo/ebegin/eend from working as parallel messes us up
 		[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && RC_QUIET_STDOUT="yes"
 		start
 		)
-		retval=$?
+		retval="$?"
 		
 		# If a service has been marked inactive, exit now as something
 		# may attempt to start it again later
@@ -456,7 +456,7 @@ svc_restart() {
 	if ! service_stopped "${myservice}" ; then
 		svc_stop || return "$?"
 	fi
-	svc_start || return "$?"
+	svc_start
 }
 
 svc_status() {
@@ -495,9 +495,9 @@ svc_status() {
 	[[ ${state} == "started" ]]
 }
 
-rcscript_errors="$(bash -n ${myscript} 2>&1)" || {
+rcscript_errors="$(bash -n "${myscript}" 2>&1)" || {
 	[[ -n ${rcscript_errors} ]] && echo "${rcscript_errors}" >&2
-	eerror "ERROR:  \"${myscript}\" has syntax errors in it; aborting ..."
+	eerror "ERROR:  ${myscript} has syntax errors in it; aborting ..."
 	exit 1
 }
 
@@ -576,9 +576,10 @@ for arg in $* ; do
 		retval="$?"
 		
 		if [[ ${IN_BACKGROUND} == "true" ]] ; then
-			res=
 			for x in $(dolisting "${svcdir}/snapshot/$$/") ; do
-				service_stopped "${x##*/}" && svc_schedule_restart "${x##*/}"
+				if service_stopped "${x##*/}" ; then
+					svc_schedule_restart "${myservice}" "${x##*/}"
+				fi
 			done
 		fi
 		
@@ -643,26 +644,22 @@ for arg in $* ; do
 			restart
 		fi
 
+		[[ -e "${svcdir}/restart/${myservice}" ]] \
+			&& rm -f "${svcdir}/restart/${myservice}"
+			
 		# Restart dependencies as well
-		if service_started "${myservice}" ; then
-			for x in $(trace_dependencies \
-				$(dolisting "${svcdir}/snapshot/$$/") ) ; do
-				if service_stopped "${x##*/}" ; then
-					start_service "${x##*/}"
-				fi
-			done
-		elif service_inactive "${myservice}" ; then
-			res=
+		if service_inactive "${myservice}" ; then
 			for x in $(dolisting "${svcdir}/snapshot/$$/") ; do
 				if service_stopped "${x##*/}" ; then
-					res="${res}${x##*/} "
+					svc_schedule_restart "${myservice}" "${x##*/}"
 				fi
 			done
-			[[ -n ${res} ]] && echo "${res}" > "${svcdir}/restart/${myservice}"
+		elif service_started "${myservice}" ; then
+			for x in $(trace_dependencies \
+				$(dolisting "${svcdir}/snapshot/$$/") ) ; do
+				service_stopped "${x##*/}" && start_service "${x##*/}"
+			done
 		fi
-
-		# Wait for any services that may still be running ...
-		[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && wait
 
 		rm -rf "${svcdir}/snapshot/$$"
 		svcrestart="no"

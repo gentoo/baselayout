@@ -100,7 +100,7 @@ rc_setup_daemon_vars() {
 
 	# We may want to launch the daemon with a custom command
 	# This is mainly useful for debugging with apps like valgrind, strace
-	local bash_service=$( bash_variable "${myservice}" )
+	local bash_service="$( bash_variable "${myservice}" )"
 	eval x=\"\$\{RC_DAEMON_${bash_service}\}\"
 	if [[ -n ${x} ]]; then
 		local -a d=( ${x} )
@@ -117,7 +117,7 @@ rc_setup_daemon_vars() {
 			args="${args} ${d[i]}"
 			unset d[i]
 		done
-		d=$( "${d[@]}" )
+		d=( "${d[@]}" )
 
 		eval args=\"${args} --exec '${d[0]}' -- ${d[@]:1} '${cmd}' ${eargs[@]}\"
 		! ${stopping} && cmd="${d[0]}"
@@ -145,7 +145,7 @@ rc_try_kill_pid() {
 				pkill "-${signal}" -s "${pid}"
 				pgrep -s "${pid}" >/dev/null || return 0
 			else
-				local pids=$(ps -eo pid,sid | sed -n 's/'${pid}'$//p')
+				local pids="$(ps -eo pid,sid | sed -n 's/'${pid}'$//p')"
 				[[ -z ${pids} ]] && return 0
 				kill -s "${signal}" ${pids} 2>/dev/null
 				e=false
@@ -216,7 +216,7 @@ is_daemon_running() {
 		pidfile="$1"
 	fi
 
-	pids=$( pidof ${cmd} )
+	pids="$( pidof ${cmd} )"
 	[[ -z ${pids} ]] && return 1
 
 	[[ -s ${pidfile} ]] || return 0
@@ -273,7 +273,7 @@ rc_stop_daemon() {
 		if ! is_daemon_running ${cmd} "${pidfile}" ; then
 			[[ ${RC_FAIL_ON_ZOMBIE} == "yes" ]] && return 1
 		fi
-		pids=$( pidof ${cmd} )
+		pids="$( pidof ${cmd} )"
 	fi
 
 	if [[ -s ${pidfile} ]]; then
@@ -293,11 +293,11 @@ rc_stop_daemon() {
 	# two methods
 	if [[ ${RC_KILL_CHILDREN} == "yes" ]]; then
 		if [[ -x /usr/bin/pgrep ]]; then
-			pids="${pids} $(pgrep -P ${pids// /,})"
+			pids="${pids} $(pgrep -P "${pids// /,}")"
 		else
 			local npids
 			for pid in ${pids} ; do
-				npids="${npids} $(ps -eo pid,ppid | sed -n 's/'${pid}'$//p')"
+				npids="${npids} $(ps -eo pid,ppid | sed -n 's/'"${pid}"'$//p')"
 			done
 			pids="${pids} ${npids}"
 		fi
@@ -356,7 +356,7 @@ update_service_status() {
 # Return the result of start_daemon or stop_daemon depending on
 # how we are called
 start-stop-daemon() {
-	local args=$( requote "$@" ) result i
+	local args="$( requote "$@" )" result i
 	local cmd pidfile pid stopping signal nothing=false 
 	local daemonfile="${svcdir}/daemons/${myservice}"
 	local -a RC_DAEMONS=() RC_PIDFILES=()
