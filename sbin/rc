@@ -851,7 +851,7 @@ for i in $(get_start_services) ; do
 done
 
 # Wait for any services that may still be running ...
-[ "${RC_PARALLEL_STARTUP}" = "yes" ] && wait
+[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && wait
 
 # Clean the old runlevel
 rm -rf "${svcdir}/softscripts.old" &>/dev/null
