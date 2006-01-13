@@ -7,6 +7,9 @@
     to put modules there that trigger hotplug events which in turn start
     services, #118419.
 
+    Services that need a service which is inactive at boot are now scheduled
+    to start when the inactive service starts, #118801.
+
   12 Jan 2006; Roy Marples <uberlord@gentoo.org>:
 
     Interactive start is now controllable by RC_INTERACTIVE="yes" and will
