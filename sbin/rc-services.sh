@@ -68,7 +68,7 @@ get_service_index() {
 	fi
 
 	for (( x=1; x<=${RC_DEPEND_TREE[0]}; x++ )); do
-		index=$(( ${x} * ${rc_index_scale} ))
+		index="$(( ${x} * ${rc_index_scale} ))"
 		if [[ ${myservice} == "${RC_DEPEND_TREE[${index}]}" ]] ; then
 			echo "${index}"
 			return 0
@@ -91,7 +91,7 @@ get_dep_info() {
 	# We already have the right stuff ...
 	[[ ${myservice} == "${rc_name}" && -n ${rc_mtime} ]] && return 0
 
-	rc_index="`get_service_index "${myservice}" "${rc_index}"`"
+	rc_index="$(get_service_index "${myservice}" "${rc_index}")"
 	rc_mtime="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_mtime}))]}"
 
 	# Verify that we have the correct index (rc_index) ...
@@ -133,7 +133,7 @@ check_dependency() {
 	fi
 
 	if ! get_dep_info "${myservice}" >/dev/null ; then
-		eerror "Could not get dependency info for \"${myservice}\"!" > /dev/stderr
+		eerror "Could not get dependency info for ${myservice}!" > /dev/stderr
 		eerror "Please run:" > /dev/stderr
 		eerror "  # /sbin/depscan.sh" > /dev/stderr
 		eerror "to try and fix this." > /dev/stderr
@@ -214,10 +214,10 @@ is_fake_service() {
 	[[ -z $1 || -z $2 ]] && return 1
 
 	[[ $2 != "${BOOTLEVEL}" && -e /etc/runlevels/"${BOOTLEVEL}"/.fake ]] && \
-		fake_services=$( < /etc/runlevels/"${BOOTLEVEL}"/.fake )
+		fake_services="$( < /etc/runlevels/"${BOOTLEVEL}"/.fake )"
 
 	[[ -e /etc/runlevels/"$2"/.fake ]] && \
-		fake_services="${fake_services} $( < /etc/runlevels/$2/.fake )"
+		fake_services="${fake_services} $( < /etc/runlevels/"$2"/.fake )"
 
 	for x in ${fake_services} ; do
 		[[ $1 == "${x##*/}" ]] && return 0
@@ -271,7 +271,7 @@ service_message() {
 	local r="${RC_QUIET_STDOUT}"
 	RC_QUIET_STDOUT="no"
 	${cmd} "$@"
-	RC_QUIET_STDOUT=${r}
+	RC_QUIET_STDOUT="${r}"
 }
 
 # bool begin_service( service )
@@ -336,8 +336,9 @@ wait_service() {
 
 	# This will block until the service fifo is touched
 	# Otheriwse we don't block
-	$( < "${fifo}" &>/dev/null )
-	local exitstatus=$( < "${svcdir}/exitcodes/${service}" )
+	# We need to use cat instead of the bash inbuilt < so we don't see errors
+	local tmp="$( cat "${fifo}" 2>/dev/null )"
+	local exitstatus="$( < "${svcdir}/exitcodes/${service}" )"
 
 	return "${exitstatus}"
 }
@@ -647,7 +648,7 @@ is_net_up() {
 
 	# Only worry about net.* services if this is the last one running,
 	# or if RC_NET_STRICT_CHECKING is set ...
-	if [[ "${netcount}" -lt 1 || ${RC_NET_STRICT_CHECKING} == "yes" ]] ; then
+	if [[ ${netcount} -lt 1 || ${RC_NET_STRICT_CHECKING} == "yes" ]] ; then
 		return 1
 	fi
 
@@ -721,7 +722,7 @@ trace_dependencies() {
 		fi
 	fi
 
-	net_services=$( cd "${svcdir}"/started; ls net.* 2>/dev/null )
+	net_services="$( cd "${svcdir}"/started; ls net.* 2>/dev/null )"
 	# If no net services are running or we only have net.lo up, then
 	# assume we are in boot runlevel or starting a new runlevel
 	if [[ -z ${net_services} || ${net_services} == "net.lo" ]]; then
@@ -735,9 +736,9 @@ trace_dependencies() {
 		}
 
 		local mylevel="${BOOTLEVEL}"
-		local x=$( get_net_services "${mylevel}" )
+		local x="$( get_net_services "${mylevel}" )"
 
-		[[ -f "${svcdir}/softlevel" ]] && mylevel=$( < "${svcdir}/softlevel" )
+		[[ -f "${svcdir}/softlevel" ]] && mylevel="$( < "${svcdir}/softlevel" )"
 		[[ ${BOOTLEVEL} != "${mylevel}" ]] && \
 			local x="${x} $( get_net_services "${mylevel}" )"
 		[[ -n ${x} ]] && net_services="${x}"
@@ -815,7 +816,7 @@ query_before() {
 
 	[[ -z $1 || -z $2 ]] && return 1
 
-	list=$( trace_dependencies "$1" )
+	list="$( trace_dependencies "$1" )"
 
 	net_service "$2" && netservice="yes"
 	
