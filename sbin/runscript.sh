@@ -70,17 +70,13 @@ conf="$(add_suffix /etc/rc.conf)"
 [[ -e ${conf} ]] && source "${conf}"
 
 # Call svc_quit if we abort AND we have obtained a lock
-svcbegun=1
 service_started "${myservice}"
 svcstarted="$?"
 service_inactive "${myservice}"
 svcinactive="$?"
 svc_quit() {
 	eerror "ERROR:  ${myservice} caught an interrupt"
-	if [[ ${svcbegun} == 0 ]] ; then
-		end_service "${myservice}"
-		svcbegun=1
-	fi
+	end_service "${myservice}"
 	if service_inactive "${myservice}" || [[ ${svcinactive} == 0 ]] ; then
 		mark_service_inactive "${myservice}"
 	elif [[ ${svcstarted} == 0 ]] ; then
@@ -121,10 +117,27 @@ status() {
 
 svc_schedule_restart() {
 	local service="$1" restart="$2"
-	if [[ ! -e "${svcdir}/restart/${service}" ]] \
-		|| ! grep -q "^${restart}$" "${svcdir}/restart/${service}" ; then
-		echo "${restart}" >> "${svcdir}/restart/${service}"
-	fi
+	[[ ! -d "${svcdir}/restart/${service}" ]] \
+		&& mkdir -p "${svcdir}/restart/${service}"
+	[[ ! -e "${svcdir}/restart/${service}/${restart}" ]] \
+		&& ln -snf "/etc/init.d/${service}" \
+			"${svcdir}/restart/${service}/${restart}"
+}
+
+svc_start_restart() {
+	[[ ! -d "${svcdir}/restart/${myservice}" ]] && return
+	local x= services= scripts="$(dolisting "${svcdir}/restart/${myservice}/")"
+
+	for x in ${scripts} ; do
+		services="${services} ${x##*/}"
+	done
+		
+	for x in $(trace_dependencies "${services}") ; do
+		service_stopped "${x}" && start_service "${x}"
+		rm -f "${svcdir}/restart/${myservice}/${x}"
+	done
+
+	rmdir "${svcdir}/restart/${myservice}"
 }
 
 svc_stop() {
@@ -152,7 +165,6 @@ svc_stop() {
 	trap "svc_quit" INT QUIT TSTP
 	
 	begin_service "${myservice}"
-	svcbegun="$?"
 	
 	service_message "Stopping service ${myservice}"
 
@@ -167,13 +179,10 @@ svc_stop() {
 			# A net.* service
 			if in_runlevel "${myservice}" "${BOOTLEVEL}" || \
 			   in_runlevel "${myservice}" "${mylevel}" ; then
-				# Only worry about net.* services if this is the last one running,
-				# or if RC_NET_STRICT_CHECKING is set ...
-				if ! is_net_up ; then
-					mydeps="net"
-				fi
+				# Only worry about net.* services if this is the last one
+				# running or if RC_NET_STRICT_CHECKING is set ...
+				! is_net_up && mydeps="net"
 			fi
-
 			mydeps="${mydeps} ${myservice}"
 		else
 			mydeps="${myservice}"
@@ -193,6 +202,8 @@ svc_stop() {
 			fi
 		done
 	done
+
+	[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && wait
 
 	for x in "${service_list[@]}" ; do
 		# We need to test if the service has been marked stopped
@@ -232,7 +243,7 @@ svc_stop() {
 		# may attempt to start it again later
 		if service_inactive "${myservice}" ; then
 			svcinactive=0
-			[[ ${svcbegun} == 0 ]] && end_service "${myservice}" 0
+			end_service "${myservice}" 0
 			return 0
 		fi
 	fi
@@ -264,10 +275,7 @@ svc_stop() {
 		service_message "Stopped service ${myservice}"
 	fi
 
-	if [[ ${svcbegun} == 0 ]] ; then
-		end_service "${myservice}" "${retval}"
-		svcbegun=1
-	fi
+	end_service "${myservice}" "${retval}"
 	
 	# Reset the trap
 	svc_trap
@@ -305,8 +313,6 @@ svc_start() {
 	trap "svc_quit" INT QUIT TSTP
 	
 	begin_service "${myservice}"
-	svcbegun=$?
-
 	service_message "Starting service ${myservice}"
 
 	# Save the IN_BACKGROUND var as we need to clear it for starting depends
@@ -333,6 +339,8 @@ svc_start() {
 			fi
 		fi
 	done
+
+	[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && wait
 
 	# We also wait for any services we're after to finish incase they
 	# have a "before" dep but we don't dep on them.
@@ -414,7 +422,7 @@ svc_start() {
 		# may attempt to start it again later
 		if service_inactive "${myservice}" ; then
 			svcinactive=0
-			[[ ${svcbegun} == 0 ]] && end_service "${myservice}" 1
+			end_service "${myservice}" 1
 			return 1
 		fi
 	fi
@@ -441,11 +449,7 @@ svc_start() {
 		service_message "Service ${myservice} started OK"
 	fi
 
-	if [[ ${svcbegun} == 0 ]] ; then
-		end_service "${myservice}" "${retval}"
-		svcbegun=1
-	fi
-	
+	end_service "${myservice}" "${retval}"
 	# Reset the trap
 	svc_trap
 	
@@ -561,7 +565,7 @@ for arg in $* ; do
 	case "${arg}" in
 	stop)
 		if [[ -e "${svcdir}/restart/${myservice}" ]] ; then
-			rm -f "${svcdir}/restart/${myservice}"
+			rm -Rf "${svcdir}/restart/${myservice}"
 		fi
 
 		# Stoped from the background - treat this as a restart so that
@@ -588,14 +592,7 @@ for arg in $* ; do
 	start)
 		svc_start
 		retval=$?
-		if ! is_runlevel_start && [[ -s "${svcdir}/restart/${myservice}" ]] ; then
-			for x in $(trace_dependencies $(< "${svcdir}/restart/${myservice}")) ; do
-				service_stopped "${x}" && start_service "${x}"
-			done
-		fi
-		if [[ -e "${svcdir}/restart/${myservice}" ]] ; then
-			rm -f "${svcdir}/restart/${myservice}"
-		fi
+		service_started "${myservice}" && svc_start_restart
 		exit "${retval}"
 		;;
 	needsme|ineed|usesme|iuse|broken)
@@ -655,10 +652,7 @@ for arg in $* ; do
 				fi
 			done
 		elif service_started "${myservice}" ; then
-			for x in $(trace_dependencies \
-				$(dolisting "${svcdir}/snapshot/$$/") ) ; do
-				service_stopped "${x##*/}" && start_service "${x##*/}"
-			done
+			svc_start_restart
 		fi
 
 		rm -rf "${svcdir}/snapshot/$$"
