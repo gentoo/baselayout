@@ -2,13 +2,11 @@
 #
 # Note that this file is for 2.6 kernels.
 #
-# This file should only be used to load modules that are essential to the
-# mounting of local partitions, such as RAID controllers.
-# Coldplug or similar should be used to load the rest of the modules
-# for your hardware automatically.
-#
 # WARNING: It is dangerous to put modules here which will cause hotplug to
 # start services, for example network driver modules.
+# For network modules it is advisable to use coldplug to load your modules.
+# You can do this by emerging coldplug and adding coldplug do the boot runlevel
+# using rc-update.
 
 # Add the names of modules that you'd like to load when the system
 # starts into this file, one per line.  Comments begin with # and
