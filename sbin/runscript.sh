@@ -262,7 +262,7 @@ svc_stop() {
 			fi
 		fi
 
-		service_message "eerror" "FAILED to stop service ${myservice}!"
+		service_message "eerror" "ERROR:  ${myservice} failed to stop"
 	else
 		# If we're stopped from a daemon that sets ${IN_BACKGROUND} such as
 		# wpa_monitor when we mark as inactive instead of taking the down
@@ -272,7 +272,7 @@ svc_stop() {
 		else
 			mark_service_stopped "${myservice}"
 		fi
-		service_message "Stopped service ${myservice}"
+		service_message "Stopped service ${myservice} successfully"
 	fi
 
 	end_service "${myservice}" "${retval}"
@@ -422,6 +422,7 @@ svc_start() {
 		# may attempt to start it again later
 		if service_inactive "${myservice}" ; then
 			svcinactive=0
+			service_message "ewarn" "WARNING:  ${myservice} has started but is inactive"
 			end_service "${myservice}" 1
 			return 1
 		fi
@@ -441,12 +442,12 @@ svc_start() {
 
 		if [[ -z ${startinactive} ]] ; then
 			is_runlevel_start && mark_service_failed "${myservice}"
-			service_message "eerror" "FAILED to start service ${myservice}!"
+			service_message "eerror" "ERROR:  ${myservice} failed to start"
 		fi
 	else
 		svcstarted=0
 		mark_service_started "${myservice}"
-		service_message "Service ${myservice} started OK"
+		service_message "Service ${myservice} started successfully"
 	fi
 
 	end_service "${myservice}" "${retval}"

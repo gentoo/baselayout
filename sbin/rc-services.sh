@@ -263,10 +263,16 @@ service_message() {
 	[[ ${RC_PARALLEL_STARTUP} != "yes" ]] && return
 
 	local cmd="einfo"
-	if [[ $1 == "1" || $1 == "error" || $1 == "eerror" ]] ; then
-		cmd="eerror"
-		shift
-	fi
+	case "$1" in
+		1|error|eerror)
+			cmd="eerror"
+			shift
+			;;
+		ewarn)
+			cmd="ewarn"
+			shift
+			;;
+	esac
 
 	local r="${RC_QUIET_STDOUT}"
 	RC_QUIET_STDOUT="no"
