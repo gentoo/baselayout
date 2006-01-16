@@ -5,6 +5,8 @@
 
     Renamed restart in $svcdir to scheduled as it makes much more sense.
 
+    Interfaces names with a dot in them now work.
+
   15 Jan 2005; Roy Marples <uberlord@gentoo.org>:
 
     Changed wording about network modules in /etc/modules.autoload.d/*,
