@@ -90,9 +90,7 @@ check_statedir() {
 #
 noblock_read() {
 	local old_tty_settings="$(stty -g)"
-	# sparc doesn't like this on the same line, bug #104067
-	stty -icanon
-	stty min 0 time 0
+	stty -icanon min 0 time 0
 	read "$@"
 	stty "${old_tty_settings}"
 }

@@ -267,7 +267,7 @@ svc_stop() {
 		else
 			mark_service_stopped "${myservice}"
 		fi
-		service_message "Stopped service ${myservice} successfully"
+		service_message "Stopped service ${myservice}"
 	fi
 
 	end_service "${myservice}" "${retval}"
@@ -442,7 +442,7 @@ svc_start() {
 	else
 		svcstarted=0
 		mark_service_started "${myservice}"
-		service_message "Service ${myservice} started successfully"
+		service_message "Service ${myservice} started"
 	fi
 
 	end_service "${myservice}" "${retval}"
