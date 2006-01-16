@@ -40,8 +40,8 @@ svc_trap
 [[ ${RC_GOT_DAEMON} != "yes" ]] && source "${svclib}/sh/rc-daemon.sh"
 
 # Set $IFACE to the name of the network interface if it is a 'net.*' script
-if [[ ${myservice%%.*} == "net" && ${myservice##*.} != "${myservice}" ]] ; then
-	IFACE="${myservice##*.}"
+if [[ ${myservice%%.*} == "net" && ${myservice#*.} != "${myservice}" ]] ; then
+	IFACE="${myservice#*.}"
 	NETSERVICE="yes"
 else
 	IFACE=

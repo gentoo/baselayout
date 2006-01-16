@@ -166,11 +166,12 @@ modules_check_installed() {
 
 # bool modules_check_user(void)
 modules_check_user() {
-	local -a umods 
+	local iface="$1" ifvar="$(bash_variable "${IFACE}")"
 	local i j k l nmods="${#MODULES[@]}"
+	local -a umods
 
 	# Has the interface got any specific modules?
-	umods="modules_${iface}[@]"
+	umods="modules_${ifvar}[@]"
 	umods=( "${!umods}" )
 
 	# Global setting follows interface-specific setting
@@ -190,7 +191,7 @@ modules_check_user() {
 		[[ ${umods[i]} == "dhcp" ]] && continue
 
 		# We remove any modules we explicitly don't want
-		if [[ ${umods[i]} == !* ]]; then
+		if [[ ${umods[i]} == "!"* ]]; then
 			for (( j=0; j<nmods; j++ )); do
 				[[ -z ${MODULES[j]} ]] && continue
 				if [[ ${umods[i]:1} == "${MODULES[j]}" \
@@ -463,7 +464,7 @@ modules_load()  {
 		PROVIDES=( "${PROVIDES[@]}" )
 	else
 		if ${starting}; then
-			modules_check_user || return 1
+			modules_check_user "${iface}" || return 1
 		else
 			# Always prefer iproute2 for taking down interfaces
 			if is_function iproute2_provide ; then

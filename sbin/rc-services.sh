@@ -616,7 +616,7 @@ service_started_daemon() {
 #   Returns true if 'service' is a service controlling a network interface
 #
 net_service() {
-	[[ -n $1 && ${1%%.*} == "net" && ${1##*.} != "$1" ]]
+	[[ -n $1 && ${1%%.*} == "net" && ${1#*.} != "$1" ]]
 }
 
 # bool is_net_up()
