@@ -110,29 +110,29 @@ status() {
 	return 0
 }
 
-svc_schedule_restart() {
-	local service="$1" restart="$2"
-	[[ ! -d "${svcdir}/restart/${service}" ]] \
-		&& mkdir -p "${svcdir}/restart/${service}"
-	[[ ! -e "${svcdir}/restart/${service}/${restart}" ]] \
+svc_schedule_start() {
+	local service="$1" start="$2"
+	[[ ! -d "${svcdir}/scheduled/${service}" ]] \
+		&& mkdir -p "${svcdir}/scheduled/${service}"
+	[[ ! -e "${svcdir}/scheduled/${service}/${start}" ]] \
 		&& ln -snf "/etc/init.d/${service}" \
-			"${svcdir}/restart/${service}/${restart}"
+			"${svcdir}/scheduled/${service}/${start}"
 }
 
-svc_start_restart() {
-	[[ ! -d "${svcdir}/restart/${myservice}" ]] && return
-	local x= services= scripts="$(dolisting "${svcdir}/restart/${myservice}/")"
+svc_start_scheduled() {
+	[[ ! -d "${svcdir}/scheduled/${myservice}" ]] && return
+	local x= services=
 
-	for x in ${scripts} ; do
+	for x in $(dolisting "${svcdir}/scheduled/${myservice}/") ; do
 		services="${services} ${x##*/}"
 	done
 		
 	for x in $(trace_dependencies "${services}") ; do
 		service_stopped "${x}" && start_service "${x}"
-		rm -f "${svcdir}/restart/${myservice}/${x}"
+		rm -f "${svcdir}/scheduled/${myservice}/${x}"
 	done
 
-	rmdir "${svcdir}/restart/${myservice}"
+	rmdir "${svcdir}/scheduled/${myservice}"
 }
 
 svc_stop() {
@@ -356,7 +356,7 @@ svc_start() {
 					if ineed -t "${myservice}" "${x}" >/dev/null ; then
 						if ! is_net_up ; then
 							if service_inactive "${y}" ; then
-								svc_schedule_restart "${y}" "${myservice}"
+								svc_schedule_start "${y}" "${myservice}"
 								startinactive="${y}"
 							else
 								startfail="${y}"
@@ -374,7 +374,7 @@ svc_start() {
 				# A 'need' dependacy is critical for startup
 				if ineed -t "${myservice}" "${x}" >/dev/null ; then
 					if service_inactive "${x}" ; then
-						svc_schedule_restart "${x}"
+						svc_schedule_start "${x}"
 						startinactive="${x}"
 					else
 						startfail="${x}"
@@ -559,8 +559,8 @@ done
 for arg in $* ; do
 	case "${arg}" in
 	stop)
-		if [[ -e "${svcdir}/restart/${myservice}" ]] ; then
-			rm -Rf "${svcdir}/restart/${myservice}"
+		if [[ -e "${svcdir}/scheduled/${myservice}" ]] ; then
+			rm -Rf "${svcdir}/scheduled/${myservice}"
 		fi
 
 		# Stoped from the background - treat this as a restart so that
@@ -577,7 +577,7 @@ for arg in $* ; do
 		if [[ ${IN_BACKGROUND} == "true" ]] ; then
 			for x in $(dolisting "${svcdir}/snapshot/$$/") ; do
 				if service_stopped "${x##*/}" ; then
-					svc_schedule_restart "${myservice}" "${x##*/}"
+					svc_schedule_start "${myservice}" "${x##*/}"
 				fi
 			done
 		fi
@@ -587,7 +587,7 @@ for arg in $* ; do
 	start)
 		svc_start
 		retval=$?
-		service_started "${myservice}" && svc_start_restart
+		service_started "${myservice}" && svc_start_scheduled
 		exit "${retval}"
 		;;
 	needsme|ineed|usesme|iuse|broken)
@@ -597,8 +597,8 @@ for arg in $* ; do
 		svc_status
 		;;
 	zap)
-		if [[ -e "${svcdir}/restart/${myservice}" ]] ; then
-			rm -f "${svcdir}/restart/${myservice}"
+		if [[ -e "${svcdir}/scheduled/${myservice}" ]] ; then
+			rm -Rf "${svcdir}/scheduled/${myservice}"
 		fi
 		if ! service_stopped "${myservice}" ; then
 			einfo "Manually resetting ${myservice} to stopped state."
@@ -636,18 +636,18 @@ for arg in $* ; do
 			restart
 		fi
 
-		[[ -e "${svcdir}/restart/${myservice}" ]] \
-			&& rm -f "${svcdir}/restart/${myservice}"
+		[[ -e "${svcdir}/scheduled/${myservice}" ]] \
+			&& rm -Rf "${svcdir}/scheduled/${myservice}"
 			
 		# Restart dependencies as well
 		if service_inactive "${myservice}" ; then
 			for x in $(dolisting "${svcdir}/snapshot/$$/") ; do
 				if service_stopped "${x##*/}" ; then
-					svc_schedule_restart "${myservice}" "${x##*/}"
+					svc_schedule_start "${myservice}" "${x##*/}"
 				fi
 			done
 		elif service_started "${myservice}" ; then
-			svc_start_restart
+			svc_start_scheduled
 		fi
 
 		rm -rf "${svcdir}/snapshot/$$"
