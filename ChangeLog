@@ -37,8 +37,6 @@
     Interactive start is now controllable by RC_INTERACTIVE="yes" and will
     probe to see if we can go interactive.
 
-    Interactive start should now work on Sparc, #104067.
-
   11 Jan 2006; Roy Marples <uberlord@gentoo.org>:
 
     runscript.sh now traps interrupt signals and rolls back its status to what
