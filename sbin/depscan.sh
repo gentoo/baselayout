@@ -17,7 +17,7 @@ fi
 
 for x in softscripts snapshot options daemons \
 	started starting inactive stopping failed \
-	exclusive exitcodes restart ; do
+	exclusive exitcodes scheduled ; do
 	if [[ ! -d "${svcdir}/${x}" ]] ; then
 		if ! mkdir -p -m 0755 "${svcdir}/${x}" 2>/dev/null ; then
 			eerror "Could not create needed directory '${svcdir}/${x}'!"
