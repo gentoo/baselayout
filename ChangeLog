@@ -5,6 +5,8 @@
 
     Services should not get stuck in rc anymore, #119242.
 
+    ifconfig and iproute2 now only report MAC addresses for Ethernet links.
+
   16 Jan 2006; Roy Marples <uberlord@gentoo.org>:
 
     Renamed restart in $svcdir to scheduled as it makes much more sense.

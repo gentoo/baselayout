@@ -102,7 +102,7 @@ ifconfig_get_address() {
 # Fetch the mac address assingned to the network card
 ifconfig_get_mac_address() {
 	local mac=$( ifconfig "$1" | sed -n -e \
-		's/.*HWaddr[ \t]*\<\(..:..:..:..:..:..\)\>.*/\U\1/p' )
+	'/Link encap:Ethernet/ s/.*HWaddr[ \t]*\<\(..:..:..:..:..:..\)\>.*/\U\1/p' )
 	[[ ${mac} != '00:00:00:00:00:00' \
 	&& ${mac} != '44:44:44:44:44:44' \
 	&& ${mac} != 'FF:FF:FF:FF:FF:FF' ]] \
