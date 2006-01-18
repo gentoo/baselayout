@@ -16,7 +16,7 @@ if [[ ! -d ${svcdir} ]] ; then
 fi
 
 for x in softscripts snapshot options daemons \
-	started starting inactive stopping failed \
+	started starting inactive wasinactive stopping failed \
 	exclusive exitcodes scheduled ; do
 	if [[ ! -d "${svcdir}/${x}" ]] ; then
 		if ! mkdir -p -m 0755 "${svcdir}/${x}" 2>/dev/null ; then
@@ -35,7 +35,7 @@ if [[ $1 == "-u" ]] ; then
 
 	# If its not there, we have to update, and make sure its present
 	# for next mtime testing
-	if [[ ! -e ${svcdir}/depcache ]] ; then
+	if [[ ! -e "${svcdir}/depcache" ]] ; then
 			update=1
 			touch "${svcdir}/depcache"
 	fi
@@ -56,7 +56,7 @@ if [[ $1 == "-u" ]] ; then
 	shift
 fi
 
-[[ ${update} == 0 ]] && exit 0
+[[ ${update} == 0 && -e "${svcdir}/deptree" ]] && exit 0
 
 ebegin "Caching service dependencies"
 

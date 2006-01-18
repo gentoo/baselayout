@@ -382,7 +382,6 @@ start_service() {
 		( "/etc/init.d/${service}" start )
 		retval=$?
 		splash "svc_started" "${service}" "${retval}"
-		end_service "${service}" "${retval}"
 		return "${retval}"
 	else
 		# if parallel startup is allowed, start it in background
@@ -390,7 +389,6 @@ start_service() {
 			"/etc/init.d/${service}" start 
 			retval=$?
 			splash "svc_started" "${service}" "${retval}"
-			end_service "${service}" "${retval}"
 		) &
 		return 0
 	fi
@@ -432,7 +430,6 @@ stop_service() {
 		( "/etc/init.d/${service}" stop )
 		retval=$?
 		splash "svc_stopped" "${service}" "${retval}"
-		end_service "${service}" "${retval}"
 		return "${retval}"
 	else
 		# if parallel startup is allowed, start it in background
@@ -440,7 +437,6 @@ stop_service() {
 			( "/etc/init.d/${service}" stop )
 			retval=$?
 			splash "svc_stopped" "${service}" "${retval}"
-			end_service "${service}" "${retval}"
 		) &
 		return 0
 	fi
@@ -455,8 +451,9 @@ mark_service_starting() {
 
 	ln -sn "/etc/init.d/$1" "${svcdir}/starting/$1" 2>/dev/null || return 1
 
-	[[ -f "${svcdir}/inactive/$1" ]] && rm -f "${svcdir}/inactive/$1"
 	[[ -f "${svcdir}/started/$1" ]] && rm -f "${svcdir}/started/$1"
+	[[ -f "${svcdir}/inactive/$1" ]] \
+		&& mv "${svcdir}/inactive/$1" "${svcdir}/wasinactive/$1"
 	return 0
 }
 
@@ -469,10 +466,12 @@ mark_service_started() {
 
 	ln -snf "/etc/init.d/$1" "${svcdir}/started/$1"
 	
-	[[ -f "${svcdir}/starting/$1" ]] && rm -f "${svcdir}/starting/$1"
-	[[ -f "${svcdir}/inactive/$1" ]] && rm -f "${svcdir}/inactive/$1"
-	[[ -f "${svcdir}/stopping/$1" ]] && rm -f "${svcdir}/stopping/$1"
+	rm -f "${svcdir}/starting/$1" "${svcdir}/inactive/$1" \
+		"${svcdir}/wasinactive/$1" "${svcdir}/stopping/$1" \
+		"${svcdir}"/scheduled/*/"$1"
 
+	end_service "$1" 0
+	
 	return 0 
 }
 
@@ -485,9 +484,10 @@ mark_service_inactive() {
 
 	ln -snf "/etc/init.d/$1" "${svcdir}/inactive/$1"
 	
-	[[ -f "${svcdir}/started/$1" ]] && rm -f "${svcdir}/started/$1"
-	[[ -f "${svcdir}/starting/$1" ]] && rm -f "${svcdir}/starting/$1"
-	[[ -f "${svcdir}/stopping/$1" ]] && rm -f "${svcdir}/stopping/$1"
+	rm -f "${svcdir}/started/$1" "${svcdir}/wasinactive/$1" \
+		"${svcdir}/starting/$1" "${svcdir}/stopping/$1"
+
+	end_service "$1" 0
 
 	return 0
 }
@@ -501,8 +501,10 @@ mark_service_stopping() {
 
 	ln -sn "/etc/init.d/$1" "${svcdir}/stopping/$1" 2>/dev/null || return 1
 
-	[[ -f "${svcdir}/inactive/$1" ]] && rm -f "${svcdir}/inactive/$1"
-	[[ -f "${svcdir}/started/$1" ]] && rm -f "${svcdir}/started/$1"
+	rm -f "${svcdir}/started/$1"
+	[[ -f "${svcdir}/inactive/$1" ]] \
+		&& mv "${svcdir}/inactive/$1" "${svcdir}/wasinactive/$1"
+		
 	return 0
 }
 
@@ -513,11 +515,12 @@ mark_service_stopping() {
 mark_service_stopped() {
 	[[ -z $1 ]] && return 1
 
-	[[ -f "${svcdir}/daemons/$1" ]] && rm -f "${svcdir}/daemons/$1"
-	[[ -f "${svcdir}/starting/$1" ]] && rm -f "${svcdir}/starting/$1"
-	[[ -f "${svcdir}/started/$1" ]] && rm -f "${svcdir}/started/$1"
-	[[ -f "${svcdir}/inactive/$1" ]] && rm -f "${svcdir}/inactive/$1"
-	[[ -f "${svcdir}/stopping/$1" ]] && rm -f "${svcdir}/stopping/$1"
+	rm -Rf "${svcdir}/daemons/$1" "${svcdir}/starting/$1" \
+		"${svcdir}/started/$1" "${svcdir}/inactive/$1" \
+		"${svcdir}/wasinactive/$1" "${svcdir}/stopping/$1" \
+		"${svcdir}/scheduled/$1"
+
+	end_service "$1" 0
 
 	return 0
 }
@@ -560,6 +563,14 @@ service_started() {
 #
 service_inactive() {
 	test_service_state "$1" "inactive"
+}
+
+# bool service_wasinactive(service)
+#
+#   Returns true if 'service' is inactive
+#
+service_wasinactive() {
+	test_service_state "$1" "wasinactive"
 }
 
 # bool service_stopping(service)
