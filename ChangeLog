@@ -5,7 +5,7 @@
 
     Services should not get stuck in rc anymore, #119242.
 
-    ifconfig and iproute2 now only report MAC addresses for Ethernet links.
+    We only hotplug net.* scripts on interfaces that are marked as ethernet.
 
   16 Jan 2006; Roy Marples <uberlord@gentoo.org>:
 

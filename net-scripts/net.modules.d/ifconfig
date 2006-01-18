@@ -97,12 +97,20 @@ ifconfig_get_address() {
 	[[ -n ${x[0]} ]] && echo "${x[0]}/${x[1]}"
 }
 
+# bool ifconfig_is_ethernet(char *interface)
+#
+# Return 0 if the link is ethernet, otherwise 1.
+ifconfig_is_ethernet() {
+	ifconfig "$1" | grep -q "^$1[[:space:]]*Link encap:Ethernet[[:space:]]"
+}
+	
+
 # void ifconfig_get_mac_address(char *interface)
 #
 # Fetch the mac address assingned to the network card
 ifconfig_get_mac_address() {
 	local mac=$( ifconfig "$1" | sed -n -e \
-	'/Link encap:Ethernet/ s/.*HWaddr[ \t]*\<\(..:..:..:..:..:..\)\>.*/\U\1/p' )
+		's/.*HWaddr[ \t]*\<\(..:..:..:..:..:..\)\>.*/\U\1/p' )
 	[[ ${mac} != '00:00:00:00:00:00' \
 	&& ${mac} != '44:44:44:44:44:44' \
 	&& ${mac} != 'FF:FF:FF:FF:FF:FF' ]] \

@@ -879,6 +879,14 @@ run() {
 			run_stop "${iface}" && r=0
 			remove_state "${iface}"
 		else
+			# Only hotplug on ethernet interfaces
+			if [[ ${IN_HOTPLUG} == 1 ]] ; then
+				if ! interface_is_ethernet "${iface}" ; then
+					eerror "We only hotplug for ethernet interfaces"
+					return 1
+				fi
+			fi
+
 			run_start "${iface}" && r=0
 		fi
 	fi

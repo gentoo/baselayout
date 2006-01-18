@@ -97,12 +97,19 @@ iproute2_get_address() {
 	| sed -n -e 's/.*inet \([^ ]*\).*/\1/p'
 }
 
+# bool iproute2_is_ethernet(char *interface)
+#
+# Return 0 if the link is ethernet, otherwise 1.
+iproute2_is_ethernet() {
+	ip link show "$1" | grep -q "^[[:space:]]*link/ether[[:space:]]*"
+}
+
 # void iproute2_get_mac_address(char *interface)
 #
 # Fetch the mac address assingned to the network card
 iproute2_get_mac_address() {
 	local mac=$( ip link show "$1" | sed -n -e \
-		'/link\/\(ether\)/ s/^.*\<\(..:..:..:..:..:..\)\>.*/\U\1/p' )
+		'/link\// s/^.*\<\(..:..:..:..:..:..\)\>.*/\U\1/p' )
 	[[ ${mac} != '00:00:00:00:00:00' \
 	&& ${mac} != '44:44:44:44:44:44' \
 	&& ${mac} != 'FF:FF:FF:FF:FF:FF' ]] \
