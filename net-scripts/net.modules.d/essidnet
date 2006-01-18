@@ -83,7 +83,8 @@ essidnet_pre_start() {
 	done
 
 	# Nameserver setup for the essid if required
-	local -a nameservers=( \"\$\{mac_dns_servers_${mac}\[@\]\}\" )
+	local -a nameservers
+	eval nameservers=( \"\$\{mac_dns_servers_${mac}\[@\]\}\" )
 	[[ -z ${nameservers} ]] && eval nameservers=( \"\$\{dns_servers_${essid}\[@\]\}\" )
 	if [[ -n ${nameservers} ]]; then
 		# Make a backup of the origional file if necessary
