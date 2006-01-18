@@ -102,7 +102,7 @@ iproute2_get_address() {
 # Fetch the mac address assingned to the network card
 iproute2_get_mac_address() {
 	local mac=$( ip link show "$1" | sed -n -e \
-		's/^.*\<\(..:..:..:..:..:..\)\>.*/\U\1/p' )
+		'/link\/\(ether\)/ s/^.*\<\(..:..:..:..:..:..\)\>.*/\U\1/p' )
 	[[ ${mac} != '00:00:00:00:00:00' \
 	&& ${mac} != '44:44:44:44:44:44' \
 	&& ${mac} != 'FF:FF:FF:FF:FF:FF' ]] \
