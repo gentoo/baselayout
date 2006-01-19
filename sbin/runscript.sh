@@ -239,20 +239,18 @@ svc_stop() {
 		is_runlevel_stop && mark_service_failed "${myservice}"
 		
 		# If we are halting the system, do it as cleanly as possible
-		if [[ ${SOFTLEVEL} != "reboot" && ${SOFTLEVEL} != "shutdown" ]] ; then
+		if [[ ${SOFTLEVEL} == "reboot" || ${SOFTLEVEL} == "shutdown" ]] ; then
+			mark_service_stopped "${myservice}"
+		else
 			if [[ ${svcinactive} == 0 ]] ; then
 				mark_service_inactive "${myservice}"
 			else
 				mark_service_started "${myservice}"
 			fi
-		else
-			mark_service_stopped "${myservice}"
 		fi
 
 		service_message "eerror" "ERROR:  ${myservice} failed to stop"
 	else
-		# If we're stopped from a daemon that sets ${IN_BACKGROUND} such as
-		# wpa_monitor when we mark as inactive instead of taking the down
 		svcstarted=1
 		if service_inactive "${myservice}" ; then
 			svcinactive=0
@@ -395,15 +393,10 @@ svc_start() {
 	fi
 
 	if [[ ${retval} != 0 ]] ; then
-		# Remove link if service didn't start; but only if we're not booting
-		# If we're booting, we need to continue and do our best to get the
-		# system up.
-		if [[ ${SOFTLEVEL} != "${BOOTLEVEL}" ]] ; then
-			if [[ ${svcinactive} == 0 ]] ; then
-				mark_service_inactive "${myservice}"
-			else
-				mark_service_stopped "${myservice}"
-			fi
+		if [[ ${svcinactive} == 0 ]] ; then
+			mark_service_inactive "${myservice}"
+		else
+			mark_service_stopped "${myservice}"
 		fi
 
 		if [[ -z ${startinactive} ]] ; then
