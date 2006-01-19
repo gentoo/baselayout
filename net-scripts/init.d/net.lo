@@ -25,7 +25,7 @@ depend() {
 # Define where our modules are
 MODULES_DIR="${svclib}/net.modules.d"
 
-# Load some functions shared between ourselves and our dhcp helpers
+# Load some functions shared between ourselves and our DHCP helpers
 source "${MODULES_DIR}/helpers.d/functions"
 
 # Make some wrappers to fudge after/before/need/use depend flags.
@@ -568,12 +568,11 @@ iface_start() {
 	# Otherwise a default of NULL
 	if [[ -z ${config} ]]; then
 #		if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
+			ewarn "Configuration not set for ${iface} - assuming DHCP"
 			if is_function "dhcp_start" ; then
 				config=( "dhcp" )
-				ewarn "Configuration not set for ${iface} - assuming dhcp"
 			else
-				eerror "Cannot default to dhcp as there is no dhcp module loaded"
-				eerror "No configuration for ${iface}"
+				eerror "No DHCP client installed"
 				return 1
 			fi
 #		else
@@ -618,7 +617,11 @@ iface_start() {
 			[[ ${x} == "0" ]] && interface_add_address "${iface}" ${conf[@]}; x="$?"
 			eend "${x}" && config_worked=true && continue
 		else
-			eerror "No loaded modules provide \"${conf[0]}\" (${conf[0]}_start)"
+			if [[ ${conf[0]} == "dhcp" ]] ; then
+				eerror "No DHCP client installed"
+			else
+				eerror "No loaded modules provide \"${conf[0]}\" (${conf[0]}_start)"
+			fi
 		fi
 
 		if [[ -n ${fallback[config_counter]} ]]; then
