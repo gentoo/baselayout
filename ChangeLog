@@ -1,7 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
-  04 Jan 2005; Roy Marples <uberlord@gentoo.org>:
+  20 Jan 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Backport udev causing init scripts to start too early, #118419.
+
+  04 Jan 2006; Roy Marples <uberlord@gentoo.org>:
 
     Backport wpa_supplicant fix for bash-3.1.
 

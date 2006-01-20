@@ -86,7 +86,7 @@ get_critical_services() {
 			CRITICAL_SERVICES="${CRITICAL_SERVICES} ${x##*/}"
 		done
 	else
-		CRITICAL_SERVICES="checkroot hostname modules checkfs localmount clock"
+		CRITICAL_SERVICES="checkroot hostname modules checkfs localmount clock bootmisc"
 	fi
 
 	export CRITICAL_SERVICES
@@ -449,6 +449,9 @@ then
 	else
 		ewarn "Skipping /var/run/utmp initialization (ro root?)"
 	fi
+
+	# sysinit is now done, so allow init scripts to run normally
+	[[ -e /dev/.rcsysinit ]] && rm -f /dev/.rcsysinit
 
 	# All done logging
 	bootlog quit
