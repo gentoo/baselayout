@@ -1,13 +1,22 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  20 Jan 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Fix quoting in iwconfig, #119629.
+    Fix process pid selection in rc-daemon.sh, #119631.
+    Both of the above thanks to Dominik Buerkle.
+
+    init scripts no longer run during the sysinit runlevel, #118419.
+    Thanks to Greg KH and the Linux Hotplug mailing list for advice.
+
   19 Jan 2006; Roy Marples <uberlord@gentoo.org>:
 
     Give a better error message when no valid DHCP client is installed.
 
   18 Jan 2006; Roy Marples <uberlord@gentoo.org>:
 
-    Services should not get stuck in rc anymore, #119242.
+    Services should not get stuck in rc anymore, #119233, #119242.
 
     We only hotplug net.* scripts on interfaces that are marked as ethernet.
 
@@ -16,11 +25,6 @@
     Renamed restart in $svcdir to scheduled as it makes much more sense.
 
     Interfaces names with a dot in them now work.
-
-  15 Jan 2005; Roy Marples <uberlord@gentoo.org>:
-
-    Changed wording about network modules in /etc/modules.autoload.d/*,
-    #118419.
 
   14 Jan 2006; Roy Marples <uberlord@gentoo.org>:
 

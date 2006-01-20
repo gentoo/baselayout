@@ -121,6 +121,9 @@ echo "${svcinteractive}" > "${svcdir}/interactive"
 	done
 )
 
+# sysinit is now done, so allow init scripts to run normally
+[[ -e /dev/.rcsysinit ]] && rm -f /dev/.rcsysinit
+
 # If the user's /dev/null or /dev/console are missing, we 
 # should help them out and explain how to rectify the situation
 if [[ ${dev_null} -eq 0 || ${dev_console} -eq 0 ]] && \
@@ -139,6 +142,5 @@ echo "${svcinteractive:-no}" > "${svcdir}/interactive"
 
 # All done logging
 bootlog quit
-
 
 # vim:ts=4
