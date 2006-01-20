@@ -164,7 +164,7 @@ get_critical_services() {
 			CRITICAL_SERVICES="${CRITICAL_SERVICES} ${x##*/}"
 		done
 	else
-		CRITICAL_SERVICES="checkroot hostname modules checkfs localmount clock"
+		CRITICAL_SERVICES="checkroot hostname modules checkfs localmount clock bootmisc"
 	fi
 
 	export CRITICAL_SERVICES
@@ -548,6 +548,9 @@ then
 	# Check and save if the user wants interactive
 	user_want_interactive && svcinteractive="yes"
 	echo "${svcinteractive:-no}" > "${svcdir}/interactive"
+
+	# sysinit is now done, so allow init scripts to run normally
+	[[ -e /dev/.rcsysinit ]] && rm -f /dev/.rcsysinit
 
 	# All done logging
 	bootlog quit

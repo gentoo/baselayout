@@ -2,12 +2,6 @@
 #
 # Note that this file is for 2.6 kernels.
 #
-# WARNING: It is dangerous to put modules here which will cause hotplug to
-# start services, for example network driver modules.
-# For network modules it is advisable to use coldplug to load your modules.
-# You can do this by emerging coldplug and adding coldplug do the boot runlevel
-# using rc-update. See bug #118419 for why this is.
-
 # Add the names of modules that you'd like to load when the system
 # starts into this file, one per line.  Comments begin with # and
 # are ignored.  Read man modules.autoload for additional details.

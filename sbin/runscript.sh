@@ -20,7 +20,12 @@ fi
 
 myservice="${myservice##*/}"
 export SVCNAME="${myservice}"
-mylevel="$(< "${svcdir}/softlevel")"
+
+# Stop init scripts from working until sysinit completes
+if [[ -e /dev/.rcsysinit ]] ; then
+	eerror "ERROR:  cannot run ${myservice} until sysinit completes"
+	exit 1
+fi
 
 svc_trap() {
 	trap 'eerror "ERROR:  ${myservice} caught an interrupt"; exit 1' \
@@ -63,6 +68,11 @@ conf="$(add_suffix "/etc/conf.d/${myservice}")"
 [[ -e ${conf} ]] && source "${conf}"
 conf="$(add_suffix /etc/rc.conf)"
 [[ -e ${conf} ]] && source "${conf}"
+
+mylevel="${SOFTLEVEL}"
+[[ ${SOFTLEVEL} == "${BOOTLEVEL}" \
+	|| ${SOFTLEVEL} == "reboot" || ${SOFTLEVEL} == "shutdown" ]] \
+	&& mylevel="${DEFAULTLEVEL}"
 
 # Call svc_quit if we abort AND we have obtained a lock
 service_started "${myservice}"
@@ -154,7 +164,7 @@ svc_stop() {
 	trap "svc_quit" INT QUIT TSTP
 
 	mark_service_starting "${myservice}"
-	service_message "Stopping service ${myservice}"
+	service_message "Service ${myservice} stopping"
 
 	if in_runlevel "${myservice}" "${BOOTLEVEL}" && \
 	   [[ ${SOFTLEVEL} != "reboot" && ${SOFTLEVEL} != "shutdown" && \
@@ -257,7 +267,7 @@ svc_stop() {
 		else
 			mark_service_stopped "${myservice}"
 		fi
-		service_message "Stopped service ${myservice}"
+		service_message "Service ${myservice} stopped"
 	fi
 
 	# Reset the trap
@@ -294,7 +304,7 @@ svc_start() {
 	# Ensure that we clean up if we abort for any reason
 	trap "svc_quit" INT QUIT TSTP
 
-	service_message "Starting service ${myservice}"
+	service_message "Service ${myservice} starting"
 
 	# Save the IN_BACKGROUND var as we need to clear it for starting depends
 	local ib_save="${IN_BACKGROUND}"
