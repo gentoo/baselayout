@@ -103,7 +103,6 @@ ifconfig_get_address() {
 ifconfig_is_ethernet() {
 	ifconfig "$1" | grep -q "^$1[[:space:]]*Link encap:Ethernet[[:space:]]"
 }
-	
 
 # void ifconfig_get_mac_address(char *interface)
 #
