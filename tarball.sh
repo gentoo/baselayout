@@ -1,6 +1,6 @@
 #!/bin/bash
 export TMP="${TMP:-/tmp}"
-export V="1.12.0_pre14"
+export V="1.12.0_pre15"
 export NAME="baselayout"
 export DEST="${TMP}/${NAME}-${V}"
 
