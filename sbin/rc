@@ -111,6 +111,21 @@ get_critical_services() {
 	return 0
 }
 
+# void check_critical_services()
+#
+#     Ensure that critical services are in the boot runlevel
+#
+check_critical_services() {
+	local x
+
+	for x in ${CRITICAL_SERVICES} ; do
+		if [[ ! -L "/etc/runlevels/${BOOTLEVEL}/${x}" ]] ; then
+			ewarn "WARNING:  Adding critical service ${x} to the ${BOOTLEVEL} runlevel"
+			ln -snf "/etc/init.d/${x}" "/etc/runlevels/${BOOTLEVEL}/${x}"
+		fi
+	done
+}
+
 # Save $1
 argv1=$1
 
@@ -166,6 +181,9 @@ then
 	exit 0
 fi
 
+# Ensure all critical services have are in the boot runlevel
+get_critical_services
+check_critical_services
 source "${svclib}/sh/rc-services.sh"
 
 if [[ -f "${svcdir}/softlevel" ]] ; then
@@ -203,12 +221,8 @@ splash "rc_init" "${argv1}"
 
 if [[ ${SOFTLEVEL} == "reboot" || ${SOFTLEVEL} == "shutdown" ]] ; then
 	myscripts=
-
 elif [[ ${SOFTLEVEL} = "single" ]] ; then
-	get_critical_services
-
 	myscripts="${CRITICAL_SERVICES}"
-	
 elif [[ ! -d "/etc/runlevels/${SOFTLEVEL}" ]] ; then
 	eerror "ERROR:  runlevel ${SOFTLEVEL} does not exist; exiting ..."
 	exit 1
