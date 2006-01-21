@@ -107,6 +107,14 @@ rm -rf $(ls -d1 "${svcdir}/"* 2>/dev/null | \
 echo "sysinit" > "${svcdir}/softlevel"
 echo "${svcinteractive}" > "${svcdir}/interactive"
 
+# Ensure that critical services are in the boot runlevel
+for x in ${CRITICAL_SERVICES} ; do
+	if [[ ! -L "/etc/runlevels/${BOOTLEVEL}/${x}" ]] ; then
+		ewarn "WARNING:  Adding critical service ${x} to the ${BOOTLEVEL} runlevel"
+		ln -snf "/etc/init.d/${x}" "/etc/runlevels/${BOOTLEVEL}/${x}"
+	fi
+done
+
 # Update the dependency cache
 /sbin/depscan.sh -u
 
