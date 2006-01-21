@@ -172,6 +172,18 @@ get_critical_services() {
 	return 0
 }
 
+check_critical_services() {
+	local x
+
+	# Ensure that critical services are in the boot runlevel
+	for x in ${CRITICAL_SERVICES} ; do
+		if [[ ! -L "/etc/runlevels/${BOOTLEVEL}/${x}" ]] ; then
+			ewarn "WARNING:  Adding critical service ${x} to the ${BOOTLEVEL} runlevel"
+			ln -snf "/etc/init.d/${x}" "/etc/runlevels/${BOOTLEVEL}/${x}"
+		fi
+	done
+}
+
 # Save $1
 argv1="$1"
 
@@ -501,13 +513,8 @@ then
 
 	echo "sysinit" > "${svcdir}/softlevel"
 
-	# Ensure that critical services are in the boot runlevel
-	for x in ${CRITICAL_SERVICES} ; do
-		if [[ ! -L "/etc/runlevels/${BOOTLEVEL}/${x}" ]] ; then
-			ewarn "WARNING:  Adding critical service ${x} to the ${BOOTLEVEL} runlevel"
-			ln -snf "/etc/init.d/${x}" "/etc/runlevels/${BOOTLEVEL}/${x}"
-		fi
-	done
+	# Ensure all critical services have are in the boot runlevel
+	check_critical_services
 
 	# Update the dependency cache
 	/sbin/depscan.sh -u
@@ -606,6 +613,10 @@ then
 	exit 0
 fi
 
+# Ensure that critical services are in the boot runlevel
+get_critical_services
+check_critical_services
+
 source "${svclib}/sh/rc-services.sh"
 [[ -e "${svcdir}/interactive" ]] \
 	&& svcinteractive="$(<${svcdir}/interactive)"
@@ -645,13 +656,13 @@ fi
 
 splash "rc_init" "${argv1}"
 
+
 if [ "${SOFTLEVEL}" = "reboot" -o "${SOFTLEVEL}" = "shutdown" ]
 then
 	myscripts=
 
 elif [ "${SOFTLEVEL}" = "single" ]
 then
-	get_critical_services
 
 	myscripts="${CRITICAL_SERVICES}"
 	
