@@ -617,17 +617,24 @@ for arg in $* ; do
 			&& rm -Rf "${svcdir}/scheduled/${myservice}"
 			
 		# Restart dependencies as well
-		if service_inactive "${myservice}" ; then
-			for x in $(dolisting "${svcdir}/snapshot/$$/") ; do
-				if service_stopped "${x##*/}" ; then
+		for x in $(dolisting "${svcdir}/snapshot/$$/") ; do
+			if service_stopped "${x##*/}" ; then
+				if service_inactive "${myservice}" \
+					|| service_wasinactive "${myservice}" ; then
 					svc_schedule_start "${myservice}" "${x##*/}"
+					ewarn "WARNING:  ${x##*/} is scheduled to start when ${myservice} has started."
+				else
+					start_service "${x##*/}"
 				fi
-			done
-		elif service_started "${myservice}" ; then
-			svc_start_scheduled
-		fi
-
+			fi
+		done
 		rm -rf "${svcdir}/snapshot/$$"
+	
+		service_started "${myservice}" && svc_start_scheduled
+
+		# Wait for services to come up
+		[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && wait
+
 		svcrestart="no"
 		;;
 	pause)
