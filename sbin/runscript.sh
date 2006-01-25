@@ -387,8 +387,13 @@ svc_start() {
 			unset -f exit
 			exit "$@"
 		}
+
+		# Apply any ulimits if defined
+		[[ -n ${RC_ULIMIT} ]] && ulimit ${RC_ULIMIT}
+		
 		# Stop einfo/ebegin/eend from working as parallel messes us up
 		[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && RC_QUIET_STDOUT="yes"
+		
 		start
 		)
 		retval="$?"

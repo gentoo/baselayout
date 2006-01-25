@@ -1,6 +1,14 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  25 Jan 2006; Roy Marples <uberlord@gentoo.org>:
+
+    New variable RC_ULIMIT applies ulimit commands before starting a service.
+    This should be configured in /etc/conf.d/foo for service foo, but can also
+    be configured in /etc/conf.d/rc on a global basis.
+    RC_DAEMON now works in a similar way, instead of RC_DAEMON_foo.
+    Fixes, #120151.
+
   24 Jan 2006; Roy Marples <uberlord@gentoo.org>:
 
     Dependant services are restarted correctly when the restarted

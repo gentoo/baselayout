@@ -153,18 +153,28 @@ RC_KILL_CHILDREN="no"
 RC_WAIT_ON_START="0.1"
 
 
+##############################################################################
+# SERVICE CONFIGURATION VARIABLES
+# These variables are documented here, but should be configured in
+# /etc/conf.d/foo for service foo and NOT enabled here unless you
+# really want them to work on a global basis.
+
 # Some daemons are started and stopped via start-stop-daemon.
-# We can change launch them through other daemons here, for example valgrind.
+# We can launch them through other daemons here, for example valgrind.
 # This is only useful for serious debugging of the daemon
-# Note non alphanumeric chars in the script name need to be changed to _
-# This is shown in the below example.
 # WARNING: If the script's "stop" function does not supply a PID file then
 # all processes using the same daemon will be killed.
-#RC_DAEMON_syslog_ng="/usr/bin/valgrind --tool=memcheck --log-file=/tmp/valgrind.syslog-ng"
+#RC_DAEMON="/usr/bin/valgrind --tool=memcheck --log-file=/tmp/valgrind.syslog-ng"
 
 # strace needs to be prefixed with --background as it does not detach when
 # it's following
-#RC_DAEMON_syslog_ng="--background /usr/sbin/strace -f -o /tmp/strace.syslog-ng"
+#RC_DAEMON="--background /usr/sbin/strace -f -o /tmp/strace.syslog-ng"
+
+# Pass ulimit parameters 
+#RC_ULIMIT="-u 30"
+
+##############################################################################
+
 
 #
 # Internal configuration variables
@@ -172,7 +182,6 @@ RC_WAIT_ON_START="0.1"
 # NB:  These are for advanced users, and you should really
 #      know what you are doing before changing them!
 #
-
  
 # rc-scripts dep-cache directory
 #
@@ -182,19 +191,16 @@ RC_WAIT_ON_START="0.1"
 
 svcdir="/var/lib/init.d"
 
-
 # Should we mount $svcdir in a ram disk for some speed increase 
 # for slower machines, or for the more extreme setups ?
 
 svcmount="no"
-
 
 # FS type that should be used for $svcdir.  Note that you need 
 # $svcmount above set to "yes" for this to work ...  Currently 
 # tmpfs, ramfs, and ramdisk are supported (tmpfs is the default).
 
 svcfstype="tmpfs"
-
 
 # Size of $svcdir in KB.  Note that ramfs doesn't support this 
 # due to kernel limitations.
