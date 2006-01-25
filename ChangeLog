@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+  25 Jan 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Fix ADSL module stopping, #120135.
+
   20 Jan 2006; Roy Marples <uberlord@gentoo.org>:
 
     Backport udev causing init scripts to start too early, #118419.
