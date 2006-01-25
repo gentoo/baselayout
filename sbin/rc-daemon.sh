@@ -101,9 +101,8 @@ rc_setup_daemon_vars() {
 	# We may want to launch the daemon with a custom command
 	# This is mainly useful for debugging with apps like valgrind, strace
 	local bash_service="$( bash_variable "${myservice}" )"
-	eval x=\"\$\{RC_DAEMON_${bash_service}\}\"
-	if [[ -n ${x} ]]; then
-		local -a d=( ${x} )
+	if [[ -n ${RC_DAEMON} ]]; then
+		local -a d=( ${RC_DAEMON} )
 		if ${stopping}; then
 			args="--stop"
 		else
