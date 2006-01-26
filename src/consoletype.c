@@ -3,12 +3,12 @@
  * simple app to figure out whether the current terminal
  * is serial, console (vt), or remote (pty).
  *
- * Copyright 1999-2004 Gentoo Foundation
+ * Copyright 1999-2006 Gentoo Foundation
  * Distributed under the terms of the GNU General Public License v2
- * $Header$
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
