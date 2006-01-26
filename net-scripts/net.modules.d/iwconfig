@@ -225,15 +225,16 @@ iwconfig_setup_specific() {
 		fi
 	fi
 
-	iwconfig_user_config "${iface}" "${ESSIDVAR}"
-
-	# Finally set the ESSID
+	# Then set the ESSID
 	if ! iwconfig "${iface}" essid "${ESSID}" ; then
 		eerror "${iface} does not support setting ESSID to \"${dessid}\""
 		return 1
 	fi
 	iwconfig "${iface}" nick "${ESSID}" 2>/dev/null
 
+	# Finally apply the user Config
+	iwconfig_user_config "${iface}" "${ESSIDVAR}"
+	
 	iwconfig_report "${iface}"
 
 	return 0
@@ -358,14 +359,15 @@ iwconfig_associate() {
 		[[ ${key} != "off" ]] && w=$( iwconfig_get_wep_status "${iface}" )
 	fi
 
-	iwconfig_user_config "${iface}" "${ESSIDVAR}"
-
 	if ! iwconfig "${iface}" essid "${ESSID}" ; then
 		if [[ ${ESSID} != "any" ]]; then
 			ewarn "${iface} does not support setting ESSID to \"${dessid}\""
 		fi
 	fi
 	iwconfig "${iface}" nick "${ESSID}" 2>/dev/null
+
+	# Finally apply the user Config
+	iwconfig_user_config "${iface}" "${ESSIDVAR}"
 
 	vebegin "Connecting to \"${dessid}\" ${w}"
 
