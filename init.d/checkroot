@@ -66,9 +66,11 @@ start() {
 		fi
 	fi
 
-	# Should we mount root rw ?
+	# Should we mount root rw ?  the touch check is to see if the / is
+	# already mounted rw in which case there's nothing for us to do
 	if mount -vf -o remount / 2> /dev/null | \
-	   awk '{ if ($6 ~ /rw/) exit 0; else exit 1; }'
+	   awk '{ if ($6 ~ /rw/) exit 0; else exit 1; }' && \
+	   ! touch -c / >& /dev/null
 	then
 		ebegin $"Remounting root filesystem read/write"
 		mount -n -o remount,rw / &> /dev/null
