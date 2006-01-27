@@ -5,6 +5,9 @@
 
     Add fixes by Robert Millan to consoletype so that it's more portable #80021.
 
+    Fix grepping of --assume-kernel in modules-update as pointed out by 
+    Patrick McLean in #117212.
+
   25 Jan 2006; Roy Marples <uberlord@gentoo.org>:
 
     New variable RC_ULIMIT applies ulimit commands before starting a service.
