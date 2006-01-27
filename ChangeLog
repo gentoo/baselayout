@@ -8,6 +8,9 @@
     Fix grepping of --assume-kernel in modules-update as pointed out by 
     Patrick McLean in #117212.
 
+    Make sure / is actually read-only before trying to remount it read/write 
+    (to fix people using like unionfs for /) #118646 by Alun Jones.
+
   25 Jan 2006; Roy Marples <uberlord@gentoo.org>:
 
     New variable RC_ULIMIT applies ulimit commands before starting a service.
