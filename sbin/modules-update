@@ -155,7 +155,7 @@ if ${FORCE} || is_older_than ${CFGFILE2} ${MODDIR} || [[ ! -e ${CFGFILE2} ]]; th
 		# Make sure that generate-modprobe.conf can handle --assume-kernel
 		# if we were called with it.
 		if [[ -n ${ASSUME_KV} ]] && \
-			! grep -qe -- --assume-kernel /sbin/generate-modprobe.conf
+			! grep -qe --assume-kernel /sbin/generate-modprobe.conf
 		then
 			eerror "Error: modules-update called with --assume-kernel flag, but"
 			eerror "generate-modprobe.conf doesn't understand it.  You need to"
