@@ -267,7 +267,7 @@ if [[ ${CFGFILE2} -nt /lib/modules/${KV}/modules.dep ]] ; then
 			depmod -a ${KV}
 		fi
 	elif [[ ${VERBOSE} -gt 0 ]] ; then
-		echo "The dir '$(depdir)' doesn't exist, skipping call to depmod"
+		ewarn "The dir '$(depdir)' doesn't exist, skipping call to depmod"
 	fi
 fi
 
