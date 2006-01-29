@@ -260,12 +260,14 @@ fi
 # We also call depmod here to stop insmod from complaining that modules.conf
 # is more recent then modules.dep
 if [[ ${CFGFILE2} -nt /lib/modules/${KV}/modules.dep ]] ; then
-	if [[ -d $(depdir) && -f /proc/modules ]] ; then
+	if [[ -d $(depdir) ]] ; then
 		if [[ -f /lib/modules/${KV}/build/System.map ]] ; then
 			depmod -a -F /lib/modules/${KV}/build/System.map ${KV}
 		else
 			depmod -a ${KV}
 		fi
+	elif [[ ${VERBOSE} -gt 0 ]] ; then
+		echo "The dir '$(depdir)' doesn't exist, skipping call to depmod"
 	fi
 fi
 
