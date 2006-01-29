@@ -38,7 +38,7 @@ while [ -n "$1" ]; do
 		--assume-kernel=*)
 			ASSUME_KV=${1#*=} ;;
 		-v|--verbose) ((++VERBOSE)) ;;
-		-d|--debug)   DEBUG=1 ;;
+		-d|--debug)   ((++DEBUG)) ;;
 		-V|--version)
 			cat /etc/gentoo-release
 			exit 0 ;;
@@ -63,7 +63,7 @@ while [ -n "$1" ]; do
 	shift
 done
 
-[[ ${DEBUG} == "1" ]] && set -x
+[[ ${DEBUG} -gt 0 ]] && set -x
 
 # Set kernel version, either from --assume-kernel or uname -r
 KV=${ASSUME_KV:-$(uname -r)}
