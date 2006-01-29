@@ -1,6 +1,12 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  29 Jan 2006; Mike Frysinger <vapier@gentoo.org>:
+
+    Update modules-update to run depmod even if /proc/modules doesn't exist
+    and warn if the depdir doesn't exist but the user ran in verbose mode
+    #117212 by Alex Guensche.
+
   26 Jan 2006; Mike Frysinger <vapier@gentoo.org>:
 
     Add fixes by Robert Millan to consoletype so that it's more portable #80021.
