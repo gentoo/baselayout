@@ -595,7 +595,7 @@ qrh		752/tcp		passwd_server
 qrh		752/udp		passwd_server	# Kerberos passwd server
 rrh		753/tcp
 rrh		753/udp
-tell		754/tcp		send krb_prop	# Kerberos slave propagation
+tell		754/tcp		send krb_prop krb5_prop	# Kerberos slave propagation
 tell		754/udp		send
 nlogin		758/tcp
 nlogin		758/udp
