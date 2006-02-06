@@ -62,12 +62,23 @@ AC_TRY_COMPILE([
 AC_MSG_RESULT([$va_copy])
 if test x"$va_copy" != xva_copy ; then
   AC_DEFINE_UNQUOTED([va_copy], [$va_copy],
-    [va_copy macro proviced by gcc (undefined if its va_copy, else defined
-     to proper name)]    
+    [Define to name of va_copy macro proviced by gcc if its not `va_copy'.]
   )
 fi
 
-dnl check if we have 32bit or 64bit output
+dnl Check if we want SELinux support
+AC_ARG_ENABLE([selinux],
+  AS_HELP_STRING([--enable-selinux],
+    [enable SELinux support (default=disabled)]),
+  [enable_selinux="$enableval"],
+  [enable_selinux="no"]
+)
+
+if test x"$enable_selinux" != xno ; then
+  AC_DEFINE([WANT_SELINUX], [], [Define if SELinux support is required.])
+fi
+
+dnl Check if we want debugging
 AC_ARG_ENABLE([debug],
   AS_HELP_STRING([--enable-debug],
     [enable debugging - very verbose (default=disabled)]),

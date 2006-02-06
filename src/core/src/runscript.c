@@ -23,11 +23,14 @@
 static void (*selinux_run_init_old) (void);
 static void (*selinux_run_init_new) (int argc, char **argv);
 
+#if defined(WANT_SELINUX)
 void setup_selinux (int argc, char **argv);
+#endif
 char ** filter_environ (char *caller);
 
 extern char **environ;
 
+#if defined(WANT_SELINUX)
 void
 setup_selinux (int argc, char **argv)
 {
@@ -52,6 +55,7 @@ setup_selinux (int argc, char **argv)
 	}
     }
 }
+#endif
 
 char **
 filter_environ (char *caller)
@@ -184,8 +188,10 @@ main (int argc, char *argv[])
       myenv = environ;
     }
 
+#if defined(WANT_SELINUX)
   /* Ok, we are ready to go, so setup selinux if applicable */
   setup_selinux (argc, argv);
+#endif
 
   if (!IS_SBIN_RC ())
     {
