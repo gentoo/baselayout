@@ -37,14 +37,6 @@ dhcpcd_check_installed() {
 	return 1
 }
 
-# char* dhcpcd_get_vars(char *interface)
-#
-# Returns a string spaced with possible user set
-# configuration variables
-dhcpcd_get_vars() {
-	echo "dhcpcd_$1 dhcp_$1"
-}
-
 # bool dhcpcd_stop(char *iface)
 #
 # Stop DHCP on an interface by calling dhcpcd -z $iface
