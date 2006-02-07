@@ -15,7 +15,7 @@ pppd_depend() {
 #
 # Returns 1 if pppd is installed, otherwise 0
 pppd_check_installed() {
-	if [[ ! -x /usr/sbin/pppd ]]; then
+	if [[ ! -x /usr/sbin/pppd ]] ; then
 		${1:-false} && eerror "For PPP support, emerge net-dialup/ppp"
 		return 1
 	fi
@@ -56,7 +56,7 @@ pppd_regex_escape() {
 # Add/update PAP/CHAP authentication information 
 pppd_update_secrets_file() {
 	local filepath="$1" username="$2" remotename="$3" password="$4"
-	if [[ ! -s ${filepath} ]]; then
+	if [[ ! -s ${filepath} ]] ; then
 		echo '#'client$'\t'server$'\t'secret$'\t'IP addresses > "${filepath}" \
 			&& chmod 0600 "${filepath}" \
 			|| return 1
@@ -77,14 +77,14 @@ pppd_update_secrets_file() {
 		${filepath}
 	)
 
-	if [[ -z "${old_password}" ]]; then
+	if [[ -z "${old_password}" ]] ; then
 		regex_username="${username//\\/\\\\}"
 		regex_remotename="${remotename//\\/\\\\}"
 		regex_password="${password//\\/\\\\}"
 		regex_password=${password//"/\\\\"}
 		sed -r -i -e "\$a\"${regex_username}\" ${regex_remotename} \"${regex_password}\"" ${filepath}
 		vewarn "Authentication info has been added to ${filepath}"
-	elif [[ "\"${password//\"/\\\"}\"" != "${old_password}" ]]; then
+	elif [[ "\"${password//\"/\\\"}\"" != "${old_password}" ]] ; then
 		regex_password="${password//\\/\\\\}"
 		regex_password="${regex_password//\//\\/}"
 		regex_password="${regex_password//&/\\&}"
@@ -104,7 +104,7 @@ pppd_start() {
 	${IN_BACKGROUND} && return 0
 
 	local iface="$1" ifvar=$( bash_variable "$1" ) opts="" link
-	if [[ ${iface%%[0-9]*} != "ppp" ]]; then
+	if [[ ${iface%%[0-9]*} != "ppp" ]] ; then
 		eerror "PPP can only be invoked from net.ppp[0-9]"
 		return 1
 	fi
@@ -120,7 +120,7 @@ pppd_start() {
 	# PPPoA communicates over ATM
 	# In all cases, the link needs to be available before we start PPP
 	link="link_${ifvar}"
-	if [[ -z ${!link} ]]; then
+	if [[ -z ${!link} ]] ; then
 		eerror "${link} has not been set in /etc/conf.d/net"
 		return 1
 	fi
@@ -131,7 +131,7 @@ pppd_start() {
 	password="password_${ifvar}"
 
 	#Add/update info in PAP/CHAP secrets files
-	if [[ -n ${!username} && -n ${!password} ]]; then
+	if [[ -n ${!username} && -n ${!password} ]] ; then
 		for i in chap pap ; do
 			if ! pppd_update_secrets_file "/etc/ppp/${i}-secrets" \
 					"${!username}" "${iface}" "${!password}" ; then
@@ -146,16 +146,16 @@ pppd_start() {
 	opts="${!opts}"
 
 	# We don't work with these options set by the user
-	for i in unit nodetach linkname maxfail persist ; do
-		if [[ " ${opts} " == *" ${i} "* ]]; then
-			eerror "The option \"${i}\" is not allowed"
+	for i in unit nodetach linkname ; do
+		if [[ " ${opts} " == *" ${i} "* ]] ; then
+			eerror "The option \"${i}\" is not allowed in pppd_${ifvar}"
 			return 1
 		fi
 	done
 
 	# Check for mtu/mru
 	local mtu="mtu_${ifvar}"
-	if [[ -n ${!mtu} ]]; then
+	if [[ -n ${!mtu} ]] ; then
 		[[ " ${opts} " != *" mtu "* ]] && opts="${opts} mtu ${!mtu}"
 		[[ " ${opts} " != *" mru "* ]] && opts="${opts} mru ${!mtu}"
 	fi
@@ -172,28 +172,28 @@ pppd_start() {
 	[[ -f "/etc/ppp/options.${iface}" ]] \
 		&& opts="${opts} file /etc/ppp/options.${iface}"
 
-	# Set forced options
-	opts="unit ${unit} persist maxfail 0 ${opts}"
+	# Set unit
+	opts="unit ${unit} ${opts}"
 
+	# Default maxfail to 0 unless specified
+	[[ " ${opts} " != *" maxfail "* ]] && opts="${opts} maxfail 0"
+
+	# Append persist
+	[[ " ${opts} " != *" persist "* ]] && opts="${opts} persist"
+	
 	# Setup connect script
 	local chat="chat_${ifvar}[@]"
-	if [[ -n "${!chat}" ]]; then
-		opts="${opts} connect \"/usr/sbin/chat -e -E -v"
-
+	if [[ -n "${!chat}" ]] ; then
+		local chatopts="/usr/sbin/chat -e -E -v"
 		local -a phone_number="phone_number_${ifvar}[@]"
 		phone_number=( "${!phone_number}" )
-		if [[ ${#phone_number[@]} -ge 1 ]]; then
-			opts="${opts} -T '${phone_number[0]}'"
-			if [[ ${#phone_number[@]} -ge 2 ]]; then
-				opts="${opts} -U '${phone_number[1]}'"
+		if [[ ${#phone_number[@]} -ge 1 ]] ; then
+			chatopts="${chatopts} -T '${phone_number[0]}'"
+			if [[ ${#phone_number[@]} -ge 2 ]] ; then
+				chatopts="${chatopts} -U '${phone_number[1]}'"
 			fi
 		fi
-
-		for i in "${!chat}"; do
-			opts="${opts} '${i}'"
-		done
-
-		opts="${opts}\""
+		opts="${opts} connect $(requote "${chatopts} $(requote "${!chat}")")"
 	fi
 
 	# Add plugins
@@ -212,8 +212,8 @@ pppd_start() {
 
 	#Specialized stuff. Insert here actions particular to connection type (pppoe,pppoa,capi)
 	local insert_link_in_opts=1
-	if [[ " ${opts} " == *" plugin rp-pppoe.so "* ]]; then
-		if [[ ! -e /proc/net/pppoe ]]; then
+	if [[ " ${opts} " == *" plugin rp-pppoe.so "* ]] ; then
+		if [[ ! -e /proc/net/pppoe ]] ; then
 			# Load the PPPoE kernel module
 			if ! modprobe pppoe ; then
 				eerror "kernel does not support PPPoE"
@@ -228,8 +228,8 @@ pppd_start() {
 		insert_link_in_opts=0
 	fi
 
-	if [[ " ${opts} " == *" plugin pppoatm.so "* ]]; then
-		if [[ ! -d /proc/net/atm ]]; then
+	if [[ " ${opts} " == *" plugin pppoatm.so "* ]] ; then
+		if [[ ! -d /proc/net/atm ]] ; then
 			# Load the PPPoA kernel module
 			if ! modprobe pppoatm ; then
 				eerror "kernel does not support PPPoATM"
@@ -241,15 +241,16 @@ pppd_start() {
 
 	ebegin "Running pppd"
 	[[ " ${opts} " != *" updetach "* ]] && mark_service_inactive "net.${iface}"
+	echo "${opts}"
 	eval start-stop-daemon --start --exec /usr/sbin/pppd \
 		--pidfile "/var/run/ppp-${iface}.pid" -- "${opts}" >/dev/null
-	if [[ $? != "0" ]]; then
+	if [[ $? != "0" ]] ; then
 		eend $? "Failed to start PPP"
 		mark_service_starting "net.${iface}"
 		return $?
 	fi
 
-	if [[ " ${opts} " == *" updetach "* ]]; then
+	if [[ " ${opts} " == *" updetach "* ]] ; then
 		local addr=$( interface_get_address "${iface}" )
 		einfo "${iface} received address ${addr}"
 	else

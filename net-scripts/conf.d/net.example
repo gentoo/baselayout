@@ -119,6 +119,13 @@
 #	"::/0"					# IPv6 unicast
 #)
 
+# If you're using iproute2 then you can also do policy routing.
+# This is not available with ifconfig.
+#rules_eth0=(
+#	"from 24.80.102.112/32 to 192.168.1.0/24 table localnet priority 100"
+#	"from 216.113.223.51/32 to 192.168.1.0/24 table localnet priority 100"
+#)
+
 # If a specified module fails (like dhcp - see below), you can specify a
 # fallback like so
 #fallback_eth0=( "192.168.0.2 netmask 255.255.255.0" )
@@ -396,6 +403,8 @@
 #pppd_ppp0=(
 #	"updetach" 	# WARNING: If you don't specify this then we will
 #			# not wait for the actual PPP link to go up
+#	"maxfail 0"	# WARNING: It's not recommended you use change this
+#			# if you don't specify maxfail then we assume 0
 #	"debug" 	# Enables syslog debugging
 #	"noauth"	# Do not require the peer to authenticate itself
 #	"defaultroute"	# Make this PPP interface the default route
