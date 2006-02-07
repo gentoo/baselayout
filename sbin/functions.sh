@@ -663,7 +663,7 @@ is_vserver_sys() {
 #   EXAMPLE:  if is_xenU_sys ; then ...
 #
 is_xenU_sys() {
-	[[ -d /proc/xen && ! -f /proc/xen/privcmd ]]
+	[[ -d /sys/bus/xen/drivers/vbd || -d /sys/bus/xen/drivers/vif ]]
 }
 
 # bool get_mount_fstab(path)

@@ -9,7 +9,7 @@ depend() {
 }
 
 start() {
-	if is_uml_sys ; then
+	if is_uml_sys || is_xenU_sys ; then
 		ebegin $"Setting user font"
 		eend 0
 		return 0
