@@ -58,7 +58,7 @@ wpa_supplicant_get_essid() {
 	local i essid
 
 	for (( i=0; i<5; i++ )); do
-		essid="$( wpa_cli -i$1 status | sed -n -e 's/^ssid=//p' )"
+		essid="$( wpa_cli -i"$1" status | sed -n -e 's/^ssid=//p' )"
 		if [[ -n ${essid} ]]; then
 			echo "${essid}"
 			return 0
@@ -120,7 +120,7 @@ wpa_supplicant_kill() {
 		${report} && eend "$?"
 	else
 		# Support wpa_supplicant-0.3.x
-		local pid=$( pgrep -f '^/sbin/wpa_supplicant .* -i'"${iface}"'[ ]*$' )
+		local pid="$( pgrep -f "^/sbin/wpa_supplicant .* -i${iface}[ ]*$" )"
 		if [[ -n ${pid} ]]; then
 			${report} && ebegin "Stopping wpa_supplicant on ${iface}"
 			kill -s TERM "${pid}"
@@ -138,7 +138,7 @@ wpa_supplicant_kill() {
 # Returns 0 if wpa_supplicant associates and authenticates to an AP
 # otherwise, 1
 wpa_supplicant_associate() {
-	local iface="$1" ifvar=$( bash_variable "$1" ) timeout i
+	local iface="$1" ifvar="$( bash_variable "$1" )" timeout i
 	timeout="associate_timeout_${ifvar}"
 	[[ -z ${!timeout} ]] && timeout="wpa_timeout_${ifvar}"
 	timeout="${!timeout:--1}"
@@ -151,7 +151,7 @@ wpa_supplicant_associate() {
 	fi
 
 	while true ; do
-		if ${action} ; then
+		if [[ -n ${actfile} ]] ; then
 			service_started "net.${iface}" && return 0
 		else
 			if ! wpa_cli -i"${iface}" status &>/dev/null ; then
@@ -166,7 +166,7 @@ wpa_supplicant_associate() {
 	done
 
 	# Spit out an appropriate error
-	if ${action} ; then
+	if [[ -n ${actfile} ]] ; then
 		eend 1 "Failed to configure ${iface} in the background"
 	else
 		eend 1 "Timed out"
@@ -174,7 +174,7 @@ wpa_supplicant_associate() {
 
 	# exit without error with wpa_supplicant-0.4.x as we may get kickstarted
 	# when an AP comes in range
-	${action} && exit 0
+	[[ -n ${actfile} ]] && exit 0
 
 	# Kill wpa_supplicant for 0.3.x
 	wpa_supplicant_kill "${iface}"
@@ -186,16 +186,15 @@ wpa_supplicant_associate() {
 # Start wpa_supplicant on an interface and wait for association
 # Returns 0 (true) when successful, non-zero otherwise
 wpa_supplicant_pre_start() {
-	local iface="$1" opts timeout action=false cfgfile
-	local actfile="/sbin/wpa_cli.action"
+	local iface="$1" opts="" timeout="" actfile="" cfgfile=""
 
 	# We don't configure wireless if we're being called from
 	# the background unless we're not currently running
 	if ${IN_BACKGROUND} ; then
 		if service_started_daemon "net.${iface}" /sbin/wpa_supplicant ; then
 			if wpa_supplicant_exists "${iface}" ; then
-				ESSID=$( wpa_supplicant_get_essid "${iface}" )
-				ESSIDVAR=$( bash_variable "${ESSID}" )
+				ESSID="$( wpa_supplicant_get_essid "${iface}" )"
+				ESSIDVAR="$( bash_variable "${ESSID}" )"
 				save_options "ESSID" "${ESSID}"
 			fi
 			return 0
@@ -204,7 +203,7 @@ wpa_supplicant_pre_start() {
 
 	save_options "ESSID" ""
 
-	local ifvar=$( bash_variable "${iface}" )
+	local ifvar="$( bash_variable "${iface}" )"
 	opts="wpa_supplicant_${ifvar}"
 	opts=" ${!opts} "
 	[[ ${opts} != *" -D"* ]] \
@@ -246,8 +245,13 @@ wpa_supplicant_pre_start() {
 		[[ ${cfgfile:0:1} == " " ]] && cfgfile="${cfgfile# *}"
 		cfgfile="${cfgfile%% *}"
 	else
-		cfgfile="/etc/wpa_supplicant.conf"
-		opts="${opts} -c/etc/wpa_supplicant.conf"
+		# Support new and old style locations
+		cfgfile="/etc/wpa_supplicant/wpa_supplicant-${iface}.conf"
+		[[ ! -e ${cfgfile} ]] \
+			&& cfgfile="/etc/wpa_supplicant/wpa_supplicant.conf"
+		[[ ! -e ${cfgfile} ]] \
+			&& cfgfile="/etc/wpa_supplicant.conf"
+		opts="${opts} -c${cfgfile}"
 	fi
 
 	if [[ ! -f ${cfgfile} ]]; then
@@ -255,7 +259,7 @@ wpa_supplicant_pre_start() {
 		return 1
 	fi
 
-	local ctrl_dir=$( sed -n -e 's/[ \t]*#.*//g;s/[ \t]*$//g;s/^ctrl_interface=//p' "${cfgfile}" )
+	local ctrl_dir="$( sed -n -e 's/[ \t]*#.*//g;s/[ \t]*$//g;s/^ctrl_interface=//p' "${cfgfile}" )"
 	if [[ ${ctrl_dir} != "/var/run/wpa_supplicant" ]]; then
 		eerror "${cfgfile} must set"
 		eerror "  ctrl_interface=/var/run/wpa_supplicant"
@@ -266,7 +270,7 @@ wpa_supplicant_pre_start() {
 	# Some drivers require the interface to be up
 	interface_up "${iface}"
 
-	version=$( wpa_cli -v | sed -n -e 's/wpa_cli v//p' )
+	version="$( wpa_cli -v | sed -n -e 's/wpa_cli v//p' )"
 	version=( ${version//./ } )
 	(( version = version[0] * 1000 + version[1] * 100 + version[2] ))
 
@@ -276,9 +280,12 @@ wpa_supplicant_pre_start() {
 	# wpa_cli is now responsible for informing us of success/failure.
 	# The downside of this is that we don't see the interface being configured
 	# for DHCP/static.
-	if [[ ${version} -gt 399 && -x ${actfile} ]]; then
+	if [[ ${version} -gt 399 ]]; then
 		opts="${opts} -W -P/var/run/wpa_supplicant-${iface}.pid"
-		action=true
+		actfile="/etc/wpa_supplicant/wpa_cli.sh"
+		# Support old file location
+		[[ ! -x ${actfile} ]] && actfile="/sbin/wpa_cli.action"
+		[[ ! -x ${actfile} ]] && unset actfile
 	fi
 
 	eval start-stop-daemon --start --exec /sbin/wpa_supplicant \
@@ -288,7 +295,7 @@ wpa_supplicant_pre_start() {
 
 	# Starting wpa_supplication-0.4.0, we can get wpa_cli to
 	# start/stop our scripts from wpa_supplicant messages
-	if ${action} ; then
+	if [[ -n ${actfile} ]] ; then
 		mark_service_inactive "net.${iface}"
 		ebegin "Starting wpa_cli on ${iface}"
 		start-stop-daemon --start --exec /bin/wpa_cli \
@@ -307,8 +314,8 @@ wpa_supplicant_pre_start() {
 	# Only report wireless info for wireless interfaces
 	if wpa_supplicant_exists "${iface}" ; then
 		# Set ESSID for essidnet and report
-		ESSID=$( wpa_supplicant_get_essid "${iface}" )
-		ESSIDVAR=$( bash_variable "${ESSID}" )
+		ESSID="$( wpa_supplicant_get_essid "${iface}" )"
+		ESSIDVAR="$( bash_variable "${ESSID}" )"
 		save_options "ESSID" "${ESSID}"
 
 		local -a status
@@ -329,8 +336,8 @@ wpa_supplicant_pre_start() {
 		einfo "${iface} connected"
 	fi
 
-	if ${action} ; then
-		local addr=$( interface_get_address "${iface}" )
+	if [[ -n ${actfile} ]] ; then
+		local addr="$( interface_get_address "${iface}" )"
 		einfo "${iface} configured with address ${addr}"
 		exit 0 
 	fi

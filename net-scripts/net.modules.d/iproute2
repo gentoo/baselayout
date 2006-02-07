@@ -28,11 +28,11 @@ iproute2_depend() {
 # Returns 1 if iproute2 is installed, otherwise 0
 iproute2_check_installed() {
 	local report="${1:-false}" installed="0"
-	if [[ ! -x /sbin/ip ]]; then
+	if [[ ! -x /sbin/ip ]] ; then
 		installed="1"
 		${report} && eerror "For iproute2 support, emerge sys-apps/iproute2"
 	fi
-	if [[ ! -e /proc/net/netlink ]]; then
+	if [[ ! -e /proc/net/netlink ]] ; then
 		installed="1"
 		${report} && eerror "iproute2 requires NetLink enabled in the kernel"
 	fi
@@ -43,7 +43,7 @@ iproute2_check_installed() {
 #
 # Returns 1 if the interface exists, otherwise 0
 iproute2_exists() {
-	local e=$( ip addr show label "$1" ) report="${2:-false}"
+	local e="$( ip addr show label "$1" )" report="${2:-false}"
 	[[ -n ${e} ]] && return 0
 
 	if ${report} ; then
@@ -93,8 +93,7 @@ iproute2_set_flag() {
 # Fetch the address retrieved by DHCP.  If successful, echoes the
 # address on stdout, otherwise echoes nothing.
 iproute2_get_address() {
-	ip -family inet addr show "$1" \
-	| sed -n -e 's/.*inet \([^ ]*\).*/\1/p'
+	ip -family inet addr show "$1" | sed -n -e 's/.*inet \([^ ]*\).*/\1/p'
 }
 
 # bool iproute2_is_ethernet(char *interface)
@@ -108,8 +107,8 @@ iproute2_is_ethernet() {
 #
 # Fetch the mac address assingned to the network card
 iproute2_get_mac_address() {
-	local mac=$( ip link show "$1" | sed -n -e \
-		'/link\// s/^.*\<\(..:..:..:..:..:..\)\>.*/\U\1/p' )
+	local mac="$( ip link show "$1" | sed -n -e \
+		'/link\// s/^.*\<\(..:..:..:..:..:..\)\>.*/\U\1/p' )"
 	[[ ${mac} != '00:00:00:00:00:00' \
 	&& ${mac} != '44:44:44:44:44:44' \
 	&& ${mac} != 'FF:FF:FF:FF:FF:FF' ]] \
@@ -137,7 +136,7 @@ iproute2_set_name() {
 # Outputs a space-separated list on stdout, in reverse order, for
 # example "eth0:2 eth0:1"
 iproute2_get_aliases_rev() {
-	local iface=$( interface_device "$1" )
+	local iface="$( interface_device "$1" )"
 	ip addr show dev "${iface}" | grep -o "${iface}:[0-9].*" | tac
 }
 
@@ -158,7 +157,7 @@ iproute2_del_addresses() {
 #
 # Returns config and config_fallback for the given interface
 iproute2_get_old_config() {
-	local ifvar=$( bash_variable "$1" ) inet6 t
+	local ifvar="$( bash_variable "$1" )" inet6="" t=""
 
 	# iproute2-style config vars
 	t="ipaddr_${ifvar}[@]"
@@ -190,10 +189,10 @@ iproute2_get_old_config() {
 #
 # Returns 0 (true) when successful, non-zero (false) on failure
 iproute2_iface_stop() {
-	local label="$1" iface=$( interface_device "$1" )
+	local label="$1" iface="$( interface_device "$1" )"
 
 	# Shut down the link if this isn't an alias or vlan
-	if [[ ${label} == "${iface}" ]]; then
+	if [[ ${label} == "${iface}" ]] ; then
 		iproute2_down "${iface}"
 		return $?
 	fi
@@ -205,7 +204,7 @@ iproute2_iface_stop() {
 # Adds an the specified address to the interface
 # returns 0 on success and non-zero on failure
 iproute2_add_address() {
-	local iface="$1" x
+	local iface="$1" x=""
 
 	iproute2_exists "${iface}" true || return 1
 
@@ -218,7 +217,7 @@ iproute2_add_address() {
 	for (( x=0; x<n; x++ )); do
 		case "${config[x]}" in
 			netmask)
-				config[0]="${config[0]}/$( netmask2cidr ${config[x+1]} )"
+				config[0]="${config[0]}/$( netmask2cidr "${config[x+1]}" )"
 				unset config[x] config[x+1]
 				;;
 			mtu)
@@ -231,10 +230,10 @@ iproute2_add_address() {
 
 	# Always scope lo addresses as host unless specified otherwise
 	[[ ${iface} == "lo" && " ${config[@]} " != *" scope "* ]] \
-	&& config=( "${config[@]}" "scope host" )
+		&& config=( "${config[@]}" "scope host" )
 
 	# IPv4 specifics
-	if [[ ${config[@]} == *.*.*.* ]]; then
+	if [[ ${config[@]} == *.*.*.* ]] ; then
 		# Work out a broadcast if none supplied
 		[[ ${config[@]} != *" brd "* && ${config[@]} != *" broadcast "* ]] \
 			&& config=( "${config[@]}" "brd +" )
@@ -245,7 +244,7 @@ iproute2_add_address() {
 
 	# Some kernels like to apply lo with an address when they are brought up
 	if [[ ${iface} == "lo" \
-		&& ${config[@]} == "127.0.0.1/8 brd 127.255.255.255 scope host" ]]; then
+		&& ${config[@]} == "127.0.0.1/8 brd 127.255.255.255 scope host" ]] ; then
 		ip addr del dev "${iface}" 127.0.0.1/8 2>/dev/null
 	fi
 
@@ -253,12 +252,12 @@ iproute2_add_address() {
 	local r="$?"
 	[[ ${r} != "0" ]] && return "${r}"
 
-	local metric ifvar=$( bash_variable "${iface}" )
+	local ifvar="$( bash_variable "${iface}" )"
 	# Remove the newly added route and replace with our metric
-	metric="metric_${ifvar}"
+	local metric="metric_${ifvar}"
 	[[ ${!metric} == "0" || ${RC_AUTO_INTERFACE} != "yes" ]] && return "${r}"
 
-	local network=$( ip_network "${config[0]}" )
+	local network="$( ip_network "${config[0]}" )"
 	[[ -z ${network} ]] && return "${r}"
 
 	local cidr="${config[0]##*/}"
@@ -280,10 +279,10 @@ iproute2_pre_start() {
 
 	interface_exists "${iface}" || return 0
 
-	local ifvar=$( bash_variable "$1" ) mtu
+	local ifvar="$( bash_variable "$1" )"
 
 	# MTU support
-	mtu="mtu_${ifvar}"
+	local mtu="mtu_${ifvar}"
 	[[ -n ${!mtu} ]] && ip link set mtu "${!mtu}" dev "${iface}"
 
 	return 0
@@ -294,7 +293,7 @@ iproute2_pre_start() {
 # Runs any post_start stuff on our interface and adds routes
 # Always returns 0
 iproute2_post_start() {
-	local iface="$1" ifvar=$( bash_variable "$1" ) routes metric mtu x netmask
+	local iface="$1" ifvar="$( bash_variable "$1" )" x=""
 
 	iproute2_exists "${iface}" || return 0
 	
@@ -302,50 +301,73 @@ iproute2_post_start() {
 	iproute2_up "${iface}"
 
 	# MTU support
-	mtu="mtu_${ifvar}"
+	local mtu="mtu_${ifvar}"
 	[[ -n ${!mtu} ]] && ip link set mtu "${!mtu}" dev "${iface}"
 
-	x="routes_${ifvar}[@]"
-	routes=( "${!x}" )
-	metric="metric_${ifvar}"
+	local x="routes_${ifvar}[@]"
+	local routes=( "${!x}" )
+	local metric="metric_${ifvar}"
 
 	# Test for old style ipaddr variable
-	if [[ -z ${routes} ]]; then
+	if [[ -z ${routes} ]] ; then
 		t="iproute_${ifvar}[@]"
 		routes=( "${!t}" )
 	fi
 
-	[[ -z ${routes} ]] && return 0
-
 	# Set routes with ip route -- this might also include default route
-	einfo "Adding routes"
-	eindent
-	for x in "${routes[@]}"; do
-		ebegin "${x}"
+	if [[ -n ${routes} ]] ; then
+		einfo "Adding routes"
+		eindent
+		for x in "${routes[@]}"; do
+			ebegin "${x}"
 
-		# Support net-tools routing too
-		x="${x//gw/via}"
-		x="${x//-A inet6/}"
-		x="${x//-net/}"
-		[[ " ${x} " == *" -host "* ]] && x="${x//-host/} scope host"
+			# Support net-tools routing too
+			x="${x//gw/via}"
+			x="${x//-A inet6/}"
+			x="${x//-net/}"
+			[[ " ${x} " == *" -host "* ]] && x="${x//-host/} scope host"
 
-		# Attempt to support net-tools route netmask option
-		netmask="${x##* netmask }"
-		if [[ -n ${netmask} && ${x} != "${netmask}" ]]; then
-			netmask="${netmask%% *}"
-			x="${x// netmask ${netmask} / }"
-			local -a a=( ${x} )
-			a[0]="${a[0]}/$( netmask2cidr ${netmask} )"
-			x="${a[@]}"
+			# Attempt to support net-tools route netmask option
+			netmask="${x##* netmask }"
+			if [[ -n ${netmask} && ${x} != "${netmask}" ]] ; then
+				netmask="${netmask%% *}"
+				x="${x// netmask ${netmask} / }"
+				local -a a=( ${x} )
+				a[0]="${a[0]}/$( netmask2cidr "${netmask}")"
+				x="${a[@]}"
+			fi
+
+			# Add a metric if we don't have one
+			[[ " ${x} " != *" metric "* ]] && x="${x} metric ${!metric}"
+
+			ip route append ${x} dev "${iface}"
+			eend $?
+		done
+		eoutdent
+	fi
+
+	# Now apply any rules we may want
+	x="rules_${ifvar}[@]"
+	local -a rules=( "${!x}" )
+	if [[ -n ${rules} ]] ; then
+		einfo "Adding IP policy routing rules"
+		eindent
+		# Ensure that the kernel supports policy routing
+		if ! ip rule list | grep -q "^" ; then
+			eerror "You need to enable IP Policy Routing (CONFIG_IP_MULTIPLE_TABLES)"
+			eerror "in your kernel to use ip rules"
+		else
+			for x in "${rules[@]}" ; do
+				ebegin "${x}"
+				ip rule add ${x} dev "${iface}"
+				eend $?
+			done
 		fi
+		eoutdent
+	fi
 
-		# Add a metric if we don't have one
-		[[ " ${x} " != *" metric "* ]] && x="${x} metric ${!metric}"
-
-		ip route append ${x} dev "${iface}"
-		eend $?
-	done
-	eoutdent
+	# Flush the route cache
+	ip route flush cache dev "${iface}"
 
 	return 0
 }
@@ -354,7 +376,7 @@ iproute2_post_start() {
 #
 # Change all routes for an interface to a given metric
 iproute2_route_metric() {
-	local route
+	local route=""
 	ip route | grep " dev $1" | {
 		while read route ; do
 			ip route del ${route}
@@ -372,6 +394,24 @@ iproute2_default_route() {
 
 	ip route change default via "$2" metric "${metric}" dev "$1" 2>/dev/null \
 	|| ip route append default via "$2" metric "${metric}" dev "$1" 2>/dev/null
+}
+
+# void iproute2_post_stop(char* interface)
+iproute2_post_stop() {
+	local iface="$1" rule=""
+
+	iproute2_exists "${iface}" || return
+	
+	# Remove any rules for this interface
+	ip rule list | grep " iif ${iface}[ ]*" | {
+		while read rule ; do
+			rule="${rule#*:}"	
+			ip rule del ${rule}
+		done
+	}
+
+	# Flush the route cache
+	ip route flush cache dev "${iface}"
 }
 
 # vim:ts=4

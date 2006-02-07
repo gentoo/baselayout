@@ -1,6 +1,27 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  07 Feb 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Always ensure the end_service is called, #119233 again.
+
+    You can now specify a maxfail value for pppd (default 0), #115346.
+
+    net.lo now depends on isapnp to work with older NICs, #121539.
+
+    chat commands in pppd are now re-quoted, #121665.
+
+    ip routing policies are now supports via the rule_eth0=( ... )
+    variable (only supported by iproute2), #107628.
+
+    wpa_supplicant now looks for config files in order
+        /etc/wpa_supplicant/wpa_supplicant-$iface.conf
+        /etc/wpa_supplicant/wpa_supplicant.conf
+        /etc/wpa_supplicant.conf
+    and for these wpa_cli scripts
+        /etc/wpa_supplicant/wpa_cli.sh
+        /sbin/wpa_cli.action
+
   25 Jan 2006; Roy Marples <uberlord@gentoo.org>:
 
     New variable RC_ULIMIT applies ulimit commands before starting a service.

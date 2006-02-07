@@ -12,7 +12,7 @@
 # runlevel as the net.* script that needs it.
 depend() {
 	need localmount
-	use pcmcia usb isdn wlan
+	use isapnp isdn pcmcia usb wlan
 
 	# Load any custom depend functions for the given interface
 	# For example, br0 may need eth0 and eth1
@@ -60,7 +60,7 @@ variables() {
 module_load_minimum() {
 	local f="$1" MODULE="${1##*/}"
 
-	if [[ ! -f ${f} ]]; then
+	if [[ ! -f ${f} ]] ; then
 		eerror "${f} does not exist"
 		return 1
 	fi
@@ -103,7 +103,7 @@ modules_load_auto() {
 	j="${#MODULES[@]}"
 	loaded_interface=false
 	for (( i=0; i<j; i++ )); do
-		if [[ ${MODULES[i]##*/} == "interface" ]]; then
+		if [[ ${MODULES[i]##*/} == "interface" ]] ; then
 			eerror "interface is a reserved name - cannot load a module called interface"
 			return 1
 		fi
@@ -111,7 +111,7 @@ modules_load_auto() {
 		(
 		u=0;
 		module_load_minimum "${MODULES[i]}" || u=1;
-		if [[ ${u} == 0 ]]; then
+		if [[ ${u} == 0 ]] ; then
 			inst="${MODULES[i]##*/}_check_installed";
 			if is_function "${inst}" ; then
 				${inst} false || u=1;
@@ -120,7 +120,7 @@ modules_load_auto() {
 		exit "${u}";
 		)
 
-		if [[ $? == 0 ]]; then
+		if [[ $? == 0 ]] ; then
 			source "${MODULES[i]}"
 			MODULES[i]="${MODULES[i]##*/}"
 		else
@@ -188,11 +188,11 @@ modules_check_user() {
 		[[ ${umods[i]} == "dhcp" ]] && continue
 
 		# We remove any modules we explicitly don't want
-		if [[ ${umods[i]} == "!"* ]]; then
+		if [[ ${umods[i]} == "!"* ]] ; then
 			for (( j=0; j<nmods; j++ )); do
 				[[ -z ${MODULES[j]} ]] && continue
 				if [[ ${umods[i]:1} == "${MODULES[j]}" \
-					|| ${umods[i]:1} == "${PROVIDES[j]}" ]]; then
+					|| ${umods[i]:1} == "${PROVIDES[j]}" ]] ; then
 					# We may need to setup a class wrapper for it even though
 					# we don't use it directly
 					# However, we put it into an array and wrap later as
@@ -217,7 +217,7 @@ modules_check_user() {
 
 			# The function may not exist because the modules software is
 			# not installed. Load the module and report its error
-			if [[ -e "${MODULES_DIR}/${umods[i]}" ]]; then
+			if [[ -e "${MODULES_DIR}/${umods[i]}" ]] ; then
 				source "${MODULES_DIR}/${umods[i]}"
 				is_function "${umods[i]}_check_installed" \
 					&& ${umods[i]}_check_installed true
@@ -228,18 +228,18 @@ modules_check_user() {
 		fi
 
 		if is_function "${umods[i]}_provide" ; then
-			mod=$( ${umods[i]}_provide )
+			mod="$(${umods[i]}_provide )"
 		else
 			mod="${umods[i]}"
 		fi
 		for (( j=0; j<nmods; j++ )); do
 			[[ -z ${MODULES[j]} ]] && continue
-			if [[ ${PROVIDES[j]} == "${mod}" && ${umods[i]} != "${MODULES[j]}" ]]; then
+			if [[ ${PROVIDES[j]} == "${mod}" && ${umods[i]} != "${MODULES[j]}" ]] ; then
 				# We don't have a match - now ensure that we still provide an
 				# alternative. This is to handle our preferred modules.
 				for (( l=0; l<nmods; l++ )); do
 					[[ ${l} == "${j}" || -z ${MODULES[l]} ]] && continue
-					if [[ ${PROVIDES[l]} == "${mod}" ]]; then
+					if [[ ${PROVIDES[l]} == "${mod}" ]] ; then
 						unset MODULES[j]
 						unset PROVIDES[j]
 						break
@@ -280,7 +280,7 @@ modules_sort() {
 		if [[ ${MODULES[i]} != "${PROVIDES[i]}" ]] ; then
 			local provided=false
 			for ((j=0; j<${#provide[@]}; j++)); do
-				if [[ ${provide[j]} == "${PROVIDES[i]}" ]]; then
+				if [[ ${provide[j]} == "${PROVIDES[i]}" ]] ; then
 					provide_list[j]="${provide_list[j]} ${MODULES[i]}"
 					provided=true
 				fi
@@ -301,7 +301,7 @@ modules_sort() {
 		if is_function "${MODULES[i]}_before" ; then
 			for m in $(${MODULES[i]}_before); do
 				for ((j=0; j<nmods; j++)) ; do
-					if [[ ${PROVIDES[j]} == "${m}" ]]; then
+					if [[ ${PROVIDES[j]} == "${m}" ]] ; then
 						after[j]=" ${after[j]} ${MODULES[i]} "
 						break
 					fi
@@ -312,7 +312,7 @@ modules_sort() {
 
 	# Replace the after list modules with real modules
 	for ((i=0; i<nmods; i++)); do
-		if [[ -n ${after[i]} ]]; then
+		if [[ -n ${after[i]} ]] ; then
 			for ((j=0; j<${#provide[@]}; j++)); do
 				after[i]="${after[i]// ${provide[j]} / ${provide_list[j]} }"
 			done
@@ -357,7 +357,7 @@ modules_check_depends() {
 				missingdeps=true
 				for (( j=0; j<nmods; j++ )); do
 					if [[ ${needmod} == "${MODULES[j]}" \
-						|| ${needmod} == "${PROVIDES[j]}" ]]; then
+						|| ${needmod} == "${PROVIDES[j]}" ]] ; then
 						missingdeps=false
 						break
 					fi
@@ -404,10 +404,10 @@ modules_load()  {
 	local RC_INDENTATION="${RC_INDENTATION}"
 	local -a PROVIDES WRAP_MODULES
 
-	if [[ ${iface} != "lo" ]]; then
+	if [[ ${iface} != "lo" ]] ; then
 		x="modules_force_${iface}[@]"
 		[[ -n ${!x} ]] && modules_force=( "${!x}" )
-		if [[ -n ${modules_force} ]]; then
+		if [[ -n ${modules_force} ]] ; then
 			ewarn "WARNING: You are forcing modules!"
 			ewarn "Do not complain or file bugs if things start breaking"
 			report=true
@@ -417,7 +417,7 @@ modules_load()  {
 	veinfo "Loading networking modules for ${iface}"
 	eindent
 
-	if [[ -z ${modules_force} ]]; then
+	if [[ -z ${modules_force} ]] ; then
 		modules_load_auto || return 1
 	else
 		j="${#modules_force[@]}"
@@ -439,19 +439,19 @@ modules_load()  {
 
 		# If no provide is given, assume module name
 		if is_function "${MODULES[i]}_provide" ; then
-			PROVIDES[i]=$( ${MODULES[i]}_provide )
+			PROVIDES[i]="$(${MODULES[i]}_provide)"
 		else
 			PROVIDES[i]="${MODULES[i]}"
 		fi
 	done
 
-	if [[ -n ${modules_force[@]} ]]; then
+	if [[ -n ${modules_force[@]} ]] ; then
 		# Strip any duplicate modules providing the same thing
 		j="${#MODULES[@]}"
 		for (( i=0; i<j-1; i++ )); do
 			[[ -z ${MODULES[i]} ]] && continue
 			for (( k=i+1; k<j; k++ )); do
-				if [[ ${PROVIDES[i]} == ${PROVIDES[k]} ]]; then
+				if [[ ${PROVIDES[i]} == ${PROVIDES[k]} ]] ; then
 					unset MODULES[k]
 					unset PROVIDES[k]
 				fi
@@ -465,7 +465,7 @@ modules_load()  {
 		else
 			# Always prefer iproute2 for taking down interfaces
 			if is_function iproute2_provide ; then
-				function_wrap iproute2 $(iproute2_provide)
+				function_wrap iproute2 "$(iproute2_provide)"
 			fi
 		fi
 	fi
@@ -480,7 +480,7 @@ modules_load()  {
 		function_wrap ${WRAP_MODULES[i]}
 	done
 	
-	if [[ -z ${modules_force[@]} ]]; then
+	if [[ -z ${modules_force[@]} ]] ; then
 		modules_check_installed || return 1
 		modules_sort || return 1
 	fi
@@ -507,9 +507,9 @@ iface_start() {
 
 	# Try and work out a metric for the interface if we're on auto
 	x="metric_${ifvar}"
-	if [[ -z ${!x} ]]; then
-		if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
-			eval "metric_${ifvar}=\""$( calculate_metric ${iface} )"\""
+	if [[ -z ${!x} ]] ; then
+		if [[ ${RC_AUTO_INTERFACE} == "yes" ]] ; then
+			eval "metric_${ifvar}=\"$(calculate_metric ${iface})\""
 		else
 			eval "metric_${ifvar}=0"
 		fi
@@ -528,14 +528,14 @@ iface_start() {
 	a="config_${ifvar}[@]"
 	a=( "${!a}" )
 	for (( i=0; i<${#a[@]}; i++ )); do 
-		eval b=( $( expand_parameters "${a[i]}" ) )
+		eval b=( $(expand_parameters "${a[i]}") )
 		config=( "${config[@]}" "${b[@]}" )
 	done
 
 	a="fallback_${ifvar}[@]"
 	a=( "${!a}" )
 	for (( i=0; i<${#a[@]}; i++ )); do 
-		eval b=( $( expand_parameters "${a[i]}" ) )
+		eval b=( $(expand_parameters "${a[i]}") )
 		fallback=( "${fallback[@]}" "${b[@]}" )
 	done
 
@@ -544,16 +544,16 @@ iface_start() {
 	fallback_route=( "${!fallback_route}" )
 	
 	# We must support old configs
-	if [[ -z ${config} ]]; then
+	if [[ -z ${config} ]] ; then
 		interface_get_old_config "${iface}" || return 1
-		if [[ -n ${config} ]]; then
+		if [[ -n ${config} ]] ; then
 			ewarn "You are using a depreciated configuration syntax for ${iface}"
 			ewarn "You are advised to read /etc/conf.d/net.example and upgrade it accordingly"
 		fi
 	fi
 
 	# Handle "noop" correctly
-	if [[ ${config[0]} == "noop" ]]; then
+	if [[ ${config[0]} == "noop" ]] ; then
 		if interface_is_up "${iface}" true ; then
 			einfo "Keeping current configuration for ${iface}"
 			eend 0
@@ -566,8 +566,8 @@ iface_start() {
 
 	# Provide a default of DHCP if no configuration is set and we're auto
 	# Otherwise a default of NULL
-	if [[ -z ${config} ]]; then
-#		if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
+	if [[ -z ${config} ]] ; then
+#		if [[ ${RC_AUTO_INTERFACE} == "yes" ]] ; then
 			ewarn "Configuration not set for ${iface} - assuming DHCP"
 			if is_function "dhcp_start" ; then
 				config=( "dhcp" )
@@ -586,7 +586,7 @@ iface_start() {
 	for (( config_counter=0; config_counter<${#config[@]}; config_counter++ )); do
 		# Handle null and noop correctly
 		if [[ ${config[config_counter]} == "null" \
-			|| ${config[config_counter]} == "noop" ]]; then
+			|| ${config[config_counter]} == "noop" ]] ; then
 			eend 0
 			config_worked=true
 			continue
@@ -605,7 +605,7 @@ iface_start() {
 			[[ ${x} == 0 ]] && config_worked=true && continue
 			# We need to test to see if it's an IP address or a function
 			# We do this by testing if the 1st character is a digit
-		elif [[ ${conf[0]:0:1} == [[:digit:]] || ${conf[0]} == *:* ]]; then
+		elif [[ ${conf[0]:0:1} == [[:digit:]] || ${conf[0]} == *:* ]] ; then
 			x="0"
 			if [[ ${RC_AUTO_INTERFACE} == "yes" ]] \
 				&& is_function arping_address_exists ; then
@@ -624,13 +624,13 @@ iface_start() {
 			fi
 		fi
 
-		if [[ -n ${fallback[config_counter]} ]]; then
+		if [[ -n ${fallback[config_counter]} ]] ; then
 			einfo "Trying fallback configuration"
 			config[config_counter]="${fallback[config_counter]}"
 			fallback[config_counter]=""
 
 			# Do we have a fallback route?
-			if [[ -n ${fallback_route[config_counter]} ]]; then
+			if [[ -n ${fallback_route[config_counter]} ]] ; then
 				x="fallback_route[config_counter]"
 				eval "routes_${ifvar}=( \"\${!x}\" )"
 				fallback_route[config_counter]=""
@@ -676,7 +676,7 @@ iface_stop() {
 	# Collect list of aliases for this interface.
 	# List will be in reverse order.
 	if interface_exists "${iface}" ; then
-		aliases=$( interface_get_aliases_rev "${iface}" )
+		aliases="$(interface_get_aliases_rev "${iface}")"
 	fi
 
 	# Stop aliases before primary interface.
@@ -700,7 +700,7 @@ iface_stop() {
 
 		# Do final shut down of this alias
 		if [[ ${IN_BACKGROUND} != "true" \
-			&& ${RC_DOWN_INTERFACE} == "yes" ]]; then
+			&& ${RC_DOWN_INTERFACE} == "yes" ]] ; then
 			ebegin "Shutting down ${i}"
 			interface_iface_stop "${i}"
 			eend "$?"
@@ -724,12 +724,12 @@ iface_stop() {
 # We cannot check that the device exists ourselves as modules like
 # tuntap make create it.
 run_start() {
-	local iface="$1" IFVAR=$( bash_variable "$1" )
+	local iface="$1" IFVAR="$(bash_variable "$1")"
 
 	# We do this so users can specify additional addresses for lo if they
 	# need too - additional routes too
 	# However, no extra modules are loaded as they are just not needed
-	if [[ ${iface} == "lo" ]]; then
+	if [[ ${iface} == "lo" ]] ; then
 		metric_lo="0"
 		config_lo=( "127.0.0.1/8 brd 127.255.255.255" "${config_lo[@]}" )
 		routes_lo=( "127.0.0.0/8" "${routes_lo[@]}" )
@@ -772,13 +772,13 @@ run_start() {
 
 		# There may be existing ip address info - so we strip it
 		if [[ ${RC_INTERFACE_KEEP_CONFIG} != "yes" \
-			&& ${IN_BACKGROUND} != "true" ]]; then
+			&& ${IN_BACKGROUND} != "true" ]] ; then
 			interface_del_addresses "${iface}"
 		fi
 
 		# Start the interface
 		if ! iface_start "${iface}" ; then
-			if [[ ${IN_BACKGROUND} != "true" ]]; then
+			if [[ ${IN_BACKGROUND} != "true" ]] ; then
 				interface_exists "${iface}" && interface_down "${iface}"
 			fi
 			eend 1
@@ -806,12 +806,12 @@ run_start() {
 # stop returns non-zero to indicate failure bringing down device.
 # In all other cases stop returns 0 to indicate success.
 run_stop() {
-	local iface="$1" IFVAR=$( bash_variable "$1" ) x
+	local iface="$1" IFVAR="$(bash_variable "$1")" x
 
 	# Load our ESSID variable so users can use it in predown() instead
 	# of having to write code.
-	local ESSID=$( get_options "ESSID" ) ESSIDVAR
-	[[ -n ${ESSID} ]] && ESSIDVAR=$( bash_variable "${ESSID}" )
+	local ESSID="$(get_options ESSID)" ESSIDVAR
+	[[ -n ${ESSID} ]] && ESSIDVAR="$(bash_variable "${ESSID}")"
 
 	# Call user-defined predown function if it exists
 	if is_function predown ; then
@@ -855,7 +855,7 @@ run() {
 	local -a MODULES mods
 	local IN_BACKGROUND="${IN_BACKGROUND}"
 
-	if [[ ${IN_BACKGROUND} == "true" || ${IN_BACKGROUND} == "1" ]]; then
+	if [[ ${IN_BACKGROUND} == "true" || ${IN_BACKGROUND} == "1" ]] ; then
 		IN_BACKGROUND=true
 	else
 		IN_BACKGROUND=false
@@ -872,7 +872,7 @@ run() {
 	[[ ${iface} == "lo" ]] && modules_force=( "iproute2" "ifconfig" "system" )
 
 	if modules_load "${iface}" "${starting}" ; then
-		if [[ ${cmd} == "stop" ]]; then
+		if [[ ${cmd} == "stop" ]] ; then
 			# Reverse the module list for stopping
 			mods=( "${MODULES[@]}" )
 			for ((i = 0; i < ${#mods[@]}; i++)); do
@@ -895,19 +895,19 @@ run() {
 	fi
 
 	# Only apply best state if we're on auto
-	if [[ ${r} == "0" ]]; then
+	if [[ ${r} == "0" ]] ; then
 		local siface=""
-		if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
-			siface=$( select_best_interface )
-			if [[ -n ${siface} ]]; then
+		if [[ ${RC_AUTO_INTERFACE} == "yes" ]] ; then
+			siface="$(select_best_interface)"
+			if [[ -n ${siface} ]] ; then
 				einfo "Selecting best interface: ${siface}"
 			fi
-		elif [[ ${cmd} == "start" ]]; then
+		elif [[ ${cmd} == "start" ]] ; then
 			siface="${iface}"
 		fi
 		[[ -n ${siface} ]] && apply_state "${siface}"
 	else
-		if [[ ${cmd} == "start" ]]; then
+		if [[ ${cmd} == "start" ]] ; then
 			# Call user-defined failup if it exists
 			if is_function failup ; then
 				einfo "Running failup function"
@@ -938,9 +938,9 @@ run() {
 # and allow /etc to become read only.
 link_file() {
 	local file="$1"
-	local link=$( readlink "/etc/${file}" 2>/dev/null )
-	if [[ ${link} != "${netdir}/${file}" ]]; then
-		if [[ -f "/etc/${file}" ]]; then
+	local link="$(readlink "/etc/${file}" 2>/dev/null)"
+	if [[ ${link} != "${netdir}/${file}" ]] ; then
+		if [[ -f "/etc/${file}" ]] ; then
 			vewarn "Moving /etc/${file} to ${netdir}/${file} and creating link"
 			mv "/etc/${file}" "${netdir}"
 			ln -snf "${netdir}/${file}" "/etc/${file}"
@@ -953,12 +953,12 @@ link_file() {
 # Start entry point so that we only have one function
 # which localises variables and unsets functions
 start() {
-	if [[ ${IN_HOTPLUG} == "1" ]]; then
+	if [[ ${IN_HOTPLUG} == "1" ]] ; then
 		# If we've been called by hotplug, check if we have
 		# a policy for the interface for not starting
-		local x ifvar=$( bash_variable "${IFACE}" )
+		local x ifvar="$(bash_variable "${IFACE}")"
 		x="hotplug_${ifvar}"
-		if [[ ${!x} == "no" || ${!x} == "false" ]]; then
+		if [[ ${!x} == "no" || ${!x} == "false" ]] ; then
 			eerror "Not starting interface ${IFACE} due to hotplug policy"
 			unset -f exit
 			mark_service_stopped "net.${IFACE}"
@@ -966,14 +966,14 @@ start() {
 		fi
 	fi
 
-	if [[ ! -d "${statedir}/${IFACE}" ]]; then
+	if [[ ! -d "${statedir}/${IFACE}" ]] ; then
 		if ! mkdir -m 0755 -p "${statedir}/${IFACE}" ; then
 			eerror "Unable to create state directory!"
 			return 1
 		fi
 	fi
 
-	if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
+	if [[ ${RC_AUTO_INTERFACE} == "yes" ]] ; then
 		link_file "resolv.conf"
 		link_file "ntp.conf"
 		link_file "yp.conf"

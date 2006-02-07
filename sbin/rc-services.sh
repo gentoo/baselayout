@@ -381,6 +381,7 @@ start_service() {
 		# then just start it and return the exit status
 		( "/etc/init.d/${service}" start )
 		retval=$?
+		end_service "${service}" "${retval}"
 		splash "svc_started" "${service}" "${retval}"
 		return "${retval}"
 	else
@@ -388,6 +389,7 @@ start_service() {
 		(
 			"/etc/init.d/${service}" start 
 			retval=$?
+			end_service "${service}" "${retval}"
 			splash "svc_started" "${service}" "${retval}"
 		) &
 		return 0
@@ -429,6 +431,7 @@ stop_service() {
 		# then just start it and return the exit status
 		( "/etc/init.d/${service}" stop )
 		retval=$?
+		end_service "${service}" "${retval}"
 		splash "svc_stopped" "${service}" "${retval}"
 		return "${retval}"
 	else
@@ -436,6 +439,7 @@ stop_service() {
 		(
 			( "/etc/init.d/${service}" stop )
 			retval=$?
+			end_service "${service}" "${retval}"
 			splash "svc_stopped" "${service}" "${retval}"
 		) &
 		return 0
