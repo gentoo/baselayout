@@ -19,7 +19,7 @@ checkconfig() {
 }
 
 start() {
-	if is_uml_sys ; then
+	if is_uml_sys || is_xenU_sys ; then
 		ebegin "Loading key mappings"
 		eend 0
 		return 0
