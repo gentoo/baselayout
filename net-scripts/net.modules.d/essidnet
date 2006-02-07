@@ -22,7 +22,7 @@ essidnet_depend() {
 
 # bool essidnet_start(char *iface)
 #
-# All interfaces and module scripts expose modulename_get_vars
+# All interfaces and module scripts can depend on the variables function
 # which returns a space seperated list of user configuration variables
 # We can override each variable here from a given ESSID or the MAC
 # of the AP connected to. MAC configuration takes precedence
