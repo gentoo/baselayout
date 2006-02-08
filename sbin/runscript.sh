@@ -550,6 +550,7 @@ for arg in $* ; do
 			rm -rf "${svcdir}/snapshot/$$"
 			mkdir -p "${svcdir}/snapshot/$$"
 			cp -pP "${svcdir}"/started/* "${svcdir}/snapshot/$$/"
+			rm -f "${svcdir}/snapshot/$$/${myservice}"
 		fi
 	
 		svc_stop
@@ -593,6 +594,7 @@ for arg in $* ; do
 		rm -rf "${svcdir}/snapshot/$$"
 		mkdir -p "${svcdir}/snapshot/$$"
 		cp -pP "${svcdir}"/started/* "${svcdir}/snapshot/$$/"
+		rm -f "${svcdir}/snapshot/$$/${myservice}"
 
 		# Simple way to try and detect if the service use svc_{start,stop}
 		# to restart if it have a custom restart() funtion.
@@ -615,7 +617,7 @@ for arg in $* ; do
 
 		[[ -e "${svcdir}/scheduled/${myservice}" ]] \
 			&& rm -Rf "${svcdir}/scheduled/${myservice}"
-			
+	
 		# Restart dependencies as well
 		for x in $(dolisting "${svcdir}/snapshot/$$/") ; do
 			if service_stopped "${x##*/}" ; then
@@ -623,7 +625,7 @@ for arg in $* ; do
 					|| service_wasinactive "${myservice}" ; then
 					svc_schedule_start "${myservice}" "${x##*/}"
 					ewarn "WARNING:  ${x##*/} is scheduled to start when ${myservice} has started."
-				else
+				elif service_started "${myservice}" ; then
 					start_service "${x##*/}"
 				fi
 			fi
