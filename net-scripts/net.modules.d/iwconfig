@@ -230,7 +230,6 @@ iwconfig_setup_specific() {
 		eerror "${iface} does not support setting ESSID to \"${dessid}\""
 		return 1
 	fi
-	iwconfig "${iface}" nick "${ESSID}" 2>/dev/null
 
 	# Finally apply the user Config
 	iwconfig_user_config "${iface}" "${ESSIDVAR}"
@@ -364,7 +363,6 @@ iwconfig_associate() {
 			ewarn "${iface} does not support setting ESSID to \"${dessid}\""
 		fi
 	fi
-	iwconfig "${iface}" nick "${ESSID}" 2>/dev/null
 
 	# Finally apply the user Config
 	iwconfig_user_config "${iface}" "${ESSIDVAR}"
@@ -681,12 +679,13 @@ iwconfig_defaults() {
 
 	# Set some defaults
 	iwconfig "${iface}" rate auto &>/dev/null
-	iwconfig "${iface}" rts off &>/dev/null
-	iwconfig "${iface}" frag off &>/dev/null
-	iwconfig "${iface}" power off &>/dev/null
+	iwconfig "${iface}" rts auto &>/dev/null
+	iwconfig "${iface}" frag auto &>/dev/null
 	iwconfig "${iface}" txpower auto &>/dev/null
 	iwconfig "${iface}" key [1] off &>/dev/null
 	iwconfig "${iface}" mode managed &>/dev/null
+	iwconfig "${iface}" essid -- off &>/dev/null
+	iwconfig "${iface}" ap off &>/dev/null
 }
 
 # void iwconfig_strip_associated(char *iface)

@@ -8,8 +8,7 @@
 #
 # Sets up the dependancies for the module
 bonding_depend() {
-	after interface macnet
-	before vlan dhcp bridge
+	before interface macchanger
 	functions interface_exists interface_up interface_down \
 		interface_del_addresses
 	variables slaves

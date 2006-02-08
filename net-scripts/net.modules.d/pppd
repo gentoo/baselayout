@@ -241,7 +241,6 @@ pppd_start() {
 
 	ebegin "Running pppd"
 	[[ " ${opts} " != *" updetach "* ]] && mark_service_inactive "net.${iface}"
-	echo "${opts}"
 	eval start-stop-daemon --start --exec /usr/sbin/pppd \
 		--pidfile "/var/run/ppp-${iface}.pid" -- "${opts}" >/dev/null
 	if [[ $? != "0" ]] ; then
