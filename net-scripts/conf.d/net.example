@@ -555,6 +555,9 @@
 
 #-----------------------------------------------------------------------------
 # Tunnelling
+# WARNING: For tunnelling it is highly recommended that you
+# emerge sys-apps/iproute2
+#
 # For GRE tunnels
 #iptunnel_vpn0="mode gre remote 207.170.82.1 key 0xffffffff ttl 255"
 
@@ -564,6 +567,19 @@
 # To configure the interface
 #config_vpn0=( "192.168.0.2 pointopoint 192.168.1.2" )	# ifconfig style
 #config_vpn0=( "192.168.0.2 peer 192.168.1.1" )		# iproute2 style
+
+# 6to4 Tunnels allow IPv6 to work over IPv4 addresses, provided you
+# have a non-private address configured on an interface.
+# link_6to4="eth0"		# Interface to base it's addresses on
+# config_6to4=( "ip6to4" )
+# You may want to depend on eth0 like so
+# depend_6to4() {
+#	need net.eth0
+# }
+# To ensure that eth0 is configured before 6to4. Of course, the tunnel could be
+# any name and this also works for any configured interface.
+# NOTE: If you're not using iproute2 then your 6to4 tunnel has to be called
+# sit0 - otherwise use a different name like 6to4 in the example above.
 
 #-----------------------------------------------------------------------------
 # System
