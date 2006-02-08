@@ -474,8 +474,6 @@ mark_service_started() {
 		"${svcdir}/wasinactive/$1" "${svcdir}/stopping/$1" \
 		"${svcdir}"/scheduled/*/"$1"
 
-	end_service "$1" 0
-	
 	return 0 
 }
 
@@ -490,8 +488,6 @@ mark_service_inactive() {
 	
 	rm -f "${svcdir}/started/$1" "${svcdir}/wasinactive/$1" \
 		"${svcdir}/starting/$1" "${svcdir}/stopping/$1"
-
-	end_service "$1" 0
 
 	return 0
 }
@@ -523,8 +519,6 @@ mark_service_stopped() {
 		"${svcdir}/started/$1" "${svcdir}/inactive/$1" \
 		"${svcdir}/wasinactive/$1" "${svcdir}/stopping/$1" \
 		"${svcdir}/scheduled/$1"
-
-	end_service "$1" 0
 
 	return 0
 }
