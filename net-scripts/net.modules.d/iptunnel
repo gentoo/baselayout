@@ -8,7 +8,6 @@
 #
 # Sets up the dependancies for the module
 iptunnel_depend() {
-	after wireless
 	before interface
 	functions interface_exists interface_tunnel
 	variables iptunnel
@@ -35,6 +34,9 @@ iptunnel_pre_start() {
 iptunnel_stop() {
 	local iface="$1"
 
+	# Don't delete sit0 as it's a special tunnel
+	[[ ${iface} == "sit0" ]] && return 0
+	
 	interface_exists "${iface}" || return 0
 	[[ -z $( interface_tunnel show "${iface}" 2>/dev/null ) ]] && return 0
 
