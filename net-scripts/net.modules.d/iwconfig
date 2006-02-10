@@ -63,12 +63,12 @@ iwconfig_exists() {
 # Echos a string showing whether WEP is enabled or disabled
 # for the given interface
 iwconfig_get_wep_status() {
-	local key=$( iwconfig "$1" | grep -i -o "Encryption key:[0-9,A-F]" )
+	local key="$( iwconfig "$1" | grep -i -o "Encryption key:[0-9,A-F]" )"
 	local mode status="disabled"
 
 	if [[ -n ${key} ]]; then
 		status="enabled"
-		mode="$( iwconfig $1 | sed -n -e 's/^.*Security mode:\(.*[^ ]\).*/\1/p' )"
+		mode="$( iwconfig "$1" | sed -n -e 's/^.*Security mode:\(.*[^ ]\).*/\1/p' )"
 		[[ -n ${mode} ]] && mode=" - ${mode}"
 	fi
 
@@ -82,7 +82,7 @@ iwconfig_get_essid() {
 	local i essid
 
 	for (( i=0; i<5; i++ )); do
-		essid="$( iwgetid $1 2>/dev/null | sed -n -e 's/^.*ESSID:"\(.*\)"$/\1/p' )"
+		essid="$( iwgetid "$1" 2>/dev/null | sed -n -e 's/^.*ESSID:"\(.*\)"$/\1/p' )"
 		if [[ -n ${essid} ]]; then
 			echo "${essid}"
 			return 0
@@ -121,18 +121,18 @@ iwconfig_get_type() {
 iwconfig_report() {
 	local iface="$1" essid mac m="to"
 
-	essid=$( iwconfig_get_essid "${iface}" )
+	essid="$( iwconfig_get_essid "${iface}" )"
 
-	local wep_status=$( iwconfig_get_wep_status "${iface}" )
-	local channel=$( iwgetid --channel "${iface}" 2>/dev/null | cut -d: -f2 )
+	local wep_status="$( iwconfig_get_wep_status "${iface}" )"
+	local channel="$( iwgetid --channel "${iface}" 2>/dev/null | cut -d: -f2 )"
 	[[ -n ${channel} ]] && channel="on channel ${channel} "
 
 	essid="${essid//\\\\/\\\\}"
-	local mode=$( iwconfig_get_mode "${iface}" )
+	local mode="$( iwconfig_get_mode "${iface}" )"
 	if [[ ${mode} == "master" ]]; then
 		m="as"
 	elif [[ ${mode} != "ad-hoc" ]]; then
-		mac=$( iwconfig_get_ap_mac_address "${iface}" )
+		mac="$( iwconfig_get_ap_mac_address "${iface}" )"
 		[[ -n ${mac} ]] && mac=" at ${mac}"
 	fi
 
@@ -158,7 +158,7 @@ iwconfig_get_wep_key() {
 # Applies the user configuration to the interface
 iwconfig_user_config() {
 	local iface="$1" conf aconf ifvar="$2"
-	[[ -z ${ifvar} ]] && ifvar=$( bash_variable "$1" )
+	[[ -z ${ifvar} ]] && ifvar="$( bash_variable "$1" )"
 
 	# Apply the user configuration
 	conf="iwconfig_${ifvar}"
@@ -189,7 +189,7 @@ iwconfig_user_config() {
 # Sets up our wireless interface to operate in ad-hoc or master mode
 iwconfig_setup_specific() {
 	local iface="$1" mode="$2" channel key dessid
-	local ifvar=$( bash_variable "$1" )
+	local ifvar="$( bash_variable "$1" )"
 
 	if [[ -z ${ESSID} ]]; then
 		eerror "${iface} requires an ESSID to be set to operate in ${mode} mode"
@@ -197,11 +197,11 @@ iwconfig_setup_specific() {
 		return 1
 	fi
 	dessid="${ESSID//\\\\/\\\\}"
-	ESSIDVAR=$( bash_variable "${ESSID}" )
-	key=$( iwconfig_get_wep_key )
+	ESSIDVAR="$( bash_variable "${ESSID}" )"
+	key="$( iwconfig_get_wep_key )"
 
 	# We only change the mode if it's not the same
-	local cur_mode=$( iwconfig_get_mode "${iface}" )
+	local cur_mode="$( iwconfig_get_mode "${iface}" )"
 	if [[ ${cur_mode} != "${mode}" ]]; then
 		if ! iwconfig "${iface}" mode "${mode}" ; then
 			eerror "${iface} does not support setting the mode to \"${mode}\""
@@ -218,7 +218,7 @@ iwconfig_setup_specific() {
 	fi
 
 	# Now set the key
-	if ! eval iwconfig "${iface}" key "${key}" ; then
+	if ! iwconfig "${iface}" key ${key} ; then
 		if [[ ${key} != "off" ]]; then
 			ewarn "${iface} does not support setting keys"
 			ewarn "or the parameter \"mac_key_${ESSIDVAR}\" or \"key_${ESSIDVAR}\" is incorrect"
@@ -244,7 +244,7 @@ iwconfig_setup_specific() {
 # Returns true if the AP MAC address is valid or not
 iwconfig_associate_mac() {
 	# Checks if a MAC address has been assigned
-	local mac="$( iwconfig_get_ap_mac_address $1 )" i
+	local mac="$( iwconfig_get_ap_mac_address "$1" )" i
 	local -a invalid_macs=(
 		"00:00:00:00:00:00"
 		"44:44:44:44:44:44"
@@ -263,10 +263,10 @@ iwconfig_associate_mac() {
 #
 # Returns true if the link quality is not 0 or 0.
 iwconfig_associate_quality() {
-	local quality=$( \
+	local quality="$( \
 		sed -n -e 's/^.*'"$1"': *[0-9]* *\([0-9]*\).*/\1/p' \
 		/proc/net/wireless
-	)
+	)"
 	[[ ${quality} != "0" ]]
 	return "$?"
 }
@@ -275,12 +275,12 @@ iwconfig_associate_quality() {
 #
 # Returns true if the interface has associated with an Access Point
 iwconfig_test_associated() {
-	local iface="$1" ttype ifvar=$( bash_variable "$1" ) x
+	local iface="$1" ttype ifvar="$( bash_variable "$1" )" x
 	# Some drivers don't set MAC to a bogus value when assocation is lost/fails
 	# whereas they do set link quality to 0
 
 	x="associate_test_${ifvar}"
-	ttype=$( echo "${!x:-mac}" | tr '[:upper:]' '[:lower:]' )
+	ttype="$( echo "${!x:-mac}" | tr '[:upper:]' '[:lower:]' )"
 	if [[ ${ttype} != "mac" && ${ttype} != "quality" && ${ttype} != "all" ]]; then
 		ewarn "  associate_test_${iface} is not set to mac, quality or all"
 		ewarn "  defaulting to \"mac\""
@@ -302,7 +302,7 @@ iwconfig_test_associated() {
 # Waits for a configured ammount of time until
 # we are assocaited with an Access Point
 iwconfig_wait_for_association() {
-	local iface="$1" i=0 timeout ifvar=$( bash_variable "$1" )
+	local iface="$1" i=0 timeout ifvar="$( bash_variable "$1" )"
 	timeout="associate_timeout_${ifvar}"
 	[[ -z ${!timeout} ]] && timeout="sleep_associate_${ifvar}"
 	timeout="${!timeout:-10}"
@@ -337,8 +337,8 @@ iwconfig_associate() {
 		dessid="any"
 		unset ESSIDVAR
 	else
-		ESSIDVAR=$( bash_variable "${ESSID}" )
-		key=$( iwconfig_get_wep_key "${mac}" )
+		ESSIDVAR="$( bash_variable "${ESSID}" )"
+		key="$( iwconfig_get_wep_key "${mac}" )"
 		if [[ ${wep_required} == "on" && ${key} == "off" ]]; then
 			eerror "WEP key is not set for \"${dessid}\" - not connecting"
 			return 1
@@ -348,14 +348,14 @@ iwconfig_associate() {
 			ewarn "\"${dessid}\" is not WEP enabled - ignoring setting"
 		fi
 
-		if ! eval iwconfig "${iface}" key "${key}" ; then
+		if ! iwconfig "${iface}" key ${key} ; then
 			if [[ ${key} != "off" ]]; then
 				ewarn "${iface} does not support setting keys"
 				ewarn "or the parameter \"mac_key_${ESSIDVAR}\" or \"key_${ESSIDVAR}\" is incorrect"
 				return 1
 			fi
 		fi
-		[[ ${key} != "off" ]] && w=$( iwconfig_get_wep_status "${iface}" )
+		[[ ${key} != "off" ]] && w="$( iwconfig_get_wep_status "${iface}" )"
 	fi
 
 	if ! iwconfig "${iface}" essid "${ESSID}" ; then
@@ -388,7 +388,7 @@ iwconfig_associate() {
 	veend 0
 
 	if [[ ${ESSID} == "any" ]]; then
-		ESSID=$( iwconfig_get_essid "${iface}" )
+		ESSID="$( iwconfig_get_essid "${iface}" )"
 		iwconfig_associate "${iface}"
 		return $?
 	fi
@@ -409,11 +409,11 @@ iwconfig_associate() {
 #
 # Fills 3 arrays with information from a wireless scan
 iwconfig_scan() {
-	local iface="$1" mode x ifvar=$( bash_variable "$1" )
+	local iface="$1" mode x ifvar="$( bash_variable "$1" )"
 
 	# First, we may need to change mode to scan in
 	x="scan_mode_${ifvar}"
-	mode=$( echo "${!x}" | tr '[:upper:]' '[:lower:]' )
+	mode="$( echo "${!x}" | tr '[:upper:]' '[:lower:]' )"
 	if [[ -n ${mode} ]]; then
 		if ! iwconfig "${iface}" mode "${mode}" ; then
 			ewarn "${iface} does not support setting the mode to \"${mode}\""
@@ -446,14 +446,14 @@ iwconfig_scan() {
 		case "${line}" in
 			*Address:*)
 				(( i++ ))
-				mac[i]=$( echo "${line#*: }" | tr '[:lower:]' '[:upper:]' )
+				mac[i]="$( echo "${line#*: }" | tr '[:lower:]' '[:upper:]' )"
 				;;
 			*ESSID:*)
 				essid[i]="${line#*\"}"
 				essid[i]="${essid[i]%*\"}"
 				;;
 			*Mode:*)
-				mode[i]=$(echo "${line#*:}" | tr '[:upper:]' '[:lower:]' )
+				mode[i]="$(echo "${line#*:}" | tr '[:upper:]' '[:lower:]' )"
 				[[ ${mode[i]} == "master" ]] && mode[i]="managed"
 				;;
 			*'Encryption key:'*)
@@ -500,7 +500,7 @@ iwconfig_scan() {
 
 	# Change back mode if needed
 	x="mode_${ifvar}"
-	x=$( echo "${!x:-managed}" | tr '[:upper:]' '[:lower:]' )
+	x="$( echo "${!x:-managed}" | tr '[:upper:]' '[:lower:]' )"
 	[[ ${mode} != "${x}" ]] && iwconfig "${iface}" mode "${x}"
 
 	for (( i=0; i<${#mac[@]}; i++ )); do
@@ -695,15 +695,15 @@ iwconfig_defaults() {
 # We also remove from the preferred list
 iwconfig_strip_associated() {
 	local iface="$1" e a j
-	local essid=$( iwconfig_get_essid "${iface}" )
+	local essid="$( iwconfig_get_essid "${iface}" )"
 	local -a ifaces=( $( iwconfig 2>/dev/null | grep -o "^\w*" ) )
 
 	for i in "${ifaces[@]}"; do
 		[[ ${i} == ${iface} ]] && continue
 		interface_is_up "${i}" || continue
 		iwconfig_test_associated "${i}" || continue
-		e=$( iwconfig_get_essid "${i}" )
-		u=()
+		e="$( iwconfig_get_essid "${i}" )"
+		local -a u=()
 		for ((j=0; j<${#mac_APs[@]}; j++)); do
 			if [[ ${essid_APs[j]} == "${e}" ]]; then
 				ewarn "${e} has already been associated with ${i}"
@@ -738,7 +738,7 @@ iwconfig_strip_associated() {
 # Once we're connected we show a report and then configure any interface
 # variables for the ESSID
 iwconfig_configure() {
-	local iface="$1" test x e ifvar=$( bash_variable "$1" )
+	local iface="$1" test x e ifvar="$( bash_variable "$1" )"
 	local -a essid_APs mac_APs mode_APs enc_APs
 
 	iwconfig_defaults "${iface}"
@@ -749,7 +749,7 @@ iwconfig_configure() {
 
 	# Setup ad-hoc mode?
 	x="mode_${ifvar}"
-	x=$( echo "${!x:-managed}" | tr '[:upper:]' '[:lower:]' )
+	x="$( echo "${!x:-managed}" | tr '[:upper:]' '[:lower:]' )"
 	if [[ ${x} == "ad-hoc" || ${x} == "master" ]]; then
 		iwconfig_setup_specific "${iface}" "${x}"
 		return $?
@@ -762,7 +762,7 @@ iwconfig_configure() {
 
 	# We only change the mode if it's not the same as some drivers
 	# only do managed and throw an error changing to managed
-	local cur_mode=$( iwconfig_get_mode "${iface}" )
+	local cur_mode="$( iwconfig_get_mode "${iface}" )"
 	if [[ ${cur_mode} != "${x}" ]]; then
 		if ! iwconfig "${iface}" mode "${x}" ; then
 			eerror "${iface} does not support setting the mode to \"${x}\""
@@ -798,10 +798,10 @@ iwconfig_configure() {
 	# Are we forcing preferred only?
 	x="associate_order_${ifvar}"
 	[[ -n ${!x} ]] && associate_order="${!x}"
-	associate_order=$(
+	associate_order="$(
 		echo "${associate_order:-any}" \
 		| tr '[:upper:]' '[:lower:]'
-	)
+	)"
 
 	if [[ ${associate_order} == "forcepreferredonly" ]]; then
 		iwconfig_force_preferred "${iface}" && return 0
@@ -813,7 +813,7 @@ iwconfig_configure() {
 		# other wireless cards in the system if requested
 		x="unique_ap_${ifvar}"
 		[[ -n ${!x} ]] && unique_ap="${!x}"
-		unique_ap=$( echo "${unique_ap:-no}" | tr '[:upper:]' '[:lower:]' )
+		unique_ap="$( echo "${unique_ap:-no}" | tr '[:upper:]' '[:lower:]' )"
 		[[ ${unique_ap} != "no" ]] && iwconfig_strip_associated "${iface}"
 
 		iwconfig_connect_preferred "${iface}" && return 0
@@ -882,7 +882,7 @@ iwconfig_pre_start() {
 	# and RA cards return RAPCI or similar which really sucks :(
 	# For the time being, we will test prism54 not loading firmware which reports
 	# NOT READY!
-	x=$( iwconfig_get_type "${iface}" )
+	x="$( iwconfig_get_type "${iface}" )"
 	if [[ ${x} == "NOT READY!" ]]; then
 		eerror "Looks like there was a probem loading the firmware for ${iface}"
 		return 1
