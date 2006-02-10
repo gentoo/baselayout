@@ -906,8 +906,8 @@
 
   19 Jul 2005; Mike Frysinger <vapier@gentoo.org>:
 
-    Punt the at/bind/cron/cyrus/ftp/games/gdm/man/mysql/qmail/slocate/squid/
-    sshd/vpopmail/xfs users/groups to the respective ebuilds.
+    Punt the at/bind/cron/cyrus/ftp/games/gdm/man/mysql/postgres/qmail/slocate/
+    squid/sshd/vpopmail/xfs users/groups to the respective ebuilds.
 
   19 Jul 2005; Roy Marples <uberlord@gentoo.org>:
 
