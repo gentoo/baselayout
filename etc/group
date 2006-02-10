@@ -20,7 +20,6 @@ dialout::20:root
 tape::26:root
 video::27:root
 cdrw::80:
-nut::84:
 usb::85:
 users::100:games
 nofiles:x:200:
