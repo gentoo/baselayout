@@ -305,7 +305,7 @@ iproute2_post_start() {
 	[[ -n ${!mtu} ]] && ip link set mtu "${!mtu}" dev "${iface}"
 
 	local x="routes_${ifvar}[@]"
-	local routes=( "${!x}" )
+	local -a routes=( "${!x}" )
 	local metric="metric_${ifvar}"
 
 	# Test for old style ipaddr variable
