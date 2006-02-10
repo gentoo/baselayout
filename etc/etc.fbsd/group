@@ -22,7 +22,6 @@ cdrw::80:
 usb::85:
 users::100:games
 nofiles:x:200:
-postdrop:x:208:
 smmsp:x:209:smmsp
 portage::250:portage
 nogroup::65533:
