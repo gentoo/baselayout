@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+  12 Feb 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Fix udhcpc+ifconfig combo bug, #112521 thanks to magan.
+
   25 Jan 2006; Roy Marples <uberlord@gentoo.org>:
 
     Fix ADSL module stopping, #120135.
