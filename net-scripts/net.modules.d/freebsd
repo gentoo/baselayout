@@ -1,0 +1,381 @@
+#!/bin/bash
+# Copyright (c) 2004-2005 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+
+# Original linux version by Roy Marples (uberlord@gentoo.org)
+# BSD version by Diego Pettenò (flameeyes@gentoo.org)
+
+# Fix any potential localisation problems
+# Note that LC_ALL trumps LC_anything_else according to locale(7)
+ifconfig() {
+	LC_ALL=C /sbin/ifconfig "$@"
+}
+
+freebsd_tunnel() {
+	LC_ALL=C /sbin/iptunnel "$@"
+}
+
+route() {
+	LC_ALL=C /sbin/route "$@"
+}
+
+# void freebsd_depend(void)
+#
+# Sets up the dependancies for the module
+freebsd_depend() {
+	after macnet wireless
+}
+
+# bool freebsd_check_installed(void)
+#
+# Returns 1 if ifconfig is installed, otherwise 0
+freebsd_check_installed() {
+	[[ -x /sbin/ifconfig ]] && return 0
+	return 1
+}
+
+# char* freebsd_provides(void)
+#
+# Returns a string to change module definition for starting up
+freebsd_provides() {
+	echo "interface"
+}
+
+# char* freebsd_module(void)
+#
+# Returns the module name
+# This is needed by dhclient as we run different scripts
+# based on the interface
+freebsd_module() {
+	echo "freebsd"
+}
+
+# bool freebsd_check_depends(void)
+#
+# Checks to see if we have the needed functions
+freebsd_check_depends() {
+	return 0
+}
+
+# bool freebsd_exists(char *interface, bool report)
+#
+# Returns 1 if the interface exists, otherwise 0
+freebsd_exists() {
+	local e=$( ifconfig -a | grep -o "^$1" ) report="${2:-false}"
+	[[ -n ${e} ]] && return 0
+	${report} && eerror "$1 does not exist"
+	return 1
+}
+
+# void freebsd_up(char *iface)
+#
+# provides a generic interface for bringing interfaces up
+freebsd_up() {
+	ifconfig "$1" up
+}
+
+# void freebsd_down(char *iface)
+#
+# provides a generic interface for bringing interfaces down
+freebsd_down() {
+	ifconfig "$1" down
+}
+
+# bool freebsd_is_up(char *iface, bool withaddress)
+#
+# Returns 0 if the interface is up, otherwise 1
+# If withaddress is true then the interface has to have an IPv4 address
+# assigned as well
+freebsd_is_up() {
+	local check="\<UP\>" addr="${2:-false}"
+	${addr} && check="\<inet addr:.*${check}"
+	ifconfig "$1" | grep -Eq "${check}" && return 0
+	return 1
+}
+
+# void freebsd_set_flag(char *iface, char *flag, bool enabled)
+#
+# Sets or disables the interface flag 
+freebsd_set_flag() {
+	local iface="$1" flag="$2" enable="$3"
+	${enable} || flag="-${flag}"
+	ifconfig "${iface}" "${flag}"
+}
+
+# void freebsd_get_address(char *interface)
+#
+# Fetch the address retrieved by DHCP.  If successful, echoes the
+# address on stdout, otherwise echoes nothing.
+freebsd_get_address() {
+	local -a x=( $( ifconfig "$1" \
+	| gsed -n -e 's/.*inet \([^ ]*\).*netmask \([^ ]*\).*/\1 \2/p' ) )
+	x[1]=$( netmask2cidr "${x[1]}" )
+	echo "${x[0]}/${x[1]}"
+}
+
+# void freebsd_get_mac_address(char *interface)
+#
+# Fetch the mac address assingned to the network card
+freebsd_get_mac_address() {
+	ifconfig "$1" | gsed -n -e 's/.*ether .*\<\(..:..:..:..:..:..\)\>.*/\U\1/p'
+}
+
+# void freebsd_set_mac_address(char *interface, char *mac)
+#
+# Assigned the mac address to the network card
+freebsd_set_mac_address() {
+	ifconfig "$1" link "$2"
+}
+
+# int freebsd_set_name(char *interface, char *new_name)
+#
+# Renames the interface
+freebsd_set_name() {
+	ifconfig "$1" name "$2"
+}
+
+# bool freebsd_del_addresses(char *interface, bool onlyinet)
+#
+# Remove addresses from interface.  Returns 0 (true) if there
+# were addresses to remove (whether successful or not).  Returns 1
+# (false) if there were no addresses to remove.
+# If onlyinet is true then we only delete IPv4 / inet addresses
+freebsd_del_addresses() {
+	local iface="$1" i onlyinet="${2:-false}"
+	# We don't remove addresses from aliases
+	[[ ${iface} == *:* ]] && return 0
+
+	# If the interface doesn't exist, don't try and delete
+	freebsd_exists "${iface}" || return 0
+
+	# iproute2 can add many addresses to an iface unlike ifconfig ...
+	# iproute2 added addresses cause problems for ifconfig
+	# as we delete an address, a new one appears, so we have to
+	# keep polling
+	while ifconfig "${iface}" | grep -q -m1 -o 'inet [^ ]*' ; do
+		ifconfig "${iface}" -alias $(freebsd_get_address)
+	done
+
+	# Remove IPv6 addresses
+	# FIXME! THIS IS BROKEN ON BSD!!!
+	if ! ${onlyinet} ; then
+		for i in $( ifconfig "${iface}" \
+			| sed -n -e 's/^.*inet6 addr: \([^ ]*\) Scope:[^L].*/\1/p' ) ; do
+			/sbin/ifconfig "${iface}" inet6 del "${i}"
+		done
+	fi
+	return 0
+}
+
+# char* freebsd_get_vars(char *interface)
+#
+# Returns a string spaced with possible user set
+# configuration variables
+freebsd_get_vars() {
+	echo "config_$1 routes_$1 fallback_$1 metric_$1 freebsd_$1 \
+	freebsd_fallback_$1 routes_$1 inet6_$1 iface_$1 alias_$1 \
+	broadcast_$1 netmask_$1"
+	# The depreciated gateway var has to be handled by
+	# each module if needed
+}
+
+# bool freebsd_get_old_config(char *iface)
+#
+# Returns config and config_fallback for the given interface
+freebsd_get_old_config() {
+	local iface="$1" ifvar=$( bash_variable "$1" ) i inet6
+
+	eval config=( \"\$\{freebsd_${ifvar}\[@\]\}\" )
+	eval config_fallback=( \"\$\{freebsd_fallback_${ifvar}\[@\]\}\" )
+	eval inet6=( \"\$\{inet6_${ifvar}\[@\]\}\" )
+
+	# BACKWARD COMPATIBILITY: populate the config_IFACE array
+	# if iface_IFACE is set (fex. iface_eth0 instead of freebsd_eth0)
+	eval i=\"\$\{iface_${ifvar}\}\"
+	if [[ -n ${i} && -z ${config} ]]; then
+		# Make sure these get evaluated as arrays
+		local -a aliases broadcasts netmasks
+
+		# Start with the primary interface
+		config=( "${i}" )
+
+		# ..then add aliases
+		eval aliases=( \$\{alias_${ifvar}\} )
+		eval broadcasts=( \$\{broadcast_${ifvar}\} )
+		eval netmasks=( \$\{netmask_${ifvar}\} )
+		for (( i=0; i<${#aliases[@]}; i++ )); do
+			config[i+1]="${aliases[i]} ${broadcasts[i]:+broadcast ${broadcasts[i]}} ${netmasks[i]:+netmask ${netmasks[i]}}"
+		done
+	fi
+
+	# BACKWARD COMPATIBILITY: check for space-separated inet6 addresses
+	[[ ${#inet6[@]} == 1 && ${inet6} == *' '* ]] &&  inet6=( ${inet6} )
+
+	# Add inet6 addresses to our config if required
+	[[ -n ${inet6} ]] && config=( "${config[@]}" "${inet6[@]}" )
+
+	return 0
+}
+
+# bool freebsd_iface_stop(char *interface)
+#
+# Do final shutdown for an interface or alias.
+#
+# Returns 0 (true) when successful, non-zero (false) on failure
+freebsd_iface_stop() {
+	# If an alias is already down, then "ifconfig eth0:1 down"
+	# will try to bring it up with an address of "down" which
+	# fails.  Do some double-checking before returning error
+	# status
+	freebsd_is_up "$1" || return 0
+	freebsd_down "$1" && return 0
+
+	# It is sometimes impossible to transition an alias from the
+	# UP state... particularly if the alias has no address.  So
+	# ignore the failure, which should be okay since the entire
+	# interface will be shut down eventually.
+	[[ $1 == *:* ]] && return 0
+	return 1
+}
+
+# bool freebsd_post_start(char *iface)
+#
+# Bring up iface using ifconfig utilities, called from iface_start
+#
+# Returns 0 (true) when successful on the primary interface, non-zero
+# (false) when the primary interface fails.  Aliases are allowed to
+# fail, the routine should still return success to indicate that
+# net.eth0 was successful
+freebsd_post_start() {
+	local iface="$1" ifvar=$( bash_variable "$1" ) routes x metric mtu
+	eval metric=\"\$\{metric_${ifvar}\}\"
+
+	# Make sure interface is marked UP
+	freebsd_up "${iface}"
+
+	# MTU support
+	eval mtu=\"\$\{mtu_${ifvar}\}\"
+	[[ -n ${mtu} ]] && ifconfig "${iface}" mtu "${mtu}"
+
+	eval routes=( \"\$\{routes_${ifvar}\[@\]\}\" )
+
+	# BACKWARD COMPATIBILITY: set the default gateway
+	if [[ ${gateway} == "${iface}/"* ]]; then
+		# We don't add the old gateway if one has been set in routes_IFACE
+		local gw=true
+		for x in "${routes[@]}"; do
+			[[ ${x} != *"default gw"* ]] && continue
+			gw=false
+			break
+		done
+		${gw} && routes=( "${routes[@]}" "default gw ${gateway#*/}" )
+	fi
+
+	[[ -z ${routes} ]] && return 0
+
+	# Add routes for this interface, might even include default gw
+	einfo "Adding routes"
+	eindent
+	for x in "${routes[@]}"; do
+		ebegin "${x}"
+
+		# Support iproute2 style routes
+		x="${x//via/gw} "
+		x="${x//scope * / }"
+
+		# Assume we're a net device unless told otherwise
+		[[ " ${x} " != *" -net "* && " ${x} " != *" -host "* ]] && x="-net ${x}"
+
+		# Support adding IPv6 addresses easily
+		[[ ${x} == *:* && ${x} != *"-A inet6"* ]] && x="-A inet6 ${x}"
+
+		# Add a metric if we don't have one
+		[[ ${x} != *" metric "* ]] && x="${x} metric ${metric}"
+
+		route add ${x} dev "${iface}"
+		eend $?
+	done
+	eoutdent
+
+	return 0
+}
+
+# bool freebsd_add_address(char *iface, char *options ...)
+#
+# Adds the given address to the interface
+freebsd_add_address() {
+	local iface="$1" i=0 r e
+
+	freebsd_exists "${iface}" true || return 1
+
+	# Extract the config
+	local -a config=( "$@" )
+	config=( ${config[@]:1} )
+
+	if [[ ${config[0]} == *:* ]]; then
+		# Support IPv6 - nice and simple
+		config[0]="inet6 alias ${config[0]}"
+	else
+		# Support iproute2 style config where possible
+		r="${config[@]}"
+		config=( ${r//brd +/} )
+		config=( "${config[@]//brd/broadcast}" )
+		config=( "${config[@]//peer/pointtopoint}" )
+	fi
+
+	# Some kernels like to apply lo with an address when they are brought up
+	if [[ ${iface} == "lo" \
+		|| ${config[@]} == "127.0.0.1/8 broadcast 127.255.255.255" ]]; then
+		ifconfig "${iface}" ${config[@]} 2>/dev/null
+		r="0"
+	else
+		e=$( ifconfig "${iface}" ${config[@]} 2>&1 )
+		r="$?"
+		[[ ${r} != "0" ]] && echo "${e}" > /dev/stderr
+	fi
+
+	[[ ${r} != "0" || ${config[0]} == "inet6"* || ${iface} == *:* ]] \
+	&& return ${r}
+
+	local metric ifvar=$( bash_variable "${iface}" )
+	# Remove the newly added route and replace with our metric
+	eval metric=\"\$\{metric_${ifvar}\}\"
+	[[ ${metric} == "0" || ${RC_AUTO_INTERFACE} != "yes" ]] && return ${r}
+
+	if [[ -z ${netmask} ]]; then
+		for (( i=1; i<${#config[@]}-1; i++ )); do
+			if [[ ${config[i]} == "netmask" ]]; then
+				netmask="${config[i+1]}"
+				cidr=$( netmask2cidr "${netmask}" )
+				break
+			fi
+		done
+		[[ -z ${netmask} ]] && return ${r}
+	fi
+
+	local network=$( ip_network "${ip}" "${netmask}" )
+
+	if route del -net "${network}/${cidr}" metric 0 dev "${iface}" \
+		2>/dev/null ; then
+		route add -net "${network}/${cidr}" metric "${metric}" dev "${iface}"
+	fi
+
+	return ${r}
+}
+
+# void freebsd_default_route(char* interface, char* gateway_ip, int metric)
+#
+# Force default route to the specified gateway
+freebsd_default_route() {
+	local metric="${3:-0}"
+
+	# Delete any existing default routes
+	while true ; do
+		route del default metric "${metric}" dev "$1" 2>/dev/null || break
+	done
+
+	# Then we add our route
+	route add default gw "$2" metric "${metric}" dev "$1"
+}
+
+# vim:ts=4
