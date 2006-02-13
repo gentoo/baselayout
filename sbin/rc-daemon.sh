@@ -190,6 +190,7 @@ pidof() {
 
 	for arg in "$@"; do
 		[[ ${arg##*/} == "rpc.nfsd" ]] && arg="${arg%/*}/nfsd"
+		arg=$(basename "${arg}")
 		args="${args} '"${arg}"'"
 	done
 
