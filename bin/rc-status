@@ -123,7 +123,7 @@ declare -a runlevels
 arridx=0
 for level in ${runlevelidxs} ; do
 	if [[ ${level} == ${runlevel} || -n ${ALL} ]] ; then
-		runlevels[${arridx}]=$(find ${runleveldir}/${level} -maxdepth 1 -type l -printf '%f ')
+		runlevels[${arridx}]=$(find ${runleveldir}/${level} -maxdepth 1 -type l -exec basename {} \; )
 		let "arridx += 1"
 	fi
 done
