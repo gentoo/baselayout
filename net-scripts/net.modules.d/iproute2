@@ -255,7 +255,7 @@ iproute2_add_address() {
 	local ifvar="$( bash_variable "${iface}" )"
 	# Remove the newly added route and replace with our metric
 	local metric="metric_${ifvar}"
-	[[ ${!metric} == "0" || ${RC_AUTO_INTERFACE} != "yes" ]] && return "${r}"
+	[[ ${!metric:-0} == "0" ]] && return "${r}"
 
 	local network="$( ip_network "${config[0]}" )"
 	[[ -z ${network} ]] && return "${r}"
@@ -263,7 +263,7 @@ iproute2_add_address() {
 	local cidr="${config[0]##*/}"
 	if ip route del "${network}/${cidr}" metric 0 dev "${iface}" \
 		2>/dev/null ; then
-		ip route add "${network}/${cidr}" metric "${!metric}" dev "${iface}"
+		ip route add "${network}/${cidr}" metric "${!metric:-0}" dev "${iface}"
 	fi
 
 	return "${r}"
