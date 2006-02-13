@@ -12,13 +12,13 @@ start() {
 	if [[ ! -f /fastboot && -z ${CDBOOT} ]] && ! is_net_fs / ; then
 		if touch -c / >& /dev/null ; then
 			ebegin $"Remounting root filesystem read-only"
-			mount -n -o remount,ro /
+			mount -u -o ro /
 			eend $?
 		fi
 
 		if [[ -f /forcefsck ]] || get_bootparam "forcefsck" ; then
 			ebegin $"Checking root filesystem (full fsck forced)"
-			fsck -C -a -f /
+			fsck -f /
 			# /forcefsck isn't deleted because checkfs needs it.
 			# it'll be deleted in that script.
 			retval=$?
@@ -31,7 +31,7 @@ start() {
 			                && NF == 6 && $6 != 0) { print }' /etc/fstab) ]]
 			then
 				ebegin $"Checking root filesystem"
-				fsck -C -T -a /
+				fsck /
 				retval=$?
 			else
 				ebegin $"Skipping root filesystem check" "(fstab's passno == 0)"
@@ -54,13 +54,12 @@ start() {
 		else
 			if [[ ${RC_FORCE_AUTO} == "yes" ]] ; then
 				eend 2 "Rerunning fsck in force mode"
-				fsck -y -C -T /
+				fsck -y /
 			else
 				eend 2 "Filesystem couldn't be fixed :("
-				/sbin/sulogin ${CONSOLE}
 			fi
 			einfo $"Unmounting filesystems"
-			/bin/mount -a -o remount,ro &> /dev/null
+			mount -u -o ro -a &> /dev/null
 			einfo $"Rebooting"
 			/sbin/reboot -f
 		fi
@@ -68,23 +67,25 @@ start() {
 
 	# Should we mount root rw ?  the touch check is to see if the / is
 	# already mounted rw in which case there's nothing for us to do
-	if mount -vf -o remount / 2> /dev/null | \
+	# Don't do that on FreeBSD
+	if [[ "1" == "2" ]] && mount -vf -o remount / 2> /dev/null | \
 	   awk '{ if ($6 ~ /rw/) exit 0; else exit 1; }' && \
 	   ! touch -c / >& /dev/null
 	then
 		ebegin $"Remounting root filesystem read/write"
-		mount -n -o remount,rw / &> /dev/null
+		mount -u -o rw / &> /dev/null
 		if [[ $? -ne 0 ]] ; then
 			eend 2 "Root filesystem could not be mounted read/write :("
 			if [[ ${RC_FORCE_AUTO} != "yes" ]] ; then
-				/sbin/sulogin ${CONSOLE}
+				eend 3 "Trying to do something that does not work."
 			fi
 		else
 			eend 0
 		fi
 	fi
 
-	if [[ ${BOOT} == "yes" ]] ; then
+	# /etc/mtab is linuxism
+	if [[ ${BOOT} == "yes" ]] && [[ "1" == "2" ]]; then
 		local x=
 		local y=
 
