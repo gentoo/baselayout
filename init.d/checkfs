@@ -18,11 +18,11 @@ start() {
 		ebegin $"Checking all filesystems"
 		if [[ -f /forcefsck ]] ; then
 			ewarn $"A full fsck has been forced"
-			fsck -C -T -R -A -a -f
+			fsck -p -f
 			retval=$?
 			rm -f /forcefsck
 		else
-			fsck -C -T -R -A -a
+			fsck -p
 			retval=$?
 		fi
 		if [[ ${retval} -eq 0 ]] ; then
@@ -34,13 +34,12 @@ start() {
 		else
 			if [[ ${RC_FORCE_AUTO} == "yes" ]] ; then
 				eend 2 "Fsck could not correct all errors, rerunning"
-				fsck -C -T -R -A -y
+				fsck -p -y
 				retval=$?
 			fi
 
 			if [[ ${retval} -gt 3 ]] ; then
 				eend 2 "Fsck could not correct all errors, manual repair needed"
-				/sbin/sulogin ${CONSOLE}
 			fi
 		fi
 	fi
