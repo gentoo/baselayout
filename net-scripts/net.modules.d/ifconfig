@@ -390,7 +390,7 @@ ifconfig_add_address() {
 	local metric ifvar=$(bash_variable "${real_iface}")
 	# Remove the newly added route and replace with our metric
 	metric="metric_${ifvar}"
-	[[ ${!metric} == "0" || ${RC_AUTO_INTERFACE} != "yes" ]] && return ${r}
+	[[ ${!metric:-0} == "0" ]] && return ${r}
 
 	if [[ -z ${netmask} ]]; then
 		for (( i=1; i<${#config[@]}-1; i++ )); do
@@ -407,7 +407,7 @@ ifconfig_add_address() {
 
 	if route del -net "${network}/${cidr}" metric 0 dev "${iface}" \
 		2>/dev/null ; then
-		route add -net "${network}/${cidr}" metric "${!metric}" dev "${iface}"
+		route add -net "${network}/${cidr}" metric "${!metric:-0}" dev "${iface}"
 	fi
 
 	return ${r}
