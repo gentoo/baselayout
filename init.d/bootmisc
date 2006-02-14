@@ -20,7 +20,9 @@ start() {
 		cp /etc/nologin /etc/nologin.boot &> /dev/null
 	fi
 
-	if [[ -e /etc/sysctl.conf ]] ; then
+	# This has to be handled in a completely different way for FreeBSD, and
+	# it's currently done by sysctl init.d (althought it's quite short)
+	if [[ $(uname -s) == "Linux" && -e /etc/sysctl.conf ]] ; then
 		ebegin $"Configuring kernel parameters"
 		/sbin/sysctl -q -p /etc/sysctl.conf
 		eend 0
