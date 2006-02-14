@@ -171,7 +171,7 @@ fi
 eend ${mount_worked}
 if [[ ${mount_worked} -eq 1 ]]; then
 	ups_kill_power
-	/sbin/sulogin -t 10 /dev/console
+	single_user -t 10 /dev/console
 fi
 
 # Inform if there is a forced or skipped fsck

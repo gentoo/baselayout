@@ -388,7 +388,7 @@ if [[ ${SOFTLEVEL} == "reboot" || ${SOFTLEVEL} == "shutdown" ]] ; then
 fi
 
 if [[ ${SOFTLEVEL} == "single" ]] ; then
-	/sbin/sulogin ${CONSOLE}
+	single_user ${CONSOLE}
 	exit 0
 fi
 
