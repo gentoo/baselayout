@@ -12,26 +12,28 @@ start() {
 	mount -at noproc,noshm,no${NET_FS_LIST// /,no} >/dev/null
 	eend $? $"Some local filesystem failed to mount"
 
-	# Make sure we insert usbcore if its a module
-	if [[ -f /proc/modules && ! -d /proc/bus/usb ]] ; then
-		# >/dev/null to hide errors from non-USB users
-		modprobe usbcore &> /dev/null
-	fi
+	if [[ $(uname -s) == "Linux" ]]; then
+		# Make sure we insert usbcore if its a module
+		if [[ -f /proc/modules && ! -d /proc/bus/usb ]] ; then
+			# >/dev/null to hide errors from non-USB users
+			modprobe usbcore &> /dev/null
+		fi
+		
+		# Check what USB fs the kernel support.  Currently
+		# 2.5+ kernels, and later 2.4 kernels have 'usbfs',
+		# while older kernels have 'usbdevfs'.
+		local usbfs=$(grep -Fow usbfs /proc/filesystems ||
+			grep -Fow usbdevfs /proc/filesystems)
 	
-	# Check what USB fs the kernel support.  Currently
-	# 2.5+ kernels, and later 2.4 kernels have 'usbfs',
-	# while older kernels have 'usbdevfs'.
-	local usbfs=$(grep -Fow usbfs /proc/filesystems ||
-		grep -Fow usbdevfs /proc/filesystems)
-
-	if [[ -n ${usbfs} ]] && \
-	   [[ -e /proc/bus/usb && ! -e /proc/bus/usb/devices ]]
-	then
-		ebegin $"Mounting USB device filesystem" "(${usbfs})"
-		usbgid=$(echo $(getent group usb) | gawk -F: '{print $3}')
-		mount -t ${usbfs} usbfs /proc/bus/usb \
-			${usbgid:+-o devmode=0664,devgid=${usbgid}}
-		eend $? $"Failed to mount USB device filesystem"
+		if [[ -n ${usbfs} ]] && \
+		[[ -e /proc/bus/usb && ! -e /proc/bus/usb/devices ]]
+		then
+			ebegin $"Mounting USB device filesystem" "(${usbfs})"
+			usbgid=$(echo $(getent group usb) | gawk -F: '{print $3}')
+			mount -t ${usbfs} usbfs /proc/bus/usb \
+				${usbgid:+-o devmode=0664,devgid=${usbgid}}
+			eend $? $"Failed to mount USB device filesystem"
+		fi
 	fi
 
 	# Swap on loopback devices, and other weirdnesses
