@@ -240,7 +240,7 @@ pppd_start() {
 	[[ ${insert_link_in_opts} -eq 0 ]] || opts="${!link} ${opts}"
 
 	ebegin "Running pppd"
-	[[ " ${opts} " != *" updetach "* ]] && mark_service_inactive "net.${iface}"
+	mark_service_inactive "net.${iface}"
 	eval start-stop-daemon --start --exec /usr/sbin/pppd \
 		--pidfile "/var/run/ppp-${iface}.pid" -- "${opts}" >/dev/null
 	if [[ $? != "0" ]] ; then
@@ -254,10 +254,10 @@ pppd_start() {
 		einfo "${iface} received address ${addr}"
 	else
 		einfo "Backgrounding ..."
-		exit 0
 	fi
-	
-	return 0
+
+	# pppd will re-call us when we bring the interface up
+	exit 0
 }
 
 # bool pppd_stop(char *iface)

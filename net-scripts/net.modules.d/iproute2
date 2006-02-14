@@ -346,26 +346,6 @@ iproute2_post_start() {
 		eoutdent
 	fi
 
-	# Now apply any rules we may want
-	x="rules_${ifvar}[@]"
-	local -a rules=( "${!x}" )
-	if [[ -n ${rules} ]] ; then
-		einfo "Adding IP policy routing rules"
-		eindent
-		# Ensure that the kernel supports policy routing
-		if ! ip rule list | grep -q "^" ; then
-			eerror "You need to enable IP Policy Routing (CONFIG_IP_MULTIPLE_TABLES)"
-			eerror "in your kernel to use ip rules"
-		else
-			for x in "${rules[@]}" ; do
-				ebegin "${x}"
-				ip rule add ${x} dev "${iface}"
-				eend $?
-			done
-		fi
-		eoutdent
-	fi
-
 	# Flush the route cache
 	ip route flush cache dev "${iface}"
 
@@ -401,14 +381,6 @@ iproute2_post_stop() {
 	local iface="$1" rule=""
 
 	iproute2_exists "${iface}" || return
-	
-	# Remove any rules for this interface
-	ip rule list | grep " iif ${iface}[ ]*" | {
-		while read rule ; do
-			rule="${rule#*:}"	
-			ip rule del ${rule}
-		done
-	}
 
 	# Flush the route cache
 	ip route flush cache dev "${iface}"

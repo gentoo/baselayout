@@ -119,13 +119,6 @@
 #	"::/0"					# IPv6 unicast
 #)
 
-# If you're using iproute2 then you can also do policy routing.
-# This is not available with ifconfig.
-#rules_eth0=(
-#	"from 24.80.102.112/32 to 192.168.1.0/24 table localnet priority 100"
-#	"from 216.113.223.51/32 to 192.168.1.0/24 table localnet priority 100"
-#)
-
 # If a specified module fails (like dhcp - see below), you can specify a
 # fallback like so
 #fallback_eth0=( "192.168.0.2 netmask 255.255.255.0" )
@@ -695,7 +688,34 @@
 #	# This function could be used, for example, to register with a
 #	# dynamic DNS service.  Another possibility would be to
 #	# send/receive mail once the interface is brought up.
-#	return 0
+
+#	# Here is an example that allows the use of iproute rules
+#	# which have been configured using the rules_eth0 variable.
+#	#rules_eth0=(
+#	#	"from 24.80.102.112/32 to 192.168.1.0/24 table localnet priority 100"
+#	#	"from 216.113.223.51/32 to 192.168.1.0/24 table localnet priority 100"
+#	#)
+#	local x="rules_${IFVAR}[@]"
+#	local -a rules=( "${!x}" )
+#	if [[ -n ${rules} ]] ; then
+#		einfo "Adding IP policy routing rules"
+#		eindent
+#		# Ensure that the kernel supports policy routing
+#		if ! ip rule list | grep -q "^" ; then
+#			eerror "You need to enable IP Policy Routing (CONFIG_IP_MULTIPLE_TABLES)"
+#			eerror "in your kernel to use ip rules"
+#		else
+#			for x in "${rules[@]}" ; do
+#				ebegin "${x}"
+#				ip rule add ${x} dev "${IFACE}"
+#				eend $?
+#			done
+#		fi
+#		eoutdent
+#		# Flush the cache
+#		ip route flush cache dev "${IFACE}"
+#	fi
+
 #}
 
 #postdown() {
@@ -703,7 +723,21 @@
 #	# Probably a good idea to set RC_DOWN_INTERFACE="no" in /etc/conf.d/rc
 #	# as well ;)
 #	[[ ${IFACE} != "lo" ]] && ethtool -s "${IFACE}" wol g
-#
+
+#	Automatically erase any ip rules created in the example postup above
+#	if interface_exists "${IFACE}" ; then
+#		# Remove any rules for this interface
+#		local rule
+#		ip rule list | grep " iif ${IFACE}[ ]*" | {
+#			while read rule ; do
+#				rule="${rule#*:}"	
+#				ip rule del ${rule}
+#			done
+#		}
+#		# Flush the route cache
+#		ip route flush cache dev "${IFACE}"
+#	fi
+
 #	# Return 0 always
 #	return 0
 #}
