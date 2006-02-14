@@ -27,7 +27,7 @@ start() {
 			# - find the / entry
 			# - make sure we have 6 fields
 			# - see if fs_passno is something other than 0
-			if [[ -n $(awk '($1 ~ /^(\/|UUID|LABEL)/ && $2 == "/" \
+			if [[ -n $(gawk '($1 ~ /^(\/|UUID|LABEL)/ && $2 == "/" \
 			                && NF == 6 && $6 != 0) { print }' /etc/fstab) ]]
 			then
 				ebegin $"Checking root filesystem"
@@ -69,7 +69,7 @@ start() {
 	# already mounted rw in which case there's nothing for us to do
 	# Don't do that on FreeBSD
 	if [[ "1" == "2" ]] && mount -vf -o remount / 2> /dev/null | \
-	   awk '{ if ($6 ~ /rw/) exit 0; else exit 1; }' && \
+	   gawk '{ if ($6 ~ /rw/) exit 0; else exit 1; }' && \
 	   ! touch -c / >& /dev/null
 	then
 		ebegin $"Remounting root filesystem read/write"
@@ -106,11 +106,11 @@ start() {
 		mount -f /
 
 		# Don't list root more than once
-		awk '$2 != "/" {print}' /proc/mounts >> /etc/mtab
+		gawk '$2 != "/" {print}' /proc/mounts >> /etc/mtab
 
 		# Now make sure /etc/mtab have additional info (gid, etc) in there
-		for x in $(awk '{ print $2 }' /proc/mounts | sort -u) ; do
-			for y in $(awk '{ print $2 }' /etc/fstab) ; do
+		for x in $(gawk '{ print $2 }' /proc/mounts | sort -u) ; do
+			for y in $(gawk '{ print $2 }' /etc/fstab) ; do
 				if [[ ${x} == ${y} ]] ; then
 					mount -f -o remount $x
 					continue

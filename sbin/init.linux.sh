@@ -64,7 +64,7 @@ check_statedir /dev
 devfs_automounted="no"
 if [[ -e "/dev/.devfsd" ]] ; then
 	# make sure devfs is actually mounted and it isnt a bogus file
-	devfs_automounted=$(awk '($3 == "devfs") { print "yes"; exit 0 }' /proc/mounts)
+	devfs_automounted=$(gawk '($3 == "devfs") { print "yes"; exit 0 }' /proc/mounts)
 fi
 
 # Try to figure out how the user wants /dev handled
@@ -131,7 +131,7 @@ fi
 
 # From linux-2.5.68 we need to mount /dev/pts again ...
 if [[ "$(get_KV)" -ge "$(KV_to_int '2.5.68')" ]] ; then
-	have_devpts=$(awk '($2 == "devpts") { print "yes"; exit 0 }' /proc/filesystems)
+	have_devpts=$(gawk '($2 == "devpts") { print "yes"; exit 0 }' /proc/filesystems)
 
 	if [[ ${have_devpts} = "yes" ]] ; then
 		# Only try to create /dev/pts if we have /dev mounted dynamically,

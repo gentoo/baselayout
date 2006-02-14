@@ -44,7 +44,7 @@ halt -w &>/dev/null
 
 # Remove loopback devices started by dm-crypt
 
-remaining=$(awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts | \
+remaining=$(gawk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts | \
             sort -r | grep -v '/newroot' | grep -v '/mnt/livecd')
 [[ -n ${remaining} ]] && {
 	sig=
@@ -61,7 +61,7 @@ remaining=$(awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mou
 			eend $? $"Failed to unmount filesystems"
 		fi
 
-		remaining=$(awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts | \
+		remaining=$(gawk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts | \
 		            sort -r | grep -v '/newroot' | grep -v '/mnt/livecd')
 		[[ -z ${remaining} ]] && break
 		
@@ -77,7 +77,7 @@ remaining=$(awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mou
 # on a LVM volume when shutting LVM down ...
 ebegin $"Unmounting filesystems"
 unmounts=$( \
-	awk '{ \
+	gawk '{ \
 	    if (($3 !~ /^(proc|devpts|sysfs|devfs|tmpfs|usb(dev)?fs)$/) && \
 	        ($1 != "none") && \
 	        ($1 !~ /^(rootfs|\/dev\/root)$/) && \
@@ -140,7 +140,7 @@ mount_readonly() {
 	sync; sync
 	sleep 1
 
-	for x in $(awk '$1 != "none" { print $2 }' /proc/mounts | sort -ur) ; do
+	for x in $(gawk '$1 != "none" { print $2 }' /proc/mounts | sort -ur) ; do
 		x=${x//\\040/ }
 		if [[ ${cmd} == "u" ]]; then
 			umount -n -r "${x}"

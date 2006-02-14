@@ -8,7 +8,7 @@ depend() {
 
 	# Only have Portmap as a dependency if there is a nfs mount in fstab 
 	# that should be mounted at boot time.  Also filter out comments.
-	local nfsmounts=$(awk '!/^#/ && ($3=="nfs" || $3=="nfs4") && $4 !~ /noauto/ { print $0 }' /etc/fstab)
+	local nfsmounts=$(gawk '!/^#/ && ($3=="nfs" || $3=="nfs4") && $4 !~ /noauto/ { print $0 }' /etc/fstab)
 
 	if [[ -n ${nfsmounts} ]] ; then
 		myneed="${myneed} portmap"
@@ -86,7 +86,7 @@ stop() {
 		# Populate $remaining with a newline-delimited list of network 
 		# filesystems.  Mount points have spaces swapped for '\040' (see 
 		# fstab(5)) so we have to translate them back to spaces.
-		remaining="$(awk '$3 ~ /'${NET_FS_LIST// /|}'/ { if ($2 != "/") print $2 }' /proc/mounts | sort -r)"
+		remaining="$(gawk '$3 ~ /'${NET_FS_LIST// /|}'/ { if ($2 != "/") print $2 }' /proc/mounts | sort -r)"
 		# Since we have to worry about the spaces being quoted properly, 
 		# we'll use `set --` and then "$@" to get the correct result.
 		IFS=$'\n'
