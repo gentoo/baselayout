@@ -28,7 +28,7 @@ variables() { eval "${MODULE}_variables() { echo \"$*\"; }"; }
 if [[ -x /sbin/ip ]]; then
 	interface_module="iproute2"
 elif [[ -x /sbin/ifconfig ]]; then
-	interface_module="ifconfig"
+	interface_module="freebsd"
 else
 	echo "Can't find a known interface module" >&2
 	exit 1
