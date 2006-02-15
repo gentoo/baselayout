@@ -402,7 +402,7 @@ BEGIN {
 	
 	# Since this could be called more than once simultaneously, use a
 	# temporary cache and rename when finished.  See bug 48303
-	("/bin/mktemp "SVCDIR"/treecache.XXXXXXX") | getline CACHEDTREE
+	("mktemp "SVCDIR"/treecache.XXXXXXX") | getline CACHEDTREE
 	if (CACHEDTREE == "") {
 		eerror("Failed to create temporary cache!")
 		exit 1
