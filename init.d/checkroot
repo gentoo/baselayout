@@ -18,7 +18,7 @@ start() {
 
 		if [[ -f /forcefsck ]] || get_bootparam "forcefsck" ; then
 			ebegin $"Checking root filesystem (full fsck forced)"
-			fsck -p -f /
+			fsck -f /
 			# /forcefsck isn't deleted because checkfs needs it.
 			# it'll be deleted in that script.
 			retval=$?
@@ -31,7 +31,7 @@ start() {
 			                && NF == 6 && $6 != 0) { print }' /etc/fstab) ]]
 			then
 				ebegin $"Checking root filesystem"
-				fsck -p /
+				fsck /
 				retval=$?
 			else
 				ebegin $"Skipping root filesystem check" "(fstab's passno == 0)"
