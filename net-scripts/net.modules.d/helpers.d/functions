@@ -484,7 +484,7 @@ clean_pidfile() {
 	if [[ -n ${pid} ]]; then
 		local cmd="${pidfile##*/}"
 		cmd="${cmd%%-*}"
-		ps -p "${pid}" 2>/dev/null | grep -q "${cmd}" && return 1
+		ps p "${pid}" 2>/dev/null | grep -q "${cmd}" && return 1
 	fi
 
 	rm -f "${pidfile}"
@@ -499,7 +499,7 @@ process_finished() {
 	local i pid="$1" cmd="$2" secs="${3:-9}"
 
 	for (( i=0; i<secs; i++ )); do
-		ps -p "${pid}" 2>/dev/null | grep -q "${cmd}" || return 0
+		ps p "${pid}" 2>/dev/null | grep -q "${cmd}" || return 0
 		sleep 1
 	done
 
