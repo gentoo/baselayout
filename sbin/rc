@@ -237,8 +237,8 @@ else
 		mylevels="$(dolisting "/etc/runlevels/${SOFTLEVEL}/")"
 	fi
 	
-	[[ ${OLDSOFTLEVEL} == "${BOOTLEVEL}" || ${OLDSOFTLEVEL} == "single" && \
-		-x /bin/dmesg ]] && /bin/dmesg -n 1
+	[[ ${OLDSOFTLEVEL} == "${BOOTLEVEL}" || ${OLDSOFTLEVEL} == "single" ]] && \
+		[[ -x /bin/dmesg ]] && /bin/dmesg -n 1
 	
 	for x in ${mylevels} ; do
 		[[ -L ${x} ]] && myscripts="${myscripts} ${x##*/}"
