@@ -4,7 +4,7 @@
 # Set the console loglevel to 1 for a cleaner boot
 # the logger should anyhow dump the ring-0 buffer at start to the
 # logs, and that with dmesg can be used to check for problems
-/bin/dmesg -n 1
+[[ -x /bin/dmesg ]] && /bin/dmesg -n 1
 
 # Start logging console output since we have all /dev stuff setup
 bootlog start
