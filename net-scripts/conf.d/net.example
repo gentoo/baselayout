@@ -504,7 +504,7 @@
 
 #-----------------------------------------------------------------------------
 # TUN/TAP
-# For TUN/TAP support emerge sys-apps/usermode-utilities
+# For TUN/TAP support emerge net-misc/openvpn or sys-apps/usermode-utilities
 #
 # NOTE: The interface name must be either tun or tap followed by a number
 #config_tun1=( "192.168.0.1/24")
@@ -512,6 +512,7 @@
 # For passing custom options to tunctl use something like the following.  This
 # example sets the owner to adm
 #tunctl_tun1="-u adm"
+# When using openvpn, there are no options
 
 #-----------------------------------------------------------------------------
 # Bridging (802.1d)
