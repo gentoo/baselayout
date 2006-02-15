@@ -99,7 +99,7 @@ order_interfaces() {
 	local ifaces extra
 
 	${1:-false} && extra=' && $2=="00000000"'
-	ifaces=$(gawk '{if (NR>1 && $1!="lo"'"${extra}"') print $7, $1}' /proc/net/route \
+	ifaces=$(awk '{if (NR>1 && $1!="lo"'"${extra}"') print $7, $1}' /proc/net/route \
 		| sort -n | cut -d' ' -f2 | uniq)
 
 	# Append lo if it's up
@@ -343,7 +343,7 @@ calculate_metric() {
 	local iface="$1" exclude='$1!="Iface" && $1!="lo"'
 
 	# Have we already got a metric?
-	local m=$( gawk '$1=="'${iface}'" && $2=="00000000" { print $7 }' \
+	local m=$( awk '$1=="'${iface}'" && $2=="00000000" { print $7 }' \
 		/proc/net/route )
 	if [[ -n ${m} ]]; then
 		echo "${m}"
@@ -372,7 +372,7 @@ calculate_metric() {
 		exclude="${exclude} && "'$1'"!=\"${x}\""
 	done
 
-	local m=$( gawk "${exclude} { print "'$7'" }" /proc/net/route \
+	local m=$( awk "${exclude} { print "'$7'" }" /proc/net/route \
 		| sort -rn | head -n 1 | cut -d' ' -f2 )
 	m="${m:--1}"
 	(( m ++ ))
@@ -484,7 +484,7 @@ clean_pidfile() {
 	if [[ -n ${pid} ]]; then
 		local cmd="${pidfile##*/}"
 		cmd="${cmd%%-*}"
-		ps -p "${pid}" 2>/dev/null | grep -q "${cmd}" && return 1
+		ps p "${pid}" 2>/dev/null | grep -q "${cmd}" && return 1
 	fi
 
 	rm -f "${pidfile}"
@@ -499,7 +499,7 @@ process_finished() {
 	local i pid="$1" cmd="$2" secs="${3:-9}"
 
 	for (( i=0; i<secs; i++ )); do
-		ps -p "${pid}" 2>/dev/null | grep -q "${cmd}" || return 0
+		ps p "${pid}" 2>/dev/null | grep -q "${cmd}" || return 0
 		sleep 1
 	done
 
@@ -576,7 +576,7 @@ configure_variables() {
 }
 
 # Provide a wrapper for hostname if it's not available
-if [[ -z $(type -p hostname) || $(uname -s) != "Linux" ]]; then
+if [[ -z $(type -p hostname) ]]; then
 	hostname() {
 		# Linux and *BSD seem to differ
 		local kernel="kern" ctl="hostname"
