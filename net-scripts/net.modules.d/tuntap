@@ -6,6 +6,9 @@
 
 # Fix any potential localisation problems
 # Note that LC_ALL trumps LC_anything_else according to locale(7)
+openvpn() {
+	LC_ALL=C /usr/sbin/openvpn "$@"
+}
 tunctl() {
 	LC_ALL=C /usr/bin/tunctl "$@"
 }
@@ -23,8 +26,9 @@ tuntap_depend() {
 #
 # Returns 1 if tuntap is installed, otherwise 0
 tuntap_check_installed() {
+	[[ -x /usr/sbin/openvpn ]] && return 0
 	[[ -x /usr/bin/tunctl ]] && return 0
-	${1:-false} && eerror "For TunTap support, emerge sys-apps/usermode-utilities"
+	${1:-false} && eerror "For TunTap support, emerge net-misc/openvpn or sys-apps/usermode-utilities"
 	return 1
 }
 
@@ -44,15 +48,16 @@ tuntap_check_kernel() {
 #
 # Returns 0 if the tun/tap interface exists, otherwise 1
 tuntap_exists() {
-	tunctl -d "$1" &>/dev/null
+	local itype="$(interface_type "$1")"
+	[[ ${itype} != "tun" && ${itype} != "tap" ]] && return 1
+	interface_exists "$1"
 }
 
 # bool tuntap_pre_start(char *iface)
 #
 # Create the device, give it the right perms
 tuntap_pre_start() {
-	local iface="$1" opts ifvar=$( bash_variable "$1" )
-	local itype=$( interface_type "${iface}" )
+	local iface="$1" itype="$(interface_type "$1")"
 
 	# Check that we are a valid tun/tap interface
 	# NOTE - the name can be anything as we define it
@@ -62,14 +67,15 @@ tuntap_pre_start() {
 
 	tuntap_check_kernel || return 1
 
-	# Get our options
-	opts="tunctl_${ifvar}"
-
 	ebegin "Creating Tun/Tap interface ${iface}"
-	tunctl ${!opts} -t "${iface}" >/dev/null
-	eend "$?" || return 1
-
-	return 0
+	if [[ -x /usr/sbin/openvpn ]] ; then
+		openvpn --mktun --dev "${iface}" >/dev/null
+	else
+		local ifvar="$(bash_variable "${iface}")"
+		local opts="tunctl_${ifvar}"
+		tunctl ${!opts} -t "${iface}" >/dev/null
+	fi
+	eend $?
 }
 
 # bool tuntap_stop(char *iface)
@@ -79,16 +85,15 @@ tuntap_stop() {
 	local iface="$1"
 
 	tuntap_check_installed || return 0
-	interface_exists "${iface}" || return 0
+	tuntap_exists "${iface}" || return 0
 
-	# tunctl doesn't always error on on tun/tap
-	# interfaces (mainly aliases, etc)
-	if tuntap_exists "${iface}" ; then
-		interface_exists "${iface}" \
-		|| einfo "Destroyed Tun/Tap interface ${iface}"
+	ebegin "Destroying Tun/Tap interface ${iface}"
+	if [[ -x /usr/sbin/openvpn ]] ; then
+		openvpn --rmtun --dev "${iface}" >/dev/null
+	else
+		tunctl -d "${fiace}" >/dev/null
 	fi
-
-	return 0 
+	eend $?
 }
 
 # vim:ts=4
