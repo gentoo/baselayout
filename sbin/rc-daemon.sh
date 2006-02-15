@@ -305,7 +305,7 @@ rc_stop_daemon() {
 
 	for pid in ${pids}; do
 		if [[ ${RC_FAIL_ON_ZOMBIE} == "yes" ]]; then
-			ps p "${pid}" &>/dev/null || return 1
+			ps -p "${pid}" &>/dev/null || return 1
 		fi
 
 		if rc_kill_pid "${pid}" false ; then
