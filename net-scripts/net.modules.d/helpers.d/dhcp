@@ -20,7 +20,7 @@ case "${action}" in
 	deconfig|leasefail)
 		# Just remove IPv4 / inet addresses
 		interface_del_addresses "${interface}" true
-		service_started "${service}" && mark_service_inactive "net.${interface}"
+		service_started "${service}" && mark_service_inactive "${service}"
 		remove_state "${interface}"
 		if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
 			best_interface=$( select_best_interface )
@@ -115,7 +115,7 @@ else
 	apply_state "${interface}"
 fi
 
-! service_stopping "${service}" && mark_service_started "${service}"
+service_inactive "${service}" && mark_service_started "${service}"
 
 echo "${action}"
 exit 0
