@@ -576,7 +576,7 @@ configure_variables() {
 }
 
 # Provide a wrapper for hostname if it's not available
-if [[ -z $(type -p hostname) ]]; then
+if [[ -z $(type -p hostname) || $(uname -s) != "Linux" ]]; then
 	hostname() {
 		# Linux and *BSD seem to differ
 		local kernel="kern" ctl="hostname"
