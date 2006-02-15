@@ -94,6 +94,9 @@ freebsd_get_address() {
 	local -a x=( $( ifconfig "$1" \
 	| gsed -n -e 's/.*inet \([^ ]*\).*netmask \([^ ]*\).*/\1 \2/p' ) )
 	x[1]=$( netmask2cidr "${x[1]}" )
+	
+	[[ -z ${x[0]} ]] && return 0;
+	
 	echo "${x[0]}/${x[1]}"
 }
 
@@ -138,7 +141,8 @@ freebsd_set_name() {
 # example "eth0:2 eth0:1"
 freebsd_get_aliases_rev() {
 	# BSD NEED VERIFY
-	ifconfig | grep -o "^$1:[0-9]* " | tac
+	#ifconfig | grep -o "^$1:[0-9]* "
+	return 0
 }
 
 # bool freebsd_del_addresses(char *interface, bool onlyinet)
@@ -303,8 +307,9 @@ freebsd_post_start() {
 		x="${x//via/gw} "
 		x="${x//scope * / }"
 
-		# Assume we're a net device unless told otherwise
-		[[ " ${x} " != *" -net "* && " ${x} " != *" -host "* ]] && x="-net ${x}"
+# FIXME! FreeBSD does not support dev command
+#		# Assume we're a net device unless told otherwise
+#		[[ " ${x} " != *" -net "* && " ${x} " != *" -host "* ]] && x="-net ${x}"
 
 		# Support adding IPv6 addresses easily
 		if [[ ${x} == *:* ]]; then
@@ -312,10 +317,11 @@ freebsd_post_start() {
 			x="${x// -net / }"
 		fi
 
-		# Add a metric if we don't have one
-		[[ ${x} != *" metric "* ]] && x="${x} metric ${!metric}"
+# FIXME! FreeBSD does not support metric command
+#		# Add a metric if we don't have one
+#		[[ ${x} != *" metric "* ]] && x="${x} metric ${!metric}"
 
-		route add ${x} dev "${iface}"
+		route add ${x}
 		eend $?
 	done
 	eoutdent
