@@ -144,7 +144,7 @@ rc_try_kill_pid() {
 				pkill "-${signal}" -s "${pid}"
 				pgrep -s "${pid}" >/dev/null || return 0
 			else
-				local pids="$(ps -eo pid,sid | sed -n "s/ ${pid}\$//p")"
+				local pids="$(ps eo pid,sid | sed -n "s/ ${pid}\$//p")"
 				[[ -z ${pids} ]] && return 0
 				kill -s "${signal}" ${pids} 2>/dev/null
 				e=false
@@ -296,7 +296,7 @@ rc_stop_daemon() {
 		else
 			local npids
 			for pid in ${pids} ; do
-				npids="${npids} $(ps -eo pid,ppid | sed -n "s/ ${pid}\$//p")"
+				npids="${npids} $(ps eo pid,ppid | sed -n "s/ ${pid}\$//p")"
 			done
 			pids="${pids} ${npids}"
 		fi
@@ -304,7 +304,7 @@ rc_stop_daemon() {
 
 	for pid in ${pids}; do
 		if [[ ${RC_FAIL_ON_ZOMBIE} == "yes" ]]; then
-			ps -p "${pid}" &>/dev/null || return 1
+			ps p "${pid}" &>/dev/null || return 1
 		fi
 
 		if rc_kill_pid "${pid}" false ; then
