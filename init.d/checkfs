@@ -18,11 +18,11 @@ start() {
 		ebegin $"Checking all filesystems"
 		if [[ -f /forcefsck ]] ; then
 			ewarn $"A full fsck has been forced"
-			fsck -p -f
+			fsck -f
 			retval=$?
 			rm -f /forcefsck
 		else
-			fsck -p
+			fsck
 			retval=$?
 		fi
 		if [[ ${retval} -eq 0 ]] ; then
