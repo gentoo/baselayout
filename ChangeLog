@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  17 Feb 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Fixed typo in functions, #123136 thanks to Alexander Danilov.
+
 * baselayout-1.12.0_pre16 (16 Feb 2006)
 
   15 Feb 2006; Roy Marples <uberlord@gentoo.org>:
