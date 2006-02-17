@@ -74,7 +74,7 @@ apply_state() {
 				local file 
 				for file in ${files} ; do
 					# Skip .sv files
-					[[ ${file} == *".sv" ]] && contine
+					[[ ${file} == *".sv" ]] && continue
 					local link=$( readlink "/etc/${file}" 2>/dev/null )
 					if [[ ${link} != "${netdir}/${file}" ]]; then
 						[[ -e "/etc/${file}" ]] && rm -f "/etc/${file}"
