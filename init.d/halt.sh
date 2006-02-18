@@ -20,10 +20,25 @@ stop_addon udev
 # occure, bug #13599.
 umount -at tmpfs &>/dev/null
 
-if [[ -n $(swapon -s 2>/dev/null) ]]; then
-	ebegin "Deactivating swap"
+# Turn off swap and perhaps zero it out for fun
+swap_list=$(swapon -s 2>/dev/null)
+
+if [[ -n ${swap_list} ]] ; then
+	ebegin $"Deactivating swap"
 	swapoff -a
 	eend $?
+
+	if [[ ${RC_SWAP_ERASE} == "yes" ]] ; then
+		for s in $(echo "${swap_list}" | awk '$2 == "partition" {print $1}') ; do
+			ebegin $"Erasing swap space" ${s}
+			ssize=$(awk '$4 == "'${s##*/}'" {print $3}' /proc/partitions 2> /dev/null)
+			dd if=/dev/zero of=${s} bs=1024 count=${ssize} 2> /dev/null
+			eend $?
+			ebegin $"Creating swap space" ${s}
+			mkswap ${s} > /dev/null
+			eend $?
+		done
+	fi
 fi
 
 # Write a reboot record to /var/log/wtmp before unmounting

@@ -76,6 +76,11 @@ RC_DEVICES="auto"
 
 RC_DEVICE_TARBALL="yes"
 
+# RC_SWAP_ERASE controls erasing of swap partitions at shutdown.
+# Useful for all those paranoid peeps to nuke their memory.
+
+RC_SWAP_ERASE="no"
+
 
 
 
