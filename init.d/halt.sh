@@ -20,10 +20,25 @@ stop_addon udev
 # occure, bug #13599.
 umount -at tmpfs &>/dev/null
 
-if [[ -n $(swapon -s 2>/dev/null) ]]; then
+# Turn off swap and perhaps zero it out for fun
+swap_list=$(swapon -s 2>/dev/null)
+
+if [[ -n ${swap_list} ]] ; then
 	ebegin $"Deactivating swap"
 	swapoff -a
 	eend $?
+
+	if [[ ${RC_SWAP_ERASE} == "yes" ]] ; then
+		for s in $(echo "${swap_list}" | awk '$2 == "partition" {print $1}') ; do
+			ebegin $"Erasing swap space" ${s}
+			ssize=$(awk '$4 == "'${s##*/}'" {print $3}' /proc/partitions 2> /dev/null)
+			dd if=/dev/zero of=${s} bs=1024 count=${ssize} 2> /dev/null
+			eend $?
+			ebegin $"Creating swap space" ${s}
+			mkswap ${s} > /dev/null
+			eend $?
+		done
+	fi
 fi
 
 # Write a reboot record to /var/log/wtmp before unmounting
@@ -44,7 +59,7 @@ halt -w &>/dev/null
 
 # Remove loopback devices started by dm-crypt
 
-remaining=$(gawk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts | \
+remaining=$(awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts | \
             sort -r | grep -v '/newroot' | grep -v '/mnt/livecd')
 [[ -n ${remaining} ]] && {
 	sig=
@@ -61,7 +76,7 @@ remaining=$(gawk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mo
 			eend $? $"Failed to unmount filesystems"
 		fi
 
-		remaining=$(gawk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts | \
+		remaining=$(awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts | \
 		            sort -r | grep -v '/newroot' | grep -v '/mnt/livecd')
 		[[ -z ${remaining} ]] && break
 		
@@ -77,7 +92,7 @@ remaining=$(gawk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mo
 # on a LVM volume when shutting LVM down ...
 ebegin $"Unmounting filesystems"
 unmounts=$( \
-	gawk '{ \
+	awk '{ \
 	    if (($3 !~ /^(proc|devpts|sysfs|devfs|tmpfs|usb(dev)?fs)$/) && \
 	        ($1 != "none") && \
 	        ($1 !~ /^(rootfs|\/dev\/root)$/) && \
@@ -140,7 +155,7 @@ mount_readonly() {
 	sync; sync
 	sleep 1
 
-	for x in $(gawk '$1 != "none" { print $2 }' /proc/mounts | sort -ur) ; do
+	for x in $(awk '$1 != "none" { print $2 }' /proc/mounts | sort -ur) ; do
 		x=${x//\\040/ }
 		if [[ ${cmd} == "u" ]]; then
 			umount -n -r "${x}"
@@ -171,7 +186,7 @@ fi
 eend ${mount_worked}
 if [[ ${mount_worked} -eq 1 ]]; then
 	ups_kill_power
-	single_user -t 10 /dev/console
+	/sbin/sulogin -t 10 /dev/console
 fi
 
 # Inform if there is a forced or skipped fsck
