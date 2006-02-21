@@ -45,7 +45,7 @@
 # In other words, you probably should DO NOTHING HERE...
 
 # Prefer ifconfig over iproute2
-#modules=( "iproute2" )
+#modules=( "ifconfig" )
 
 # You can also specify other modules for an interface
 # In this case we prefer udhcpc over dhcpcd
