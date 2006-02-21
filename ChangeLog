@@ -1,0 +1,5094 @@
+# ChangeLog for Gentoo System Intialization ("rc") scripts
+# Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
+
+  21 Feb 2006; Mike Frysinger <vapier@gentoo.org>:
+
+    Add patch by Alun Jones to respect RC_QUIET_STDOUT in conf.d/rc #123606.
+
+  18 Feb 2006; Mike Frysinger <vapier@gentoo.org>:
+
+    Add patch by Craig to nuke swap at shutdown #122893.
+
+  17 Feb 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Fixed typo in functions, #123136 thanks to Alexander Danilov.
+
+* baselayout-1.12.0_pre16 (16 Feb 2006)
+
+  15 Feb 2006; Roy Marples <uberlord@gentoo.org>:
+
+    tuntap now works if openvpn is installed, #122452.
+
+  14 Feb 2006; Roy Marples <uberlord@gentoo.org>:
+
+    ip rules setup has been documented in net.example, #107628.
+
+    pppd should now be fully re-entrant, #122396.
+
+  08 Feb 2006; Roy Marples <uberlord@gentoo.org>:
+
+    New module ip6to4 that creates tunnels with IPv6 addresses based off
+    global IPv4 addresses on a specified interface, #122015.
+    Thanks to Antti Mäkelä for testing and ideas.
+
+  07 Feb 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Always ensure that end_service is called, #119233 again.
+
+    You can now specify a maxfail value for pppd (default 0), #115346.
+
+    net.lo now depends on isapnp to work with older NICs, #121539.
+
+    chat commands in pppd are now re-quoted, #121665.
+
+    wpa_supplicant now looks for config files in order
+        /etc/wpa_supplicant/wpa_supplicant-$iface.conf
+        /etc/wpa_supplicant/wpa_supplicant.conf
+        /etc/wpa_supplicant.conf
+    and for these wpa_cli scripts
+        /etc/wpa_supplicant/wpa_cli.sh
+        /sbin/wpa_cli.action
+
+  6 Feb 2006; Mike Frysinger <vapier@gentoo.org>:
+
+    Update xen checks #96240 by Tuan Van and #107976 by Chris Bainbridge.
+
+  29 Jan 2006; Mike Frysinger <vapier@gentoo.org>:
+
+    Update modules-update to run depmod even if /proc/modules doesn't exist
+    and warn if the depdir doesn't exist but the user ran in verbose mode
+    #117212 by Alex Guensche.
+
+  26 Jan 2006; Mike Frysinger <vapier@gentoo.org>:
+
+    Add fixes by Robert Millan to consoletype so that it's more portable #80021.
+
+    Fix grepping of --assume-kernel in modules-update as pointed out by 
+    Patrick McLean in #117212.
+
+    Make sure / is actually read-only before trying to remount it read/write 
+    (to fix people using like unionfs for /) #118646 by Alun Jones.
+
+  25 Jan 2006; Roy Marples <uberlord@gentoo.org>:
+
+    New variable RC_ULIMIT applies ulimit commands before starting a service.
+    This should be configured in /etc/conf.d/foo for service foo, but can also
+    be configured in /etc/conf.d/rc on a global basis.
+    RC_DAEMON now works in a similar way, instead of RC_DAEMON_foo.
+    Fixes, #120151.
+
+  24 Jan 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Dependant services are restarted correctly when the restarted
+    service is started and not inactive, #120154.
+
+  21 Jan 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Ensure that CRITICAL_SERVICES are in the boot runlevel, #117912.
+
+* baselayout-1.12.0_pre15 (20 Jan 2006)
+
+  20 Jan 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Fix quoting in iwconfig, #119629.
+    Fix process pid selection in rc-daemon.sh, #119631.
+    Both of the above thanks to Dominik Buerkle.
+
+    init scripts no longer run during the sysinit runlevel, #118419.
+    Thanks to Greg KH and the Linux Hotplug mailing list for advice.
+
+  19 Jan 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Give a better error message when no valid DHCP client is installed.
+
+  18 Jan 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Services should not get stuck in rc anymore, #119233, #119242.
+
+    We only hotplug net.* scripts on interfaces that are marked as ethernet.
+
+  16 Jan 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Renamed restart in $svcdir to scheduled as it makes much more sense.
+
+    Interfaces names with a dot in them now work.
+
+  14 Jan 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Changed runscript.sh to store it's services to restart like rc.
+
+* baselayout-1.12.0_pre14 (13 Jan 2006)
+
+  13 Jan 2006; Mike Frysinger <vapier@gentoo.org>:
+
+    Filter all of fuse as network based since there's no way for us to know
+    if the thing is local or not #118552 by Pete Ezzo.'
+
+  13 Jan 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Added warning to modules.autoload.d files stating that it's a bad idea
+    to put modules there that trigger hotplug events which in turn start
+    services, #118419.
+
+    Services that need a service which is inactive at boot are now scheduled
+    to start when the inactive service starts, #118801.
+
+  12 Jan 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Interactive start is now controllable by RC_INTERACTIVE="yes" and will
+    probe to see if we can go interactive.
+
+  11 Jan 2006; Roy Marples <uberlord@gentoo.org>:
+
+    runscript.sh now traps interrupt signals and rolls back its status to what
+    it was when before it started.
+
+    bonding module now supports space seperated and array variables, #118590.
+
+    start-stop-daemon now waits for upto 1 second if it returns 0 and we
+    don't have a valid process.
+
+    A more user friendly message is reported when an interface does not exist.
+
+  10 Jan 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Removed runlevel dependancies from runscript.sh as they're now in rc.
+    
+    runscript.sh now has much better locking, #118418.
+
+    We now store services to restart when we end up as inactive from a restart
+    or we were stopped with IN_BACKGROUND=true, #112088.
+
+    We no longer stop and start services already running on runlevel change if
+    they're in the runlevel we're changing too.
+
+    We can now wait_sevice on services started outside of rc.
+
+    rc-status now reports "Could not locate" instead of "Could not local",
+    thanks to Christian Heim.
+
+  09 Jan 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Ensure that specific configuration is loaded after net, #118368.
+
+    iwconfig now supports multiple iwconfig_* and iwpriv_* statements and is
+    also configurable for specific ESSIDs. This allows use to use the inbuilt
+    WPA support in the rt2500 driver.
+
+    module-loader now loads interface specific configuration files, #118366.
+
+  07 Jan 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Save a few CPU cycles by storing add_suffix in variable.
+
+  06 Jan 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Use ${DEFAULTLEVEL} if ${SOFTLEVEL} is boot, shutdown, reboot or single
+    in add_suffix.
+
+    Sync style changes in functions.sh
+
+    Critical services now load a suffixed config and fail gracefully.
+
+  05 Jan 2006; Roy Marples <uberlord@gentoo.org>:
+
+    iproute deletes addresses again, fixes #117799.
+
+    dhclient now supports dhclient-enter-hooks, #117763.
+
+* baselayout-1.12.0_pre13 (04 Jan 2006)
+
+  03 Jan 2006; Roy Marples <uberlord@gentoo.org>:
+
+    net scripts now work with bash-3.1-r2, #116352.
+
+  02 Jan 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Interfaces can be dynamically added to bridges again, #117406.
+    Updated copyright to 2006.
+
+  27 Dec 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Startup volume related stuff (lvm/raid/etc...) in rc instead of
+    init.d/checkfs (lvm/raid/etc...) #50711.
+
+  25 Dec 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Clean up and display the ${TMPFILE2}.err error file in modules-update
+    where appropriate #116745 by Daniele Gaffuri.
+
+  21 Dec 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Add new variable RC_DOWN_INTERFACE and documentation so that interfaces
+    are kept up for Wake On LAN support, #113880.
+
+* baselayout-1.12.0_pre12 (20 Dec 2005)
+
+  20 Dec 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Ensure that tty has keyboard and stty reports icanon before enabling
+    interactive rc, #112161.
+
+  15 Dec 2005; Roy Marples <uberlord@gentoo.org>:
+
+    When setting ad-hoc or master modes, set the mode before anything else,
+    #115664 thanks to Oldrich Jedlicka.
+
+  14 Dec 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Add great big warning in documentation advising people not to use the
+    IPv6 examples if they don't have IPv6 enabled in their kernel, #115396.
+
+  09 Dec 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Remove nasty undocumented backgrounding as we now support
+    ifplugd, netplug and wpa_supplicant-0.4.x which do much better jobs.
+
+  08 Dec 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Use getent instead of trying to read /etc/groups directly in localmount 
+    #114833 by Justin Sanchez.
+
+    Make modules-update a little more friendly by adding --help, --verbose,
+    and --debug runtime options.
+
+    Remove rtc clock sleep hack for udev and replace with a modprobe rtc.
+
+  06 Dec 2005; Roy Marples <uberlord@gentoo.org>:
+
+    ppp documentation updated, #114551.
+
+  05 Dec 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Fix dhcp options, #114519.
+
+  29 Nov 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add po/Makefile, based mostly on work done by Rach Holmes <Rach.Holmes@GMX.net>
+    and James Rowe <Jay@jnrowe.uklinux.net> since Mike changed most rc-scripts to
+    support it.
+
+    Set TEXTDOMAIN and TEXTDOMAINDIR.  Install locale into $svclib.
+
+  28 Nov 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Fixed fallback_routes, #113776.
+    Fixed variable array references, #113661.
+    Fixed iwconfig mode selection, #113677 - thanks to Tuan Van.    
+    Fixed iproute2 is_up check, #113672 - thanks to Georgi Georgiev. 
+    Added information about the "broken" status as reported by rc-status to
+    its output, #113755.
+
+  27 Nov 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Don't set default RC_VOLUME_ORDER anymore in functions.sh #113700.
+
+  24 Nov 2005; Roy Marples <uberlord@gentoo.org>:
+
+    ifconfig routes now work with metrics and older configs again
+    #113378 and #113406.
+
+    arping now works with multiple gateways, #113402.
+
+    pppd module now updates an emply secrets file, #113431.
+
+    use ${svclib} instead of hardcoding /lib/rcscripts.
+
+* baselayout-1.12.0_pre11 (23 Nov 2005)
+
+  23 Nov 2005; Roy Marples <uberlord@gentoo.org>:
+
+    RC_KILL_CHILDREN now defaults to "no". This stops ssh children being
+    killed when a network interface is restarted.
+
+    macchanger now ensures the interface is down before attempting to change
+    the mac address, #112333.
+
+  22 Nov 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Stop ifplugd and netplugd from operating on bonded and vlan interfaces.
+
+  21 Nov 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Fix wpa_suppicant error when auth is IEEE 802.1X (NO WPA) #112938.
+ 
+  20 Nov 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Call reboot with -k to support people who want to use kexec #80220.
+
+    Source /etc/profile.d/*.sh files in /etc/profile #4854.
+
+  18 Nov 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Changed from eval foo=\"\$config_$ifvar\" to foo=config_$ivar; foo=$!foo
+    This is to avoid using the eval statement to extract user configured vars.
+    
+    Enhanced pppd module so that it obeys metric routes, does not mess
+    with the system resolv.conf and works with updetach a bit better, #112049.
+
+    Fixed pointotpoint, #112757 thanks to Felix Braun.
+
+  10 Nov 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix module-update searching for System.map in /usr/src/linux #104288.
+
+  10 Nov 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Fix WEP for forced AP's, #112031
+
+    Change pppd behaviour for updetach, #112049
+
+    Fix "Device foo not found" error when stopping an interface and the
+    interface does not physically exist.
+
+  09 Nov 2005; Roy Marples <uberlord@gentoo.org>:
+
+    ifplugd, netplug and wpa_supplicant  now background automatically
+    instead of waiting to see if the interface was configured OK
+
+* baselayout-1.12.0_pre10 (08 Nov 2005)
+
+  08 Nov 2005; Roy Marples <uberlord@gentoo.org>:
+
+    punted serial from rc-lists/boot as it's no longer provided by baselayout
+
+  07 Nov 2005; Roy Marples <uberlord@gentoo.org>:
+
+    documented pppd module settings, #53954
+
+    rc-status now warns about broken symbolic links in /etc/runlevels and
+    trace_dependencies got a bit of a revamp, attempts to fix #104394
+
+    Always setup_defaultlevels as we need the default vars set for
+    rc-status.
+
+  04 Nov 2005; Roy Marples <uberlord@gentoo.org>:
+
+    udhcpc now checks the dhcp lease file for a valid IP address.
+
+    We prefer iproute2 when stopping an interface by default.
+
+  03 Nov 2005; Roy Marples <uberlord@gentoo.org>:
+
+    iwconfig now detects an unencrypted AP and doesn't apply any configured
+    WEP settings.
+
+    baselayout now caters for systems without /bin/hostname (from net-tools)
+    and uses sysctl instead.
+
+  02 Nov 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Grab updates from IANA for /etc/services including OpenVPN #111194.
+
+  31 Oct 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Replace the bubble-esq sort routine with a tsort based one for
+    loading modules. This means that we are much faster than before :)
+
+    Fix ifconfig with multiple IP addresses, #110956
+
+  28 Oct 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Fix typo in rc-status error message #110685 by Eduardo Tongson.
+
+  27 Oct 2005; Roy Marples <uberlord@gentoo.org>:
+
+    New net scripts depend calls - functions, variables and provide.
+    This saves having to create 3 seperate functions in each module which means
+    a saving of around 600-800 bytes per module.
+
+    Split apipa out of arping module due to user demand for seperate
+    functionality.
+
+    arping module now works correctly.
+
+    runscript sets RC_KILL_CHILDREN="no" when restarting a service, otherwise
+    things like your ssh session get killed.
+
+    adsl module supports new rp-pppoe-3.6 ebuild, #102820
+
+    Config profile is now changed correctly when doing "rc foo" and you're in
+    the default runlevel, #101105
+
+  26 Oct 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Tweak runscript error output to only show the invalid arg once rather than 
+    twice #110558 by Toralf Förster.
+
+  24 Oct 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Fix remove_net_fs space handling in netmount script #110313 DominikBuerkle.
+
+  19 Oct 2005; Roy Marples <uberlord@gentoo.org>:
+
+    rc-daemon.sh now kills children correctly.
+
+  18 Oct 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Touchup the devfsd init code to be a bit more resilient.
+
+    Cache get_KV() so we don't keep calling `uname -r`.
+
+  18 Oct 2005; Roy Marples <uberlord@gentoo.org>:
+
+    You can now specify a custom wpa_supplicant configuration file.
+    wpa_supplicant now works on more than one interface.
+
+  17 Oct 2005; Roy Marples <uberlord@gentoo.org>:
+
+    wpa_supplicant now works on wired interfaces, and can work with
+    ifplugd and netplug too.
+
+  16 Oct 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Fixed typo in dhcpcd-wrapper so the new resolv.conf gets created
+    in /var/lib/net-scripts and not the current directory. Thanks to
+    Mark-Dominik Bürkle for the patch.
+
+  13 Oct 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Fix test_service_state() so it always returns 1 when it's not in that
+    state.
+
+  12 Oct 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Changed number of preferred modules from 3 to 4 in net.lo, #108960.
+
+  11 Oct 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Note that RC_BOOTLOG won't work with boot splash stuff #108645.
+
+* baselayout-1.12.0_pre9 (11 Oct 2005)
+
+  11 Oct 2005; Roy Marples <uberlord@gentoo.org>:
+
+    arping now dis-regards 0.0.0.0 and 0 addresses, #108737.
+
+    dhcpcd now allows the user to configure the -c script option, #108345.
+
+    bash doesn't handle floats, so we eumlate it. Fixes the issue
+    where some daemons didn't stop, #107492. Thanks to Giampaolo Tomassoni.
+
+  09 Oct 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Fix chroot handling and enable custom env vars for start-stop-daemon
+    binary #101642, thanks to Quequero. 
+
+  07 Oct 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Fix some vlan/bridge/tap/neplugd/ifplugd interdependencies #107406.
+
+  06 Oct 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Tweak clock start/stop display to be clearer about behavior #105681.
+
+  06 Oct 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Fixup IPv6 documentation and support, #108143.
+
+  02 Oct 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Add support for ROOT to rc-update script.
+
+  01 Oct 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Add support for running some features of rc-update as non-root.
+    Patch by RiverRat #107775.
+
+    Drop -a and keep -y from the forced fsck since -a and -y can't be used at 
+    the same time #107812.
+
+  23 Sep 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Add a note to conf.d/clock for people who dual boot with Windows.
+
+    Touchup comments in conf.d/domainname to help clear confusion.
+
+    Rework how we setup default rc variables in sbin/functions.sh to help
+    keep users from doing stupid things and destroying their system.
+
+  17 Sep 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Fix up support for NetBSD #106112 by Damian Florczyk.
+
+    When doing a forced fsck, don't show title at startup (-T).
+
+  16 Sep 2005; Roy Marples <uberlord@gentoo.org>:
+
+    iwconfig and wpa_supplicant now check to see if /proc/net/wireless exists
+    before checking for extensions, #106036
+
+  14 Sep 2005; Roy Marples <uberlord@gentoo.org>:
+
+    netplug module renamed to netplugd for consistency
+
+    pppd module added, #53954 thanks to Alin Nastac
+
+  14 Sep 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Need to source init-functions.sh to provid try() for halt.sh.
+
+  13 Sep 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Don't mount ${svcdir} with -n since / is writable at that point.
+
+    Clean up udev tarball temp files in halt.sh #105827 by Robert Forsman.
+
+  13 Sep 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Changed net.lo depend from isdn4linux to isdn, #102846
+
+  12 Sep 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Split /sbin/rc into more modular pieces to allow easy porting to the bsd's.
+    Thanks goes to Mike who did the initial version.
+
+    Split out devfs and udev stuff to addons.
+
+    Lots of syntax and quoting fixes.
+
+    Move noblock_read() back to /sbin/rc, as its used there.
+
+  12 Sep 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Set essid before mode for ad-hoc/master configurations, #105452
+
+    Fixed force_any associate order option, #99256
+
+  09 Sep 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Add PKG_CONFIG_PATH to incremental env var list #105384 by Sven Wegener.
+
+  08 Sep 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Added ifplugd module, but we prefer netplug by default
+
+  07 Sep 2005; Roy Marples <uberlord@gentoo.org>:
+ 
+    replace the apipa module with a generic arping module which can now
+    do gateway detection and apply a configuration for it as well as the
+    apipa stuff
+
+    updated env_whitelist so that nothing is allowed by default
+
+    system module now runs through pre instead of post and is run by
+    lo as well, so dns_ options can be configured for it
+
+    netplug and wpa_supplicant understand negative timeouts to be defined
+    as "return immediately and don't wait for success"
+
+    dns options and sortlist now get merged in resolv.conf too
+
+    bridge error message regarding the kernel module should work with
+    newer versions of bridge-utils
+
+  06 Sep 2005; Roy Marples <uberlord@gentoo.org>:
+
+    dns_*, nis_* and ntp_* options now work globally too, but are overridden
+    by specific interface/essid/mac ones.
+
+    dhcpcd and pump now support the "options" and "sortlist" directives too,
+    #104870
+
+  05 Sep 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Added resolv.conf options for "options" and "sortlist" directives, #104870
+
+    dns_search_path_eth0 renamed to dns_search_eth0 so that all the dns_
+    variables match their resolv.conf counterpart.
+
+  04 Sep 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Do not unmount /usr, but rather remount it ro, else we run into issues
+    with systems that have locales enabled, as the fuser call in halt.sh tries
+    to kill bash (due to it using /usr/lib/locale/*).
+
+  03 Sep 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Clean up netmount and don't unmount afs filesystems if the user has the 
+    afs-client init.d script running.
+
+    Update rc-help.sh to show custom init.d opts #49663 and in general make 
+    the output a lot more useful.
+
+  03 Sep 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add warning about having LANG in env_whitelist, add TERM to system
+    env_whitelist, set argv[0] to '/bin/bash' and not 'runscript'.
+
+  02 Sep 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Fixed netplug from stopping on the wrong interface
+
+* baselayout-1.12.0_pre8 (02 Sep 2005)
+
+  02 Sep 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Split the enviroment whitelist for runscript into a system and user part.
+    Update it to use LIBDIR so that we can set 'lib' or 'lib64'.
+
+  02 Sep 2005; Roy Marples <uberlord@gentoo.org>:
+
+    netplug module added + documentation for it.
+
+    We also set MTU in the pre_start of ifconfig/iproute2 incase a DHCP
+    client or similar needs it.
+
+  01 Sep 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Altered iproute2 to use the same lo logic as ifconfig below
+
+    Fixed ifconfig bringing lo up and then working out aliases, bug #104415
+
+  31 Aug 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add the initial stuff for filtering of env variables for the rc-system.
+
+    Use /sbin/functions.sh instead of /etc/init.d/functions.sh.
+
+    Fix for the 'local starts and stops unneeded' issue when calling /sbin/rc
+    in some cases.
+
+* baselayout-1.12.0_pre7 (31 Aug 2005)
+
+  31 Aug 2005; Roy Marples <uberlord@gentoo.org>:
+
+    service status requests (either by /etc/init.d/foo status or rc-status)
+    now update the service status by checking daemons and/or pidfiles to check
+    if they are still running or not. To update the status in your own code,
+    source "${svclib}/sh/rc-daemon.sh" and call
+    update_service_status "${service}"
+
+    Trimmed $Header$ from a few files
+
+  30 Aug 2005; Roy Marples <uberlord@gentoo.org>:
+
+    iwconfig fixed for scanned ad-hoc networks
+    we now prefer managed over ad-hoc when processing scan results
+    
+    iwconfig associate_test_quality now works. Fixes #103579 thanks to
+    Harald Schioeberg
+
+    iproute2 now understands ifconfig style netmask routes
+
+    fixed IPv6 address problems in ifconfig and iproute2 modules
+
+  25 Aug 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix typo in /sbin/rc - we should check if ${argv1} is in /etc/inittab, and
+    not if 'default' is in there ...
+
+    Add /sbin/evms_activate to populate_udev(), bug #50711.
+
+  24 Aug 2005; Roy Marples <uberlord@gentoo.org>:
+
+    rc-daemon now handles --signal correct - fixes #103182
+
+  23 Aug 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Sync our MAKEDEV with Debian's latest version. 
+
+  19 Aug 2005; Roy Marples <uberlord@gentoo.org>:
+
+    dhcpcd now reports the correct needed version
+
+    iwconfig and wpa_supplicant have better tests for wireless interface
+    which fixes the "lan wlan" problem
+
+* baselayout-1.12.0_pre6 (18 Aug 2005)
+
+  18 Aug 2005; Roy Marples <uberlord@gentoo.org>:
+
+    RC_AUTO_INTERFACE defaults to NO - but we still default to DHCP
+    
+    consoletype is now cached. This has the benefit of being very slightly
+    faster and you now get coloured text for parallel startup
+    
+    Parallel startup also does parallel shutdown as well
+    
+    You're now warned if you're using a deprecated conf.d/net syntax
+    
+  18 Aug 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Add a note about the 6th field for root filesystems #95846.
+
+  16 Aug 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    rquotad is supposed to be an alias for port 4003 not 4002.
+
+  15 Aug 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Add ocfs2 to the NET_FS_LIST #102659 by Lazar Obradovic.
+
+  15 Aug 2005; Roy Marples <uberlord@gentoo.org>:
+
+    iproute2 now understands the old iface_xxx syntax, but this only works
+    if ifconfig (from net-tools) is installed
+
+  14 Aug 2005; Roy Marples <uberlord@gentoo.org>:
+
+    fallback_route_eth0 now works again
+
+    Implemented interactive startup - fixes #5353
+    Thanks to Paul Pacheco for the patch
+
+  13 Aug 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Parallel startup races should now be fixed
+
+    iwconfig now scans for mode so you can prefer ad-hoc networks
+
+  12 Aug 2005; Roy Marples <uberlord@gentoo.org>:
+
+    RC_AUTO_INTERFACE now defaults to no - we no longer mess with /etc unless
+    told too
+
+    tuntap no longer complains about ${devnull}
+
+    We now merge resolv.conf and ntp.conf from active interfaces
+
+  11 Aug 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Add support for --pid ${pidfile} and --pidfile=${pidfile} in rc-daemon.sh
+
+    Remove tail from depdir() in /sbin/modules-update
+
+  10 Aug 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Document the boot logging option RC_BOOTLOG with app-admin/showconsole.
+
+  08 Aug 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Add failup/faildown user functions when an interface fails to come up/go
+    down. Fixes bug #101087.
+
+  06 Aug 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Add a lot more documentation to /etc/hosts from FreeBSD's standard hosts 
+    file #101418 by Mark Cooper.
+
+  06 Aug 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Revert 'mtime' changes to depscan.sh, and just make it warn if it detects
+    that there are files with mtime in the future.
+
+  06 Aug 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Enhance gendepends.awk to check more than one level of dependencies.  Also
+    break checking of NEED/USE/BEFORE/AFTER into more stages, so that we can
+    but sure that all NEED's will override the rest, that USE will override
+    BEFORE/AFTER, and also check both the resolved and unresolved trees.
+
+    Also test if RUNLEVEL is '1' besides 'S', fixing 'init 1'.
+
+    Hack init.d/clock to wait for /dev/rtc if compiled as a module ... hopefully
+    udev will get sorted soon.
+
+    Try a workaround for the "mtime in future" issues we have with depscan.sh.
+
+  05 Aug 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Rationalise if/then/else login in runscript.sh svc_start() and svc_stop()
+
+    Fixed a few quoting issues in iwconfig
+    Use return values instead of capturing stderr output for iwconfig commands
+
+    Added # vim:ts=4 to all net-script files and re-indented
+
+    ${svcdir}/dep{cache,tree} are now chmodded 0644 so users can read them
+
+  04 Aug 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update /sbin/rc to actually use init's single level, and also to launch
+    sulogin, bug #66834.
+
+    Fix a typo and some logic issues in new trace_dependencies().
+
+    Whitespace cleanups in new trace_dependencies().
+
+    Fix my own logic issue in new trace_dependencies().
+
+  04 Aug 2005; Roy Marples <uberlord@gentoo.org>:
+
+    interface state directories are now created with -m 0755 to ensure that
+    everyone can read them
+
+    rc-daemon.sh now supports multiple cmds - partial fix for #98745
+
+    trace_dependencies gets a re-write (again) to try and solve the hanging
+    issues that many people are reporting
+
+    More anal about RHS quoting
+
+  02 Aug 2005; Roy Marples <uberlord@gentoo.org>:
+
+    0 timeout now means infinite for wpa_supplicant and iwconfig wrt #90443
+
+    iwconfig no longer downs and ups the interface after a scan - instead we
+    set essid any just before doing it
+
+  01 Aug 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Only create /dev/core if /proc/kcore exists #100978 by Timo Hirvonen.
+
+  01 Aug 2005; Roy Marples <uberlord@gentoo.org>:
+
+    dhclient now has to be told it can edit dhclient.conf instead of assuming
+    it. Final fix to #100745.
+
+    Tweaked module depends to fix order when no dhcp client is found.
+
+    rc-daemon now works with mysql - fixes #100982, thanks to bju from the
+    forums.
+
+    We now only link /etc/{resolv,ntp,yp}.conf when the file exists.
+    We now link back everything in the state dir except for .sv files.
+
+  30 Jul 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Fixed associate_order "forcepreferred" #100799, thanks to Benoit Boissinot.
+
+  29 Jul 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Fixed dhclient sending hostname #100745, thanks to Benoit Boissinot.
+
+  26 Jul 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Remove the "parallel" depend stuff from the awk backend.
+
+    Remove the "parallel" depend stuff from the help.
+
+  26 Jul 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Removed the "parallel" depend for init scripts and related functions.
+    The RC_PARALLEL_STARTUP works well for all - no need for init scripts to
+    state if they parallel or not.
+
+    Removed loops from trace_dependencies for a nice speed boost.
+
+    Fixed failure in runscript.sh to proceed when a non needed dependency
+    (ie use, after, before) failed to start.
+
+  25 Jul 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    If we do not have net services, check both boot and current runlevel for
+    net services in trace_dependencies().  Sort services and make sure they
+    are unique.
+
+    Fix the adding of dependencies to properly add netservices as 'net'.
+
+  25 Jul 2005; Roy Marples <uberlord@gentoo.org>:
+
+    trace_dependencies no longer clobbers the net service.
+
+    RC_AUTO_INTERFACE no longer symlinks /etc/{resolv,ntp,yp}.conf when no.
+
+  25 Jul 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Do not restart dependencies on runlevel change if the service that needs
+    them are in the next runlevel.
+
+  22 Jul 2005; Roy Marples <uberlord@gentoo.org>:
+
+    When a service is stopped, the IN_BACKGROUND variable is cleared
+    before any dependencies are stopped so they are not marked inactive.
+    The IN_BACKGROUND variable is then restored so the parent script can be
+    marked inactive.
+
+  21 Jul 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Change the -l option to tar to --one-file-system #99775.
+
+    Add a --debug option to depscan.sh.
+
+  21 Jul 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix hangs in bootup, bug #99663.
+
+  21 Jul 2005; Roy Marples <uberlord@gentoo.org>:
+
+    dhclient now sets the hostname correctly.
+
+    Fixed some start/stop/restart logic for #99663.
+
+    Stopped rc-status from checking failed and broken which no longer apply.
+
+  20 Jul 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Make sure the X11 dirs are always created in /tmp #99679 by Marc Ballarin.
+
+  20 Jul 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Fixed <wpa_supplicant-0.4 support
+
+    Removed trailing tab from local.start - fixes #99624
+
+    Moved RC_AUTO_INTERFACE definition to /etc/conf.d/rc
+
+  19 Jul 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Punt the at/bind/cron/cyrus/ftp/games/gdm/man/mysql/nut/postfix/postgres/
+    qmail/slocate/squid/sshd/vpopmail/xfs users/groups to the respective
+    ebuilds.
+
+  19 Jul 2005; Roy Marples <uberlord@gentoo.org>:
+
+    ${ESSID} and ${ESSIDVAR} are now available in predown() - fixes #99106
+
+  18 Jul 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Changed wpa-supplicant to wpa_supplicant when reporting that it is not
+    installed. Fixes #99381
+
+    Fixed some startup problems caused by a mixture of inactive +
+    begin_service/end_service functions.
+
+  16 Jul 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add Darwin support for start-stop-daemon, bug #82421.
+
+  15 Jul 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Do not run depmod in modules-update if System.map is missing, bug #59188.
+
+  14 Jul 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Remove pointless check of depmod existence in modules init.d since the 
+    modules-update script checks for it.
+
+    Run kbd_mode earlier for unicode users so initial loadkeys doesn't 
+    trigger a warning #94048 by Eugene Pavlovsky.
+
+  13 Jul 2005; Roy Marples <uberlord@gentoo.org>:
+
+    pump-0.8.21-r4 now creates ntp.conf by itself so the ntp.conf creation
+    code has been removed from the pump module and helper.
+
+    Moved wpa_supplicant and iwconfig et all from /usr/sbin to /sbin
+
+  12 Jul 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Added dhcp_eth0="nogateway" option, generic to all dhcp clients.
+    Fixes #98466
+
+  11 Jul 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add fix -r to unmount to be -n .. bug #98667, thanks to Patrick McLean.
+
+  11 Jul 2005; Roy Marples <uberlord@gentoo.org>:
+
+    udhcpc/dhclient helpers no longer flush IPv6 addresses - fixes #98539
+
+    wpa_supplicant now marks service as stopped when using wpa_supplicant-0.4.x
+    and we have associated but failed to configure in the background.
+
+  09 Jul 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Only remount the / filesystem readonly if it isn't already and don't 
+    screw around with net filesystems #98405 in init.d/checkroot.
+
+    Add support for completely wiping out /tmp and in general clean up
+    the bootmisc file #56592.
+
+    Add back in support for mounting usbfs under usbgid #35860.
+
+  09 Jul 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add workaround for evms device names and 'RC_DEVICE_TARBALL="yes"'.  Patch
+    by Olaf Niermann, bug #95799.
+
+  07 Jul 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Added "nosendhost" dhcp option so users can request not to send their
+    machines hostname by default. Fixes #98132 - Patch by Eli.
+
+  04 Jul 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Added a rename module to rename interfaces based on MAC address
+    (preferred) or current name. Fixes #76328
+
+  03 Jul 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Fixed module depends in net.lo
+
+    Remove the "no net scripts in boot runlevel" restriction as we now
+    have a hotplug policy setup instead
+
+  02 Jul 2005; Roy Marples <uberlord@gentoo.org>:
+
+    net.lo no longer needs find or diff
+
+  01 Jul 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Minor tweaks to all dhcp modules - basically better quoting so that
+    the eval ${dhcpclient} calls work better
+
+    pump can now be backgrounded
+
+    Tweaked the dhcp helpers so that more code is shared
+
+    A few tweaks to runscript.sh and rc-services.sh to avoid races
+
+    bootmisc now cleans /var/lib/net-scripts/state/*
+
+  30 Jun 2005; Roy Marples <uberlord@gentoo.org>:
+
+    pump can now use route metrics and store it's configs in
+    /var/lib/net-scripts/state/${iface}
+
+  29 Jun 2005; Roy Marples <uberlord@gentoo.org>:
+
+    dhclient now parses dhclient_eth0 for -cf parameter to set ${cffile}
+    dhclient now strips lines starting with script and send host-name
+    from ${cffile} and adds send host-name "${HOSTNAME}"; at the top
+    To stop this behaviour, add dhclient_edit_config="no" to /etc/conf.d/net
+    Fixes #96322
+
+    Removed killing udhcpc hard as it now dies nicely
+
+    wireless.runlevel now works
+
+  28 Jun 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Add davfs to the net list #97283 by Erik Grinaker.
+
+  28 Jun 2005; Roy Marples <uberlord@gentoo.org>:
+
+    wpa_supplicant now respects the background=no option if
+    wpa_suppliant>=0.4.0 is installed
+
+    fixed network dependencies some more
+
+    You can now restart a script marked starting/inactive
+
+    Documented the use of the RC_USE_CONFIG_PROFILE variable in conf.d/rc
+
+    udhcpc now removes stale pidfiles and parses for -(h|H) instead of
+    just --hostname
+
+  24 Jun 2005; Roy Marples <uberlord@gentoo.org>:
+
+    udhcpc now doesn't send hostname if it's set at the default of localhost
+
+    net.lo will not take down the interface if it does not exist and starting
+    failed to work
+
+  21 Jun 2005; Roy Marples <uberlord@gentoo.org>:
+
+    interfaces can now dynamically add themselves to a bridge using
+    bridge_add_eth0="br0" - they are dynamically removed as well. Fixes #93321
+
+  20 Jun 2005; Roy Marples <uberlord@gentoo.org>:
+
+    ifconfig now reports correct MAC address
+
+    ifconfig and iproute2 now support mtu_eth0 option
+
+    net.lo attemts to arping the requested address when RC_AUTO_INTERFACE==yes
+
+    iwconfig and wpa_supplicant now check rk_kill if available and produce a
+    suitable error if rf is killed #56430
+
+    added hotplug policy check for interface name #78495
+
+  19 Jun 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Make sure /proc/cmdline is readable before using it in get_bootconfig()
+    in /sbin/functions.sh.
+
+  17 Jun 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Fixed VLAN documentation for working with eth0.1 style names #95121
+    
+    tarball.sh now works with svn
+
+    dhclient and udhcpc now report any errors to stdout
+
+    RC_DEVICE_TARBALL now defaults to "no"
+
+    STYLE updates to all modules
+
+  16 Jun 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Add lmtp as an alias to the 2003 tcp port #96190.
+
+    Add support for Xen to clock init.d #96240 by Christopher G. Stach II.
+
+    When we mount readonly, make sure we don't attempt the same mountpoint
+    twice #96259 by Toralf Förster.
+
+  14 Jun 2005; Roy Marples <uberlord@gentoo.org>:
+
+    dhclient now calls /etc/dhcp/dhclient-exit-hooks when it exits
+    fixes #96000
+
+  13 Jun 2005; Roy Marples <uberlord@gentoo.org>:
+
+    /etc/{resolv,ntp,yp}.conf now link to /var/lib/net-scripts
+
+  13 Jun 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Remove etc/ppp since the ppp package provides this stuff.
+
+  05 Jun 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Run sysctl in quiet mode so we don't force errors to /dev/null.
+
+  02 Jun 2005; Roy Marples <uberlord@gentoo.org>:
+  
+    dhcp helper module fixes
+    
+    dhcpcd-backgrounder renamed to dhcpcd-wrapper
+    
+    dhcpcd-wrapper applies dns_search_domains_* to /etc/resolv.conf
+    fixes #94027 when used with dhcpcd-1.3.22_p4-r10
+    
+    dhcpcd module now applies route metric if possible
+
+  01 Jun 2005; Roy Marples <uberlord@gentoo.org>:
+
+    removed cruft from net-scripts functions helper as rc-services.sh can
+    now be sourced by our dhcp helpers without causing errors.
+
+    system module now creates it's temporary files in /tmp instead of /etc
+
+  31 May 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Add support for bootlogging (via blogd in showconsole package).
+
+    Rewrite the modules.autoload code in init.d/modules to work off the 
+    current arbitrary kernel version #35872.
+
+  29 May 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Make sure we quote EDITOR in /etc/profile #94412 by Stanislav Brabec.
+
+  27 May 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Added macnet module (like essidnet but for mac addresses)
+    Regresses macchanger one version
+    Tweaked module depends for macnet
+    dhcp helper now uses macnet
+
+    is_net_fs now works with what $1 was mounted as, not would it would
+    be remounted as - fixes #53104
+    
+  26 May 2005; Roy Marples <uberlord@gentoo.org>:
+
+    report ${myservice} instead of $0 when disallowing net scripts to work in
+    the boot runlevel - fixes #91534
+
+    You can now configure all options via the MAC address of your network card
+    and the MAC address of AP you connect to like so
+    config_001122334455=( "192.168.0.2/24 brd +")
+    Fixes the last part of #52975
+    
+    The old way of configuring for the MAC address of the AP is no longer
+    supported
+
+  25 May 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Add gfs to the NET_FS_LIST #93911 by Thomas Rasch.
+
+  25 May 2005; Roy Marples <uberlord@gentoo.org>:
+
+    networking now expands configuration parameters - fixes #91564
+    so config_eth0=( "192.168.{1..3}.{1..3}/24 brd +" ) expands into
+    config_eth0=(
+       "192.168.1.1/24 brd +"
+       "192.168.1.2/24 brd +"
+       "192.168.1.3/24 brd +"
+       "192.168.2.1/24 brd +"
+       "192.168.2.2/24 brd +"
+       "192.168.2.3/24 brd +"
+       "192.168.3.1/24 brd +"
+       "192.168.3.2/24 brd +"
+       "192.168.3.3/24 brd +"
+    )
+
+    updated ESSID variables example in wireless.example - fixes #92469
+
+  21 May 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Quiet down valid_i() if ${svcdir}/softlevel do not yet exist, try #2.
+
+  20 May 2005; Roy Marples <uberlord@gentoo.org>:
+
+    fix ifconfig to understand CIDR addresses - bug #93237
+    iproute2 now works out broadcast addresses
+
+    added #!/bin/bash or #!/bin/sh to modules and helpers so they now get
+    nice syntax highlighting and indenting
+
+  20 May 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fixup sbin/{depscan.sh,modules-update} to use is_older_than() for mtime
+    logic.  Some small tweaks regarding 2.6 systems and modules-update.
+
+  19 May 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Merged Paul Pacheco's parallel startup #69854 and modules update
+    #55329 patches
+
+    If RC_PARALLEL_STARTUP==yes then we no longer output einfo/ebegin
+    messages as they don't line up on screen correctly - instead we output
+    service ${myservice} starting/started/stopping/stopped/failed
+
+  17 May 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Make sure /dev is mounted with exec since many video drivers need to 
+    mmap() device nodes in there with exec access #92921 by Lachlan Pease.
+
+  16 May 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    If halt/reboot failed, try to force it as a fallback.
+
+    Add RC_FORCE_AUTO setting so people can try to minimize amount of 
+    user interaction required for booting.
+
+    Move nsswitch.conf to glibc.
+
+  15 May 2005; Roy Marples <uberlord@gentoo.org>:
+
+    udhcpc and dhclient now select the best interface when one goes down
+
+  14 May 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Make sure /dev is mounted with sane permissions #87745 by Jordan.
+
+    When we search /etc/fstab for /, make sure we handle mounts that have 
+    UUID/LABEL info in them #90603 by Alessandro Sappia.
+
+    Simplify rc-script error checking so we don't need a tempfile and so
+    non-root users can run /etc/init.d/status #85892 by Stuart Shelton.
+
+    Add a sanity check for devs who write bad scripts and call exit #85298.
+
+    Run irqbalance after /var is rw #85304 by Miroslaw Mieszczak.
+
+    Redo the addon code to prepare for profiling support #74425.
+
+  12 May 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Move pam files out of baselayout and into packages #92387.
+
+  10 May 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Really fix trace_dependencies() to handle net.* services properly.
+
+    Quiet down valid_i() if ${svcdir}/softlevel do not yet exist.
+
+  10 May 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix get_service_index() being off by one.  Fix trace_dependencies() to also
+    take "net" into regard if its a net_service.  This fixes two problems, first
+    shutdown should bring services down that uses net before the net.* services,
+    and secondly '/etc/init.d/net.eth0 needsme', etc should now work properly.
+    All changes to sbin/rc-services.sh.
+
+  03 May 2005; Roy Marples <uberlord@gentoo.org>:
+
+    changed default indentation to 2 spaces to match rcscripts in functions.sh
+
+    wpa_supplicant now stops wpa_cli before wpa_supplicant to fix a potential
+    future error
+
+  02 May 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Fix user function hooks for echoing to stdout and protecting our vars
+
+  30 Apr 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Do not create the udev devices.tar.bz2 if we do not have write permissions
+    for /.  Request by Donnie (spyderous) for boxes with / on NFS.
+
+  30 Apr 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fixor column/color logic for when used in portage.
+
+  29 Apr 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Move crypto-loop to util-linux and skel bash files to bash.
+
+  28 Apr 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Export the 'service name' for init scripts #86348.
+
+  28 Apr 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    If no /etc/modules.conf exist, do not 'touch' it, but create a new
+    file with the 'modules-update header' in it to get modules-update
+    to do the right thing (regen), and not just quit (init.d/modules).
+
+  27 Apr 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Ignore trailing comments in module files #88553.
+
+  26 Apr 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Sync special var's with portage's env-update.sh and ours #88819.
+
+  26 Apr 2005; Roy Marples <uberlord@gentoo.org>:
+
+    wpa_supplicant now supports wpa_supplicant-0.4.0
+
+    iwconfig downs and ups the interface after a scan
+
+  25 Apr 2005; Roy Marples <uberlord@gentoo.org>:
+
+    iproute2 now handles mtu the same way as ifconfig - fixes #90242
+
+    net.lo no longer errors when using postdown and postup functions
+
+  22 Apr 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Address network routes now get metrics applied as well
+    (ie a route automatically added when an address is added)
+
+    net.lo no longer errors when exlcuding modules who are installed
+
+* rc-scripts 1.7.1 (19 Apr 2005)
+
+  18 Apr 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Changed "sed -ne" to "sed -n -e" for portability.
+    
+    Added auto_interface (default yes).
+    if auto_interface is yes then we
+       *) default to dhcp
+       *) automatically calculate a metric (this may need work)
+       *) select the best interface based on metric
+          (restore resolv.conf, ntp.conf and yp.conf we have saved)
+    otherwise we
+       *) default to null
+
+    wpa_supplicant no longer kills itself when we're not stopping the interface
+    it's running on.
+
+    wpa_supplicant now uses wpa_monitor (yet to be released) if available.
+
+    Added a new module called system which enables the definition of domain
+    name, dns servers, ntp servers, nis domain and nis servers per interface.
+    essidnet and dhcp helpers have been re-coded around this module.
+
+  15 Apr 2005; Chris Gianelloni <wolf31o2@gentoo.org> -bin/bashlogin,
+  -sbin/livecd-functions.sh:
+  Removed sbin/livecd-functions.sh and bin/bashlogin as they are only used in
+  release building, and they have been moved to livecd-tools.
+
+  14 Apr 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Do not kill udevd in /sbin/rc, as it is apparently evil.
+
+  14 Apr 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Fixed ifconfig and iproute2 erroring from new lo code - fixes #88006
+
+    If /proc/net/netlink does not exist then iproute2 will fail the
+    check_installed function with an appropriate error - Thanks to
+    Jeremy Huddleston for the patch.
+
+    If /proc/net/packet does not exist then wpa_supplicant will fail
+    check_installed function with an appropriate error
+
+    Background fixes for net.lo, udhcpc and wpa_supplicant
+
+  11 Apr 2005; Roy Marples <uberlord@gentoo.org>:
+
+    removed ${devnull} from net.lo and net-script modules
+    updated all modules not to re-direct stderr where appropriate
+
+    iwconfig and wpa_supplicant now save their current ESSID via save_options
+    and reload it in their pre_stops so that ${ESSID} and ${ESSIDVAR} can be
+    used in users custom postdown functions
+
+    wpa_supplicant now calls iwconfig_defaults and iwconfig_user_config
+    if available - fixes #88703
+
+  09 Apr 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Have the 'status' function return 0/1 based upon the status of the 
+    init script #88319 by Josh Nichols.
+
+  08 Apr 2005; Roy Marples <uberlord@gentoo.org>:
+
+    added a bash_variable to functions.sh which converts the given string
+    into a variable that bash can use - fixes #88175
+
+    net scripts can only launch if we're not in ${BOOTLEVEL} - fixes #78495
+
+  01 Apr 2005; Roy Marples <uberlord@gentoo.org>:
+
+    RC_DAEMON_syslog_ng allows syslog-ng to be started with the specified
+    launcher - like valgrind or strace. Handy for debugging/auditing.
+    Thanks to Rob Holland for the idea.
+
+    Stopped setting ESSID in predown functions in iwconfig and wpa_supplicant
+    as there is no guarantee that the current ESSID is the one we started with
+    Also, we may not have an ESSID at all...
+
+  23 Mar 2005; Roy Marples <uberlord@gentoo.ord>:
+
+    bridge stops removing IP addresses from bridge ports.
+    iwconfig no longer tries to get an ESSID from non-wireless interfaces.
+    ifconfig no longer errors when deleting addresses on a non-existant
+    interface.
+
+  23 Mar 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Get modules-update to clean up after itself if we on a 2.6 kernel without
+    modules.conf.
+
+  22 Mar 2005; Roy Marples <uberlord@gentoo.org>:
+
+    revamped rc-services.sh for STYLE updates and code rationalisation.
+
+  21 Mar 2005; Roy Marples <uberlord@gentoo.org>:
+  
+    udhcpc now checks for custom hostname correctly
+
+  21 Mar 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix tracing for current service as list_depend_trace() was removed.
+    Fix mylevel not being set if valid_iuse(), etc is called from /sbin/rc.
+
+  20 Mar 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Take sort_services function from bug #70009, and fix the removing of a
+    service from a array properly by using unset.  Use this instead of the
+    trace_* stuff, and fixup shutdown order.
+
+  19 Mar 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Make sure we mount svcdir with 0755 and not 0644 #85888.
+
+  15 Mar 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Export myservice when starting critical services, as its needed by
+    some of the addons (dmcrypt for example).
+
+  12 Mar 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    When shutting down, pass -h to halt too #84654 by Dmitry Karasik.
+
+  11 Mar 2005; Roy Marples <uberlord@gentoo.org>:
+
+    Prepend rc-daemon.sh functions with rc_ to avoid name conflicts
+
+  11 Mar 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Make sure the last test in init.d/modules do not bork the return
+    value of the script if not true.
+
+  10 Mar 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Add udev/selinux support by Chris PeBenito #84337.
+
+  10 Mar 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    The system() stuff in *depends.awk should be dosystem().
+
+* rc-scripts 1.7.0 (10 Mar 2005)
+
+  09 Mar 2005; Roy Marples <uberlord@gentoo.org>:
+
+    changed from $( cat ${file} ) to $( < ${file ) in net-scripts
+
+    fixed ChangeLog corruption
+
+    rc-daemon.sh now works with the env program
+
+  08 Mar 2005; Roy Marples <uberlord@gentoo.org>:
+
+    rc-services.sh now does a /sbin/depscan.sh -u if we have not got
+    our deptree loaded
+
+    removed net_start/stop function from net.lo, bridge and bonding
+
+    net.lo now supports depend() per interface like so
+    depend_br0() { need net.eth0 net.eth1 }
+
+  04 Mar 2005; Roy Marples <uberlord@gentoo.org>:
+
+    applied STYLE updates to rc-status
+    
+    rc-status now uses find correctly for -maxdepth which fixes #84055
+
+  03 Mar 2005; Roy Marples <uberlord@gentoo.org>:
+
+    iwconfig now defaults the transmit key to 1
+    bridging and bonding modules now start an interface if it's not
+    marked as started
+
+  02 Mar 2005; Roy Marples <uberlord@gentoo.org>:
+
+    net_service() now returns 1 for non net-services
+    fixes bug #83352
+
+  02 Mar 2005; Aron Griffis <agriffis@gentoo.org>:
+
+    Add requote() to functions.sh to help rc-daemon.sh
+
+  01 Mar 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix braindead logic in init.d/checkfs ([[ -z $CDBOOT ]] &&, not -n).
+
+  01 Mar 2005; Roy Marples <uberlord@gentoo.org>
+
+    rc-daemon.sh now provides a working wrapper for start-stop-daemon
+    fixes bug #7198
+
+    removed ps calls from net scripts
+
+  25 Feb 2005; Chris Gianelloni <wolf31o2@gentoo.org>
+
+    Updated livecd-functions.sh to match what we are using on the LiveCD.
+
+  25 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Style updates for init.d/halt.sh.
+
+    Only run pam_console_apply if we are actually using pam_console.
+
+    Fix init.d/checkfs, init.d/localmount and init.d/halt.sh to call
+    start_addon, stop_addon, start_volumes and stop_volumes.
+
+  24 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
+    
+    Update /sbin/modules-update to work without modprobe.old (modutils) for
+    2.6 kernels.
+
+    Update /etc/init.d/modules so that it will only touch modules.conf if we
+    have a <= 2.4 kernel, or have /sbin/modprobe.old.
+
+  23 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Remove RAID/LVM/EVMS2/dm-crypt from checkfs and localmount, and
+    add needed {start,stop}-volumes() and {start,stop}-addons().
+
+    Add use tempory file for deptree, bug #48303, thanks to patch from
+    Stefan Hoefer <stefan@hoefer.ch>.
+
+    Add {start,stop}-volumes() to /sbin/functions.sh, as well as
+    RC_VOLUME_ORDER to /etc/conf.d/rc.
+
+  21 Feb 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Move the serial init.d to the setserial package.
+
+    Create a rc-status.8 manpage #81917.
+
+  11 Feb 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Add UPS kill fixes for halt.sh by Lee Weisz / Remy Blank #46440.
+
+    Define a few more {for,back}ward-word bindings in inputrc to fix up 
+    the different GUI terminals #53770 by Arturo Alberto Busleiman.
+
+  10 Feb 2005; Roy Marples <uberlord@gentoo.org>:
+
+    net.lo now supports fallback_route - fixes #75676
+    due to bash limitations, only one fallback route is supported
+
+    cleaned up dhcp helper
+    
+    iproute now appends routes instead of adding them - this allows multiple
+    default routes
+
+    RC_STRICT_NET_CHECKING now supports the none "option" which means
+    that the net service is always up
+    
+  31 Jan 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Punt the PROTOCOL variable from rc.conf since nothing uses it.
+
+    Punt the consolefont related variables from rc.conf since they've 
+    been moved to conf.d/consolefont.
+
+    Import some VServer support from #55973.  For now, just add the 
+    detection function to functions.sh and support in init.d/clock.
+
+  07 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix /sbin/functions.sh not to run stty during 'emerge depend'.
+
+  07 Feb 2005; Roy Marples <uberlord@gentoo.org>:
+
+    netmask2cidr now works correctly - fixes #81119
+    Thanks to Benoit Boissinot for the patch
+
+  06 Feb 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Remove the apache user and let apache ebuilds handle it #77738.
+
+  04 Feb 2005; Roy Marples <uberlord@gentoo.org>:
+
+    It's now possible to configure addresses and routes for the loopback
+    interface if required - however you cannot override our defaults
+
+    wpa_supplicant and iwconfig now loop for 5 seconds if essid is
+    not returned straight away
+
+  31 Jan 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Fix the test for device-mapper in checkfs #80206.
+
+    Change home of man to /usr/share/man.
+
+* rc-scripts 1.6.9 (30 Jan 2004)
+
+  30 Jan 2005; Mike Frysinger <vapier@gentoo.org>:
+
+    Use clock, don't need it.  Not everyone has a RTC #78997.
+
+    Rewrite the KV_* functions to use pure bash rather than awk #75836.
+
+    Don't use 'none' when mounting virtual filesystems since `umount` can 
+    produce some pretty vague output #78684.  Fixed sbin/rc and etc/fstab 
+    and etc/halt.sh to handle the new format.
+
+    modules-update.8 touchups by Benno Schulenberg #77582.
+
+    Don't symlink /etc/filesystems since it is an user config file #74176.
+
+    Punt the 'guest' user #74737.
+
+    Add support for loopback dm-crypt by Dylan Carlson #73598 and for gpg 
+    dm-crypt by Lars Strojny #75659.
+
+    Update crypto-loop to newer util-linux #40874 by jochen / JÃ¼rgen HÃ¶tzel
+
+  27 Jan 2005; Roy Marples <uberlord@gentoo.org>:
+
+    removed udhcpc-* and dhclient-* helper modules and replaced them with a
+    generic dhcp module which caters for all interfaces and dhcp clients that
+    need it.
+    We now prefer iproute2 over ifconfig if both are installed.
+
+  24 Jan 2005; Roy Marples <uberlord@gentoo.org>:
+
+    replaced awk commands with sed equivalents in net-scripts to make us
+    more portable
+    STYLE fixes to many net-scripts modules
+    Removed hardcoded Version and replaced with cvs $Header:
+
+  17 Jan 2005; Roy Marples <uberlord@gentoo.org>:
+
+    net.lo changed logic to read "only fail if no configuration parameters
+    work, bring interface down and abort". Fixes #78092
+    all modules should now check interface existance correctly - fixes #76385
+    wpa_supplicant now works with EAP - fixes #78367
+
+  13 Jan 2005; Roy Marples <uberlord@gentoo.org>:
+
+    wpa_supplicant forces ctrl_interface to /var/run/wpa_supplicant
+    and removes stale directories
+    clean_pidfile function no longer errors on empty pidfiles
+    net dependancies corrected in runscript.sh - fixes #77839
+    allow pure IPv6 addresses - fixes #73844
+
+  12 Jan 2005; Roy Marples <uberlord@gentoo.org>:
+
+    net.lo now ignores dot files when loading modules
+    ipppd module now stops correctly - fixes #73067 again
+
+  11 Jan 2005; Roy Marples <uberlord@gentoo.org>:
+
+    added "noop" config parameter which means take no action if the interface
+    is up and has an address configured, otherwise continue
+    addresses are now removed when starting an interface - fixes #77111
+
+  06 Jan 2005; Roy Marples <uberlord@gentoo.org>:
+
+    ifconfig, udhcpc-ifconfig now deletes addresses using 0.0.0.0 for uclibc
+    - fixes #76846
+
+  04 Jan 2005; Roy Marples <uberlord@gentoo.org>:
+
+    bridge now marks interfaces as UP - fixes #75354
+    bridge, net.lo, iwconfig touched up to match new STYLE
+    net.lo tests the return value of modprobe - fixes #76385
+    iwconfig now sets enc keys through an eval statement - fixes #76601
+    updated wireless.example for whitespace in keys
+    iwconfig now accepts mode "auto" and defaults to it
+
+  30 Dec 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Touch up rc-update to match our new STYLE.  Also tweak the help 
+    to fit in the standard console.
+
+  23 Dec 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Merge a bunch of BSD fixes into our .c files.
+
+  18 Dec 2004; Roy Marples <uberlord@gentoo.org>:
+
+    iwconfig now sets ESSIDVAR for master/ad-hoc modes - fixes #74802
+
+  17 Dec 2004; Roy Marples <uberlord@gentoo.org>:
+
+    wpa_supplicant - fixed file location for wpa_cli and association test
+    as it they changed in wpa_supplicant-0.3.x
+    wpa_supplicant now brings the interface up before launching - fixes #74637
+
+* rc-scripts 1.6.8 (15 Dec 2004)
+
+  15 Dec 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    start_critical_service in /sbin/rc should rely on $1 instead of 
+    the external variable $x for the service name.  #74425
+
+  15 Dec 2004; Roy Marples <uberlord@gentoo.org>:
+
+    rc-status now reports stopping status
+    Updated documentation to point non-usb linux-wlan-ng users to use
+    hostap-driver instead
+
+  13 Dec 2004; Martin Schlemmer <azarah@gentoo.org>:
+
+    Tweak init.d/halt.sh to support new text based udev_db ('udevinfo -d' do
+    not work anymore, and there is no space after '(S|N):').  Also check if
+    devices.tar.bz2 is empty before trying to create it, bug #71143.
+
+  12 Dec 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Tweak get_mount_fstab to only print the first mount point found and then 
+    spit warning messages for extra matches.  Also add support for RC_USE_FSTAB
+    so normal users don't have to worry about a broken /etc/fstab.
+
+    Add an additional sanity check to the udev tarball usage.  Don't try to 
+    unpack an empty or non-existant tarball.
+
+    Tweak the 'static' description so users know they can use it to make 
+    /sbin/rc ignore /dev completely.
+
+  12 Dec 2004; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add suport for using /sbin/udevsend from new udev-048 as hotplug multiplexer.
+
+  12 Dec 2004; Roy Marples <uberlord@gentoo.org>:
+
+    fixed installed typo in net.lo - fixes #74152. Thanks to Federico Galassi
+
+    dhcpcd and udhcpc now run via the eval statement so quotes can be used
+    in options. Fixes #74053 - thanks to Evan Buswell
+
+  09 Dec 2004; Roy Marples <uberlord@gentoo.org>:
+
+    fixed net.lo getting vlan config
+    rc doesn't stop hotplugged devices when system is booting - fixes #61594
+    thanks to Andreas Sundebo for the fix
+    rc-status now reports stopping
+
+  08 Dec 2004; Roy Marples <uberlord@gentoo.org>:
+
+    iwconfig now unsets wireless config and downs interface when backgrounding
+    fails
+    wpa_supplicant now supports backgrounding
+    removed is_in_fstab function and replaced with get_mount_fstab which
+    returns a mount command based on the contents of fstab. Resolves bugs
+    #70044 and #73762
+
+  07 Dec 2004; Roy Marples <uberlord@gentoo.org>:
+
+    essidnet - fixed setting up search domains
+    ifconfig now reads the old gateway variable correctly - fixes #73641
+    iwconfig now supports backgrounding
+    ifconfig and iproute2 now support function interface_set_mac_address
+    macchanger no longer depends on macchanger if configuring a specific
+    mac address
+
+    fix depstop for net-services when system is booting - should fix #61594
+    added service_stopped function to make reading code easier and trying
+    to avoid race conditions
+
+  06 Dec 2004; Roy Marples <uberlord@gentoo.org>:
+
+    macchanger defaults to setting the interface down, and then trying
+    with it up - fixes #71929
+    macchanger converts mac_${IFACE} to lowercase - fixes #73549
+    iproute2 now configures the interface up everytime we add an address
+    removed "need interface" from all modules depends as net.lo requires
+    interface anyway
+    removed hardcoded ath0 in wpa_supplicant
+
+    added rc-script statuses "starting", "stopping" and "inactive"
+    dhcpcd, udhcpc and dhclient now support backgrounding - fixes #52975
+
+  05 Dec 2004; Roy Marples <uberlord@gentoo.org>:
+
+    dhclient now kill it's process if it failed to get a lease on startup
+    all dhclient responses are now handled correctly
+
+  04 Dec 2004; Roy Marples <uberlord@gentoo.org>:
+
+    fixed dhclient-ifconfig to look for dhclient-udhcpc-wrapper in the correct
+    place and changed hardcoded eth1 to ${interface} in udhcpc-ifconfig.
+    Fixes #73327 - thanks to Benoit Boissinot
+
+    essidnet gets the essid itself instead of relying on ${ESSID}
+    wpa_supplicant module added
+    config-system now creates files as .tmp instead of .new and loads
+    the wpa_supplicant module if needed
+    ifconfig now addes aliases to devices other than eth0
+    dhcpcd, dhclient, pump and udhcpc now expose the dhcp_${IFACE} variable
+    instead of the old peer_dns_${IFACE}, peer_ntp_${IFACE}, peer_nis_${IFACE}
+    ones
+
+    removed modules use dependancy in net.lo and added installed
+    - this allows use to provide "virtual" modules which are only "installed"
+      when other depended modules are installed
+
+* rc-scripts 1.6.7 (03 Dec 2004)
+
+  03 Dec 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Simply filesystem unmounting in halt.sh.  Based upon work by Georg Sauthoff 
+    #68697.  Also clean up the filesystem remounting readonly.  As a last 
+    resort to filesystems which won't remount readonly, we try to unmount them 
+    with the force/readonly options.  Idea from #70349.
+
+  03 Dec 2004; Roy Marples <uberlord@gentoo.org>:
+
+    Fixed config-system for only changing hostname when needed
+    udhcpc and dhclient now restore saved configs when stopping and work
+    with non-infinite leases
+    Moved generic dhcp options into a space seperated string
+    udhcpc now caches it's IP address and requests it the next time it starts
+    if the address is not released
+    udhcpc and dhclient no longer flush interfaces if we don't need too
+    ipppd module now looks for ipppd in /usr/sbin - fixes #73067
+
+  02 Dec 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Merge time checking function (is_older_than) to help simplify config 
+    file update checking.  Used for now in env-update.sh #71285.  Function 
+    written by Paul Pacheco #55329.
+
+  02 Dec 2004; Roy Marples <uberlord@gentoo.org>:
+
+    Added option dhcp_release to specify if we release the DHCP lease or not
+    defaults to no
+    Changed variables peer_* to dhcp_*
+    dhclient and udhcpc now specify a pidfile
+    Fixed iwconfig report if iwgetid does not support --channel
+
+  01 Dec 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Refix and clean up the netmount script to kill processes #64034.
+
+  01 Dec 2004; Roy Marples <uberlord@gentoo.org>:
+
+    Documentation fixes regarding iwconfig and linux-wlan-ng
+    Fixed bonding deps per bug #71419
+
+  30 Nov 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Fix the UML/coLinux check in init.d/clock #72937.
+
+    Allow the user to override the default mount options via /etc/fstab 
+    for all the mounts.  Added a 'is_in_fstab' function to see if the 
+    user has defined the mount, and if not, fall back to the hardcoded 
+    stuff from before.  This also lets us get rid of $RC_DEVICE_FS #70044.
+
+  26 Nov 2004; Roy Marples <uberlord@gentoo.org>:
+
+    Fixed up address detection in apipa
+    net.lo now checks for duplicate static IPv4 addresses before assigning
+    iwconfig now supports preassociate and postassociate user hooks
+    net.example - changed $1 to ${IFACE} in examples
+    clarified lack of linux-wlan-ng support
+
+  24 Nov 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Allow users to specify charset option to dumpkeys when using unicode 
+    in conf.d/keymaps #72225.  Also move all the init.d/keymap specific 
+    options out of rc.conf and into conf.d/keymaps and add some config 
+    checks to init.d/keymaps like the clock/hostname init.d scripts.
+
+    Make sure /etc/rc.conf overrides conf.d files when starting up 
+    critical services.  Should help out with transition from rc.conf.
+
+  24 Nov 2004; Roy Marples <uberlord@gentoo.org>:
+
+    Ensure all net-scripts modules depend on interface_variable function
+    where applicable
+    Fixed adsl stopping - #68934. Thanks to Andreas Kauer
+
+  23 Nov 2004; Roy Marples <uberlord@gentoo.org>:
+
+    iproute2 does not need to create dummy interfaces for aliases
+    unlike ifconfig so we no longer do this
+    We now bring down all aliases and addresses properly
+    Split off some functions from net.lo into helpers.d/functions
+    so that our DHCP helper scripts can use them too :)
+    Deprecated interface specific setup in favour of a generic config
+    macchanger brings interface up now - fixes #71929
+    DHCP over VLAN now works - fixes #71860
+    Disabled modified function checking as it's far too expensive on CPU
+    and still isn't 100% reliable
+    When specifing a module that isn't emerged, you now get an error
+    telling you what to emerge
+    Removed -p option from the diff call used for function removal
+    Removed rp_filter setting - fixes first part of bug #71971
+    Added sysctl.conf settings relating to rp_filter to sysctl.conf
+    - fixes last part of bug #71971
+    Fixed pump exporing ntp servers
+    implemented MODULES_DIR so we can change directory we load from on the fly
+    fixed variables for vlans in most modules
+    
+  19 Nov 2004; Aron Grffis <agriffis@gentoo.org>:
+
+    Remove crap "ll" and "d" aliases from skel .bashrc
+
+  19 Nov 2004; Roy Marples <uberlord@gentoo.org>:
+
+    tests for hostname (none) when sending hostname via dhcpcd, udhpc or pump
+    udhcpc now does correct signal handling so we can release leases and
+    terminate cleanly
+    Improved pump process detection
+    Rewrote udhcpc helper scripts around udhcpc and wrapped dhclient to udhcpc
+    scripts. This makes things much saner as udhcpc is much saner - also fixed
+    essidnet and ipv6 local link for them.
+    removed iproute2 udhcpc reliance on the "bc" command
+
+  17 Nov 2004; Roy Marples <uberlord@gentoo.org>:
+
+    Fixed invalid variable handling in bonding and vlan - bug #71419
+    apipa now brings the interface up before testing if address exists
+    Updated bonding documentation - bug #71419
+    Fixed iproute2 adding addresses for vlans - bug #71419
+    ifconfig handle inet6 routing automatically - bug #33310
+    ifconfig - fixed old gateway + gateway in routes conflict
+    iproute2 cleaned up some functions
+
+  16 Nov 2004; Roy Marples <uberlord@gentoo.org>:
+
+    We no longer default a fallback to APIPA when no config is given
+    net.example fleshed out a bit more for dhcpcd - fixes #60845
+    Improved forced module handling a touch
+    modules_sort and modules_check_user in net.lo buffer _provides,
+      _before and _after in arrays to avoid shelling out
+
+  15 Nov 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Add a check to clock init.d to make sure users dont try to set 
+    config their clock in rc.conf anymore.
+
+    Redo hostname/domainname scripts to use files in /etc/conf.d/ 
+    instead of creating files in /etc/.  Allows for controlling things 
+    like the behavior of setting the 'domain' in resolv.conf since users 
+    may not always understand exactly what's going on.
+
+    Stop referring to conf.d/basic as a global rc config option.  That 
+    file hasn't been used in a long time and has since been replaced 
+    with env.d/00basic.  Updated sbin/runscript.sh, etc/profile, 
+    sbin/rc-help.sh, and src/awk/cachedepends.awk.
+
+    Run `find | xargs` instead of `find -exec`.  Much better performance 
+    this way, and busybox friendly #59732.
+
+  15 Nov 2004; Roy Marples <uberlord@gentoo.org>:
+
+    Split modules_load into smaller more managable functions in net.lo
+    Added modules_force option to net.lo with a big phat warning in
+      net.example about it potentially breaking networking
+    Added searchdomains_ESSID option to essidnet
+    Stopped the domain setting from putting the same entry in search
+      in config-system and essidnet
+    Removed second warning in net.lo when configuration not set
+    Documented APIPA module in net.example
+    Added kernel checking for vlan - fixes #70829
+    Added kernel checking for bonding, bridging and tuntap
+    Added iproute2 support to the APIPA module
+
+  13 Nov 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Update the svcdir mounting #69595.  Instead of mounting in /mnt 
+    and then bind mounting to $svcdir, we mount the ramdisk on $svcidr.
+
+  12 Nov 2004; Roy Marples <uberlord@gentoo.org>:
+
+    Added arping duplicate address detection to net.lo
+    Created Automatic Private IP Addressing (APIPA) module
+
+    Added dependancy checking to ipppd
+    Bonding is now started pre instead of post
+    Fixed iface variable in dhcp modules for vlans
+    Changed get_device to interface_device
+    Changed get_type to interface_type
+    Added vlan configuration options and documented them in net.example
+    Fixed bridge configuration handling
+    Removed _get_vlans from iproute2 and ifconfig as vlan now does it itself
+
+  11 Nov 2004; Roy Marples <uberlord@gentoo.org>:
+
+    Fixed category of rp-pppoe to net-dialup error when requesting ADSL
+    Improved inet6 address deletion and detection in iproute2
+    Improved gateway logic in ifconfig
+    Changed all wireless reporting functions to use iwgetid instead of
+      parsing iwconfig output except for essid
+
+* rc-scripts 1.6.6 (08 Nov 2004)
+
+  08 Nov 2004; Roy Marples <uberlord@gentoo.org>:
+
+    Added options to configure bridge
+    Added bridge configuration example to net.example
+    Added missing required function interface_exists to iptunnel check_depends
+
+  07 Nov 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Fix shell scripting errors that would result in 
+    /sbin/functions.sh: line 166: [: too many arguments.
+
+  05 Nov 2004; Roy Marples <uberlord@gentoo.org>:
+
+    net-scripts/net.modules.d/bridge
+    - fixed destroying a bridge if no ports were added
+    - starts interfaces if they don't exist - fixed bug #65153
+
+    net-scrips/net.modules.d/bonding
+    - starts interfaces if they don't exist
+
+    net-scripts/init.d/net.lo
+    - added net_start() function to start depandant ifaces
+      so that bridge br0 can active tun0 which net.tun0 has to create
+    - added use dependany on wlan incase we're using linux-wlan-ng drivers
+      fixes bug #64978
+    - moved start() to run_start() and stop() to run_stop()
+      created run() and new start()/stop() functions
+      this is so that we have one single entry point to localise variables
+      and to remove any added functions loaded by our modules
+    - removed redundant interface_exists() as it's provided by
+      ifconfig and/or iproute2
+
+    net-scripts/net.modules.d/ifconfig and iproute2
+    - added ifconfig_tunnel and iproute2_tunnel functions
+
+    addred gre/ipip tunnel support via the the tunnel module
+    - fixes bug #50765
+
+  04 Nov 2004; Roy Marples <uberlord@gentoo.org>:
+
+    net-scripts/net.modules.d/pump
+    - fixed setting ntp servers
+
+    net-scripts/net.modules.d/dhcpcd
+    - fixed stopping function
+
+    net-scripts/net.modules.d/bonding
+    - fixed module to actually work with the interface
+
+    net-scripts/init.d/net.lo
+    - we remove all added functions when restarting an interface
+      this relies on the diff command being available
+
+    added isdn support via the new ipppd module - fixes bug #69035
+
+    net-scripts/conf.d/net.example
+    - added sample isdn setup
+
+    net-scripts/conf.d/wireless.example
+    - added better descriptions to the _sleep variables
+
+    Fixed boolean logic error when testing is_net_up in /sbin/runscript.sh
+    - fixed bug #70022
+
+    net.lo - added get_type function to return the type of the interface
+    - eth, ippp, etc
+
+    ipppd, tuntap
+    - start() moved to pre_start() and we now test by type
+      this means you no longer need ifconfig_ippp0=( "isdn" "dhcp" )
+      as ippp0 is always an isdn device
+
+    bridge - fixed stop function and moved start() to pre_start()
+      and automatically start if the variable bridge_${iface} exists
+
+    net.example - fixed up documentation for changed behaviour above
+
+  03 Nov 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    When launching critical services in /sbin/rc, make sure we source 
+    the conf.d file (if it exists).  Resolves #69956.
+
+  03 Nov 2004; Roy Marples <uberlord@gentoo.org>:
+
+    net-scripts/init.d/net.lo
+    - fixed !module when it's not installed
+    - we can now specify null inet addresses in the config
+      this allows a pure inet6 setup
+    - shutdown lo the same way we bring it up
+
+    net-scripts/net.modules.d/ifconfig
+    - changed IPv6 to inet6 in output of adding inet6 addresses
+    - just output inet6 address removed, not eth0 del foo
+
+    net-scripts/net.modules.d/iproute2
+    - fix deletion of non-link addresses - fixes bug #65417 (again)
+    - handle inet6 addresses like ifconfig - fixes more bug #65417
+
+    net-scripts/conf.d/net.example
+    - noted that inet6 addresses do not create aliases
+    - added examples of assigning inet6 addresses
+
+    net-scripts/net.modules.d/iwconfig
+    - improve error message when card does not support scanning
+
+    net-scripts/conf.d/wireless.example
+    - fixed comment regarding preferred_aps not working with cards that don't
+      support scanning
+
+  02 Nov 2004; Roy Marples <uberlord@gentoo.org>:
+
+    net-scripts/conf.d/net.example
+    - added bridging and tuntap examples
+
+    net-scripts/init.d/net.lo
+    - modprobe ${IFACE} when ${IFACE} does not exist
+
+    net-scripts/net.modules.d/ifconfig
+    - fixed interface existance check
+
+    net-scripts/net.modules.d
+    ifconfig & iproute2
+    - added boolean to interface_exists to report if it exists or not
+    - added checks to see if the interface exists or not when starting
+
+    dhcpcd
+    - removed debug line
+
+    bonding, dhclient, dhcpcd, essidnet, macchanger, pump, udhcpc
+    - added checks to see if the interface exists or not when starting
+
+    tuntap
+    - added checks to see if the interface exists or not when stopping
+
+  01 Nov 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Dump the error message that hwclock returns since it tends to be 
+    quite useful.  Modified init.d/clock.
+
+    Fix error in functions.sh [ -z "$@" ] -> [[ -z "$@" ]] #69789.
+
+    Don't create /dev/sndstat link anymore in populate_udev per #69635.
+
+  01 Nov 2004; Roy Marples <uberlord@gentoo.org>:
+
+    net-scripts/init.d/net.lo:
+    - modules specified by interface config now error if they are not loaded
+    - moved interface check to after preup incase user preup loads drivers
+    - modules can be explicitly not used by prefixing them with a !
+      however, they are still available to other modules
+      fixes bugs #68908, #69027
+    - remove check to see if interface exists
+    - modules may setup new interfaces and still require config
+      so we have a new label counter in iface_start
+    - removed the check to see if a class wrapping already exists
+      this fixes the bug where ifconfig and iproute2 are installed, but
+      ifconfig is asked for and the interface is restarted.
+    - added check to see if the configured module is loaded
+      and installed or not in iface_start
+    - add dependancy on isdn4linux - fixes bug #69035
+    - interface_exists moved to iproute and ifconfig
+
+    net-scripts/net.modules.d
+    - Split wireless module into iwconfig and essidnet modules
+    - Added tuntap and bridge modules, fixes bug #55394, #30688
+
+    net-scripts/init.d/iwconfig:
+    - wep mode is now reported
+    - removed post_stop function so we keep existing config
+    - added pre_stop to set the ESSID variable
+    - changed to veinfo/vewarn where appropriate
+    - check if interface exists otherwise abort gracefully
+    - no longer deletes addresses as we now avoid
+      ipv6 local addresses in detecting if interface has an addresses or not
+
+    net-scripts/init.d/ifconfig:
+    - added flag enable/disable function
+    - scope:link inet6 addresses are ignored when testing is_up and
+      del_addresses - fixes bug #65417
+
+    net-scripts/init.d/iproute2:
+    - added flag enable/disable function
+    - scope:link inet6 addresses are ignored when testing is_up and
+      del_addresses - fixes bug #65417
+
+    net-scripts/init.d/macchanger:
+    - fixed detecting whether the change worked or not, fixes bug #68893
+
+    net-scripts/init.d/vlan:
+    - fixed old config problem
+
+  31 Oct 2004; Martin Schlemmer <azarah@gentoo.org>:
+
+    Do not delete depscan and envupdate caches on reboot, as this should
+    improve bootup times - works nicely with the '-u' parameters of both.
+    Also move the '-u' parameter test of depscan.sh after the directory
+    exist test, else ${svcdir}/started/, etc do not exist.  Modified both
+    /sbin/rc and /sbin/depscan.sh for this.
+
+    Move things around in /sbin/functions.sh to have all functions above.
+
+    Add the 'lo' option to RC_NET_STRICT_CHECKING to resolve bug #29225.
+
+  28 Oct 2004; Martin Schlemmer <azarah@gentoo.org>:
+
+    Only add files not managed by udev to device tarball, bug #57110.
+
+  28 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Revert pam_console_apply udev check in bootmisc/halt.sh since 
+    the bug is with pam_console_apply and not udev/pam.
+
+    Use ${EUID} instead of $(id -u) to help out BSD in runscript.sh.
+
+    Allow users to select ramfs instead of default tmpfs for mounting 
+    on /dev with udev #69091.
+
+    Add issue.devfix which would be auto copied to /etc/issue if 
+    /sbin/rc detects the user is missing /dev/null or /dev/console.  
+    Includes a simple explanation/fix for what's wrong.
+
+    Make sure the clock init script runs after checkroot/modules/localmount 
+    so that timestamps are synchronized asap #68133 / #70008.
+
+    Accept '-nc' as a short option to '--nocolor' #64736.
+
+  26 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Don't use -A with fsck to respect the fs_passno since it'll try 
+    to fsck all filesystems, not just the ones specified.  Instead, 
+    awk /etc/fstab to review the passno field in checkroot #68822.
+
+    Add support for 'gentoo=forcefsck' boot option in checkroot.
+
+    Make sure we run devfsd in /sbin/rc even when /dev has been 
+    automounted by the kernel #68795.
+
+    Don't generate the device tarball in halt.sh with livecds #68469.
+
+  25 Oct 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    net-scripts/net.modules.d/ifconfig:
+    - Simplify ifconfig_is_up() 
+    - Fix ifconfig_get_aliases_rev() to actually work... you can't
+      specify an interface name to ifconfig if you want to see the
+      aliases.
+    - Workaround a couple ifconfig bugs dealing with aliases
+    - Correct a return status in ifconfig_interface_del_addresses()
+    - ifconfig_iface_stop() is bool, not void; fix the comments
+
+    net-scripts/net.modules.d/iproute2:
+    - iproute2_iface_stop() is bool, not void.  Fix the code so it
+      returns meaningful values
+
+    net-scripts/init.d/net.lo:
+    - Fix preferred (ifconfig/dhcpcd) module loading so it doesn't
+      barf when a preferred module is either (1) missing from
+      net.modules.d or (2) not available due to missing dependencies
+    - When loading all modules in order to stop an interface, only use
+      the first available to satisfy each class wrapper
+
+  24 Oct 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Include livecd patch that was applied to baselayout-1.9.4-r6
+    to use agetty instead of mingetty
+
+  24 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Mount tmpfs instead of ramfs on /dev when using udev systems.
+    The problem with ramfs is that it has no size limitations so 
+    one could easily take down their machine by accident #68653.
+
+* rc-scripts 1.6.3 (23 Oct 2004)
+
+  22 Oct 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Add support for user_eth0 in the adsl module and in net.example.
+    This means that most users won't need to edit pppoe.conf at all
+
+  21 Oct 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Remove old etc/conf.d/net and try to clarify instructions in
+    net-scripts/conf.d/net.example.  Add example for ADSL
+
+  21 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Merge all of the UML checks into one function, is_uml_sys(), 
+    which is now in functions.sh.
+
+  18 Oct 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Add v-e-commands (veinfo, vbegin, etc) to sbin/functions.sh that
+    depend on RC_VERBOSE which defaults to no.  Add --verbose to args
+    understood by runscript.sh.
+
+    In net.lo, use veinfo and friends when loading modules since this
+    information is confusing to users.
+
+    In net.lo, always load global "modules" setting in following
+    "modules_iface" since this is a little easier for users to
+    understand.
+
+    In net.lo, use eindent for output of pre/post scripts
+
+  18 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Add shfs to our list of net filesystems #61452.  Also add afs/nfs4.
+
+    Add a '-u' parameter to depscan.sh to allow for updates only when 
+    the config files have changed.  With /sbin/rc using this, we speed 
+    up bootup by only regenerating the cache when need be #67976.  Also 
+    add a '-u' parameter to env-update.sh for same reasons.
+
+    Don't run depscan.sh in rc-update anymore since the cache files don't 
+    depend on runlevels (which is all that rc-update modifies).
+
+    Add unicode support to keymaps/consolefont #32111 and UML support #29707.
+
+    Add checks to many filesystem operations in the eventuality that the 
+    filesystems are mounted read only.
+
+  16 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Update the default fstab /dev/shm mount to include the nodev, nosuid, 
+    and noexec mount flags.  No reason for the filesystem to have those.
+
+    Cleaned up the clock init script.  Moved the clock options out of 
+    rc.conf and into its own conf.d/clock file.  Added support for the 
+    weird Alpha consoles SRM/ARC since they need special config options.  
+    Also made the syncing of system clock to hardware clock at shutdown 
+    optional (with the default being off) #15834.  Don't try to set the 
+    clock if running inside a coLinux environment #52870.
+
+    Update default PATH ordering to try to follow default behavior in 
+    other distro's and because it's logical that /usr/local should 
+    override /usr which should override /.  Fixes #12531.
+
+    Move devfs stuff out of baselayout and into the devfsd package.
+
+    Don't run /sbin/pam_console_apply -r if using udev on /dev #50315.
+
+  14 Oct 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Fix rc-status to work with new COLS code.
+
+  14 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Allow users to mount ramfs/tmpfs/ramdisk as their svcdir and 
+    stop assuming ramfs==ramdisk #64079.
+
+  13 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Rework the code for managing /dev to make it more flexible for 
+    users.  Some don't want to use devfs/udev but rather just create 
+    their own nodes.  Handles some issues with #44906 / #67276.
+
+    Move the utmp clearing code out of bootmisc and into /sbin/rc.  
+    The utmp log must be cleared while in the initial boot level 
+    (meaning inside /sbin/rc) because as soon as rc exists, init 
+    writes a 'boot' record (`who -b`) which would normally be lost 
+    when the bootmisc init.d script is run #61727.
+
+  13 Oct 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Cosmetic fixes for starting loopback interface
+
+    SpanKY doesn't like the dots... disable them by default, but you
+    can set RC_DOT_PATTERN=' .' in /etc/conf.d/rc to get them back
+
+* rc-scripts 1.6.2 (13 Oct 2004)
+
+  13 Oct 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Install net.modules.d to /lib/rcscripts instead of /etc so we
+    don't have to deal with CONFIG_PROTECT
+
+    Fix diff code in modules_load so it can identify which functions
+    have been modified
+
+    Fix fallback mechanism in iface_start so that it works correctly
+    and doesn't report a bogus error message when trying the fallback
+
+    Get rid of need_begin trickery in iface_stop
+
+    Simplify eend processing in dhcp modules
+
+    Implement eindent, eoutdent, esetdent in functions.sh and adjust
+    net-scripts to use them.
+
+    Re-write einfo, ewarn, eerror, ebegin, eend, ewend to use
+    RC_INDENTATION and to work better on serial terminals
+
+    Remove conf.d/net.ppp0 since that is provided by net-dialup/ppp
+
+  12 Oct 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Fix ipaddr_fallback in net-scripts/conf.d/net.example
+
+  09 Oct 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Remove init.d/net.eth0 net.lo and net.ppp0.  The first two are
+    provided now by net-scripts and net.ppp0 is shipped in
+    net-dialup/ppp
+
+    Create NET_FS_LIST and is_net_fs in functions.sh and use them in
+    checkroot, localmount, netmount, net.example, and net.lo
+
+  09 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    If the hostname has already been set via the kernel/dhcp, don't 
+    force it to 'localhost'.  Used in netboot/terminal setups #38172.
+
+    Add domainname to default boot runlevel list #47041.
+
+  08 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Make sure that when we try to mount /sys, we do so with -n (tigger).
+
+    Add some examples for nfs to sysctl.conf #66575.
+
+  06 Oct 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Update to net-scripts 1.0.2 from Roy
+    ------------------------------------
+    - wireless module: replaced preferred_only var with
+      associate_order this makes more sense now as we have changed the
+      possible values
+    - wireless module: added patch from Daniel Zappala we should call
+      wireless_get_essid everywhere now
+    - wireless module: don't declare ESSID local in
+      wireless_configure().  This allows ESSID to be tested in the
+      user defined postup() function
+    - wireless module: test type != "NOT READY!" instead of testing =
+      IEEE.  this resolves problems with intel and ra-tech drivers
+    - net.lo start() now errors when the interface does not exist
+    - dhcpcd, dhclient, udhcpc and pump now expose peer_* vars this
+      enables wireless to map them from peer_dns_ESSID
+    - config-system helper now loads wireless module to remap
+      variables from ESSID this allows udhcpc and dhclient to use
+      remapped wireless vars
+    - fixed dhcpcd and pump modules using peer_* vars
+    - wireless aborts after 5 seconds if it cannot report a valid
+      ESSID this fixes a potential infinite loop problem
+    - wireless_setup_iface() renamed to wireless_map_essid_vars() this
+      avoids confusion about what the function actually does
+
+  06 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Change the default net.ipv4.conf.default.rp_filter setting to 1
+    in sysctl.conf since it shouldn't be harmful in anyway.  Redhat 
+    does the same.
+
+  05 Oct 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Get rid of getcols() in sbin/functions.sh.  Use COLUMNS when
+    possible and otherwise clean up the COLS code.  Fix the "emerge
+    depend" detection code to use RC_ENDCOL="no"
+
+  05 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Changed behavior of the domainname init.d script.  It will now 
+    override any settings obtained via dhcp/whatever.  See #48277.
+
+    Updated bootmisc to dump the output of `dmesg` to /var/log/dmesg.  
+    This way users have an 'after-boot' log of their dmesg saved 
+    somewhere useful #55421.
+
+    Added the 'eend' back to depscan.sh since the script starts with a 
+    call to 'ebegin' #59694.
+
+    Add selinux update from Chris PeBenito for src/runscript.c #64019.
+
+    Add more quoting to rc-help.sh to fix some non-critical errors.  
+    Make rc-help.sh respect the value of RC_NOCOLOR.  Allow RC_NOCOLOR 
+    in functions.sh to be set via the environment.
+
+    Flesh out the default sysctl.conf with comments and more examples 
+    since our previous one was pretty sparse #59993.
+
+    Change calls to `uniq` to `sort -u` in checkroot/halt.sh.  This way 
+    we only require sort in / and not both #36453.
+
+  04 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    More (I mean a LOT more) services.  This takes care of #44458, 
+    #52881 #55939 #58997 #66166 #66297.  Gleaned many from the IANA 
+    list/Fedora/FreeBSD/Debian.
+
+    Change the test for /proc/cmdline from -e to -r.  On grsecurity 
+    based systems for example, the file may exist, but not be readable 
+    by non-root users (patch by Ned Ludd).
+
+  03 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Add support for NFSv4 from #25106 to the netmount script.  Don't 
+    try to fsck / if the root is a remote filesystem (like NFS) #36624.
+
+    Update the fs_passno values in the default fstab to match the 
+    settings suggested by the manpage #37314.  Make checkroot respect 
+    a fs_passno setting of 0 when dealing with / #39212.  Change 
+    default / filesystem type to ext3 instead of xfs #42670.
+
+    Re-order the arguments to mount to match POSIX requirements #66225.
+
+    Don't pipe swapon in localmount to /dev/null and ignore return 
+    codes anymore.  A swapon that works shows no output #39834.
+
+  02 Oct 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Break up the COL/COLOR code properly this time.  Not all serial 
+    consoles can handle adjusting to the end of the line, so let's not 
+    bother running stty at all anymore.  This should fix up #32453.
+
+  30 Sep 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Disable cryptfs by default in the conf.d file.  Also cleanup 
+    the output generated in localmount/checkfs/halt.sh for dm-crypt.
+    Add an extra check so that cryptfs is only run when the conf.d
+    file exists as well as /bin/cryptsetup.
+
+  29 Sep 2004; Mike Frysinger <vapier@gentoo.org>:
+
+    Let glibc install nscd since different versions of glibc will 
+    need to be handled differently.  See #43076 by Rui Malheiro.
+
+  29 Sep 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Prefer ~/.dir_colors over /etc/DIR_COLORS when it exists #64489
+
+  27 Sep 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Clear the screen in .bash_logout #32330
+
+* rc-scripts 1.6.1 (27 Sep 2004)
+
+  27 Sep 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Update dm-crypt to work with multi-line configuration files.
+    Also don't set status in a subshell; it was being lost before.
+
+  23 Sep 2004; Mike Frysinger <vapier@gentoo.org>:
+
+   Rework the logic behind the $COLS code.  It should not depend 
+   on whether color is enabled.  Also add a check for negative 
+   values (like when using a serial console).
+
+* rc-scripts 1.6.0 (15 Sep 2004)
+
+  15 Sep 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Fix bug 64034: simplify netmount script's stop function so that
+    mountpoints containing spaces work correctly
+
+    Update tarball.sh to use net-scripts
+
+  14 Sep 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Commit dm-crypt enablement patch from Tigger (Rob Holland) in
+    bug 43146
+
+* rc-scripts 1.5.3 (18 Aug 2004)
+
+  18 Aug 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Fix bug 60719 (request for better error messages from runscript)
+    by allowing errors to show on the screen when they're encountered
+    in wrap_rcscript
+
+    Apply Spock's bootsplash patch from bug 45784.  This moves most of
+    the splash functionality out of baselayout.
+
+  13 Aug 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Don't export PS1.  Continuation of bug 26951, comments 60-62.
+
+* rc-scripts 1.5.2 (02 Aug 2004)
+
+  02 Aug 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Related to bug 38955, don't set INPUTRC.  Instead patch bash so
+    that it looks for /etc/inputrc automatically if ~/.inputrc is
+    missing.  This is better than using INPUTRC since that will
+    override even after the user creates ~/.inputrc.
+
+    Fix bug 54275: Don't set INFODIR.  The correct variable used by
+    texinfo is INFOPATH, which is already set in 00basic.  Setting
+    INFODIR is useless, and breaks a NetBSD cross compile from Gentoo
+
+  01 Aug 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Fix bug 58805: net.eth0 should use bridge so that bridge
+    interfaces are configured prior to net.br0 running
+
+    Fix bug 56856: Get rid of net.rej and integrate missing stuff to
+    conf.d/net
+
+    Apply half of spock's patch in bug 45784: Check for
+    conf.d/bootsplash instead of conf.d/bootsplash.conf
+
+    Fix bug 51351: Quote parsed output of /proc/filesystems to handle
+    octal sequences in mountpoint such as encoded spaces (\040)
+
+    Fix bug 46680: Add cifs support to localmount and netmount.
+    Thanks to Ronald Moesbergen for the patches
+
+  21 Jul 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Fix bug 26952: Use /etc/bash/bashrc to setup PS1, testing $- to
+    determine if shell is interactive.  The new system-wide bashrc is
+    installed by bash-2.05b-r10
+
+  19 Jul 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Fix bug 38743: strip leading and trailing spaces from variable
+    values in genenviron.awk.  Thanks to Marius Mauch for the patch.
+
+  09 Jul 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Fix bug 55576: swap words "start" and "stop" in runscript.sh error
+    message
+
+* rc-scripts 1.5.1 (28 Jun 2004)
+
+  28 Jun 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Fix dhcp in iface_start_ifconfig: It was re-using the variable
+    ${i} which would result in the following error:
+        /sbin/runscript.sh: line 441: ((: 16.141.88.153: syntax error
+        in expression (error token is ".141.88.153")
+
+    Use vlan_IFACE instead of iface_IFACE_vlans in net.eth0 for more
+    consistent vlan configuration.  Thanks to robbat2 in bug 55394
+    (not fully resolved)
+
+    Add example for checking if root filesystem is NFS-mounted via
+    predown function in conf.d/net for bug 53104.  This might be
+    better integrated at some point into net.eth0
+
+* rc-scripts 1.5.0 (26 Jun 2004)
+
+  26 Jun 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Fix bug 47659: support iproute2-style configuration.  Thanks to
+    Dean Bailey for some fantastic patches, including documentation
+    for conf.d/net.  This is a pretty huge re-write of net.eth0
+
+    Fix bug 34607: provide examples for in conf.d/net for preup,
+    postup, predown, postdown functions.  Also pay attention to return
+    value from predown function (previously ignored)
+
+  15 Jun 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Fix bug 25975: support adsl in net.eth0.  Thanks to Patrick McLean
+    for the initial pass at the code.
+
+    Fix bug 34140: add --servicelist option to rc-status.  Thanks to
+    Eldad Zack for the patch.
+
+    Fix bug 37418: fix order of LVM and RAID in checkfs.  Thanks to
+    Raimondo Giammanco for the patch.
+
+* rc-scripts 1.4.16 (06 Jun 2004)
+
+  06 Jun 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Only call generate-modprobe.conf with --assume-kernel if
+    modules-update was called with --assume-kernel.  This means that
+    only catalyst has the dependency on module-init-tools, not
+    everybody with the newer baselayout
+
+* rc-scripts 1.4.15 (21 May 2004)
+
+  21 May 2004; Aron Grifis <agriffis@gentoo.org>:
+
+    Fix bug 51570: typo on line 161 of /sbin/livecd-functions.sh
+
+    Fix bug 51626: wrong variable declaration at top of
+    get_bootparam() in /sbin/functions.sh
+
+* rc-scripts 1.4.14 (17 May 2004)
+
+  17 May 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Bump version to 1.4.14 to push out gmsoft's fix for hppa console
+    on ttyB0
+
+* rc-scripts 1.4.13 (15 May 2004)
+
+  15 May 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Bump version to 1.4.13 to push out Gustavo's livecd serial console
+    fixes for sparc and hppa.
+
+* rc-scripts 1.4.12 (07 May 2004)
+
+  10 May 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Bump version to 1.4.12 to release these critical bug fixes
+
+    Fix bug 50434: The new version of start-stop-daemon changes
+    directory to / by default unless --chdir is specified.  Revert
+    this behavior to maintain working directory.  This fixes openvpn
+    startup (probably among other things).  Thanks to Sven Wegener for
+    the patch.
+
+    Fix bug 50448: Four days ago I changed bash loops to use the wrong
+    conditional syntax in net.eth0.  Thanks to Sven Wegener for
+    pointing out the problem and providing a patch.
+
+* rc-scripts 1.4.11 (07 May 2004)
+
+  07 May 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Fix bug 20597: Skip RCS files when updating modules
+
+    Fix bug 49926: Add a --assume-kernel flag to modules-update.  This
+    requires a companion patch in module-init-tools-3.0-r2 to handle
+    the same flag in generate-modprobe.conf; this dependency won't be
+    handled in the baselayout ebuild since it only affects livecd
+    building.
+
+  06 May 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    In net.eth0, fix many instances of loops like "for ((i = 0; i <
+    100; i = i + 1))".  The problem here is that the middle comparison
+    is being interpreted as a bash conditional, which means that it's
+    doing string comparison by default.  It needs to be "i -lt 100"
+
+    Fix bug 34827: net.eth0 breaks when localized because the ifconfig
+    output changes.  Wrap ifconfig in a function that overrides
+    LC_ALL=C
+
+    Fix bug 48305: Provide a new network configuration variable
+    ifconfig_fallback_eth0 which allows one to specify a fallback
+    configuration in case DHCP fails.
+
+    Fix bug 50246: Give root an invalid password ("*" in /etc/shadow)
+    in the default baselayout.  This prevents the first reboot after
+    installation from having a blank password.
+
+  05 May 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Fix bug 48595: Make sure $(id -u) is zero (root user) when running
+    init scripts to avoid a lot of error messages.
+
+    Replace many lines of awk with two lines of grep in
+    init.d/localmount
+
+    Fix bug 44316: Use 0644 instead of 0640 for resolv.conf in net.ppp0
+
+  03 May 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Update to version 1.10.20 of Debian's start-stop-daemon (contained
+    in dpkg at http://packages.debian.org/testing/base/dpkg).  This
+    fixes bug 22686 (start-stop-daemon in baselayout doesn't allow
+    altered nicelevel).
+
+* rc-scripts 1.4.10 (25 Apr 2004)
+
+  25 Apr 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Fix typos in sbin/rc: "try try mount" and "mount ... & >/dev/null"
+    Also removed the errstr double-checking since the need for that is
+    alleviated by these typo fixes.
+
+  23 Apr 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Fix bug 48629 (/sbin/rc fixups for udev) with patch from GregKH
+
+    Fix bug 40987 (gentoo should be able to boot with an empty /dev)
+    with patch from Spanky.  The patch avoids redirection to /dev/null
+    when it doesn't exist; this was breaking /sbin/rc.
+
+* rc-scripts 1.4.9 (15 Apr 2004)
+
+  15 Apr 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Fix bug 47111 (severe depcache problems) with tons of help from
+    dswhite42 and the rest of the crew in that bug.  Thanks guys!
+
+* rc-scripts 1.4.8 (14 Apr 2004)
+
+  14 Apr 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Fix bug 47623 (error removing inet6 addresses) with patch provided
+    by Vlad Yasevich.
+
+* rc-scripts 1.4.7 (12 Apr 2004)
+
+  12 Apr 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Fix bug 47218 (net.eth0 broken for vlans) with patch provided by
+    Andy Dustman.  Fix bug 47250 (depscan.sh fails to create
+    /var/lib/init.d/* directories) with patch from Terje BergstrÃ¶m
+
+* rc-scripts 1.4.6 (08 Apr 2004)
+
+  08 Apr 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Update patch from Gustavoz; -ln /bin/bash should have been -nl /bin/bash
+
+* rc-scripts 1.4.5 (08 Apr 2004)
+
+  08 Apr 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Patch init.d/checkroot to list / (root) only once in mtab; see bug 38360.
+    Patch from Gustavoz to livecd-functions.sh to run bash instead of login on
+    serial consoles, necessary due to scrambled root passwords.
+
+* rc-scripts 1.4.4 (07 Apr 2004)
+
+  07 Apr 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    Patch from Gustavoz for Sparc console: Fetch LIVECD_CONSOLE from dmesg
+    output.  Also support 4800 baud correctly.
+
+  16 Mar 2004; Aron Griffis <agriffis@gentoo.org>:
+
+    The changes in this commit pertain primarily to
+        http://bugs.gentoo.org/show_bug.cgi?id=19695
+        http://bugs.gentoo.org/show_bug.cgi?id=35736
+
+    Specify routes as an array per interface, for example:
+        routes_eth0=(
+            "-net 10.1.0.0 netmask 255.255.0.0 gw 10.0.0.5"
+            "-net 10.2.0.0 netmask 255.255.0.0 gw 10.0.0.6"
+            "-host 10.3.0.1 dev eth0"
+        )
+
+    You can optionally use the gateway variable or just put the default route
+    in the routes variable.  The following two are REDUNDANT:
+
+        routes_eth0=( "default gw 10.0.0.5" )
+        gateway="eth0/10.0.0.5"
+
+    Old configuration variables in /etc/conf.d/net are fully supported and
+    used transparently if ifconfig_eth0 is missing.  In other words, this new
+    script is fully backward-compatible.  However you can get rid of
+    iface_eth0, alias_eth0, broadcast_eth0 and netmask_eth0 if you want by
+    using the new syntax:
+
+        ifconfig_eth0=(
+            "10.0.0.6 broadcast 10.0.255.255 netmask 255.255.0.0"
+            "192.168.1.1 netmask 255.255.255.0"
+            "123.456.789.1"
+        )
+
+    Full backward compatibility so no danger to screwing up users relying on
+    existing /etc/conf.d/net setup
+
+    NET_DEBUG can be set in the environment for copious debugging output
+
+    Deprecate [ ] in favor of [[ ]] which has fewer quoting issues and
+    better functionality (and is even slightly faster)
+
+    Properly localize all variables, including variables returned by
+    setup_vars
+
+    Allow full options for every ifconfig command, both base address and
+    aliases via ifconfig_eth0, replacing the convoluted and less-functional
+    iface_eth0, alias_eth0, broadcast_eth0, netmask_eth0
+
+    Provide full support for static routes via routes_eth0
+
+    Fix potential quoting problems in setup_vars by using better eval syntax
+    instead of eval echo
+
+    Display IP addresses while configuring, both DHCP-retrieved and
+    statically set addresses
+
+    Collapse redundant caching of $? since eend returns $? again
+
+    Report when keeping kernel configuration for an interface along with IP
+    address gleaned
+
+    Don't reset the default gateway if it is already set correctly
+
+    Don't bind default gateway to particular interface when /sbin/route is
+    called so that it can survive if there is more than one interface on the
+    required subnet.  (Old behavior can be obtained by setting
+    routes_eth0="default gw 1.2.3.4 dev eth0" if you really want it)
+
+    Don't bomb if default gateway can't be set since that doesn't
+    necessarily mean that the interface configuration is invalid.
+    (Old behavior was completely broken, but commented section
+    demonstrates how to do it right if necessary)
+
+    iface_stop no longer relies on configuration in /etc/conf.d/net AT ALL.
+    This is very good because it means you can put new configuration in
+    /etc/conf.d/net, then restart the interface and the old configuration will
+    be properly shut down.
+
+    iface_stop reports when it is releasing the DHCP lease
+
+* rc-scripts 1.4.3.13p1 (26 Feb 2004)
+
+  26 Feb 2004; Martin Schlemmer <azarah@gentoo.org>:
+
+    Remove /etc/DIR_COLORS, as coreutils provides it now.
+
+    Add RC_DEVICE_TARBALL to /etc/conf.d/rc to control use of device tarball.
+    Also modified /sbin/rc and /etc/init.d/halt.sh for this.
+
+    Start udevd if present.
+
+    Small fix to sbin/rc-services.sh related to mtime checking and 'net'
+    virtual service - it had no mtime generated, so check_mtime() failed
+    for it ...
+
+  25 Feb 2004; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update to enable checking of mtimes on rc-scripts, and auto running
+    depscan.sh if needed.  Also try to run depscan.sh when RC_GOT_DEPTREE_INFO
+    is not set instead of just erroring.
+
+  19 Feb 2004; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix irda type-o in /sbin/MAKEDEV, thanks to Tobias Sager <moixa@gmx.ch>.
+
+    Fix type-o in /etc/initrc, bug #41666 (Tom Vergote <bugzilla@tomvergote.be>).
+
+  15 Feb 2004; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add RC_TTY_NUMBER to /etc/conf.d/rc to configure how many tty devices
+    are used in scripts such as consolefonts, numlock, etc.  This should
+    close bug #39863.
+
+    Fix type-o in /etc/init.d/consolefont, bug #40938, thanks to patch from
+    Cory Tusar <ctusar@adelphia.net>.
+
+  09 Feb 2004; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add SELinux modifications to /sbin/runscript.  This allows runscript to
+    make sure it is running in the right domain.  Patch done by
+    Chris PeBenito <pebenito@gentoo.org>.
+
+* rc-scripts 1.4.3.13 (08 Feb 2004)
+
+  08 Feb 2004; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix wrong logic in /etc/init.d/halt.sh which did not umount all mounts
+    _but_ /mnt/cdrom and /mnt/livecd.
+
+    Update /etc/init.d/consolefont to use newer kbd.  Should also close
+    bug #39864.
+
+    Fix /sbin/depscan.sh, /sbin/functions.sh and /sbin/rc to use mkdir rather
+    than install, as newer versions of install is located in /usr/bin.  This
+    closes bug #39648.
+
+  06 Feb 2004; Martin Schlemmer <azarah@gentoo.org>:
+
+   Tweak livecd support changes and add some more to hopefully sort out
+   last issues, with help from Brad House <brad_mssw@gentoo.org>.
+
+   Add code to generate /dev/fd, /dev/std* and /dev/core to /sbin/rc,
+   bug #37349.
+
+* rc-scripts 1.4.3.12p3 (21 Jan 2004)
+
+  19 Jan 2004; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add /sbin/livecd-functions.sh from Brad House <brad_mssw@gentoo.org>
+    for livecd support.  Add bits to /sbin/rc to support it.
+
+  06 Jan 2004; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix type-o in /etc/init.d/checkfs, bug #37113.
+
+  29 Dec 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update /sbin/depscan.sh, /sbin/env-update.sh, src/awk/cachedepends.awk,
+    src/awk/gendepends.awk and src/awk/genenviron.awk to use ENVIRON rather
+    then gawk -v.  Also add some tests to see if we got the environment
+    variables.
+
+  28 Dec 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix /sbin/rc to mount /dev/pts with gid=5 and mode=0620, bug #36088.
+
+* rc-scripts 1.4.3.12p2 (27 Dec 2003)
+
+  26 Dec 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update code to generate /dev from /sys.  Add UDEV_NO_SLEEP=1 for
+    hack to not make udev sleep - its not needed as these entries
+    are already present, and not a hotplug event.
+
+    Update /etc/init.d/{consolefont,numlock} to work with udev managed
+    /dev that have devfs layout.
+
+  14 Dec 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix type-o in /sbin/rc, bug #34837.
+
+* rc-scripts 1.4.3.12p1 (26 Nov 2003)
+
+  26 Nov 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix /etc/init.d/halt.sh to reset pam_console permissions, else
+    the next bootup might be done with some non-root nodes which cause
+    some odd issues.
+
+    Add code to generate /dev from sysfs entries - not much it currently
+    support but block/tty devices, but it is a start for when we have
+    full sysfs support in all drivers.
+
+    Revert carrier detection check, as there is currently too many
+    issues with it, bug #33272.
+
+    Make sure we mount already mounted mount (done in /sbin/rc) with
+    correct permissions, etc, bug #33764.  Modified /etc/init.d/checkroot
+    for this.
+
+  16 Nov 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix carrier detection - we need to do a 'ifconfig $IFACE up' else
+    some drivers do not set the IFF_RUNNING bit, bug #33272, thanks to
+    Jason Rhinelander <jason-gentoo@gossamer-threads.com> for the fix.
+
+  15 Nov 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add a warning to cachedepends.awk if a rc-script's name ends in
+    '.sh', bug #33134.  Add better error checking to /sbin/depscan.sh.
+
+    Fix /etc/init.d/halt.sh to not try and remount virtual devices,
+    also do a few cleanups.  Closes bug #33271.
+
+* rc-scripts 1.4.3.12 (11 Nov 2003)
+
+  11 Nov 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add carrier detection to /etc/init.d/net.eth0 closing bug #25480;
+    patch by Jordan Ritter <jpr5+gentoo@darkridge.com>.
+
+    Add extra checks for critical directories to /sbin/rc.
+
+  04 Nov 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update /bin/rc-status giving a working '-u' parameter, bug #32417.
+    Fix by Michael Frysinger <vapier@gentoo.org>.
+
+  31 Oct 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add support for --tty switch added to setfont and remove consolechars
+    support; modified /etc/init.d/consolefont for this.  Also remove
+    consoletools support from /etc/init.d/keymaps.
+
+  29 Oct 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    We should still use /sbin/udev as hotplug agent if /sbin/hotplug do
+    not exist.  Updated /sbin/rc for this.
+
+    Add a fix to /etc/init.d/keymaps for bug #32111 (we should not have
+    '-u' in the call to loadkeys when using unicode).
+
+    We should not use '-' in variable names for bash, bug #31184, thanks
+    to Andreas Simon <yuipx@gmx.net>.  Updated /sbin/MAKEDEV.
+
+  27 Oct 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix return code checking of fsck in /etc/init.d/checkfs, bug #31349.
+
+  26 Oct 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    The unmount stuff in /etc/init.d/halt.sh was flawed, in the fact that
+    it called 'umount -t no<insert_fs_here>', which resulted in /proc, etc
+    unmounted anyhow.  Change it to remount the last filesystems readonly
+    without trying to unmount any.  This fixes a few cases where reboot
+    would halt due to unmounted /proc, etc.
+
+    This change set fixes two things:
+    1)  In exporting all functions/variables in functions.sh, rc-services.sh
+       and rc-daemon.sh, we created an overly large environment, and also
+       broke stuff like glftpd.  Do not do this, and hope whatever caused
+       the issues previously is fixed in the meantime.  This should close
+       bugs #25754 and #31794.
+    2)  gendepend.awk used to generate deptree with functions called
+       depinfo_<scriptname> which set appropriate variables when called.
+       This broke if the scriptname contained characters that is not valid
+       for bash variable names.  Changed things to use an array fixing this.
+       This closes bug #24092.
+
+    Change /sbin/rc again to not set the hotplug agent to /sbin/udev, as
+    /sbin/hotplug will call udev as well.
+
+    Fix a logic error in /lib/rcscripts/sh/rc-services.sh that cause the
+    get_dep_info() function to skip the last entry in the RC_DEPEND_TREE
+    array (in my case 'net').
+
+    We did not handle the 'net' dependency properly in valid_iuse() and
+    valid_iafter().  Fix this in /lib/rcscripts/sh/rc-services.sh, closing
+    bugs #30327 and #31950.
+
+    Change an occurance of /etc/modutils in modules-update.8 to
+    /etc/modules.d/ closing bug #31171.
+
+  19 Oct 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    More bootsplash fixes, bug #21019 (comment #21).
+
+    Remove the killall5 stuff from /etc/init.d/halt.sh, as it messes with
+    bootsplash.  Add support to kill processes still using non-critical
+    mounts with fuser though.
+
+  17 Oct 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Bootsplash fixes from Michael Aichler <micha@aichler.net>, (comment #15
+    and #16 from bug #21019).
+
+    Bootsplash coded did not play nice with boot profiles, so I fixed that
+    as well.  Some other style tweaks.
+
+    Fix /sbin/MAKEDEV to use 'user:group' form, and not depriciated '.'.
+    Also changed the permissions on tty's, ibcs and scanner devices
+    to 0660.
+
+* rc-scripts 1.4.3.11p2 (14 Sep 2003)
+
+  14 Oct 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Revert previous changes, and substitute it for the bootsplash patches
+    from Michael Aichler <micha@aichler.net>, bug #21019.  His www pages
+    can be reached at:
+    
+      http://www.aichler.net/gentoo/bootsplash/
+
+    I should note that the bootsplash stuff is not 100% tested.
+    
+
+* rc-scripts 1.4.3.11p1 (14 Sep 2003)
+
+  14 Oct 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Initial bootsplash patch as from LiveCD's.
+
+    Add more tty's to /etc/init.d/numlock, bug #28252.
+
+* rc-scripts 1.4.3.11 (14 Sep 2003)
+
+  14 Oct 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add initial udev support.  Modified /sbin/rc and /etc/init.d/halt.sh.
+    Resolves bug #27527.
+
+    Add squid to /etc/services, bug #30995.  Other cleanups from rac.
+
+    Add patch from Kumba <kumba@gentoo.org> to MAKEDEV to not allow
+    running while pwd is root (/).
+
+    Add 'after hotplug' to /etc/init.d/consolefont, bug #30856.
+
+    Add entry for floppy in /etc/fstab, bug #30574.
+
+    Remove changing group of /tmp/.{X,ICE}-unix, as it it not needed,
+    bug #28861.
+
+    Apply a patch from Mike Frysinger <vapier@gentoo.org> for rc-status.
+    It now will work with runlevels named with any characters (other than
+    ones found in default bash IFS).  It also adds a few sanity/error
+    checks, bug #26432.
+
+    Change /etc/inputrc to have PageUp/PageDown search through bash
+    history again, bug #26036.
+
+  14 Sep 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Change update-modules to modules-update in manpage, bug #28101.
+
+* rc-scripts 1.4.3.10p1 (08 Sep 2003)
+
+  08 Sep 2003; Martin Schlemmer <azarah@gentoo.org>:
+  
+    Change the '-k' switch to dhcpcd to '-z' in /etc/init.d/net.eth0.
+
+  12 Aug 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add missing 'local x' to filter_environ() (bug #26429), thanks to
+    Mark Wagner <mark@lanfear.net>.  Modified rc-services.sh for this.
+
+  11 Aug 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Modify /etc/init.d/modules not to print the autoloading stuff if
+    no modules should be loaded (resolving bug #26288), per request from
+    Michael Frysinger <vapier@gentoo.org>.
+
+    Fix get_bootparam() in /sbin/functions.sh to check for existance of
+    the /proc/cmdline proc entry.
+    
+  10 Aug 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Modify /etc/init.d/halt.sh to first kill, and then deactivate swap on
+    request of Luke-Jr <luke-jr@gentoo.org>.  It should be ok now, as the
+    whole way of devfs handling changed long ago already.
+
+    Fix /etc/init.d/halt.sh to unmount the mount point and not the device.
+    Also change it to 'mount -d' to detach the loop device.  Patch by
+    Kalin KOZHUHAROV <kalin@ThinRope.net>, bug #26256.
+
+    Fix /etc/init.d/consolefont to not error out if CONSOLEFONT in rc.conf
+    is not set, bug #26278 (noted by Michael Frysinger <vapier@gentoo.org>).
+
+* rc-scripts 1.4.3.10 (04 Aug 2003)
+
+  04 Aug 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add /bin/rc-status and 'show' support to /sbin/rc-update (long overdue),
+    bug #4222, thanks to Sean E Russell <ser@germane-software.com>,
+    Michael Frysinger <vapier@gentoo.org> (/bin/rc-status) and for the 'show'
+    stuff to /sbin/rc-update, Max Kalika <max@gentoo.org>.
+
+    Fixed modules-update to only do the /etc/modprobe.conf generation if we
+    are actually running a 2.5+ kernel.
+
+    Add pop3 entries to /etc/services, bug #25501.
+
+    Add a switch for devfsd startup to /etc/conf.d/rc, fix /sbin/rc to check
+    RC_DEVFSD_STARTUP.  Closes bug #24361, thanks to patches from
+    Kurt V. Hindenburg <khindenburg@cherrynebula.net>.
+
+    Add LVM2 support thanks to Max Kalika <max@gentoo.org> (bug #21908).
+
+    Add IPV6 versions of localhost and co in /etc/hosts, bug #25859.
+
+    Fix type-o in /sbin/rc-update, bug #25854.
+
+  29 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Tweak /etc/init.d/check{root,fs} to set retval after each fsck call,
+    and not the whole block.  Tweak check checkroot to reboot if need be
+    (This is with sufficient warning and message).  Tweak checkfs to not
+    drop to a sulogin if return code 2 or 3 is given - as we did not
+    mount the filesystems yet, we should not need to reboot ... bug #25398.
+
+    Add '-T' option to fsck (/etc/init.d/check{root,fs} - requested by
+    Michael Frysinger <vapier@gentoo.org>.
+
+  28 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Rework changes for the Adelie project to support boot config profiles
+    better.  Added support for /etc/runlevels/LEVEL/.fake to specify which
+    runlevels should be marked started or stopped without executing the
+    script.  Renamed the /etc/runlevels/LEVEL/critical to ".critical" for
+    more uniformity.  Modified /sbin/rc, /sbin/functions.sh, /sbin/runscript.sh
+    for this.
+
+    Add better support for services that provide the "logger" virtual.  We
+    should really start the logger earlier, and stop it as late as possible.
+    Modified /sbin/rc, /lib/rcscripts/sh/rc-services.sh and gendepends.awk
+    for this.
+
+    Fix .../boot/... paths hardcoded in /lib/rcscripts/sh/rc-services.sh,
+    thanks to Jean-Francois Richard <jean-francois@richard.name>.
+
+    Replace the Suse /etc/inputrc with a non copyrighted one, bug #24918.
+
+  23 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    From Jean-Francois Richard <jean-francois@richard.name> and
+    Olivier Crete <tester@gentoo.org> from the Adelie project:
+
+      The last four patches are the "adaptation" of our previous patches to
+      the new "no-tmpfs" init system in Gentoo.  Since we were using quite
+      different scripts for the boot runlevel (no "checkroot" for example) and
+      that the new system hardcodes some of the boot services, we had to find
+      a simple yet elegant solution.
+
+      We chose to make init scripts read "/etc/runlevels/LEVEL/critical" to
+      know what are the boot runlevel services.  If this file is not present,
+      it uses the Gentoo hardcoded defaults.
+
+    This touches /sbin/rc, /sbin/functions.sh, /sbin/runscript.sh and
+    /etc/init.d/halt.sh.
+
+    I just changed the behaviour of 'softlevel' kernel command line argument
+    to not only add a suffix and some other cleanups.
+
+    Add support for irqbalance.
+
+  22 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix the /dev/root entry in /etc/mtab, bug #24916.
+
+    Add EVMS2 support, thanks to Mike Javorski <mike_javorski@bigfoot.com>,
+    bug #24064.
+
+* rc-scripts 1.4.3.9 (17 Jul 2003)
+
+  17 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add vlan support to /etc/init.d/net.eth0, bug #15588, thanks to
+    Andy Dustman <andy-gentoo.54e552@dustman.net>.
+
+    Add 'TERM=Eterm' to /etc/DIR_COLORS, bug #23423.
+
+    Add mdadm support to /etc/init.d/checkfs, bug #23437, many thanks
+    to Wes Kurdziolek <wkurdzio@vtluug.org>.
+
+    Rather use 'uname -r' to get kernel version, as else we need sysctl.
+    This closes bug #23923, modified /etc/init.d/modules.
+
+    Fix a type-o in /etc/fstab, bug #23308.
+
+    Add support for the new 'O' agetty option to display the DNS domainname
+    in the issue file thanks to Marius Mauch <genone@genone.de>, bug #22275.
+    Updated /etc/issue and /etc/issue.logo for this.
+
+  16 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add aliases for add/del to /sbin/rc-update closing bug #24317, thanks
+    to Antonio Dolcetta <zagarna@yahoo.com>.
+
+    Fix /etc/init.d/net.eth0 to not set rp_filter if already set via
+    /etc/sysctl.conf, bug #24235 - thanks jochen <jochen.eisinger@gmx.de>.
+
+    Fix /sbin/runscript.sh and /lib/rcscripts/awk/cachedepend.awk to work
+    with symlinks in /etc/init.d/, closing bug #24228.
+
+    Fix /etc/init.d/clock to work with UML, closing bug #24225 thanks to
+    John Mylchreest <johnm@gentoo.org>.
+
+    Fix hardcoded color escape sequence in /sbin/rc, closing bug #24109,
+    thanks to splite <splite-gentoo@sigint.cs.purdue.edu>.
+
+    Fix /sbin/functions.sh to disable color printing if NOCOLOR is set to
+    "true" in /etc/make.conf, closing bug #24107.
+
+    Fix /etc/init.d/keymaps to be more non-x86 friendly, and also allow
+    more keymaps to be specified in /etc/rc.conf, bug #24084.
+
+  15 Jul 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add /bin/csh to /etc/shells.
+
+    Add new protocols to /etc/services, thanks Rajiv Aaron Manglani
+    <rajiv@gentoo.org>.
+
+  23 Jun 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Cleanups for bug #21438 from bug #22637, thanks to
+    Christian Strauf <christian.strauf@gmx.de> and Ian Abbott <ian@abbott.org>.
+
+  22 Jun 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Really commit fix for bug #21438 to CVS.
+
+  21 May 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Call /proc mount with explicit options to fix issues where user
+    have 'bind' mounts for /proc in fstab as well, bug #21068.
+
+    Fix /etc/init.d/bootmisc to check for /sbin/env-update.sh, bug #21384,
+    reported by Gunnlaugur Thor Briem <gthb@hi.is>.
+
+    Add 'before bootmisc' to /etc/init.d/domainname, as we need to start
+    it before 'env-update.sh' gets run by /etc/init.d/bootmisc.
+
+* rc-scripts 1.4.3.8p1 (21 May 2003)
+
+  21 May 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Last fix I did not use the modified 'myservice', but used $1 again,
+    causing the network dependencies to bork.  I did not notice this
+    as I have net.eth0 in default runlevel.
+
+* rc-scripts 1.4.3.8 (20 May 2003)
+
+  20 May 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    A '-' in a bash variable is not valid as well.  Fix gendepend.awk and
+    rc-service.sh to handle this, thanks to YAMAKURA Makoto
+    <makoto@dsb.club.ne.jp>.
+
+    Move /etc/issue to /etc/issue.logo, and have /etc/issue only print info
+    about the host it is running on.
+
+  18 May 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Do not let devfsd handle /dev/log's permission management, as it breaks
+    selinux.  Modified /etc/devfsd.conf, changes submited by Chris PeBenito
+    <pebenito@gentoo.org>.
+
+    Fix type-o in /etc/init.d/net.ppp0, and add local ip-up/ip-down support.
+
+  14 May 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    We should not export the RC_GOT_* variables, as it breaks on some systems,
+    thanks to J?rg Gollnick <gentoo-bugs@wurzelbenutzer.de>, bug #20851.
+
+    From C. Brewer <killian@gentoo.org>:
+    - Add hide-password to the connect cmd-line of /etc/init.d/net.ppp0, which is
+      suppose to be default, but why take chances?
+    - Also, echoing chmod 640 in the resolv.conf two-step at the end to solve the
+      kppp complaint.
+
+  13 May 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    For the network functions, the dependency code tried to create a funcion
+    with a '.' in the name, causing the network rc-scripts to not have any
+    dependencies.  This should fix bug #20849 's order issue, thanks to
+    YAMAKURA Makoto <makoto@dsb.club.ne.jp> for noticing.
+
+    Fix query_{before,after} to also check 'net' if 'service2' is a network
+    service.
+
+  12 May 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    More cleanups:
+    - Move the broken stuff from symlinks to a DB entry in ${svcdir}/deptree.
+      Updated /sbin/runscript.sh, /sbin/rc-services.sh and gendepend.awk for
+      this.
+    - Add functions for more common tasks in /sbin/runscript.sh to
+      /sbin/rc-services.sh.
+    - Move 'consoletype' to /sbin.
+    - Rename /sbin/rc-envupdate.sh to /sbin/env-update.sh; updated
+      /etc/init.d/bootmisc for this.
+    - Move rc-services.sh, rc-daemon.sh and rc-help.sh to /lib/rcscripts/sh.
+    - Improve detection of circular depends ... modified gendepend.awk for this.
+
+* rc-scripts 1.4.3.7 (11 May 2003)
+
+  11 May 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Too many things to remember, so here is changes of note:
+    - More changes to gendepend.awk.  This basically modifies it to not use
+      symlinks in $svcdir/{need,use,before,after,provide} anymore, but rather
+      create a file that can be sourced.  Seems to speedup things nicely.
+    - Add /sbin/rc-services.sh.  This is basically a module to get dependency
+      info from the new $svcdir/deptree, and some other new service functions.
+    - Modify the whole works to *only* source all needed files once.  This
+      includes /sbin/{functions.sh,rc-services.sh,rc-daemon.sh}.  Also
+      rc-services.sh will only source $svcdir/deptree once.  /sbin/runscript.sh
+      is sourced more than once (actually each time a service is started or
+      stopped, but is is cut down much).  Also seems to speed things up again.
+    - Fix a long outstanding bug in gendepend.awk that caused the 'net'
+      dependency to not be actually used in shutdown, causing the services
+      needing it to be stoped before net.* services.
+    - Add the RC_PARALLEL_STARTUP variable, with schedule_service_startup() to
+      /sbin/rc-services.sh and /etc/conf.d/rc.  This is experimental parallel
+      startup of services, and seems to work nicely.  Only issues to date is
+      that printing of messages is not synced, and a race very intermittantly
+      that causes a service to be started when it was already scheduled.
+    - Add a new dependency type 'parallel' that can be used to control if a
+      service can be started in paralled or not.  Possible arguments is "yes"
+      or "no"; if it is not present, it is considered as "yes":
+
+      depend() {
+          parallel yes|no
+      }
+      
+      Modified cachedepend.awk, gendepend.awk and /sbin/rc-services.sh.
+    - Fix the 'single' runlevel to actually work properly, and without a
+      /etc/runlevels/single directory.
+    - Remove the BOOT variable, and update /sbin/rc to set SOFTLEVEL properly.
+      Fix /etc/init.d/{checkroot,bootmisc} to use SOFTLEVEL instead of BOOT.
+
+  08 May 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Major rework of /lib/rcscript/awk/gendepend.awk, cleaning it up nicely,
+    and adding more sanity checks.
+
+  04 May 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Revert /etc/init.d/hostname the way it was, as it should be the user's
+    choice if he want to have a FQDN in there or not, bug #14946.
+
+    Add /etc/init.d/domainname for those that want to use it.
+
+  29 Apr 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Change the root check back the way it was, else it breaks with non bash
+    shells;  modified /etc/profile.
+
+  29 Apr 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Change test in /etc/profile for root to '[ "$EUID" -eq 0 ]', bug #20140.
+
+  27 Apr 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add various patches from Rachel Holmes <rach@gmx.net>:
+
+      Dropped use of 'cat' in bash scripts, '$(<$file)' is there for that
+      purpose.  Modified:
+    
+        /etc/init.d/net.ppp0
+        /etc/init.d/nscd
+        /sbin/functions.sh
+        /sbin/rc
+        /sbin/rc-daemon.sh
+        /sbin/rc-envupdate.sh.bash
+        /sbin/runscript.sh
+
+      Exchanged some gratuitous use of awk for grep. Awk is a little resource
+      hungry just for a simple test. (I [azarah] did not apply the changes to
+      tests for 'devfs', as having 'usbdevfs' in the equation will break
+      things).  Modified /sbin/rc for this.
+
+      Gentoo enforces having /proc, so uname -r is a little redundant when the
+      information is available without an external command.  Modified:
+
+        /etc/init.d/modules
+        /etc/init.d/serial
+        /sbin/functions.sh
+        /sbin/modules-update
+
+      Changed 'id -u' commands to use $EUID in bash executed scripts, same
+      result no extra command.  Modified:
+
+        /sbin/rc-envupdate.sh
+        /sbin/rc-envupdate.sh.bash
+        /sbin/rc-update
+
+      Removed all the cat sections, and the separate echo sections.  The output
+      is _exactly_ the same, minus some spare spaces that have been removed.
+      Fourfold speed increase in the (granted flimsy) tests I have done.
+      Modified /sbin/rc-help.sh for this.
+
+      Final remaining 'cat' commands removed, in favour of using bash's internal
+      '$(< )' or 'echo'.  Use of echo leads the way to future support for bash's
+      i18n anyway.  Modified:
+
+        /sbin/rc
+        /sbin/rc-envupdate.sh
+        /sbin/rc-envupdate.sh.bash
+
+
+
+* rc-scripts 1.4.3.6 (27 Apr 2003)
+
+  27 Apr 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add a 'save' function /etc/init.d/clock, bug #19685.
+
+    Add a slocate group to /etc/group, bug #19604.
+
+    Do not stop a network service if we do not reboot on runlevel change,
+    as it could have been started by the user or hotplug.  This should
+    address bug #12763; modified /sbin/rc for this.
+
+    Fix /etc/init.d/hostname to set only the hostname, and not the NIS
+    domainname.
+
+    Fix /etc/init.d/keymaps to be able to set the extended keymap in rc.conf.
+    This should close bug #16884.
+
+    Fix /etc/profile to be /bin/sh compadible, bug #18918.
+
+    Change the swap comments in /sbin/rc to "Activating (possible) swap" to
+    be more 'generic' ?  Only try to disable swap if any devices/files was
+    activated.  This should close bug #19089.
+
+    Fix /etc/init.d/checkroot to only remount / rw if not set explicitly to
+    rw in /etc/fstab, bug #19158.
+
+  24 Apr 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix /etc/init.d/net.ppp0 to do the right thing if stopped was called,
+    but the ppp link was already down, bug #15333.
+
+  12 Apr 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix type-o in /etc/init.d/consolefont (line 38 should be 'retval=$?').
+    Thanks to  Matt Taylor <liverbugg@juno.com> (comment #6, bug #18344).
+
+    From linux-2.5.68, we need to mount devpts on /dev/pts again ...
+    updated /sbin/rc for this.
+
+  11 Apr 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix errors on sourcing /etc/profile if EDITOR is not set, bug #18995.
+
+  10 Apr 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Make checking in unmount more strict, fixing bug #19007.
+
+  09 Apr 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add one more check to genenviron.awk, to spot cases where there is a
+    space between the variable and the '='.
+
+  08 Apr 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix interactive shell not to have coloured prompt when used as a
+    dumb client, bug #18886.  Fix was inspired by patch from
+    Matthew Kennedy <mkennedy@gentoo.org>.
+
+* rc-scripts 1.4.3.5 (06 Apr 2003)
+
+  06 Apr 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Hopefully get the serial support sane again.  Added /bin/consoletype
+    from Redhat to check for serial console.  This should resolve bug
+    #18329 partly.
+
+    Add the --nocolor option to suppress the use of colors.
+
+    Change the 'status' option to return true if the service is running,
+    and false if stopped.  This is only if the '--quiet' flag was also
+    given.
+
+    Change the start and stop options not to output or return false if
+    the '--quiet' flag was given.
+
+    Redirect stderr for consolechars in /etc/init.d/consolefont to /dev/null
+    as well, fixing bug #18344.
+
+    Optimize $EDITOR extraction in /etc/profile closing bug #18614, thanks to
+    Aron Griffis <agriffis@gentoo.org>.
+
+    Set HALT to 'shutdown' or 'reboot' depending on if we are shutting down
+    or rebooting.
+
+  30 Mar 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix bug #18329 ... $COLS was not setup properly for serial console.
+
+  24 Mar 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Optimize USB fs stuff in /etc/init.d/localmount to use less cats etc.
+    Fix a problem where it might not have mounted the USB fs when usbcore
+    was compiled as module, and the kernel did not mount it by the time
+    the script was started.  Get it to rather check what filesystems is
+    supported when deciding if it should use 'usbdevfs' or 'usbfs', as
+    later 2.4 kernels now also support the newer 'usbfs'.
+
+    Optimize RAID stuff in /etc/init.d/checkfs a bit.
+
+  16 Mar 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update sbin/rc-envupdate.sh.bash for bug #17549.
+
+* rc-scripts 1.4.3.4 (16 Mar 2003)
+
+  16 Mar 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add /etc/issue done by a Polish ascii-artists, v|rus with some slight
+    modifications (purple and display hostname, etc).  Closes bug #16806.
+
+    Add 'use hotplug' to /etc/init.d/net.eth0, to get cardbus hardware to
+    work properly.  Closes bug #17348.
+
+    Add update from Wout Mertens <wmertens@gentoo.org> to speedup shutdown
+    of dhcp interfaces, closing bug #17378.  This modified /etc/init.d/net.eth0.
+
+  11 Mar 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix usage of /usr/bin/cut in /sbin/functions.sh, thanks Brandon Low
+    <lostlogic@gentoo.org>!
+
+  10 Mar 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add sysfs support for 2.5 kernels (mounted to /sys).  Updated /sbin/rc
+    and /etc/init.d/halt.sh for this.
+
+    Update /etc/fstab to correctly mount /proc with:
+    
+      mount -t proc none /proc
+
+    Do the same for /dev/shm:
+
+      mount -t tmpfs none /dev/shm
+
+    Fix a typeo in /etc/init.d/checkroot that caused 'umount -a' to output
+    noise if we exited a recovery console.
+
+    Fix /etc/init.d/hostname using /usr/bin/cut, closing bug #17175, thanks
+    to Bobby Bingham <uhmmmm@columbus.rr.com> for noticing this.
+
+    Bring down default gateway before adding new one .. this fixes issues
+    where eth0/whatever was brought up by kernel.  Changed /etc/init.d/net.eth0
+    for this, closing bug #17164.  Thanks to nth <y.lesaint@free.fr> for the
+    fix.
+
+    Fix /etc/init.d/modules to call modprobe with -q .. this fix issues where
+    it fails for module-init-tools if the module is already loaded.  This
+    closes bug #17163, thanks to nth <y.lesaint@free.fr>.
+
+* rc-scripts 1.4.3.3 (09 Mar 2003)
+
+  09 Mar 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix /etc/init.d/netmount not to unmount / on nfs/whatever, bug #16274.
+
+    Fix net.eth0 not to try and start an interface if already up.
+
+    Update MAKEDEV from Debian to support more archs.  This adds support
+    for 'arm', 'hppa' among others.  URL:
+
+      http://packages.debian.org/stable/base/makedev.html
+
+    Add support to /etc/init.d/modules to use /etc/modules.autoload/kernel-2.4
+    if we are using a 2.4 kernel, and /etc/modules.autoload/kernel-2.5 if we
+    are using a 2.5 kernel ... bug #17109.
+
+  02 Mar 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update /etc/init.d/hostname to only set the hostname to whatever is before
+    the first '.', and then set the domainname to the rest, closing bug #14946.
+
+  28 Feb 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Merge some of the optimizations from Graham Forest <vladimir@gentoo.org>.
+
+    Fix spelling of dependency and some other spelling/grammer issues.
+    Thanks goes to Kerin Millar <kerin@recruit2recruit.net> and
+    Mike Frysinger <vapier@gentoo.org>, bug #15498.
+
+    Change $svcdir to '/var/lib/init.d' to be more FHS compliant, bug #15192.
+
+    Add 'Eterm' to /etc/skel/.bashrc, closing bug #14662.
+
+    Adjust comments about PROTOCOLS in /etc/rc.conf to try and prevent
+    bug #14556.
+
+  27 Feb 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Finally fix /etc/init.d/halt.sh to unmount non critical mounts properly.
+
+  20 Feb 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Kill /dev/ttyp0 error at boot by changing test in /etc/init.d/modules
+    to 'test -c /dev/ttyp0 &> /dev/null'.
+
+  18 Feb 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update /sbin/modules-update to generate /etc/modprobe.devfs from
+    /etc/modules.devfs.  This along with the devfs-hack.patch in the latest
+    module-init-tools-0.9.9 should get rid of many of the warnings/errors
+    with devfs, and makes it work a bit better.
+
+  17 Feb 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix /etc/inputrc for dvorak keyboard layout, bug #2599 again.
+
+  16 Feb 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix the 'source /etc/profile.env' to be '. /etc/profile' to have ksh
+    support.  This resolves bug #14994.
+
+    Move EDITOR to /etc/rc.conf.  Also update /etc/profile to set EDITOR
+    according to /etc/rc.conf.
+
+    Update /etc/init.d/checkfs to fix bug #14282.  It did not exclude comments,
+    and used 'basename' which is located in /usr/bin.
+
+  13 Feb 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Merge changes from Nick Jones <carpaski@gentoo.org> to not run stty if
+    used in portage.  Fix the NOCOLOR stuff.  Updated /sbin/functions.sh for
+    this.
+
+  06 Feb 2003; Martin Schlemmer <azarah@gentoo.org>:
+  
+    Update src/awk/genenviron.awk to properly set the environment for each
+    rc-script's depend() function by sourcing required config files.
+  
+  05 Feb 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix /sbin/rc-envupdate.sh to use $svcdir to set SVCDIR.  This is thanks
+    to Max Kalika <alkern23@yahoo.com>, bug #15050.
+
+  03 Feb 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix /sbin/modules-update to work with module-init-tools-0.9.9.
+
+  30 Jan 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add 'use isapnp' to /etc/init.d/modules, closing bug #14677, thanks to
+    Hubert Hanghofer <hubert.hanghofer@netbeer.co.at>.
+
+  27 Jan 2003; Donny Davies <woodchip@gentoo.org>:
+
+    Fix halt.sh by moving the nut UPS kill power stuff back into a function!
+    Add fix from the wonderful analysis of Toby Dickenson
+    <tdickenson@geminidataloggers.com> in #12947.
+
+  26 Jan 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix start-stop-daemon to check the call to nice() correctly for failure,
+    closing bug #14359, thanks to YAMAKURA Makoto <makoto@dsb.club.ne.jp>.
+
+    Fix globbing $? when checking return value of fsck in /etc/init.d/checkroot
+    and /etc/init.d/checkfs.  This closes bug #13320, thanks to good work from
+    Malcolm Scott <m@lcolm.org.uk>.
+
+  21 Jan 2003; Mike Frysinger <vapier@gentoo.org>:
+
+    Updated /etc/rc.conf to add elogin/entrance support #13790.
+
+  21 Jan 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update /etc/init.d/keymaps to enable unicode if required.  This closes
+    bug #14306 thanks to Danny Milosavljevic <danny_milo@yahoo.com>.
+
+  19 Jan 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix deadlock durning shutdown if tmpfs filesystems larger than free
+    memory, and swap gets deactivated, bug #13599.  Updated /etc/init.d/halt.sh
+    for this.
+
+    Merge in some fixes from Vapier <vapier@gentoo.org> to /sbin/functions.sh.
+    This closes bug #13868.
+
+    Always add "/bin:/sbin:/usr/bin:/usr/sbin" to PATH, as it fixes both
+    'su -c foo' not finding start-stop-daemon (etc), and bug #14127.
+
+    Add route for lo interface to /etc/init.d/net.lo, closing bug #14055.
+
+  15 Jan 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Clear $svcdir in /sbin/rc before we run depscan to make sure we do
+    not have stale entries left from hard reboot, thanks to pac1085 on
+    irc.
+
+* rc-scripts 1.4.3.2 (15 Jan 2003)
+
+  15 Jan 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Truely fix bootup on seperate /var.
+
+    Add some fixes and optimizations to /sbin/rc-update, thanks to
+    Daniel Robbins <drobbins@gentoo.org>.
+
+* rc-scripts 1.4.3.1 (15 Jan 2003)
+
+  15 Jan 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix bootup on seperate /var.
+
+  14 Jan 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix /etc/init.d/hostname and /etc/init.d/serial to close bug #13636.
+
+  07 Jan 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix /etc/init.d/keymaps to force linux keycodes for PPC, thanks
+    to Olaf Hering <gentoo@aepfle.de>, bug #13193.
+
+    Turn on -C option to fsck on for all calls to fsck.  Updated scripts
+    /etc/init.d/checkroot and /etc/init.d/checkfs, closing bug #13321.
+
+* rc-scripts 1.4.3.0 (07 Jan 2003)
+
+  07 Jan 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Too much to mention, but here are a few:
+    - Major rewrite of software RAID startup, based on Mandrake's, as
+      ours was pretty broken :(
+    - Redone /sbin/rc to work without the tmpfs/ramfs stat directory.
+      Much of /sbin/functions.sh and other scripts have been changed
+      to support this.
+    - Reworked /etc/inittab to support this.  Also moved critical
+      mounting of local filesystems to 'sysinit' function of /sbin/rc.
+    - Move state directory to /var/state/init.d/ ($svcdir).
+    - Move Adelie node init to /sbin/functions.sh to try and simplify
+      /sbin/rc a bit.
+    - Updated Copyright dates to 2003.
+
+* rc-scripts 1.4.2.8 (06 Jan 2003)
+
+  02 Jan 2003; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix src/awk/genenviron.awk to work with multiple 'need', 'use', etc
+    lines, as it seems users do not note the need to have them all on
+    one line ....
+
+    Fix /sbin/runscript.sh to detect 'net.adsl', or any other net.*
+    script not ending on a digit.  This closes bug #12887.
+
+    Fix get_KV to also check micro version of kernel;  add KV_to_int()
+    helper function for get_KV.  Update /etc/init.d/localmount to work
+    with new get_KV ...
+
+  28 Dec 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add support for generate-modprobe.conf or generating /etc/modprobe.conf
+    in the new sys-apps/module-init-tools.  Note that you need version
+    0.9.7 or later of sys-apps/module-init-tools.  Updated
+    /sbin/modules-update for this.
+
+    Change /etc/init.d/localmount to use 'usbfs' and not 'usbdevfs' if
+    we are running kernel 2.5 or later ...
+
+  26 Dec 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add /etc/init.d/crypto-loop and /etc/conf.d/crypto-loop, a cool
+    rc-script to setup encrypted loopback devices.  This was kindly
+    donated by Matthew Kennedy <mkennedy@gentoo.org> (bug #11471).
+
+  25 Dec 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix src/awk/genenviron.awk stripping *all* '=', closing
+    bug #8901.
+
+    Fix src/awk/genenviron.awk not seperating CONFIG_PROTECT with
+    spaces ...
+
+* rc-scripts 1.4.2.7 (24 Dec 2002)
+
+  24 Dec 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add a fix to /sbin/functions.sh for bug #12601.
+
+  22 Dec 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add INFOPATH to /etc/env.d/00basic.
+
+    Fix src/awk/genenviron.awk to get the order of the env.d files
+    correct.  Also fix it to handle *all* the SPECIALS correctly.
+    This closes bug #12411.
+
+* rc-scripts 1.4.2.6 (18 Dec 2002)
+
+  18 Dec 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add mips changes to sbin/MAKEDEV.  This should close bug #12329,
+    thanks to Nicholas Wourms <nwourms@netscape.net>.
+
+    Quote some tests in /sbin/rc-update to fix/avoid the problem
+    in bug #
+
+    Fix awk regex in /etc/init.d/halt.sh to fix bug #11795.
+
+    Update shell for postgres user, closing bug #12258.
+
+  11 Dec 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix src/awk/genenviron.awk not to add duplicate entries, closing
+    bug #8999.
+
+* rc-scripts 1.4.2.5 (09 Dec 2002)
+
+  08 Dec 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add another sync to /etc/init.d/halt.sh, closing bug 8173.
+
+    Add smmsp uid and gid.  Closes bug #8952.
+
+  04 Dec 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Setup colums, etc up properly for serial consoles in /sbin/functions.sh.
+    Closes bug #11557, thanks to Erik Scrafford <erik@scrafford.org>.
+
+    Add headers similar to that of portage-2.0.45 and up to the
+    generated profile files (/etc/{profile,csh}.env).  Updated
+    src/awk/genenviron.awk for this.
+
+  01 Dec 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix typeo in /etc/devfsd.conf, closing bug #11424, thanks to the
+    sharp eye of Techie2000 <Linux@mochamail.com>.
+
+    Rename /sbin/update-modules to /sbin/modules-update, closing
+    bug #11445.
+
+    Nano moved from /usr/bin/nano to /bin/nano.  Fix this in
+    /etc/env.d/00basic, bug #10916.
+
+  27 Nov 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add more improvements to clustering code.  This is from
+    Olivier Crete <crete@cerca.umontreal.ca>, bug #4151.
+
+  26 Nov 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Change default 'net' dependency behaviour to be more suited
+    for notebook users.  Basically if at least one net.* service
+    beside net.lo start successfully, the 'net' dependency is
+    considered up.  Server admin can set RC_NET_STRICT_CHECKING="yes"
+    in /etc/conf.d/rc to change this back to the old default.
+    This is the start to address bug #2706.
+
+* rc-scripts 1.4.2.4 (26 Nov 2002)
+
+  26 Nov 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Initial merge of bits for Adelie Linux for SSI clusters.  More
+    info at:
+
+      http://www.cerca.umontreal.ca/hpc/en/projects/adelie/index.html
+
+  25 Nov 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    One liner fix to src/awk/cachedepends.awk to once again fix
+    bug #7803.
+
+  18 Nov 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add 'alias char-major-89    i2c-dev' to /etc/modules.d/aliases.
+    This should close bug #10891.
+
+* rc-scripts 1.4.2.3 (18 Nov 2002)
+
+  18 Nov 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add some more checks to src/awk/*.  Fix error printing for
+    /sbin/depscan.sh.
+
+    Link awk module with gcc and not with ld.  This should fix
+    problems on sparc and alpha.  Many thanks for this fix to
+    Stephan Jones <cretin@gentoo.org>.
+
+    Remove the copyright info from config files, thanks to
+    Matthew Kennedy <mkennedy@gentoo.org>.
+
+* rc-scripts 1.4.2.2 (18 Nov 2002)
+
+  18 Nov 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add src/awk/genenviron.awk which is rc-envupdate.sh ported
+    to awk.  This is also much faster than its bash version.
+
+    Remove the 'Spider cat fix' from depscan.sh.bash, as it makes
+    things even slower on older boxes.  Bug #10548.
+
+    After a bored Vapier decided that he needed to update the
+    licenses of things in /etc :P, I did the rest.  Hopefully
+    not too many people will nuke thier fstab :/
+
+* rc-scripts 1.4.2.1 (18 Nov 2002)
+
+  18 Nov 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update src/awk/cachedepends.awk to find its own rc-scripts,
+    fixing the need for find which broke systems with /usr on
+    a different partition.
+
+  17 Nov 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add some extra checks to src/awk/cachedepends.awk and
+    src/awk/gendepends.awk.
+
+    Move some of the more generic functions in src/awk/gendepends.awk
+    to src/awk/functions.awk.
+
+* rc-scripts 1.4.2 (17 Nov 2002)
+
+  17 Nov 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add initial version of new depscan.sh.  This uses awk scripts
+    to do the main work, giving about 10 times speed improvement on
+    slower machines.  Updated /sbin/depscan.sh, src/filefuncts.c,
+    src/Makefile, src/awk/cachedepends.awk and src/awk/gendepends.awk
+    for this.  This should close bug #10548.
+
+* rc-scripts 1.4.1.2 (5 Nov 2002)
+
+  5 Nov 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add UID/GID of 250 for Portage Fakeroot account.
+
+  4 Nov 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Change /etc/init.d/clock to depend on localmount again, fixing
+    bug #10048.
+
+    Get deps on logger sane again.  I wanted to get the logger started
+    as early as possible, but clock for one breaks if /usr is mounted
+    on seperate partition.
+
+  29 Oct 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix return in /etc/init.d/modules to return 0 if /proc/modules
+    do not exists.  Closes bug #7738, comment #5.
+
+* rc-scripts 1.4.1.1 (28 Oct 2002)
+
+  28 Oct 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix /sbin/update-modules not to include backup files.  Closes
+    bug #9707.
+
+  26 Oct 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix update-modules borking if there are directories present
+    in /etc/modules.d/.  Closes bug #9632.
+
+  17 Oct 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Change deps on /etc/init.d/{clock,hostname,modules} not to
+    depend on localmount, but rather on checkroot, as all of them
+    just need / to be mounted.  This should fix race conditions
+    because of checkfs dependency on modules.  This should close
+    bug #9266.
+
+* rc-scripts 1.4.1 (13 Oct 2002)
+
+  13 Oct 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Create and fix permissions on /tmp/.{ICE,X11}-unix/.  This
+    is additional measures for bug #8281.
+
+  12 Oct 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update /etc/init.d/net.eth0 to fix bug #8626.
+
+    Fix /sbin/rc-update to check return code of "ln".  This should
+    close bug #8867.
+
+  29 Sep 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix indentation in /etc/inputrc.  This should close
+    bug #8368.
+
+    Add extended status functionality.  Should close bug #2462.
+
+    Add support for /sbin/rc-update to check if the rc-script
+    is executable or not.  Thanks to widersacher@gmx.net, closing
+    bug #8326.
+
+  25 Sep 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix /etc/init.d/bootmisc not to kill pidfiles of running
+    daemons.  Improve NGPT support in /sbin/rc a bit.
+
+  23 Sep 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix my last screwup with /etc/init.d/net.ppp0.  Basically
+    forgot to change a few DEVICE's to IFACE ...
+
+  22 Sep 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    NGPT support.
+
+  17 Sep 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Did a small fix to /etc/init.d/net.eth0, thanks to
+    naanyaar2000@yahoo.com, bug #7407.
+
+  16 Sep 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add the permission stuff for generic scsi when compiled as
+    module, thanks to Bauno <bauno@inwind.it>.
+
+    Add support for /etc/devfs.d/ for additional devfs config
+    stuff .. idea from Denys Duchier <Denys.Duchier@ps.uni-sb.de>.
+
+  11 Sep 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix small type-o from last changes to /etc/init.d/netmount.
+    Should resolve bug #7803.
+
+* rc-scripts 1.4.0 (7 Sep 2002)
+
+  7 Sep 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update /etc/init.d/net.eth0 to handle individual broadcast
+    and netmask for aliases.  Should close bug #7407.
+
+    Give /var/run/utmp and /var/log/wtmp the proper permissions
+    and ownership.  First steps in fixing bug #7630.
+
+    Change Raid stuff again in /etc/init.d/checkfs.
+
+  26 Aug 2002; Donny Davies <woodchip@gentoo.org>:
+
+    Give root a 'root' GECOS in /etc/passwd, was NULL before.
+
+* rc-scripts 1.3.9 (25 Aug 2002)
+
+  25 Aug 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update /sbin/rc to fix some spelling/slang mistakes.  Closes
+    bug #6887.
+
+    Move /etc/init.d/net.ppp0 's config to /etc/conf.d/net.ppp0.
+    This closes bug #6378.
+
+    Add IPv6 support to /etc/init.d/net.eth0.  Closes bug #6175,
+    with many thanks to Asbjorn Sannes <ace@sannes.org>.
+
+  20 Aug 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update /etc/init.d/bootmisc to reset pam_console permissions.
+    
+    Update /etc/devfsd.conf to have the "pam_console_apply_devfsd.so"
+    line for getting devfs to work with pam_console.
+
+  12 Aug 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update /etc/init.d/keymaps to first load the windowkeys.inc then
+    the user selected one, fixing bug #6295.
+
+  11 Aug 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Change the 'cat' in check_rcscript() to a single 'awk' in
+    /sbin/depscan.sh.  This should fix broken pipe issues if the
+    loop exists too early.  Resolves bug #5961.
+
+    Fix software RAID startup/shutdown, bug #5310.  Modified
+    /etc/init.d/checkfs and /etc/init.d/halt.sh for this.
+
+* rc-scripts 1.3.8 (08 Aug 2002)
+
+   7 Aug 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Move the color ls stuff to .bashrc.  Fix bug #5250.
+
+   6 Aug 2002; Dan Armak <danarmak@gentoo.org>:
+   
+    Correct the comments in rc.conf about the XSESSION variable: it should
+    be set to "kde-<version>" not "KDE". Closes bug #5948.
+
+   5 Aug 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix the 'Usage' line in the help to return the correct options for
+    the script (/sbin/runscript.sh).  Resolve bug #6029.
+
+   3 Aug 2002; Donny Davies <woodchip@gentoo.org>:
+
+    Added UPS shutdown support for nut to halt.sh.
+    Added nut user/group as uid/gid 84.
+
+  27 Jul 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Updated /sbin/rc's way of checking for devfs support (now rather uses
+    awk, as it is more accurate).  Closes bug #5458.
+
+    Add the Redhat/Mandrake /forcefsck and /fastboot options to our checkroot
+    and checkfs.  Updated /etc/init.d/{checkroot,checkfs,halt.sh} for this.
+    Thanks goes to Chris PeBenito (bug #5570).
+
+    Changed most daemons to use /bin/false as shell.  Should close bug #5388.
+
+  27 Jul 2002; Nicholas Jones <carpaski@gentoo.org>:
+    
+    Added vpopmail user and group as 89:89
+
+  22 Jul 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add the cyrus user to /etc/passwd.  Resolves bug #4100.
+
+    Some bugfixes and speed improvements to /sbin/depscan.sh after
+    last changes.
+
+    Replace some cat/grep's in /sbin/rc-envupdate.sh with awk's to
+    get some speed improvements.
+
+  21 Jul 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix LVM support in /etc/init.d/checkfs again, thanks to help from
+    Kyle Manna <nitro@gentoo.org>.
+
+    Add software RAID support to /etc/init.d/checkfs, thanks to
+    Daniel Ahlberg <aliz@gentoo.org>.
+
+    Update the cache_depend() funtion in /sbin/depscan.sh not to
+    quit on any "}", but only on the one matching the first "{". This
+    requires wc in /bin, so baselayout should depend on
+    >=sys-apps/textutils-2.0.19-r2
+
+    Update /etc/init.d/netmount to try and detect nfs mounts that should be
+    mounted automatically on boot.  This requires awk in /bin, so baselayout
+    should depend on >=sys-apps/gawk-3.1.0-r3.
+
+* rc-scripts 1.3.7 (17 Jul 2002)
+
+  17 Jul 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add logging functionality to the rc-scripts, thanks to Alexander Holler,
+    bug #4037 for the basic idea.  Updated /sbin/functions.sh for this.
+
+  16 Jul 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add additional entries to /etc/services to support cyrus-imapd, thanks
+    to Nick Hadaway <raker@gentoo.org>.
+
+    Update /etc/init.d/consolefont to resolve bug #4968.  This fixes a
+    problem with non 7bit ascii symbols.
+
+    Updated /etc/init.d/checkfs to detect if lvm is already active.
+    This should resolve bug #3613.
+
+  5 Jun 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add "usb" group, gid 85.  Move "sshd" user and group to 22.  Move
+    "games" user and group to 35
+
+  3 Jun 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update Copyright displayed at boot, thanks to Sascha Schwabbauer
+    (aka cybersystem).  Updated /sbin/rc for this.
+
+  30 Jun 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update /etc/skel/.bashrc to update the window title of X terminals
+    that supports it.  Closes bug #4232.
+
+  26 Jun 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add sshd user and group.  Updated /etc/passwd and /etc/group for this.
+
+    Update /etc/inputrc to resolve bug #2599.
+
+  20 Jun 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add /opt/bin to $PATH and $ROOTPATH, closing bug #3603.  Modified
+    /etc/env.d/00basic for this.
+
+    Add some new daemon stop and pid detection stuff to /sbin/functions.sh.
+    Nothing official, but I spent enough time on it not to want to loose it :)
+
+    Fixed a bug in /sbin/functions.sh that caused rc-scripts run as cron jobs
+    to give output to stderr.  This was caused by a call to "stty", which when
+    run without a attatched terminal, have this effect.  Basically just pipe
+    stderr to /dev/null.
+
+  5 Jun 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add /usr/local/share/man to $MANPATH (/etc/env.d/00basic), resolving
+    bug #3363
+
+  26 May 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update /etc/init.d/netmount not to try and mount NFS filesystems
+    if portmap was not started.  This is to stop "hang" problems for
+    new users who do not add portmap to the default runlevel.  See
+    bug #2555.
+
+    Add the video4linux stuff to /etc/devfsd.conf.  Resolves bug #2015.
+
+  19 May 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Move $EDITOR from /etc/profile to /etc/env.d/00basic.
+
+  13 May 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Change the homes of user "at" and "cron" in /etc/passwd, as
+    they moved to /var/spool/cron...
+
+* rc-scripts 1.3.5 (12 May 2002)
+
+  12 May 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Make slight modifications to /sbin/depscan.sh to improve speed (about
+    1 second on a celeron 633).
+
+    Finally fix /sbin/runscript.sh to properly handle interdependencies
+    between types need/use and before/after on runlevel change.  I can
+    actually kick myself for previous implementations, as this fix simplifies
+    things a lot, and is almost 30 lines of code less!
+
+    Change /etc/init.d/netmount not to fail if all mounts are not mounted.
+    It rather just exit with a warning, as I think most people have like
+    me mounts that are to boxes that are not always up.
+
+    Resolve bug #2439 (should not use try with the dd command for ramdisk
+    stuff).  Also increase the number of inodes used for the ramdisk to
+    fix "out of space" errors.  Updated /sbin/rc for this.
+
+  10 May 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Resolve bug #2505 ... /sbin/rc-envupdate.sh should not use
+    backup files to generate /etc/profile.env.
+
+    Resolve bug #2489 and #2175.  Modified /etc/init.d/net.eth0
+    for this.
+
+  6 May 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fixed /sbin/rc-envupdate.sh to only use the $KDEDIR of the highest
+    /etc/env.d/ file.  Same for $QTDIR.
+
+  5 May 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add /etc/DIR_COLORS as it is no longer shipped with fileutils,
+    and is needed for some fixes.
+
+  28 Apr 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update /etc/rc.conf to be more clear and state that you should
+    remove consolefont from startup if you do not use it.  Should
+    resolve bug #2174.
+
+  26 Apr 2002; Donny Davies <woodchip@gentoo.org> passwd, group :
+
+    Added user/group apache with uid/gid 81.
+
+  25 Apr 2002; Martin Schlemmer <azarah@gentoo.org>:
+  
+    Remove the "-net" from the line setting the default gateway
+    in /etc/init.d/net.eth0.  Thanks to Peter W. Michaleas for
+    noting this.
+
+  24 Apr 2002; Donny Davies <woodchip@gentoo.org> rc.conf :
+
+    Remove NFSSERVER from rc.conf since it's now covered in /etc/conf.d/nfs
+    which is installed with the nfs-utils package.  Also tidied up some
+    really old, leftover junk like the non-supported stuff from rc5.
+    Closes #1754.
+
+  23 Apr 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Remove creation of /var/run/utmpx from bootmisc again.  Seems
+    other people have wierd problems.
+
+* rc-scripts 1.3.4 (21 Apr 2002)
+
+  21 Apr 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add /sbin/rc-envupdate.sh to speedup updating of /etc/profile.env,
+    and /etc/csh.env.  Update /etc/init.d/bootmisc to use this.
+
+    Implement the status commandline argument.  Updated /sbin/runscript.sh
+    and /sbin/rc-help.sh for this.
+
+    Fix /sbin/depscan.sh to honour NEED and USE overriding BEFORE
+    and AFTER.
+
+  12 Apr 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update /etc/init.d/bootmisc to create /var/run/utmpx. This
+    is needed, else /usr/bin/newgrp segfault.
+
+  11 Apr 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update /etc/skel/.bash_profile to make it tcsh compadible.
+    Thanks to VÃ¤inÃ¶ JÃ¤rvelÃ¤ for this fix.
+
+    Update /etc/profile to also set the PS? variables if $SHELL
+    is set to /bin/sh.  This should make prompt colours in
+    bootstrap work again.
+
+    Move LVM stuff to checkfs to ensure that they get fscked.
+    This resolves bug #1552.
+
+* rc-scripts 1.3.3 (5 Apr 2002)
+
+  5 Apr 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Move /etc/init.d/{depscan.sh,runscript.sh,functions.sh} to /sbin.
+    This is done to try and ensure system integrity.
+
+  1 Apr 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add quotes to the "export INPUTRC=/etc/inputrc" line to resolve bug #1391.
+
+    Add a error message to /etc/init.d/consolefont, resolving bug #1415.
+
+    Add a bash check to the code that sets the prompt, fixing bug #1078.
+
+* rc-scripts 1.3.2 (24 Mar 2002)
+
+  24 Mar 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Resolve bug #1274.  Updated /etc/init.d/hostname and /etc/init.d/bootmisc
+    for this.
+
+    With the "before" and "after" stuff, recursion levels was getting too high,
+    and with some cases, things just plain did not work as it should.  Reworked
+    things to to lower the levels of recursion and get the order right.  Updated
+    /etc/init.d/runscript.sh for this.
+
+    Fixed a problem in /sbin/rc and /etc/init.d/runscript.sh where
+    ${svcdir}/softlevel did not always exist, but runscript.sh tried to open it.
+
+    Enhance --quiet support.  Updated /etc/init.d/functions.sh for this.
+
+    Remove /etc/pwdb.conf, as pwdb already install a copy of this.
+
+    Remove /etc/pam.d/{rexec,rlogin,rsh} as pam already install this.
+
+    Added $INPUTRC to /etc/profile, since too many people keep on bugging me,
+    and it seems it has fallen now to my discression.
+
+* rc-scripts 1.3.1 (23 Mar 2002)
+
+  23 Mar 2002; Daniel Robbins <drobbins@gentoo.org>: init.d/net.eth0: fix for
+  DHCP lease release from Jim Nutt.
+  
+  23 Mar 2002; Daniel Robbins <drobbins@gentoo.org>: rolling a new release
+  since there are a lot of important bug fixes in here that are needed.
+
+  23 Mar 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Resolve bug #1292.
+
+    Remove the extra 'depmod -a' in /etc/init.d/modules, thanks to
+    Spidler.
+
+  21 Mar 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Update /sbin/rc to fix a 'cat mounts' instead of the correct
+    version, 'cat /proc/mounts'.
+
+  19 Mar 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Add initial support for the --quiet flag that suppress output.
+
+  18 Mar 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Remove the 'try' from 'try /etc/init.d/depscan.sh' in /sbin/rc
+    as not all errors by depscan.sh is critical.  It should be
+    reworked to do better error handeling.
+
+  14 Mar 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Fix the GID and UID of nobody and nogroup in /etc/passwd and
+    /etc/group to match those of Debian, FBSD and others.  Thanks
+    to those who reported it, and Woodchip for looking up the
+    proper values.
+
+    Update /etc/init.d/net.eth0 to properly down DHCP interfaces.
+    This resolves bug #1150, thanks to Paul Fleischer.
+
+  11 Mar 2002; Martin Schlemmer <azarah@gentoo.org>:
+
+    Updated /etc/init.d/functions.sh not to use /usr/bin/basename,
+    as some users have /usr on seperate partition which is not
+    mounted when depscan.sh is run the first time.
+
+    Updated the checking for more than one service providing the
+    same virtual function in /etc/init.d/depscan.sh.  It should
+    be working now, and this also fix a problem that when there is no
+    service providing a virtual, counter was used uninitialized.
+
+* rc-scripts 1.3.0 (10 Mar 2002)
+
+  10 Mar 2002; Martin Schlemmer <azarah@gentoo.org>:
+  
+    Resolved bug #1021; updated /etc/init.d/consolefont for this.
+
+    Resolved bug #1029; updated /etc/init.d/net.eth0 for this.
+
+    Resolved bug #990; updated /etc/init.d/net.eth0, /etc/init.d/netmount
+    and /etc/init.d/localmount for this.
+
+    Lots of form/syntax cleanups, most things should be more
+    consistant now.  Fixed fail detection/return values of lots of
+    scripts.
+
+    Lots of cleanup/fixes in the three main scripts behind our
+    rc-system, /sbin/rc, /etc/init.d/depscan.sh, /etc/init.d/runscript.sh
+
+    Fix a bug regarding a invalid $PATH for portage if /etc/init.d/functions.sh
+    is sourced in a ebuild.
+
+    Fix a bug that our rc-script wrapper introduced:  Global variables
+    in scripts no longer worked.  Updated /etc/init.d/runscript.sh for
+    this.
+
+    Implemented more error checking for the main startup code in /sbin/rc.
+    Also fixed try() for mounting /proc (maybe all mount commands).
+    The function worked fine in a simulated test, but in real life failed
+    to detect a error when mounting /proc (remember to thank Grant for
+    his UserMode ebuilds, and Guide).
+
+* rc-scripts 1.2.9 (6 Mar 2002)
+
+  6 Mar 2002; Martin Schlemmer <azarah@gentoo.org>:
+  
+    General form updates and some piping fixes.
+
+    Updated /etc/inittab, /etc/init.d/xdm and /etc/X11/startDM.sh
+    to fix a problem where startDM.sh would be respawned repeatedly
+    if xdm was not in the default runlevel.
+
+* rc-scripts 1.2.8 (4 Mar 2002)
+
+  4 Mar 2002; Martin Schlemmer <azarah@gentoo.org>:
+  
+    Add /etc/init.d/xdm, /etc/X11/startDM.sh and updated /etc/inittab
+    to fix the "dead key" problem we had with xdm/gdm/kdm.  We should
+    move them to the xfree ebuild later on when things settles down.
+
+    Added some sanity checks to /sbin/rc, /etc/init.d/runscripts.sh.
+
+    Added a basic $PATH to /etc/init.d/functions.sh to fix a problem
+    where we had a invalid $PATH on boot in some cases.
+
+    Updated /etc/init.d/keymap and /etc/init.d/consolefont to work with
+    the new sys-apps/kbd package.
+
+* rc-scripts 1.2.7 (3 Mar 2002)
+
+  3 Mar 2002; Martin Schlemmer <azarah@gentoo.org>:
+  
+    Fixed the problem of rc-scripts trying to start/stop a service multiple
+    times if it fails to do so.  Updated /etc/init.d/runscript.sh and /sbin/rc
+    for this.
+
+    Fixing some variable declarations in /etc/init.d/runscript.sh caused
+    /etc/init.d/net.lo to fail on stop ($IFACE was set invalid). Fixed
+    this.
+
+    Added caching of the "depend() { need foo; } " lines, and updated
+    /etc/init.d/depscan.sh to touch the actual files less.  This should
+    speedup dependency caching a lot, especially on slow machines.
+
+    Updated /etc/passwd to have users with no shell defined, use /bin/false
+    for security.
+
+    Update /etc/fstab to mention /dev/shm since we dont mount it anymore.
+
+  1 Mar 2002; Martin Schlemmer <azarah@gentoo.org>:
+  
+    Added a wrapper for sourcing the rc-scripts to eliminate syntax errors.
+    Thanks to Karl Trygve Kalleberg (aka karltk) for the idea.  Updated
+    /etc/init.d/depscan.sh, /etc/init.d/functions.sh and
+    /etc/init.d/runscript.sh for this (added wrap_rcscript() function).
+
+    Removed stopping of dependent services that have current service as
+    a 'use'dependency ... should be less confusing now.
+    Updated /etc/init.d/runscript.sh for this.
+
+  28 Feb 2002; Martin Schlemmer <azarah@gentoo.org>:
+  
+    Add /etc/conf.d/local.start and /etc/conf.d/local.stop for adding any misc
+    programs to startup.  This should pretty much have /etc/init.d/ static,
+    except for baselayout updates, etc.
+
+  27 Feb 2002; Martin Schlemmer <azarah@gentoo.org>:
+  
+    In some wierd cases, a redundent /dev/.devfsd on a unmounted /dev can cause
+    problems.  Fixed this in /sbin/rc.
+
+    Added the patches from Grant Goodyear (aka g2boojum) to enable us to
+    use a ramdisk to store the contents of ${svcdir}.  Updated /sbin/rc,
+    /etc/init.d/functions.sh and /etc/init.d/checkroot for this.
+
+  26 Feb 2002; Martin Schlemmer <azarah@gentoo.org>:
+  
+    Fix my brain dead update of the 25th.  It really should keep
+    "gentoo=nodevfs" in mind.  Also added 'get_bootparam()' to help in
+    retrieving kernel options.  Updated /etc/init.d/functions.sh,
+    /etc/init.d/checkroot and /sbin/rc for this.
+
+    Updated /etc/init.d/consolefont to work without devfs as well.
+
+    When rebooting or shutting down, a service should not fail to stop
+    if a service it depends on, fails.  Updated /etc/init.d/runscript.sh
+    for this.
+
+  25 Feb 2002; Martin Schlemmer <azarah@gentoo.org>:
+  
+    Added a check if /dev is mounted when creating entries for /etc/mtab.
+    This should solve a invalid entry or /dev being mounted even with
+    'gentoo=nodevfs' option.  Updated /etc/init.d/checkroot for this.
+
+  17 Feb 2002: Daniel Robbins <drobbins@gentoo.org>: Made "xfs" the default
+  filesystem in /etc/fstab (from ReiserFS) and removed "notail" option (it's
+  just in a comment now)
+
+  17 Feb 2002: Martin Schlemmer (azarah@gentoo.org):
+  
+    Mmore fixes to 'after' and 'before', updated /etc/init.d/runscript.sh for
+    this.  This should fix services not getting started in the correct order
+    in a tight loop,  services getting stopped out of order, and some other
+    sanity checks.  Updated rc-script.sh for updated help.
+  
+  15 Feb 2002: Martin Schlemmer (azarah@gentoo.org):
+  
+    Update /etc/profile to resolve bug #588.  Reimplemented things a bit,
+    and added the 'after' type. 'before' and 'after' will only work currently
+    for a change of runlevel.  Updated /etc/init.d/depscan.sh,
+    /etc/init.d/runscript.sh and /sbin/rc for this.
+
+  13 Feb 2002: Martin Schlemmer (azarah@gentoo.org):
+  
+    Add some more entries to /etc/devfsd.conf to make alsa users life
+    easier ...  thanks Tod.
+
+  12 Feb 2002: Martin Schlemmer (azarah@gentoo.org):
+  
+    Some more cleanups to /etc/init.d/depscan.sh and /etc/init.d/runscript.sh.
+
+    Fixed some services not starting again when restarting a service.
+    Seems simple is still the best way.
+
+    Fixed some other problems created with feature additions and cleanups.
+
+  11 Feb 2002: Martin Schlemmer (azarah@gentoo.org):
+  
+    General cleanups to /etc/init.d/depscan.sh and /etc/init.d/runscript.sh.
+
+    Added 'before *' to /etc/init.d/checkroot to make sure it gets
+    started first.
+
+    Added 'use *' to /etc/init.d/local to make sure it gets started
+    last.
+
+  10 Feb 2002: Martin Schlemmer (azarah@gentoo.org):
+  
+    Fixed /sbin/rc to stop a service on change of runlevel if it is
+    in 'use' by another service.
+
+    Added the 'provide' depend type for creating virtual services.
+    Updated /etc/init.d/depscan.sh for this.
+
+    Added the 'before' depend type.  This is more for changing the
+    order services start in.  Updated /etc/init.d/depscan.sh and
+    /etc/init.d/functions.sh for this.
+
+    Updated /etc/init.d/depscan.sh to work with '*' as argument for
+    dependency types.  This can be used with 'use' and 'before' to
+    start a script last or first respectively.
+
+    Added save_options() and get_options() to /etc/init.d/functions.sh
+    for saving misc settings between startup/shutdown.  Updated
+    /etc/init.d/net.eth0 to use these and properly down virtual
+    interfaces.
+
+  6 Feb 2002: Martin Schlemmer (azarah@gentoo.org):
+  
+    Updated both /etc/init.d/bootmisc and /etc/init.d/keymaps to be quiet
+    on no errors.
+
+* rc-scripts 1.2.6 (6 Feb 2002)
+
+  2 Feb 2002: Martin Schlemmer (azarah@gentoo.org):
+  
+    Updated /etc/net.eth0 to specify the gateway device via the $gateway
+    variable (something like gateway="eth0/192.168.0.1").
+
+  2 Feb 2002: Martin Schlemmer (azarah@gentoo.org):
+  
+    Added rc-script /etc/init.d/numlock, for enabling numlock at boot.
+
+  29 Jan 2002: Martin Schlemmer (azarah@gentoo.org):
+  
+    Hopefully the last fix to /etc/init.d/netmount to umount cleanly.  This fix
+    implements a retry if not successful the first time, and will kill
+    processess using the mount.  Also small type-o fix to /etc/init.d/halt.sh.
+
+  27 Jan 2002: Donny Davies (woodchip@gentoo.org): security fix to
+  /etc/pam.d/sshd,login,chsh: added pam_shells.so to the stack.
+  Fixed /etc/passwd,group for user/group mysql.
+
+  27 Jan 2002: Martin Schlemmer (azarah@gentoo.org): added charset
+  map file support to /etc/init.d/consolefont and the setting to
+  /etc/rc.conf.
+
+  25 Jan 2002: Martin Schlemmer (azarah@gentoo.org): fixed dircolors
+  in skel files to support both versions of dircolors.
+
+  23 Jan 2002: Martin Schlemmer (azarah@gentoo.org): fixed bug
+  in the restart stuff of /etc/init.d/runscript.sh that caused
+  a restart of a 'net' service not to restart services again
+  that depended on it.
+
+* rc-scripts 1.2.5 (20 Jan 2002)
+
+  20 Jan 2002: Martin Schlemmer (azarah@gentoo.org): updated
+  /etc/init.d/net.eth0 to 'use' pcmcia.
+
+  8  Jan 2002: Martin Schlemmer (azarah@gentoo.org): added '--sh' to
+  the dircolors command in /etc/skel/.bash_profile to handle cases
+  where bash do not export $SHELL.
+
+  6  Jan 2002: Martin Schlemmer (azarah@gentoo.org): updated 
+  /etc/init.d/runscripts.sh, /etc/init.d/net.eth0, /etc/conf.d/net and
+  removed /etc/init.d/net.eth0-dhcp to reflect a new 'bsd-ish' config
+  scheme for the net.eth* scripts.
+
+  6  Jan 2002: Donny Davies (woodchip@gentoo.org): Removed email address
+  from manpages; no need for that..
+
+  5  Jan 2002: Martin Schlemmer (azarah@gentoo.org): fix type-o in
+  /etc/devfsd.conf; had 'dvd' in the cdrw stuff.
+
+* rc-scripts 1.2.4 (30 Dec 2001)
+
+  30 Dec 2001: Daniel Robbins (drobbins@gentoo.org): Changed default umask
+  back to 022 as it should be.
+
+  30 Dec 2001; Martin Schlemmer (azarah@gentoo.org): Updated
+  /etc/init.d/checkfs to return 0 if the fs was successfully repaired.
+
+  29 Dec 2001; Donny Davies (woodchip@gentoo.org):
+    sort -t: -k3,3 -n /etc/passwd,group.  Ahhhh :))
+
+  28 Dec 2001; Martin Schlemmer (azarah@gentoo.org);
+  
+    Updated /etc/init.d/depscan.sh to store info about missing dependencies
+    of type 'need' in ${svcdir}/broken.  Also updated /etc/init.d/runscript.sh
+    to use this when starting a script ('need' dependencies is critical for
+    startup).  Added the broken() function to /etc/init.d/runscript.sh
+    to list the missing dependencies.
+
+    Updated /etc/init.d/runscript.sh for svc_start() to have better error
+    checking.
+
+    Updated /etc/init.d/functions.sh with ewend(), which is the same as
+    eend(), but print a warning on error, not a error.  Updated
+    /etc/init.d/checkroot and /etc/init.d/checkfs to use this function.
+
+  27 Dec 2001; Martin Schlemmer (azarah@gentoo.org);
+  
+    Update /sbin/runscript.c to run /etc/init.d/rc-help.sh if no arguments
+    is passed to a rc-script.
+  
+    Added /etc/init.d/rc-help.sh, simple script that prints out help for
+    the rc-scripts.
+
+  25 Dec 2001; Martin Schlemmer (azarah@gentoo.org);
+  
+    Update /etc/init.d/shutdown.sh and /etc/init.d/reboot.sh not to force the
+    halt and reboot.  This fixes a problem where / was not unmounted properly
+    in some cases.
+
+  24 Dec 2001; Martin Schlemmer (azarah@gentoo.org):
+  
+    Move $svcdir to to /etc/init.d/functions.sh, and update
+    /etc/init.d/runscript.sh and /etc/init.d/depscan.sh for this
+
+    Modified /etc/init.d/runscript.sh to also restart the services that
+    depend on a service if that service is restarted.  Enhanced the
+    restart function to be able to have custom restart() functions in
+    rc-scripts.  The custom restart() have to use svc_stop() and
+    svc_start() to restart the service.
+
+    Add a pause function to /etc/init.d/runscript.sh.  It will basically
+    stop a service without stopping the services that depends on that
+    service.
+
+    Add a pause function to /etc/init.d/runscript.sh.  It will basically stop a
+    service without stopping the services that depends on that service.
+
+* rc-scripts 1.2.3 (18 Dec 2001)
+
+  16 Dec 2001; Martin Schlemmer (azarah@gentoo.org):
+  
+    Moved the stuff from /sbin/init (old) to /sbin/rc (basically drop the
+    init wrapper we used).
+
+    Some cleanups:  take out the shm resize comment;
+
+                    remove the $wrongmount;
+
+                    remove the mountshm() function and insert it directly
+                    where needed;
+
+                    remove the setting of $PATH as /sbin/init already do 
+                    this for us.
+
+    Added the if statement to detect if it is the first time the 'boot'
+    runlevel is executed (if [ "$RUNLEVEL" = "S" ] && [ "$argv1" = "boot" ]).
+    $RUNLEVEL is a env var set by /sbin/init.
+
+    Also added functionality to detect if the kernel have DEVFS support
+    compiled in; seems new users thinks devfs is unstable and as they do
+    not always read the docs, it does not get compiled in ;/  Should
+    make live for us a bit easier.
+    
+  14 Dec 2001; Martin Schlemmer (azarah@gentoo.org):
+  
+    Fixed /sbin/rc to kill a cosmetic bug in the part that stops all
+    the unneeded services.  
+
+* rc-scripts 1.2.2 (8 Dec 2001)
+
+  10 Dec 2001; Added a localhost entry in /etc/hosts.
+
+  8  Dec 2001; Donny Davies (woodchip@gentoo.org): Added start-stop-daemon.c
+  to rc-scripts/sbin source.  Moved rc-scripts/init.d/runscript.c to
+  rc-scripts/sbin/runscript.c.  Added manpage for start-stop-daemon.
+  Start-stop-daemon is moved here from sysvinit by the way.  There is stuff
+  in this ChangeLog that needs to be removed! Like the changes to hosts,
+  profile.  /etc/{passwd,group} have minor UID and GID type fixes for
+  users ftp, postgres, xfs.  Tweaked tarball.sh to not include CVS
+  directories.
+
+  29 Nov 2001; Donny Davies (woodchip@gentoo.org): Added a man directory
+  to rc-scripts.  Checked in two manpages there, one for modules.autoload.5
+  and one for update-modules.8. These were adapted from Debian. Updated
+  tarball.sh to include the new man directory. Updated baselayout to install
+  these manpages. Slightly tweak the /etc/modules.autoload comments.
+
+  28 Nov 2001; Martin Schlemmer (azarah@gentoo.org):
+  
+    Updated /sbin/init to work correctly with the 'gentoo=nodevfs' option,
+    and cleaned out old code.
+
+    Updated /etc/init.d/bootmisc with additional lock files to clean.
+
+  27 Nov 2001; Martin Schlemmer (azarah@gentoo.org):
+  
+    Updated /etc/init.d/depscan.sh for a virtual 'use' depend, called 'logger'
+    that can be used for services that needs to have a logger started before
+    they are started.  Updated /etc/conf.d/basic with $SYSLOGGER that is used
+    to define what loggers the 'logger' depend represent.
+
+  26 Nov 2001; Martin Schlemmer (azarah@gentoo.org):
+  
+    Updated /etc/passwd and /etc/group with minor fixes to pass pwck
+    and grpck.
+
+  25 Nov 2001; Martin Schlemmer (azarah@gentoo.org):
+  
+    Changed umask in /etc/profile for the user to 077 for security.
+
+    Added a stop() function to /etc/init.d/clock.  Also removed uneeded
+    'source /etc/rc.conf' line.
+
+    Updated /etc/init.d/hostname to set the hostname to 'localhost' if
+    /etc/hostname is invalid.
+
+    Updated /sbin/init to move the entries in /lib/dev-state to /dev before
+    running devfsd, as it did still not save settings properly.  Also removed
+    old /dev-state/compat stuff.
+
+  25 Nov 2001; ncsd, the name service cache daemon script, has been removed
+  from the default "default" runlevel.  It still exists in the archive so that
+  users who want/need it can add it easily.
+
+  25 Nov 2001; Updated the /etc/fstab; removed usbdevfs (explicitly mounted),
+  removed notail from the ext2 boot partition, other cleanups.
+
+  25 Nov 2001; Fixed init.d/clock script to work in UTC mode.
+
+  24 Nov 2001; Martin Schlemmer (azarah@gentoo.org):
+  
+    Added /etc/devfsd.conf and updated /sbin/init to use a new scheme for saving
+    /dev permissions.  Also moved /dev-state to /lib/dev-state which is a more
+    standard location.
+
+    Fixed a ugly bug in /etc/init.d/depscan.sh.  If a service depended on
+    itself, calling depscan.sh or changing runlevels cause a tempory effect
+    similar to a 'mini fork bomb'.  Afterwards the depends was broken, and
+    changing runlevels did not want to work.
+
+    Updated /etc/init.d/halt.sh to terminate and display message for devfsd.
+    More cosmetic than anything else, but cant hurt with the new dev-state
+    scheme.
+
+    Updated /sbin/init to set the console log level to 1, so that bootup
+    can be much cleaner.  Also updated /etc/init.d/modules not to have
+    a logger in it 'use' depends, as it should not be needed anymore.
+
+    Updated /sbin/rc to check if devfsd is still running between runlevel
+    changes.
+
+    Updated /etc/init.d/modules to run update-modules.  We want to be sure
+    /etc/modules.conf is updated when running depmod -a.
+
+    Change ftp's uid to 21 in /etc/passwd (was the same as bind).  Also
+    added a entry for xfs (X Font Server) in /etc/passwd and /etc/group.
+
+    Added /etc/init.d/net.ppp0, /etc/conf.d/net.ppp0 and
+    /usr/lib/ppp/chat-default as part of my new pppd scripts.  Also
+    updated tarball.sh to handle ppp/chat-default.
+
+    Added /etc/skel/.bash* to make things cleaner.
+
+    Other minor changes.
+
+  17 Nov 2001; Donny Davies (woodchip@gentoo.org): Added /etc/shells file
+  to rc-scripts.  Can remove it from sys-libs/shadow at the next release.
+
+* rc-scripts 1.1.8 (15 Nov 2001)
+
+  16 Nov 2001; removed bogus "mountall.test" script.
+  
+  15 Nov 2001; Martin Schlemmer (azarah@gentoo.org):
+  
+    Updated init.d/{runscript.sh,depscan.sh}, sbin/rc to the new dep being
+    'use' not 'uses', as it fits better with 'need' (not 'needs').  Also
+    removed unneeded for loop from init.d/depscan.sh, and other fixes.  Updated
+    names of new functions in init.d/runscript.sh to better sounding ones.
+    Updated init.d/modules, init.d/netmount to use 'use'.  Lots of other
+    fixes/cleanups.
+    
+    Removed try() out of init.d/runscript.sh (why was this here ?).
+
+  14 Nov 2001; Martin Schlemmer (azarah@gentoo.org): 
+  
+    Now init.d/bootmisc cleans /tmp.  Also creates /etc/resolv.conf if it
+    doesn't exist.
+
+    init.d/hostname:  Added check for a valid /etc/hostname.
+
+    init.d/keymaps:  Added check for valid $KEYMAP.
+
+    init.d/modules:  Added sysklogd, metalog, syslog-ng as 'use' deps.  This
+    should solve Woodchip's syslog+glue issue.  We just have to change the
+    console loglevel for metalog and syslog-ng (sysklogd already updated) not to
+    output info and warnings, etc to the console, then boot will be much cleaner.
+    Also the install guide will need changing to add the loggers to 'boot' and
+    not 'default' runlevel.
+
+    init.d/mountall.test:  Hopefully updated to the new rc-scripts style.  Is
+    this really needed (I cannot see that it is used anywhere ...)?
+
+  13 Nov 2001; Martin Schlemmer (azarah@gentoo.org):
+  
+    Updated init.d/runscript.sh, init.d/depscan.sh and sbin/rc with a new depend
+    called 'uses'.  It basically have the same usage as 'need', except that it
+    do not start services that is not in the current and 'boot' runlevels.
+
+    Updated init.d/netmount to use the 'uses' depend.
+
+  11 Nov 2001; Martin Schlemmer (azarah@gentoo.org):
+  
+    Fixed init.d/runscript.sh not to destroy the 'need' depends in
+    /${svcdir}/need.  This caused subsequent starting and stopping of services
+    not to start depends.
+
+  7 Nov 2001; Martin Schlemmer (azarah@gentoo.org):
+  
+    Fixed a problem in sbin/rc where the ${svcdir}/softscripts directory got
+    destroyed before stopping running services scheduled to be stopped.  This
+    with the fact that $SOFTLEVEL was set too early, caused the services to be
+    stopped in the wrong order.
+
+  30 Oct 2001; Martin Schlemmer (azarah@gentoo.org):
+  
+    Modified init.d/netmount to check if any network filesystems is mounted.
+
+  29 Oct 2001; init.d/netmount: umount -art doesn't seem to work, so I added
+  some awk and grep magic to find all remote filesystems and umount them.
+  
+  29 Oct 2001; Martin Schlemmer (azarah@gentoo.org):
+  
+    A fix for checkroot (missing "/"); it now actually checks the root
+    filesystem.  Also, a localmount cleanliness fix.
+
+* rc-scripts 1.1.7 (18 Oct 2001)
+
+[old changelog format follows]
+
+    *lots of scripts; woodchip
+    removed old rc5 scripts from cvs
+
+    *init.d/runscript.sh; agriffis
+    Added support for rc.conf and home-grown functions
+    
+    *init.d/modules;
+    Now correctly looks at /etc/modules.autoload
+
+rc-scripts-1.1.6, released 15 Sep 2001
+======================================
+
+    *init.d/runscript.sh, others
+    Handling of "net" dependencies resolve to all net devices in
+    /etc/runlevels/boot and /etc/runlevels/[curr-runlevel].  INTERFACES
+    variable in /etc/rc.conf has been removed.
+    
+    *init.d/runscript.sh
+    New "zap" option for manually resetting the state of an initscript
+    to stopped.
+
+    *init.d/{samba,sysklogd,sshd}
+    Removed from CVS; they live in their respective packages.
+
+rc-scripts-1.1.5, released 02 Sep 2001
+====================================
+
+    *sbin/rc-update
+    New version of the rc-update command for the new initscripts.  Works
+    similarly to the old version, except this one updates our dependency
+    cache.
+
+    *init.d/functions.sh
+    New and better looking informational message functions (einfo, einfon).
+    Brand new message functions (ewarn).
+
+    *sbin/init, init.d/checkroot
+    We're going back to a /proc/mounts-based mtab symlink because it's 
+    just plain better.  Appropriate changes made.
+
+# vim:expandtab
