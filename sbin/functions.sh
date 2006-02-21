@@ -26,7 +26,7 @@ ordtypes="before after"
 #
 
 # Dont output to stdout?
-RC_QUIET_STDOUT="no"
+RC_QUIET_STDOUT=${RC_QUIET_STDOUT:-no}
 RC_VERBOSE=${RC_VERBOSE:-no}
 
 # Should we use color?
