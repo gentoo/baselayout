@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  22 Feb 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Ensure that ifplugd, netplugd and wpa_supplicant timeouts really are
+    infinite when requested. Thanks to embobo.
+
   21 Feb 2006; Mike Frysinger <vapier@gentoo.org>:
 
     Add patch by Alun Jones to respect RC_QUIET_STDOUT in conf.d/rc #123606.
