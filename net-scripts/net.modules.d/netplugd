@@ -29,7 +29,7 @@ netplugd_check_installed() {
 #
 # Start netplug on an interface
 netplugd_pre_start() {
-	local iface="$1" timeout i
+	local iface="$1" timeout
 	local pidfile="/var/run/netplugd.${iface}.pid"
 
 	# We don't start netplug if we're being called from the background
@@ -82,7 +82,7 @@ netplugd_pre_start() {
 
 	veinfo "Waiting for ${iface} to be marked as started"
 
-	i=0
+	local i=0
 	while true ; do
 		if service_started "net.${iface}"; then
 			local addr=$( interface_get_address "${iface}" )
@@ -90,6 +90,7 @@ netplugd_pre_start() {
 			exit 0
 		fi
 		sleep 1
+		[[ ${timeout} == "0" ]] && continue
 		(( i++ ))
 		[[ ${i} == "${timeout}" || ${i} -gt "${timeout}" ]] && break
 	done
