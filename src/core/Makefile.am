@@ -9,4 +9,7 @@ SUBDIRS = \
 
 EXTRA_DIST = \
 	autogen.sh  \
-	ChangeLog.0
+	ChangeLog.0 \
+	dl.m4
+
+ACLOCAL_AMFLAGS = -I m4

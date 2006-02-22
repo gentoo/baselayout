@@ -12,6 +12,6 @@ depscan_CFLAGS = -DLEGACY_DEPSCAN
 depscan_LDADD = $(LIBRCSCRIPTS)
 depscan_SOURCES = depscan.c
 
-runscript_LDADD = $(LIBRCSCRIPTS) -ldl
+runscript_LDADD = $(LIBRCSCRIPTS) $(DYNAMIC_LD_LIBS)
 runscript_SOURCES = runscript.c
 

@@ -95,6 +95,8 @@ CFLAGS="$CFLAGS -Wall"
 RCSCRIPTS_DEFINES='-DETCDIR="\"$(sysconfdir)\"" -DLIBDIR="\"$(libdir)\"" -DBINDIR="\"$(bindir)\"" -DSBINDIR="\"$(sbindir)\""'
 AC_SUBST([RCSCRIPTS_DEFINES])
 
+AM_DL
+
 AC_OUTPUT([
   Makefile
   scripts/Makefile
