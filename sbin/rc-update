@@ -36,30 +36,30 @@ add() {
 	local myscript=
 
 	if [[ $# -lt 3 ]] ; then
-		eerror "${0}: at least two arguments expected after \"$1\"."
+		eerror "$0: at least two arguments expected after \"$1\"."
 		exit 1
 	fi
 	shift
 	myscript="$1"
-	if [[ ! -e /etc/init.d/${myscript} ]] ; then
-		eerror "$0: /etc/init.d/${myscript} not found; aborting."
+	if [[ ! -e ${ROOT}/etc/init.d/${myscript} ]] ; then
+		eerror "$0: '${ROOT}/etc/init.d/${myscript}' not found; aborting."
 		exit 1
 	fi
 	shift
 	for x in $* ; do
-		if [[ ! -e /etc/runlevels/${x} ]] ; then
+		if [[ ! -e ${ROOT}/etc/runlevels/${x} ]] ; then
 			ewarn "runlevel ${x} not found; skipping"
 			continue
 		fi
-		if [[ -L /etc/runlevels/${x}/${myscript} ]] ; then
+		if [[ -L ${ROOT}/etc/runlevels/${x}/${myscript} ]] ; then
 			ewarn "${myscript} already installed in runlevel ${x}; skipping"
 			continue
 		fi
-		if [[ ! -x /etc/init.d/${myscript} ]] ; then
+		if [[ ! -x ${ROOT}/etc/init.d/${myscript} ]] ; then
 			ewarn "${myscript} not executable; skipping"
 			continue
 		fi
-		ln -snf "/etc/init.d/${myscript}" "/etc/runlevels/${x}/${myscript}"
+		ln -snf "/etc/init.d/${myscript}" "${ROOT}/etc/runlevels/${x}/${myscript}"
 		if [[ $? -ne 0 ]] ; then
 			eerror "$0: failed to add ${myscript} to ${x}."
 			exit 1
@@ -82,14 +82,14 @@ del() {
 	myscript=$1
 	shift
 	if [[ $# -eq 0 ]] ; then
-		mylevels=$(cd /etc/runlevels/; ls)
+		mylevels=$(cd "${ROOT}"/etc/runlevels/; ls)
 	else
 		mylevels="$*"
 	fi
 	remlevels=""
 	for x in ${mylevels} ; do
-		if [[ -L /etc/runlevels/${x}/${myscript} ]] ; then
-			rm -f "/etc/runlevels/${x}/${myscript}"
+		if [[ -L ${ROOT}/etc/runlevels/${x}/${myscript} ]] ; then
+			rm -f "${ROOT}/etc/runlevels/${x}/${myscript}"
 			remlevels="${remlevels} ${x}"
 		fi
 	done
@@ -108,17 +108,17 @@ show() {
 
 	shift
 	if [[ $# -eq 0 ]] ; then
-		mylevels=$(cd /etc/runlevels/; ls)
+		mylevels=$(cd "${ROOT}"/etc/runlevels/; ls)
 	else
 		mylevels="$*"
 	fi
-	myscripts=$(cd /etc/init.d; ls)
+	myscripts=$(cd "${ROOT}"/etc/init.d; ls)
 
 	for x in ${myscripts} ; do
 		if [[ ${x%%.sh} = "${x}" ]] ; then
 			printf "%20s | " ${x:0:19}
 			for y in ${mylevels} ; do
-				if [[ -L /etc/runlevels/${y}/${x} ]] ; then
+				if [[ -L ${ROOT}/etc/runlevels/${y}/${x} ]] ; then
 					echo -n "${y} "
 				else
 					printf "%${#y}s " " "
@@ -139,6 +139,11 @@ check_is_root() {
 if [[ $# -lt 1 ]] ; then
 	usage
 	exit 1
+fi
+
+if [[ -n ${ROOT} ]] ; then
+	[[ ${ROOT:0-1} == "/" ]] && export ROOT=${ROOT:0:${#ROOT}-1}
+	einfo "Working with files in root ${ROOT} ..."
 fi
 
 case "$1" in
