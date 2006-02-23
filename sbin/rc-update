@@ -74,7 +74,6 @@ add() {
 			eerror "$0: failed to add ${myscript} to ${x}."
 			exit 1
 		fi
-		regen=1
 		einfo "${myscript} added to runlevel ${x}"
 	done
 }
@@ -104,7 +103,6 @@ del() {
 	do
 		if [ -L "/etc/runlevels/${x}/${myscript}" ]
 		then
-			regen=1
 			rm -f "/etc/runlevels/${x}/${myscript}"
 			remlevels="${remlevels} ${x}"
 		fi
@@ -164,8 +162,6 @@ then
 	exit 1
 fi
 
-regen=0
-
 case "$1" in
 	add|-a)
 		check_is_root
@@ -183,13 +179,5 @@ case "$1" in
 		exit 1
 		;;
 esac
-
-if [ "${regen}" -eq 1 ]
-then
-	# depscan doesnt actually read runlevels so no point ...
-	#/sbin/depscan.sh
-	einfo "rc-update complete."
-fi
-
 
 # vim:ts=4
