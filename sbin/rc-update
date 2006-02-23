@@ -10,24 +10,21 @@ usage: rc-update -a|add script runlevel2 [runlevel2 ...]
        rc-update -d|del script [runlevel1 ...]
        rc-update -s|show [runlevel1 ...]
 
-note:  After rc-update executes, the script dependency cache is automatically
-       updated.
-
 examples:
-       rc-update add net.eth0 default
+       # rc-update add net.eth0 default
        Adds the net.eth0 script (in /etc/init.d) to the "default" runlevel.
 
-       rc-update del sysklogd
+       # rc-update del sysklogd
        Deletes the sysklogd script from all runlevels.  The original script
        is not deleted, just any symlinks to the script in /etc/runlevels/*.
 
-       rc-update del net.eth2 default wumpus
+       # rc-update del net.eth2 default wumpus
        Delete the net.eth2 script from the default and wumpus runlevels.
        All other runlevels are unaffected.  Again, the net.eth2 script
        residing in /etc/init.d is not deleted, just any symlinks in
        /etc/runlevels/default and /etc/runlevels/wumpus.
 
-       rc-update show
+       # rc-update show
        Show all the available scripts and list at which runlevels they
        will execute.
 FOO
@@ -37,40 +34,33 @@ FOO
 add() {
 	local x=
 	local myscript=
-	
-	if [ $# -lt 3 ]
-	then
+
+	if [[ $# -lt 3 ]] ; then
 		eerror "${0}: at least two arguments expected after \"$1\"."
 		exit 1
 	fi
 	shift
 	myscript="$1"
-	if [ ! -e "/etc/init.d/${myscript}" ]
-	then
+	if [[ ! -e /etc/init.d/${myscript} ]] ; then
 		eerror "$0: /etc/init.d/${myscript} not found; aborting."
 		exit 1
 	fi
 	shift
-	for x in $*
-	do
-		if [ ! -e "/etc/runlevels/${x}" ]
-		then
+	for x in $* ; do
+		if [[ ! -e /etc/runlevels/${x} ]] ; then
 			ewarn "runlevel ${x} not found; skipping"
 			continue
 		fi
-		if [ -L "/etc/runlevels/${x}/${myscript}" ]
-		then
+		if [[ -L /etc/runlevels/${x}/${myscript} ]] ; then
 			ewarn "${myscript} already installed in runlevel ${x}; skipping"
 			continue
 		fi
-		if [ ! -x "/etc/init.d/${myscript}" ]
-		then
+		if [[ ! -x /etc/init.d/${myscript} ]] ; then
 			ewarn "${myscript} not executable; skipping"
 			continue
 		fi
 		ln -snf "/etc/init.d/${myscript}" "/etc/runlevels/${x}/${myscript}"
-		if [ "$?" -ne 0 ]
-		then
+		if [[ $? -ne 0 ]] ; then
 			eerror "$0: failed to add ${myscript} to ${x}."
 			exit 1
 		fi
@@ -83,32 +73,27 @@ del() {
 	local mylevels=
 	local myscript=
 	local remlevels=
-	
-	if [ $# -lt 2 ]
-	then
+
+	if [[ $# -lt 2 ]] ; then
 		eerror "$0: at least one argument expected after \"$1\"."
 		exit 1
 	fi
 	shift
 	myscript=$1
 	shift
-	if [ $# -eq 0 ]
-	then
-		mylevels="`( cd /etc/runlevels; ls )`"
+	if [[ $# -eq 0 ]] ; then
+		mylevels=$(cd /etc/runlevels/; ls)
 	else
 		mylevels="$*"
 	fi
 	remlevels=""
-	for x in ${mylevels}
-	do
-		if [ -L "/etc/runlevels/${x}/${myscript}" ]
-		then
+	for x in ${mylevels} ; do
+		if [[ -L /etc/runlevels/${x}/${myscript} ]] ; then
 			rm -f "/etc/runlevels/${x}/${myscript}"
 			remlevels="${remlevels} ${x}"
 		fi
 	done
-	if [ "${remlevels}" = "" ]
-	then
+	if [[ -z ${remlevels} ]] ; then
 		einfo "${myscript} not found in any of the specified runlevels."
 	else
 		einfo "${myscript} removed from the following runlevels:${remlevels}"
@@ -120,25 +105,20 @@ show() {
 	local y=
 	local mylevels=
 	local myscripts=
-	
+
 	shift
-	if [ $# -eq 0 ]
-	then
-		mylevels="`( cd /etc/runlevels; ls )`"
+	if [[ $# -eq 0 ]] ; then
+		mylevels=$(cd /etc/runlevels/; ls)
 	else
 		mylevels="$*"
 	fi
-	myscripts="`( cd /etc/init.d; ls )`"
+	myscripts=$(cd /etc/init.d; ls)
 
-	for x in ${myscripts}
-	do
-		if [ "${x%%.sh}" = "${x}" ]
-		then
+	for x in ${myscripts} ; do
+		if [[ ${x%%.sh} = "${x}" ]] ; then
 			printf "%20s | " ${x:0:19}
-			for y in ${mylevels}
-			do
-				if [ -L "/etc/runlevels/${y}/${x}" ]
-				then
+			for y in ${mylevels} ; do
+				if [[ -L /etc/runlevels/${y}/${x} ]] ; then
 					echo -n "${y} "
 				else
 					printf "%${#y}s " " "
@@ -156,8 +136,7 @@ check_is_root() {
 	fi
 }
 
-if [ $# -lt 1 ]
-then
+if [[ $# -lt 1 ]] ; then
 	usage
 	exit 1
 fi
