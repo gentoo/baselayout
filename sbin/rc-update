@@ -3,69 +3,80 @@
 # Distributed under the terms of the GNU General Public License v2
 
 source /sbin/functions.sh
+esyslog() { :; }
+
+argv0=${0##*/}
 
 usage() {
 cat << FOO
-usage: rc-update -a|add script runlevel2 [runlevel2 ...]
-       rc-update -d|del script [runlevel1 ...]
-       rc-update -s|show [runlevel1 ...]
+usage: ${argv0} -a|add script runlevel1 [runlevel2 ...]
+       ${argv0} -d|del script [runlevel1 ...]
+       ${argv0} -s|show [runlevel1 ...]
 
 examples:
-       # rc-update add net.eth0 default
+       # ${argv0} add net.eth0 default
        Adds the net.eth0 script (in /etc/init.d) to the "default" runlevel.
 
-       # rc-update del sysklogd
+       # ${argv0} del sysklogd
        Deletes the sysklogd script from all runlevels.  The original script
        is not deleted, just any symlinks to the script in /etc/runlevels/*.
 
-       # rc-update del net.eth2 default wumpus
+       # ${argv0} del net.eth2 default wumpus
        Delete the net.eth2 script from the default and wumpus runlevels.
        All other runlevels are unaffected.  Again, the net.eth2 script
        residing in /etc/init.d is not deleted, just any symlinks in
        /etc/runlevels/default and /etc/runlevels/wumpus.
 
-       # rc-update show
+       # ${argv0} show
        Show all the available scripts and list at which runlevels they
        will execute.
 FOO
-	exit 1
+	exit ${1:-0}
 }
 
 add() {
+	local ret=0
 	local x=
 	local myscript=
 
-	if [[ $# -lt 3 ]] ; then
-		eerror "$0: at least two arguments expected after \"$1\"."
+	if [[ $# -lt 2 ]] ; then
+		eerror "Usage: ${argv0} add <script> runlevel1 [runlevel2 ...]" 1>&2
 		exit 1
 	fi
-	shift
-	myscript="$1"
+
+	[[ ${quiet} -gt 0 ]] && exec 2> /dev/null
+
+	myscript=$1
 	if [[ ! -e ${ROOT}/etc/init.d/${myscript} ]] ; then
-		eerror "$0: '${ROOT}/etc/init.d/${myscript}' not found; aborting."
+		eerror "${argv0}: '${ROOT}etc/init.d/${myscript}' not found; aborting" 1>&2
 		exit 1
 	fi
 	shift
 	for x in $* ; do
-		if [[ ! -e ${ROOT}/etc/runlevels/${x} ]] ; then
-			ewarn "runlevel ${x} not found; skipping"
+		if [[ ! -e ${ROOT}etc/runlevels/${x} ]] ; then
+			ewarn "runlevel '${x}' not found; skipping" 1>&2
+			((++ret))
 			continue
 		fi
-		if [[ -L ${ROOT}/etc/runlevels/${x}/${myscript} ]] ; then
-			ewarn "${myscript} already installed in runlevel ${x}; skipping"
+		if [[ -L ${ROOT}etc/runlevels/${x}/${myscript} ]] ; then
+			ewarn "${myscript} already installed in runlevel '${x}'; skipping" 1>&2
 			continue
 		fi
-		if [[ ! -x ${ROOT}/etc/init.d/${myscript} ]] ; then
-			ewarn "${myscript} not executable; skipping"
+		if [[ ! -x ${ROOT}etc/init.d/${myscript} ]] ; then
+			ewarn "${myscript} not executable; skipping" 1>&2
+			((++ret))
 			continue
 		fi
-		ln -snf "/etc/init.d/${myscript}" "${ROOT}/etc/runlevels/${x}/${myscript}"
+		ln -snf "/etc/init.d/${myscript}" "${ROOT}etc/runlevels/${x}/${myscript}"
 		if [[ $? -ne 0 ]] ; then
-			eerror "$0: failed to add ${myscript} to ${x}."
-			exit 1
+			eerror "${argv0}: failed to add '${myscript}' to '${x}'" 1>&2
+			((++ret))
+			continue
 		fi
 		einfo "${myscript} added to runlevel ${x}"
 	done
+
+	return ${ret}
 }
 
 del() {
@@ -74,30 +85,39 @@ del() {
 	local myscript=
 	local remlevels=
 
-	if [[ $# -lt 2 ]] ; then
-		eerror "$0: at least one argument expected after \"$1\"."
+	if [[ $# -lt 1 ]] ; then
+		eerror "Usage: ${argv0} del <script> [runlevel1 ...]" 1>&2
 		exit 1
 	fi
-	shift
+
+	[[ ${quiet} -gt 0 ]] && exec 2> /dev/null
+
 	myscript=$1
 	shift
 	if [[ $# -eq 0 ]] ; then
-		mylevels=$(cd "${ROOT}"/etc/runlevels/; ls)
+		mylevels=$(cd "${ROOT}"etc/runlevels/; ls)
 	else
 		mylevels="$*"
 	fi
 	remlevels=""
 	for x in ${mylevels} ; do
-		if [[ -L ${ROOT}/etc/runlevels/${x}/${myscript} ]] ; then
-			rm -f "${ROOT}/etc/runlevels/${x}/${myscript}"
-			remlevels="${remlevels} ${x}"
+		# -e will return false for broken symlinks so we need the extra -L
+		[[ ! -L ${ROOT}etc/runlevels/${x}/${myscript} ]] && \
+		[[ ! -e ${ROOT}etc/runlevels/${x}/${myscript} ]] && continue
+
+		remlevels="${remlevels} ${x}"
+		if [[ ! -L ${ROOT}etc/runlevels/${x}/${myscript} ]] ; then
+			ewarn "Removing invalid init.d script: '${ROOT}etc/runlevels/${x}/${myscript}'" 1>&2
 		fi
+		rm -f "${ROOT}etc/runlevels/${x}/${myscript}"
+		((ret+=$?))
 	done
 	if [[ -z ${remlevels} ]] ; then
-		einfo "${myscript} not found in any of the specified runlevels."
-	else
-		einfo "${myscript} removed from the following runlevels:${remlevels}"
+		ewarn "'${myscript}' not found in any of the specified runlevels" 1>&2
+	elif [[ ${quiet} -eq 0 ]] ; then
+		einfo "'${myscript}' removed from the following runlevels:${remlevels}"
 	fi
+	return ${ret}
 }
 
 show() {
@@ -106,62 +126,113 @@ show() {
 	local mylevels=
 	local myscripts=
 
-	shift
+	shopt -s nullglob
 	if [[ $# -eq 0 ]] ; then
-		mylevels=$(cd "${ROOT}"/etc/runlevels/; ls)
+		mylevels=$(cd "${ROOT}"etc/runlevels/; ls)
 	else
 		mylevels="$*"
+		# verify runlevels provided by user
+		for y in ${mylevels} ; do
+			[[ ! -d ${ROOT}etc/runlevels/${y} ]] && ewarn "Runlevel doesn't exist: ${y}"
+		done
 	fi
-	myscripts=$(cd "${ROOT}"/etc/init.d; ls)
+	myscripts=$(cd "${ROOT}"etc/init.d; ls)
+
+	# Sanity check to make sure everything is kosher ...
+	for x in $(find "${ROOT}"etc/runlevels -xtype l) ; do
+		ewarn "Broken runlevel entry: ${x}"
+	done
+	for x in $(find "${ROOT}"etc/runlevels ! -type l -a ! -type d) ; do
+		ewarn "Invalid runlevel entry: ${x}"
+	done
 
 	for x in ${myscripts} ; do
-		if [[ ${x%%.sh} = "${x}" ]] ; then
-			printf "%20s | " ${x:0:19}
+		# skip *.sh scripts as they are helpers, not init.d scripts
+		[[ ${x} == *.sh ]] && continue
+
+		# unless we are running in verbose mode, don't display scripts
+		# that aren't in any runlevels that we are examining
+		if [[ ${verbose} -eq 0 ]] ; then
+			local found_it=0
 			for y in ${mylevels} ; do
-				if [[ -L ${ROOT}/etc/runlevels/${y}/${x} ]] ; then
-					echo -n "${y} "
-				else
-					printf "%${#y}s " " "
+				if [[ -L ${ROOT}etc/runlevels/${y}/${x} ]] ; then
+					found_it=1
+					break
 				fi
 			done
-			echo ""
+			[[ ${found_it} -eq 0 ]] && continue
 		fi
+
+		# ok, let's show this script already !
+		printf "%20s | " ${x:0:19}
+		for y in ${mylevels} ; do
+			if [[ -L ${ROOT}etc/runlevels/${y}/${x} ]] ; then
+				echo -n "${y} "
+			else
+				printf "%${#y}s " " "
+			fi
+		done
+		echo ""
 	done
 }
 
 check_is_root() {
 	if [[ ${EUID} -ne 0 ]] ; then
-		eerror "$0: must be root."
+		eerror "${argv0}: must be root to complete this operation" 1>&2
 		exit 1
 	fi
 }
 
-if [[ $# -lt 1 ]] ; then
-	usage
+export ROOT=${ROOT%/}/
+[[ ${ROOT} != "/" ]] && einfo "Working with files in root ${ROOT} ..."
+
+verbose=0
+quiet=0
+action=""
+opts=""
+check_root=0
+
+[[ ${RC_VERBOSE} == "yes" ]] && ((++verbose))
+
+while [[ -n $* ]] ; do
+	case "$1" in
+	add|-a)
+		check_root=1
+		action="add"
+		;;
+	del|delete|-d)
+		check_root=1
+		action="del"
+		;;
+	show|-s)
+		action="show"
+		;;
+	help|-h|--help)
+		usage 0
+		;;
+	verbose|-v|--verbose)
+		((++verbose))
+		;;
+	quiet|-q|--quiet)
+		((++quiet))
+		;;
+	-*)
+		echo -e "${argv0}: Unknown option $1\n" 1>&2
+		usage 1
+		;;
+	*)
+		opts="${opts} $1"
+		;;
+	esac
+	shift
+done
+
+if [[ -z ${action} ]] ; then
+	eerror "${argv0}: gimme something to do!" 1>&2
 	exit 1
 fi
 
-if [[ -n ${ROOT} ]] ; then
-	[[ ${ROOT:0-1} == "/" ]] && export ROOT=${ROOT:0:${#ROOT}-1}
-	einfo "Working with files in root ${ROOT} ..."
-fi
-
-case "$1" in
-	add|-a)
-		check_is_root
-		add "$@"
-		;;
-	del|delete|-d)
-		check_is_root
-		del "$@"
-		;;
-	show|-s)
-		show "$@"
-		;;
-	*)
-		usage
-		exit 1
-		;;
-esac
+[[ ${check_root} -eq 1 ]] && check_is_root
+${action} ${opts}
 
 # vim:ts=4
