@@ -1,0 +1,63 @@
+#!/bin/bash
+# Copyright (c) 2005-2006 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+
+# Contributed by Roy Marples (uberlord@gentoo.org)
+
+interface="${1##*/dhcpcd-}"
+interface="${interface%%.info}"
+
+if [[ $2 != "up" && $2 != "new" ]] ; then
+	action="down"
+else
+	action="up"
+fi
+
+. /sbin/functions.sh
+. "${svclib}/net.modules.d/helpers.d/module-loader"
+
+# Map MAC address variables to interface variables
+macnet_pre_start "${interface}" 1>/dev/null
+
+# Map wireless ESSID variables to interface variables
+if [[ -n ${wireless_module} ]] ; then
+	if wireless_exists "${interface}" ; then
+		essidnet_pre_start "${interface}" 1>/dev/null
+	fi
+fi
+
+# Add any search paths if we have any defined
+ifvar="$(bash_variable "${interface}")"
+
+if [[ ${action} == "up" ]] ; then
+	d="dhcp_${ifvar}"
+	d=" ${!d} "
+	[[ ${d} == "  " ]] && d=" ${dhcp} "
+	resolv="${statedir}/${interface}/resolv.conf"
+
+	if [[ ${d} != *" nodns "* ]] ; then
+		search="dns_search_${ifvar}"
+		if [[ -n ${!search} ]] ; then
+			tmp="${resolv}.$$"
+			egrep -v "^[ \t]*(search|domain)[ \t]*" "${resolv}" > "${tmp}"
+			echo "search ${!search}" >> "${tmp}" 
+			mv "${tmp}" "${resolv}"
+		fi
+	fi
+
+	system_dns_extra "${interface}" "${resolv}"
+fi
+
+# As we override the -c option, we need to call the specified script ourself
+opts="dhcpcd_${ifvar}"
+exe="${!opts##* -c }"
+if [[ -n ${exe} && ${exe} != "${!opts}" ]] ; then
+	exe="${exe%% *}"
+else
+	exe="/etc/dhcpc/dhcpcd.exe"
+fi
+[[ -x ${exe} ]] && ( ${exe} "$@" 1>/dev/null )
+
+. "${svclib}/net.modules.d/helpers.d/dhcp-state"
+
+# vim:ts=4

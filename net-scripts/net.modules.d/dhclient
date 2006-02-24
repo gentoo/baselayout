@@ -1,0 +1,149 @@
+#!/bin/bash
+# Copyright (c) 2004-2006 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+
+# Contributed by Roy Marples (uberlord@gentoo.org)
+
+# Fix any potential localisation problems
+# Note that LC_ALL trumps LC_anything_else according to locale(7)
+dhclient() {
+	LC_ALL=C /sbin/dhclient "$@"
+}
+
+# void dhclient_depend(void)
+#
+# Sets up the dependancies for the module
+dhclient_depend() {
+	after interface
+	provide dhcp
+	functions interface_exists interface_get_address
+	variables dhclient dhcp
+}
+
+# bool dhclient_check_installed(void)
+#
+# Returns 1 if dhclient is installed, otherwise 0
+dhclient_check_installed() {
+	[[ -x /sbin/dhclient ]] && return 0
+	${1:-false} && eerror "For DHCP (dhclient) support, emerge net-misc/dhcp"
+	return 1
+}
+
+# bool dhclient_stop(char *iface)
+#
+# Stop dhclient on an interface
+# Always returns 0
+dhclient_stop() {
+	local iface="$1" d
+	local pidfile="/var/run/dhclient-${iface}.pid"
+
+	[[ ! -f ${pidfile} ]] && return 0
+
+	local ifvar="$(bash_variable "${iface}")"
+	d="dhcp_${ifvar}"
+	d=" ${!d} "
+	[[ ${d} == "  " ]] && d=" ${dhcp} "
+
+	ebegin "Stopping dhclient on ${iface}"
+	if [[ ${d} == *" release "* ]]; then
+		local r=$( dhclient -q -r -pf "${pidfile}" \
+			-sf "${MODULES_DIR}/helpers.d/dhclient-wrapper" "${iface}" )
+		[[ ${r} == "deconfig" ]]
+		eend $? "dhclient returned a ${r}"
+	else
+		start-stop-daemon --stop --exec /sbin/dhclient --pidfile "${pidfile}"
+		eend 0
+	fi
+
+	return 0
+}
+
+# bool dhclient_start(char *iface)
+#
+# Start DHCP on an interface by calling dhclient $iface $options
+#
+# Returns 0 (true) when a DHCP address is obtained, otherwise 1
+dhclient_start() {
+	local iface="$1" opts ifvar="$(bash_variable "$1")" d
+	local pidfile="/var/run/dhclient-${iface}.pid" edit=""
+	local cffile="/etc/dhcp/dhclient.conf"
+
+	interface_exists "${iface}" true || return 1
+
+	edit="dhclient_edit_config_${ifvar}"
+	[[ -z ${!edit} ]] && edit="dhclient_edit_config"
+	if [[ ${!edit} == "yes" || ${!edit} == "true" ]]; then
+		edit=true
+	else
+		edit=false
+	fi
+
+	# Load our options
+	opts="dhclient_${ifvar}"
+	opts="${!opts}"
+
+	# Work out our cffile
+	x="${opts##* -cf }"
+	if [[ ${x} != "${opts}" ]]; then
+		x="${x%% *}"
+		if [[ -n ${x} ]]; then
+			cffile="${x}"
+			opts="${opts//-cf ${cffile}/}"
+		fi
+	fi
+	opts="${opts} -cf ${cffile}"
+
+	# Ensure that the cffile does not contain any script lines
+	# as that will stop our helpers from running
+	if [[ -e ${cffile} ]] ; then
+		if grep -q "^[ \t]*script " "${cffile}" 2>/dev/null ; then
+			if ${edit} ; then
+				sed -i '/^[ \t]*script /d' "${cffile}" || return 1
+			else
+				eerror "You have to remove the script parameter from ${cffile}"
+				return 1
+			fi
+		fi
+	else
+		${edit} && touch "${cffile}" 2>/dev/null
+	fi
+
+	d="dhcp_${ifvar}"
+	d=" ${!d} "
+	[[ ${d} == "  " ]] && d=" ${dhcp} "
+
+	# Send our hostname by editing cffile
+	if ${edit} && [[ -e ${cffile} && ${d} != *" nosendhost "* ]] ; then
+		local hname="$(hostname)"
+		if [[ ${hname} != "(none)" && ${hname} != "localhost" ]]; then
+			sed -i '/^[ \t]*send[ \t]*host-name[ \t]*/d' "${cffile}"
+			if [[ -s ${cffile} ]]; then
+				sed -i '1 isend host-name "'"${hname}"'";' "${cffile}"
+			else
+				echo "send host-name \"${hname}\";" > "${cffile}"
+			fi
+		fi
+	fi
+
+	# Bring up DHCP for this interface (or alias)
+	ebegin "Running dhclient"
+	local x="$( eval dhclient "${opts}" -1 -pf "${pidfile}" \
+		-sf "${MODULES_DIR}/helpers.d/dhclient-wrapper" -q "${iface}" 2>&1 )"
+	# We just check the last 5 letters
+	[[ ${x:${#x} - 5:5} == "bound" ]]
+	if [[ $? != "0" ]]; then
+		echo "${x}"
+		dhclient_stop "${iface}" &>/dev/null
+		eend 1
+		return 1
+	fi
+	eend 0
+
+	# DHCP succeeded, show address retrieved
+	local addr="$(interface_get_address "${iface}")"
+	einfo "${iface} received address ${addr}"
+
+	return 0
+}
+
+# vim:ts=4

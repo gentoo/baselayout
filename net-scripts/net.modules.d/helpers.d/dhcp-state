@@ -1,0 +1,28 @@
+#!/bin/bash
+# Copyright (c) 2005-2006 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+
+# Contributed by Roy Marples (uberlord@gentoo.org)
+
+. "${svclib}/sh/rc-services.sh"
+. "${svclib}/net.modules.d/helpers.d/functions"
+conf="$(add_suffix /etc/conf.d/net)"
+[[ -e ${conf} ]] && source "${conf}"
+
+service="net.${interface}"
+
+if [[ ${action} != "up" ]] ; then
+	service_started "${service}" && mark_service_inactive "${service}"
+	remove_state "${interface}" false
+else
+	service_inactive "${service}" && mark_service_started "${service}"
+fi
+
+if [[ ${RC_AUTO_INTERFACE} == "yes" ]] ; then
+	best_interface="$(select_best_interface)"
+	apply_state "${best_interface}"
+elif [[ ${action} == "up" ]] ; then
+	apply_state "${interface}"
+fi
+
+# vim:ts=4
