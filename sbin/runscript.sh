@@ -1,7 +1,6 @@
 #!/bin/bash
 # Copyright 1999-2006 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header$
 
 # Common functions
 [[ ${RC_GOT_FUNCTIONS} != "yes" ]] && source /sbin/functions.sh
@@ -16,12 +15,6 @@ if [[ ${EUID} != 0 ]] && ! [[ $2 == "status" && $# -eq 2 ]] ; then
 	exit 1
 fi
 
-# Stop init scripts from working until sysinit completes
-if [[ -e /dev/.rcsysinit ]] ; then
-    eerror "ERROR:  cannot run ${myservice} until sysinit completes"
-    exit 1
-fi
-		
 # State variables
 svcpause="no"
 svcrestart="no"
@@ -36,6 +29,12 @@ fi
 myservice=${myservice##*/}
 export SVCNAME=${myservice}
 mylevel=$(<"${svcdir}/softlevel")
+
+# Stop init scripts from working until sysinit completes
+if [[ -e /dev/.rcsysinit ]] ; then
+    eerror "ERROR:  cannot run ${myservice} until sysinit completes"
+    exit 1
+fi
 
 
 # Set $IFACE to the name of the network interface if it is a 'net.*' script
