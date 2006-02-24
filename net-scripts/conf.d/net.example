@@ -209,7 +209,7 @@
 
 #-----------------------------------------------------------------------------
 # DHCP
-# DHCP can be provided by dhcpcd, dhclient, udhcpc or pump
+# DHCP can be provided by dhclient, dhcpcd, pump or udhcpc.
 #
 # dhclient: emerge net-misc/dhcp
 # dhcpcd:   emerge net-misc/dhcpcd
@@ -217,17 +217,13 @@
 # udhcpc:   emerge net-misc/udhcp
 
 # If you have more than one DHCP client installed, you need to specify which
-# one to use - otherwise we default to dhcpcd if available
-#modules=( "udhcpc" ) # to select udhcpc over dhcpcd
+# one to use - otherwise we default to dhcpcd if available.
+#modules=( "dhclient" ) # to select dhclient over dhcpcd
 #
 # Notes:
-# - dhcpcd, udhcpc and pump send the current hostname
-#   to the DHCP server by default
-#   pump always sends the current hostname - see below to disable
-#   udhcpc and dhcpcd from doing this
+# - All clients send the current hostname to the DHCP server by default
 # - dhcpcd does not daemonize when the lease time is infinite
-# - udhcp-0.9.3-r3 and earlier does not support getting NTP servers 
-# - dhclient does not support getting NTP servers 
+# - udhcp-0.9.3-r3 and earlier do not support getting NTP servers 
 # - pump does not support getting NIS servers
 # - DHCP tends to erase any existing device information - so add
 #   static addresses after dhcp if you need them
@@ -250,9 +246,6 @@
 #udhcpc_eth0="..."
 #pump_eth0="..."
 
-# To set options for dhclient, you need to have an /etc/dhclient.conf file
-# See the dhclient man page for details
-
 # GENERIC DHCP OPTIONS
 # Set generic DHCP options like so
 #dhcp_eth0="release nodns nontp nonis nogateway nosendhost"
@@ -262,11 +255,6 @@
 # send the current hostname to the dhcp server and when it starts.
 # You can use any combination of the above options - the default is not to
 # use any of them.
-
-# DHCLIENT
-# dhclient can modify /etc/dhclient.conf (or the file specified by the -cf
-# option) with the current hostname and to strip any script lines. To enable
-# this, add dhclient_edit_config="yes" to /etc/conf.d/net
 
 #-----------------------------------------------------------------------------
 # For APIPA support, emerge net-misc/iputils or net-analyzer/arping
