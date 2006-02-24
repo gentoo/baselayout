@@ -34,28 +34,29 @@ dhclient_check_installed() {
 # Stop dhclient on an interface
 # Always returns 0
 dhclient_stop() {
-	local iface="$1" d
-	local pidfile="/var/run/dhclient-${iface}.pid"
+	local iface="$1" pidfile="/var/run/dhclient-$1.pid"
 
 	[[ ! -f ${pidfile} ]] && return 0
 
+	ebegin "Stopping dhclient on ${iface}"
+
 	local ifvar="$(bash_variable "${iface}")"
-	d="dhcp_${ifvar}"
+	local d="dhcp_${ifvar}"
 	d=" ${!d} "
 	[[ ${d} == "  " ]] && d=" ${dhcp} "
 
-	ebegin "Stopping dhclient on ${iface}"
-	if [[ ${d} == *" release "* ]]; then
-		local r=$( dhclient -q -r -pf "${pidfile}" \
-			-sf "${MODULES_DIR}/helpers.d/dhclient-wrapper" "${iface}" )
+	if [[ ${d} == *" release "* ]] ; then
+		local dhconf="interface \"${iface}\" {\n \
+			script \"${MODULES_DIR}/helpers.d/dhclient-wrapper\";\n \
+			}\n"
+		local r="$(echo -e "${dhconf}" \
+			| dhclient -q -r -pf "${pidfile}" "${iface}" )"
 		[[ ${r} == "deconfig" ]]
-		eend $? "dhclient returned a ${r}"
+		eend $? "dhclient returned ${r}"
 	else
 		start-stop-daemon --stop --exec /sbin/dhclient --pidfile "${pidfile}"
-		eend 0
+		eend $?
 	fi
-
-	return 0
 }
 
 # bool dhclient_start(char *iface)
@@ -64,26 +65,22 @@ dhclient_stop() {
 #
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 dhclient_start() {
-	local iface="$1" opts ifvar="$(bash_variable "$1")" d
-	local pidfile="/var/run/dhclient-${iface}.pid" edit=""
+	local iface="$1" ifvar="$(bash_variable "$1")"
+	local pidfile="/var/run/dhclient-${iface}.pid"
 	local cffile="/etc/dhcp/dhclient.conf"
 
 	interface_exists "${iface}" true || return 1
 
-	edit="dhclient_edit_config_${ifvar}"
-	[[ -z ${!edit} ]] && edit="dhclient_edit_config"
-	if [[ ${!edit} == "yes" || ${!edit} == "true" ]]; then
-		edit=true
-	else
-		edit=false
-	fi
-
+	# Load any dhclient.conf instructions specified by the user
+	local opts="dhclient_conf_${ifvar}"
+	local dhconf="${!opts}"
+	
 	# Load our options
 	opts="dhclient_${ifvar}"
 	opts="${!opts}"
 
 	# Work out our cffile
-	x="${opts##* -cf }"
+	local x="${opts##* -cf }"
 	if [[ ${x} != "${opts}" ]]; then
 		x="${x%% *}"
 		if [[ -n ${x} ]]; then
@@ -91,50 +88,50 @@ dhclient_start() {
 			opts="${opts//-cf ${cffile}/}"
 		fi
 	fi
-	opts="${opts} -cf ${cffile}"
 
-	# Ensure that the cffile does not contain any script lines
-	# as that will stop our helpers from running
+	# Warn that we're going to override parts of their cffile
 	if [[ -e ${cffile} ]] ; then
-		if grep -q "^[ \t]*script " "${cffile}" 2>/dev/null ; then
-			if ${edit} ; then
-				sed -i '/^[ \t]*script /d' "${cffile}" || return 1
-			else
-				eerror "You have to remove the script parameter from ${cffile}"
-				return 1
-			fi
+		opts="${opts} -cf ${cffile}"
+		if grep -q "^[ \t]*script[ \t]" "${cffile}" ; then
+			ewarn "The script specified in ${cffile} will not be used"
 		fi
-	else
-		${edit} && touch "${cffile}" 2>/dev/null
 	fi
 
-	d="dhcp_${ifvar}"
+	local d="dhcp_${ifvar}"
 	d=" ${!d} "
 	[[ ${d} == "  " ]] && d=" ${dhcp} "
 
+	local ah=""
 	# Send our hostname by editing cffile
-	if ${edit} && [[ -e ${cffile} && ${d} != *" nosendhost "* ]] ; then
+	if [[ ${d} != *" nosendhost "* ]] ; then
 		local hname="$(hostname)"
 		if [[ ${hname} != "(none)" && ${hname} != "localhost" ]]; then
-			sed -i '/^[ \t]*send[ \t]*host-name[ \t]*/d' "${cffile}"
-			if [[ -s ${cffile} ]]; then
-				sed -i '1 isend host-name "'"${hname}"'";' "${cffile}"
-			else
-				echo "send host-name \"${hname}\";" > "${cffile}"
+			ah="send host-name \"${hname}\"\n;"
+			# Warn that we're going to override parts of their cffile
+			if [[ -e ${cffile} ]] ; then
+				if grep -q "^[ \t]*send[ \t]*host-name[ \t]" "${cffile}" ; then
+					ewarn "The host-name \"${hname}\" will be sent instead of"
+					ewarn "the one specified in ${cffile}"
+					vewarn "Set dhcp_${ifvar}=\"nosendhost\" in /etc/conf.d/net"
+					vewarn "to stop this from happening"
+				fi
 			fi
 		fi
 	fi
+	dhconf="${dhconf} interface \"${iface}\" {\n \
+		script \"/${MODULES_DIR}/helpers.d/dhclient-wrapper\";\n \
+		 ${ah}
+	 	}" 
 
 	# Bring up DHCP for this interface (or alias)
 	ebegin "Running dhclient"
-	local x="$( eval dhclient "${opts}" -1 -pf "${pidfile}" \
-		-sf "${MODULES_DIR}/helpers.d/dhclient-wrapper" -q "${iface}" 2>&1 )"
+	x="$(echo -e "${dhconf}" | dhclient ${opts} -q -1 -pf "${pidfile}")"
 	# We just check the last 5 letters
 	[[ ${x:${#x} - 5:5} == "bound" ]]
 	if [[ $? != "0" ]]; then
-		echo "${x}"
-		dhclient_stop "${iface}" &>/dev/null
-		eend 1
+		# Kill the offending daemon as it likes to hang around
+		start-stop-daemon --stop --exec /sbin/dhclient --pidfile "${pidfile}"
+		eend 1 "${x}"
 		return 1
 	fi
 	eend 0

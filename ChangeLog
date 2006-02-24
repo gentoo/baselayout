@@ -13,6 +13,10 @@
     start-stop-daemon as provided by rc-daemon.sh now provides
     the same thing, just better.
 
+    We now send extra configuration to dhclient via stdin.
+    This means we don't have to edit /etc/dhcp/dhclient.conf anymore
+    or warn users about script settings. Requires net-misc/dhcp-3.0.3-r5.
+
   22 Feb 2006; Mike Frysinger <vapier@gentoo.org>:
 
     Overhaul rc-update and make it more user friendly.
