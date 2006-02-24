@@ -11,14 +11,14 @@ interface="$2"
 
 . /sbin/functions.sh
 
-if [[ ${action} == "up" ]]; then
+if [[ ${action} == "up" ]] ; then
 	. "${svclib}/net.modules.d/helpers.d/module-loader"
 
 	# Map MAC address variables to interface variables
 	macnet_pre_start "${interface}" 1>/dev/null
 
 	# Map wireless ESSID variables to interface variables
-	if [[ -n ${wireless_module} ]]; then
+	if [[ -n ${wireless_module} ]] ; then
 		if wireless_exists "${interface}" ; then
 			essidnet_pre_start "${interface}" 1>/dev/null
 		fi

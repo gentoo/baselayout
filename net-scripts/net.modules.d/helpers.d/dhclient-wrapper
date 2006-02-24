@@ -17,7 +17,7 @@ case "${reason}" in
 	MEDIUM) exit 0 ;;
 esac
 
-if [[ -z ${action} ]]; then
+if [[ -z ${action} ]] ; then
 	echo "dhclient sent an unknown action ${reason}!" >&2
 	exit 1
 fi

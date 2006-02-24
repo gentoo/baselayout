@@ -1,6 +1,18 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  24 Feb 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Misc STYLE and quoting issues fixes in net scripts.
+    
+    dhclient and udhcpc now work with RFC violating space separated
+    domain names in /etc/resolv.conf - they get appended to the search
+    option if it's not specified.
+
+    punted clean_pidfile and process_finished functions and as
+    start-stop-daemon as provided by rc-daemon.sh now provides
+    the same thing, just better.
+
   22 Feb 2006; Roy Marples <uberlord@gentoo.org>:
 
     Ensure that ifplugd, netplugd and wpa_supplicant timeouts really are

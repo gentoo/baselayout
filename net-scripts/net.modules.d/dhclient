@@ -39,12 +39,7 @@ dhclient_stop() {
 
 	[[ ! -f ${pidfile} ]] && return 0
 
-	# We check for a dhclient process first as if we attempt to release
-	# an interface for which dhclient has obtained an IP in the past
-	# it causes a "RELEASE" event anyway.
-	local pid=$( < "${pidfile}" )
-
-	local ifvar=$( bash_variable "${iface}" )
+	local ifvar="$(bash_variable "${iface}")"
 	d="dhcp_${ifvar}"
 	d=" ${!d} "
 	[[ ${d} == "  " ]] && d=" ${dhcp} "
@@ -55,11 +50,8 @@ dhclient_stop() {
 			-sf "${MODULES_DIR}/helpers.d/dhclient-wrapper" "${iface}" )
 		[[ ${r} == "deconfig" ]]
 		eend $? "dhclient returned a ${r}"
-		[[ -f "/var/cache/dhcp-${iface}.lease" ]] \
-			&& rm -f "/var/cache/dhcp-${iface}.lease"
 	else
-		kill -s TERM "${pid}" 2>/dev/null
-		clean_pidfile "${pidfile}"
+		start-stop-daemon --stop --exec /sbin/dhclient --pidfile "${pidfile}"
 		eend 0
 	fi
 
@@ -72,7 +64,7 @@ dhclient_stop() {
 #
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 dhclient_start() {
-	local iface="$1" opts ifvar=$( bash_variable "$1" ) d
+	local iface="$1" opts ifvar="$(bash_variable "$1")" d
 	local pidfile="/var/run/dhclient-${iface}.pid" edit=""
 	local cffile="/etc/dhcp/dhclient.conf"
 
@@ -122,7 +114,7 @@ dhclient_start() {
 
 	# Send our hostname by editing cffile
 	if ${edit} && [[ -e ${cffile} && ${d} != *" nosendhost "* ]] ; then
-		local hname=$( hostname )
+		local hname="$(hostname)"
 		if [[ ${hname} != "(none)" && ${hname} != "localhost" ]]; then
 			sed -i '/^[ \t]*send[ \t]*host-name[ \t]*/d' "${cffile}"
 			if [[ -s ${cffile} ]]; then
@@ -135,8 +127,8 @@ dhclient_start() {
 
 	# Bring up DHCP for this interface (or alias)
 	ebegin "Running dhclient"
-	local x=$( eval dhclient "${opts}" -1 -pf "${pidfile}" \
-		-sf "${MODULES_DIR}/helpers.d/dhclient-wrapper" -q "${iface}" 2>&1 )
+	local x="$( eval dhclient "${opts}" -1 -pf "${pidfile}" \
+		-sf "${MODULES_DIR}/helpers.d/dhclient-wrapper" -q "${iface}" 2>&1 )"
 	# We just check the last 5 letters
 	[[ ${x:${#x} - 5:5} == "bound" ]]
 	if [[ $? != "0" ]]; then
@@ -148,7 +140,7 @@ dhclient_start() {
 	eend 0
 
 	# DHCP succeeded, show address retrieved
-	local addr=$( interface_get_address "${iface}" )
+	local addr="$(interface_get_address "${iface}")"
 	einfo "${iface} received address ${addr}"
 
 	return 0

@@ -54,7 +54,7 @@ adsl_setup_vars() {
 #
 # Returns 0 (true) when successful, non-zero otherwise
 adsl_start() {
-	local iface="$1" exe cfgfile user ifvar=$( bash_variable "$1" )
+	local iface="$1" exe cfgfile user ifvar="$(bash_variable "$1")"
 
 	adsl_setup_vars "${iface}" start || return 1
 

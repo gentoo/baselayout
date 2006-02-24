@@ -40,11 +40,11 @@ arping_address_exists() {
 	# We need to bring the interface up to test
 	interface_up "${iface}"
 
-	if [[ -x /sbin/arping ]]; then
+	if [[ -x /sbin/arping ]] ; then
 		/sbin/arping -q -c 2 -w 3 -D -f -I "${iface}" "${address}" \
 		&>/dev/null || return 0
-	elif [[ -x /usr/sbin/arping2 ]]; then
-		for (( i=0; i<3; i++ )); do
+	elif [[ -x /usr/sbin/arping2 ]] ; then
+		for (( i=0; i<3; i++ )) ; do
 			/usr/sbin/arping2 -0 -c 1 -i "${iface}" "${address}" \
 			&>/dev/null && return 0
 		done
@@ -64,7 +64,7 @@ arping_start() {
 	einfo "Pinging gateways on ${iface} for configuration"
 
 	gateways="gateways_${ifvar}[@]"
-	if [[ -z ${!gateways} ]]; then
+	if [[ -z ${!gateways} ]] ; then
 		eerror "No gateways have been defined (gateways_${ifvar}=\"...\")"
 		return 1
 	fi
@@ -75,9 +75,9 @@ arping_start() {
 		vebegin "${x}"
 		if arping_address_exists "${iface}" "${x}" ; then
 			for i in ${x//./ } ; do
-				if [[ ${#i} == "2" ]]; then
+				if [[ ${#i} == "2" ]] ; then
 					conf="${conf}0${i}"
-				elif [[ ${#i} == "1" ]]; then
+				elif [[ ${#i} == "1" ]] ; then
 					conf="${conf}00${i}"
 				else
 					conf="${conf}${i}"

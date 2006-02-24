@@ -12,7 +12,7 @@ MODULES_DIR="${svclib}/net.modules.d"
 
 conf="$(add_suffix /etc/conf.d/net)"
 [[ -e ${conf} ]] && source "${conf}"
-conf="$(add_suffix /etc/conf.d/net.${interface})"
+conf="$(add_suffix "/etc/conf.d/net.${interface}")"
 [[ -e ${conf} ]] && source "${conf}"
 
 # Create some dummy functions, so we can depend on a module
@@ -25,9 +25,9 @@ functions() { return; }
 variables() { eval "${MODULE}_variables() { echo \"$*\"; }"; }
 
 # Guess which interface module to load - we prefer iproute2
-if [[ -x /sbin/ip ]]; then
+if [[ -x /sbin/ip ]] ; then
 	interface_module="iproute2"
-elif [[ -x /sbin/ifconfig ]]; then
+elif [[ -x /sbin/ifconfig ]] ; then
 	interface_module="ifconfig"
 else
 	echo "Can't find a known interface module" >&2
@@ -36,10 +36,10 @@ fi
 
 # iwconfig is the best bet for wireless - we use wpa_supplicant
 # only if we need to
-if [[ -x /sbin/iwconfig ]]; then
+if [[ -x /sbin/iwconfig ]] ; then
 	wireless_module="iwconfig"
 elif [[ -x /sbin/wpa_supplicant \
-	&& -S "/var/run/wpa_supplicant/${interface}" ]]; then
+	&& -S "/var/run/wpa_supplicant/${interface}" ]] ; then
 	wireless_module="wpa_supplicant"
 fi
 
@@ -51,7 +51,7 @@ MODULE="interface"
 ${interface_module}_depend
 function_wrap "${interface_module}" interface
 
-if [[ -e "${MODULES_DIR}/macnet" ]]; then
+if [[ -e "${MODULES_DIR}/macnet" ]] ; then
 	. "${MODULES_DIR}/macnet"
 	MODULE="macnet"
 	macnet_depend
@@ -61,7 +61,7 @@ fi
 MODULE="system"
 system_depend
 
-if [[ -n ${wireless_module} ]]; then
+if [[ -n ${wireless_module} ]] ; then
 	. "${MODULES_DIR}/${wireless_module}"
 	MODULE="${wireless_module}"
 	${wireless_module}_depend

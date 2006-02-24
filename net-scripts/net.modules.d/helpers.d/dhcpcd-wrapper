@@ -7,7 +7,7 @@
 interface="${1##*/dhcpcd-}"
 interface="${interface%%.info}"
 
-if [[ $2 != "up" && $2 != "new" ]]; then
+if [[ $2 != "up" && $2 != "new" ]] ; then
 	action="down"
 else
 	action="up"
@@ -20,24 +20,24 @@ fi
 macnet_pre_start "${interface}" 1>/dev/null
 
 # Map wireless ESSID variables to interface variables
-if [[ -n ${wireless_module} ]]; then
+if [[ -n ${wireless_module} ]] ; then
 	if wireless_exists "${interface}" ; then
 		essidnet_pre_start "${interface}" 1>/dev/null
 	fi
 fi
 
 # Add any search paths if we have any defined
-ifvar=$( bash_variable "${interface}" )
+ifvar="$(bash_variable "${interface}")"
 
-if [[ ${action} == "up" ]]; then
+if [[ ${action} == "up" ]] ; then
 	d="dhcp_${ifvar}"
 	d=" ${!d} "
 	[[ ${d} == "  " ]] && d=" ${dhcp} "
 	resolv="${statedir}/${interface}/resolv.conf"
 
-	if [[ ${d} != *" nodns "* ]]; then
+	if [[ ${d} != *" nodns "* ]] ; then
 		search="dns_search_${ifvar}"
-		if [[ -n ${!search} ]]; then
+		if [[ -n ${!search} ]] ; then
 			tmp="${resolv}.$$"
 			egrep -v "^[ \t]*(search|domain)[ \t]*" "${resolv}" > "${tmp}"
 			echo "search ${!search}" >> "${tmp}" 
@@ -51,7 +51,7 @@ fi
 # As we override the -c option, we need to call the specified script ourself
 opts="dhcpcd_${ifvar}"
 exe="${!opts##* -c }"
-if [[ -n ${exe} && ${exe} != "${!opts}" ]]; then
+if [[ -n ${exe} && ${exe} != "${!opts}" ]] ; then
 	exe="${exe%% *}"
 else
 	exe="/etc/dhcpc/dhcpcd.exe"

@@ -22,8 +22,8 @@ case "${action}" in
 		interface_del_addresses "${interface}" true
 		service_started "${service}" && mark_service_inactive "${service}"
 		remove_state "${interface}"
-		if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
-			best_interface=$( select_best_interface )
+		if [[ ${RC_AUTO_INTERFACE} == "yes" ]] ; then
+			best_interface="$(select_best_interface)"
 			apply_state "${best_interface}"
 		fi
 		echo "${action}"
@@ -44,19 +44,19 @@ esac
 macnet_pre_start "${interface}" 1>/dev/null
 
 # Map wireless ESSID variables to interface variables
-if [[ -n ${wireless_module} ]]; then
+if [[ -n ${wireless_module} ]] ; then
 	if wireless_exists "${interface}" ; then
 		essidnet_pre_start "${interface}" 1>/dev/null
 	fi
 fi
 
 # Calculate the metric for our routes
-ifvar=$( bash_variable "${interface}" )
+ifvar="$(bash_variable "${interface}")"
 metric="metric_${ifvar}"
 metric="${!metric}"
-if [[ -z ${metric} ]]; then
-	if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
-		metric=$( calculate_metric "${interface}" )
+if [[ -z ${metric} ]] ; then
+	if [[ ${RC_AUTO_INTERFACE} == "yes" ]] ; then
+		metric="$(calculate_metric "${interface}")"
 	else
 		metric="0"
 	fi
@@ -66,36 +66,32 @@ fi
 # Configure our IP address
 ip="${ip// /}"
 subnet="${subnet// /}"
-cidr=$( netmask2cidr "${subnet}" )
+cidr="$(netmask2cidr "${subnet}")"
 broadcast="${broadcast// /}"
 [[ -n ${broadcast} ]] && broadcast="broadcast ${broadcast}"
 
 # If we don't have our address then we flush it and then add our new one
-curip=$( interface_get_address "${interface}" )
+curip="$(interface_get_address "${interface}")"
 if [[ ${curip} != "${ip}/${cidr}" ]] ; then
 	# Just remove IPv4 / inet addresses
 	interface_del_addresses "${interface}" true
 	interface_add_address "${interface}" "${ip}/${cidr}" "${broadcast}"
 fi
 
-# Store the address in a cache for future usage
-echo "${ip}" > "/var/cache/dhcp-${interface}.lease"
-chmod 600 "/var/cache/dhcp-${interface}.lease"
-
 d="dhcp_${ifvar}"
 d=" ${!d} "
 [[ ${d} == "  " ]] && d=" ${dhcp} "
 
 # Configure our default route - we only have 1 default route
-if [[ ${d} != *" nogateway "* ]]; then
+if [[ ${d} != *" nogateway "* ]] ; then
 	for r in ${routers}; do
 		interface_default_route "${interface}" "${r}" "${metric:-0}" && break
 	done
 fi
 
 # Configure our hostname - but only if we need it
-if [[ -n ${hostname} ]]; then
-	x=$( hostname )
+if [[ -n ${hostname} ]] ; then
+	x="$(hostname)"
 	[[ ${x} == "(none)" || ${x} == "localhost" ]] && hostname "${hostname}"
 fi
 
@@ -108,8 +104,8 @@ fi
 [[ ${d} != *" nontp "* ]] && system_ntp "${interface}"
 [[ ${d} != *" nonis "* ]] && system_nis "${interface}"
 
-if [[ ${RC_AUTO_INTERFACE} == "yes" ]]; then
-	best_interface=$( select_best_interface )
+if [[ ${RC_AUTO_INTERFACE} == "yes" ]] ; then
+	best_interface="$(select_best_interface)"
 	apply_state "${best_interface}"
 else
 	apply_state "${interface}"

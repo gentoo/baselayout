@@ -331,7 +331,13 @@ iwconfig_associate() {
 	local mac="$3" wep_required="$4" w="(WEP Disabled)"
 	local dessid="${ESSID//\\\\/\\\\}" key
 
-	iwconfig "${iface}" mode "${mode}" 2>/dev/null
+	if ! iwconfig "${iface}" mode "${mode}" ; then
+		eerror "Unable to change mode to ${mode}"
+		return 1
+	fi
+	interface_down "${iface}"
+	interface_up "${iface}"
+
 	if [[ ${ESSID} == "any" ]]; then
 		iwconfig "${iface}" ap any 2>/dev/null
 		dessid="any"
@@ -365,7 +371,7 @@ iwconfig_associate() {
 	fi
 
 	# Finally apply the user Config
-	iwconfig_user_config "${iface}" "${ESSIDVAR}"
+	#iwconfig_user_config "${iface}" "${ESSIDVAR}"
 
 	vebegin "Connecting to \"${dessid}\" ${w}"
 

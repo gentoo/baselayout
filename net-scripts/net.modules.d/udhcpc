@@ -39,26 +39,21 @@ udhcpc_stop() {
 	[[ ! -f ${pidfile} ]] && return 0
 
 	ebegin "Stopping udhcpc on ${iface}"
-	local pid=$( < "${pidfile}" ) e=true
+	local pid="$(<"${pidfile}")" e=true
 
-	local ifvar=$( bash_variable "${iface}" )
+	local ifvar="$(bash_variable "${iface}")"
 	d="dhcp_${ifvar}"
 	d=" ${!d} "
 	[[ ${d} == "  " ]] && d=" ${dhcp} "
 
 	if [[ ${d} == *" release "* ]]; then
 		kill -s USR2 "${pid}" &>/dev/null
-		[[ -f "/var/cache/dhcp-${iface}.lease" ]] \
-			&& rm "/var/cache/dhcp-${iface}.lease"
+		[[ -f "/var/cache/udhcpc-${iface}.lease" ]] \
+			&& rm "/var/cache/udhcpc-${iface}.lease"
 	fi
 
-	kill -s TERM "${pid}" &>/dev/null
-
-	[[ -f ${pidfile} ]] && rm -f "${pidfile}"
-
-	${e}
-	eend "$?"
-	return "$?"
+	start-stop-daemon --stop --exec /sbin/udhcpc --pidfile "${pidfile}"
+	eend $?
 }
 
 # bool udhcpc_start(char *iface)
@@ -68,11 +63,11 @@ udhcpc_stop() {
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 udhcpc_start() {
 	local iface="$1" opts pidfile="/var/run/udhcpc-$1.pid"
-	local cachefile="/var/cache/dhcp-$1.lease" d
+	local cachefile="/var/cache/udhcpc-$1.lease" d
 
 	interface_exists "${iface}" true || return 1
 
-	local ifvar=$( bash_variable "${iface}" ) opts 
+	local ifvar="$(bash_variable "${iface}" )" opts 
 	opts="udhcpc_${ifvar}"
 	opts="${!opts}"
 
@@ -82,7 +77,7 @@ udhcpc_start() {
 
 	if [[ " ${d} " != *" nosendhost "* ]]; then
 		if [[ ! " ${opts}" =~ " -([hH] |-hostname=)" ]]; then
-			local hname=$( hostname )
+			local hname="$(hostname)"
 			[[ -n ${hname} && ${hname} != "(none)" && ${hname} != "localhost" ]] \
 				&& opts="${opts} --hostname=${hname}"
 		fi
@@ -94,22 +89,22 @@ udhcpc_start() {
 	# Try and load the cache if it exists
 	if [[ -f ${cachefile} ]]; then
 		if [[ " ${opts}" != *" --request="* && " ${opts} " != *" -r "* ]]; then
-			local x=$( < "${cachefile}" )
+			local x="$(<"${cachefile}")"
 			# Check for a valid ip
 			[[ ${x} == *.*.*.* ]] && opts="${opts} --request=${x}"
 		fi
 	fi
 
-	x=$( eval udhcpc "${opts}" --now --pidfile="${pidfile}" \
+	x="$( eval udhcpc "${opts}" --now --pidfile="${pidfile}" \
 		--interface="${iface}" \
 		--script="${MODULES_DIR}/helpers.d/udhcpc-wrapper" 2>&1 \
-		| egrep -v '^info,' )
+		| egrep -v '^info,' )"
 	# We just check the last 5 letters
 	[[ ${x:((${#x} - 5)):5} == "bound" ]]
 	eend "$?" "${x}" || return 1
 
 	# DHCP succeeded, show address retrieved
-	local addr=$( interface_get_address "${iface}" )
+	local addr="$(interface_get_address "${iface}")"
 	einfo "${iface} received address ${addr}"
 
 	return 0

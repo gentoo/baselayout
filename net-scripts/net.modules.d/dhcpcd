@@ -4,12 +4,6 @@
 
 # Contributed by Roy Marples (uberlord@gentoo.org)
 
-# Fix any potential localisation problems
-# Note that LC_ALL trumps LC_anything_else according to locale(7)
-dhcpcd() {
-	LC_ALL=C /sbin/dhcpcd "$@"
-}
-
 # void dhcpcd_depend(void)
 #
 # Sets up the dependancies for the module
@@ -44,28 +38,23 @@ dhcpcd_check_installed() {
 # Returns 0 (true) when a DHCP address dropped
 # otherwise return 1
 dhcpcd_stop() {
-	local iface=$1 count signal pidfile="/var/run/dhcpcd-$1.pid" d
+	local iface=$1 signal pidfile="/var/run/dhcpcd-$1.pid" d
 
 	[[ ! -f ${pidfile} ]] && return 0
 
 	ebegin "Stopping dhcpcd on ${iface}"
-	local pid=$( < "${pidfile}" )
-
-	local ifvar=$( bash_variable "${iface}" )
+	
+	local ifvar="$(bash_variable "${iface}")"
 	d="dhcp_${ifvar}"
 	d=" ${!d} "
 	[[ ${d} == "  " ]] && d=" ${dhcp} "
 
-	if [[ ${d} == *" release "* ]]; then
-		signal="HUP"
+	if [[ ${d} == *" release "* ]] ; then
+		/sbin/dhcpcd -k "${iface}"
 	else
-		signal="TERM"
+		start-stop-daemon --stop --exec /sbin/dhcpcd --pidfile "${pidfile}"
 	fi
-
-	kill -s "${signal}" "${pid}" &>/dev/null 
-	process_finished "${pid}" dhcpcd
 	eend $? "timed out"
-	return $?
 }
 
 # bool dhcpcd_start(char *iface)
@@ -75,7 +64,7 @@ dhcpcd_stop() {
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 dhcpcd_start() {
 	local iface="$1" opts pidfile="/var/run/dhcpcd-$1.pid"
-	local ifvar=$( bash_variable "${iface}" ) metric d
+	local ifvar="$(bash_variable "${iface}")" metric d
 
 	interface_exists "${iface}" true || return 1
 
@@ -94,7 +83,7 @@ dhcpcd_start() {
 
 	# We transmit the hostname by default:q
 	if [[ " ${d} " != *" nosendhost "* && " ${opts} " != *" -h "* ]]; then
-		local hname=$( hostname )
+		local hname="$(hostname)"
 		[[ -n ${hname} && ${hname} != "(none)" && ${hname} != "localhost" ]] \
 			&& opts="-h \"${hname}\" ${opts}"
 	fi
@@ -116,11 +105,11 @@ dhcpcd_start() {
 	ebegin "Running dhcpcd"
 
 	[[ ! -d "${statedir}/${iface}" ]] && mkdir -m 0755 -p "${statedir}/${iface}"
-	eval dhcpcd "${opts}" "${iface}"
+	eval /sbin/dhcpcd "${opts}" "${iface}"
 	eend $? || return 1
 
 	# DHCP succeeded, show address retrieved
-	local addr=$( interface_get_address "${iface}" )
+	local addr="$( interface_get_address "${iface}" )"
 	einfo "${iface} received address ${addr}"
 
 	return 0

@@ -62,7 +62,7 @@ vlan_check_kernel() {
 #
 # Setup vconfig
 vlan_pre_start() {
-	local iface="$1" opts i x e ifvar=$( bash_variable "$1" )
+	local iface="$1" opts i x e ifvar="$(bash_variable "$1")"
 	
 	opts="vconfig_${ifvar}[@]"
 	[[ -z ${!opts} ]] && return 0
@@ -71,14 +71,14 @@ vlan_pre_start() {
 	vlan_check_kernel || return 1
 	interface_exists "${iface}" || return 1
 
-	for (( i=0; i<${#opts[@]}; i++ )); do
+	for (( i=0; i<${#opts[@]}; i++ )) ; do
 		if [[ ${opts[i]} == "set_name_type "* ]]; then
 			x="${opts[i]}"
 		else
 			x="${opts[i]/ / ${iface} }"
 			[[ ${x} == "${opts[i]}" ]] && x="${x} ${iface}"
 		fi
-		e=$( vconfig ${x} 2>&1 1>/dev/null )
+		e="$(vconfig ${x} 2>&1 1>/dev/null)"
 		[[ -z ${e} ]] && continue
 		eerror "vconfig ${x}"
 		eerror "${e}"
@@ -94,7 +94,7 @@ vlan_pre_start() {
 #
 # Always returns 0 (true) 
 vlan_post_start() {
-	local iface="$1" vlan vlans vlans_old e ifname ifvar=$( bash_variable "$1" )
+	local iface="$1" vlan vlans vlans_old e ifname ifvar="$(bash_variable "$1")"
 
 	vlans="vlans_${ifvar}[@]"
 
@@ -108,9 +108,9 @@ vlan_post_start() {
 	interface_exists "${iface}" true || return 1
 
 	# Start vlans for this interface
-	for vlan in ${!vlans}; do
+	for vlan in ${!vlans} ; do
 		einfo "Adding VLAN ${vlan} to ${iface}"
-		e=$( vconfig add "${iface}" "${vlan}" 2>&1 1>/dev/null )
+		e="$(vconfig add "${iface}" "${vlan}" 2>&1 1>/dev/null)"
 		if [[ -n ${e} ]] ; then
 			eend 1 "${e}"
 			continue
@@ -118,10 +118,10 @@ vlan_post_start() {
 		eend 0
 
 		# We need to work out the interface name of our new vlan id
-		ifname=$( \
+		ifname="$( \
 			sed -n -e 's/^\([^ \t]*\) *| '"${vlan}"' *| .*'"${iface}"'$/\1/p' \
 			/proc/net/vlan/config
-		)
+		)"
 		iface_start "${ifname}"
 	done
 
@@ -138,7 +138,7 @@ vlan_stop() {
 
 	vlan_check_installed || return 0
 
-	for vlan in $( vlan_get_vlans "${iface}" ); do
+	for vlan in $(vlan_get_vlans "${iface}"); do
 		einfo "Removing VLAN ${vlan##*.} from ${iface}"
 		iface_stop "${vlan}"
 		vconfig rem "${vlan}" >/dev/null

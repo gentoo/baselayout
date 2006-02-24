@@ -34,7 +34,7 @@ bonding_exists() {
 #
 # Bonds the interface
 bonding_pre_start() {
-	local iface="$1" s ifvar=$( bash_variable "$1" )
+	local iface="$1" s ifvar="$(bash_variable "$1")"
 	local -a slaves
 
 	slaves="slaves_${ifvar}[@]"
@@ -71,7 +71,7 @@ bonding_pre_start() {
 
 	# finally add in slaves
 	eoutdent
-	eval /sbin/ifenslave "${iface}" "${slaves[@]}" >/dev/null
+	/sbin/ifenslave "${iface}" ${slaves[@]} >/dev/null
 	eend $?
 
 	return 0 #important
@@ -89,7 +89,8 @@ bonding_stop() {
 
 	# don't trust the config, get the active list instead
 	slaves="$( \
-		sed -n -e 's/^Slave Interface: //p' /proc/net/bonding/${iface} | xargs \
+		sed -n -e 's/^Slave Interface: //p' "/proc/net/bonding/${iface}" \
+		| xargs \
 	)"
 	[[ -z ${slaves} ]] && return 0
 

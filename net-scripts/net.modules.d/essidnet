@@ -7,8 +7,8 @@
 # motivation for me to make this and keep on improving it
 
 # Load our config if it exists
-[[ -f $(add_suffix "/etc/conf.d/wireless" ) ]] \
-	&& source $(add_suffix "/etc/conf.d/wireless" )
+[[ -f "$(add_suffix "/etc/conf.d/wireless" )" ]] \
+	&& source "$(add_suffix "/etc/conf.d/wireless" )"
 
 # void essidnet_depend(void)
 #
@@ -32,9 +32,9 @@ essidnet_pre_start() {
 
 	wireless_exists "${iface}" || return 0
 
-	local mac=$( wireless_get_ap_mac_address "${iface}" )
-	local ESSID=$( wireless_get_essid "${iface}" )
-	local essid=$( bash_variable ${ESSID} )
+	local mac="$(wireless_get_ap_mac_address "${iface}")"
+	local ESSID="$(wireless_get_essid "${iface}")"
+	local essid="$(bash_variable "${ESSID}")"
 	mac="${mac//:/}"
 
 	vebegin "Configuring ${iface} for ESSID \"${ESSID//\\\\/\\\\}\"" 2>/dev/null

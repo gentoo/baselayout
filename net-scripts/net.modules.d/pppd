@@ -63,19 +63,19 @@ pppd_update_secrets_file() {
 	fi
 
 	#escape username and remotename, used in following sed calls
-	local regex_username=$(pppd_regex_escape ${username})
-	local regex_remotename=$(pppd_regex_escape ${remotename})
+	local regex_username="$(pppd_regex_escape "${username}")"
+	local regex_remotename="$(pppd_regex_escape "${remotename}")"
 	local regex_password
 	local regex_filter="[ \t]*\"?${regex_username}\"?[ \t]*\"?${regex_remotename}\"?[ \t]*"
 
 	#read old password, including " chars 
 	#for being able to distinct when we need to add or update auth info
-	local old_password=$(
+	local old_password="$(
 	sed -r -e "/^${regex_filter}\".*\"[ \t]*\$/\
 		{s/^${regex_filter}(\".*\")[ \t]*\$/\1/;q;};\
 		d;" \
-		${filepath}
-	)
+		"${filepath}"
+	)"
 
 	if [[ -z "${old_password}" ]] ; then
 		regex_username="${username//\\/\\\\}"
@@ -103,7 +103,7 @@ pppd_update_secrets_file() {
 pppd_start() {
 	${IN_BACKGROUND} && return 0
 
-	local iface="$1" ifvar=$( bash_variable "$1" ) opts="" link
+	local iface="$1" ifvar="$(bash_variable "$1")" opts="" link
 	if [[ ${iface%%[0-9]*} != "ppp" ]] ; then
 		eerror "PPP can only be invoked from net.ppp[0-9]"
 		return 1
@@ -250,7 +250,7 @@ pppd_start() {
 	fi
 
 	if [[ " ${opts} " == *" updetach "* ]] ; then
-		local addr=$( interface_get_address "${iface}" )
+		local addr="$(interface_get_address "${iface}")"
 		einfo "${iface} received address ${addr}"
 	else
 		einfo "Backgrounding ..."

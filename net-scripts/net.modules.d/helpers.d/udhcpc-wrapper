@@ -18,4 +18,10 @@ export nis_servers_${interface}="${nissrv}"
 . /sbin/functions.sh
 "${svclib}/net.modules.d/helpers.d/dhcp" "$@"
 
+if [[ $? == 0 ]] && [[ $1 == "bound" || $1 == "renew" ]] ; then
+	# Store the address in a cache for future usage
+	echo "${ip// /}" > "/var/cache/udhcpc-${interface}.lease"
+	chmod 600 "/var/cache/udhcpc-${interface}.lease"
+fi
+
 # vim:ts=4
