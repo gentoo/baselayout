@@ -378,9 +378,9 @@ if [[ ${SOFTLEVEL} == "reboot" || ${SOFTLEVEL} == "shutdown" ]] ; then
 	source /etc/init.d/halt.sh
 	
 	if [[ ${SOFTLEVEL} == "reboot" ]] ; then
-		source /etc/init.d/reboot.sh
+		[[ -x /etc/init.d/reboot.sh ]] && source /etc/init.d/reboot.sh
 	else
-		source /etc/init.d/shutdown.sh
+		[[ -x /etc/init.d/shutdown.sh ]] && source /etc/init.d/shutdown.sh
 	fi
 	
 	# Should never get here
