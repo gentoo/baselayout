@@ -159,7 +159,8 @@ freebsd_del_addresses() {
 	freebsd_exists "${iface}" || return 0
 
 	while ifconfig "${iface}" | grep -q -m1 -o 'inet [^ ]*' ; do
-		ifconfig "${iface}" -alias $(freebsd_get_address)
+		local addr=$(freebsd_get_address ${iface})
+		ifconfig "${iface}" -alias ${addr%%/*}
 	done
 
 	# Remove IPv6 addresses
