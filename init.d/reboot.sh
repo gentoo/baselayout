@@ -2,10 +2,10 @@
 # Distributed under the terms of the GNU General Public License v2
 
 case $(uname -s) in
-	Linux | GNU* ) opts="-idk"; forceopts="-f" ;;
+	Linux | GNU* ) opts="-pidk"; forceopts="-f" ;;
 esac
 
-/sbin/reboot -p "${opts}"
+/sbin/reboot "${opts}"
 
 # hmm, if the above failed, that's kind of odd ...
 # so let's force a reboot
