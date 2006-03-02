@@ -1,6 +1,20 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  02 Mar 2006; Roy Marples <uberlord@gentoo.org>:
+
+    $myservice is now deprecated for init scripts.
+    $SVCNAME should be used instead and is read-only so it cannot be
+    clobbered.
+
+    Several variables in global scope that provided functions rely on,
+    such as BOOTLEVEL, SOFTLEVEL and svcdir are now read only for init
+    scripts.
+
+    depscan.sh now accepts the --svcdir option so that svcdir can now be
+    specified as the variable is marked readonly in functions.sh. Splash
+    programs will have to be updated.
+
   24 Feb 2006; Roy Marples <uberlord@gentoo.org>:
 
     Misc STYLE and quoting issues fixes in net scripts.

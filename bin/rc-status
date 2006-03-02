@@ -1,0 +1,238 @@
+#!/bin/bash
+################################################################################
+#                                                                              #
+#  Author: Sean E. Russell <ser@germane-software.com>                          #
+#  Version: 1.0                                                                #
+#  Date: Jun 26, 2002                                                          #
+#  Adaptation: Mike Frysinger [SpanKY] <vapier@gentoo.org>                     #
+#      Original code was in Ruby ... recoded into bash (at syntax level)       #
+#                                                                              #
+#  This application displays information about the RC system used by Gentoo.   #
+#  In particular, it displays a tree-like format of a run level, showing       #
+#  all of the services that are installed at that level, and what each         #
+#  service's status is (running, stopped, etc.)                                #
+#                                                                              #
+#  -a can be used to display all runlevels                                     #
+#  -d can be used to display service dependancies                              #
+#  -u will display all unassigned services                                     #
+#  -s will display all services                                                #
+#  -h will display help                                                        #
+#  <runlevel> is used to choose the run level for which information is         #
+#             displayed                                                        #
+#                                                                              #
+#  By default, rc-status only displays information about the current           #
+#  runlevel; services installed and services running.                          #
+#                                                                              #
+################################################################################
+
+# grab code from functions.sh so we don't have to reproduce it
+source /sbin/functions.sh
+runleveldir=/etc/runlevels
+
+# grab settings from conf.d/rc
+source "${svclib}/sh/rc-daemon.sh"
+
+################################################################################
+#  Parse command line options                                                  #
+################################################################################
+do_opt() {
+	case $1 in
+		--all|-a)
+			ALL=true
+			;;
+		--depend)
+			DEPEND=true
+			;;
+		--unused|-u)
+			ALL=true
+			UNUSED=true
+			;;
+		--list|-l)
+			ls -1 ${runleveldir}
+			exit 0
+			;;
+		--servicelist|-s)
+			ALL=true
+			SERVICELIST=true
+			;;
+		--nocolor|-nc)
+			;;
+		--help|-h|-*)
+			echo "USAGE: $0 [command | <runlevel>]"
+			echo
+			echo "Commands:"
+			echo "  -a, --all          Show services at all run levels"
+			echo "  -l, --list         Show list of run levels"
+			echo "  -u, --unused       Show services not assigned to any run level"
+			echo "  -s, --servicelist  Show service list"
+			echo "  -nc,--nocolor      Monochrome output only"
+			echo "  <runlevel>         Show services assigned to <runlevel>"
+			echo
+			echo "If no arguments are supplied, shows services for current run level."
+			exit 0
+			;;
+		*)
+			runlevel=$1
+			;;
+	esac
+}
+for opt in "$@" ; do
+	do_opt ${opt}
+	[[ -n $2 ]] && shift
+done
+
+################################################################################
+#  Find the current runlevel being queried.  This is either something supplied #
+#  on the command line, or pulled from softlevel                               #
+################################################################################
+if [[ -z ${runlevel} ]] ; then
+	if [[ -e ${svcdir}/softlevel ]] ; then
+		runlevel=$(<${svcdir}/softlevel)
+	else
+		ewarn "Could not locate current runlevel in ${svcdir}/softlevel"
+		if [[ -d ${runleveldir}/single ]] ; then
+			runlevel=single
+		elif [[ -d ${runleveldir}/default ]] ; then
+			runlevel=default
+		else
+			eerror "Your installation is probably broken ... please \`emerge baselayout\`"
+			exit 1
+		fi
+		ewarn "Assuming current runlevel is '${runlevel}'"
+	fi
+fi
+if [[ ! -d ${runleveldir}/${runlevel} ]] ; then
+	eerror "${runlevel} is not a valid run level !"
+	eerror "Valid runlevels (obtained from \`rc-status --list\`):"
+	rc-status --list
+	exit 1
+fi
+
+################################################################################
+# Build up a hash of the services associated with each run level.  In the most #
+# trivial case, this is simply the current runlevel.  If --all was specified,  #
+# we gather information about all of the runlevels.  If --unused was           #
+# specified, we pull info about all of the services and filter for the ones    #
+# that don't appear in any runlevel.                                           #
+################################################################################
+runlevelidxs=$(ls ${runleveldir})
+declare -a runlevels
+# For each directory in /etc/runlevels, do ...
+arridx=0
+for level in ${runlevelidxs} ; do
+	if [[ ${level} == ${runlevel} || -n ${ALL} ]] ; then
+		runlevels[${arridx}]=$(find ${runleveldir}/${level} -maxdepth 1 -type l -printf '%f ')
+		let "arridx += 1"
+	fi
+done
+
+# In case --all was specified, get a list of all the services set up in
+# /etc/init.d; services can be added, but not enabled, and we need to
+# identify these 'orphan' services.
+in_list() { #$1=list  $2=find
+	for ele in $1 ; do
+		if [[ ${ele} == $2 ]] ; then
+			echo 1
+			return 0
+		fi
+	done
+	echo 0
+	return 0
+}
+if [[ -n ${ALL} ]] ; then
+	unassigned=
+	allservices=
+	for service in $(ls -1 /etc/init.d | grep -v '\.sh$') ; do
+		if [[ $(in_list "${runlevels[*]}" "${service}") -eq 0 ]] ; then
+			unassigned="${unassigned} ${service}"
+		fi
+		allservices="${allservices} ${service}"
+	done
+	runlevelidxs="${runlevelidxs} UNASSIGNED"
+	runlevels[${arridx}]="${unassigned}"
+	runlevels[${arridx}+1]="${allservices}"
+fi
+
+################################################################################
+#  Now collect information about the status of the various services; whether   #
+#  they're started, broken, or failed.  Put all of this into arrays.           #
+################################################################################
+if [[ -x ${svcdir}/started ]]; then
+    started=$(ls ${svcdir}/started)
+    # If we're root then update service statuses incase any naughty daemons
+    # stopped running without our say so
+    if [[ ${EUID} == 0 ]]; then
+	for service in ${started}; do
+	    update_service_status "${service}"
+	done
+	started=$(ls ${svcdir}/started)
+    fi
+fi
+[[ -x ${svcdir}/starting ]] && starting=$(ls ${svcdir}/starting)
+[[ -x ${svcdir}/inactive ]] && inactive=$(ls ${svcdir}/inactive)
+[[ -x ${svcdir}/stopping ]] && stopping=$(ls ${svcdir}/stopping)
+
+################################################################################
+#  Now print out the information we've gathered.  We do this by going through  #
+#  the hash of 'runlevels' information, and for each String key/Array value    #
+#  pair, print the runlevel; then for each service in that runlevel, print the #
+#  service name and its status.                                                #
+################################################################################
+# Define a helper method for printing the status of a service; '[ xxx ]'
+print_msg() {
+	printf " %-$((COLS - 5 - ${#3}))s%s\n" "$1" "${BRACKET}[ $2$3 ${BRACKET}]${NORMAL}"
+}
+
+# if --all wasnt specified, dont print everything
+[[ -z ${ALL} ]] && runlevelidxs=${runlevel}
+if [[ -z ${UNUSED} ]] ; then
+	if [[ -z ${SERVICELIST} ]] ; then
+		arridx=0
+	else
+		runlevelidxs="all"
+		let "arridx += 1"
+	fi
+else
+	runlevelidxs="unused"
+fi
+
+if [[ -f "/etc/runlevels/${BOOTLEVEL}/.critical" ]]; then
+	boot_crit=
+	for x in $(< "/etc/runlevels/${BOOTLEVEL}/.critical"); do
+		boot_crit="${boot_crit} ${x##*/}"
+	done
+else
+	boot_crit="checkroot hostname modules checkfs localmount clock"
+fi
+
+broken=""
+for level in ${runlevelidxs} ; do
+	echo "Runlevel: ${HILITE}${level}${NORMAL}"
+	for service in ${runlevels[${arridx}]} ; do
+		if [[ ! -e "${runleveldir}/${level}/${service}" \
+			&& ${level} != "UNASSIGNED" \
+			]] && [[ ${level} != "${BOOTLEVEL}" \
+			|| " ${boot_crit} " != *" ${service} "* ]]; then
+			print_msg "${service}" "${BAD}" 'broken  '
+			broken="${broken} ${service}"
+		elif [[ -n ${stopping} && $(in_list "${stopping}" "${service}") -eq 1 ]] ; then
+			print_msg "${service}" "${BAD}" 'stopping'
+		elif [[ -n ${starting} && $(in_list "${starting}" "${service}") -eq 1 ]] ; then
+			print_msg "${service}" "${GOOD}" 'starting'
+		elif [[ -n ${inactive} && $(in_list "${inactive}" "${service}") -eq 1 ]] ; then
+			print_msg "${service}" "${WARN}" 'inactive'
+		elif [[ $(in_list "${started}" "${service}") -eq 1 ]] ; then
+			print_msg "${service}" "${GOOD}" 'started '
+		else
+			print_msg "${service}" "${BAD}" 'stopped '
+		fi
+	done
+	let "arridx += 1"
+	[ -n "${UNUSED}" ] && exit 0
+done
+
+if [[ -n ${broken} ]]; then
+    eerror "You have some broken symbolic links as reported by the broken"
+    eerror "status above. This can be fixed by removing the broken service"
+    eerror "from its runlevel and re-adding it back using rc-update."
+fi
