@@ -10,7 +10,7 @@ RC_GOT_SERVICES="yes"
 
 if [ "${RC_GOT_DEPTREE_INFO}" != "yes" ]
 then
-	if ! /sbin/depscan.sh -u
+	if ! /sbin/depscan.sh
 	then
 		echo
 		eerror "Error running '/sbin/depscan.sh'!"

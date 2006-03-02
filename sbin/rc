@@ -407,7 +407,7 @@ then
 	         grep -ve '\(depcache\|deptree\|envcache\)')
 
 	# Update the dependency cache
-	/sbin/depscan.sh -u
+	/sbin/depscan.sh
 
 	# Now that the dependency cache are up to date, make sure these
 	# are marked as started ...
