@@ -2,14 +2,13 @@
 # Distributed under the terms of the GNU General Public License v2
 
 # RC Dependency and misc service functions
-
-RC_GOT_SERVICES="yes"
+RC_GOT_SVCNAMES="yes"
 
 [[ ${RC_GOT_FUNCTIONS} != "yes" ]] && source /sbin/functions.sh
 
 if [[ ${RC_GOT_DEPTREE_INFO} != "yes" ]] ; then
 	# Only try and update if we are root
-	if [[ ${EUID} == "0" ]] && ! /sbin/depscan.sh -u ; then
+	if [[ ${EUID} == "0" ]] && ! /sbin/depscan.sh ; then
 		echo
 		eerror "Error running '/sbin/depscan.sh'!"
 		eerror "Please correct any problems above."
@@ -141,18 +140,18 @@ check_dependency() {
 	fi
 
 	# Do we have valid info for 'deptype' ?
-	eval deps=\"\$\{rc_$1\}\"
-	[[ -z ${deps} ]] && return 1
+	deps="rc_$1"
+	[[ -z ${!deps} ]] && return 1
 
 	if [[ $2 == "-t" && -n $4 ]]; then
 		# Check if 'service1' have 'deptype' dependency on 'service2'
-		for x in ${deps} ; do
+		for x in ${!deps} ; do
 			[[ ${x} == "$4" ]] && return 0
 		done
 		return 1
 	else
 		# Just list all services that 'service1' have 'deptype' dependency on.
-		echo "${deps}"
+		echo "${!deps}"
 		return 0
 	fi
 }
@@ -518,7 +517,7 @@ mark_service_stopped() {
 	rm -Rf "${svcdir}/daemons/$1" "${svcdir}/starting/$1" \
 		"${svcdir}/started/$1" "${svcdir}/inactive/$1" \
 		"${svcdir}/wasinactive/$1" "${svcdir}/stopping/$1" \
-		"${svcdir}/scheduled/$1"
+		"${svcdir}/scheduled/$1" "${svcdir}/options/$1"
 
 	return 0
 }
@@ -730,10 +729,10 @@ trace_dependencies() {
 
 	if [[ $1 == -* ]]; then
 		deptype="${1/-/}"
-		if net_service "${myservice}" ; then
-			services=( "net" "${myservice}" )
+		if net_service "${SVCNAME}" ; then
+			services=( "net" "${SVCNAME}" )
 		else
-			services=( "${myservice}" )
+			services=( "${SVCNAME}" )
 		fi
 	fi
 
@@ -808,10 +807,10 @@ trace_dependencies() {
 	if [[ -n ${deptype} ]] ; then
 		# If deptype is set, we do not want the name of this service
 		x=" ${services[@]} "
-		services=( ${x// ${myservice} / } )
+		services=( ${x// ${SVCNAME} / } )
 
 		# If its a net service, do not include "net"
-		if net_service "${myservice}" ; then
+		if net_service "${SVCNAME}" ; then
 			x=" ${services[@]} "
 			sorted=( ${services// net / } )
 		fi

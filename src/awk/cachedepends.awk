@@ -30,9 +30,13 @@ function print_start() {
 function print_header1(mtime) {
 	print "#*** " MYFILENAME " ***" >> TMPCACHE
 	print "" >> TMPCACHE
-	print "myservice=\"" MYFILENAME "\"" >> TMPCACHE
-	print "myservice=\"${myservice##*/}\"" >> TMPCACHE
-	print "echo \"RCSCRIPT ${myservice}\"" >> TMPCACHE
+	print "SVCNAME=\"" MYFILENAME "\"" >> TMPCACHE
+	print "SVCNAME=\"${SVCNAME##*/}\"" >> TMPCACHE
+
+	# Support deprected myservice variable
+	print "myservice=\"${SVCNAME}\"" >> TMPCACHE
+	
+	print "echo \"RCSCRIPT ${SVCNAME}\"" >> TMPCACHE
 	print "" >> TMPCACHE
 	print "echo \"MTIME " mtime "\"" >> TMPCACHE
 	print "" >> TMPCACHE
@@ -42,11 +46,11 @@ function print_header2(mtime) {
 	print "(" >> TMPCACHE
 	print "  # Get settings for rc-script ..." >> TMPCACHE
 	print "" >> TMPCACHE
-	print "  [ -e \"/etc/conf.d/${myservice}\" ]        && source \"/etc/conf.d/${myservice}\"" >> TMPCACHE
-	print "" >> TMPCACHE
 	print "  [ -e /etc/conf.d/net ]                   && \\" >> TMPCACHE
-	print "  [ \"${myservice%%.*}\" = \"net\" ]           && \\" >> TMPCACHE
-	print "  [ \"${myservice##*.}\" != \"${myservice}\" ] && source /etc/conf.d/net" >> TMPCACHE
+	print "  [ \"${SVCNAME%%.*}\" = \"net\" ]           && \\" >> TMPCACHE
+	print "  [ \"${SVCNAME##*.}\" != \"${SVCNAME}\" ] && source /etc/conf.d/net" >> TMPCACHE
+	print "" >> TMPCACHE
+	print "  [ -e \"/etc/conf.d/${SVCNAME}\" ]        && source \"/etc/conf.d/${SVCNAME}\"" >> TMPCACHE
 	print "" >> TMPCACHE
 	print "  [ -e /etc/rc.conf ]                      && source /etc/rc.conf" >> TMPCACHE
 	print "" >> TMPCACHE

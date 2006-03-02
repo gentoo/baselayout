@@ -20,11 +20,11 @@ if [[ -z ${myscript} ]] ; then
 fi
 
 if [[ -L ${myscript} ]] ; then
-	myservice=$(readlink "${myscript}")
+	SERVICE=$(readlink "${myscript}")
 else
-	myservice=${myscript}
+	SERVICE=${myscript}
 fi
-myservice=${myservice##*/}
+SERVICE=${SERVICE##*/}
 
 if [[ $2 == "help" ]] ; then
 	BE_VERBOSE="yes"
@@ -44,7 +44,7 @@ ${GREEN}Gentoo RC-Scripts; ${BLUE}http://www.gentoo.org/${OFF}
 "
 fi
 
-echo -e "Usage: ${CYAN}${myservice}${OFF} [ ${GREEN}flags${OFF} ] < ${GREEN}options${OFF} >
+echo -e "Usage: ${CYAN}${SERVICE}${OFF} [ ${GREEN}flags${OFF} ] < ${GREEN}options${OFF} >
 
 ${CYAN}Normal Options:${OFF}"
 
@@ -221,7 +221,7 @@ echo -e "
 "
 fi
 
-echo -e "    /etc/conf.d/${myservice}${NL}    /etc/rc.conf"
+echo -e "    /etc/conf.d/${SERVICE}${NL}    /etc/rc.conf"
 
 if [[ ${BE_VERBOSE} == "yes" ]] ; then
 echo -e "

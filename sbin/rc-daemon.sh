@@ -12,13 +12,11 @@
 # when we're testing for the daemon to be running. I (Roy Marples) view this
 # as behaviour by design as start-stop-daemon should not be used to run shell
 # scripts!
-# At the time of writing, the only culprit I know of is courier-imap.
-# There may be others!
 
 RC_GOT_DAEMON="yes"
 
 [[ ${RC_GOT_FUNCTIONS} != "yes" ]] && source /sbin/functions.sh
-[[ ${RC_GOT_SERVICES} != "yes" ]] && source "${svclib}/sh/rc-services.sh"
+[[ ${RC_GOT_SVCNAMES} != "yes" ]] && source "${svclib}/sh/rc-services.sh"
 
 RC_RETRY_KILL="no"
 RC_RETRY_TIMEOUT=1
@@ -100,7 +98,7 @@ rc_setup_daemon_vars() {
 
 	# We may want to launch the daemon with a custom command
 	# This is mainly useful for debugging with apps like valgrind, strace
-	local bash_service="$( bash_variable "${myservice}" )"
+	local bash_service="$( bash_variable "${SVCNAME}" )"
 	if [[ -n ${RC_DAEMON} ]]; then
 		local -a d=( ${RC_DAEMON} )
 		if ${stopping}; then
@@ -357,7 +355,7 @@ update_service_status() {
 start-stop-daemon() {
 	local args="$( requote "$@" )" result i
 	local cmd pidfile pid stopping signal nothing=false 
-	local daemonfile="${svcdir}/daemons/${myservice}"
+	local daemonfile="${svcdir}/daemons/${SVCNAME}"
 	local -a RC_DAEMONS=() RC_PIDFILES=()
 
 	[[ -e ${daemonfile} ]] && source "${daemonfile}"

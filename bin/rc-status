@@ -31,8 +31,6 @@ runleveldir=/etc/runlevels
 
 # grab settings from conf.d/rc
 source "${svclib}/sh/rc-daemon.sh"
-conf="$(add_suffix /etc/conf.d/rc)"
-[[ -e ${conf} ]] && source "${conf}"
 
 ################################################################################
 #  Parse command line options                                                  #

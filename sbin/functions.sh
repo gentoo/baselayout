@@ -4,17 +4,17 @@
 RC_GOT_FUNCTIONS="yes"
 
 # Override defaults with user settings ...
-[ -f /etc/conf.d/rc ] && source /etc/conf.d/rc
+[[ -f /etc/conf.d/rc ]] && source /etc/conf.d/rc
 
 # daemontools dir
 SVCDIR="/var/lib/supervise"
 
 # Check /etc/conf.d/rc for a description of these ...
-svclib="/lib/rcscripts"
-svcdir=${svcdir:-/var/lib/init.d}
-svcmount=${svcmount:-no}
-svcfstype=${svcfstype:-tmpfs}
-svcsize=${svcsize:-1024}
+declare -r svclib="/lib/rcscripts"
+declare -r svcdir="${svcdir:-/var/lib/init.d}"
+svcmount="${svcmount:-no}"
+svcfstype="${svcfstype:-tmpfs}"
+svcsize="${svcsize:-1024}"
 
 # Different types of dependencies
 deptypes="need use"
@@ -26,25 +26,25 @@ ordtypes="before after"
 #
 
 # Dont output to stdout?
-RC_QUIET_STDOUT=${RC_QUIET_STDOUT:-no}
-RC_VERBOSE=${RC_VERBOSE:-no}
+RC_QUIET_STDOUT="${RC_QUIET_STDOUT:-no}"
+RC_VERBOSE="${RC_VERBOSE:-no}"
 
 # Should we use color?
-RC_NOCOLOR=${RC_NOCOLOR:-no}
+RC_NOCOLOR="${RC_NOCOLOR:-no}"
 # Can the terminal handle endcols?
 RC_ENDCOL="yes"
 
 #
 # Default values for rc system
 #
-RC_TTY_NUMBER=${RC_TTY_NUMBER:-11}
-RC_PARALLEL_STARTUP=${RC_PARALLEL_STARTUP:-no}
-RC_NET_STRICT_CHECKING=${RC_NET_STRICT_CHECKING:-no}
-RC_USE_FSTAB=${RC_USE_FSTAB:-no}
-RC_USE_CONFIG_PROFILE=${RC_USE_CONFIG_PROFILE:-yes}
-RC_FORCE_AUTO=${RC_FORCE_AUTO:-no}
-RC_DEVICES=${RC_DEVICES:-auto}
-RC_DOWN_INTERFACE=${RC_DOWN_INTERFACE:-yes}
+RC_TTY_NUMBER="${RC_TTY_NUMBER:-11}"
+RC_PARALLEL_STARTUP="${RC_PARALLEL_STARTUP:-no}"
+RC_NET_STRICT_CHECKING="${RC_NET_STRICT_CHECKING:-no}"
+RC_USE_FSTAB="${RC_USE_FSTAB:-no}"
+RC_USE_CONFIG_PROFILE="${RC_USE_CONFIG_PROFILE:-yes}"
+RC_FORCE_AUTO="${RC_FORCE_AUTO:-no}"
+RC_DEVICES="${RC_DEVICES:-auto}"
+RC_DOWN_INTERFACE="${RC_DOWN_INTERFACE:-yes}"
 
 #
 # Default values for e-message indentation and dots
@@ -171,9 +171,9 @@ get_libdir() {
 	if [[ -n ${CONF_LIBDIR_OVERRIDE} ]] ; then
 		CONF_LIBDIR="${CONF_LIBDIR_OVERRIDE}"
 	elif [[ -x /usr/bin/portageq ]] ; then
-		CONF_LIBDIR=$(/usr/bin/portageq envvar CONF_LIBDIR)
+		CONF_LIBDIR="$(/usr/bin/portageq envvar CONF_LIBDIR)"
 	fi
-	echo ${CONF_LIBDIR:=lib}
+	echo "${CONF_LIBDIR:=lib}"
 }
 
 # void esyslog(char* priority, char* tag, char* message)
@@ -293,12 +293,12 @@ eerror() {
 #    show a message indicating the start of a process
 #
 ebegin() {
-	local msg="$*" dots spaces=${RC_DOT_PATTERN//?/ }
+	local msg="$*" dots spaces="${RC_DOT_PATTERN//?/ }"
 	[[ ${RC_QUIET_STDOUT} == "yes" ]] && return 0
 
 	if [[ -n ${RC_DOT_PATTERN} ]] ; then
-		dots=$(printf "%$(( COLS - 3 - ${#RC_INDENTATION} - ${#msg} - 7 ))s" '')
-		dots=${dots//${spaces}/${RC_DOT_PATTERN}}
+		dots="$(printf "%$((COLS - 3 - ${#RC_INDENTATION} - ${#msg} - 7))s" '')"
+		dots="${dots//${spaces}/${RC_DOT_PATTERN}}"
 		msg="${msg}${dots}"
 	else
 		msg="${msg} ..."
@@ -306,7 +306,7 @@ ebegin() {
 	einfon "${msg}"
 	[[ ${RC_ENDCOL} == "yes" ]] && echo
 
-	LAST_E_LEN=$(( 3 + ${#RC_INDENTATION} + ${#msg} ))
+	LAST_E_LEN="$(( 3 + ${#RC_INDENTATION} + ${#msg} ))"
 	LAST_E_CMD="ebegin"
 	return 0
 }
@@ -320,7 +320,7 @@ ebegin() {
 #    script.
 #
 _eend() {
-	local retval=${1:-0} efunc=${2:-eerror} msg
+	local retval="${1:-0}" efunc="${2:-eerror}" msg
 	shift 2
 
 	if [[ ${retval} == "0" ]] ; then
@@ -354,10 +354,10 @@ _eend() {
 #    if error, show errstr via eerror
 #
 eend() {
-	local retval=${1:-0}
+	local retval="${1:-0}"
 	shift
 
-	_eend ${retval} eerror "$*"
+	_eend "${retval}" eerror "$*"
 
 	LAST_E_CMD="eend"
 	return ${retval}
@@ -369,10 +369,10 @@ eend() {
 #    if error, show errstr via ewarn
 #
 ewend() {
-	local retval=${1:-0}
+	local retval="${1:-0}"
 	shift
 
-	_eend ${retval} ewarn "$*"
+	_eend "${retval}" ewarn "$*"
 
 	LAST_E_CMD="ewend"
 	return ${retval}
@@ -401,7 +401,7 @@ veend() {
 KV_major() {
 	[[ -z $1 ]] && return 1
 
-	local KV=$@
+	local KV="$@"
 	echo "${KV%%.*}"
 }
 
@@ -412,8 +412,8 @@ KV_major() {
 KV_minor() {
 	[[ -z $1 ]] && return 1
 
-	local KV=$@
-	KV=${KV#*.}
+	local KV="$@"
+	KV="${KV#*.}"
 	echo "${KV%%.*}"
 }
 
@@ -424,8 +424,8 @@ KV_minor() {
 KV_micro() {
 	[[ -z $1 ]] && return 1
 
-	local KV=$@
-	KV=${KV#*.*.}
+	local KV="$@"
+	KV="${KV#*.*.}"
 	echo "${KV%%[^[:digit:]]*}"
 }
 
@@ -437,10 +437,10 @@ KV_micro() {
 KV_to_int() {
 	[[ -z $1 ]] && return 1
 
-	local KV_MAJOR=$(KV_major "$1")
-	local KV_MINOR=$(KV_minor "$1")
-	local KV_MICRO=$(KV_micro "$1")
-	local KV_int=$(( KV_MAJOR * 65536 + KV_MINOR * 256 + KV_MICRO ))
+	local KV_MAJOR="$(KV_major "$1")"
+	local KV_MINOR="$(KV_minor "$1")"
+	local KV_MICRO="$(KV_micro "$1")"
+	local KV_int="$(( KV_MAJOR * 65536 + KV_MINOR * 256 + KV_MICRO ))"
 
 	# We make version 2.2.0 the minimum version we will handle as
 	# a sanity check ... if its less, we fail ...
@@ -462,9 +462,9 @@ KV_to_int() {
 _RC_GET_KV_CACHE=""
 get_KV() {
 	[[ -z ${_RC_GET_KV_CACHE} ]] \
-		&& _RC_GET_KV_CACHE=$(uname -r)
+		&& _RC_GET_KV_CACHE="$(uname -r)"
 
-	echo $(KV_to_int "${_RC_GET_KV_CACHE}")
+	echo "$(KV_to_int "${_RC_GET_KV_CACHE}")"
 
 	return $?
 }
@@ -550,11 +550,11 @@ save_options() {
 	local myopts="$1"
 
 	shift
-	if [[ ! -d "${svcdir}/options/${myservice}" ]] ; then
-		mkdir -p -m 0755 "${svcdir}/options/${myservice}"
+	if [[ ! -d "${svcdir}/options/${SVCNAME}" ]] ; then
+		mkdir -p -m 0755 "${svcdir}/options/${SVCNAME}"
 	fi
 
-	echo "$*" > "${svcdir}/options/${myservice}/${myopts}"
+	echo "$*" > "${svcdir}/options/${SVCNAME}/${myopts}"
 
 	return 0
 }
@@ -565,8 +565,8 @@ save_options() {
 #    by calling the save_options function
 #
 get_options() {
-	if [[ -f "${svcdir}/options/${myservice}/$1" ]] ; then
-		echo "$(< ${svcdir}/options/${myservice}/$1)"
+	if [[ -f "${svcdir}/options/${SVCNAME}/$1" ]] ; then
+		echo "$(< ${svcdir}/options/${SVCNAME}/$1)"
 	fi
 
 	return 0
@@ -603,7 +603,7 @@ add_suffix() {
 #
 get_base_ver() {
 	[[ ! -r /etc/gentoo-release ]] && return 0
-	local ver=$(</etc/gentoo-release)
+	local ver="$(</etc/gentoo-release)"
 	echo "${ver##* }"
 }
 
@@ -622,9 +622,9 @@ is_net_fs() {
 	local fstype
 	# /proc/mounts is always accurate but may not always be available
 	if [[ -e /proc/mounts ]] ; then
-		fstype=$( sed -n -e '/^rootfs/!s:.* '"$1"' \([^ ]*\).*:\1:p' /proc/mounts )
+		fstype="$( sed -n -e '/^rootfs/!s:.* '"$1"' \([^ ]*\).*:\1:p' /proc/mounts )"
 	else
-		fstype=$( mount | sed -n -e 's:.* on '"$1"' type \([^ ]*\).*:\1:p' )
+		fstype="$( mount | sed -n -e 's:.* on '"$1"' type \([^ ]*\).*:\1:p' )"
 	fi
 	[[ " ${NET_FS_LIST} " == *" ${fstype} "* ]]
 	return $?
@@ -638,7 +638,6 @@ is_net_fs() {
 #
 is_uml_sys() {
 	grep -qs 'UML' /proc/cpuinfo
-	return $?
 }
 
 # bool is_vserver_sys()
@@ -649,7 +648,6 @@ is_uml_sys() {
 #
 is_vserver_sys() {
 	grep -qs '^s_context:[[:space:]]*[1-9]' /proc/self/status
-	return $?
 }
 
 # bool is_xenU_sys()
@@ -799,7 +797,7 @@ if [[ -z ${EBUILD} ]] ; then
 	# have a TTY. rc unsets it at the end of running so it shouldn't hang
 	# around
 	if [[ -z ${CONSOLETYPE} ]] ; then
-		export CONSOLETYPE=$( /sbin/consoletype 2>/dev/null )
+		export CONSOLETYPE="$( /sbin/consoletype 2>/dev/null )"
 	fi
 	if [[ ${CONSOLETYPE} == "serial" ]] ; then
 		RC_NOCOLOR="yes"
@@ -816,6 +814,12 @@ if [[ -z ${EBUILD} ]] ; then
 	done
 
 	setup_defaultlevels
+
+	# If we are not /sbin/rc then ensure that we cannot change level variables
+	if [[ -n ${BASH_SOURCE} \
+		&& ${BASH_SOURCE[${#BASH_SOURCE[@]}-1]} != "/sbin/rc" ]] ; then
+		declare -r BOOTLEVEL DEFAULTLEVEL SOFTLEVEL
+	fi
 else
 	# Should we use colors ?
 	if [[ $* != *depend* ]] ; then
@@ -835,8 +839,8 @@ if [[ -n ${EBUILD} && $* == *depend* ]] ; then
 	COLS=80
 else
 	# Setup COLS and ENDCOL so eend can line up the [ ok ]
-	COLS=${COLUMNS:-0}		# bash's internal COLUMNS variable
-	(( COLS == 0 )) && COLS=$(stty size 2>/dev/null | cut -d' ' -f2)
+	COLS="${COLUMNS:-0}"		# bash's internal COLUMNS variable
+	(( COLS == 0 )) && COLS="$(set -- `stty size 2>/dev/null` ; echo "$2")"
 	(( COLS > 0 )) || (( COLS = 80 ))	# width of [ ok ] == 7
 fi
 

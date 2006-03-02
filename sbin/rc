@@ -517,7 +517,7 @@ then
 	check_critical_services
 
 	# Update the dependency cache
-	/sbin/depscan.sh -u
+	/sbin/depscan.sh
 
 	# Now that the dependency cache are up to date, make sure these
 	# are marked as started ...
@@ -722,24 +722,24 @@ get_stop_services() {
 
 dep_stop() {
 	local x dep needsme depservice
-	local myservice=${1##*/}
+	local service=${1##*/}
 
-	service_stopped "${myservice}" && return 0
+	service_stopped "${service}" && return 0
 	
 	# Candidate for zapping ?
-	[[ ! -L ${svcdir}/softscripts.new/${myservice} ]] || \
+	[[ ! -L ${svcdir}/softscripts.new/${service} ]] || \
 		return 0
 
 	# If this is a 'net' service, we do not want to stop it if it was
 	# not in the previous runlevel, and we are not shutting down,
 	# rebooting or going to single runlevel.  This is because the user
 	# (or hotplut) might have started it (net.ppp?) ...
-	if net_service "${myservice}" && \
+	if net_service "${service}" && \
 	   [[ ${SOFTLEVEL} != "reboot" && \
 	      ${SOFTLEVEL} != "shutdown" && \
 	      ${SOFTLEVEL} != "single" ]] ; then
 		if [[ -z ${OLDSOFTLEVEL} ]] || \
-		   ! in_runlevel "${myservice}" "${OLDSOFTLEVEL}"
+		   ! in_runlevel "${service}" "${OLDSOFTLEVEL}"
 		then
 			# This service is not in the previous runlevel, so
 			# do not stop it ...
@@ -748,14 +748,14 @@ dep_stop() {
 	fi
 
 	# Should not work for 'use'
-	if [[ -z $(needsme "${myservice}") ]] ; then
+	if [[ -z $(needsme "${service}") ]] ; then
 		# Nothing depends on me
-		stop_service "${myservice}"
+		stop_service "${service}"
 	else
 		# Something may depend on me
 		needsme=0
 		
-		for dep in $(needsme "${myservice}") ; do
+		for dep in $(needsme "${service}") ; do
 			if [[ -L "${svcdir}/softscripts.new/${dep}" ]] ; then
 				# This dep is valid
 				needsme=1
@@ -764,7 +764,7 @@ dep_stop() {
 			fi
 		done
 		
-		[[ ${needsme} -eq 0 ]] && stop_service "${myservice}"
+		[[ ${needsme} -eq 0 ]] && stop_service "${service}"
 	fi
 }
 
@@ -784,10 +784,10 @@ else
 
 	is_critical_service() {
 		local x
-		local myservice=${1##*/}
+		local service=${1##*/}
 
 		for x in ${CRITICAL_SERVICES} ${LOGGER_SERVICE} ; do
-			[[ ${myservice} == "${x}" ]] && return 0
+			[[ ${service} == "${x}" ]] && return 0
 		done
 
 		return 1
@@ -815,8 +815,6 @@ fi
 echo "${SOFTLEVEL}" > "${svcdir}/softlevel"
 
 if [[ ${SOFTLEVEL} == "reboot" || ${SOFTLEVEL} == "shutdown" ]] ; then
-	source /sbin/functions.sh
-	
 	# Clear $svcdir from stale entries, but leave the caches around, as it
 	# should help speed things up a bit
 	rm -rf $(ls -d1 "${svcdir}/"* 2>/dev/null | \
@@ -861,7 +859,6 @@ get_start_services() {
 
 	trace_dependencies ${list}
 }
-
 
 # Start scripts
 for i in $(get_start_services) ; do

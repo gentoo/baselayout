@@ -504,8 +504,8 @@ END {
 	}
 
 	for (x = TYPES_MIN; x <= TYPES_MAX; x++)
-		print "rc_type_" TYPE_NAMES[x] "=" x >> (CACHEDTREE)
-	print "rc_index_scale=" (TYPES_MAX + 1) >> (CACHEDTREE)
+		print "declare -r rc_type_" TYPE_NAMES[x] "=" x >> (CACHEDTREE)
+	print "declare -r rc_index_scale=" (TYPES_MAX + 1) >> (CACHEDTREE)
 	print "" >> (CACHEDTREE)
 	print "declare -a RC_DEPEND_TREE" >> (CACHEDTREE)
 	print "" >> (CACHEDTREE)
@@ -542,15 +542,17 @@ END {
 
 		print "" >> (CACHEDTREE)
 	}
+	# Ensure that no-one changes our tree
+	print "declare -r RC_DEPEND_TREE" >> (CACHEDTREE)
 
 	# Do not export these, as we want them local
-	print "RC_GOT_DEPTREE_INFO=\"yes\"" >> (CACHEDTREE)
+	print "declare -r RC_GOT_DEPTREE_INFO=\"yes\"" >> (CACHEDTREE)
 	print "" >> (CACHEDTREE)
 
 	if (check_provide("logger"))
-		print "LOGGER_SERVICE=\"" get_provide("logger") "\"" >> (CACHEDTREE)
+		print "declare -r LOGGER_SERVICE=\"" get_provide("logger") "\"" >> (CACHEDTREE)
 	else
-		print "LOGGER_SERVICE=" >> (CACHEDTREE)
+		print "declare -r LOGGER_SERVICE=" >> (CACHEDTREE)
 		
 	close(CACHEDTREE)
 
