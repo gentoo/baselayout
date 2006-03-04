@@ -5,6 +5,8 @@
 
     Pass '-O no_netdev' to `mount -a` in localmount init.d.
 
+    Add note to sysctl.conf about needing nfsd for fs.nfs.* to work #66575.
+
   02 Mar 2006; Roy Marples <uberlord@gentoo.org>:
 
     $myservice is now deprecated for init scripts.
