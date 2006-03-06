@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  06 Mar 2006; Mike Frysinger <vapier@gentoo.org>:
+
+    Touchup fuser options in netmount so we don't pipe output to /dev/null.
+
   03 Mar 2006; Mike Frysinger <vapier@gentoo.org>:
 
     Pass '-O no_netdev' to `mount -a` in localmount init.d.
