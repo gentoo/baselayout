@@ -335,8 +335,6 @@ iwconfig_associate() {
 		eerror "Unable to change mode to ${mode}"
 		return 1
 	fi
-	interface_down "${iface}"
-	interface_up "${iface}"
 
 	if [[ ${ESSID} == "any" ]]; then
 		iwconfig "${iface}" ap any 2>/dev/null
@@ -371,7 +369,7 @@ iwconfig_associate() {
 	fi
 
 	# Finally apply the user Config
-	#iwconfig_user_config "${iface}" "${ESSIDVAR}"
+	iwconfig_user_config "${iface}" "${ESSIDVAR}"
 
 	vebegin "Connecting to \"${dessid}\" ${w}"
 
@@ -690,8 +688,13 @@ iwconfig_defaults() {
 	iwconfig "${iface}" txpower auto &>/dev/null
 	iwconfig "${iface}" key [1] off &>/dev/null
 	iwconfig "${iface}" mode managed &>/dev/null
-	iwconfig "${iface}" essid -- off &>/dev/null
 	iwconfig "${iface}" ap off &>/dev/null
+
+	# According to the iwconfig man page we should be doing
+	# iwconfig "${iface}" essid -- off &>/dev/null
+	# instead. However, this borks many drivers - setting essid
+	# to "" seems to work for all drivers however.
+	iwconfig "${iface}" essid "" &>/dev/null
 }
 
 # void iwconfig_strip_associated(char *iface)
@@ -907,6 +910,11 @@ iwconfig_pre_start() {
 	unset ESSID ESSIDVAR
 	interface_down "${iface}"
 	return 1
+}
+
+iwconfig_post_stop() {
+	interface_exists "${iface}" || return 0
+	iwconfig_defaults "${iface}" 
 }
 
 # vim:ts=4

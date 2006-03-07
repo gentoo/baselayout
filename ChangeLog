@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  07 Mar 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Set essid to "" instead of -- off as it appears not all drivers work
+    as they should. Hopefully fixes #125067 and maybe #120822.
+
   02 Mar 2006; Roy Marples <uberlord@gentoo.org>:
 
     $myservice is now deprecated for init scripts.
