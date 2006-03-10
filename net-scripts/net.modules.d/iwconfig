@@ -545,8 +545,9 @@ iwconfig_scan_report() {
 	# dynamically remove from the array
 	eindent
 	for ((i=0; i<${#mac_APs[@]}; i++)); do
-		k=""
-		[[ ${enc_APs[i]} == "yes" ]] && k="(WEP required)"
+		k="(${mode_APs[i]}"
+		[[ ${enc_APs[i]} != "off" ]] && k="${k}, encrypted"
+		k="${k})"
 
 		if [[ -z ${essid_APs[i]} ]]; then
 			veinfo "Found ${mac_APs[i]} ${k}"
