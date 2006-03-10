@@ -1,7 +1,5 @@
-#!/bin/bash
-# Copyright (c) 2004-2005 Gentoo Foundation
+# Copyright (c) 2004-2006 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-
 # Contributed by Roy Marples (uberlord@gentoo.org)
 
 # void macchanger_depend(void)
@@ -10,6 +8,12 @@
 macchanger_depend() {
 	before macnet
 	functions interface_get_mac_address interface_set_mac_address
+}
+
+# void macchanger_expose(void)
+#
+# Expose variables that can be configured
+macchanger_expose() {
 	variables mac
 }
 
@@ -95,4 +99,4 @@ macchanger_pre_start() {
 	return 0 #important
 }
 
-# vim:ts=4
+# vim: set ft=sh ts=4 :
