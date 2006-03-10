@@ -3,6 +3,8 @@
 
   10 Mar 2006; Roy Marples <uberlord@gentoo.org>:
 
+    iwconfig now reports mode in scan results
+
     net script modules variables function has been moved into module_expose
     and removed from module_depend to be more correct.
 
