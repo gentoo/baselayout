@@ -439,8 +439,8 @@ iwconfig_scan() {
 	fi
 
 	# Set the essid to any. This is required for scanning
-	#iwconfig "${iface}" essid any
-
+	iwconfig "${iface}" essid any
+	
 	veinfo "Scanning for access points"
 
 	# Sleep if required
@@ -687,19 +687,11 @@ iwconfig_defaults() {
 	local iface="$1"
 
 	# Set some defaults
-	iwconfig "${iface}" rate auto &>/dev/null
-	iwconfig "${iface}" rts auto &>/dev/null
-	iwconfig "${iface}" frag auto &>/dev/null
-	iwconfig "${iface}" txpower auto &>/dev/null
-	iwconfig "${iface}" key [1] off &>/dev/null
-	iwconfig "${iface}" mode managed &>/dev/null
-	iwconfig "${iface}" ap off &>/dev/null
+	iwconfig "${iface}" rate auto 2>/dev/null
+	iwconfig "${iface}" rts auto 2>/dev/null
+	iwconfig "${iface}" frag auto 2>/dev/null
+	iwconfig "${iface}" txpower auto 2>/dev/null
 
-	# According to the iwconfig man page we should be doing
-	# iwconfig "${iface}" essid -- off &>/dev/null
-	# instead. However, this borks many drivers - setting essid
-	# to "" seems to work for all drivers however.
-	iwconfig "${iface}" essid "" &>/dev/null
 }
 
 # void iwconfig_strip_associated(char *iface)
