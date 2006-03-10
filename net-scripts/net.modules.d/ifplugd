@@ -1,7 +1,5 @@
-#!/bin/bash
-# Copyright (c) 2004-2005 Gentoo Foundation
+# Copyright (c) 2004-2006 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-
 # Contributed by Roy Marples (uberlord@gentoo.org)
 
 # void ifplugd_depend(void)
@@ -12,6 +10,13 @@ ifplugd_depend() {
 	before interface
 	functions interface_exists interface_get_mac_address
 	provide plug
+}
+
+# void ifplugd_expose(void)
+#
+# Expose variables that can be configured
+ifplugd_expose() {
+	variables plug_timeout
 }
 
 # bool ifplugd_check_installed(void)
@@ -138,4 +143,4 @@ ifplugd_stop() {
 	eend $?
 }
 
-# vim:ts=4
+# vim: set ft=sh ts=4 :

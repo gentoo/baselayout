@@ -1,7 +1,5 @@
-#!/bin/bash
-# Copyright (c) 2004-2005 Gentoo Foundation
+# Copyright (c) 2005-2006 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-
 # Contributed by Roy Marples (uberlord@gentoo.org)
 
 # void netplugd_depend(void)
@@ -12,6 +10,13 @@ netplugd_depend() {
 	before interface
 	provide plug
 	functions interface_exists interface_get_mac_address
+}
+
+# void netplugd_expose(void)
+#
+# Expose variables that can be configured
+netplugd_expose() {
+	variables plug_timeout
 }
 
 # bool netplugd_check_installed(void)
@@ -116,4 +121,4 @@ netplugd_stop() {
 	eend $?
 }
 
-# vim:ts=4
+# vim: set ft=sh ts=4 :

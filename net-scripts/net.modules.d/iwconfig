@@ -1,7 +1,5 @@
-#!/bin/bash
-# Copyright (c) 2004-2005 Gentoo Foundation
+# Copyright (c) 2004-2006 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-
 # Contributed by Roy Marples (uberlord@gentoo.org)
 # Many thanks to all the people in the Gentoo forums for their ideas and
 # motivation for me to make this and keep on improving it
@@ -29,6 +27,13 @@ iwconfig_depend() {
 	before interface
 	provide wireless
 	functions interface_up interface_down interface_exists
+}
+
+# void iwconfig_expose(void)
+#
+# Expose variables that can be configured
+iwconfig_expose() {
+	variables essid mode associate_timeout sleep_scan preferred_aps blacklist_aps
 }
 
 # bool iwconfig_check_installed(void)
@@ -82,8 +87,8 @@ iwconfig_get_essid() {
 	local i essid
 
 	for (( i=0; i<5; i++ )); do
-		essid="$( iwgetid "$1" 2>/dev/null | sed -n -e 's/^.*ESSID:"\(.*\)"$/\1/p' )"
-		if [[ -n ${essid} ]]; then
+		essid="$( iwgetid --raw "$1" )"
+		if [[ -n ${essid} ]] ; then
 			echo "${essid}"
 			return 0
 		fi
@@ -98,7 +103,7 @@ iwconfig_get_essid() {
 # Returns the MAC address of the Access Point
 # the interface is connected to
 iwconfig_get_ap_mac_address() {
-	iwgetid --ap "$1" | sed -n -e 's/^.*Cell: .*\<\(..:..:..:..:..:..\)\>.*/\U\1/p'
+	iwgetid --raw --ap "$1"
 }
 
 # char* iwconfig_get_mode(char *interface)
@@ -119,25 +124,25 @@ iwconfig_get_type() {
 #
 # Output how our wireless interface has been configured
 iwconfig_report() {
-	local iface="$1" essid mac m="to"
+	local iface="$1" essid mac m="connected to"
 
 	essid="$( iwconfig_get_essid "${iface}" )"
 
 	local wep_status="$( iwconfig_get_wep_status "${iface}" )"
-	local channel="$( iwgetid --channel "${iface}" 2>/dev/null | cut -d: -f2 )"
+	local channel="$( iwgetid --raw --channel "${iface}" )"
 	[[ -n ${channel} ]] && channel="on channel ${channel} "
 
 	essid="${essid//\\\\/\\\\}"
 	local mode="$( iwconfig_get_mode "${iface}" )"
 	if [[ ${mode} == "master" ]]; then
-		m="as"
-	elif [[ ${mode} != "ad-hoc" ]]; then
+		m="configured as"
+	else
 		mac="$( iwconfig_get_ap_mac_address "${iface}" )"
 		[[ -n ${mac} ]] && mac=" at ${mac}"
 	fi
 
 	eindent
-	einfo "${iface} connected ${m} \"${essid}\"${mac}"
+	einfo "${iface} ${m} ESSID \"${essid}\"${mac}"
 	einfo "in ${mode} mode ${channel}${wep_status}"
 	eoutdent
 }
@@ -291,7 +296,7 @@ iwconfig_test_associated() {
 		mac) iwconfig_associate_mac "${iface}" && return 0 ;;
 		quality) iwconfig_associate_quality "${iface}" && return 0 ;;
 		all) iwconfig_associate_mac "${iface}" \
-		&& iwconfig_associate_quality "${iface}" && return 0 ;;
+			&& iwconfig_associate_quality "${iface}" && return 0 ;;
 	esac
 
 	return 1
@@ -371,7 +376,7 @@ iwconfig_associate() {
 	# Finally apply the user Config
 	iwconfig_user_config "${iface}" "${ESSIDVAR}"
 
-	vebegin "Connecting to \"${dessid}\" ${w}"
+	vebegin "Connecting to \"${dessid}\" in ${mode} mode ${w}"
 
 	if [[ ${ESSID} != "any" ]] && is_function preassociate ; then
 		veinfo "Running preassociate function"
@@ -917,4 +922,4 @@ iwconfig_post_stop() {
 	iwconfig_defaults "${iface}" 
 }
 
-# vim:ts=4
+# vim: set ft=sh ts=4 :

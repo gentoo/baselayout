@@ -1,7 +1,5 @@
-#!/bin/bash
 # Copyright (c) 2004-2006 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-
 # Contributed by Roy Marples (uberlord@gentoo.org)
 
 # void bonding_depend(void)
@@ -11,6 +9,12 @@ bonding_depend() {
 	before interface macchanger
 	functions interface_exists interface_up interface_down \
 		interface_del_addresses
+}
+
+# void bonding_expose(void)
+#
+# Expose variables that can be configured
+bonding_expose() {
 	variables slaves
 }
 
@@ -113,4 +117,4 @@ bonding_stop() {
 	return 0
 }
 
-# vim:ts=4
+# vim: set ft=sh ts=4 :

@@ -1,7 +1,5 @@
-#!/bin/bash
 # Copyright (c) 2004-2006 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-
 # Contributed by Roy Marples (uberlord@gentoo.org)
 
 # Fix any potential localisation problems
@@ -15,6 +13,12 @@ brctl() {
 bridge_depend() {
 	before interface macnet
 	functions interface_down interface_del_addresses interface_set_flag
+}
+
+# void bridge_expose(void)
+#
+# Expose variables that can be configured
+bridge_expose() {
 	variables bridge bridge_add brctl
 }
 
@@ -191,4 +195,4 @@ bridge_stop() {
 	return 0
 }
 
-# vim:ts=4
+# vim: set ft=sh ts=4 :

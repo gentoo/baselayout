@@ -1,7 +1,5 @@
-#!/bin/bash
-# Copyright (c) 2004-2005 Gentoo Foundation
+# Copyright (c) 2004-2006 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-
 # Contributed by Roy Marples (uberlord@gentoo.org)
 
 # Fix any potential localisation problems
@@ -23,6 +21,12 @@ route() {
 # Sets up the dependancies for the module
 ifconfig_depend() {
 	provide interface
+}
+
+# void ifconfig_expose(void)
+#
+# Expose variables that can be configured
+ifconfig_expose() {
 	variables config routes fallback metric ifconfig \
 		ifconfig_fallback routes inet6 iface alias broadcast netmask
 }
@@ -446,4 +450,4 @@ ifconfig_default_route() {
 	route add default gw "$2" metric "${metric}" dev "$1"
 }
 
-# vim:ts=4
+# vim: set ft=sh ts=4 :

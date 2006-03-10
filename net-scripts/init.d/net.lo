@@ -437,6 +437,11 @@ modules_load()  {
 		MODULE="${MODULES[i]}"
 		${MODULE}_depend
 
+		# expose does exactly the same thing as depend
+		# However it is more "correct" as it exposes things to other modules
+		# instead of depending on them ;)
+		is_function "${MODULES[i]}_expose" && ${MODULES[i]}_expose
+
 		# If no provide is given, assume module name
 		if is_function "${MODULES[i]}_provide" ; then
 			PROVIDES[i]="$(${MODULES[i]}_provide)"
