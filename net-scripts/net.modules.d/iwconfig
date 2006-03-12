@@ -512,6 +512,31 @@ iwconfig_scan() {
 	x="$( echo "${!x:-managed}" | tr '[:upper:]' '[:lower:]' )"
 	[[ ${mode} != "${x}" ]] && iwconfig "${iface}" mode "${x}"
 
+	# Strip any duplicates
+	local i j x="${#mac[@]}" y
+	for (( i=0; i<x-1; i++ )) ; do
+		[[ -z ${mac[i]} ]] && continue
+		for (( j=i+1; j<x; j++)) ; do
+			if [[ ${mac[i]} == "${mac[j]}" ]] ; then
+				if [[ ${qual[i]} -gt ${qual[j]} ]] ; then
+					y="${j}"
+				else
+					y="${j}"
+				fi
+				unset mac[y]
+				unset qual[y]
+				unset essid[y]
+				unset mode[y]
+				unset enc[y]
+			fi
+		done
+	done
+	mac=( "${mac[@]}" )
+	qual=( "${qual[@]}" )
+	essid=( "${essid[@]}" )
+	mode=( "${mode[@]}" )
+	enc=( "${enc[@]}" )
+
 	for (( i=0; i<${#mac[@]}; i++ )); do
 		# Don't like ad-hoc nodes by default
 		[[ ${mode[i]} == "ad-hoc" ]] && (( qual[i]-=10000 ))
