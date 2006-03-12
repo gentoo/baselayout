@@ -170,7 +170,7 @@ iwconfig_user_config() {
 	if [[ -n ${!conf} ]]; then
 		aconf=( "${!conf}" )
 		for conf in "${aconf[@]}" ; do
-			if ! eval iwconfig "${iface}" "${conf}" ; then
+			if ! iwconfig "${iface}" ${conf} ; then
 				ewarn "${iface} does not support the following configuration commands"
 				ewarn "  ${conf}"
 			fi
@@ -181,7 +181,7 @@ iwconfig_user_config() {
 	if [[ -n ${!conf} ]]; then
 		aconf=( "${!conf}" )
 		for conf in "${aconf[@]}" ; do
-			if ! eval iwpriv "${iface}" "${conf}" ; then
+			if ! iwpriv "${iface}" ${conf} ; then
 				ewarn "${iface} does not support the following private ioctls"
 				ewarn "  ${conf}"
 			fi
