@@ -355,11 +355,12 @@ svc_start() {
 				if service_inactive "${x}" || service_wasinactive "${x}" || \
 				[[ -n $(ls "${svcdir}"/scheduled/*/"${x}" 2>/dev/null) ]] ; then
 					svc_schedule_start "${x}" "${SVCNAME}"
-					startinactive="${x}"
+					[[ -n ${startinactive} ]] && startinactive="${startinactive}, "
+					startinactive="${startinactive}${x}"
 				else
 					startfail="${x}"
+					break
 				fi
-				break
 			fi
 		fi
 	done
@@ -369,6 +370,9 @@ svc_start() {
 		eerror "        ${SVCNAME} was not started."
 		retval=1
 	elif [[ -n ${startinactive} ]] ; then
+		# Change the last , to or for correct grammar.
+		x="${startinactive##*, }"
+		startinactive="${startinactive/%, ${x}/ or ${x}}"
 		ewarn "WARNING:  ${SVCNAME} is scheduled to start when ${startinactive} has started."
 		retval=1
 	elif broken "${SVCNAME}" ; then
