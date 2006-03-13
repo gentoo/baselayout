@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  13 Mar 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Allow more than 1 inactive dependant service to start us when it is
+    started, #125819 thanks to Arnuad Fabre.
+
   12 Mar 2006; Roy Marples <uberlord@gentoo.org>:
 
     iwconfig now strips duplicate mac addresses from scan results which means
