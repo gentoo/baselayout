@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  14 Mar 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Allow services that depend on net to be stopped/started in post
+    up/down functions when the net service is started by rc.
+
   13 Mar 2006; Roy Marples <uberlord@gentoo.org>:
 
     Allow more than 1 inactive dependant service to start us when it is
