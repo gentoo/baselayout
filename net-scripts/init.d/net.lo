@@ -796,6 +796,7 @@ run_start() {
 		# We need to mark the service as started incase a
 		# postdown function wants to restart services that depend on us
 		mark_service_started "net.${iface}"
+		end_service "net.${iface}" 0
 		einfo "Running postup function"
 		eindent
 		( postup "${iface}" )
@@ -840,6 +841,7 @@ run_stop() {
 		# We need to mark the service as stopped incase a
 		# postdown function wants to restart services that depend on us
 		[[ ${IN_BACKGROUND} != "true" ]] && mark_service_stopped "net.${iface}"
+		end_service "net.${iface}" 0
 		einfo "Running postdown function"
 		eindent
 		( postdown "${iface}" )
