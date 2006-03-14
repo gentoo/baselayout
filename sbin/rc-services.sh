@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 
 # RC Dependency and misc service functions
-RC_GOT_SVCNAMES="yes"
+RC_GOT_SERVICES="yes"
 
 [[ ${RC_GOT_FUNCTIONS} != "yes" ]] && source /sbin/functions.sh
 

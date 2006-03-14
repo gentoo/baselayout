@@ -42,7 +42,7 @@ svcpause="no"
 svcrestart="no"
 
 # Functions to handle dependencies and services
-[[ ${RC_GOT_SVCNAMES} != "yes" ]] && source "${svclib}/sh/rc-services.sh"
+[[ ${RC_GOT_SERVICES} != "yes" ]] && source "${svclib}/sh/rc-services.sh"
 # Functions to control daemons
 [[ ${RC_GOT_DAEMON} != "yes" ]] && source "${svclib}/sh/rc-daemon.sh"
 

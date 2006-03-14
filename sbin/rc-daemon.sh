@@ -16,7 +16,7 @@
 RC_GOT_DAEMON="yes"
 
 [[ ${RC_GOT_FUNCTIONS} != "yes" ]] && source /sbin/functions.sh
-[[ ${RC_GOT_SVCNAMES} != "yes" ]] && source "${svclib}/sh/rc-services.sh"
+[[ ${RC_GOT_SERVICES} != "yes" ]] && source "${svclib}/sh/rc-services.sh"
 
 RC_RETRY_KILL="no"
 RC_RETRY_TIMEOUT=1
