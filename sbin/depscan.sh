@@ -44,11 +44,18 @@ done
 
 # Only update if files have actually changed
 if ! ${update} ; then
-	for config in /etc/conf.d /etc/init.d /etc/rc.conf ; do
-		if [[ ${config} -nt "${mysvcdir}/depcache" ]] ; then
-			update=true	
-			break
-		fi
+	# If its not there, we have to update, and make sure its present
+	# for next mtime testing
+	if [[ ! -e "${mysvcdir}/depcache" ]] ; then
+			update=true
+			touch "${mysvcdir}/depcache"
+	fi
+
+	for config in /etc/conf.d /etc/init.d /etc/rc.conf
+	do
+		! ${update} \
+			&& is_older_than "${mysvcdir}/depcache" "${config}" \
+			&& update=true
 	done
 fi
 
