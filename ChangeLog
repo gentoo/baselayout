@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  23 Mar 2006; Mike Frysinger <vapier@gentoo.org>:
+
+    Disable hwclock script on s390 hosts.
+
   14 Mar 2006; Roy Marples <uberlord@gentoo.org>:
 
     Allow services that depend on net to be stopped/started in post
