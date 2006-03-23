@@ -21,6 +21,9 @@ setupopts() {
 	elif grep -q ' cobd$' /proc/devices ; then
 		TBLURB="coLinux"
 		fakeit=1
+	elif [[ $(uname -m) == s390* ]] ; then
+		TBLURB="s390"
+		fakeit=1
 	elif [[ ${CLOCK} == "UTC" ]] ; then
 		myopts="--utc"
 		TBLURB="UTC"
