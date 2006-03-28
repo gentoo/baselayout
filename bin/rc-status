@@ -230,11 +230,14 @@ for level in ${runlevelidxs} ; do
 		fi
 	done
 	let "arridx += 1"
-	[ -n "${UNUSED}" ] && exit 0
+	[ -n "${UNUSED}" ] && break
 done
 
 if [[ -n ${broken} ]]; then
     eerror "You have some broken symbolic links as reported by the broken"
     eerror "status above. This can be fixed by removing the broken service"
     eerror "from its runlevel and re-adding it back using rc-update."
+	exit 1
+else
+	exit 0
 fi
