@@ -209,5 +209,7 @@ for level in ${runlevelidxs} ; do
 		fi
 	done
 	let "arridx += 1"
-	[ -n "${UNUSED}" ] && exit 0
+	[ -n "${UNUSED}" ] && break
 done
+
+exit 0
