@@ -292,7 +292,7 @@ freebsd_post_start() {
 			gw=false
 			break
 		done
-		${gw} && routes=( "${routes[@]}" "default gw ${gateway#*/}" )
+		${gw} && routes=( "${routes[@]}" "default ${gateway#*/}" )
 	fi
 
 	[[ -z ${routes} ]] && return 0
@@ -306,20 +306,10 @@ freebsd_post_start() {
 		# Support iproute2 style routes
 		x="${x//via/gw} "
 		x="${x//scope * / }"
+		x="${x//default gw/default}"
 
-# FIXME! FreeBSD does not support dev command
-#		# Assume we're a net device unless told otherwise
-#		[[ " ${x} " != *" -net "* && " ${x} " != *" -host "* ]] && x="-net ${x}"
-
-		# Support adding IPv6 addresses easily
-		if [[ ${x} == *:* ]]; then
-			[[ ${x} != *"-A inet6"* ]] && x="-A inet6 ${x}"
-			x="${x// -net / }"
-		fi
-
-# FIXME! FreeBSD does not support metric command
-#		# Add a metric if we don't have one
-#		[[ ${x} != *" metric "* ]] && x="${x} metric ${!metric}"
+		# Assume we're a net device unless told otherwise
+		[[ " ${x} " != *" -net "* && " ${x} " != *" -host "* ]] && x="-net ${x}"
 
 		route add ${x}
 		eend $?
