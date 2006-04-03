@@ -221,7 +221,7 @@ configure_variables() {
 #
 # Does the minimum checking on a module - even when forcing
 module_load_minimum() {
-	local f="$1" MODULE="${1##*/}"
+	local f="$1.sh" MODULE="${1##*/}"
 
 	if [[ ! -f ${f} ]] ; then
 		eerror "${f} does not exist"
@@ -235,7 +235,7 @@ module_load_minimum() {
 
 	for f in depend; do
 		is_function "${MODULE}_${f}" && continue
-		eerror "${MODULE} does not support the required function ${f}"
+		eerror "${MODULE}.sh does not support the required function ${f}"
 		return 1
 	done
 
@@ -251,7 +251,7 @@ modules_load_auto() {
 
 	# Populate the MODULES array
 	# Basically we treat evey file in ${MODULES_DIR} as a module
-	MODULES=( $( cd "${MODULES_DIR}" ; ls ) )
+	MODULES=( $( cd "${MODULES_DIR}" ; ls *.sh ) )
 	j="${#MODULES[@]}"
 	for (( i=0; i<j; i++ )); do
 		MODULES[i]="${MODULES_DIR}/${MODULES[i]}"
@@ -266,6 +266,7 @@ modules_load_auto() {
 	j="${#MODULES[@]}"
 	loaded_interface=false
 	for (( i=0; i<j; i++ )); do
+		MODULES[i]="${MODULES[i]%.sh*}"
 		if [[ ${MODULES[i]##*/} == "interface" ]] ; then
 			eerror "interface is a reserved name - cannot load a module called interface"
 			return 1
@@ -380,8 +381,8 @@ modules_check_user() {
 
 			# The function may not exist because the modules software is
 			# not installed. Load the module and report its error
-			if [[ -e "${MODULES_DIR}/${umods[i]}" ]] ; then
-				source "${MODULES_DIR}/${umods[i]}"
+			if [[ -e "${MODULES_DIR}/${umods[i]}.sh" ]] ; then
+				source "${MODULES_DIR}/${umods[i]}.sh"
 				is_function "${umods[i]}_check_installed" \
 					&& ${umods[i]}_check_installed true
 			else

@@ -3,6 +3,9 @@
 
   03 Apr 2006; Roy Marples <uberlord@gentoo.org>:
 
+    All net modules how have a .sh suffix to indicate that they are shell
+    scripts as not everyone uses vim.
+
     runscript.sh now has a --nodeps option so that no depends are checked
     when starting and stopping a service.
 
