@@ -285,7 +285,7 @@ modules_load_auto() {
 		)
 
 		if [[ $? == 0 ]] ; then
-			source "${MODULES[i]}"
+			source "${MODULES[i]}.sh"
 			MODULES[i]="${MODULES[i]##*/}"
 		else
 			unset MODULES[i]
