@@ -38,4 +38,4 @@ ccwgroup_post_stop() {
 	eend $?
 }
 
-# vim: set ft=sh ts=4 :
+# vim: set ts=4 :
