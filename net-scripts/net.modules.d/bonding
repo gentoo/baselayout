@@ -94,7 +94,7 @@ bonding_stop() {
 	# don't trust the config, get the active list instead
 	slaves="$( \
 		sed -n -e 's/^Slave Interface: //p' "/proc/net/bonding/${iface}" \
-		| xargs \
+		| tr '\n' ' ' \
 	)"
 	[[ -z ${slaves} ]] && return 0
 

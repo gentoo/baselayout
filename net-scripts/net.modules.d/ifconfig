@@ -55,6 +55,38 @@ ifconfig_exists() {
 	return 1
 }
 
+# char* cidr2netmask(int cidr)
+#
+# Returns the netmask of a given CIDR
+cidr2netmask() {
+	local cidr="$1" netmask="" done=0 i sum=0 cur=128
+	local octets frac
+
+	(( octets=cidr/8 ))
+	(( frac=cidr%8 ))
+	while [[ octets -gt 0 ]] ; do
+		netmask="${netmask}.255"
+		(( octets-- ))
+		(( done++ ))
+	done
+
+	if [[ ${done} -lt 4 ]] ; then
+		for (( i=0; i<${frac}; i++ )); do
+			(( sum+=cur ))
+			(( cur/=2 ))
+		done
+		netmask="${netmask}.${sum}"
+		(( done++ ))
+
+		while [[ ${done} -lt 4 ]] ; do
+			netmask="${netmask}.0"
+			(( done++ ))
+		done
+	fi
+
+	echo "${netmask:1}"
+}
+
 # void ifconfig_up(char *iface)
 #
 # provides a generic interface for bringing interfaces up
@@ -383,71 +415,11 @@ ifconfig_add_address() {
 	interface_up "${real_iface}"
 
 	# Some kernels like to apply lo with an address when they are brought up
-	if [[ ${iface} == "lo" && ${config[@]} == "127.0.0.1 netmask 255.0.0.0 broadcast 127.255.255.255" ]]; then
-		ifconfig "${iface}" 0.0.0.0
+	if [[ ${config[@]} == "127.0.0.1 netmask 255.0.0.0 broadcast 127.255.255.255" ]]; then
+		is_loopback "${iface}" && ifconfig "${iface}" 0.0.0.0
 	fi
 
 	ifconfig "${iface}" ${config[@]}
-	r="$?"
-	[[ ${r} != "0" ]] && return ${r}
-
-	local metric ifvar="$(bash_variable "${real_iface}")"
-	# Remove the newly added route and replace with our metric
-	metric="metric_${ifvar}"
-	[[ ${!metric:-0} == "0" ]] && return ${r}
-
-	if [[ -z ${netmask} ]]; then
-		for (( i=1; i<${#config[@]}-1; i++ )); do
-			if [[ ${config[i]} == "netmask" ]]; then
-				netmask="${config[i+1]}"
-				cidr="$(netmask2cidr "${netmask}")"
-				break
-			fi
-		done
-		[[ -z ${netmask} ]] && return ${r}
-	fi
-
-	local network="$(ip_network "${ip}" "${netmask}")"
-
-	if route del -net "${network}/${cidr}" metric 0 dev "${iface}" \
-		2>/dev/null ; then
-		route add -net "${network}/${cidr}" metric "${!metric:-0}" dev "${iface}"
-	fi
-
-	return ${r}
-}
-
-# void ifconfig_route_metric(char* interface, int metric)
-#
-# Change all routes for an interface to a given metric
-ifconfig_route_metric() {
-	local dest gateway mask flags metric ref use
-	route -n | grep " $1$" | {
-		while read dest gateway mask flags metric ref use ; do
-			if [[ ${gateway} != "0.0.0.0" ]]; then
-				gateway="gw ${gateway}"
-			else
-				unset gateway
-			fi
-			route del ${dest}
-			route add -net ${dest} netmask ${mask} ${gateway} metric "$2" dev "$1"
-		done
-	}
-}
-
-# void ifconfig_default_route(char* interface, char* gateway_ip, int metric)
-#
-# Force default route to the specified gateway
-ifconfig_default_route() {
-	local metric="${3:-0}"
-
-	# Delete any existing default routes
-	while true ; do
-		route del default metric "${metric}" dev "$1" 2>/dev/null || break
-	done
-
-	# Then we add our route
-	route add default gw "$2" metric "${metric}" dev "$1"
 }
 
 # vim: set ft=sh ts=4 :

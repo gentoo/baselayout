@@ -78,8 +78,7 @@ iproute2_down() {
 iproute2_is_up() {
 	local check="\<UP\>" addr="${2:-false}"
 	${addr} && check="${check}.*inet "
-	ip addr show "$1" | xargs | grep -Eq "${check}" && return 0
-	return 1
+	ip addr show "$1" | tr '\n' ' ' | grep -Eq "${check}"
 }
 
 # void iproute2_set_flag(char *iface, char *flag, bool enabled)
@@ -232,8 +231,9 @@ iproute2_add_address() {
 	config=( "${config[@]//pointopoint/peer}" )
 
 	# Always scope lo addresses as host unless specified otherwise
-	[[ ${iface} == "lo" && " ${config[@]} " != *" scope "* ]] \
-		&& config=( "${config[@]}" "scope host" )
+	if [[ " ${config[@]} " != *" scope "* ]] ; then
+		is_loopback "${iface}" && config=( "${config[@]}" "scope host" )
+	fi
 
 	# IPv4 specifics
 	if [[ ${config[@]} == *.*.*.* ]] ; then
@@ -246,30 +246,11 @@ iproute2_add_address() {
 	interface_up "${iface}"
 
 	# Some kernels like to apply lo with an address when they are brought up
-	if [[ ${iface} == "lo" \
-		&& ${config[@]} == "127.0.0.1/8 brd 127.255.255.255 scope host" ]] ; then
-		ip addr del dev "${iface}" 127.0.0.1/8 2>/dev/null
+	if [[ ${config[@]} == "127.0.0.1/8 brd 127.255.255.255 scope host" ]] ; then
+		is_loopback "${iface}" && ip addr del dev "${iface}" 127.0.0.1/8 2>/dev/null
 	fi
 
 	ip addr add dev "${iface}" ${config[@]}
-	local r="$?"
-	[[ ${r} != "0" ]] && return "${r}"
-
-	local ifvar="$( bash_variable "${iface}" )"
-	# Remove the newly added route and replace with our metric
-	local metric="metric_${ifvar}"
-	[[ ${!metric:-0} == "0" ]] && return "${r}"
-
-	local network="$( ip_network "${config[0]}" )"
-	[[ -z ${network} ]] && return "${r}"
-
-	local cidr="${config[0]##*/}"
-	if ip route del "${network}/${cidr}" metric 0 dev "${iface}" \
-		2>/dev/null ; then
-		ip route add "${network}/${cidr}" metric "${!metric:-0}" dev "${iface}"
-	fi
-
-	return "${r}"
 }
 
 # bool iproute2_pre_start(char *interface)
@@ -353,30 +334,6 @@ iproute2_post_start() {
 	ip route flush cache dev "${iface}"
 
 	return 0
-}
-
-# void iproute2_route_metric(char* interface, int metric)
-#
-# Change all routes for an interface to a given metric
-iproute2_route_metric() {
-	local route=""
-	ip route | grep " dev $1" | {
-		while read route ; do
-			ip route del ${route}
-			ip route add ${route} metric "$2"
-		done
-	}
-}
-
-# void iproute2_default_route(char* interface, char* gateway_ip, int metric)
-#
-# Force default route to the specified gateway, optionally on
-# the given interface
-iproute2_default_route() {
-	local metric="${3:-0}"
-
-	ip route change default via "$2" metric "${metric}" dev "$1" 2>/dev/null \
-	|| ip route append default via "$2" metric "${metric}" dev "$1" 2>/dev/null
 }
 
 # void iproute2_post_stop(char* interface)

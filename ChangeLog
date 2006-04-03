@@ -1,6 +1,35 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  03 Apr 2006; Roy Marples <uberlord@gentoo.org>:
+
+    runscript.sh now has a --nodeps option so that no depends are checked
+    when starting and stopping a service.
+
+    net.lo and system modules now support resolvconf instead of using our
+    own internal system.
+
+    DHCP and PPP clients no longer have helper scripts. As such they don't
+    change service status at all. Moved helpers.d/functions back into net.lo
+
+    Moved {get,save}_options from functions.sh to rc-services.sh
+
+    Removed whole load of crud from hostname init script, fixes #38172 again
+    and #122794. Also, it's no longer a critical service as defined by rc.
+
+    Added net modules for ccwgroup (s390 qeth ethernet) and br2684ctl
+    (speedtouch usb).
+
+    Removed xargs and find from all net scripts as /usr maybe net mounted,
+    #107260.
+
+    Punted the domainname script. Functionality has been in conf.d/net so you
+    can do this.
+      dns_domain_lo="foo"
+      nis_domain_lo="bar"
+
+    ppd module now checks to see if link exists if prefixed with /, #126916.
+
   28 Mar 2006; Mike Frysinger <vapier@gentoo.org>:
 
     Make sure rc-status exit status is 0 #127733 by Timo Boettcher.

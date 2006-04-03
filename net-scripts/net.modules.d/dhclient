@@ -43,24 +43,15 @@ dhclient_stop() {
 	[[ ! -f ${pidfile} ]] && return 0
 
 	ebegin "Stopping dhclient on ${iface}"
-
 	local ifvar="$(bash_variable "${iface}")"
 	local d="dhcp_${ifvar}"
-	d=" ${!d} "
-	[[ ${d} == "  " ]] && d=" ${dhcp} "
-
-	if [[ ${d} == *" release "* ]] ; then
-		local dhconf="interface \"${iface}\" {\n \
-			script \"${MODULES_DIR}/helpers.d/dhclient-wrapper\";\n \
-			}\n"
-		local r="$(echo -e "${dhconf}" \
-			| dhclient -q -r -pf "${pidfile}" "${iface}" )"
-		[[ ${r} == "deconfig" ]]
-		eend $? "dhclient returned ${r}"
+	[[ -z ${!d} ]] && d="dhcp"
+	if [[ " ${!d} " == *" release "* ]] ; then
+		dhclient -q -r -pf "${pidfile}" "${iface}"
 	else
 		start-stop-daemon --stop --exec /sbin/dhclient --pidfile "${pidfile}"
-		eend $?
 	fi
+	eend $?
 }
 
 # bool dhclient_start(char *iface)
@@ -69,76 +60,50 @@ dhclient_stop() {
 #
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 dhclient_start() {
-	local iface="$1" ifvar="$(bash_variable "$1")"
+	local iface="$1" ifvar="$(bash_variable "$1")" dhconf=
 	local pidfile="/var/run/dhclient-${iface}.pid"
-	local cffile="/etc/dhcp/dhclient.conf"
 
 	interface_exists "${iface}" true || return 1
 
-	# Load any dhclient.conf instructions specified by the user
-	local opts="dhclient_conf_${ifvar}"
-	local dhconf="${!opts}"
-	
-	# Load our options
+	# Load our default options
 	opts="dhclient_${ifvar}"
 	opts="${!opts}"
 
-	# Work out our cffile
-	local x="${opts##* -cf }"
-	if [[ ${x} != "${opts}" ]]; then
-		x="${x%% *}"
-		if [[ -n ${x} ]]; then
-			cffile="${x}"
-			opts="${opts//-cf ${cffile}/}"
-		fi
-	fi
-
-	# Warn that we're going to override parts of their cffile
-	if [[ -e ${cffile} ]] ; then
-		opts="${opts} -cf ${cffile}"
-		if grep -q "^[ \t]*script[ \t]" "${cffile}" ; then
-			ewarn "The script specified in ${cffile} will not be used"
-		fi
-	fi
-
 	local d="dhcp_${ifvar}"
-	d=" ${!d} "
-	[[ ${d} == "  " ]] && d=" ${dhcp} "
-
-	local ah=""
+	[[ -z ${!d} ]] && d="dhcp"
+	
+	# Add our peer and metric options
+	if [[ " ${!d} " == *" nodns "* ]] ; then
+		opts="${opts} -e PEER_DNS=no"
+	elif [[ " ${opts} " != *" -e PEER_DNS="* ]] ; then
+		opts="${opts} -e PEER_DNS=yes"
+	fi
+	if [[ " ${!d} " == *" nontp "* ]] ; then
+		opts="${opts} -e PEER_NTP=no"
+	elif [[ " ${opts} " != *" -e PEER_NTP="* ]] ; then
+		opts="${opts} -e PEER_NTP=yes"
+	fi
+	local metric="metric_${ifvar}"
+	if [[ -n ${!metric} && ${!metric} != "0" ]] ; then
+		opts="${opts} -e IF_METRIC=${!metric}"
+	fi
+	
 	# Send our hostname by editing cffile
-	if [[ ${d} != *" nosendhost "* ]] ; then
+	if [[ " ${!d} " != *" nosendhost "* ]] ; then
 		local hname="$(hostname)"
 		if [[ ${hname} != "(none)" && ${hname} != "localhost" ]]; then
-			ah="send host-name \"${hname}\"\n;"
-			# Warn that we're going to override parts of their cffile
-			if [[ -e ${cffile} ]] ; then
-				if grep -q "^[ \t]*send[ \t]*host-name[ \t]" "${cffile}" ; then
-					ewarn "The host-name \"${hname}\" will be sent instead of"
-					ewarn "the one specified in ${cffile}"
-					vewarn "Set dhcp_${ifvar}=\"nosendhost\" in /etc/conf.d/net"
-					vewarn "to stop this from happening"
-				fi
-			fi
+			dhconf="${dhconf} interface \"${iface}\" {\n"
+			dhconf="${dhconf} send host-name \"${hname}\"\n;"
+			dhconf="${dhconf}}"
 		fi
 	fi
-	dhconf="${dhconf} interface \"${iface}\" {\n \
-		script \"/${MODULES_DIR}/helpers.d/dhclient-wrapper\";\n \
-		 ${ah}
-	 	}" 
 
+	echo "${dhconf}" > /tmp/dhconf-${iface}
 	# Bring up DHCP for this interface (or alias)
 	ebegin "Running dhclient"
-	x="$(echo -e "${dhconf}" | dhclient ${opts} -q -1 -pf "${pidfile}")"
-	# We just check the last 5 letters
-	[[ ${x:${#x} - 5:5} == "bound" ]]
-	if [[ $? != "0" ]]; then
-		# Kill the offending daemon as it likes to hang around
-		start-stop-daemon --stop --exec /sbin/dhclient --pidfile "${pidfile}"
-		eend 1 "${x}"
-		return 1
-	fi
-	eend 0
+	echo -e "${dhconf}" | start-stop-daemon --start --exec /sbin/dhclient \
+		--pidfile "${pidfile}" -- ${opts} -q -1 -pf "${pidfile}"
+	eend $? || return 1 
 
 	# DHCP succeeded, show address retrieved
 	local addr="$(interface_get_address "${iface}")"
