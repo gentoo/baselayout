@@ -60,4 +60,4 @@ rename_pre_start() {
 	exit 1 
 }
 
-# vim: set ft=sh ts=4 :
+# vim: set ts=4 :

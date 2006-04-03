@@ -106,4 +106,4 @@ arping_start() {
 	return 1
 }
 
-# vim: set ft=sh ts=4 :
+# vim: set ts=4 :

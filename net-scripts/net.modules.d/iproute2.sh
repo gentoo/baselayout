@@ -346,4 +346,4 @@ iproute2_post_stop() {
 	ip route flush cache dev "${iface}"
 }
 
-# vim: set ft=sh ts=4 :
+# vim: set ts=4 :

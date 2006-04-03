@@ -422,4 +422,4 @@ ifconfig_add_address() {
 	ifconfig "${iface}" ${config[@]}
 }
 
-# vim: set ft=sh ts=4 :
+# vim: set ts=4 :

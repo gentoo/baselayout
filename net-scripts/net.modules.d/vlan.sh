@@ -151,4 +151,4 @@ vlan_stop() {
 	return 0
 }
 
-# vim: set ft=sh ts=4 :
+# vim: set ts=4 :
