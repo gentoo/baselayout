@@ -3,6 +3,9 @@
 
   03 Apr 2006; Roy Marples <uberlord@gentoo.org>:
 
+    rc-status doesn't report broken symlinks when querying all levels,
+    #113755 again.
+
     All net modules how have a .sh suffix to indicate that they are shell
     scripts as not everyone uses vim.
 
