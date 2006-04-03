@@ -262,8 +262,10 @@ ewarn() {
 		echo -e " ${WARN}*${NORMAL} ${RC_INDENTATION}$*"
 	fi
 
+	local name="rc-scripts"
+	[[ $0 != "/sbin/runscript.sh" ]] && name="${0##*/}"
 	# Log warnings to system log
-	esyslog "daemon.warning" "rc-scripts" "$*"
+	esyslog "daemon.warning" "${name}" "$*"
 
 	LAST_E_CMD="ewarn"
 	return 0
@@ -281,6 +283,8 @@ eerror() {
 		echo -e " ${BAD}*${NORMAL} ${RC_INDENTATION}$*"
 	fi
 
+	local name="rc-scripts"
+	[[ $0 != "/sbin/runscript.sh" ]] && name="${0##*/}"
 	# Log errors to system log
 	esyslog "daemon.err" "rc-scripts" "$*"
 
@@ -542,35 +546,6 @@ dolisting() {
 	echo "${mylist}"
 }
 
-# void save_options(char *option, char *optstring)
-#
-#    save the settings ("optstring") for "option"
-#
-save_options() {
-	local myopts="$1"
-
-	shift
-	if [[ ! -d "${svcdir}/options/${SVCNAME}" ]] ; then
-		mkdir -p -m 0755 "${svcdir}/options/${SVCNAME}"
-	fi
-
-	echo "$*" > "${svcdir}/options/${SVCNAME}/${myopts}"
-
-	return 0
-}
-
-# char *get_options(char *option)
-#
-#    get the "optstring" for "option" that was saved
-#    by calling the save_options function
-#
-get_options() {
-	if [[ -f "${svcdir}/options/${SVCNAME}/$1" ]] ; then
-		echo "$(< ${svcdir}/options/${SVCNAME}/$1)"
-	fi
-
-	return 0
-}
 
 # char *add_suffix(char * configfile)
 #
@@ -777,6 +752,19 @@ requote() {
 	set -- "${@/#/$q}"			# add ' to start of each param
 	set -- "${@/%/$q}"			# add ' to end of each param
 	echo "$*"
+}
+
+# char* uniqify(char *arg, ...)
+#
+#   Ensure that params are unique
+#
+uniqify() {
+    local result= x=
+    while [[ -n "$1" ]] ; do
+		[[ " ${result} " != *" $1 "* ]] && result="${result} $1"
+		shift
+	done
+    echo "${result# *}"
 }
 
 ##############################################################################

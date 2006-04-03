@@ -7,36 +7,14 @@ depend() {
 }
 
 start() {
-	# Ensure that we have a hostname binary or function
-	source /lib/rcscripts/net.modules.d/helpers.d/functions
-	
-	local myhost=$(hostname 2>/dev/null)
-	local retval=0
-
-	# If the hostname is already set via the kernel, and /etc/hostname 
-	# isn't setup, then we shouldn't go reseting the configuration #38172.
-	if [[ -z ${myhost} ]] || [[ ${myhost} == "(none)" ]] ; then
-		myhost="localhost"
-	fi
-
 	if [[ -f /etc/hostname ]] ; then
 		ewarn "You should stop using /etc/hostname and use /etc/conf.d/hostname"
-		myhost=$(</etc/hostname)
-	else
-		myhost=${HOSTNAME}
+		HOSTNAME="$(< /etc/hostname)"
 	fi
 
-	ebegin "Setting hostname to ${myhost}"
-	hostname "${myhost}"
-	retval=$?
-	eend ${retval} "Failed to set the hostname"
-
-	if [[ ${retval} -eq 0 ]] ; then
-		# setup $HOSTNAME, ignore errors in case /etc is readonly.
-		echo "HOSTNAME=\"${myhost}\"" 2>/dev/null > /etc/env.d/01hostname
-	fi
-
-	return ${retval}
+	ebegin "Setting hostname to ${HOSTNAME}"
+	hostname "${HOSTNAME}"
+	eend $? "Failed to set the hostname"
 }
 
-# vim:ts=4
+# vim: ts=4 :

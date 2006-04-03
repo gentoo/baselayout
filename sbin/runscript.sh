@@ -80,9 +80,9 @@ service_inactive "${SVCNAME}"
 svcinactive="$?"
 svc_quit() {
 	eerror "ERROR:  ${SVCNAME} caught an interrupt"
-	if service_inactive "${SVCNAME}" || [[ ${svcinactive} == 0 ]] ; then
+	if service_inactive "${SVCNAME}" || [[ ${svcinactive} == "0" ]] ; then
 		mark_service_inactive "${SVCNAME}"
-	elif [[ ${svcstarted} == 0 ]] ; then
+	elif [[ ${svcstarted} == "0" ]] ; then
 		mark_service_started "${SVCNAME}"
 	else
 		mark_service_stopped "${SVCNAME}"
@@ -171,7 +171,7 @@ svc_stop() {
 		ewarn "WARNING:  you are stopping a boot service."
 	fi
 	
-	if [[ ${svcpause} != "yes" ]] ; then
+	if [[ ${svcpause} != "yes" && ${RC_NO_DEPS} != "yes" ]] ; then
 		if [[ ${NETSERVICE} == "yes" ]] ; then
 			# A net.* service
 			if in_runlevel "${SVCNAME}" "${BOOTLEVEL}" || \
@@ -215,7 +215,7 @@ svc_stop() {
 
 	IN_BACKGROUND="${ib_save}"
 
-	if [[ ${retval} != 0 ]] ; then
+	if [[ ${retval} != "0" ]] ; then
 		eerror "ERROR:  problems stopping dependent services."
 		eerror "        ${SVCNAME} is still up."
 	else
@@ -236,7 +236,7 @@ svc_stop() {
 
 		# If a service has been marked inactive, exit now as something
 		# may attempt to start it again later
-		if service_inactive "${SVCNAME}" ; then
+		if [[ ${retval} == "0" ]] && service_inactive "${SVCNAME}" ; then
 			svcinactive=0
 			return 0
 		fi
@@ -251,7 +251,7 @@ svc_stop() {
 		if [[ ${SOFTLEVEL} == "reboot" || ${SOFTLEVEL} == "shutdown" ]] ; then
 			mark_service_stopped "${SVCNAME}"
 		else
-			if [[ ${svcinactive} == 0 ]] ; then
+			if [[ ${svcinactive} == "0" ]] ; then
 				mark_service_inactive "${SVCNAME}"
 			else
 				mark_service_started "${SVCNAME}"
@@ -305,82 +305,88 @@ svc_start() {
 
 	service_message "Service ${SVCNAME} starting"
 
+	if broken "${SVCNAME}" ; then
+		eerror "ERROR:  Some services needed are missing.  Run"
+		eerror "        './${SVCNAME} broken' for a list of those"
+		eerror "        services.  ${SVCNAME} was not started."
+		retval=1	
+	fi
+
 	# Save the IN_BACKGROUND var as we need to clear it for starting depends
 	local ib_save="${IN_BACKGROUND}"
 	unset IN_BACKGROUND
 
-	local startupservices="$(ineed "${SVCNAME}") $(valid_iuse "${SVCNAME}")"
-	local netservices=
-	for x in $(dolisting "/etc/runlevels/${BOOTLEVEL}/net.*") \
-		$(dolisting "/etc/runlevels/${mylevel}/net.*") ; do
-		netservices="${netservices} ${x##*/}"
-	done
-
-	# Start dependencies, if any.
-	if ! is_runlevel_start ; then
-		for x in ${startupservices} ; do
-			if [[ ${x} == "net" && ${NETSERVICE} != "yes" ]] && ! is_net_up ; then
-				for y in ${netservices} ; do
-					service_stopped "${y}" && start_service "${y}"
-				done
-			elif [[ ${x} != "net" ]] ; then
-				if service_stopped "${x}" ; then
-					start_service "${x}"
-				fi	
-			fi
+	if [[ ${retval} == "0" && ${RC_NO_DEPS} != "yes" ]] ; then
+		local startupservices="$(ineed "${SVCNAME}") $(valid_iuse "${SVCNAME}")"
+		local netservices=
+		for x in $(dolisting "/etc/runlevels/${BOOTLEVEL}/net.*") \
+			$(dolisting "/etc/runlevels/${mylevel}/net.*") ; do
+			netservices="${netservices} ${x##*/}"
 		done
-	fi
 
-	# We also wait for any services we're after to finish incase they
-	# have a "before" dep but we don't dep on them.
-	if is_runlevel_start ; then
-		startupservices="${startupservices} $(valid_iafter "${SVCNAME}")"
-	fi
+		# Start dependencies, if any.
+		if ! is_runlevel_start ; then
+			for x in ${startupservices} ; do
+				if [[ ${x} == "net" && ${NETSERVICE} != "yes" ]] && ! is_net_up ; then
+					for y in ${netservices} ; do
+						service_stopped "${y}" && start_service "${y}"
+					done
+				elif [[ ${x} != "net" ]] ; then
+					if service_stopped "${x}" ; then
+						start_service "${x}"
+					fi	
+				fi
+			done
+		fi
 
-	if [[ " ${startupservices} " == *" net "* ]] ; then
-		startupservices=" ${startupservices} "
-		startupservices="${startupservices/ net / ${netservices} }"
-		startupservices="${startupservices// net /}"
-	fi
+		# We also wait for any services we're after to finish incase they
+		# have a "before" dep but we don't dep on them.
+		if is_runlevel_start ; then
+			startupservices="${startupservices} $(valid_iafter "${SVCNAME}")"
+		fi
 
-	# Wait for dependencies to finish.
-	for x in ${startupservices} ; do
-		service_started "${x}" && continue
-		wait_service "${x}"
-		if ! service_started "${x}" ; then
-			# A 'need' dependency is critical for startup
-			if ineed -t "${SVCNAME}" "${x}" >/dev/null \
-				|| net_service "${x}" && ineed -t "${SVCNAME}" net \
-				&& ! is_net_up ; then
-				if service_inactive "${x}" || service_wasinactive "${x}" || \
-				[[ -n $(ls "${svcdir}"/scheduled/*/"${x}" 2>/dev/null) ]] ; then
-					svc_schedule_start "${x}" "${SVCNAME}"
-					[[ -n ${startinactive} ]] && startinactive="${startinactive}, "
-					startinactive="${startinactive}${x}"
-				else
-					startfail="${x}"
-					break
+		if [[ " ${startupservices} " == *" net "* ]] ; then
+			startupservices=" ${startupservices} "
+			startupservices="${startupservices/ net / ${netservices} }"
+			startupservices="${startupservices// net /}"
+		fi
+
+		# Wait for dependencies to finish.
+		for x in ${startupservices} ; do
+			service_started "${x}" && continue
+			wait_service "${x}"
+			if ! service_started "${x}" ; then
+				# A 'need' dependency is critical for startup
+				if ineed -t "${SVCNAME}" "${x}" >/dev/null \
+					|| net_service "${x}" && ineed -t "${SVCNAME}" net \
+					&& ! is_net_up ; then
+					if service_inactive "${x}" || service_wasinactive "${x}" || \
+						[[ -n $(ls "${svcdir}"/scheduled/*/"${x}" 2>/dev/null) ]] ; then
+						svc_schedule_start "${x}" "${SVCNAME}"
+						[[ -n ${startinactive} ]] && startinactive="${startinactive}, "
+						startinactive="${startinactive}${x}"
+					else
+						startfail="${x}"
+						break
+					fi
 				fi
 			fi
+		done
+
+		if [[ -n ${startfail} ]] ; then
+			eerror "ERROR:  Problem starting needed service ${startfail}"
+			eerror "        ${SVCNAME} was not started."
+			retval=1
+		elif [[ -n ${startinactive} ]] ; then
+			# Change the last , to or for correct grammar.
+			x="${startinactive##*, }"
+			startinactive="${startinactive/%, ${x}/ or ${x}}"
+			ewarn "WARNING:  ${SVCNAME} is scheduled to start when ${startinactive} has started."
+			retval=1
 		fi
-	done
-	
-	if [[ -n ${startfail} ]] ; then
-		eerror "ERROR:  Problem starting needed service ${startfail}"
-		eerror "        ${SVCNAME} was not started."
-		retval=1
-	elif [[ -n ${startinactive} ]] ; then
-		# Change the last , to or for correct grammar.
-		x="${startinactive##*, }"
-		startinactive="${startinactive/%, ${x}/ or ${x}}"
-		ewarn "WARNING:  ${SVCNAME} is scheduled to start when ${startinactive} has started."
-		retval=1
-	elif broken "${SVCNAME}" ; then
-		eerror "ERROR:  Some services needed are missing.  Run"
-		eerror "        './${SVCNAME} broken' for a list of those"
-		eerror "        services.  ${SVCNAME} was not started."
-		retval=1
-	else
+	fi
+		
+	if [[ ${retval} == "0" ]] ; then
 		IN_BACKGROUND="${ib_save}"
 		(
 		exit() {
@@ -403,15 +409,15 @@ svc_start() {
 		
 		# If a service has been marked inactive, exit now as something
 		# may attempt to start it again later
-		if service_inactive "${SVCNAME}" ; then
+		if [[ ${retval} == "0" ]] && service_inactive "${SVCNAME}" ; then
 			svcinactive=0
 			service_message "ewarn" "WARNING:  ${SVCNAME} has started but is inactive"
 			return 1
 		fi
 	fi
 
-	if [[ ${retval} != 0 ]] ; then
-		if [[ ${svcinactive} == 0 ]] ; then
+	if [[ ${retval} != "0" ]] ; then
+		if [[ ${svcinactive} == "0" ]] ; then
 			mark_service_inactive "${SVCNAME}"
 		else
 			mark_service_stopped "${SVCNAME}"
@@ -527,12 +533,16 @@ fi
 for arg in $* ; do
 	case "${arg}" in
 	--quiet)
+		RC_QUIET="yes"
 		RC_QUIET_STDOUT="yes"
 		;;
 # We check this in functions.sh ...
 #	--nocolor)
 #		RC_NOCOLOR="yes"
 #		;;
+	--nodeps)
+		RC_NO_DEPS="yes"
+		;;
 	--verbose)
 		RC_VERBOSE="yes"
 		;;
@@ -648,7 +658,7 @@ for arg in $* ; do
 		retval="$?"
 		svcpause="no"
 		;;
-	--quiet|--nocolor)
+	--quiet|--nocolor|--nodeps)
 		;;
 	help)
 		exec "${svclib}"/sh/rc-help.sh "${myscript}" help

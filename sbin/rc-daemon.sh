@@ -265,7 +265,7 @@ rc_start_daemon() {
 # Returns 0 if everything was successful otherwise 1
 rc_stop_daemon() {
 	local pid pids retval="0"
-
+	
 	if [[ -n ${cmd} ]]; then
 		if ! is_daemon_running ${cmd} "${pidfile}" ; then
 			[[ ${RC_FAIL_ON_ZOMBIE} == "yes" ]] && return 1

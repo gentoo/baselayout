@@ -255,11 +255,40 @@ is_runlevel_stop() {
 	[[ -d "${svcdir}/softscripts.new" ]]
 }
 
+# void save_options(char *option, char *optstring)
+#
+#    save the settings ("optstring") for "option"
+#
+save_options() {
+	local myopts="$1"
+
+	shift
+	if [[ ! -d "${svcdir}/options/${SVCNAME}" ]] ; then
+		mkdir -p -m 0755 "${svcdir}/options/${SVCNAME}"
+	fi
+
+	echo "$*" > "${svcdir}/options/${SVCNAME}/${myopts}"
+}
+
+# char *get_options(char *option)
+#
+#    get the "optstring" for "option" that was saved
+#    by calling the save_options function
+#
+get_options() {
+	local svc="${SVCNAME}"
+	[[ -n $2 ]] && svc="$2"
+	
+	if [[ -f "${svcdir}/options/${svc}/$1" ]] ; then
+		echo "$(< ${svcdir}/options/${svc}/$1)"
+	fi
+}
+
 # void sevice_message([char *type] char *message)
 #
 # Print out a service message if we are on parallel
 service_message() {
-	[[ ${RC_PARALLEL_STARTUP} != "yes" ]] && return
+	[[ ${RC_PARALLEL_STARTUP} != "yes" || ${RC_QUIET} == "yes" ]] && return
 
 	local cmd="einfo"
 	case "$1" in

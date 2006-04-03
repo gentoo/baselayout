@@ -47,17 +47,20 @@ udhcpc_stop() {
 
 	local ifvar="$(bash_variable "${iface}")"
 	d="dhcp_${ifvar}"
-	d=" ${!d} "
-	[[ ${d} == "  " ]] && d=" ${dhcp} "
+	[[ -z ${!d} ]] && d="dhcp" 
 
-	if [[ ${d} == *" release "* ]]; then
+	if [[ " ${!d} " == *" release "* ]]; then
 		kill -s USR2 "${pid}" &>/dev/null
 		[[ -f "/var/cache/udhcpc-${iface}.lease" ]] \
 			&& rm "/var/cache/udhcpc-${iface}.lease"
 	fi
 
 	start-stop-daemon --stop --exec /sbin/udhcpc --pidfile "${pidfile}"
-	eend $?
+	eend $? || return 1
+
+	[[ -e /var/run/udhcpc-"${iface}".conf ]] \
+		&& rm -f /var/run/udhcpc-"${iface}".conf
+	return 0
 }
 
 # bool udhcpc_start(char *iface)
@@ -76,15 +79,39 @@ udhcpc_start() {
 	opts="${!opts}"
 
 	d="dhcp_${ifvar}"
-	d=" ${!d} "
-	[[ ${d} == "  " ]] && d=" ${dhcp} "
+	[[ -z ${!d} ]] && d="dhcp"
 
-	if [[ " ${d} " != *" nosendhost "* ]]; then
+	if [[ " ${!d} " != *" nosendhost "* ]]; then
 		if [[ ! " ${opts}" =~ " -([hH] |-hostname=)" ]]; then
 			local hname="$(hostname)"
 			[[ -n ${hname} && ${hname} != "(none)" && ${hname} != "localhost" ]] \
 				&& opts="${opts} --hostname=${hname}"
 		fi
+	fi
+
+	# Setup options for the udhcpc script
+	# We pass these via a seperate config file so we're nice and fast
+	# maybe oneday, udhcp will accept custom env vars.
+	local conf="/var/run/udhcpc-${iface}.conf"
+	echo "# udhcpc runtime configuration for interface ${iface}" > "${conf}"
+	if [[ " ${!d} " == *" nodns "* ]] ; then
+		#opts="${opts} --env PEER_DNS=no"
+		echo "PEER_DNS=no" >> "${conf}"
+	else
+		#opts="${opts} --env PEER_DNS=yes"
+		echo "PEER_DNS=yes" >> "${conf}"
+	fi
+	if [[ " ${!d} " == *" nontp "* ]] ; then
+		#opts="${opts} --env PEER_NTP=no"
+		echo "PEER_NTP=no" >> "${conf}"
+	else
+		#opts="${opts} --env PEER_NTP=yes"
+		echo "PEER_NTP=yes" >> "${conf}"
+	fi
+	local metric="metric_${ifvar}"
+	if [[ -n ${!metric} ]] ; then
+		#opts="${opts} --env IF_METRIC=${!metric}"
+		echo "IF_METRIC=${!metric}" >> "${conf}"
 	fi
 
 	# Bring up DHCP for this interface (or alias)
@@ -99,13 +126,11 @@ udhcpc_start() {
 		fi
 	fi
 
-	x="$( eval udhcpc "${opts}" --now --pidfile="${pidfile}" \
-		--interface="${iface}" \
-		--script="${MODULES_DIR}/helpers.d/udhcpc-wrapper" 2>&1 \
-		| egrep -v '^info,' )"
-	# We just check the last 5 letters
-	[[ ${x:((${#x} - 5)):5} == "bound" ]]
-	eend "$?" "${x}" || return 1
+	eval start-stop-daemon --start --exec /sbin/udhcpc \
+		--pidfile "${pidfile}" \
+		-- "${opts}" --interface="${iface}" --now --quiet \
+		--pidfile="${pidfile}"
+	eend $? || return 1
 
 	# DHCP succeeded, show address retrieved
 	local addr="$(interface_get_address "${iface}")"

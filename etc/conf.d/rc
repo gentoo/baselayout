@@ -31,16 +31,6 @@ RC_INTERACTIVE="yes"
 
 RC_NET_STRICT_CHECKING="no"
 
-# RC_AUTO_INTERFACE allows us to try and configure your interfaces
-# automatically. This includes:
-# - link /etc/{resolv,ntp,yp}.conf to /var/lib/net-scripts
-# - calculate a metric based on what interfaces are up and type
-# - apply interface state (resolv.conf, ntp.conf, etc)
-# - merge resolv.conf and ntp.conf from active interfaces based on metric
-# otherwise we don't do the above
-
-RC_AUTO_INTERFACE="no"
-
 # RC_DOWN_INTERFACE allows you to specify if RC will bring the interface
 # compeletly down when it stops. The default is yes, but there are some
 # instances where you may not want this to happen such as using Wake On LAN.

@@ -59,7 +59,7 @@ dhcpcd_stop() {
 	else
 		start-stop-daemon --stop --exec /sbin/dhcpcd --pidfile "${pidfile}"
 	fi
-	eend $? "timed out"
+	eend $?
 }
 
 # bool dhcpcd_start(char *iface)
@@ -100,16 +100,9 @@ dhcpcd_start() {
 	metric="metric_${ifvar}"
 	[[ -n ${!metric} && ${!metric} != "0" ]] && opts="${opts} -m ${!metric}"
 
-	# Instruct dhcpcd to use our wrapper 
-	opts="${opts} -c \"${svclib}/net.modules.d/helpers.d/dhcpcd-wrapper\""
-
-	# Instruct dhcpcd to create it's files in our state dir
-	opts="${opts} -e \"${statedir}/${iface}\""
-
 	# Bring up DHCP for this interface (or alias)
 	ebegin "Running dhcpcd"
 
-	[[ ! -d "${statedir}/${iface}" ]] && mkdir -m 0755 -p "${statedir}/${iface}"
 	eval /sbin/dhcpcd "${opts}" "${iface}"
 	eend $? || return 1
 

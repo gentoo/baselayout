@@ -12,6 +12,7 @@
 # runlevel as the net.* script that needs it.
 depend() {
 	need localmount
+	after hostname
 	use isapnp isdn pcmcia usb wlan
 
 	# Load any custom depend functions for the given interface
@@ -24,9 +25,6 @@ depend() {
 
 # Define where our modules are
 MODULES_DIR="${svclib}/net.modules.d"
-
-# Load some functions shared between ourselves and our DHCP helpers
-source "${MODULES_DIR}/helpers.d/functions"
 
 # Make some wrappers to fudge after/before/need/use depend flags.
 # These are callbacks so MODULE will be set.
@@ -54,6 +52,171 @@ variables() {
 	eval "${MODULE}_variables() { echo \"$*\"; }"
 }
 
+is_loopback() {
+	[[ $1 == "lo" || $1 == "lo"[0-9]* ]]
+}
+
+# char* interface_device(char *iface)
+#
+# Gets the base device of the interface
+# Can handle eth0:1 and eth0.1
+# Which returns eth0 in this case
+interface_device() {
+	local dev="${1%%.*}"
+	[[ ${dev} == "$1" ]] && dev="${1%%:*}"
+	echo "${dev}"
+}
+
+# char* interface_type(char* iface)
+#
+# Returns the base type of the interface
+# eth, ippp, etc
+interface_type() {
+	echo "${1%%[0-9]*}"
+}
+
+# int calculate_metric(char *interface)
+#
+# Calculates the best metric for the interface
+# The Linux kernel does not use this at the moment, but we use it so that
+# default routes remain and we can work out the "best" interface
+calculate_metric() {
+	local iface="$1" exclude='$1!="Iface" && $1!="lo"'
+
+	# Have we already got a metric?
+	local m="$( awk '$1=="'${iface}'" && $2=="00000000" { print $7 }' \
+		/proc/net/route )"
+	if [[ -n ${m} ]] ; then
+		echo "${m}"
+		return 0
+	fi
+
+	local itype="$(interface_type "${iface}")" x i
+
+	# If we're not a wireless device then exclude wireless from the
+	# routing table so we stay < 1000
+	if [[ -e /proc/net/wireless ]] ; then
+		if ! grep -q "^[ \t]*${iface}:[ \t]" /proc/net/wireless ; then
+			local i="$(sed -n -e 's/^[ \t]*\(.*\):.*/\1/p' /proc/net/wireless)"
+			for x in ${i} ; do
+				exclude="${exclude} && "'$1'"!=\"${x}\""
+			done
+		fi
+	fi
+
+	# Exclude ppp and ippp as well
+	local ix="ppp|ippp"
+	[[ ${itype} == "ppp" ]] && ix="ippp"
+	[[ ${itype} == "ippp" ]] && ix="ppp"
+	i="$( sed -n -e 's/^[ ]*\('"${ix}"'[0-9]*\):.*$/\1/p' /proc/net/dev )"
+	for x in ${i} ; do
+		exclude="${exclude} && "'$1'"!=\"${x}\""
+	done
+
+	local m="$( awk "${exclude} { print "'$7'" }" /proc/net/route \
+		| sort -rn | head -n 1 | cut -d' ' -f2 )"
+	m="${m:--1}"
+	(( m ++ ))
+
+	# If we're a wireless device then add 1000 so that wired interfaces take preference
+	if [[ -e /proc/net/wireless ]] ; then
+		grep -q "^[ \t]*${iface}:[ \t]" /proc/net/wireless && (( m+= 1000 ))
+	fi
+
+	# If we're a ppp device then we add 2000 for ISDN, otherwise 3000
+	[[ ${itype} == "ippp" ]] && (( m+= 2000 ))
+	[[ ${itype} == "ppp" ]] && (( m+= 3000 ))
+
+	echo "${m}"
+}
+
+# int netmask2cidr(char *netmask)
+#
+# Returns the CIDR of a given netmask
+netmask2cidr() {
+	local binary="" i bin
+
+	for i in ${1//./ }; do
+		bin=""
+		while [[ ${i} != "0" ]] ; do
+			bin=$[${i}%2]${bin}
+			(( i=i>>1 ))
+		done
+		binary="${binary}${bin}"
+	done
+	binary="${binary%%0*}"
+	echo "${#binary}"
+}
+
+
+# bool is_function(char* name)
+#
+# Returns 0 if the given name is a shell function, otherwise 1
+is_function() {
+	[[ -z $1 ]] && return 1
+	[[ $(type -t "$1") == "function" ]]
+}
+
+# void function_wrap(char* source, char* target)
+#
+# wraps function calls - for example function_wrap(this, that)
+# maps function names this_* to that_*
+function_wrap() {
+	local i
+
+	is_function "${2}_depend" && return
+
+	for i in $( typeset -f | grep -o '^'"${1}"'_[^ ]*' ); do
+		eval "${2}${i#${1}}() { ${i} \"\$@\"; }"
+	done
+}
+
+# char[] * expand_parameters(char *cmd)
+#
+# Returns an array after expanding parameters. For example
+# "192.168.{1..3}.{1..3}/24 brd +"
+# will return
+# "192.168.1.1/24 brd +"
+# "192.168.1.2/24 brd +"
+# "192.168.1.3/24 brd +"
+# "192.168.2.1/24 brd +"
+# "192.168.2.2/24 brd +"
+# "192.168.2.3/24 brd +"
+# "192.168.3.1/24 brd +"
+# "192.168.3.2/24 brd +"
+# "192.168.3.3/24 brd +"
+expand_parameters() {
+	local x="$( eval echo ${@// /_} )"
+	local -a a=( ${x} )
+
+	a=( "${a[@]/#/\"}" )
+	a=( "${a[@]/%/\"}" )
+	echo "${a[*]//_/ }"
+}
+
+# void configure_variables(char *interface, char *option1, [char *option2])
+#
+# Maps configuration options from <variable>_<option> to <variable>_<iface>
+# option2 takes precedence over option1
+configure_variables() {
+	local iface="$1" option1="$2" option2="$3"
+
+	local mod func x i
+	local -a ivars ovars1 ovars2
+	local ifvar="$(bash_variable "${iface}")"
+
+	for mod in ${MODULES[@]}; do
+		is_function ${mod}_variables || continue
+		for v in $(${mod}_variables) ; do
+			x=""
+			[[ -n ${option2} ]] && x="${v}_${option2}[@]"
+			[[ -z ${!x} ]] && x="${v}_${option1}[@]"
+			[[ -n ${!x} ]] && eval "${v}_${ifvar}=( \"\${!x}\" )"
+		done
+	done
+
+	return 0
+}
 # bool module_load_minimum(char *module)
 #
 # Does the minimum checking on a module - even when forcing
@@ -404,7 +567,7 @@ modules_load()  {
 	local RC_INDENTATION="${RC_INDENTATION}"
 	local -a PROVIDES WRAP_MODULES
 
-	if [[ ${iface} != "lo" ]] ; then
+	if ! is_loopback "${iface}" ; then
 		x="modules_force_${iface}[@]"
 		[[ -n ${!x} ]] && modules_force=( "${!x}" )
 		if [[ -n ${modules_force} ]] ; then
@@ -510,14 +673,10 @@ iface_start() {
 	local -a config fallback fallback_route conf a b 
 	local ifvar="$(bash_variable "$1")" i j
 
-	# Try and work out a metric for the interface if we're on auto
+	# Try and work out a metric for the interface
 	x="metric_${ifvar}"
 	if [[ -z ${!x} ]] ; then
-		if [[ ${RC_AUTO_INTERFACE} == "yes" ]] ; then
-			eval "metric_${ifvar}=\"$(calculate_metric ${iface})\""
-		else
-			eval "metric_${ifvar}=0"
-		fi
+		eval "metric_${ifvar}=\"$(calculate_metric ${iface})\""
 	fi
 
 	# pre Start any modules with
@@ -572,18 +731,13 @@ iface_start() {
 	# Provide a default of DHCP if no configuration is set and we're auto
 	# Otherwise a default of NULL
 	if [[ -z ${config} ]] ; then
-#		if [[ ${RC_AUTO_INTERFACE} == "yes" ]] ; then
-			ewarn "Configuration not set for ${iface} - assuming DHCP"
-			if is_function "dhcp_start" ; then
-				config=( "dhcp" )
-			else
-				eerror "No DHCP client installed"
-				return 1
-			fi
-#		else
-#			config=( "null" )
-#			ewarn "Configuration not set for ${iface} - assuming null"
-#		fi
+		ewarn "Configuration not set for ${iface} - assuming DHCP"
+		if is_function "dhcp_start" ; then
+			config=( "dhcp" )
+		else
+			eerror "No DHCP client installed"
+			return 1
+		fi
 	fi
 
 	einfo "Bringing up ${iface}"
@@ -612,11 +766,12 @@ iface_start() {
 			# We do this by testing if the 1st character is a digit
 		elif [[ ${conf[0]:0:1} == [[:digit:]] || ${conf[0]} == *:* ]] ; then
 			x="0"
-			if [[ ${RC_AUTO_INTERFACE} == "yes" ]] \
-				&& is_function arping_address_exists ; then
-				if arping_address_exists "${iface}" "${conf[0]}" ; then
-					eerror "${conf[0]%%/*} already taken on ${iface}"
-					x="1"
+			if ! is_loopback "${iface}" ; then
+				if is_function arping_address_exists ; then
+					if arping_address_exists "${iface}" "${conf[0]}" ; then
+						eerror "${conf[0]%%/*} already taken on ${iface}"
+						x="1"
+					fi
 				fi
 			fi
 			[[ ${x} == "0" ]] && interface_add_address "${iface}" ${conf[@]}; x="$?"
@@ -672,7 +827,9 @@ iface_stop() {
 
 	# pre Stop any modules
 	for mod in ${MODULES[@]}; do
-		is_function "${mod}_pre_stop" && ${mod}_pre_stop "${iface}"
+		if is_function "${mod}_pre_stop" ; then
+			${mod}_pre_stop "${iface}" || return 1
+		fi
 	done
 
 	einfo "Bringing down ${iface}"
@@ -691,7 +848,9 @@ iface_stop() {
 	for i in ${aliases} ${iface}; do
 		# Stop all our modules
 		for mod in ${MODULES[@]}; do
-			is_function "${mod}_stop" && ${mod}_stop "${i}"
+			if is_function "${mod}_stop" ; then
+				${mod}_stop "${i}" || return 1
+			fi
 		done
 
 		# A module may have removed the interface
@@ -738,6 +897,10 @@ run_start() {
 		metric_lo="0"
 		config_lo=( "127.0.0.1/8 brd 127.255.255.255" "${config_lo[@]}" )
 		routes_lo=( "127.0.0.0/8" "${routes_lo[@]}" )
+	elif [[ ${iface} == "lo0" ]] ; then
+		metric_lo0="0"
+		config_lo0=( "127.0.0.1/8 brd 127.255.255.255" "${config_lo[@]}" )
+		routes_lo0=( "127.0.0.0/8" "${routes_lo[@]}" )
 	fi
 
 	# We may not have a loaded module for ${iface}
@@ -833,6 +996,9 @@ run_stop() {
 
 	iface_stop "${iface}" || return 1  # always succeeds, btw
 
+	# Release resolv.conf information.
+	[[ -x /sbin/resolvconf ]] && resolvconf -d "${iface}"
+	
 	# Mark us as inactive if called from the background
 	[[ ${IN_BACKGROUND} == "true" ]] && mark_service_inactive "net.${iface}"
 
@@ -847,6 +1013,7 @@ run_stop() {
 		( postdown "${iface}" )
 		eoutdent
 	fi
+
 
 	return 0
 }
@@ -876,7 +1043,9 @@ run() {
 	[[ ${cmd} == "stop" ]] && starting=false
 
 	# We force lo to only use these modules for a major speed boost
-	[[ ${iface} == "lo" ]] && modules_force=( "iproute2" "ifconfig" "system" )
+	if is_loopback "${iface}" ; then	
+		modules_force=( "iproute2" "ifconfig" "system" )
+	fi
 
 	if modules_load "${iface}" "${starting}" ; then
 		if [[ ${cmd} == "stop" ]] ; then
@@ -887,7 +1056,6 @@ run() {
 			done
 
 			run_stop "${iface}" && r=0
-			remove_state "${iface}"
 		else
 			# Only hotplug on ethernet interfaces
 			if [[ ${IN_HOTPLUG} == 1 ]] ; then
@@ -901,19 +1069,7 @@ run() {
 		fi
 	fi
 
-	# Only apply best state if we're on auto
-	if [[ ${r} == "0" ]] ; then
-		local siface=""
-		if [[ ${RC_AUTO_INTERFACE} == "yes" ]] ; then
-			siface="$(select_best_interface)"
-			if [[ -n ${siface} ]] ; then
-				einfo "Selecting best interface: ${siface}"
-			fi
-		elif [[ ${cmd} == "start" ]] ; then
-			siface="${iface}"
-		fi
-		[[ -n ${siface} ]] && apply_state "${siface}"
-	else
+	if [[ ${r} != "0" ]] ; then
 		if [[ ${cmd} == "start" ]] ; then
 			# Call user-defined failup if it exists
 			if is_function failup ; then
@@ -938,23 +1094,6 @@ run() {
 	return "${r}"
 }
 
-# void link_file(char *file)
-#
-# Move a config file from /etc to ${netdir} and creates a link if needed.
-# This enables net-scripts to control the config file for interface management
-# and allow /etc to become read only.
-link_file() {
-	local file="$1"
-	local link="$(readlink "/etc/${file}" 2>/dev/null)"
-	if [[ ${link} != "${netdir}/${file}" ]] ; then
-		if [[ -f "/etc/${file}" ]] ; then
-			vewarn "Moving /etc/${file} to ${netdir}/${file} and creating link"
-			mv "/etc/${file}" "${netdir}"
-			ln -snf "${netdir}/${file}" "/etc/${file}"
-		fi
-	fi
-}
-
 # bool start(void)
 #
 # Start entry point so that we only have one function
@@ -972,19 +1111,6 @@ start() {
 			mark_service_stopped "net.${IFACE}"
 			exit 1
 		fi
-	fi
-
-	if [[ ! -d "${statedir}/${IFACE}" ]] ; then
-		if ! mkdir -m 0755 -p "${statedir}/${IFACE}" ; then
-			eerror "Unable to create state directory!"
-			return 1
-		fi
-	fi
-
-	if [[ ${RC_AUTO_INTERFACE} == "yes" ]] ; then
-		link_file "resolv.conf"
-		link_file "ntp.conf"
-		link_file "yp.conf"
 	fi
 
 	einfo "Starting ${IFACE}"

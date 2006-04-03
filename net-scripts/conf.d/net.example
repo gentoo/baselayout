@@ -494,8 +494,14 @@
 # TUN/TAP
 # For TUN/TAP support emerge net-misc/openvpn or sys-apps/usermode-utilities
 #
-# NOTE: The interface name must be either tun or tap followed by a number
+# You must specify if we're a tun or tap device. Then you can give it any
+# name you like - such as vpn
+#tuntap_vpn="tun"
 #config_tun1=( "192.168.0.1/24")
+
+# Or stick wit the generic names - like tap0
+#tuntap_tap0="tap"
+#config_tap0=( "192.168.0.1/24")
 
 # For passing custom options to tunctl use something like the following.  This
 # example sets the owner to adm

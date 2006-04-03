@@ -124,6 +124,12 @@ pppd_start() {
 		return 1
 	fi
 
+	if [[ ${!link} == "/"* && ! -e ${!link} ]] ; then
+		eerror "${link} does not exist"
+		eerror "Please verify hardware or kernel module (driver)"
+		return 1
+	fi
+
 	# Might or might not be set in conf.d/net
 	local user password i
 	username="username_${ifvar}"
