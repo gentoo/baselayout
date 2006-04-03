@@ -210,7 +210,7 @@ for level in ${runlevelidxs} ; do
 	echo "Runlevel: ${HILITE}${level}${NORMAL}"
 	for service in ${runlevels[${arridx}]} ; do
 		if [[ ! -e "${runleveldir}/${level}/${service}" \
-			&& ${level} != "UNASSIGNED" \
+			&& ${level} != "UNASSIGNED" && ${level} != "all" \
 			]] && [[ ${level} != "${BOOTLEVEL}" \
 			|| " ${boot_crit} " != *" ${service} "* ]]; then
 			print_msg "${service}" "${BAD}" 'broken  '
