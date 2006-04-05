@@ -1,6 +1,13 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  05 Apr 2006; Roy Marples <uberlord@gentoo.org>:
+
+    runscript.sh now stores the fact that it failed to to /dev/.rcsysinit
+    existing in the directory /dev/.rcafterinit. rc adds services in
+    /dev/.rcafterinit to the boot list and then rm -f's that directory. This
+    solves the issue of udev-089 forcing coldplug removal.
+
   03 Apr 2006; Roy Marples <uberlord@gentoo.org>:
 
     rc-status doesn't report broken symlinks when querying all levels,

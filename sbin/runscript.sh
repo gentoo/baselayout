@@ -26,6 +26,9 @@ myservice="${SVCNAME}"
 # Stop init scripts from working until sysinit completes
 if [[ -e /dev/.rcsysinit ]] ; then
 	eerror "ERROR:  cannot run ${SVCNAME} until sysinit completes"
+	# Try to add this service to a queue when sysinit has completed
+	[[ ! -d /dev/.rcafterinit ]] && mkdir /dev/.rcafterinit
+	ln -snf "$1" /dev/.rcafterinit/"${SVCNAME}"
 	exit 1
 fi
 
