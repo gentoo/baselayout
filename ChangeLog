@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 2002-2004 Gentoo Foundation; Distributed under the GPLv2
 
+  06 Apr 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Backport .rcboot feature which works with udev-089 coldplugging.
+
   11 Mar 2006; Roy Marples <uberlord@gentoo.org>:
 
     ifconfig fixes routes to ifaces, #125786 thanks to Jason Stubbs.
