@@ -23,12 +23,15 @@ export SVCNAME
 # Support deprecated myservice variable
 myservice="${SVCNAME}"
 
-# Stop init scripts from working until sysinit completes
+# coldplug events can trigger init scripts, but we don't want to run them
+# until after rc sysinit has completed so we punt them to the boot runlevel
 if [[ -e /dev/.rcsysinit ]] ; then
 	eerror "ERROR:  cannot run ${SVCNAME} until sysinit completes"
-	# Try to add this service to a queue when sysinit has completed
-	[[ ! -d /dev/.rcafterinit ]] && mkdir /dev/.rcafterinit
-	ln -snf "$1" /dev/.rcafterinit/"${SVCNAME}"
+	eerror "${SVCNAME} will be started in the ${BOOTLEVEL} runlevel"
+	if [[ ! -L /dev/.rcboot/"${SVCNAME}" ]] ; then
+		[[ ! -d /dev/.rcboot ]] && mkdir /dev/.rcboot
+		ln -snf "$1" /dev/.rcboot/"${SVCNAME}"
+	fi
 	exit 1
 fi
 

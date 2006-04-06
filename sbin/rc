@@ -524,7 +524,7 @@ then
 	(
 		# Needed for mark_service_started()
 		source "${svclib}/sh/rc-services.sh"
-		
+
 		for x in ${CRITICAL_SERVICES}
 		do
 			mark_service_started "${x}"
@@ -683,12 +683,12 @@ else
 
 		# As we're in the bootlevel, add any services that failed due
 		# to /dev/.rcsysinit existing to the list
-		if [[ -d /dev/.rcafterinit ]] ; then
-			for x in $(dolisting /dev/.rcafterinit/) ; do
+		if [[ -d /dev/.rcboot ]] ; then
+			for x in $(dolisting /dev/.rcboot/) ; do
 				[[ -L ${x} ]] && myscripts="${myscripts} ${x##*/}"
 			done
 			einfo "Device initiated services:${HILITE}${myscripts}${NORMAL}"
-			rm -rf /dev/.rcafterinit
+			rm -rf /dev/.rcboot
 		fi
 	fi
 	
