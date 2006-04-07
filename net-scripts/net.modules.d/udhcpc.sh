@@ -128,8 +128,9 @@ udhcpc_start() {
 
 	eval start-stop-daemon --start --exec /sbin/udhcpc \
 		--pidfile "${pidfile}" \
-		-- "${opts}" --interface="${iface}" --now --quiet \
-		--pidfile="${pidfile}"
+		-- "${opts}" --interface="${iface}" --now \
+		--script=/lib/rcscripts/sh/udhcpc.sh \
+		--pidfile="${pidfile}" >/dev/null
 	eend $? || return 1
 
 	# DHCP succeeded, show address retrieved
