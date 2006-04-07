@@ -75,13 +75,12 @@ interface_type() {
 	echo "${1%%[0-9]*}"
 }
 
-# int calculate_metric(char *interface)
+# int calculate_metric(char *interface, int base)
 #
 # Calculates the best metric for the interface
-# The Linux kernel does not use this at the moment, but we use it so that
-# default routes remain and we can work out the "best" interface
+# We use this when we add routes so we can prefer interfaces over each other
 calculate_metric() {
-	local iface="$1" exclude='$1!="Iface" && $1!="lo"'
+	local iface="$1" metric="$2"
 
 	# Have we already got a metric?
 	local m="$( awk '$1=="'${iface}'" && $2=="00000000" { print $7 }' \
@@ -91,43 +90,27 @@ calculate_metric() {
 		return 0
 	fi
 
-	local itype="$(interface_type "${iface}")" x i
+	local i= dest= gw= flags= ref= u= m= mtu= metrics=
+	while read i dest gw flags ref u m mtu ; do
+		# Ignore lo
+		is_loopback "${i}" && continue
+		# We work out metrics from default routes only
+		[[ ${dest} != "00000000" || ${gw} == "00000000" ]] && continue
+		metrics="${metrics}\n${m}"
+	done < /proc/net/route
 
-	# If we're not a wireless device then exclude wireless from the
-	# routing table so we stay < 1000
-	if [[ -e /proc/net/wireless ]] ; then
-		if ! grep -q "^[ \t]*${iface}:[ \t]" /proc/net/wireless ; then
-			local i="$(sed -n -e 's/^[ \t]*\(.*\):.*/\1/p' /proc/net/wireless)"
-			for x in ${i} ; do
-				exclude="${exclude} && "'$1'"!=\"${x}\""
-			done
-		fi
-	fi
+	# Now, sort our metrics
+	metrics="$(echo -e "${metrics}" | sort -n)"
 
-	# Exclude ppp and ippp as well
-	local ix="ppp|ippp"
-	[[ ${itype} == "ppp" ]] && ix="ippp"
-	[[ ${itype} == "ippp" ]] && ix="ppp"
-	i="$( sed -n -e 's/^[ ]*\('"${ix}"'[0-9]*\):.*$/\1/p' /proc/net/dev )"
-	for x in ${i} ; do
-		exclude="${exclude} && "'$1'"!=\"${x}\""
+	# Now, find the lowest we can use
+	local gotbase=false
+	for m in ${metrics} ; do
+		[[ ${m} -lt ${metric} ]] && continue
+		[[ ${m} == ${metric} ]] && ((metric++))
+		[[ ${m} -gt ${metric} ]] && break
 	done
-
-	local m="$( awk "${exclude} { print "'$7'" }" /proc/net/route \
-		| sort -rn | head -n 1 | cut -d' ' -f2 )"
-	m="${m:--1}"
-	(( m ++ ))
-
-	# If we're a wireless device then add 1000 so that wired interfaces take preference
-	if [[ -e /proc/net/wireless ]] ; then
-		grep -q "^[ \t]*${iface}:[ \t]" /proc/net/wireless && (( m+= 1000 ))
-	fi
-
-	# If we're a ppp device then we add 2000 for ISDN, otherwise 3000
-	[[ ${itype} == "ippp" ]] && (( m+= 2000 ))
-	[[ ${itype} == "ppp" ]] && (( m+= 3000 ))
-
-	echo "${m}"
+	
+	echo "${metric}"
 }
 
 # int netmask2cidr(char *netmask)
@@ -672,13 +655,7 @@ iface_start() {
 	local iface="$1" mod config_counter="-1" x config_worked=false
 	local RC_INDENTATION="${RC_INDENTATION}"
 	local -a config fallback fallback_route conf a b 
-	local ifvar="$(bash_variable "$1")" i j
-
-	# Try and work out a metric for the interface
-	x="metric_${ifvar}"
-	if [[ -z ${!x} ]] ; then
-		eval "metric_${ifvar}=\"$(calculate_metric ${iface})\""
-	fi
+	local ifvar="$(bash_variable "$1")" i j metric=0
 
 	# pre Start any modules with
 	for mod in ${MODULES[@]}; do
@@ -686,6 +663,14 @@ iface_start() {
 			${mod}_pre_start "${iface}" || { eend 1; return 1; }
 		fi
 	done
+
+	x="metric_${ifvar}"
+	# If we don't have a metric then calculate one
+	# Our modules will set the metric variable to a suitable base
+	# in their pre starts.
+	if [[ -z ${!x} ]] ; then
+		eval "metric_${ifvar}=\"$(calculate_metric "${iface}" "${metric}")\""
+	fi
 
 	# We now expand the configuration parameters and pray that the
 	# fallbacks expand to the same number as config or there will be
