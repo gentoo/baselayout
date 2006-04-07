@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  07 Apr 2006; Roy Marples <uberlord@gentoo.org>:
+
+    net modules now apply their own metric if they are activated, which makes
+    for a much easier and less mesy calculation.
+
   05 Apr 2006; Roy Marples <uberlord@gentoo.org>:
 
     runscript.sh now stores the fact that it failed to to /dev/.rcsysinit

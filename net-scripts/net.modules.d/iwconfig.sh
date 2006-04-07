@@ -898,6 +898,9 @@ iwconfig_pre_start() {
 		return 0
 	fi
 
+	# Set the base metric to be 2000
+	metric=2000
+
 	# Check for rf_kill - only ipw supports this at present, but other
 	# cards may in the future.
 	if [[ -e "/sys/class/net/${iface}/device/rf_kill" ]]; then

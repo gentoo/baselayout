@@ -203,6 +203,7 @@ wpa_supplicant_pre_start() {
 				ESSID="$( wpa_supplicant_get_essid "${iface}" )"
 				ESSIDVAR="$( bash_variable "${ESSID}" )"
 				save_options "ESSID" "${ESSID}"
+				metric=2000
 			fi
 			return 0
 		fi
@@ -349,6 +350,7 @@ wpa_supplicant_pre_start() {
 		exit 0 
 	fi
 
+	metric=2000
 	return 0
 }
 
