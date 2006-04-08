@@ -21,15 +21,6 @@
 # read through the rest of this file.
 
 ##############################################################################
-# DEFAULTS
-#
-# hotplug_eth0="yes"
-# Do we allow hotplug to bring up interfaces or not? The default is we do,
-# otherwise put no in the above value.
-# NOTE: hotplug just has to be installed for hotplugging to work - it does
-# not matter if it's in any runlevel or not.
-
-##############################################################################
 # MODULES
 #
 # We now support modular networking scripts which means we can easily
