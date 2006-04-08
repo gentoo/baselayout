@@ -130,7 +130,7 @@ svc_stop() {
 		ewarn "WARNING:  you are stopping a boot service."
 	fi
 
-	if [[ ${svcpause} != "yes" ]] ; then
+	if [[ ${svcpause} != "yes" && ${RC_NODEPS} != "yes" ]] ; then
 		if [[ ${NETSERVICE} == "yes" ]] ; then
 			# A net.* service
 			if in_runlevel "${myservice}" "${BOOTLEVEL}" || \
@@ -238,13 +238,15 @@ svc_start() {
 		mark_service_started "${myservice}"
 
 		# On rc change, start all services "before $myservice" first
-		if is_runlevel_start ; then
-			startupservices="$(ineed "${myservice}") \
-				$(valid_iuse "${myservice}") \
-				$(valid_iafter "${myservice}")"
-		else
-			startupservices="$(ineed "${myservice}") \
-				$(valid_iuse "${myservice}")"
+		if [[ ${RC_NODEPS} != "yes" ]] ; then
+			if is_runlevel_start ; then
+				startupservices="$(ineed "${myservice}") \
+					$(valid_iuse "${myservice}") \
+					$(valid_iafter "${myservice}")"
+			else
+				startupservices="$(ineed "${myservice}") \
+					$(valid_iuse "${myservice}")"
+			fi
 		fi
 
 		# Start dependencies, if any
@@ -418,6 +420,8 @@ for arg in $* ; do
 	--verbose)
 		RC_VERBOSE="yes"
 		;;
+	--nodeps)
+		RC_NODEPS="yes"
 	esac
 done
 for arg in $* ; do
@@ -488,7 +492,7 @@ for arg in $* ; do
 		svc_stop
 		svcpause="no"
 		;;
-	--quiet|--nocolor)
+	--quiet|--nocolor|--nodeps)
 		;;
 	help)
 		exec "${svclib}"/sh/rc-help.sh "${myscript}" help

@@ -757,6 +757,18 @@ is_older_than() {
 	return 1
 }
 
+# char* uniqify(char *arg, ...)
+#
+#   Ensure that params are unique
+#
+uniqify() {
+    local result= x=
+    while [[ -n "$1" ]] ; do
+		[[ " ${result} " != *" $1 "* ]] && result="${result} $1"
+		shift
+	done
+    echo "${result# *}"
+}
 
 ##############################################################################
 #                                                                            #
