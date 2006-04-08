@@ -1086,19 +1086,6 @@ run() {
 # which localises variables and unsets functions
 start() {
 	declare -r IFACE="${SVCNAME#*.}"
-	if [[ ${IN_HOTPLUG} == "1" ]] ; then
-		# If we've been called by hotplug, check if we have
-		# a policy for the interface for not starting
-		local x ifvar="$(bash_variable "${IFACE}")"
-		x="hotplug_${ifvar}"
-		if [[ ${!x} == "no" || ${!x} == "false" ]] ; then
-			eerror "Not starting interface ${IFACE} due to hotplug policy"
-			unset -f exit
-			mark_service_stopped "net.${IFACE}"
-			exit 1
-		fi
-	fi
-
 	einfo "Starting ${IFACE}"
 	run "${IFACE}" start
 }
