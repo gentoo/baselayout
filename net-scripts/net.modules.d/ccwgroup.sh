@@ -26,16 +26,29 @@ ccwgroup_pre_start() {
 	eend $?
 }
 
-ccwgroup_post_stop() {
+ccwgroup_pre_stop() {
 	local iface="$1"
+
+	# Erase any existing ccwgroup to be safe
+	save_options ccwgroup_device ""
 	
 	[[ ! -L /sys/class/net/"${iface}"/driver ]] && return 0
 	local driver="$(readlink /sys/class/net/"${iface}"/driver)"
 	[[ ${driver} != *"/bus/ccwgroup/"* ]] && return 0
+
+	local device="$(readlink /sys/class/net/"${iface}"/device)"
+	device="${device##*/}"
+	save_options ccwgroup_device "${device}"
+}
+
+ccwgroup_post_stop() {
+	local iface="$1" device="$(get_options ccwgroup_device)"
+	
+	[[ -z ${device} ]] && return 0
 	
 	einfo "Disabling ccwgroup on ${iface}"
-	echo "0"  > /sys/class/net/"${iface}"/device/online
-	echo "1"  > /sys/class/net/"${iface}"/device/ungroup
+	echo "0"  > /sys/devices/qeth/"${device}"/online
+	echo "1"  > /sys/devices/qeth/"${device}"/ungroup
 	eend $?
 }
 
