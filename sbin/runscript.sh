@@ -27,10 +27,13 @@ myservice="${SVCNAME}"
 # until after rc sysinit has completed so we punt them to the boot runlevel
 if [[ -e /dev/.rcsysinit ]] ; then
 	eerror "ERROR:  cannot run ${SVCNAME} until sysinit completes"
-	eerror "${SVCNAME} will be started in the ${BOOTLEVEL} runlevel"
-	if [[ ! -L /dev/.rcboot/"${SVCNAME}" ]] ; then
-		[[ ! -d /dev/.rcboot ]] && mkdir /dev/.rcboot
-		ln -snf "$1" /dev/.rcboot/"${SVCNAME}"
+	if [[ ${RC_COLDPLUG} == "yes" \
+	|| " ${RC_COLDPLUG} " == *" ${SVCNAME} "* ]] ; then
+		eerror "${SVCNAME} will be started in the ${BOOTLEVEL} runlevel"
+		if [[ ! -L /dev/.rcboot/"${SVCNAME}" ]] ; then
+			[[ ! -d /dev/.rcboot ]] && mkdir /dev/.rcboot
+			ln -snf "$1" /dev/.rcboot/"${SVCNAME}"
+		fi
 	fi
 	exit 1
 fi

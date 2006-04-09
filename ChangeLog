@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  09 Apr 2006; Roy Marples <uberlord@gentoo.org>:
+
+    RC_COLDPLUG now controls if we add coldplugged services to the boot
+    runlevel or not, #129331.
+
 * baselayout-1.12.0_pre17 (08 Apr 2006)
 
   07 Apr 2006; Roy Marples <uberlord@gentoo.org>:
