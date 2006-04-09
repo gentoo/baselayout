@@ -6,6 +6,8 @@
     RC_COLDPLUG now controls if we add coldplugged services to the boot
     runlevel or not, #129331.
 
+    The ccwgroup module now really works!
+
 * baselayout-1.12.0_pre17 (08 Apr 2006)
 
   07 Apr 2006; Roy Marples <uberlord@gentoo.org>:

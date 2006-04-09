@@ -11,17 +11,18 @@ ccwgroup_expose() {
 
 ccwgroup_pre_start() {
 	local iface="$1" ifvar="$(bash_variable "$1")"
-	local ccwgroup="ccwgroup_${ifvar}[@]"
+	local ccw="ccwgroup_${ifvar}[@]"
+	local -a ccwgroup=( "${!ccw}" )
 
-	[[ -z ${!ccwgroup} ]] && return 0
+	[[ -z ${!ccw} ]] && return 0
 	if [[ ! -d /sys/bus/ccwgroup ]] ; then
 		eerror "ccwgroup support missing in kernel"
 		return 1
 	fi
 
 	einfo "Enabling ccwgroup on ${iface}"
-	echo "${!ccwgroup// /,}" > /sys/bus/ccwgroup/drivers/qeth/group
-	echo "1" > /sys/devices/qeth/"${!ccwgroup[0]}"/online
+	echo "${!ccw// /,}" > /sys/bus/ccwgroup/drivers/qeth/group
+	echo "1" > /sys/devices/qeth/"${ccwgroup[0]}"/online
 	eend $?
 }
 
