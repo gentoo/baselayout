@@ -784,7 +784,7 @@ do_pidfile(const char *name)
 /* WTA: this  needs to be an autoconf check for /proc/pid existance.
  */
 
-#if defined(OSLinux) || defined (OSsunos) || defined(OSfreebsd)
+#if defined(OSLinux) || defined (OSsunos) || defined(OSFreeBSD)
 static void
 do_procinit(void)
 {
@@ -855,10 +855,16 @@ pid_is_cmd(pid_t pid, const char *name)
 	kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, errbuf);
 	if (kd == 0)
 		errx(1, "%s", errbuf);
-	if ((kp = kvm_getprocs(kd, KERN_PROC_PID, pid, &nentries)) == 0)
-		errx(1, "%s", kvm_geterr(kd));
-	if ((pid_argv_p = kvm_getargv(kd, kp, argv_len)) == 0)
-		errx(1, "%s", kvm_geterr(kd));
+	kp = kvm_getprocs(kd, KERN_PROC_PID, pid, &nentries);
+	if ( ! kp )
+	{
+		printf("%s: warning: %s\n",
+		       progname, kvm_geterr(kd));
+		return 0;
+	}
+	pid_argv_p = kvm_getargv(kd, kp, argv_len);
+	if ( pid_argv_p == 0 ) /* You can't always access argv */
+		return 0;
 
 	start_argv_0_p = *pid_argv_p;
 	/* find and compare string */
@@ -924,11 +930,13 @@ pid_is_exec(pid_t pid, const char *name)
 }
 
 
+#ifndef OSFreeBSD
 static void
 do_procinit(void)
 {
 	/* Nothing to do */
 }
+#endif /* !OSFreeBSD */
 
 #endif /* OSOpenBSD */
 
