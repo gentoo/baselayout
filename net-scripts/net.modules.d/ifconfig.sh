@@ -109,7 +109,7 @@ ifconfig_down() {
 ifconfig_is_up() {
 	local check="\<UP\>" addr="${2:-false}"
 	${addr} && check="\<inet addr:.*${check}"
-	ifconfig "$1" | grep -Eq "${check}" && return 0
+	ifconfig "$1" | tr '\n' ' ' | grep -Eq "${check}" && return 0
 	return 1
 }
 
