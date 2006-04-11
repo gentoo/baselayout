@@ -31,7 +31,7 @@ start() {
 			                && NF == 6 && $6 != 0) { print }' /etc/fstab) ]]
 			then
 				ebegin $"Checking root filesystem"
-				fsck /
+				fsck -p /
 				retval=$?
 			else
 				ebegin $"Skipping root filesystem check" "(fstab's passno == 0)"

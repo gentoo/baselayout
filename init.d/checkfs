@@ -22,7 +22,7 @@ start() {
 			retval=$?
 			rm -f /forcefsck
 		else
-			fsck
+			fsck -p
 			retval=$?
 		fi
 		if [[ ${retval} -eq 0 ]] ; then
