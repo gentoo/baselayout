@@ -20,6 +20,10 @@ RC_INTERACTIVE="yes"
 # start before we are ready for them. If this happens, we can defer these
 # services to start in the boot runlevel. If you don't want this then set
 # RC_COLDPLUG to no.
+# For more fine grained control you can list full service names to allow
+# them to coldplug and prefix them with ! so they don't coldplug.
+# Example - RC_COLDLUG="net.wlan !net.*"
+# This allows net.wlan and any service not matching net.* to coldplug.
 
 RC_COLDPLUG="yes"
 
