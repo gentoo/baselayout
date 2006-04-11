@@ -126,9 +126,15 @@ udhcpc_start() {
 		fi
 	fi
 
-	eval start-stop-daemon --start --exec /sbin/udhcpc \
-		--pidfile "${pidfile}" \
-		-- "${opts}" --interface="${iface}" --now \
+	# Don't use s-s-d if the user wants to quit on lease.
+	if [[ " ${opts} " == *" -q "* || " ${opts} " == *" --quit "*  ]]; then
+		x="/sbin/udhcpc"
+	else
+		x="start-stop-daemon --start --exec /sbin/udhcpc \
+			--pidfile \"${pidfile}\" --"
+	fi
+	
+	eval "${x}" "${opts}" --interface="${iface}" --now \
 		--script=/lib/rcscripts/sh/udhcpc.sh \
 		--pidfile="${pidfile}" >/dev/null
 	eend $? || return 1
