@@ -9,9 +9,6 @@ depend() {
 start() {
 	local retval=0
 
-	# Setup dm-crypt mappings if any
-	start_addon dm-crypt
-
 	if [[ -f /fastboot ]] || [[ -n ${CDBOOT} ]] ; then
 		rm -f /fastboot
 	else
