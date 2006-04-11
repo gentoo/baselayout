@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  11 Apr 2006; Roy Marples <uberlord@gentoo.org>:
+
+    udhcpc.sh now works with the -q|--quit option again, #129437.
+
   10 Apr 2006; Mike Frysinger <vapier@gentoo.org>:
 
     Stop treating dm-crypt as a special additional and just move it into the
