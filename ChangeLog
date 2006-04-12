@@ -1,6 +1,12 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  12 Apr 2006; Roy Marples <uberlord@gentoo.org>:
+
+    vlans can now be configured with their own interface scripts, which
+    means that they can now be renamed, #128283.
+    Thanks to Jonathan deBoer.
+
   11 Apr 2006; Roy Marples <uberlord@gentoo.org>:
 
     udhcpc.sh now works with the -q|--quit option again, #129437.
