@@ -38,6 +38,9 @@ start() {
 	ebegin "Activating (possibly) more swap"
 	/sbin/swapon -a
 	eend $?
+
+	# Start dm-crypt mappings, if any
+	start_addon dm-crypt
 }
 
 
