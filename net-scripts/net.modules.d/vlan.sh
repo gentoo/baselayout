@@ -98,9 +98,9 @@ vlan_pre_start() {
 #
 # Always returns 0 (true) 
 vlan_post_start() {
-	local iface="$1" vlan vlans vlans_old e ifname ifvar="$(bash_variable "$1")"
-
+	local iface="$1" vlan vlans vlans_old ifname ifvar="$(bash_variable "$1")"
 	vlans="vlans_${ifvar}[@]"
+	local start="vlan_start_${ifvar}"
 
 	# BACKWARD COMPATIBILITY: check for old vlan variable name
 	vlans_old="iface_${ifvar}_vlans"
@@ -121,6 +121,11 @@ vlan_post_start() {
 		fi
 		eend 0
 
+		# We may not want to start the vlan ourselves, but
+		# as a seperate init script. This allows the vlan to be
+		# renamed if needed.
+		[[ -n ${!start} && ${!start} != "yes" ]] && continue
+		
 		# We need to work out the interface name of our new vlan id
 		ifname="$( \
 			sed -n -e 's/^\([^ \t]*\) *| '"${vlan}"' *| .*'"${iface}"'$/\1/p' \

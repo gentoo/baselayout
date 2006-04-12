@@ -316,6 +316,15 @@
 # NOTE: Vlans are controlled by their physical interface and not per vlan
 # This means you do not need to create init scripts in /etc/init.d for each
 # vlan, you must need to create one for the physical interface.
+# If you wish to control the configuration of each vlan through a seperate
+# script, or wish to rename the vlan interface to something that vconfig
+# cannot then you need to do this.
+#vlan_start_eth0="no
+
+# If you do the above then you may want to depend on eth0 like so
+# depend_vlan1() {
+#	need net.eth0
+# }
 
 #-----------------------------------------------------------------------------
 # Bonding
