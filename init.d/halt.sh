@@ -119,6 +119,9 @@ for x in ${unmounts}; do
 done
 eend 0
 
+# Try to remove any dm-crypt mappings
+stop_addon dm-crypt
+
 # Stop LVM, etc
 stop_volumes
 

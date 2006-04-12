@@ -52,7 +52,7 @@ RC_DOWN_INTERFACE="yes"
 # for various volume managers (MD, EVMS2, LVM, DM, etc).  Note that they are
 # stopped in reverse order.
 
-RC_VOLUME_ORDER="raid evms lvm dm dm-crypt"
+RC_VOLUME_ORDER="raid evms lvm dm"
 
 # RC_VERBOSE will make init scripts more verbose. Only networking scripts
 # really use this at this time, and this is useful for trouble shooting
