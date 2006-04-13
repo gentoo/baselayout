@@ -73,6 +73,11 @@ dhclient_start() {
 	[[ -z ${!d} ]] && d="dhcp"
 	
 	# Add our peer and metric options
+	if [[ " ${!d} " == *" nogateway "* ]] ; then
+		opts="${opts} -e PEER_ROUTERS=no"
+	elif [[ " ${opts} " != *" -e PEER_ROUTERS="* ]] ; then
+		opts="${opts} -e PEER_ROUTERS=yes"
+	fi
 	if [[ " ${!d} " == *" nodns "* ]] ; then
 		opts="${opts} -e PEER_DNS=no"
 	elif [[ " ${opts} " != *" -e PEER_DNS="* ]] ; then
