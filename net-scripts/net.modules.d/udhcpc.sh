@@ -94,6 +94,13 @@ udhcpc_start() {
 	# maybe oneday, udhcp will accept custom env vars.
 	local conf="/var/run/udhcpc-${iface}.conf"
 	echo "# udhcpc runtime configuration for interface ${iface}" > "${conf}"
+	if [[ " ${!d} " == *" nogateway "* ]] ; then
+		#opts="${opts} --env PEER_ROUTERS=no"
+		echo "PEER_ROUTERS=no" >> "${conf}"
+	else
+		#opts="${opts} --env PEER_ROUTERS=yes"
+		echo "PEER_ROUTERS=yes" >> "${conf}"
+	fi
 	if [[ " ${!d} " == *" nodns "* ]] ; then
 		#opts="${opts} --env PEER_DNS=no"
 		echo "PEER_DNS=no" >> "${conf}"
