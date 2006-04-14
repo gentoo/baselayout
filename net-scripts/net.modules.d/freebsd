@@ -307,6 +307,7 @@ freebsd_post_start() {
 		x="${x//via/gw} "
 		x="${x//scope * / }"
 		x="${x//default gw/default}"
+		x="${x//dev/-iface}"
 
 		# Assume we're a net device unless told otherwise
 		[[ " ${x} " != *" -net "* && " ${x} " != *" -host "* ]] && x="-net ${x}"
@@ -390,9 +391,10 @@ freebsd_add_address() {
 
 	local network=$( ip_network "${ip}" "${netmask}" )
 
-	if route del -net "${network}/${cidr}" metric 0 dev "${iface}" \
+	if route del -net "${network}/${cidr}" -iface "${iface}" \
 		2>/dev/null ; then
-		route add -net "${network}/${cidr}" metric "${!metric:-0}" dev "${iface}"
+		ifconfig "${iface}" metric "${!metric:-0}"
+		route add -net "${network}/${cidr}" -iface "${iface}"
 	fi
 
 	return ${r}
@@ -402,18 +404,7 @@ freebsd_add_address() {
 #
 # Change all routes for an interface to a given metric
 freebsd_route_metric() {
-	local dest gateway mask flags metric ref use
-	route -n | grep " $1$" | {
-		while read dest gateway mask flags metric ref use ; do
-			if [[ ${gateway} != "0.0.0.0" ]]; then
-				gateway="gw ${gateway}"
-			else
-				unset gateway
-			fi
-			route del ${dest}
-			route add -net ${dest} netmask ${mask} ${gateway} metric "$2" dev "$1"
-		done
-	}
+	ifconfig "$1" metric "$2"
 }
 
 # void freebsd_default_route(char* interface, char* gateway_ip, int metric)
@@ -424,11 +415,12 @@ freebsd_default_route() {
 
 	# Delete any existing default routes
 	while true ; do
-		route del default metric "${metric}" dev "$1" 2>/dev/null || break
+		route del default 2>/dev/null || break
 	done
 
 	# Then we add our route
-	route add default gw "$2" metric "${metric}" dev "$1"
+	ifconfig "$1" metric "${metric}"
+	route add default "$2" -iface "$1"
 }
 
 # vim:ts=4
