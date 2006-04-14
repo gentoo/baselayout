@@ -732,7 +732,7 @@ run_start() {
 	if [[ ${iface} == lo* ]] ; then
 		eval metric_${iface}'="0"'
 		eval config_${iface}'=( "127.0.0.1/8 brd 127.255.255.255" "${config_lo[@]}" )'
-		eval routes_${iface}'=( "127.0.0.0/8" "${routes_lo[@]}" )'
+		# eval routes_${iface}'=( "127.0.0.0/8" "${routes_lo[@]}" )'
 	fi
 
 	# We may not have a loaded module for ${iface}
