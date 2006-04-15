@@ -50,8 +50,10 @@ if [[ $1 == "-u" ]] ; then
 	done
 	rm -f "${mtime_test}"
 
-	[[ ${clock_screw} == 1 ]] && \
-		ewarn "Some file in '/etc/{conf.d,init.d}' have Modification time in the future!"
+	if [[ ${clock_screw} == 1 ]] ; then
+		ewarn "One of the files in /etc/{conf.d,init.d} or /etc/rc.conf"
+		ewarn "has a modification time in the future!"
+	fi
 
 	shift
 fi
@@ -60,7 +62,7 @@ fi
 
 ebegin "Caching service dependencies"
 
-# Clean out the non volitile directories ...
+# Clean out the non volatile directories ...
 rm -rf "${svcdir}"/dep{cache,tree} "${svcdir}"/{broken,snapshot}/*
 
 retval=0
