@@ -753,8 +753,8 @@ valid_iafter() {
 #   Get and sort the dependencies of given service[s].
 #
 trace_dependencies() {
-	local -a services=( "$@" ) net_deps
-	local i j net_services x
+	local -a services=( "$@" ) net_deps=()
+	local i= j= net_services= x=
 
 	if [[ $1 == -* ]]; then
 		deptype="${1/-/}"
@@ -765,26 +765,11 @@ trace_dependencies() {
 		fi
 	fi
 
-	net_services="$( cd "${svcdir}"/started; ls net.* 2>/dev/null )"
-	# If no net services are running or we only have net.lo up, then
-	# assume we are in boot runlevel or starting a new runlevel
-	if [[ -z ${net_services} || ${net_services} == "net.lo" ]]; then
-		get_net_services() {
-			local runlevel="$1"
-
-			if [[ -d "/etc/runlevels/${runlevel}" ]] ; then
-				cd "/etc/runlevels/${runlevel}"
-				ls net.* 2>/dev/null
-			fi
-		}
-
-		local mylevel="${BOOTLEVEL}"
-		local x="$( get_net_services "${mylevel}" )"
-
-		[[ -f "${svcdir}/softlevel" ]] && mylevel="$( < "${svcdir}/softlevel" )"
-		[[ ${BOOTLEVEL} != "${mylevel}" ]] && \
-			local x="${x} $( get_net_services "${mylevel}" )"
-		[[ -n ${x} ]] && net_services="${x}"
+	if is_runlevel_start || is_runlevel_stop || ! is_net_up ; then
+		for x in $(dolisting "/etc/runlevels/${BOOTLEVEL}/net.*") \
+			$(dolisting "/etc/runlevels/${SOFTLEVEL}/net.*") ; do
+			net_services="${net_services} ${x##*/}"
+		done
 	fi
 
 	# Cache the generic "net" depends
