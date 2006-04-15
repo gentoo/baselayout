@@ -44,7 +44,7 @@ done
 
 # Only update if files have actually changed
 if ! ${update} ; then
-	clock_screw=false
+	clock_screw=0
 	mtime_test="${mysvcdir}/mtime-test.$$"
 
 	# If its not there, we have to update, and make sure its present
@@ -61,12 +61,14 @@ if ! ${update} ; then
 			&& is_older_than "${mysvcdir}/depcache" "${config}" \
 			&& update=true
 		
-		is_older_than "${mtime_test}" "${config}" && clock_screw=true
+		is_older_than "${mtime_test}" "${config}" && clock_screw=1
 	done
 	rm -f "${mtime_test}"
 
-	${clock_screw} && \
-		ewarn "Some file in '/etc/{conf.d,init.d}' have Modification time in the future!"
+	if [[ ${clock_screw} == 1 ]] ; then
+		ewarn "One of the files in /etc/{conf.d,init.d} or /etc/rc.conf"
+		ewarn "has a modification time in the future!"
+	fi
 
 	shift
 fi
@@ -75,7 +77,7 @@ fi
 
 ebegin "Caching service dependencies"
 
-# Clean out the non volitile directories ...
+# Clean out the non volatile directories ...
 rm -rf "${mysvcdir}"/dep{cache,tree} "${mysvcdir}"/{broken,snapshot}/*
 
 retval=0
