@@ -63,7 +63,7 @@ fi
 
 ebegin "Caching service dependencies"
 
-# Clean out the non volitile directories ...
+# Clean out the non volatile directories ...
 rm -rf "${mysvcdir}"/dep{cache,tree} "${mysvcdir}"/{broken,snapshot}/*
 
 retval=0
