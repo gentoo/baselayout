@@ -36,6 +36,7 @@ arping_address_exists() {
 	[[ ${address} == "0.0.0.0" || ${address} == "0" ]] && return 1
 
 	# We need to bring the interface up to test
+	interface_exists "${iface}" || return 1 
 	interface_up "${iface}"
 
 	if [[ -x /sbin/arping ]] ; then
@@ -62,7 +63,7 @@ arping_start() {
 	einfo "Pinging gateways on ${iface} for configuration"
 
 	gateways="gateways_${ifvar}[@]"
-	if [[ -z ${!gateways} ]] ; then
+	if [[ -z "${!gateways}" ]] ; then
 		eerror "No gateways have been defined (gateways_${ifvar}=\"...\")"
 		return 1
 	fi
