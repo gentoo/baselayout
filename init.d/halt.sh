@@ -97,7 +97,7 @@ unmounts=$( \
 	        ($1 != "none") && \
 	        ($1 !~ /^(rootfs|\/dev\/root)$/) && \
 	        ($2 != "/")) \
-	      print $2 }' /proc/mounts | sort -ur)
+	      print $2 }' /proc/mounts | sort -k2 -ur)
 for x in ${unmounts}; do
 	# Do not umount these if we are booting off a livecd
 	if [[ -n ${CDBOOT} ]] && \
@@ -152,7 +152,7 @@ mount_readonly() {
 	sync; sync
 	sleep 1
 
-	for x in $(awk '$1 != "none" { print $2 }' /proc/mounts | sort -ur) ; do
+	for x in $(awk '$1 != "none" { print $2 }' /proc/mounts | sort -k2 -ur) ; do
 		x=${x//\\040/ }
 		if [[ ${cmd} == "u" ]]; then
 			umount -n -r "${x}"
