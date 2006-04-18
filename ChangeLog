@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  18 Apr 2006; Mike Frysinger <vapier@gentoo.org>:
+
+    Sort by mount point, not mount source, in halt.sh #130219 by Mark McKenna.
+
   18 Apr 2006; Roy Marples <uberlord@gentoo.org>:
 
     start-stop-daemon only removes the daemon stopping from the daemon
