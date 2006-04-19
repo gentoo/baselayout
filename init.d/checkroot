@@ -54,7 +54,7 @@ start() {
 		else
 			if [[ ${RC_FORCE_AUTO} == "yes" ]] ; then
 				eend 2 "Rerunning fsck in force mode"
-				fsck -p -y /
+				fsck -f -y /
 			else
 				eend 2 "Filesystem couldn't be fixed :("
 			fi
