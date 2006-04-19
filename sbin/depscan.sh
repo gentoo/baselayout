@@ -1,9 +1,10 @@
 #!/bin/bash
-# Copyright 1999-2004 Gentoo Foundation
+# Copyright 1999-2006 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
-source /sbin/functions.sh
-mysvcdir="${svcdir}"
+source /etc/init.d/functions.sh
+
+mysvcdir=${svcdir}
 update=false
 
 while [[ -n $1 ]] ; do
@@ -50,8 +51,8 @@ if ! ${update} ; then
 	# If its not there, we have to update, and make sure its present
 	# for next mtime testing
 	if [[ ! -e "${mysvcdir}/depcache" ]] ; then
-			update=true
-			touch "${mysvcdir}/depcache"
+		update=true
+		touch "${mysvcdir}/depcache"
 	fi
 
 	touch "${mtime_test}"
