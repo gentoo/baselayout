@@ -2,7 +2,34 @@
 # Copyright 1999-2006 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
-source /etc/init.d/functions.sh
+if [[ ${BOOT} == "yes" ]] ; then
+	trap ":" INT QUIT TSTP
+fi
+
+argv0=${0##*/}
+source /etc/init.d/functions.sh || {
+	echo "${argv0}: Could not source /etc/init.d/functions.sh!" 1>&2
+	exit 1
+}
+esyslog() { :; }
+
+usage() {
+	cat <<-EOF
+	Usage: ${argv0} [options]
+
+	Rebuild Gentoo init.d service dependency tree.
+
+	Options:
+	  -d, --debug       Turn on debug output
+	  -s, --svcdir      Specify svcdir (default: ${svcdir})
+	  -u, --update      Force update even if mtimes are OK
+	  -h, --help        Show this help cruft
+	EOF
+	[[ -z $@ ]] && exit 0
+	echo
+	eerror "$*"
+	exit 1
+}
 
 mysvcdir=${svcdir}
 update=false
@@ -22,6 +49,12 @@ while [[ -n $1 ]] ; do
 			;;
 		--update|-u)
 			update=true
+			;;
+		--help|-h)
+			usage
+			;;
+		*)
+			usage "Invalid option '$1'"
 			;;
 	esac
 	shift
