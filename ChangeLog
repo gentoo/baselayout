@@ -5,6 +5,8 @@
 
     Sort by mount point, not mount source, in halt.sh #130219 by Mark McKenna.
 
+    Disable CTRL+C in depscan.sh while booting #126512 by Marko Djukic.
+
   18 Apr 2006; Roy Marples <uberlord@gentoo.org>:
 
     start-stop-daemon only removes the daemon stopping from the daemon
