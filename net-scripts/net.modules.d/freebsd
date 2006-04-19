@@ -168,7 +168,7 @@ freebsd_del_addresses() {
 	if ! ${onlyinet} ; then
 		for i in $( ifconfig "${iface}" \
 			| sed -n -e 's/^.*inet6 addr: \([^ ]*\) Scope:[^L].*/\1/p' ) ; do
-			/sbin/ifconfig "${iface}" inet6 del "${i}"
+			/sbin/ifconfig "${iface}" inet6 delete "${i}"
 		done
 	fi
 	return 0
@@ -307,7 +307,7 @@ freebsd_post_start() {
 		x="${x//via/gw} "
 		x="${x//scope * / }"
 		x="${x//default gw/default}"
-		x="${x//dev/-iface}"
+		x="${x//dev/-ifp}"
 
 		# Assume we're a net device unless told otherwise
 		[[ " ${x} " != *" -net "* && " ${x} " != *" -host "* ]] && x="-net ${x}"
@@ -391,10 +391,10 @@ freebsd_add_address() {
 
 	local network=$( ip_network "${ip}" "${netmask}" )
 
-	if route del -net "${network}/${cidr}" -iface "${iface}" \
+	if route delete -net "${network}/${cidr}" -ifp "${iface}" \
 		2>/dev/null ; then
 		ifconfig "${iface}" metric "${!metric:-0}"
-		route add -net "${network}/${cidr}" -iface "${iface}"
+		route add -net "${network}/${cidr}" -ifp "${iface}"
 	fi
 
 	return ${r}
@@ -415,12 +415,12 @@ freebsd_default_route() {
 
 	# Delete any existing default routes
 	while true ; do
-		route del default 2>/dev/null || break
+		route delete default 2>/dev/null || break
 	done
 
 	# Then we add our route
 	ifconfig "$1" metric "${metric}"
-	route add default "$2" -iface "$1"
+	route add default "$2" -ifp "$1"
 }
 
 # vim:ts=4
