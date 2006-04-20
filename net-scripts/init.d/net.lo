@@ -54,7 +54,7 @@ variables() {
 }
 
 is_loopback() {
-	[[ $1 == "lo" || $1 == "lo"[0-9]* ]]
+	[[ $1 == "lo" || $1 == "lo0" ]]
 }
 
 # char* interface_device(char *iface)
