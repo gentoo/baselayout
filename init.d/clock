@@ -95,7 +95,7 @@ start() {
 		fi
 		errstr="Failed to set system clock to hardware clock"
 	elif [[ -x /sbin/adjkerntz ]] ; then # BSD method
-		if [[ ${myopts/--localtime/} == ${myopts} ]]; then
+		if [[ ${myopts/--localtime/} != ${myopts} ]]; then
 			touch /etc/wall_cmos_clock
 		else
 			rm -f /etc/wall_cmos_clock
