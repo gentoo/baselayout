@@ -765,16 +765,14 @@ trace_dependencies() {
 		fi
 	fi
 
-	if is_runlevel_start ; then
-		if ! is_net_up ; then
-			for x in $(dolisting "/etc/runlevels/${BOOTLEVEL}/net.*") \
-				$(dolisting "/etc/runlevels/${SOFTLEVEL}/net.*") ; do
-				net_services="${net_services} ${x##*/}"
-			done
-		fi
-	elif is_runlevel_stop ; then
+	if is_runlevel_stop ; then
 		for x in $(dolisting "${svcdir}/started/net.*") \
 			$(dolisting "${svcdir}/inactive/net.*") ; do
+			net_services="${net_services} ${x##*/}"
+		done
+	elif is_runlevel_start || ! is_net_up ; then
+		for x in $(dolisting "/etc/runlevels/${BOOTLEVEL}/net.*") \
+			$(dolisting "/etc/runlevels/${SOFTLEVEL}/net.*") ; do
 			net_services="${net_services} ${x##*/}"
 		done
 	fi
