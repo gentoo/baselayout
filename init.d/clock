@@ -61,16 +61,21 @@ start() {
 	local readonly="no"
 	local ret=0
 
-	if ! touch /etc/adjtime 2>/dev/null ; then
-		readonly="yes"
-	elif [[ ! -s /etc/adjtime ]] ; then
-		echo "0.0 0 0.0" > /etc/adjtime
-	fi
 
-	setupopts
+	if [[ $(uname -s) == "Linux" ]]; then
+		if ! touch /etc/adjtime 2>/dev/null ; then
+			readonly="yes"
+		elif [[ ! -s /etc/adjtime ]] ; then
+			echo "0.0 0 0.0" > /etc/adjtime
+		fi
 
-	if [[ ${fakeit} -ne 1 && -e /proc/modules && ! -e /dev/rtc ]] ; then
-		modprobe rtc &> /dev/null
+		setupopts
+		
+		if [[ ${fakeit} -ne 1 && -e /proc/modules && ! -e /dev/rtc ]] ; then
+			modprobe rtc &> /dev/null
+		fi
+	else
+		setupopts
 	fi
 
 	ebegin $"Setting system clock using the hardware clock" "[${TBLURB}]"
@@ -89,9 +94,17 @@ start() {
 			ret=0
 		fi
 		errstr="Failed to set system clock to hardware clock"
+	elif [[ -x /sbin/adjkerntz ]] ; then # BSD method
+		if [[ ${myopts/--localtime/} == ${myopts} ]]; then
+			touch /etc/wall_cmos_clock
+		else
+			rm -f /etc/wall_cmos_clock
+		fi
+
+		adjkerntz -i
 	else
 		ret=1
-		errstr="/sbin/hwclock not found"
+		errstr="neither /sbin/hwclock nor /sbin/adjkerntz found"
 	fi
 	eend ${ret} "${errstr}"
 }
@@ -122,6 +135,9 @@ stop() {
 			ret=0
 		fi
 		errstr="Failed to sync clocks"
+	elif [[ -x /sbin/adjkerntz ]] ; then
+		# Nothing to do here
+		ret=0
 	else
 		ret=1
 		errstr="/sbin/hwclock not found"
