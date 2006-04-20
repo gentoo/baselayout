@@ -89,12 +89,20 @@ wpa_supplicant_get_ap_mac_address() {
 # correct encryption keys
 wpa_supplicant_associated() {
 	local -a status
-	eval status=( $( wpa_cli -i"$1" status | sed -n -e 's/^\(key_mgmt\|wpa_state\|EAP state\)=\([^=]\+\).*/\U\"\2\"/p' ) )
+	eval status=( $(wpa_cli -i"$1" status \
+		| sed -n -e 's/^\(key_mgmt\|wpa_state\|EAP state\)=\([^=]\+\).*/\U\"\2\"/p')
+	)
 
 	case "${status[0]}" in
-		"NONE")					[[ ${status[1]} == "ASSOCIATED" || ${status[1]} == "COMPLETED" ]] ;;
-		"IEEE 802.1X (no WPA)")	[[ ${status[2]} == "SUCCESS" ]] ;;
-		*)						[[ ${status[1]} == "COMPLETED" ]] ;;
+		"NONE")
+			[[ ${status[1]} == "ASSOCIATED" || ${status[1]} == "COMPLETED" ]]
+			;;
+		"IEEE 802.1X (no WPA)")
+			[[ ${status[2]} == "SUCCESS" ]]
+			;;
+		*)
+			[[ ${status[1]} == "COMPLETED" ]]
+			;;
 	esac
 
 	return $?
@@ -148,6 +156,8 @@ wpa_supplicant_associate() {
 	[[ -z ${!timeout} ]] && timeout="wpa_timeout_${ifvar}"
 	timeout="${!timeout:--1}"
 
+	[[ -z ${actfile} && ${timeout} -lt 0 ]] && timeout="60"
+
 	if [[ ${timeout} == "0" ]] ; then
 		ewarn "WARNING: infinite timeout set for association on ${iface}"
 	elif [[ ${timeout} -lt 0 ]] ; then
@@ -176,6 +186,7 @@ wpa_supplicant_associate() {
 	if [[ -n ${actfile} ]] ; then
 		eend 1 "Failed to configure ${iface} in the background"
 	else
+		
 		eend 1 "Timed out"
 	fi
 
@@ -278,27 +289,22 @@ wpa_supplicant_pre_start() {
 	# Some drivers require the interface to be up
 	interface_up "${iface}"
 
-	version="$( wpa_cli -v | sed -n -e 's/wpa_cli v//p' )"
-	version=( ${version//./ } )
-	(( version = version[0] * 1000 + version[1] * 100 + version[2] ))
-
 	# wpa_supplicant 0.4.0 and greater supports wpa_cli actions
 	# This is very handy as if and when different association mechanisms are
 	# introduced to wpa_supplicant we don't have to recode for them as
 	# wpa_cli is now responsible for informing us of success/failure.
 	# The downside of this is that we don't see the interface being configured
 	# for DHCP/static.
-	if [[ ${version} -gt 399 ]] ; then
-		opts="${opts} -W -P/var/run/wpa_supplicant-${iface}.pid"
-		actfile="/etc/wpa_supplicant/wpa_cli.sh"
-		# Support old file location
-		[[ ! -x ${actfile} ]] && actfile="/sbin/wpa_cli.action"
-		[[ ! -x ${actfile} ]] && unset actfile
-	fi
+	actfile="/etc/wpa_supplicant/wpa_cli.sh"
+	# Support old file location
+	[[ ! -x ${actfile} ]] && actfile="/sbin/wpa_cli.action"
+	[[ ! -x ${actfile} ]] && unset actfile
+	[[ -n ${actfile} ]] && opts="${opts} -W"
 
 	eval start-stop-daemon --start --exec /sbin/wpa_supplicant \
 		--pidfile "/var/run/wpa_supplicant-${iface}.pid" \
-		-- "${opts}" -B -i"${iface}"
+		-- "${opts}" -B -i"${iface}" \
+		-P"/var/run/wpa_supplicant-${iface}.pid"
 	eend "$?" || return 1
 
 	# Starting wpa_supplication-0.4.0, we can get wpa_cli to
@@ -327,7 +333,7 @@ wpa_supplicant_pre_start() {
 		save_options "ESSID" "${ESSID}"
 
 		local -a status
-		eval status=( $( wpa_cli -i"${iface}" status | sed -n -e 's/^\(bssid\|pairwise_cipher\|key_mgmt\)=\([^=]\+\).*/\"\U\2\"/p' | tr '[:lower:]' '[:upper:]' ) )
+		eval status=( $(wpa_cli -i"${iface}" status | sed -n -e 's/^\(bssid\|pairwise_cipher\|key_mgmt\)=\([^=]\+\).*/\"\U\2\"/p' | tr '[:lower:]' '[:upper:]') )
 		einfo "${iface} connected to \"${ESSID//\\\\/\\\\}\" at ${status[0]}"
 
 		if [[ ${status[2]} == "NONE" ]] ; then
@@ -345,7 +351,7 @@ wpa_supplicant_pre_start() {
 	fi
 
 	if [[ -n ${actfile} ]] ; then
-		local addr="$( interface_get_address "${iface}" )"
+		local addr="$(interface_get_address "${iface}")"
 		einfo "${iface} configured with address ${addr}"
 		exit 0 
 	fi
