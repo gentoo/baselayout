@@ -19,6 +19,7 @@ depend() {
 	# For example, br0 may need eth0 and eth1
 	local iface="${SVCNAME#*.}"
 	[[ $(type -t "depend_${iface}") == "function" ]] && depend_${iface}
+	[[ ${iface} != "lo" && ${iface} != "lo0" ]] && after net.lo net.lo0
 
 	return 0
 }
