@@ -6,6 +6,8 @@
     br2684 module should now work correctly.
     Document usage of br2684 module.
 
+    move /lib/rcscripts/net.modules.d to /lib/rcscripts/net
+
   18 Apr 2006; Roy Marples <uberlord@gentoo.org>:
 
     start-stop-daemon only removes the daemon stopping from the daemon

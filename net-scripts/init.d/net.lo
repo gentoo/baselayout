@@ -25,7 +25,7 @@ depend() {
 }
 
 # Define where our modules are
-MODULES_DIR="${svclib}/net.modules.d"
+MODULES_DIR="${svclib}/net"
 
 # Make some wrappers to fudge after/before/need/use depend flags.
 # These are callbacks so MODULE will be set.

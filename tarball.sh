@@ -30,7 +30,7 @@ done
 # copy net-scripts and remove older stuff
 install -d -m0755 ${DEST}/lib/rcscripts
 cp -ax net-scripts/init.d ${DEST}
-cp -ax net-scripts/net.modules.d ${DEST}/lib/rcscripts
+cp -ax net-scripts/net ${DEST}/lib/rcscripts
 cp -ax net-scripts/conf.d ${DEST}/etc
 ln -sfn net.lo ${DEST}/init.d/net.eth0
 
