@@ -11,7 +11,7 @@ usage() {
 cat << FOO
 usage: ${argv0} -a|add script runlevel1 [runlevel2 ...]
        ${argv0} -d|del script [runlevel1 ...]
-       ${argv0} -s|show [runlevel1 ...]
+       ${argv0} -s|show [-v|--verbose] [runlevel1 ...]
 
 examples:
        # ${argv0} add net.eth0 default
@@ -28,8 +28,8 @@ examples:
        /etc/runlevels/default and /etc/runlevels/wumpus.
 
        # ${argv0} show
-       Show all the available scripts and list at which runlevels they
-       will execute.
+       Show all enabled scripts and list at which runlevels they will
+       execute.  Run with --verbose to see all available scripts.
 FOO
 	exit ${1:-0}
 }
