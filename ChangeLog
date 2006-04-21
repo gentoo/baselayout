@@ -6,6 +6,8 @@
     br2684 module should now work correctly.
     Document usage of br2684 module.
 
+    move /lib/rcscripts/net.modules.d to /lib/rcscripts/net
+
   20 Apr 2006; Mike Frysinger <vapier@gentoo.org>:
 
     Document --verbose option in rc-update #130643 by Christian Heim.
