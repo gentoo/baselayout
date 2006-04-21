@@ -19,34 +19,47 @@ br2684ctl_check_installed() {
 
 # bool br2684ctl_start(char *iface)
 br2684ctl_pre_start() {
-	local iface="$1" ifvar="$(bash_variable "$1")" opts= lnk=
-
+	local iface="$1" ifvar="$(bash_variable "$1")" opts=
+	local number="${iface#${iface%%[0-9]}}"
+	
 	opts="br2684ctl_${ifvar}"
 	[[ -z ${!opts} ]] && return 0
 
-	einfo "Starting RFC 2684 Bridge control on ${iface}"
+	if [[ $(interface_type "${iface}") != "nas" || -z ${number} ]] ; then
+		eerror "interface must be called nas[0-9] for RFC 2684 Bridging"
+		return 1
+	fi
 	
-	lnk="link_${ifvar}"
-	if [[ -z ${!lnk} ]] ; then
-		eerror "No link specified!"
+	if [[ " ${!opts} " != *" -a "* ]] ; then
+		eerror "-a option (VPI and VCI) is required in br2684_ctl"
 		return 1
 	fi
 
-	start-stop-daemon --start --exec /sbin/br2684ctl \
-		--pidfile "/var/run/br2684ctl-${!lnk}.pid" --makepid \
-		-- -c ${!lnk#nas} ${!opts}
-	eend $? && save_options "link" "${!lnk}"
+	if [[ " ${!opts} " != *" -b "* ]] ; then
+		eerror "The -b option is not allowed for br2684ctl_${ifvar}"
+		return 1
+	fi
+	
+	einfo "Starting RFC 2684 Bridge control on ${iface}"
+	
+	start-stop-daemon --start --exec /sbin/br2684ctl --background \
+		--make-pidfile --pidfile "/var/run/br2684ctl-${iface}.pid" \
+		-- ${!opts} -c "${number}"
+	eend $?
 }
 
-# bool br2684ctl_stop(char *iface)
-br2684ctl_stop() {
-	local lnk="$(get_options link)"
+# bool br2684ctl_post_stop(char *iface)
+br2684ctl_post_stop() {
+	local iface="$1"
+	local number="${iface#${iface%%[0-9]}}"
 	
-	[[ -e /var/run/br2864ctl-${lnk}.pid ]] || return 0
+	[[ $(itype "${iface}") != "nas" ]] && return 0
+	
+	[[ -e /var/run/br2864ctl-${iface}.pid ]] || return 0
 	
 	einfo "Stopping RFC 2684 Bridge control on ${iface}"
 	start-stop-daemon --stop --exec /sbin/br2864ctl \
-		--pidfile "/var/run/br2684ctl-${lnk}.pid"
+		--pidfile "/var/run/br2684ctl-${iface}.pid"
 	eend $?
 }
 
