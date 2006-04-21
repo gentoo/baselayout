@@ -1,6 +1,8 @@
 # Copyright (c) 2005-2006 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
+# Contributed by Alin Nastac (mrness@gentoo.org)
+
 # void pppd_depend(void)
 #
 # Sets up the dependancies for the module
