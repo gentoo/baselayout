@@ -435,6 +435,14 @@
 #	'~--' ''
 #)
 
+# If the link require extra configuration - for example wireless or
+# RFC 268 bridge - we need to write a depend function for the bridge so they get
+# configured correctly.
+# This is exactly the same as a depend() function in our init scripts
+#depend_ppp0() {
+#	need net.nas0
+#}
+
 #-----------------------------------------------------------------------------
 # ADSL
 # For ADSL support, emerge net-dialup/rp-pppoe
@@ -540,6 +548,17 @@
 # Below is an example of configuring the bridge
 # Consult "man brctl" for more details
 #brctl_br0=( "setfd 0" "sethello 0" "stp off" )
+
+#-----------------------------------------------------------------------------
+# RFC 2684 Bridge Support 
+# For RFC 2684 bridge support emerge net-misc/br2684ctl
+
+# Interface names have to be of the form nas0, nas1, nas2, etc.
+# You have to specify a VPI and VCI for the interface like so
+#br2684ctl_nas0="-a 0.38" # UK VPI and VCI
+
+# Then you can configure the interface as normal
+#config_nas0=( "192.168.0.1/24" )
 
 #-----------------------------------------------------------------------------
 # Tunnelling

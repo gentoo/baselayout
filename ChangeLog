@@ -4,6 +4,7 @@
   21 Apr 2006; Roy Marples <uberlord@gentoo.org>:
 
     br2684 module should now work correctly.
+    Document usage of br2684 module.
 
   18 Apr 2006; Roy Marples <uberlord@gentoo.org>:
 
