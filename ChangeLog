@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  22 Apr 2006; Roy Marples <uberlord@gentoo.org>:
+
+    udhcpc module now requires udhcp-0.9.9_pre20041216-r3 or newer with
+    the --env command option.
+
   21 Apr 2006; Roy Marples <uberlord@gentoo.org>:
 
     br2684 module should now work correctly.
