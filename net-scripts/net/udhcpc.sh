@@ -90,35 +90,26 @@ udhcpc_start() {
 	fi
 
 	# Setup options for the udhcpc script
-	# We pass these via a seperate config file so we're nice and fast
-	# maybe oneday, udhcp will accept custom env vars.
-	local conf="/var/run/udhcpc-${iface}.conf"
-	echo "# udhcpc runtime configuration for interface ${iface}" > "${conf}"
+	# This requires a specfic Gentoo patch to udhcp which will not be
+	# accepted upstream.
 	if [[ " ${!d} " == *" nogateway "* ]] ; then
-		#opts="${opts} --env PEER_ROUTERS=no"
-		echo "PEER_ROUTERS=no" >> "${conf}"
+		opts="${opts} --env PEER_ROUTERS=no"
 	else
-		#opts="${opts} --env PEER_ROUTERS=yes"
-		echo "PEER_ROUTERS=yes" >> "${conf}"
+		opts="${opts} --env PEER_ROUTERS=yes"
 	fi
 	if [[ " ${!d} " == *" nodns "* ]] ; then
-		#opts="${opts} --env PEER_DNS=no"
-		echo "PEER_DNS=no" >> "${conf}"
+		opts="${opts} --env PEER_DNS=no"
 	else
-		#opts="${opts} --env PEER_DNS=yes"
-		echo "PEER_DNS=yes" >> "${conf}"
+		opts="${opts} --env PEER_DNS=yes"
 	fi
 	if [[ " ${!d} " == *" nontp "* ]] ; then
-		#opts="${opts} --env PEER_NTP=no"
-		echo "PEER_NTP=no" >> "${conf}"
+		opts="${opts} --env PEER_NTP=no"
 	else
-		#opts="${opts} --env PEER_NTP=yes"
-		echo "PEER_NTP=yes" >> "${conf}"
+		opts="${opts} --env PEER_NTP=yes"
 	fi
 	local metric="metric_${ifvar}"
 	if [[ -n ${!metric} ]] ; then
-		#opts="${opts} --env IF_METRIC=${!metric}"
-		echo "IF_METRIC=${!metric}" >> "${conf}"
+		opts="${opts} --env IF_METRIC=${!metric}"
 	fi
 
 	# Bring up DHCP for this interface (or alias)
