@@ -1,11 +1,10 @@
 # Copyright 1999-2006 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header$
 
 CC = gcc
 LD = gcc
 
-CFLAGS = -Wall -O2
+CFLAGS ?= -Wall -O2
 DESTDIR =
 LIBDIR = lib
 
