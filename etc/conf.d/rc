@@ -85,7 +85,7 @@ RC_DEVICES="auto"
 # and restore it on startup.  This is useful if you have a lot of
 # custom device nodes that udev does not handle/know about.
 
-RC_DEVICE_TARBALL="yes"
+RC_DEVICE_TARBALL="no"
 
 # RC_SWAP_ERASE controls erasing of swap partitions at shutdown.
 # Useful for all those paranoid peeps to nuke their memory.
