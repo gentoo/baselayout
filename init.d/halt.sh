@@ -80,7 +80,7 @@ remaining=$(awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mou
 		            sort -r | grep -v '/newroot' | grep -v '/mnt/livecd')
 		[[ -z ${remaining} ]] && break
 		
-		/bin/fuser -k -m ${sig} ${remaining} &>/dev/null
+		/bin/fuser -s -k ${sig} -m ${remaining}
 		sleep 5
 		retry=$((${retry} - 1))
 		sig=-9
@@ -111,7 +111,7 @@ for x in ${unmounts}; do
 		# This is to prevent killing bash on systems using locales.
 		[[ ${x} == "/usr" ]] && continue
 		# Kill processes still using this mount
-		/bin/fuser -k -m -9 "${x}" &>/dev/null
+		/bin/fuser -s -k -9 -m "${x}"
 		sleep 2
 		# Now try to unmount it again ...
 		umount -f -r "${x}" &>/dev/null
