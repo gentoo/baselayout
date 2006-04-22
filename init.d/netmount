@@ -83,7 +83,7 @@ stop() {
 
 		# try to unmount again
 		ebegin $'\t'"Unmounting network filesystems (retry #$((retry+1)))"
-		/bin/fuser -s -k -${siglist[$((retry++))]}
+		/bin/fuser -s -k -${siglist[$((retry++))]} -m "$@"
 		sleep 5
 		umount "$@" &>/dev/null
 		eend $? $'\t'"Failed to unmount filesystems"
