@@ -1,11 +1,10 @@
 # Copyright 1999-2004 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header$
 
 CC = gcc
 LD = gcc
 
-CFLAGS = -Wall -O2
+CFLAGS ?= -Wall -O2
 DESTDIR =
 
 BIN_TARGETS =
@@ -15,14 +14,14 @@ TARGET = $(BIN_TARGETS) $(SBIN_TARGETS)
 
 all: $(TARGET)
 
-consoletype: consoletype.o
-	$(LD) -o $@ $^
+consoletype: consoletype.c
+	$(LD) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
-runscript: runscript.o
-	$(LD) -o $@ $^ -ldl
+runscript: runscript.c
+	$(LD) $(CFLAGS) $(LDFLAGS) -o $@ $^ -ldl
 
 start-stop-daemon: start-stop-daemon.c
-	$(CC) -o $@ $(CFLAGS) -DHAVE_ERROR_H -DHAVE_TIOCNOTTY -DHAVE_SETSID $^
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ -DHAVE_ERROR_H -DHAVE_TIOCNOTTY -DHAVE_SETSID $^
 
 install: $(TARGET)
 	install -m 0755 -d $(DESTDIR)/bin
