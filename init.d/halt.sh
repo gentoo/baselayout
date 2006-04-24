@@ -82,7 +82,7 @@ unmounts=$( \
 	        ($1 != "none") && \
 	        ($1 !~ /^(rootfs|\/dev\/root)$/) && \
 	        ($2 != "/")) \
-	      print $2 }' /proc/mounts | sort -k2 -ur)
+	      print $2 }' /proc/mounts | sort -ur)
 for x in ${unmounts}; do
 	# Do not umount these if we are booting off a livecd
 	if [[ -n ${CDBOOT} ]] && \
