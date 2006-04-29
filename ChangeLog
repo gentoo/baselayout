@@ -6,6 +6,8 @@
     Tweak is_older_than than so it skips checking the timestamps on directories,
     just the files in the directory.
 
+    Rewrite modules-update to make it readable and usuable without old modutils.
+
   24 Apr 2006; Roy Marples <uberlord@gentoo.org>:
 
     revert the -k2 addition to sort in halt.sh as we only echo the second
