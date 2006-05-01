@@ -9,7 +9,11 @@ wpa_supplicant() {
 }
 
 wpa_cli() {
-	LC_ALL=C /bin/wpa_cli "$@"
+	if [[ -n ${ctrl_dir} ]] ; then
+		LC_ALL=C /bin/wpa_cli -p "${ctrl_dir}" "$@"
+	else
+		LC_ALL=C /bin/wpa_cli "$@"
+	fi
 }
 
 # void wpa_supplicant_depend(void)
@@ -53,7 +57,7 @@ wpa_supplicant_check_installed() {
 # Checks to see if wireless extensions are enabled on the interface
 wpa_supplicant_exists() {
 	[[ ! -e /proc/net/wireless ]] && return 1
-	grep -q "^[ \t]*$1:[ \t]" /proc/net/wireless
+	grep -q "^[ \t]*$1:" /proc/net/wireless
 }
 
 # char* wpa_supplicant_get_essid(char *interface)
@@ -131,14 +135,6 @@ wpa_supplicant_kill() {
 		start-stop-daemon --stop --exec /sbin/wpa_supplicant \
 			--pidfile "${pidfile}"
 		${report} && eend "$?"
-	else
-		# Support wpa_supplicant-0.3.x
-		local pid="$( pgrep -f "^/sbin/wpa_supplicant .* -i${iface}[ ]*$" )"
-		if [[ -n ${pid} ]] ; then
-			${report} && ebegin "Stopping wpa_supplicant on ${iface}"
-			kill -s TERM "${pid}"
-			${report} && eend 0
-		fi
 	fi
 
 	# If wpa_supplicant exits uncleanly, we need to remove the stale dir
@@ -278,13 +274,19 @@ wpa_supplicant_pre_start() {
 		return 1
 	fi
 
+	# Work out where the ctrl_interface dir is if it's not specified
 	local ctrl_dir="$( sed -n -e 's/[ \t]*#.*//g;s/[ \t]*$//g;s/^ctrl_interface=//p' "${cfgfile}" )"
-	if [[ ${ctrl_dir} != "/var/run/wpa_supplicant" ]] ; then
-		eerror "${cfgfile} must set"
-		eerror "  ctrl_interface=/var/run/wpa_supplicant"
-		eend 1
-		return 1
+	if [[ -z ${ctrl_dir} ]] ; then
+		ctrl_dir="${opts##* -C}"
+		if [[ -n ${ctrl_dir} && ${ctrl_dir} != "${opts}" ]] ; then
+			[[ ${ctrl_dir:0:1} == " " ]] && ctrl_dir="${ctrl_dir# *}"
+			ctrl_dir="${ctrl_dir%% *}"
+		else
+			ctrl_dir="/var/run/wpa_supplicant"
+			opts="${opts} -C${ctrl_dir}"
+		fi
 	fi
+	save_options ctrl_dir "${ctrl_dir}"
 
 	# Some drivers require the interface to be up
 	interface_up "${iface}"
@@ -314,7 +316,7 @@ wpa_supplicant_pre_start() {
 		ebegin "Starting wpa_cli on ${iface}"
 		start-stop-daemon --start --exec /bin/wpa_cli \
 			--pidfile "/var/run/wpa_cli-${iface}.pid" \
-			-- -a"${actfile}" -i"${iface}" \
+			-- -a"${actfile}" -p"${ctrl_dir}" -i"${iface}" \
 			-P"/var/run/wpa_cli-${iface}.pid" -B
 		eend "$?" || return 1
 	fi

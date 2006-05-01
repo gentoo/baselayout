@@ -1,6 +1,12 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  01 May 2006; Roy Marples <uberlord@gentoo.org>:
+
+    /proc/net/wireless may not have whitespace after $iface:
+    wpa_supplicant no longer requires ctrl_interface set.
+    Thanks to kelmo for those ideas.
+
   28 Apr 2006; Mike Frysinger <vapier@gentoo.org>:
 
     Tweak is_older_than than so it skips checking the timestamps on directories,
