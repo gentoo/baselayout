@@ -60,7 +60,7 @@ iwconfig_check_installed() {
 # Checks to see if wireless extensions are enabled on the interface
 iwconfig_exists() {
 	[[ ! -e /proc/net/wireless ]] && return 1
-	grep -q "^[ \t]*$1:[ \t]" /proc/net/wireless
+	grep -q "^[ \t]*$1:" /proc/net/wireless
 }
 
 # char* iwconfig_get_wep_status(char *interface)
@@ -349,7 +349,7 @@ iwconfig_associate() {
 		ESSIDVAR="$( bash_variable "${ESSID}" )"
 		key="$( iwconfig_get_wep_key "${mac}" )"
 		if [[ ${wep_required} == "on" && ${key} == "off" ]]; then
-			eerror "WEP key is not set for \"${dessid}\" - not connecting"
+			ewarn "WEP key is not set for \"${dessid}\" - not connecting"
 			return 1
 		fi
 		if [[ ${wep_required} == "off" && ${key} != "off" ]]; then

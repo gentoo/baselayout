@@ -156,7 +156,7 @@
 # To choose wpa_supplicant over iwconfig
 #modules=( "wpa_supplicant" )
 # To configure wpa_supplicant
-#wpa_supplicant_eth0="-Dprism54" # For Prism54 based cards
+#wpa_supplicant_eth0="-Dwext" # For generic wireless
 #wpa_supplicant_ath0="-Dmadwifi" # For Atheros based cards
 # Consult wpa_supplicant for more drivers
 # By default don't wait for wpa_suppliant to associate and authenticate.
