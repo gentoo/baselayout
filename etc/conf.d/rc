@@ -18,14 +18,13 @@ RC_INTERACTIVE="yes"
 
 # Dynamic /dev managers can trigger coldplug events which cause services to
 # start before we are ready for them. If this happens, we can defer these
-# services to start in the boot runlevel. If you don't want this then set
-# RC_COLDPLUG to no.
-# For more fine grained control you can list full service names to allow
-# them to coldplug and prefix them with ! so they don't coldplug.
-# Example - RC_COLDPLUG="net.wlan !net.*"
+# services to start in the boot runlevel. RC_COLDPLUG is a list of services we
+# allow to be coldplugged in this way. Globbing is allowed as is prefixing
+# with ! which means don't coldplug.
+# Example - RC_COLDPLUG="net.wlan !net.* *"
 # This allows net.wlan and any service not matching net.* to coldplug.
 
-RC_COLDPLUG="yes"
+RC_COLDPLUG="*"
 
 # RC_NET_STRICT_CHECKING allows some flexibility with the 'net' service.
 # The following values are allowed:
