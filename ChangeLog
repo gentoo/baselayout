@@ -1,6 +1,8 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+* baselayout-1.12.0_pre19 (02 May 2006)
+
   01 May 2006; Roy Marples <uberlord@gentoo.org>:
 
     /proc/net/wireless may not have whitespace after $iface:
