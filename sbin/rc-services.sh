@@ -408,6 +408,7 @@ start_service() {
 		# if we can not start the services in parallel
 		# then just start it and return the exit status
 		( "/etc/init.d/${service}" start )
+		service_started "${service}" || service_inactive "${service}"
 		retval=$?
 		end_service "${service}" "${retval}"
 		splash "svc_started" "${service}" "${retval}"
@@ -415,7 +416,8 @@ start_service() {
 	else
 		# if parallel startup is allowed, start it in background
 		(
-			"/etc/init.d/${service}" start 
+			"/etc/init.d/${service}" start
+			service_started "${service}" || service_inactive "${service}"
 			retval=$?
 			end_service "${service}" "${retval}"
 			splash "svc_started" "${service}" "${retval}"
@@ -458,6 +460,7 @@ stop_service() {
 		# if we can not start the services in parallel
 		# then just start it and return the exit status
 		( "/etc/init.d/${service}" stop )
+		service_stopped "${service}"
 		retval=$?
 		end_service "${service}" "${retval}"
 		splash "svc_stopped" "${service}" "${retval}"
@@ -466,6 +469,7 @@ stop_service() {
 		# if parallel startup is allowed, start it in background
 		(
 			( "/etc/init.d/${service}" stop )
+			service_stopped "${service}"
 			retval=$?
 			end_service "${service}" "${retval}"
 			splash "svc_stopped" "${service}" "${retval}"
