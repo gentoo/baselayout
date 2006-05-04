@@ -27,22 +27,36 @@ myservice="${SVCNAME}"
 # until after rc sysinit has completed so we punt them to the boot runlevel
 if [[ -e /dev/.rcsysinit ]] ; then
 	eerror "ERROR:  cannot run ${SVCNAME} until sysinit completes"
-	[[ "${RC_COLDPLUG}  " == "!* "* ]] && exit 1
-	if [[ "${RC_COLDPLUG}  " != "* "* ]] ; then
-		cd /etc/init.d
-		shopt -s nullglob extglob
-		for x in ${RC_COLDPLUG} ; do
-			[[ ${SVCNAME} == "${x}" ]] && break
-			[[ "!${SVCNAME}" == "${x}" ]] && exit 1
-		done
-		[[ ${SVCNAME} == "${x}" ]] || exit 1
-	fi
+	[[ ${RC_COLDPLUG:-yes} != "yes" ]] && exit 1
+	set -f
+	for x in ${RC_PLUG_SERVICES} ; do
+		[[ ${SVCNAME} == ${x} ]] && break
+		[[ "!${SVCNAME}" == ${x} ]] && exit 1
+	done
 	eerror "${SVCNAME} will be started in the ${BOOTLEVEL} runlevel"
 	if [[ ! -L /dev/.rcboot/"${SVCNAME}" ]] ; then
 		[[ ! -d /dev/.rcboot ]] && mkdir /dev/.rcboot
 		ln -snf "$1" /dev/.rcboot/"${SVCNAME}"
 	fi
 	exit 1
+fi
+
+# Only hotplug if we're allowed to
+if [[ ${IN_HOTPLUG} == "1" ]] ; then
+	if [[ ${RC_HOTPLUG:-yes} != "yes" ]] ; then
+		eerror "${SVCNAME} is not allowed to be hotplugged"
+		exit 1
+	fi
+	
+	set -f
+	for x in ${RC_PLUG_SERVICES} ; do
+		[[ ${SVCNAME} == ${x} ]] && break
+		if [[ "!${SVCNAME}" == ${x} ]] ; then
+			eerror "${SVCNAME} is not allowed to be hotplugged"
+			exit 1
+		fi
+	done
+	set +f
 fi
 
 svc_trap() {
