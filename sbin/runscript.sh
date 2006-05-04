@@ -23,6 +23,14 @@ export SVCNAME
 # Support deprecated myservice variable
 myservice="${SVCNAME}"
 
+svc_trap() {
+	trap 'eerror "ERROR:  ${SVCNAME} caught an interrupt"; exit 1' \
+		INT QUIT TSTP
+}
+
+# Setup a default trap
+svc_trap
+
 # coldplug events can trigger init scripts, but we don't want to run them
 # until after rc sysinit has completed so we punt them to the boot runlevel
 if [[ -e /dev/.rcsysinit ]] ; then
@@ -58,14 +66,6 @@ if [[ ${IN_HOTPLUG} == "1" ]] ; then
 	done
 	set +f
 fi
-
-svc_trap() {
-	trap 'eerror "ERROR:  ${SVCNAME} caught an interrupt"; exit 1' \
-		INT QUIT TSTP
-}
-
-# Setup a default trap
-svc_trap
 
 # State variables
 svcpause="no"
