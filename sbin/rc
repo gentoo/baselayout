@@ -685,7 +685,8 @@ else
 		# to /dev/.rcsysinit existing to the list
 		if [[ -d /dev/.rcboot ]] ; then
 			for x in $(dolisting /dev/.rcboot/) ; do
-				[[ -L ${x} ]] && myscripts="${myscripts} ${x##*/}"
+				[[ -L ${x} && ! -e /etc/runlevels/"${DEFAULTLEVEL}"/"${x##*/}" ]] \
+					&& myscripts="${myscripts} ${x##*/}"
 			done
 			einfo "Device initiated services:${HILITE}${myscripts}${NORMAL}"
 			rm -rf /dev/.rcboot
