@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  05 May 2006; Roy Marples <uberlord@gentoo.org>:
+
+    If a device initiated service is in the default runlevel then we no
+    longer start it in the boot runlevel.
+
   04 May 2006; Roy Marples <uberlord@gentoo.org>:
 
     RC_COLDPLUG is now just a yes|no setting and the service list allowed
