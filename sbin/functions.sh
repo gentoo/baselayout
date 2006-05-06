@@ -393,7 +393,7 @@ veend() {
 	[[ ${RC_VERBOSE} == "yes" ]] && { eend "$@"; return $?; }
 	return ${1:-0}
 }
-veend() {
+vewend() {
 	[[ ${RC_VERBOSE} == "yes" ]] && { ewend "$@"; return $?; }
 	return ${1:-0}
 }
