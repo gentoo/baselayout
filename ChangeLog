@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  07 May 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Fix logic in br2684ctl.sh as reported by Alin Nastac, #132549.
+
   05 May 2006; Mike Frysinger <vapier@gentoo.org>:
 
     Fix typo s/veend/vewend/ in functions.sh as reported by Yoshino #132262.

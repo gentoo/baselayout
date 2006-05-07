@@ -35,7 +35,7 @@ br2684ctl_pre_start() {
 		return 1
 	fi
 
-	if [[ " ${!opts} " != *" -b "* ]] ; then
+	if [[ " ${!opts} " == *" -b "* ]] ; then
 		eerror "The -b option is not allowed for br2684ctl_${ifvar}"
 		return 1
 	fi
