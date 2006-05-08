@@ -53,7 +53,7 @@ br2684ctl_post_stop() {
 	local number="${iface#${iface%%[0-9]}}"
 	local pidfile="/var/run/br2684ctl-${iface}.pid"
 	
-	[[ $(interface_itype "${iface}") != "nas" ]] && return 0
+	[[ $(interface_type "${iface}") != "nas" ]] && return 0
 	
 	[[ -e ${pidfile} ]] || return 0
 	
