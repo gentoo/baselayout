@@ -239,9 +239,14 @@ else
 		# As we're in the bootlevel, add any services that failed due
 		# to /dev/.rcsysinit existing to the list
 		if [[ -d /dev/.rcboot ]] ; then
+			COLDPLUG_SERVICES=
 			for x in $(dolisting /dev/.rcboot/) ; do
-				[[ -L ${x} && ! -e /etc/runlevels/"${DEFAULTLEVEL}"/"${x##*/}" ]] \
-					&& myscripts="${myscripts} ${x##*/}"
+				[[ -L ${x} ]] && COLDPLUG_SERVICES="${COLDPLUG_SERVICES} ${x##*/}"
+			done
+			for x in ${COLDPLUG_SERVICES} ; do
+				[[ ! -e /etc/runlevels/"${BOOTLEVEL}"/"${x}" \
+				&& ! -e /etc/runlevels/"${DEFAULTLEVEL}"/"${x}" ]] \
+				&& myscripts="${myscripts} ${x}"
 			done
 			einfo "Device initiated services:${HILITE}${myscripts}${NORMAL}"
 			rm -rf /dev/.rcboot
