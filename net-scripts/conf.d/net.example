@@ -558,7 +558,7 @@
 #br2684ctl_nas0="-a 0.38" # UK VPI and VCI
 
 # You may want to configure the encapulation method as well by adding the -e
-# option to the command above
+# option to the command above (may need to be before the -a command)
 # -e 0 # LLC (default)
 # -e 1 # VC mux
 
