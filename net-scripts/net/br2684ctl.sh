@@ -35,16 +35,15 @@ br2684ctl_pre_start() {
 		return 1
 	fi
 
-	if [[ " ${!opts} " == *" -b "* ]] ; then
-		eerror "The -b option is not allowed for br2684ctl_${ifvar}"
+	if [[ " ${!opts} " == *" -b "* || " {!opts} " == *" -c "* ]] ; then
+		eerror "The -b and -c options are not allowed for br2684ctl_${ifvar}"
 		return 1
 	fi
 	
 	einfo "Starting RFC 2684 Bridge control on ${iface}"
-	
 	start-stop-daemon --start --exec /sbin/br2684ctl --background \
 		--make-pidfile --pidfile "/var/run/br2684ctl-${iface}.pid" \
-		-- ${!opts} -c "${number}"
+		-- -c "${number}" ${!opts}
 	eend $?
 }
 
@@ -53,7 +52,7 @@ br2684ctl_post_stop() {
 	local iface="$1"
 	local number="${iface#${iface%%[0-9]}}"
 	
-	[[ $(itype "${iface}") != "nas" ]] && return 0
+	[[ $(interface_itype "${iface}") != "nas" ]] && return 0
 	
 	[[ -e /var/run/br2864ctl-${iface}.pid ]] || return 0
 	
