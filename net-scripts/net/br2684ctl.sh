@@ -51,14 +51,14 @@ br2684ctl_pre_start() {
 br2684ctl_post_stop() {
 	local iface="$1"
 	local number="${iface#${iface%%[0-9]}}"
+	local pidfile="/var/run/br2684ctl-${iface}.pid"
 	
 	[[ $(interface_itype "${iface}") != "nas" ]] && return 0
 	
-	[[ -e /var/run/br2864ctl-${iface}.pid ]] || return 0
+	[[ -e ${pidfile} ]] || return 0
 	
 	einfo "Stopping RFC 2684 Bridge control on ${iface}"
-	start-stop-daemon --stop --exec /sbin/br2864ctl \
-		--pidfile "/var/run/br2684ctl-${iface}.pid"
+	start-stop-daemon --stop --exec /sbin/br2684ctl --pidfile "${pidfile}"
 	eend $?
 }
 

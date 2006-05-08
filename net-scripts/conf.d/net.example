@@ -557,6 +557,11 @@
 # You have to specify a VPI and VCI for the interface like so
 #br2684ctl_nas0="-a 0.38" # UK VPI and VCI
 
+# You may want to configure the encapulation method as well by adding the -e
+# option to the command above
+# -e 0 # LLC (default)
+# -e 1 # VC mux
+
 # Then you can configure the interface as normal
 #config_nas0=( "192.168.0.1/24" )
 
