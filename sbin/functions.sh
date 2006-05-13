@@ -6,9 +6,6 @@ RC_GOT_FUNCTIONS="yes"
 # Override defaults with user settings ...
 [[ -f /etc/conf.d/rc ]] && source /etc/conf.d/rc
 
-# daemontools dir
-SVCDIR="/var/lib/supervise"
-
 # Check /etc/conf.d/rc for a description of these ...
 declare -r svclib="/lib/rcscripts"
 declare -r svcdir="${svcdir:-/var/lib/init.d}"
