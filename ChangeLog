@@ -5,6 +5,8 @@
 
     Don't stop coldplugged services when changing runlevels, #113264.
 
+    Only report inactive start once.
+
   07 May 2006; Roy Marples <uberlord@gentoo.org>:
 
     Fix logic in br2684ctl.sh as reported by Alin Nastac, #132549.

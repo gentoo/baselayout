@@ -392,9 +392,10 @@ svc_start() {
 					&& ! is_net_up ; then
 					if service_inactive "${x}" || service_wasinactive "${x}" || \
 						[[ -n $(ls "${svcdir}"/scheduled/*/"${x}" 2>/dev/null) ]] ; then
-						svc_schedule_start "${x}" "${SVCNAME}"
-						[[ -n ${startinactive} ]] && startinactive="${startinactive}, "
-						startinactive="${startinactive}${x}"
+						if svc_schedule_start "${x}" "${SVCNAME}" ; then
+							[[ -n ${startinactive} ]] && startinactive="${startinactive}, "
+							startinactive="${startinactive}${x}"
+						fi
 					else
 						startfail="${x}"
 						break
