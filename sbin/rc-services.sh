@@ -478,6 +478,17 @@ stop_service() {
 	fi
 }
 
+# bool mark_service_coldplugged(service)
+#
+#   Mark 'service' as coldplugged.
+#
+mark_service_coldplugged() {
+	[[ -z $1 ]] && return 1
+
+	ln -snf "/etc/init.d/$1" "${svcdir}/coldplugged/$1"
+	return 0
+}
+
 # bool mark_service_starting(service)
 #
 #   Mark 'service' as starting.
@@ -570,6 +581,14 @@ test_service_state() {
 	
 	[[ ! -e ${f} ]] && rm -f "${f}"
 	return 1
+}
+
+# bool service_coldplugged(service)
+#
+#   Returns true if 'service' is coldplugged
+#
+service_coldplugged() {
+	test_service_state "$1" "coldplugged"
 }
 
 # bool service_starting(service)
