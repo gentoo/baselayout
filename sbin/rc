@@ -692,7 +692,7 @@ else
 				if [[ ! -e /etc/runlevels/"${BOOTLEVEL}"/"${x}" \
 				&& ! -e /etc/runlevels/"${DEFAULTLEVEL}"/"${x}" ]] ; then
 					myscripts="${myscripts} ${x}"
-					ln -snf "/etc/init.d/${x}" "${svcdir}/coldplugged"
+					mark_service_coldplugged "${x}"
 				fi
 			done
 			einfo "Device initiated services:${HILITE}${myscripts}${NORMAL}"
@@ -751,7 +751,7 @@ dep_stop() {
 	if [[ ${SOFTLEVEL} != "reboot" \
 	      && ${SOFTLEVEL} != "shutdown" \
 	      && ${SOFTLEVEL} != "single" ]] ; then
-	      	[[ -L ${svcdir}/coldplugged/${service} ]] && return 0
+	      	service_coldplugged "${service}" && return 0
 		[[ -z ${OLDSOFTLEVEL} ]] \
 			|| ! in_runlevel "${service}" "${OLDSOFTLEVEL}" \
 			&& return 0
