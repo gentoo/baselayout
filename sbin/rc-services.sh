@@ -550,7 +550,8 @@ mark_service_stopped() {
 	rm -Rf "${svcdir}/daemons/$1" "${svcdir}/starting/$1" \
 		"${svcdir}/started/$1" "${svcdir}/inactive/$1" \
 		"${svcdir}/wasinactive/$1" "${svcdir}/stopping/$1" \
-		"${svcdir}/scheduled/$1" "${svcdir}/options/$1"
+		"${svcdir}/scheduled/$1" "${svcdir}/options/$1" \
+		"${svcdir}/coldplugged/$1"
 
 	return 0
 }
@@ -730,7 +731,6 @@ valid_i() {
 		   ${x} == "net" ]] \
 				&& echo "${x}"
 	done
-
 	return 0
 }
 
