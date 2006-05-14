@@ -244,9 +244,11 @@ else
 				[[ -L ${x} ]] && COLDPLUG_SERVICES="${COLDPLUG_SERVICES} ${x##*/}"
 			done
 			for x in ${COLDPLUG_SERVICES} ; do
-				[[ ! -e /etc/runlevels/"${BOOTLEVEL}"/"${x}" \
-				&& ! -e /etc/runlevels/"${DEFAULTLEVEL}"/"${x}" ]] \
-				&& myscripts="${myscripts} ${x}"
+				if [[ ! -e /etc/runlevels/"${BOOTLEVEL}"/"${x}" \
+				&& ! -e /etc/runlevels/"${DEFAULTLEVEL}"/"${x}" ]] ; then
+					myscripts="${myscripts} ${x}"
+					ln -snf "/etc/init.d/${x}" "${svcdir}/coldplugged"
+				fi
 			done
 			einfo "Device initiated services:${HILITE}${myscripts}${NORMAL}"
 			rm -rf /dev/.rcboot
@@ -295,25 +297,17 @@ dep_stop() {
 	local myservice="${1##*/}"
 
 	service_stopped "${myservice}" && return 0
-	
-	# Candidate for zapping ?
-	[[ ! -L "${svcdir}/softscripts.new/${myservice}" ]] || \
-		return 0
 
-	# If this is a 'net' service, we do not want to stop it if it was
-	# not in the previous runlevel, and we are not shutting down,
-	# rebooting or going to single runlevel.  This is because the user
-	# (or hotplut) might have started it (net.ppp?) ...
-	if net_service "${myservice}" && \
-	   [[ ${SOFTLEVEL} != "reboot" && \
-	      ${SOFTLEVEL} != "shutdown" && \
-	      ${SOFTLEVEL} != "single" ]] ; then
-		if [[ -z ${OLDSOFTLEVEL} ]] || \
-		   ! in_runlevel "${myservice}" "${OLDSOFTLEVEL}" ; then
-			# This service is not in the previous runlevel, so
-			# do not stop it ...
-			return 0
-		fi
+	[[ -L ${svcdir}/softscripts.new/${service} ]] \
+		&& return 0
+
+	if [[ ${SOFTLEVEL} != "reboot" \
+	      && ${SOFTLEVEL} != "shutdown" \
+	      && ${SOFTLEVEL} != "single" ]] ; then
+	      	[[ -L ${svcdir}/coldplugged/${service} ]] && return 0
+		[[ -z ${OLDSOFTLEVEL} ]] \
+			|| ! in_runlevel "${service}" "${OLDSOFTLEVEL}" \
+			&& return 0
 	fi
 
 	# Should not work for 'use'
