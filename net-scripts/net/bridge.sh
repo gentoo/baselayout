@@ -58,7 +58,7 @@ bridge_get_bridge() {
 #
 # Returns 0 if the bridge exists, otherwise 1
 bridge_exists() {
-	brctl show 2>/dev/null | grep -q "^$1"
+	brctl show 2>/dev/null | grep -q "^$1[[:space:]]"
 }
 
 # bool bridge_create(char *interface)
