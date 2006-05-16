@@ -36,22 +36,26 @@ bridge_check_installed() {
 # Returns the interfaces added to the given bridge
 bridge_get_ports() {
 	brctl show 2>/dev/null \
-		| sed -n -e '/^'"$1"'/,/^\S/ { /^\('"$1"'\|\t\)/s/^.*\t//p }'
+		| sed -n -e '/^'"$1"'[[:space:]]/,/^\S/ { /^\('"$1"'[[:space:]]\|\t\)/s/^.*\t//p }'
 }
 
 # char* bridge_get_bridge(char *interface)
 #
 # Returns the bridge interface of the given interface
 bridge_get_bridge() {
-	local x="$( brctl show 2>/dev/null \
-	| sed -e '1 {d}; /^[^ ]/ { N }; /.*'"$1"'.*/ {s/^\([^ \t]\+\).*/\1/p}; d')"
-
-	local -a a=( ${x} )
-	if [[ ${#a[@]} == "1" ]] ; then
-		echo "${x}"
-	elif [[ $1 == "${a[3]}" ]] ; then
-		echo "${a[0]}"
-	fi
+	local myiface="$1"
+	local bridge= idx= stp= iface= x=
+	while read bridge idx stp iface x ; do
+		if [[ -z ${iface} ]] ; then
+			iface="${stp}"
+			stp="${idx}"
+			idx="${bridge}"
+		fi
+		if [[ ${iface} == "${myiface}" ]] ; then
+			echo "${bridge}"
+			return 0
+		fi
+	done < <(brctl show 2>/dev/null)
 }
 
 # bool bridge_exists(char *interface)
