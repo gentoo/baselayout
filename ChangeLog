@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  16 May 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Always report Xen domU domains correctly, #107976.
+
   15 May 2006; Roy Marples <uberlord@gentoo.org>:
 
     Always test for space at the end of the bridge name.

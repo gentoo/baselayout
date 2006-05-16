@@ -633,7 +633,8 @@ is_vserver_sys() {
 #   EXAMPLE:  if is_xenU_sys ; then ...
 #
 is_xenU_sys() {
-	[[ -d /sys/bus/xen/drivers/vbd || -d /sys/bus/xen/drivers/vif ]]
+	[[ ! -d /proc/xen ]] && return 1
+	! grep -q "control_d" /proc/xen/capabilities
 }
 
 # bool get_mount_fstab(path)
