@@ -630,6 +630,7 @@ is_vserver_sys() {
 #
 is_xenU_sys() {
 	[[ ! -d /proc/xen ]] && return 1
+	[[ ! -e /proc/xen/capabilities ]] && return 0
 	grep -vq "control_d" /proc/xen/capabilities
 }
 
