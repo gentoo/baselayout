@@ -606,6 +606,17 @@ is_net_fs() {
 	return $?
 }
 
+# bool is_net_fs(path)
+#
+#   return 0 if path is under unionfs control 
+#
+#   EXAMPLE:  if is_union_fs / ; then ...
+#
+is_union_fs() {
+	[[ ! -x /sbin/unionctl ]] && return 1
+	unionctl "$1" --list &>/dev/null
+}
+
 # bool is_uml_sys()
 #
 #   return 0 if the currently running system is User Mode Linux

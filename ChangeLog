@@ -1,6 +1,18 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  24 May 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Ensure that we call halt.sh in a new shell with LC_ALL=C so that we don't
+    load any locale information which may stop us unmounting /usr, #128848
+    and #133090.
+
+    Don't set clock for OpenVZ systems, #133265 thanks to Kir Kolyshkin.
+
+    Don't remount / in checkroot for unionfs /, #129975 thanks to Daniel.
+
+    Don't stop net interfaces / is unionfs and a branch is network mounted.
+
 * baselayout-1.12.0 (23 May 2006)
 
   23 May 2006; Roy Marples <uberlord@gentoo.org>:

@@ -375,24 +375,15 @@ fi
 echo "${SOFTLEVEL}" > "${svcdir}/softlevel"
 
 if [[ ${SOFTLEVEL} == "reboot" || ${SOFTLEVEL} == "shutdown" ]] ; then
-	source /sbin/functions.sh
-	
 	# Clear $svcdir from stale entries, but leave the caches around, as it
 	# should help speed things up a bit
 	rm -rf $(ls -d1 "${svcdir}/"* 2>/dev/null | \
 	         grep -ve '\(depcache\|deptree\|envcache\)')
-	
-	# Need try(), etc
-	source "${svclib}"/sh/init-functions.sh
 
-	source /etc/init.d/halt.sh
-	
-	if [[ ${SOFTLEVEL} == "reboot" ]] ; then
-		source /etc/init.d/reboot.sh
-	else
-		source /etc/init.d/shutdown.sh
-	fi
-	
+	# Call halt.sh with LC_ALL=C so that bash doesn't load any locales
+	# which could interfere with unmounting /usr
+	LC_ALL=C exec /etc/init.d/halt.sh "${SOFTLEVEL}"
+
 	# Should never get here
 	exit 0
 fi
