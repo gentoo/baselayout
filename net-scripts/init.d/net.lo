@@ -976,9 +976,17 @@ run_stop() {
 		( predown "${iface}" )
 		eend $? "predown ${iface} failed" || return 1
 		eoutdent
-	elif is_net_fs /; then
+	elif is_net_fs / ; then
 		eerror "root filesystem is network mounted -- can't stop ${iface}"
 		return 1
+	elif is_union_fs / ; then
+		for x in $(unionctl "${dir}" --list \
+		| sed -e 's/^\(.*\) .*/\1/') ; do
+			if is_net_fs "${x}" ; then
+				eerror "Part of the root filesystem is network mounted - cannot stop ${iface}"
+				return 1
+			fi
+		done
 	fi
 
 	iface_stop "${iface}" || return 1  # always succeeds, btw

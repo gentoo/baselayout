@@ -1,5 +1,8 @@
+#!/bin/bash
 # Copyright 1999-2006 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
+
+[[ ${RC_GOT_FUNCTIONS} != "yes" ]] && source /sbin/functions.sh
 
 # Check to see if this is a livecd, if it is read the commandline
 # this mainly makes sure $CDBOOT is defined if it's a livecd
@@ -113,9 +116,6 @@ for x in ${unmounts}; do
 
 	x=${x//\\040/ }
 	if ! umount "${x}" &>/dev/null; then
-		# If its /usr, just ignore it ..  we will mount it ro below ...
-		# This is to prevent killing bash on systems using locales.
-		[[ ${x} == "/usr" ]] && continue
 		# Kill processes still using this mount
 		/bin/fuser -s -k -9 -m "${x}"
 		sleep 2
@@ -215,5 +215,8 @@ elif [[ -f /forcefsck ]]; then
 fi
 
 ups_kill_power
+
+# Load the final script depending on how we are called
+[[ -e /etc/init.d/"$1".sh ]] && source /etc/init.d/"$1".sh
 
 # vim:ts=4
