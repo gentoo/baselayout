@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  30 May 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Really fix is_xenU_sys, #134571 thanks to Stefan Hellermann.
+
   24 May 2006; Roy Marples <uberlord@gentoo.org>:
 
     Ensure that we call halt.sh in a new shell with LC_ALL=C so that we don't
