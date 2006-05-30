@@ -3,6 +3,8 @@
 
   30 May 2006; Roy Marples <uberlord@gentoo.org>:
 
+    Allow users to specify netplugd options.
+
     Really fix is_xenU_sys, #134571 thanks to Stefan Hellermann.
 
   24 May 2006; Roy Marples <uberlord@gentoo.org>:

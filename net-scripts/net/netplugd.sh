@@ -34,8 +34,9 @@ netplugd_check_installed() {
 #
 # Start netplug on an interface
 netplugd_pre_start() {
-	local iface="$1" timeout
+	local iface="$1" timeout=
 	local pidfile="/var/run/netplugd.${iface}.pid"
+	local opts="netplugd_$(bash_variable "${iface}")"
 
 	# We don't start netplug if we're being called from the background
 	${IN_BACKGROUND} && return 0
@@ -71,7 +72,7 @@ netplugd_pre_start() {
 	# Start netplug
 	start-stop-daemon --start --exec /sbin/netplugd \
 		--pidfile "${pidfile}" \
-		-- -i "${iface}" -P -p "${pidfile}" -c /dev/null
+		-- ${!opts} -i "${iface}" -P -p "${pidfile}" -c /dev/null
 	eend "$?" || return 1
 
 	eindent
