@@ -645,8 +645,9 @@ is_vserver_sys() {
 #
 is_xenU_sys() {
 	[[ ! -d /proc/xen ]] && return 1
-	[[ ! -e /proc/xen/capabilities ]] && return 0
-	grep -vq "control_d" /proc/xen/capabilities
+	[[ ! -r /proc/xen/capabilities ]] && return 1
+	grep -q "control_d" /proc/xen/capabilities && return 1
+	return 0
 }
 
 # bool get_mount_fstab(path)
