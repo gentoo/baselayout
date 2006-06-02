@@ -20,6 +20,25 @@ arping_check_installed() {
 	return 1
 }
 
+# void arping_sleep(char *interface)
+#
+# Allows the interface to settle on the LAN - normally takes around 3 seconds
+# This requires the use of a global variable, ARPING_SLEPT
+arping_sleep() {
+	local iface="$1"
+	[[ ${ARPING_SLEPT} == "1" ]] && return
+
+	local ifvar="$(bash_variable "${iface}")"
+	local s="arping_sleep_${ifvar}"
+	s="${!s}"
+	if [[ -z ${s} ]] ; then
+		s="${arping_sleep}"
+		s="${s:-1}"
+	fi
+	sleep "${s}"
+	ARPING_SLEPT="1"
+}
+
 # bool arping_address_exists(char *interface, char *address)
 #
 # Returns 0 if the address on the interface responds to an arping
@@ -27,28 +46,52 @@ arping_check_installed() {
 # If neither arping (net-misc/iputils) or arping2 (net-analyzer/arping)
 # is installed then we return 1
 arping_address_exists() {
-	local iface="$1" address="${2%%/*}" i
+	local iface="$1" ip="${2%%/*}" mac="$3" foundmac= i= w=
 
 	# We only handle IPv4 addresses
-	[[ ${address} != *.*.*.* ]] && return 1
+	[[ ${ip} != *.*.*.* ]] && return 1
 
 	# 0.0.0.0 isn't a valid address - and some lusers have configured this
-	[[ ${address} == "0.0.0.0" || ${address} == "0" ]] && return 1
+	[[ ${ip} == "0.0.0.0" || ${ip} == "0" ]] && return 1
 
 	# We need to bring the interface up to test
 	interface_exists "${iface}" || return 1 
 	interface_up "${iface}"
 
+	arping_sleep
+
+	local ifvar="$(bash_variable "${iface}")"
+	w="arping_wait_${ifvar}"
+	w="${!w}"
+	[[ -z ${w} ]] && w="${arping_wait:-3}"
+
 	if [[ -x /sbin/arping ]] ; then
-		/sbin/arping -q -c 2 -w 3 -D -f -I "${iface}" "${address}" \
-		&>/dev/null || return 0
+		foundmac="$(arping -c 2 -w "${w}" -D -f -I "${iface}" \
+			"${ip}" 2>/dev/null \
+			| sed -n 's/.*\[\([^]]*\)\].*/\U\1/p')"
 	elif [[ -x /usr/sbin/arping2 ]] ; then
-		for (( i=0; i<3; i++ )) ; do
-			/usr/sbin/arping2 -0 -c 1 -i "${iface}" "${address}" \
-			&>/dev/null && return 0
+		for (( i=0; i<w; i++ )) ; do
+			foundmac="$(arping2 -r -0 -c 1 -i "${iface}" \
+				"${ip}" 2>/dev/null)"
+			if [[ $? == "0" ]] ; then
+				foundmac="$(echo "${foundmac}" \
+					| tr '[:lower:]' '[:upper:]')"
+				break
+			fi
+			foundmac=
 		done
 	fi
-	return 1
+	
+	[[ -z ${foundmac} ]] && return 1
+	
+	if [[ -n ${mac} ]] ; then
+		if [[ ${mac} != "${foundmac}" ]] ; then
+			vewarn "Found ${ip} but MAC ${foundmac} does not match"
+			return 1
+		fi
+	fi
+
+	return 0
 }
 
 # bool arping_start(char *iface)
@@ -57,23 +100,29 @@ arping_address_exists() {
 # If one is foung then apply it's configuration
 arping_start() {
 	local iface="$1" gateways x conf i
-
-	interface_exists "${iface}" true || return 1
+	local ifvar="$(bash_variable "${iface}")"
 
 	einfo "Pinging gateways on ${iface} for configuration"
 
 	gateways="gateways_${ifvar}[@]"
 	if [[ -z "${!gateways}" ]] ; then
-		eerror "No gateways have been defined (gateways_${ifvar}=\"...\")"
+		eerror "No gateways have been defined (gateways_${ifvar}=( \"...\"))"
 		return 1
 	fi
 
 	eindent
 	
 	for x in ${!gateways}; do
-		vebegin "${x}"
-		if arping_address_exists "${iface}" "${x}" ; then
-			for i in ${x//./ } ; do
+		local -a a=( ${x//,/ } )
+		local ip="${a[0]}" mac="${a[1]}" extra=
+		if [[ -n ${mac} ]] ; then
+			mac="$(echo "${mac}" | tr '[:lower:]' '[:upper:]')"
+			extra="(MAC ${mac})"
+		fi
+
+		vebegin "${ip} ${extra}"
+		if arping_address_exists "${iface}" "${ip}" "${mac}" ; then
+			for i in ${ip//./ } ; do
 				if [[ ${#i} == "2" ]] ; then
 					conf="${conf}0${i}"
 				elif [[ ${#i} == "1" ]] ; then
@@ -82,9 +131,11 @@ arping_start() {
 					conf="${conf}${i}"
 				fi
 			done
+			[[ -n ${mac} ]] && conf="${conf}_${mac//:/}"
+			
 			veend 0
 			eoutdent
-			veinfo "Configuring ${iface} for ${x}"
+			veinfo "Configuring ${iface} for ${ip} ${extra}"
 			configure_variables "${iface}" "${conf}"
 
 			# Call the system module as we've aleady passed it by ....
@@ -92,13 +143,18 @@ arping_start() {
 			system_pre_start "${iface}"
 			
 			t="config_${ifvar}[@]"
-			config=( "${!t}" )
-			t="fallback_config_${ifvar}[@]"
-			fallback_config=( "${!t}" )
-			t="fallback_route_${ifvar}[@]"
-			fallback_route=( "${!t}" )
-			config_counter=-1
-			return 0
+
+			# Only return if we HAVE a config that doesn't include
+			# arping to avoid infinite recursion.
+			if [[ " ${!t} " != *" arping "* ]] ; then
+				config=( "${!t}" )
+				t="fallback_config_${ifvar}[@]"
+				fallback_config=( "${!t}" )
+				t="fallback_route_${ifvar}[@]"
+				fallback_route=( "${!t}" )
+				config_counter=-1
+				return 0
+			fi
 		fi
 		veend 1
 	done

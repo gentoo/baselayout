@@ -1,6 +1,19 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  02 June 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Allow LC_* and LANG vars through to runscript.sh by default.
+
+    net.lo now comes after bootmisc, #135118 thanks to Oldrich Jedlicka.
+
+    arping.sh now has MAC address support, #134253 thanks to Oldrich Jedlicka.
+
+    pppd.sh now updates secret files with a blank password, #134337
+
+    Remove swapon call from /sbin/rc as localmount already calls it,
+    partial fix for #134489
+
   30 May 2006; Roy Marples <uberlord@gentoo.org>:
 
     Allow users to specify netplugd options.

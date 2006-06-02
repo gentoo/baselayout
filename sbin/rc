@@ -372,14 +372,6 @@ then
 	# Start RAID/LVM/EVMS/DM volumes for /usr, /var, etc.
 	start_volumes
 
-	# Swap needs to be activated *after* /dev has been fully setup so that
-	# the fstab can be properly parsed.  This first pass we send to /dev/null
-	# in case the user has swap points setup on different partitions.  We 
-	# will run swapon again in localmount and that one will report errors.
-	ebegin "Activating (possible) swap"
-	/sbin/swapon -a >& /dev/null
-	eend 0
-
 	# We set the forced softlevel from the kernel command line
 	# It needs to be run right after proc is mounted for the
 	# boot runlevel
