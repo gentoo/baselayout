@@ -278,6 +278,16 @@
 #routes_010000000001=( "default via 10.0.0.1" )
 #dns_servers_010000000001=( "10.0.0.1" )
 
+# We can also specify a specific MAC address for each gateway if different
+# networks have the same gateway.
+#gateways_eth0="192.168.0.1,00:11:22:AA:BB:CC 10.0.0.1,33:44:55:DD:EE:FF"
+#config_192168000001_001122AABBCC=( "192.168.0.2/24" )
+#routes_192168000001_001122AABBCC=( "default via 192.168.0.1" )
+#dns_servers_192168000001_001122AABBCC=( "192.168.0.1" )
+#config_010000000001_334455DDEEFF=( "10.0.0.254/8" )
+#routes_010000000001_334455DDEEFF=( "default via 10.0.0.1" )
+#dns_servers_010000000001_334455DDEEFF=( "10.0.0.1" )
+
 # If we don't find any gateways (or there are none configured) then we try and
 # use APIPA to find a free address in the range 169.254.0.0-169.254.255.255
 # by arping a random address in that range on the interface. If no reply is
@@ -289,6 +299,17 @@
 # or if no DHCP server can be found
 #config_eth0=( "dhcp" )
 #fallback_eth0=( "arping" )
+
+# NOTE: We default to sleeping for 1 second the first time we attempt an
+# arping to give the interface time to settle on the LAN. This appears to
+# be a good default for most instances, but if not you can alter it here.
+#arping_sleep=5
+#arping_sleep_lan=7
+
+# NOTE: We default to waiting 3 seconds to get an arping response. You can
+# change the default wait like so.
+#arping_wait=3
+#arping_wait_lan=2
 
 #-----------------------------------------------------------------------------
 # VLAN (802.1q support)
@@ -377,6 +398,9 @@
 # against the specified username
 #username_ppp0='user'
 #password_ppp0='password'
+#
+# NOTE: You can set a blank password like so
+#password_ppp0=
 #
 # The PPP daemon has many options you can specify - although there are many
 # and may seem daunting, it is recommended that you read the pppd man page

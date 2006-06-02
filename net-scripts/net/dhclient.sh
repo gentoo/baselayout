@@ -103,7 +103,6 @@ dhclient_start() {
 		fi
 	fi
 
-	echo "${dhconf}" > /tmp/dhconf-${iface}
 	# Bring up DHCP for this interface (or alias)
 	ebegin "Running dhclient"
 	echo -e "${dhconf}" | start-stop-daemon --start --exec /sbin/dhclient \

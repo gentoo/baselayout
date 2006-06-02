@@ -34,8 +34,10 @@ start() {
 		eend $? $"Failed to mount USB device filesystem"
 	fi
 
-	# Swap on loopback devices, and other weirdnesses
-	ebegin $"Activating (possibly) more swap"
+
+	# We do our swapping here instead of rc so we can get urandom started
+	# before us for people that like an encrypted swap.
+	ebegin $"Activating (possible) swap"
 	/sbin/swapon -a
 	eend $?
 

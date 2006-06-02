@@ -138,7 +138,8 @@ pppd_start() {
 	password="password_${ifvar}"
 
 	#Add/update info in PAP/CHAP secrets files
-	if [[ -n ${!username} && -n ${!password} ]] ; then
+	if [[ -n ${!username} ]] \
+	&& [[ -n ${!password} || -z ${!password-x} ]] ; then
 		for i in chap pap ; do
 			if ! pppd_update_secrets_file "/etc/ppp/${i}-secrets" \
 					"${!username}" "${iface}" "${!password}" ; then
