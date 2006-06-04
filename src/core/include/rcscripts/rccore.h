@@ -30,11 +30,6 @@
 
 #include "rcscripts/core/services.h"
 
-#include "librccore/api/scripts.h"
-#include "librccore/api/runlevels.h"
-#include "librccore/api/parse.h"
-#include "librccore/api/depend.h"
-
 /* Initialize needed variables, etc.  Should be called before anything else
  * from the rccore library is used.  Return 0 on success, else -1 and sets
  * errno.

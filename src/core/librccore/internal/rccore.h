@@ -25,7 +25,13 @@
 #ifndef __INTERNAL_RCCORE_H__
 #define __INTERNAL_RCCORE_H__
 
+#include "rcscripts/rccore.h"
 #include "internal/services.h"
+
+#include "librccore/api/scripts.h"
+#include "librccore/api/runlevels.h"
+#include "librccore/api/parse.h"
+#include "librccore/api/depend.h"
 
 /* Value of 'svcdir' in config files */
 extern char *rc_config_svcdir;

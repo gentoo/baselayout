@@ -28,7 +28,6 @@
 #include <string.h>
 
 #include "internal/rccore.h"
-#include "rcscripts/rccore.h"
 
 char *rc_service_state_names[] = {
   "coldplugged",
@@ -48,6 +47,11 @@ rc_service_test_state (const char *service, rc_service_state_t state)
 
   if (!check_str (service))
     return FALSE;
+
+  /*
+   * NB: Should check if its actually a valid service before doing all the
+   *     rest of the checks!
+   */
 
   if (exists (RC_SYSINIT_STATE))
     return FALSE;

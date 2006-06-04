@@ -28,7 +28,6 @@
 char *rc_config_svcdir = NULL;
 
 #include "internal/rccore.h"
-#include "rcscripts/rccore.h"
 
 static bool rc_initialized = FALSE;
 

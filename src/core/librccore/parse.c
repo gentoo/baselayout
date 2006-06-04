@@ -36,7 +36,7 @@
 #include <fcntl.h>
 #include <signal.h>
 
-#include "rcscripts/rccore.h"
+#include "internal/rccore.h"
 
 #define READ_PIPE			0
 #define WRITE_PIPE			1

@@ -27,7 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "rcscripts/rccore.h"
+#include "internal/rccore.h"
 
 LIST_HEAD (rcscript_list);
 
