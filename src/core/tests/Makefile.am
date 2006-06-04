@@ -13,6 +13,7 @@ TESTS = \
 
 noinst_PROGRAMS = \
 	test-runlevels \
+	test-services  \
 	$(TESTS)
 
 test_dynbuf_LDADD = $(LIBRCUTIL)
@@ -26,3 +27,6 @@ test_regex_SOURCES = test-regex.c
 
 test_runlevels_LDADD = $(LIBRCCORE)
 test_runlevels_SOURCES = test-runlevels.c
+
+test_services_LDADD = $(LIBRCCORE)
+test_services_SOURCES = test-services.c

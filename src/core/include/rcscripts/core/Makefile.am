@@ -1,2 +1,3 @@
 rcdir = $(pkgincludedir)/core
-rc_HEADERS =
+rc_HEADERS = \
+	services.h

@@ -1,7 +1,7 @@
 /*
- * rccore.h
+ * init.c
  *
- * Core includes.
+ * Functions dealing with initialization.
  *
  * Copyright (C) 2004-2006 Martin Schlemmer <azarah@nosferatu.za.org>
  *
@@ -22,23 +22,31 @@
  * $Header$
  */
 
-#ifndef __RCCORE_H__
-#define __RCCORE_H__
+#include <errno.h>
+#include <stdlib.h>
 
-#include "rcscripts/rcdefines.h"
-#include "rcscripts/rcutil.h"
+char *rc_config_svcdir = NULL;
 
-#include "rcscripts/core/services.h"
+#include "internal/rccore.h"
+#include "rcscripts/rccore.h"
 
-#include "librccore/api/scripts.h"
-#include "librccore/api/runlevels.h"
-#include "librccore/api/parse.h"
-#include "librccore/api/depend.h"
+static bool rc_initialized = FALSE;
 
-/* Initialize needed variables, etc.  Should be called before anything else
- * from the rccore library is used.  Return 0 on success, else -1 and sets
- * errno.
- */
-int rc_init (void);
+int
+rc_init (void)
+{
+  if (TRUE == rc_initialized)
+    return 0;
 
-#endif /* __RCCORE_H__ */
+  rc_config_svcdir = get_cnf_entry (RC_CONFD_FILE_NAME, SVCDIR_CONFIG_ENTRY);
+  if (NULL == rc_config_svcdir)
+    {
+      DBG_MSG ("Failed to get config entry '%s'!\n", SVCDIR_CONFIG_ENTRY);
+      return -1;
+    }
+
+  rc_initialized = TRUE;
+
+  return 0;
+}
+

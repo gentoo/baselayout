@@ -12,12 +12,13 @@ nodist_rc_HEADERS = rcdefines.h
 rcdefines.h: $(srcdir)/rcdefines.h.in
 	@rm -f rcdefines.h
 	@echo "Generating rcdefines.h..."
-	@sed -e 's:@ETCDIR@:$(sysconfdir):g'     \
-	    -e 's:@BINDIR@:$(bindir):g'         \
-	    -e 's:@LIBDIR@:$(libdir):g'         \
-	    -e 's:@SBINDIR@:$(sbindir):g'       \
-	    -e 's:@SHELL_PARSER@:$(RC_SHELL):g' \
-	    $(srcdir)/rcdefines.h.in > rcdefines.h
+	@sed -e 's:@ETCDIR@:$(sysconfdir):g'        \
+	     -e 's:@BINDIR@:$(bindir):g'            \
+	     -e 's:@LIBDIR@:$(libdir):g'            \
+	     -e 's:@SBINDIR@:$(sbindir):g'          \
+	     -e 's:@VARDIR@:$(localstatedir):g'     \
+	     -e 's:@SHELL_PARSER@:$(RC_SHELL):g'    \
+	     $(srcdir)/rcdefines.h.in > rcdefines.h
 
 EXTRA_DIST = rcdefines.h.in
 

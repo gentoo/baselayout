@@ -1,7 +1,7 @@
 /*
  * rccore.h
  *
- * Core includes.
+ * Internal Core includes.
  *
  * Copyright (C) 2004-2006 Martin Schlemmer <azarah@nosferatu.za.org>
  *
@@ -22,23 +22,12 @@
  * $Header$
  */
 
-#ifndef __RCCORE_H__
-#define __RCCORE_H__
+#ifndef __INTERNAL_RCCORE_H__
+#define __INTERNAL_RCCORE_H__
 
-#include "rcscripts/rcdefines.h"
-#include "rcscripts/rcutil.h"
+#include "internal/services.h"
 
-#include "rcscripts/core/services.h"
+/* Value of 'svcdir' in config files */
+extern char *rc_config_svcdir;
 
-#include "librccore/api/scripts.h"
-#include "librccore/api/runlevels.h"
-#include "librccore/api/parse.h"
-#include "librccore/api/depend.h"
-
-/* Initialize needed variables, etc.  Should be called before anything else
- * from the rccore library is used.  Return 0 on success, else -1 and sets
- * errno.
- */
-int rc_init (void);
-
-#endif /* __RCCORE_H__ */
+#endif /* __INTERNAL_RCCORE_H__ */

@@ -28,6 +28,7 @@
 #define RCSCRIPTS_CONFDDIR	"@ETCDIR@/conf.d"
 #define RCSCRIPTS_INITDDIR	"@ETCDIR@/init.d"
 #define RCSCRIPTS_LIBDIR	"@LIBDIR@/rcscripts"
+#define RCSCRIPTS_VARDIR	"@VARDIR@"
 
 #define RUNLEVELS_DIR		"@ETCDIR@/runlevels"
 
