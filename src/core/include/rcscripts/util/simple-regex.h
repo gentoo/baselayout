@@ -3,7 +3,7 @@
  *
  * Simle regex library.
  *
- * Copyright (C) 2004,2005 Martin Schlemmer <azarah@nosferatu.za.org>
+ * Copyright (C) 2004-2006 Martin Schlemmer <azarah@nosferatu.za.org>
  *
  *
  *      This program is free software; you can redistribute it and/or modify it
@@ -22,8 +22,8 @@
  * $Header$
  */
 
-#ifndef __SIMPLE_REGEX_H__
-#define __SIMPLE_REGEX_H__
+#ifndef __RC_SIMPLE_REGEX_H__
+#define __RC_SIMPLE_REGEX_H__
 
 #define REGEX_NO_MATCH 0	/* We have no match */
 #define REGEX_PARTIAL_MATCH 1	/* Some of the string matches the regex */
@@ -84,4 +84,4 @@ typedef struct
  */
 int match (regex_data_t * regex_data);
 
-#endif /* __SIMPLE_REGEX_H__ */
+#endif /* __RC_SIMPLE_REGEX_H__ */

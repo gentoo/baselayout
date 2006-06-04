@@ -3,7 +3,7 @@
  *
  * Simle debugging/logging macro's and functions.
  *
- * Copyright (C) 2004,2005 Martin Schlemmer <azarah@nosferatu.za.org>
+ * Copyright (C) 2004-2006 Martin Schlemmer <azarah@nosferatu.za.org>
  *
  *
  *      This program is free software; you can redistribute it and/or modify it
@@ -22,8 +22,8 @@
  * $Header$
  */
 
-#ifndef __DEBUG_H__
-#define __DEBUG_H__
+#ifndef __RC_DEBUG_H__
+#define __RC_DEBUG_H__
 
 #include <errno.h>
 #include <stdio.h>
@@ -133,4 +133,4 @@ inline char *__xstrndup (const char *str, size_t size, const char *file,
 #define xstrndup(_str, _size) \
  __xstrndup (_str, _size, __FILE__, __FUNCTION__, __LINE__)
 
-#endif /* __DEBUG_H__ */
+#endif /* __RC_DEBUG_H__ */

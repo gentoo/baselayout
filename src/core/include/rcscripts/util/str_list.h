@@ -3,7 +3,7 @@
  *
  * String list macros.
  *
- * Copyright (C) 2004,2005 Martin Schlemmer <azarah@nosferatu.za.org>
+ * Copyright (C) 2004-2006 Martin Schlemmer <azarah@nosferatu.za.org>
  *
  *
  *      This program is free software; you can redistribute it and/or modify it
@@ -22,8 +22,8 @@
  * $Header$
  */
 
-#ifndef __STR_LIST_H__
-#define __STR_LIST_H__
+#ifndef __RC_STR_LIST_H__
+#define __RC_STR_LIST_H__
 
 /* Add a new item to a string list.  If the pointer to the list is NULL,
  * allocate enough memory for the amount of entries needed.  Ditto for
@@ -209,4 +209,4 @@
      } \
  } while (0)
 
-#endif /* __STR_LIST_H__ */
+#endif /* __RC_STR_LIST_H__ */

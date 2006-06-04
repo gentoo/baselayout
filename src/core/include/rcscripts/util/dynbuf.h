@@ -3,7 +3,7 @@
  *
  * Dynamic allocated buffers.
  *
- * Copyright (C) 2004,2005 Martin Schlemmer <azarah@nosferatu.za.org>
+ * Copyright (C) 2004-2006 Martin Schlemmer <azarah@nosferatu.za.org>
  *
  *
  *      This program is free software; you can redistribute it and/or modify it
@@ -22,8 +22,8 @@
  * $Header$
  */
 
-#ifndef __DYNBUF_H__
-#define __DYNBUF_H__
+#ifndef __RC_DYNBUF_H__
+#define __RC_DYNBUF_H__
 
 #define DYNAMIC_BUFFER_SIZE (sizeof (char) * 2 * 1024)
 
@@ -63,4 +63,4 @@ inline bool __check_arg_dyn_buf (dyn_buf_t *dynbuf, const char *file,
 #define check_arg_dyn_buf(_dynbuf) \
  __check_arg_dyn_buf (_dynbuf, __FILE__, __FUNCTION__, __LINE__)
 
-#endif /* __DYNBUF_H__ */
+#endif /* __RC_DYNBUF_H__ */
