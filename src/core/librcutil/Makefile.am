@@ -8,6 +8,8 @@ lib_LTLIBRARIES = librcutil.la
 
 librcutil_la_SOURCES = \
 	debug.c        \
-	misc.c         \
+	string.c       \
+	file.c         \
+	config.c       \
 	dynbuf.c       \
 	simple-regex.c

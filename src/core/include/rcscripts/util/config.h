@@ -1,7 +1,7 @@
 /*
- * rcutil.h
+ * config.h
  *
- * Util defines.
+ * Miscellaneous config related macro's and functions.
  *
  * Copyright (C) 2004-2006 Martin Schlemmer <azarah@nosferatu.za.org>
  *
@@ -22,24 +22,15 @@
  * $Header$
  */
 
-#ifndef __RCUTIL_H__
-#define __RCUTIL_H__
+#ifndef __RC_CONFIG_H__
+#define __RC_CONFIG_H__
 
-#include <stddef.h>
-#include <sys/types.h>
+#include <stdio.h>
 
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
+/* The following return a pointer on success, or NULL with errno set on error.
+ * If it returned NULL, but errno is not set, then there was no error, but
+ * there is nothing to return. */
+char *get_cnf_entry (const char *pathname, const char *entry);
+char ** get_list_file (char **list, char *filename);
 
-#include "rcscripts/rctypes.h"
-#include "rcscripts/util/debug.h"
-#include "rcscripts/util/string.h"
-#include "rcscripts/util/file.h"
-#include "rcscripts/util/config.h"
-#include "rcscripts/util/list.h"
-#include "rcscripts/util/str_list.h"
-#include "rcscripts/util/dynbuf.h"
-#include "rcscripts/util/simple-regex.h"
-
-#endif /* __RCUTIL_H__ */
+#endif /* __RC_CONFIG_H__ */

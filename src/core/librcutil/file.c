@@ -1,9 +1,9 @@
 /*
- * misc.c
+ * file.c
  *
- * Miscellaneous macro's and functions.
+ * Miscellaneous file related macro's and functions.
  *
- * Copyright (C) 2004,2005 Martin Schlemmer <azarah@nosferatu.za.org>
+ * Copyright (C) 2004-2006 Martin Schlemmer <azarah@nosferatu.za.org>
  *
  *
  *      This program is free software; you can redistribute it and/or modify it
@@ -24,97 +24,15 @@
 
 #include <errno.h>
 #include <string.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/param.h>
 #include <dirent.h>
 #include <unistd.h>
 #include <fcntl.h>
 
 #include "rcscripts/rcutil.h"
-
-char *
-memrepchr (char **str, char old, char new, size_t size)
-{
-  char *str_p;
-
-  if (!check_arg_strv (str))
-    return NULL;
-
-  str_p = memchr (*str, old, size);
-
-  while (NULL != str_p)
-    {
-      str_p[0] = new;
-      str_p = memchr (&str_p[1], old, size - (str_p - *str) - 1);
-    }
-
-  return *str;
-}
-
-char *
-strcatpaths (const char *pathname1, const char *pathname2)
-{
-  char *new_path = NULL;
-  int lenght;
-
-  if ((!check_arg_str (pathname1)) || (!check_arg_str (pathname2)))
-    return 0;
-
-  /* Lenght of pathname1 + lenght of pathname2 + '/' if needed */
-  lenght = strlen (pathname1) + strlen (pathname2) + 2;
-  /* lenght + '\0' */
-  new_path = xmalloc (lenght);
-  if (NULL == new_path)
-    return NULL;
-
-  snprintf (new_path, lenght, "%s%s%s", pathname1,
-	    (new_path[strlen (new_path) - 1] != '/') ? "/" : "",
-	    pathname2);
-
-  return new_path;
-}
-
-char *
-strndup (const char *str, size_t size)
-{
-  char *new_str = NULL;
-  size_t len;
-
-  /* We cannot check if its a valid string here, as it might
-   * not be '\0' terminated ... */
-  if (!check_arg_ptr (str))
-    return NULL;
-
-  /* Check lenght of str without breaching the size limit */
-  for (len = 0; (len < size) && ('\0' != str[len]); len++);
-
-  new_str = xmalloc (len + 1);
-  if (NULL == new_str)
-    return NULL;
-
-  /* Make sure our string is NULL terminated */
-  new_str[len] = '\0';
-
-  return (char *) memcpy (new_str, str, len);
-}
-
-char *
-gbasename (const char *path)
-{
-  char *new_path = NULL;
-
-  if (!check_arg_str (path))
-    return NULL;
-
-  /* Copied from glibc */
-  new_path = strrchr (path, '/');
-  return new_path ? new_path + 1 : (char *) path;
-}
-
 
 int
 exists (const char *pathname)
@@ -451,185 +369,9 @@ error:
   return NULL;
 }
 
-/* This handles simple 'entry="bar"' type variables.  If it is more complex
- * ('entry="$(pwd)"' or such), it will obviously not work, but current behaviour
- * should be fine for the type of variables we want. */
-char *
-get_cnf_entry (const char *pathname, const char *entry)
-{
-  dyn_buf_t *dynbuf = NULL;
-  char *buf = NULL;
-  char *str_ptr;
-  char *value = NULL;
-  char *token;
-
-
-  if ((!check_arg_str (pathname)) || (!check_arg_str (entry)))
-    return NULL;
-
-  /* If it is not a file or symlink pointing to a file, bail */
-  if (1 != is_file (pathname, 1))
-    {
-      errno = ENOENT;
-      DBG_MSG ("Given pathname is not a file or do not exist!\n");
-      return NULL;
-    }
-
-  dynbuf = new_dyn_buf_mmap_file (pathname);
-  if (NULL == dynbuf)
-    {
-      DBG_MSG ("Could not open config file for reading!\n");
-      return NULL;
-    }
-
-  while (NULL != (buf = read_line_dyn_buf (dynbuf)))
-    {
-      str_ptr = buf;
-
-      /* Strip leading spaces/tabs */
-      while ((str_ptr[0] == ' ') || (str_ptr[0] == '\t'))
-	str_ptr++;
-
-      /* Get entry and value */
-      token = strsep (&str_ptr, "=");
-      /* Bogus entry or value */
-      if (NULL == token)
-	goto _continue;
-
-      /* Make sure we have a string that is larger than 'entry', and
-       * the first part equals 'entry' */
-      if ((strlen (token) > 0) && (0 == strcmp (entry, token)))
-	{
-	  do
-	    {
-	      /* Bash variables are usually quoted */
-	      token = strsep (&str_ptr, "\"\'");
-	      /* If quoted, the first match will be "" */
-	    }
-	  while ((NULL != token) && (0 == strlen (token)));
-
-	  /* We have a 'entry='.  We respect bash rules, so NULL
-	   * value for now (if not already) */
-	  if (NULL == token)
-	    {
-	      /* We might have 'entry=' and later 'entry="bar"',
-	       * so just continue for now ... we will handle
-	       * it below when 'value == NULL' */
-	      if (NULL != value)
-		{
-		  free (value);
-		  value = NULL;
-		}
-	      goto _continue;
-	    }
-
-	  /* If we have already allocated 'value', free it */
-	  if (NULL != value)
-	    free (value);
-
-	  value = xstrndup (token, strlen (token));
-	  if (NULL == value)
-	    {
-	      free_dyn_buf (dynbuf);
-	      free (buf);
-
-	      return NULL;
-	    }
-
-	  /* We do not break, as there might be more than one entry
-	   * defined, and as bash uses the last, so should we */
-	  /* break; */
-	}
-
-_continue:
-      free (buf);
-    }
-
-  /* read_line_dyn_buf() returned NULL with errno set */
-  if ((NULL == buf) && (0 != errno))
-    {
-      DBG_MSG ("Failed to read line from dynamic buffer!\n");
-      free_dyn_buf (dynbuf);
-      if (NULL != value)
-	free (value);
-
-      return NULL;
-    }
-
-
-  if (NULL == value)
-    DBG_MSG ("Failed to get value for config entry '%s'!\n", entry);
-
-  free_dyn_buf (dynbuf);
-
-  return value;
-}
-
-char **
-get_list_file (char **list, char *filename)
-{
-  dyn_buf_t *dynbuf = NULL;
-  char *buf = NULL;
-  char *tmp_p = NULL;
-  char *token = NULL;
-
-  if (!check_arg_str (filename))
-    return NULL;
-
-  dynbuf = new_dyn_buf_mmap_file (filename);
-  if (NULL == dynbuf)
-    return NULL;
-
-  while (NULL != (buf = read_line_dyn_buf (dynbuf)))
-    {
-      tmp_p = buf;
-
-      /* Strip leading spaces/tabs */
-      while ((tmp_p[0] == ' ') || (tmp_p[0] == '\t'))
-	tmp_p++;
-
-      /* Get entry - we do not want comments, and only the first word
-       * on a line is valid */
-      token = strsep (&tmp_p, "# \t");
-      if (check_str (token))
-	{
-	  tmp_p = xstrndup (token, strlen (token));
-	  if (NULL == tmp_p)
-	    {
-	      if (NULL != list)
-		str_list_free (list);
-	      free_dyn_buf (dynbuf);
-	      free (buf);
-
-	      return NULL;
-	    }
-
-	  str_list_add_item (list, tmp_p, error);
-	}
-
-      free (buf);
-    }
-
-  /* read_line_dyn_buf() returned NULL with errno set */
-  if ((NULL == buf) && (0 != errno))
-    {
-      DBG_MSG ("Failed to read line from dynamic buffer!\n");
-error:
-      if (NULL != list)
-	str_list_free (list);
-      free_dyn_buf (dynbuf);
-
-      return NULL;
-    }
-
-  free_dyn_buf (dynbuf);
-
-  return list;
-}
-
 
 /*
- * Below three functions (file_map, file_unmap and buf_get_line) are
+ * Below two functions (file_map, file_unmap and buf_get_line) are
  * from udev-050 (udev_utils.c).
  * (Some are slightly modified, please check udev for originals.)
  *
@@ -710,12 +452,3 @@ file_unmap (char *buf, size_t bufsize)
   munmap (buf, bufsize);
 }
 
-size_t
-buf_get_line (char *buf, size_t buflen, size_t cur)
-{
-  size_t count = 0;
-
-  for (count = cur; count < buflen && buf[count] != '\n'; count++);
-
-  return count - cur;
-}
