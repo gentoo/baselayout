@@ -28,7 +28,9 @@
 #include <stddef.h>
 #include <sys/types.h>
 
-#include "config.h"
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
 
 #include "rcscripts/rctypes.h"
 #include "rcscripts/util/debug.h"
