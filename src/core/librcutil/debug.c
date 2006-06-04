@@ -280,14 +280,14 @@ __xstrndup (const char *str, size_t size, const char *file,
 {
   char *new_ptr;
 
-  new_ptr = strndup (str, size);
+  new_ptr = rc_strndup (str, size);
   if (NULL == new_ptr)
     {
       /* Set errno in case specific realloc() implementation does not */
       errno = ENOMEM;
 
       debug_message (file, func, line,
-		     "Failed to duplicate string via strndup() !\n");
+		     "Failed to duplicate string via rc_strndup() !\n");
 
       return NULL;
     }

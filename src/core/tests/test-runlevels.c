@@ -54,7 +54,7 @@ main (void)
 
   list_for_each_entry (script_info, &rcscript_list, node)
     {
-      printf ("  - %s\n", gbasename (script_info->filename));
+      printf ("  - %s\n", rc_basename (script_info->filename));
     }
 
   printf ("\n");
@@ -62,11 +62,11 @@ main (void)
 
   list_for_each_entry (runlevel_info, &runlevel_list, node)
     {
-      EINFO ("Runlevel %s:\n", gbasename (runlevel_info->dirname));
+      EINFO ("Runlevel %s:\n", rc_basename (runlevel_info->dirname));
 
       list_for_each_entry (script_info, &runlevel_info->entries, node)
 	{
-	  printf ("  - %s\n", gbasename (script_info->filename));
+	  printf ("  - %s\n", rc_basename (script_info->filename));
 	}
     }
 

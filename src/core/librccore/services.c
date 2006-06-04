@@ -56,14 +56,14 @@ rc_service_test_state (const char *service, rc_service_state_t state)
   if (exists (RC_SYSINIT_STATE))
     return FALSE;
 
-  state_dir = strcatpaths (rc_config_svcdir, rc_service_state_names[state]);
+  state_dir = rc_strcatpaths (rc_config_svcdir, rc_service_state_names[state]);
   if (NULL == state_dir)
     {
       DBG_MSG ("Failed to allocate buffer!\n");
       return FALSE;
     }
 
-  state_link = strcatpaths (state_dir, service);
+  state_link = rc_strcatpaths (state_dir, service);
   if (NULL == state_link)
     {
       free (state_dir);

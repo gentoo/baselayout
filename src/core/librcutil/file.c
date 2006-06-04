@@ -330,7 +330,7 @@ ls_dir (const char *pathname, int hidden)
 	  if ((0 == strcmp (d_name, ".")) || (0 == strcmp (d_name, "..")))
 	    continue;
 
-	  str_ptr = strcatpaths (pathname, d_name);
+	  str_ptr = rc_strcatpaths (pathname, d_name);
 	  if (NULL == str_ptr)
 	    {
 	      DBG_MSG ("Failed to allocate buffer!\n");

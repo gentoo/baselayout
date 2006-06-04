@@ -51,14 +51,14 @@
 
 /* String functions.  Return a string on success, or NULL on error
  * or no action taken.  On error errno will be set.*/
-char *memrepchr (char **str, char old, char _new, size_t size);
+char *rc_memrepchr (char **str, char old, char _new, size_t size);
 /* Concat two paths adding '/' if needed.  Memory will be allocated
  * with the malloc() call. */
-char *strcatpaths (const char *pathname1, const char *pathname2);
+char *rc_strcatpaths (const char *pathname1, const char *pathname2);
 
 /* Compat functions for GNU extensions */
-char *strndup (const char *str, size_t size);
+char *rc_strndup (const char *str, size_t size);
 /* Same as basename(3), but do not modify path */
-char *gbasename (const char *path);
+char *rc_basename (const char *path);
 
 #endif /* __RC_STRING_H__ */

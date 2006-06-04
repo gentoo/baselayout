@@ -58,7 +58,7 @@ get_rcscripts (void)
 	  || (CHECK_FILE_EXTENSION (rcscript, ".bak"))
 	  || (CHECK_FILE_EXTENSION (rcscript, "~")))
 	{
-	  DBG_MSG ("'%s' is not a valid rc-script!\n", gbasename (rcscript));
+	  DBG_MSG ("'%s' is not a valid rc-script!\n", rc_basename (rcscript));
 	}
       else
 	{
@@ -70,7 +70,7 @@ get_rcscripts (void)
 	  if (NULL == dynbuf)
 	    {
 	      DBG_MSG ("Could not open '%s' for reading!\n",
-		       gbasename (rcscript));
+		       rc_basename (rcscript));
 	      goto error;
 	    }
 
@@ -81,7 +81,7 @@ get_rcscripts (void)
 	  if (NULL == buf)
 	    {
 	      DBG_MSG ("'%s' is not a valid rc-script!\n",
-		       gbasename (rcscript));
+		       rc_basename (rcscript));
 	      continue;
 	    }
 
@@ -92,7 +92,7 @@ get_rcscripts (void)
 	  if (REGEX_FULL_MATCH != tmp_data.match)
 	    {
 	      DBG_MSG ("'%s' is not a valid rc-script!\n",
-		       gbasename (rcscript));
+		       rc_basename (rcscript));
 	      continue;
 	    }
 
@@ -100,11 +100,11 @@ get_rcscripts (void)
 	  if (CHECK_FILE_EXTENSION (rcscript, ".sh"))
 	    {
 	      EWARN ("'%s' is invalid (should not end with '.sh')!\n",
-		     gbasename (rcscript));
+		     rc_basename (rcscript));
 	      continue;
 	    }
 
-	  DBG_MSG ("Adding rc-script '%s' to list.\n", gbasename (rcscript));
+	  DBG_MSG ("Adding rc-script '%s' to list.\n", rc_basename (rcscript));
 
 	  info = xmalloc (sizeof (rcscript_info_t));
 	  if (NULL == info)
@@ -125,7 +125,7 @@ get_rcscripts (void)
 	    }
 
 	  /* File name for the conf.d config file (if any) */
-	  confd_file = strcatpaths (RCSCRIPTS_CONFDDIR, gbasename (rcscript));
+	  confd_file = rc_strcatpaths (RCSCRIPTS_CONFDDIR, rc_basename (rcscript));
 	  if (NULL == confd_file)
 	    {
 	      DBG_MSG ("Failed to allocate temporary buffer!\n");
@@ -243,8 +243,8 @@ get_rcscript_info (const char *scriptname)
 
   list_for_each_entry (info, &rcscript_list, node)
     {
-      if ((strlen (scriptname) == strlen (gbasename (info->filename)))
-	  && (0 == strncmp (scriptname, gbasename (info->filename),
+      if ((strlen (scriptname) == strlen (rc_basename (info->filename)))
+	  && (0 == strncmp (scriptname, rc_basename (info->filename),
 			    strlen (scriptname))))
 	return info;
     }

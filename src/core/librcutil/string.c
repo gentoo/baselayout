@@ -29,7 +29,7 @@
 #include "rcscripts/rcutil.h"
 
 char *
-memrepchr (char **str, char old, char new, size_t size)
+rc_memrepchr (char **str, char old, char new, size_t size)
 {
   char *str_p;
 
@@ -48,7 +48,7 @@ memrepchr (char **str, char old, char new, size_t size)
 }
 
 char *
-strcatpaths (const char *pathname1, const char *pathname2)
+rc_strcatpaths (const char *pathname1, const char *pathname2)
 {
   char *new_path = NULL;
   int lenght;
@@ -71,7 +71,7 @@ strcatpaths (const char *pathname1, const char *pathname2)
 }
 
 char *
-strndup (const char *str, size_t size)
+rc_strndup (const char *str, size_t size)
 {
   char *new_str = NULL;
   size_t len;
@@ -95,7 +95,7 @@ strndup (const char *str, size_t size)
 }
 
 char *
-gbasename (const char *path)
+rc_basename (const char *path)
 {
   char *new_path = NULL;
 

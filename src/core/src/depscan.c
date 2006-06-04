@@ -106,7 +106,7 @@ create_var_dirs (const char *svcdir)
 
   while (NULL != svcdir_subdirs[i])
     {
-      tmp_path = strcatpaths (svcdir, svcdir_subdirs[i]);
+      tmp_path = rc_strcatpaths (svcdir, svcdir_subdirs[i]);
       if (NULL == tmp_path)
 	{
 	  DBG_MSG ("Failed to allocate buffer!\n");
@@ -146,7 +146,7 @@ delete_var_dirs (const char *svcdir)
 
   while (NULL != svcdir_volatile_subdirs[i])
     {
-      tmp_path = strcatpaths (svcdir, svcdir_volatile_subdirs[i]);
+      tmp_path = rc_strcatpaths (svcdir, svcdir_volatile_subdirs[i]);
       if (NULL == tmp_path)
 	{
 	  DBG_MSG ("Failed to allocate buffer!\n");
@@ -221,14 +221,14 @@ main (void)
       exit (EXIT_FAILURE);
     }
 
-  cachefile = strcatpaths (svcdir, LEGACY_CACHE_FILE_NAME);
+  cachefile = rc_strcatpaths (svcdir, LEGACY_CACHE_FILE_NAME);
   if (NULL == cachefile)
     {
       DBG_MSG ("Failed to allocate buffer!\n");
       exit (EXIT_FAILURE);
     }
 
-  tmp_cachefile = strcatpaths (cachefile, "XXXXXX");
+  tmp_cachefile = rc_strcatpaths (cachefile, "XXXXXX");
   if (NULL == tmp_cachefile)
     {
       DBG_MSG ("Failed to allocate buffer!\n");

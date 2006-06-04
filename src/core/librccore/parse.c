@@ -78,13 +78,13 @@ parse_rcscript (char *scriptname, dyn_buf_t *data)
   dynbuf = new_dyn_buf_mmap_file (scriptname);
   if (NULL == dynbuf)
     {
-      DBG_MSG ("Could not open '%s' for reading!\n", gbasename (scriptname));
+      DBG_MSG ("Could not open '%s' for reading!\n", rc_basename (scriptname));
       return -1;
     }
 
-  DBG_MSG ("Parsing '%s'.\n", gbasename (scriptname));
+  DBG_MSG ("Parsing '%s'.\n", rc_basename (scriptname));
 
-  tmp_count = parse_print_header (gbasename (scriptname), data);
+  tmp_count = parse_print_header (rc_basename (scriptname), data);
   if (-1 == tmp_count)
     {
       DBG_MSG ("Failed to call parse_print_header()!\n");
@@ -108,7 +108,7 @@ parse_rcscript (char *scriptname, dyn_buf_t *data)
 	{
 	  DBG_MSG ("Got 'depend()' function.\n");
 
-	  tmp_count = parse_print_body (gbasename (scriptname), data);
+	  tmp_count = parse_print_body (rc_basename (scriptname), data);
 	  if (-1 == tmp_count)
 	    {
 	      DBG_MSG ("Failed to call parse_print_body()!\n");
@@ -170,7 +170,7 @@ generate_stage1 (dyn_buf_t *data)
       tmp_count = parse_rcscript (info->filename, data);
       if (-1 == tmp_count)
 	{
-	  DBG_MSG ("Failed to parse '%s'!\n", gbasename (info->filename));
+	  DBG_MSG ("Failed to parse '%s'!\n", rc_basename (info->filename));
 
 	  /* If 'errno' is set, it is critical (hopefully) */
 	  if (0 != errno)
@@ -683,7 +683,7 @@ _continue:
    * FIXME: Can drop this when we no longer need write_legacy_stage3() */
   list_for_each_entry (rs_info, &rcscript_list, node)
     {
-      rc_name = gbasename (rs_info->filename);
+      rc_name = rc_basename (rs_info->filename);
       if (NULL == service_get_info (rc_name))
 	continue;
 

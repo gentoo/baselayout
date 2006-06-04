@@ -105,7 +105,7 @@ get_runlevels (void)
       char *dir_item;
       int dir_count;
 
-      DBG_MSG ("Adding runlevel '%s'\n", gbasename (runlevel));
+      DBG_MSG ("Adding runlevel '%s'\n", rc_basename (runlevel));
 
       runlevel_info = xmalloc (sizeof (runlevel_info_t));
       if (NULL == runlevel_info)
@@ -137,7 +137,7 @@ get_runlevels (void)
 	      continue;
 	    }
 
-	  script_info = get_rcscript_info (gbasename (dir_item));
+	  script_info = get_rcscript_info (rc_basename (dir_item));
 	  if (NULL == script_info)
 	    {
 	      DBG_MSG ("Skipping invalid entry '%s' !\n", dir_item);
@@ -152,8 +152,8 @@ get_runlevels (void)
 	    }
 
 	  DBG_MSG ("Adding '%s' to runlevel '%s'\n",
-		   gbasename (script_info->filename),
-		   gbasename (runlevel));
+		   rc_basename (script_info->filename),
+		   rc_basename (runlevel));
 
 	  /* Add a copy, as the next and prev pointers will be changed */
 	  memcpy (new_script_info, script_info, sizeof (rcscript_info_t));
@@ -187,8 +187,8 @@ get_runlevel_info (const char *runlevel)
 
   list_for_each_entry (info, &runlevel_list, node)
     {
-      if ((strlen (runlevel) == strlen (gbasename (info->dirname)))
-	  && (0 == strncmp (runlevel, gbasename (info->dirname),
+      if ((strlen (runlevel) == strlen (rc_basename (info->dirname)))
+	  && (0 == strncmp (runlevel, rc_basename (info->dirname),
 			    strlen (runlevel))))
 	return info;
     }
