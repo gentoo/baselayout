@@ -40,7 +40,7 @@ get_rcscripts (void)
   char *confd_file = NULL;
   int count;
 
-  file_list = ls_dir (RCSCRIPTS_INITDDIR, 0);
+  file_list = rc_ls_dir (RCSCRIPTS_INITDDIR, 0);
   if (NULL == file_list)
     {
       errno = ENOENT;
@@ -52,7 +52,7 @@ get_rcscripts (void)
   str_list_for_each_item (file_list, rcscript, count)
     {
       /* Is it a file? */
-      if (!(is_file (rcscript, 1))
+      if (!(rc_is_file (rcscript, 1))
 	  /* Do not process scripts, source or backup files. */
 	  || (CHECK_FILE_EXTENSION (rcscript, ".c"))
 	  || (CHECK_FILE_EXTENSION (rcscript, ".bak"))
@@ -116,7 +116,7 @@ get_rcscripts (void)
 	    goto loop_error;
 
 	  /* Get the modification time */
-	  info->mtime = get_mtime (rcscript, 1);
+	  info->mtime = rc_get_mtime (rcscript, 1);
 	  if (0 == info->mtime)
 	    {
 	      DBG_MSG ("Failed to get modification time for '%s'!\n", rcscript);
@@ -133,8 +133,8 @@ get_rcscripts (void)
 	    }
 
 	  /* Get the modification time of the conf.d file
-	   * (if any exists) */
-	  info->confd_mtime = get_mtime (confd_file, 1);
+	   * (if any rc_file_exists) */
+	  info->confd_mtime = rc_get_mtime (confd_file, 1);
 	  if (0 == info->confd_mtime)
 	    {
 	      DBG_MSG ("Failed to get modification time for '%s'!\n",
@@ -193,7 +193,7 @@ check_rcscripts_mtime (const char *cachefile)
   if (!check_arg_str (cachefile))
     return -1;
 
-  cache_mtime = get_mtime (cachefile, 1);
+  cache_mtime = rc_get_mtime (cachefile, 1);
   if (0 == cache_mtime)
     {
       DBG_MSG ("Could not get modification time for cache file '%s'!\n",
@@ -202,7 +202,7 @@ check_rcscripts_mtime (const char *cachefile)
     }
 
   /* Get and compare mtime for RC_CONF_FILE_NAME with that of cachefile */
-  rc_conf_mtime = get_mtime (RC_CONF_FILE_NAME, 1);
+  rc_conf_mtime = rc_get_mtime (RC_CONF_FILE_NAME, 1);
   if (rc_conf_mtime > cache_mtime)
     {
       DBG_MSG ("'%s' have a later modification time than '%s'.\n",
@@ -210,7 +210,7 @@ check_rcscripts_mtime (const char *cachefile)
       return -1;
     }
   /* Get and compare mtime for RC_CONFD_FILE_NAME with that of cachefile */
-  rc_confd_mtime = get_mtime (RC_CONFD_FILE_NAME, 1);
+  rc_confd_mtime = rc_get_mtime (RC_CONFD_FILE_NAME, 1);
   if (rc_confd_mtime > cache_mtime)
     {
       DBG_MSG ("'%s' have a later modification time than '%s'.\n",

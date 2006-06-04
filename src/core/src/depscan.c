@@ -66,9 +66,9 @@ create_directory (const char *name)
     return -1;
 
   /* Check if directory exist, and is not a symlink */
-  if (!is_dir (name, 0))
+  if (!rc_is_dir (name, 0))
     {
-      if (exists (name))
+      if (rc_file_exists (name))
 	{
 	  /* Remove it if not a directory */
 	  if (-1 == unlink (name))
@@ -78,7 +78,7 @@ create_directory (const char *name)
 	    }
 	}
       /* Now try to create the directory */
-      if (-1 == mktree (name, 0755))
+      if (-1 == rc_mktree (name, 0755))
 	{
 	  DBG_MSG ("Failed to create '%s'!\n", name);
 	  return -1;
@@ -138,7 +138,7 @@ delete_var_dirs (const char *svcdir)
     return -1;
 
   /* Just quit if svcdir do not exist */
-  if (!exists (svcdir))
+  if (!rc_file_exists (svcdir))
     {
       DBG_MSG ("'%s' does not exist!\n", svcdir);
       return 0;
@@ -154,11 +154,11 @@ delete_var_dirs (const char *svcdir)
 	}
 
       /* Skip the directory if it does not exist */
-      if (!exists (tmp_path))
+      if (!rc_file_exists (tmp_path))
 	goto _continue;
 
       /* Check and delete all files and sub directories if needed */
-      if (-1 == rmtree (tmp_path))
+      if (-1 == rc_rmtree (tmp_path))
 	{
 	  DBG_MSG ("Failed to delete '%s'!\n", tmp_path);
 	  free (tmp_path);
@@ -302,7 +302,7 @@ main (void)
       write_legacy_stage3 (cachefile_fd);
       fclose (cachefile_fd);
 
-      if ((-1 == unlink (cachefile)) && (exists (cachefile)))
+      if ((-1 == unlink (cachefile)) && (rc_file_exists (cachefile)))
 	{
 	  EERROR ("Could not remove '%s'!\n", cachefile);
 	  unlink (tmp_cachefile);

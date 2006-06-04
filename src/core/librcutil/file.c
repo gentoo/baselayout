@@ -35,7 +35,7 @@
 #include "rcscripts/rcutil.h"
 
 int
-exists (const char *pathname)
+rc_file_exists (const char *pathname)
 {
   struct stat buf;
   int retval;
@@ -54,7 +54,7 @@ exists (const char *pathname)
 }
 
 int
-is_file (const char *pathname, int follow_link)
+rc_is_file (const char *pathname, int follow_link)
 {
   struct stat buf;
   int retval;
@@ -73,7 +73,7 @@ is_file (const char *pathname, int follow_link)
 }
 
 int
-is_link (const char *pathname)
+rc_is_link (const char *pathname)
 {
   struct stat buf;
   int retval;
@@ -92,7 +92,7 @@ is_link (const char *pathname)
 }
 
 int
-is_dir (const char *pathname, int follow_link)
+rc_is_dir (const char *pathname, int follow_link)
 {
   struct stat buf;
   int retval;
@@ -111,7 +111,7 @@ is_dir (const char *pathname, int follow_link)
 }
 
 time_t
-get_mtime (const char *pathname, int follow_link)
+rc_get_mtime (const char *pathname, int follow_link)
 {
   struct stat buf;
   int retval;
@@ -138,7 +138,7 @@ remove (const char *pathname)
   if (!check_arg_str (pathname))
     return -1;
 
-  if (1 == is_dir (pathname, 0))
+  if (1 == rc_is_dir (pathname, 0))
     retval = rmdir (pathname);
   else
     retval = unlink (pathname);
@@ -148,7 +148,7 @@ remove (const char *pathname)
 #endif
 
 int
-mktree (const char *pathname, mode_t mode)
+rc_mktree (const char *pathname, mode_t mode)
 {
   char *temp_name = NULL;
   char *temp_token = NULL;
@@ -189,7 +189,7 @@ mktree (const char *pathname, mode_t mode)
 
       /* If it does not exist, create the dir.  If it does exit,
        * but is not a directory, we will catch it below. */
-      if (1 != exists (temp_name))
+      if (1 != rc_file_exists (temp_name))
 	{
 	  retval = mkdir (temp_name, mode);
 	  if (-1 == retval)
@@ -199,7 +199,7 @@ mktree (const char *pathname, mode_t mode)
 	    }
 	  /* Not a directory or symlink pointing to a directory */
 	}
-      else if (1 != is_dir (temp_name, 1))
+      else if (1 != rc_is_dir (temp_name, 1))
 	{
 	  errno = ENOTDIR;
 	  DBG_MSG ("Component in pathname is not a directory!\n");
@@ -227,7 +227,7 @@ error:
 }
 
 int
-rmtree (const char *pathname)
+rc_rmtree (const char *pathname)
 {
   char **dirlist = NULL;
   int i = 0;
@@ -235,14 +235,14 @@ rmtree (const char *pathname)
   if (!check_arg_str (pathname))
     return -1;
 
-  if (1 != exists (pathname))
+  if (1 != rc_file_exists (pathname))
     {
       errno = ENOENT;
-      DBG_MSG ("'%s' does not exists!\n", pathname);
+      DBG_MSG ("'%s' does not rc_file_exists!\n", pathname);
       return -1;
     }
 
-  dirlist = ls_dir (pathname, 1);
+  dirlist = rc_ls_dir (pathname, 1);
   if ((NULL == dirlist) && (0 != errno))
     {
       /* Do not error out - caller should decide itself if it
@@ -253,11 +253,11 @@ rmtree (const char *pathname)
 
   while ((NULL != dirlist) && (NULL != dirlist[i]))
     {
-      /* If it is a directory, call rmtree() again with
+      /* If it is a directory, call rc_rmtree() again with
        * it as argument */
-      if (1 == is_dir (dirlist[i], 0))
+      if (1 == rc_is_dir (dirlist[i], 0))
 	{
-	  if (-1 == rmtree (dirlist[i]))
+	  if (-1 == rc_rmtree (dirlist[i]))
 	    {
 	      DBG_MSG ("Failed to delete sub directory!\n");
 	      goto error;
@@ -265,8 +265,8 @@ rmtree (const char *pathname)
 	}
 
       /* Now actually remove it.  Note that if it was a directory,
-       * it should already be removed by above rmtree() call */
-      if ((1 == exists (dirlist[i]) && (-1 == remove (dirlist[i]))))
+       * it should already be removed by above rc_rmtree() call */
+      if ((1 == rc_file_exists (dirlist[i]) && (-1 == remove (dirlist[i]))))
 	{
 	  DBG_MSG ("Failed to remove '%s'!\n", dirlist[i]);
 	  goto error;
@@ -291,7 +291,7 @@ error:
 }
 
 char **
-ls_dir (const char *pathname, int hidden)
+rc_ls_dir (const char *pathname, int hidden)
 {
   DIR *dp;
   struct dirent *dir_entry;
@@ -371,7 +371,7 @@ error:
 
 
 /*
- * Below two functions (file_map, file_unmap and buf_get_line) are
+ * Below two functions (rc_file_map and rc_file_unmap) are
  * from udev-050 (udev_utils.c).
  * (Some are slightly modified, please check udev for originals.)
  *
@@ -393,7 +393,7 @@ error:
  */
 
 int
-file_map (const char *filename, char **buf, size_t * bufsize)
+rc_file_map (const char *filename, char **buf, size_t * bufsize)
 {
   struct stat stats;
   int fd;
@@ -447,7 +447,7 @@ file_map (const char *filename, char **buf, size_t * bufsize)
 }
 
 void
-file_unmap (char *buf, size_t bufsize)
+rc_file_unmap (char *buf, size_t bufsize)
 {
   munmap (buf, bufsize);
 }

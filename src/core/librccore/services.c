@@ -53,7 +53,7 @@ rc_service_test_state (const char *service, rc_service_state_t state)
    *     rest of the checks!
    */
 
-  if (exists (RC_SYSINIT_STATE))
+  if (rc_file_exists (RC_SYSINIT_STATE))
     return FALSE;
 
   state_dir = rc_strcatpaths (rc_config_svcdir, rc_service_state_names[state]);
@@ -71,7 +71,7 @@ rc_service_test_state (const char *service, rc_service_state_t state)
       return FALSE;
     }
 
-  if (exists (state_link))
+  if (rc_file_exists (state_link))
     {
       free (state_link);
       free (state_dir);

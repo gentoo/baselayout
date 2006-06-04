@@ -1,7 +1,7 @@
 /*
  * test-mmap.c
  *
- * Test for file_map().
+ * Test for rc_file_map().
  *
  * Copyright (C) 2004,2005 Martin Schlemmer <azarah@nosferatu.za.org>
  *
@@ -32,13 +32,13 @@ main (void)
   char *buf;
   size_t bufsize;
 
-  if (-1 == file_map ("/etc/fstab", &buf, &bufsize))
+  if (-1 == rc_file_map ("/etc/fstab", &buf, &bufsize))
     {
       DBG_MSG ("Failed to mmap file");
       exit (EXIT_FAILURE);
     }
   
-  file_unmap (buf, bufsize);
+  rc_file_unmap (buf, bufsize);
 
   return 0;
 }

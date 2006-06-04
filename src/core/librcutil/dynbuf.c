@@ -65,7 +65,7 @@ new_dyn_buf_mmap_file (const char *name)
   if (NULL == dynbuf)
     return NULL;
 
-  if (-1 == file_map (name, &dynbuf->data, &dynbuf->length))
+  if (-1 == rc_file_map (name, &dynbuf->data, &dynbuf->length))
     {
       DBG_MSG ("Failed to mmap file '%s'\n", name);
       free (dynbuf);
@@ -134,7 +134,7 @@ free_dyn_buf (dyn_buf_t *dynbuf)
   else
     {
       save_errno ();
-      file_unmap (dynbuf->data, dynbuf->length);
+      rc_file_unmap (dynbuf->data, dynbuf->length);
       restore_errno ();
     }
 

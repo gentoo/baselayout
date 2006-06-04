@@ -41,7 +41,7 @@ get_runlevel_dirs (void)
   char *dir_item;
   int count;
 
-  dir_list = ls_dir (RUNLEVELS_DIR, 0);
+  dir_list = rc_ls_dir (RUNLEVELS_DIR, 0);
   if (NULL == dir_list)
     {
       errno = ENOENT;
@@ -52,7 +52,7 @@ get_runlevel_dirs (void)
 
   str_list_for_each_item (dir_list, dir_item, count)
     {
-      if (is_dir (dir_item, 0))
+      if (rc_is_dir (dir_item, 0))
 	{
 	  char *tmp_str;
 
@@ -117,7 +117,7 @@ get_runlevels (void)
 
       INIT_LIST_HEAD (&runlevel_info->entries);
 
-      dir_list = ls_dir (runlevel, 0);
+      dir_list = rc_ls_dir (runlevel, 0);
       if (NULL == dir_list)
 	{
 	  if (0 != errno)
@@ -131,7 +131,7 @@ get_runlevels (void)
 	  rcscript_info_t *script_info;
 	  rcscript_info_t *new_script_info = NULL;
 
-	  if (!is_link (dir_item))
+	  if (!rc_is_link (dir_item))
 	    {
 	      DBG_MSG ("Skipping non symlink '%s' !\n", dir_item);
 	      continue;
@@ -210,7 +210,7 @@ is_runlevel (const char *runlevel)
 
   snprintf (runlevel_dir, len, "%s/%s", RUNLEVELS_DIR, runlevel);
 
-  if (is_dir (runlevel_dir, 0))
+  if (rc_is_dir (runlevel_dir, 0))
     return TRUE;
 
   return FALSE;
