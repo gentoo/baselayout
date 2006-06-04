@@ -28,7 +28,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "rcscripts.h"
+#include "rcscripts/rcutil.h"
 
 static dyn_buf_t *reallocate_dyn_buf (dyn_buf_t *dynbuf, size_t needed);
 

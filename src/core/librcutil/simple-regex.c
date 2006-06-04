@@ -68,7 +68,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "rcscripts.h"
+#include "rcscripts/rcutil.h"
 
 /* Macro to check if a regex_data_t pointer is valid */
 #define CHECK_REGEX_DATA_P(_regex_data, _on_error) \

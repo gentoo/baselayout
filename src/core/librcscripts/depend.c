@@ -28,7 +28,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "rcscripts.h"
+#include "rcscripts/rccore.h"
 
 LIST_HEAD (service_info_list);
 
