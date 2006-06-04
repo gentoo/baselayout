@@ -12,7 +12,7 @@
     pppd.sh now updates secret files with a blank password, #134337
 
     Remove swapon call from /sbin/rc as localmount already calls it,
-    partial fix for #134489
+    #47932 and also a partial fix for #134489
 
   30 May 2006; Roy Marples <uberlord@gentoo.org>:
 
