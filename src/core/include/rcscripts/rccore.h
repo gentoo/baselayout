@@ -26,10 +26,10 @@
 #define __RCCORE_H__
 
 #include "rcscripts/rcutil.h"
-#include "librcscripts/api/scripts.h"
-#include "librcscripts/api/runlevels.h"
-#include "librcscripts/api/parse.h"
-#include "librcscripts/api/depend.h"
+#include "librccore/api/scripts.h"
+#include "librccore/api/runlevels.h"
+#include "librccore/api/parse.h"
+#include "librccore/api/depend.h"
 
 #define RCSCRIPTS_CONFDDIR	ETCDIR "/conf.d"
 #define RCSCRIPTS_INITDDIR	ETCDIR "/init.d"

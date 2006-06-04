@@ -6,10 +6,10 @@ INCLUDES = \
 
 LIBRCUTIL = $(top_builddir)/librcutil/librcutil.la
 
-lib_LTLIBRARIES = librcscripts.la
+lib_LTLIBRARIES = librccore.la
 
-librcscripts_la_LIBADD = $(LIBRCUTIL)
-librcscripts_la_SOURCES = \
+librccore_la_LIBADD = $(LIBRCUTIL)
+librccore_la_SOURCES = \
 	scripts.c         \
 	api/scripts.h     \
 	runlevels.c       \

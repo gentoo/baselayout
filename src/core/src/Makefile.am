@@ -8,10 +8,10 @@ INCLUDES = \
 	$(RCSCRIPTS_DEFINES)
 
 LIBRCUTIL = $(top_builddir)/librcutil/librcutil.la
-LIBRCSCRIPTS = $(top_builddir)/librcscripts/librcscripts.la
+LIBRCCORE = $(top_builddir)/librccore/librccore.la
 
 depscan_CFLAGS = -DLEGACY_DEPSCAN
-depscan_LDADD = $(LIBRCSCRIPTS)
+depscan_LDADD = $(LIBRCCORE)
 depscan_SOURCES = depscan.c
 
 runscript_LDADD = $(LIBRCUTIL) -ldl

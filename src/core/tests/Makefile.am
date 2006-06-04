@@ -3,7 +3,7 @@ INCLUDES = \
 	-I$(top_srcdir)/include
 
 LIBRCUTIL = $(top_builddir)/librcutil/librcutil.la
-LIBRCSCRIPTS = $(top_builddir)/librcscripts/librcscripts.la
+LIBRCCORE = $(top_builddir)/librccore/librccore.la
 
 TESTS = \
 	test-dynbuf \
@@ -23,5 +23,5 @@ test_mmap_SOURCES = test-mmap.c
 test_regex_LDADD = $(LIBRCUTIL)
 test_regex_SOURCES = test-regex.c
 
-test_runlevels_LDADD = $(LIBRCSCRIPTS)
+test_runlevels_LDADD = $(LIBRCCORE)
 test_runlevels_SOURCES = test-runlevels.c

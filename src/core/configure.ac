@@ -104,7 +104,7 @@ AC_OUTPUT([
   include/rcscripts/core/Makefile
   include/rcscripts/util/Makefile
   librcutil/Makefile
-  librcscripts/Makefile
+  librccore/Makefile
   src/Makefile
   tests/Makefile
 ])
