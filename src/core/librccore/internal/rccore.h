@@ -33,6 +33,25 @@
 #include "librccore/api/parse.h"
 #include "librccore/api/depend.h"
 
+#define RC_CONF_FILE_NAME	RCSCRIPTS_ETCDIR "/rc.conf"
+#define RC_CONFD_FILE_NAME	RCSCRIPTS_CONFDDIR "/rc"
+
+#define SVCDIR_CONFIG_ENTRY	"svcdir"
+
+#define SBIN_RC			RCSCRIPTS_SBINDIR "/rc"
+#define PROFILE_ENV		RCSCRIPTS_ETCDIR "/profile.env"
+
+#define RCSCRIPT_HELP		RCSCRIPTS_LIBDIR "/sh/rc-help.sh"
+
+#define DEFAULT_PATH		"PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/sbin"
+
+#define SELINUX_LIB		RCSCRIPTS_LIBDIR "/runscript_selinux.so"
+
+#define SYS_WHITELIST		RCSCRIPTS_LIBDIR "/conf.d/env_whitelist"
+#define USR_WHITELIST		RCSCRIPTS_CONFDDIR "/env_whitelist"
+
+#define SOFTLEVEL		"SOFTLEVEL"
+
 /* Value of 'svcdir' in config files */
 extern char *rc_config_svcdir;
 

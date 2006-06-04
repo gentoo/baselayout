@@ -18,6 +18,7 @@
 
 #include "rcscripts/rcutil.h"
 #include "rcscripts/rcdefines.h"
+#include "librccore/internal/rccore.h"
 
 #define IS_SBIN_RC()	((caller) && (0 == strcmp (caller, SBIN_RC)))
 

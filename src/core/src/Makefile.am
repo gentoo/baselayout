@@ -5,6 +5,7 @@ sbin_PROGRAMS = \
 INCLUDES = \
 	-I$(top_srcdir)           \
 	-I$(top_srcdir)/include   \
+	-I$(top_srcdir)/librccore \
 	-I$(top_builddir)/include \
 	$(RCSCRIPTS_DEFINES)
 

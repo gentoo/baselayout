@@ -36,10 +36,7 @@
 
 #include "rcscripts/rccore.h"
 
-#include "librccore/api/scripts.h"
-#include "librccore/api/runlevels.h"
-#include "librccore/api/parse.h"
-#include "librccore/api/depend.h"
+#include "librccore/internal/rccore.h"
 
 char *svcdir_subdirs[] = {
   "softscripts",

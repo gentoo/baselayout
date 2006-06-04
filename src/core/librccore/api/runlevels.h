@@ -25,6 +25,8 @@
 #ifndef __RUNLEVELS_H__
 #define __RUNLEVELS_H__
 
+#define RUNLEVELS_DIR		RCSCRIPTS_ETCDIR "/runlevels"
+
 typedef struct
 {
   struct list_head node;

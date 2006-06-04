@@ -25,32 +25,13 @@
 #ifndef __RCDEFINES_H__
 #define __RCDEFINES_H__
 
-#define RCSCRIPTS_CONFDDIR	"@ETCDIR@/conf.d"
-#define RCSCRIPTS_INITDDIR	"@ETCDIR@/init.d"
+#define RCSCRIPTS_ETCDIR	"@ETCDIR@"
+#define RCSCRIPTS_CONFDDIR	RCSCRIPTS_ETCDIR "/conf.d"
+#define RCSCRIPTS_INITDDIR	RCSCRIPTS_ETCDIR "/init.d"
 #define RCSCRIPTS_LIBDIR	"@LIBDIR@/rcscripts"
+#define RCSCRIPTS_SBINDIR	"@SBINDIR@"
 #define RCSCRIPTS_VARDIR	"@VARDIR@"
 
-#define RUNLEVELS_DIR		"@ETCDIR@/runlevels"
-
-#define SBIN_RC			"@SBINDIR@/rc"
-#define PROFILE_ENV		"@ETCDIR@/profile.env"
-
-#define RC_CONF_FILE_NAME	"@ETCDIR@/rc.conf"
-#define RC_CONFD_FILE_NAME	RCSCRIPTS_CONFDDIR "/rc"
-
-#define RCSCRIPT_HELP		RCSCRIPTS_LIBDIR "/sh/rc-help.sh"
-
-#define SVCDIR_CONFIG_ENTRY	"svcdir"
-
 #define SHELL_PARSER		"@SHELL_PARSER@"
-
-#define DEFAULT_PATH		"PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/sbin"
-
-#define SELINUX_LIB		RCSCRIPTS_LIBDIR "/runscript_selinux.so"
-
-#define SYS_WHITELIST		RCSCRIPTS_LIBDIR "/conf.d/env_whitelist"
-#define USR_WHITELIST		RCSCRIPTS_CONFDDIR "/env_whitelist"
-
-#define SOFTLEVEL		"SOFTLEVEL"
 
 #endif /* __RCDEFINES_H__ */
