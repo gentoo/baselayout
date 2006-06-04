@@ -75,12 +75,12 @@ filter_environ (char *caller)
     return environ;
 
   if (1 == rc_is_file (SYS_WHITELIST, 1))
-    whitelist = get_list_file (whitelist, SYS_WHITELIST);
+    whitelist = rc_get_list_file (whitelist, SYS_WHITELIST);
   else
     EWARN ("System environment whitelist missing!\n");
 
   if (1 == rc_is_file (USR_WHITELIST, 1))
-    whitelist = get_list_file (whitelist, USR_WHITELIST);
+    whitelist = rc_get_list_file (whitelist, USR_WHITELIST);
 
   if (NULL == whitelist)
     /* If no whitelist is present, revert to old behaviour */
@@ -114,7 +114,7 @@ filter_environ (char *caller)
 
 	  snprintf (tmp_env_name, tmp_len, "export %s", env_name);
 
-	  env_var = get_cnf_entry (PROFILE_ENV, tmp_env_name);
+	  env_var = rc_get_cnf_entry (PROFILE_ENV, tmp_env_name);
 	  free (tmp_env_name);
 	  if ((NULL == env_var) && (0 != errno) && (ENOMSG != errno))
 	    goto error;

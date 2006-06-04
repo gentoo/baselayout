@@ -32,7 +32,7 @@
  * ('entry="$(pwd)"' or such), it will obviously not work, but current behaviour
  * should be fine for the type of variables we want. */
 char *
-get_cnf_entry (const char *pathname, const char *entry)
+rc_get_cnf_entry (const char *pathname, const char *entry)
 {
   dyn_buf_t *dynbuf = NULL;
   char *buf = NULL;
@@ -143,7 +143,7 @@ _continue:
 }
 
 char **
-get_list_file (char **list, char *filename)
+rc_get_list_file (char **list, char *filename)
 {
   dyn_buf_t *dynbuf = NULL;
   char *buf = NULL;

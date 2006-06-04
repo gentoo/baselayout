@@ -30,7 +30,7 @@
 /* The following return a pointer on success, or NULL with errno set on error.
  * If it returned NULL, but errno is not set, then there was no error, but
  * there is nothing to return. */
-char *get_cnf_entry (const char *pathname, const char *entry);
-char ** get_list_file (char **list, char *filename);
+char *rc_get_cnf_entry (const char *pathname, const char *entry);
+char ** rc_get_list_file (char **list, char *filename);
 
 #endif /* __RC_CONFIG_H__ */
