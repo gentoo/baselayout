@@ -1,7 +1,9 @@
 AUTOMAKE_OPTIONS = foreign
 
 INCLUDES = \
-	-I$(top_srcdir)/include \
+	-I$(top_srcdir)           \
+	-I$(top_srcdir)/include   \
+	-I$(top_builddir)/include \
 	$(RCSCRIPTS_DEFINES)
 
 LIBRCUTIL = $(top_builddir)/librcutil/librcutil.la

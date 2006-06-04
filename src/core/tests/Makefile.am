@@ -1,6 +1,7 @@
 INCLUDES = \
-	-I$(top_srcdir)         \
-	-I$(top_srcdir)/include
+	-I$(top_srcdir)           \
+	-I$(top_srcdir)/include   \
+	-I$(top_builddir)/include
 
 LIBRCUTIL = $(top_builddir)/librcutil/librcutil.la
 LIBRCCORE = $(top_builddir)/librccore/librccore.la

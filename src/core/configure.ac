@@ -10,6 +10,8 @@ AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 AC_PROG_AWK
 
+AC_PATH_PROGS([RC_SHELL], [bash sh])
+
 AC_ENABLE_SHARED
 AC_DISABLE_STATIC
 dnl Next four lines is a hack to prevent libtool checking for CXX/F77
