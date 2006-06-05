@@ -13,6 +13,9 @@
     users only see the clockscew message once, #135212.
 
     Show help when rc-update is called without arguments, #133434.
+
+    Ensure that an empty NET_FS_LIST doesn't cause localmount to error,
+    #132928 thanks to Dominik Buerkle.
   
   02 June 2006; Roy Marples <uberlord@gentoo.org>:
 
