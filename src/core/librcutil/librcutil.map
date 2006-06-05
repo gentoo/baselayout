@@ -1,0 +1,62 @@
+RCUTIL_0.0.0 {
+  global:
+    # debug.c
+    debug_message;
+    check_ptr;
+    check_str;
+    check_strv;
+    check_fd;
+    check_fp;
+    __check_arg_ptr;
+    __check_arg_str;
+    __check_arg_strv;
+    __check_arg_fd;
+    __check_arg_fp;
+    __xcalloc;
+    __xmalloc;
+    __xrealloc;
+    __xstrndup;
+
+    # config.c
+    rc_get_cnf_entry;
+    rc_get_list_file;
+
+    # dynbuf.c
+    new_dyn_buf;
+    new_dyn_buf_mmap_file;
+    free_dyn_buf;
+    write_dyn_buf;
+    write_dyn_buf_from_fd;
+    sprintf_dyn_buf;
+    read_dyn_buf;
+    read_dyn_buf_to_fd;
+    read_line_dyn_buf;
+    dyn_buf_rd_eof;
+    check_dyn_buf;
+    __check_arg_dyn_buf;
+
+    # file.c
+    rc_file_exists;
+    rc_is_file;
+    rc_is_link;
+    rc_is_dir;
+    rc_get_mtime;
+    remove;
+    rc_mktree;
+    rc_rmtree;
+    rc_ls_dir;
+    rc_file_map;
+    rc_file_unmap;
+
+    # simple-regex.c
+    match;
+
+    # string.c
+    rc_memrepchr;
+    rc_strcatpaths;
+    rc_strndup;
+    rc_basename;
+
+  local:
+    *;
+};

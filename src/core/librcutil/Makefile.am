@@ -6,6 +6,8 @@ INCLUDES = \
 
 lib_LTLIBRARIES = librcutil.la
 
+librcutil_la_LDFLAGS = \
+	-Wl,--version-script,$(srcdir)/librcutil.map
 librcutil_la_SOURCES = \
 	debug.c        \
 	string.c       \
@@ -13,3 +15,5 @@ librcutil_la_SOURCES = \
 	config.c       \
 	dynbuf.c       \
 	simple-regex.c
+
+EXTRA_DIST = librcutil.map
