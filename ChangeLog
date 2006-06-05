@@ -3,7 +3,7 @@
 
   05 June 2006; Roy Marples <uberlord@gentoo.org>:
 
-    Restore the man user/group, #133298 thanks to Chris Gianelloni.
+    Restore the man user/group, #113298 thanks to Chris Gianelloni.
 
     Fix typo in /sbin/rc, #135323 thanks to Ed Catmur.
 
