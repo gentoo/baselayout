@@ -229,7 +229,7 @@ done
 
 if [[ -z ${action} ]] ; then
 	eerror "${argv0}: gimme something to do!" 1>&2
-	exit 1
+	usage 1
 fi
 
 [[ ${check_root} -eq 1 ]] && check_is_root
