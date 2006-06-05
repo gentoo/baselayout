@@ -40,7 +40,7 @@ for x in ${CRITICAL_SERVICES} ; do
 		splash "critical" &>/dev/null &
 		
 		echo
-		eerror "One of more critical startup scripts failed to start!"
+		eerror "One or more critical startup scripts failed to start!"
 		eerror "Please correct this, and reboot ..."
 		echo; echo
 		/sbin/sulogin ${CONSOLE}
