@@ -8,6 +8,9 @@
     Fix typo in /sbin/rc, #135323 thanks to Ed Catmur.
 
     rc now stops services again, #135340.
+
+    depscan.sh now tries to touch files in with future mtimes so that
+    users only see the clockscew message once, #135212.
   
   02 June 2006; Roy Marples <uberlord@gentoo.org>:
 
