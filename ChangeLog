@@ -1,6 +1,8 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+* baselayout-1.12.1 (05 Jun 2006)
+
   05 June 2006; Roy Marples <uberlord@gentoo.org>:
 
     Restore the man user/group, #113298 thanks to Chris Gianelloni.
@@ -10,7 +12,7 @@
     rc now stops services again, #135340.
 
     depscan.sh now tries to touch files in with future mtimes so that
-    users only see the clockscew message once, #135212.
+    users only see the clock skew message once, #135212.
 
     Show help when rc-update is called without arguments, #133434.
 
