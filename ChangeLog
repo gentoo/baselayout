@@ -11,6 +11,8 @@
 
     depscan.sh now tries to touch files in with future mtimes so that
     users only see the clockscew message once, #135212.
+
+    Show help when rc-update is called without arguments, #133434.
   
   02 June 2006; Roy Marples <uberlord@gentoo.org>:
 
