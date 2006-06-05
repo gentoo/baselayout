@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  05 June 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Restore the man user/group, #133298 thanks to Chris Gianelloni.
+  
   02 June 2006; Roy Marples <uberlord@gentoo.org>:
 
     Allow LC_* and LANG vars through to runscript.sh by default.
