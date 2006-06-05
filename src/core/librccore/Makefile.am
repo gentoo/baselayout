@@ -12,6 +12,7 @@ lib_LTLIBRARIES = librccore.la
 
 librccore_la_LIBADD = $(LIBRCUTIL)
 librccore_la_SOURCES = \
+	internal/rccore.h   \
 	scripts.c           \
 	api/scripts.h       \
 	runlevels.c         \
