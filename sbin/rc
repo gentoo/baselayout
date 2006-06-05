@@ -305,9 +305,11 @@ dep_stop() {
 	      && ${SOFTLEVEL} != "shutdown" \
 	      && ${SOFTLEVEL} != "single" ]] ; then
 	      	service_coldplugged "${service}" && return 0
-		[[ -z ${OLDSOFTLEVEL} ]] \
+		if net_service "${service}" ; then
+			[[ -z ${OLDSOFTLEVEL} ]] \
 			|| ! in_runlevel "${service}" "${OLDSOFTLEVEL}" \
-			&& return 0
+				&& return 0
+		fi
 	fi
 
 	# Should not work for 'use'
