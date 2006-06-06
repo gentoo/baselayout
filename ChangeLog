@@ -6,6 +6,8 @@
     shutdown.sh now uses the INIT_HALT variable correctly, #135740
     thanks to Steve Moerk.
 
+    start-stop-daemon now has PAM support, #64700 thanks to Scott Dial.
+
 * baselayout-1.12.1 (05 Jun 2006)
 
   05 June 2006; Roy Marples <uberlord@gentoo.org>:

@@ -33,7 +33,7 @@ runscript: runscript.o rs-misc.o
 	$(LD) $(LDFLAGS) -o $@ $^ $(LDFLAGS_RS)
 
 start-stop-daemon: start-stop-daemon.c
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LDFLAGS_SSD)
+	$(CC) $(CFLAGS) $(PAM) $(LDFLAGS) -o $@ $^ $(LDFLAGS_SSD)
 
 install: $(TARGET)
 	install -m 0755 -d $(DESTDIR)/bin
