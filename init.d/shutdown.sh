@@ -1,7 +1,8 @@
 # Copyright 1999-2006 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
-opts="-hdp"
+opts="-hd"
+[[ ${INIT_HALT} != "HALT" ]] && opts="${opts}p"
 [[ ${RC_DOWN_INTERFACE} == "yes" ]] && opts="${opts}i"
 
 /sbin/halt "${opts}"
