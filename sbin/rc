@@ -228,6 +228,7 @@ elif [[ ! -d "/etc/runlevels/${SOFTLEVEL}" ]] ; then
 	exit 1
 else
 	myscripts=
+
 	if [[ ${SOFTLEVEL} != "${BOOTLEVEL}" ]] ; then
 		# Normal runlevels *include* boot scripts
 		mylevels="$(dolisting "/etc/runlevels/${SOFTLEVEL}/")"
@@ -254,9 +255,6 @@ else
 			rm -rf /dev/.rcboot
 		fi
  	fi
-	
-	[[ ${OLDSOFTLEVEL} == "${BOOTLEVEL}" || ${OLDSOFTLEVEL} == "single" ]] && \
-		/bin/dmesg -n 1
 	
 	for x in ${mylevels} ; do
 		[[ -L ${x} ]] && myscripts="${myscripts} ${x##*/}"
