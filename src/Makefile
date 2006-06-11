@@ -26,10 +26,7 @@ override CFLAGS += -DLIBDIR=\"$(LIBDIR)\"
 
 all: $(TARGET)
 
-rs-misc.o: core/misc.c
-	$(CC) $(CFLAGS) -c -o $@ $^
-
-runscript: runscript.o rs-misc.o
+runscript: rc-debug.o  rc-dynbuf.o  rc-misc.o runscript.o
 	$(LD) $(LDFLAGS) -o $@ $^ $(LDFLAGS_RS)
 
 start-stop-daemon: start-stop-daemon.c
