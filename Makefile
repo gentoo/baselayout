@@ -156,7 +156,7 @@ install:
 	for x in `ls src/awk` ; do \
 		install -m 0644 "src/awk/$$x" $(AWKDIR) ; \
 		if test $(LIB) != "lib" ; then \
-			sed -i -e 's:/lib/rcscripts:/$(LIB)/rcscripts:' $(AWKDIR)/$$x ; \
+			sed -i -e 's:/lib/rcscripts:/'$(LIB)'/rcscripts:' $(AWKDIR)/$$x ; \
 		fi ; \
 	done
 	# init.d
