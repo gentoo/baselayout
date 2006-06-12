@@ -292,9 +292,9 @@ get_stop_services() {
 
 dep_stop() {
 	local x dep needsme depservice
-	local myservice="${1##*/}"
+	local service="${1##*/}"
 
-	service_stopped "${myservice}" && return 0
+	service_stopped "${service}" && return 0
 
 	[[ -L ${svcdir}/softscripts.new/${service} ]] \
 		&& return 0
@@ -311,21 +311,21 @@ dep_stop() {
 	fi
 
 	# Should not work for 'use'
-	if [[ -z $(needsme "${myservice}") ]] ; then
+	if [[ -z $(needsme "${service}") ]] ; then
 		# Nothing depends on me
-		stop_service "${myservice}"
+		stop_service "${service}"
 	else
 		# Something may depend on me
 		needsme=0
 		
-		for dep in $(needsme "${myservice}") ; do
+		for dep in $(needsme "${service}") ; do
 			if [[ -L "${svcdir}/softscripts.new/${dep}" ]] ; then
 				needsme=1
 				break
 			fi
 		done
 		
-		[[ ${needsme} -eq 0 ]] && stop_service "${myservice}"
+		[[ ${needsme} -eq 0 ]] && stop_service "${service}"
 	fi
 }
 
