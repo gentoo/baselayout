@@ -52,7 +52,7 @@ KEEP_DIRS = boot proc home sys \
 SUBDIRS = src
 
 SBINTOLIB = rc-daemon.sh rc-help.sh rc-services.sh \
-			init.$(KERNEL).sh init-common-pre.sh init-common-post.sh
+	init.$(KERNEL).sh init-functions.sh init-common-pre.sh init-common-post.sh
 
 default:
 	for x in $(SUBDIRS) ; do \
@@ -156,7 +156,7 @@ install:
 	for x in `ls src/awk` ; do \
 		install -m 0644 "src/awk/$$x" $(AWKDIR) ; \
 		if test $(LIB) != "lib" ; then \
-			sed -i -e 's:/lib/rcscripts:/$(LIB)/rcscripts:' $(AWKDIR)/$$x ; \
+			sed -i -e 's:/lib/rcscripts:/'$(LIB)'/rcscripts:' $(AWKDIR)/$$x ; \
 		fi ; \
 	done
 	# init.d
@@ -246,11 +246,12 @@ distcheck:
 		exit 1 ; \
 	fi 
 
-distforce:
+distforce: clean
 	install -d /tmp/$(PKG)
 	cp -axr . /tmp/$(PKG)
 	cd /tmp/$(PKG) ; \
-	rm -rf *.sh rc-lists `find . -iname .svn` sbin/MAKEDEV-gentoo.patch ; \
+	rm -rf *.sh rc-lists `find . -iname .svn` sbin/MAKEDEV-gentoo.patch \
+		src/core ; \
 	cd .. ; \
 	tar -cvjpf $(PKG).tar.bz2 $(PKG)
 	rm -rf /tmp/$(PKG)

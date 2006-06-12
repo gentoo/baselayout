@@ -105,7 +105,7 @@
 #include <assert.h>
 #include <ctype.h>
 
-#ifdef USE_PAM
+#ifdef HAVE_PAM
 #include <security/pam_appl.h>
 #include <security/pam_misc.h>
 #endif
@@ -1258,7 +1258,7 @@ x_finished:
 }
 
 
-#ifdef USE_PAM
+#ifdef HAVE_PAM
 /* We are not supporting authentication conversations */
 static struct pam_conv conv = { NULL, NULL} ;
 #endif
@@ -1270,7 +1270,7 @@ main(int argc, char **argv)
 #ifdef HAVE_TIOCNOTTY
 	int tty_fd = -1;
 #endif
-#ifdef USE_PAM
+#ifdef HAVE_PAM
 	pam_handle_t *pamh = NULL;
 	int pamr;
 #endif
@@ -1404,7 +1404,7 @@ main(int argc, char **argv)
                 fclose(pidf);
         }
 	/* Before we change users we need to do PAM */
-#ifdef USE_PAM
+#ifdef HAVE_PAM
 	if (changeuser != NULL)
 		pamr = pam_start("start-stop-daemon", changeuser, &conv, &pamh);
 	else if (userspec != NULL)
@@ -1460,7 +1460,7 @@ main(int argc, char **argv)
 #endif
 	}
 	execv(startas, argv);
-#ifdef USE_PAM
+#ifdef HAVE_PAM
 	if (pamr == PAM_SUCCESS)
 		pam_close_session(pamh, PAM_SILENT);
 #endif
