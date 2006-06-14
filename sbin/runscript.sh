@@ -76,12 +76,6 @@ svcrestart="no"
 # Functions to control daemons
 [[ ${RC_GOT_DAEMON} != "yes" ]] && source "${svclib}/sh/rc-daemon.sh"
 
-if [[ ${SVCNAME%%.*} == "net" && ${SVCNAME#*.} != "${SVCNAME}" ]] ; then
-	NETSERVICE="yes"
-else
-	NETSERVICE="no"
-fi
-
 # Source configuration files.
 # (1) Source /etc/conf.d/net if it is a net.* service
 # (2) Source /etc/conf.d/${SVCNAME} to get initscript-specific
@@ -89,7 +83,7 @@ fi
 # (3) Source /etc/rc.conf to pick up potentially overriding
 #     configuration, if the system administrator chose to put it
 #     there (if it exists).
-if [[ ${NETSERVICE} == "yes" ]] ; then
+if net_service "${SVCNAME}" ; then
 	conf="$(add_suffix /etc/conf.d/net)"
 	[[ -e ${conf} ]] && source "${conf}"
 fi
@@ -202,7 +196,7 @@ svc_stop() {
 	fi
 	
 	if [[ ${svcpause} != "yes" && ${RC_NO_DEPS} != "yes" ]] ; then
-		if [[ ${NETSERVICE} == "yes" ]] ; then
+		if net_service "${SVCNAME}" ; then
 			# A net.* service
 			if in_runlevel "${SVCNAME}" "${BOOTLEVEL}" || \
 			   in_runlevel "${SVCNAME}" "${mylevel}" ; then
@@ -357,7 +351,8 @@ svc_start() {
 		# Start dependencies, if any.
 		if ! is_runlevel_start ; then
 			for x in ${startupservices} ; do
-				if [[ ${x} == "net" && ${NETSERVICE} != "yes" ]] && ! is_net_up ; then
+				if [[ ${x} == "net" ]] && ! net_service "${SVCNAME}" \
+					&& ! is_net_up ; then
 					for y in ${netservices} ; do
 						service_stopped "${y}" && start_service "${y}"
 					done
@@ -373,6 +368,9 @@ svc_start() {
 		# have a "before" dep but we don't dep on them.
 		if is_runlevel_start ; then
 			startupservices="${startupservices} $(valid_iafter "${SVCNAME}")"
+			if net_service "${SVCNAME}" ; then
+				startupservices="${startupservices} $(valid_iafter "net")"
+			fi
 		fi
 
 		if [[ " ${startupservices} " == *" net "* ]] ; then

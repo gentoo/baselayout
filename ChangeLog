@@ -1,18 +1,25 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
-  12 June 2006; Roy Marples <uberlord@gentoo.org>:
+  14 Jun 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Fix "before net" dependencies, #135872 thanks to Oldrich Jedlicka.
+
+    pppd.sh now uses passwordfd instead of very nasty regex stuff,
+    thanks to Oldrich Jedlicka, Alin Nastac and me :), #134337
+
+  12 Jun 2006; Roy Marples <uberlord@gentoo.org>:
 
     We now have a Makefile to install our scripts.
 
-  06 June 2006; Roy Marples <uberlord@gentoo.org>:
+  06 Jun 2006; Roy Marples <uberlord@gentoo.org>:
 
     shutdown.sh now uses the INIT_HALT variable correctly, #135740
     thanks to Steve Moerk.
 
 * baselayout-1.12.1 (05 Jun 2006)
 
-  05 June 2006; Roy Marples <uberlord@gentoo.org>:
+  05 Jun 2006; Roy Marples <uberlord@gentoo.org>:
 
     Restore the man user/group, #113298 thanks to Chris Gianelloni.
 
@@ -28,7 +35,7 @@
     Ensure that an empty NET_FS_LIST doesn't cause localmount to error,
     #132928 thanks to Dominik Buerkle.
   
-  02 June 2006; Roy Marples <uberlord@gentoo.org>:
+  02 Jun 2006; Roy Marples <uberlord@gentoo.org>:
 
     Allow LC_* and LANG vars through to runscript.sh by default.
 

@@ -23,79 +23,6 @@ pppd_check_installed() {
 	return 0
 }
 
-# char *pppd_regex_escape(char *string)
-#
-# Returns the supplied string with any special regex
-# characters escaped so they don't provide regex intructions
-# This may be a candidate for adding to /sbin/functions.sh or
-# net-scripts functions at some point
-pppd_regex_escape() {
-	local escaped_result="$*"
-	escaped_result="${escaped_result//\\/\\\\}"
-	escaped_result="${escaped_result//./\\.}"
-	escaped_result="${escaped_result//+/\\+}"
-	escaped_result="${escaped_result//(/\\(}"
-	escaped_result="${escaped_result//)/\\)}"
-	escaped_result="${escaped_result//[/\\[}"
-	escaped_result="${escaped_result//]/\\]}"
-	escaped_result="${escaped_result//\{/\\\{}"
-	escaped_result="${escaped_result//\}/\\\}}"
-	escaped_result="${escaped_result//\?/\\\?}"
-	escaped_result="${escaped_result//\*/\\\*}"
-	escaped_result="${escaped_result//\//\\/}" 
-	escaped_result="${escaped_result//|/\\|}"
-	escaped_result="${escaped_result//&/\\&}"
-	escaped_result="${escaped_result//~/\\~}"
-	escaped_result="${escaped_result//^/\\^}"
-	escaped_result="${escaped_result//$/\\$}"
-	echo "${escaped_result}"
-}
-
-# bool pppd_update_secrets_file(char* filepath, char* username, \
-#    char* remotename, char* password)
-#
-# Add/update PAP/CHAP authentication information 
-pppd_update_secrets_file() {
-	local filepath="$1" username="$2" remotename="$3" password="$4"
-	if [[ ! -s ${filepath} ]] ; then
-		echo '#'client$'\t'server$'\t'secret$'\t'IP addresses > "${filepath}" \
-			&& chmod 0600 "${filepath}" \
-			|| return 1
-	fi
-
-	#escape username and remotename, used in following sed calls
-	local regex_username="$(pppd_regex_escape "${username}")"
-	local regex_remotename="$(pppd_regex_escape "${remotename}")"
-	local regex_password
-	local regex_filter="[ \t]*\"?${regex_username}\"?[ \t]*\"?${regex_remotename}\"?[ \t]*"
-
-	#read old password, including " chars 
-	#for being able to distinct when we need to add or update auth info
-	local old_password="$(
-	sed -r -e "/^${regex_filter}\".*\"[ \t]*\$/\
-		{s/^${regex_filter}(\".*\")[ \t]*\$/\1/;q;};\
-		d;" \
-		"${filepath}"
-	)"
-
-	if [[ -z "${old_password}" ]] ; then
-		regex_username="${username//\\/\\\\}"
-		regex_remotename="${remotename//\\/\\\\}"
-		regex_password="${password//\\/\\\\}"
-		regex_password=${password//"/\\\\"}
-		sed -r -i -e "\$a\"${regex_username}\" ${regex_remotename} \"${regex_password}\"" ${filepath}
-		vewarn "Authentication info has been added to ${filepath}"
-	elif [[ "\"${password//\"/\\\"}\"" != "${old_password}" ]] ; then
-		regex_password="${password//\\/\\\\}"
-		regex_password="${regex_password//\//\\/}"
-		regex_password="${regex_password//&/\\&}"
-		regex_password=${regex_password//\"/\\\\\"}
-		sed -r -i -e "s/^(${regex_filter}\").*(\"[ \t]*)\$/\1${regex_password}\2/" ${filepath}
-		vewarn "Authentication info has been updated in ${filepath}"
-	fi
-	return 0
-}
-
 # bool pppd_start(char *iface)
 #
 # Start PPP on an interface by calling pppd
@@ -104,7 +31,7 @@ pppd_update_secrets_file() {
 pppd_start() {
 	${IN_BACKGROUND} && return 0
 
-	local iface="$1" ifvar="$(bash_variable "$1")" opts="" link
+	local iface="$1" ifvar="$(bash_variable "$1")" opts="" link= i=
 	if [[ ${iface%%[0-9]*} != "ppp" ]] ; then
 		eerror "PPP can only be invoked from net.ppp[0-9]"
 		return 1
@@ -132,23 +59,6 @@ pppd_start() {
 		return 1
 	fi
 
-	# Might or might not be set in conf.d/net
-	local user password i
-	username="username_${ifvar}"
-	password="password_${ifvar}"
-
-	#Add/update info in PAP/CHAP secrets files
-	if [[ -n ${!username} ]] \
-	&& [[ -n ${!password} || -z ${!password-x} ]] ; then
-		for i in chap pap ; do
-			if ! pppd_update_secrets_file "/etc/ppp/${i}-secrets" \
-					"${!username}" "${iface}" "${!password}" ; then
-				eerror "Failed to update /etc/ppp/${i}-secrets"
-				return 1
-			fi
-		done
-	fi
-
 	# Load any commandline options
 	opts="pppd_${ifvar}[@]"
 	opts="${!opts}"
@@ -161,6 +71,24 @@ pppd_start() {
 		fi
 	done
 
+	# Might be set in conf.d/net
+	local username= password=
+	username="username_${ifvar}"
+	password="password_${ifvar}"
+	if [[ -n ${!username} ]] \
+	&& [[ -n ${!password} || -z ${!password-x} ]] ; then
+		local fd=3
+		# fd 3 maybe in use, so find another one
+		while [[ -e /proc/$$/fd/${fd} ]] ; do
+			((fd++))
+		done
+
+		password="${!password//\\/\\\\}"
+		password="${password//\"/\\\"}"
+		opts="${opts} plugin passwordfd.so passwordfd ${fd}"
+		eval exec "${fd}< <(echo -e -n \"${password}\")"
+	fi
+	
 	# Check for mtu/mru
 	local mtu="mtu_${ifvar}"
 	if [[ -n ${!mtu} ]] ; then
@@ -201,7 +129,7 @@ pppd_start() {
 				chatopts="${chatopts} -U '${phone_number[1]}'"
 			fi
 		fi
-		opts="${opts} connect $(requote "${chatopts} $(requote "${!chat}")")"
+		opts="${opts} connect $(requote "${chatopts} $(requote "${!chat}")")" # "
 	fi
 
 	# Add plugins
@@ -209,6 +137,7 @@ pppd_start() {
 	for i in "${!plugins}" ; do
 		local -a plugin=( ${i} )
 		# Bound to be some users who do this
+		[[ ${plugin[0]} == "passwordfd" ]] && continue	# Disable
 		[[ ${plugin[0]} == "pppoe" ]] && plugin[0]="rp-pppoe"
 		[[ ${plugin[0]} == "pppoa" ]] && plugin[0]="pppoatm"
 		[[ ${plugin[0]} == "capi" ]] && plugin[0]="capiplugin"
@@ -251,6 +180,7 @@ pppd_start() {
 	mark_service_inactive "net.${iface}"
 	eval start-stop-daemon --start --exec /usr/sbin/pppd \
 		--pidfile "/var/run/ppp-${iface}.pid" -- "${opts}" >/dev/null
+
 	if [[ $? != "0" ]] ; then
 		eend $? "Failed to start PPP"
 		mark_service_starting "net.${iface}"
