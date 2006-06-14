@@ -717,7 +717,6 @@ iwconfig_defaults() {
 	iwconfig "${iface}" rts auto 2>/dev/null
 	iwconfig "${iface}" frag auto 2>/dev/null
 	iwconfig "${iface}" txpower auto 2>/dev/null
-
 }
 
 # void iwconfig_strip_associated(char *iface)
@@ -772,9 +771,6 @@ iwconfig_strip_associated() {
 iwconfig_configure() {
 	local iface="$1" test x e ifvar="$( bash_variable "$1" )"
 	local -a essid_APs mac_APs mode_APs enc_APs
-
-	iwconfig_defaults "${iface}"
-	iwconfig_user_config "${iface}"
 
 	ESSID="essid_${ifvar}"
 	ESSID="${!ESSID}"
@@ -898,6 +894,9 @@ iwconfig_pre_start() {
 		return 0
 	fi
 
+	iwconfig_defaults "${iface}"
+	iwconfig_user_config "${iface}"
+	
 	# Set the base metric to be 2000
 	metric=2000
 
@@ -940,7 +939,10 @@ iwconfig_pre_start() {
 
 iwconfig_post_stop() {
 	interface_exists "${iface}" || return 0
-	iwconfig_defaults "${iface}" 
+	iwconfig_defaults "${iface}"
+	
+	# Save power
+	iwconfig "${iface}" txpower off 2>/dev/null
 }
 
 # vim: set ts=4 :

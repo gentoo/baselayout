@@ -234,15 +234,6 @@ wpa_supplicant_pre_start() {
 		fi
 	fi
 
-	# Check for rf_kill - only ipw supports this at present, but other
-	# cards may in the future
-	if [[ -e "/sys/class/net/${iface}/device/rf_kill" ]] ; then
-		if [[ $( < "/sys/class/net/${iface}/device/rf_kill" ) != 0 ]] ; then
-			eerror "Wireless radio has been killed for interface ${iface}"
-			return 1
-		fi
-	fi
-
 	# If wireless-tools is installed, try and apply our user config
 	# This is needed for some drivers - such as hostap because they start
 	# the card in Master mode which causes problems with wpa_supplicant.
@@ -253,6 +244,15 @@ wpa_supplicant_pre_start() {
 		fi
 	fi	
 
+	# Check for rf_kill - only ipw supports this at present, but other
+	# cards may in the future
+	if [[ -e "/sys/class/net/${iface}/device/rf_kill" ]] ; then
+		if [[ $( < "/sys/class/net/${iface}/device/rf_kill" ) != 0 ]] ; then
+			eerror "Wireless radio has been killed for interface ${iface}"
+			return 1
+		fi
+	fi
+	
 	ebegin "Starting wpa_supplicant on ${iface}"
 
 	cfgfile="${opts##* -c}"
