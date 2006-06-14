@@ -3,6 +3,8 @@
 
   14 Jun 2006; Roy Marples <uberlord@gentoo.org>:
 
+    wireless cards now get their txpower set to auto before starting.
+
     Fix "before net" dependencies, #135872 thanks to Oldrich Jedlicka.
 
     pppd.sh now uses passwordfd instead of very nasty regex stuff,
