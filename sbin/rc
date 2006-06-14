@@ -370,7 +370,9 @@ then
 	bootlog start
 
 	# Start RAID/LVM/EVMS/DM volumes for /usr, /var, etc.
-	start_volumes
+	for x in ${RC_VOLUME_ORDER} ; do
+		start_addon "${x}"
+	done
 
 	# We set the forced softlevel from the kernel command line
 	# It needs to be run right after proc is mounted for the

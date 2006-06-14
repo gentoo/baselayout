@@ -129,7 +129,9 @@ eend 0
 stop_addon dm-crypt
 
 # Stop LVM, etc
-stop_volumes
+for x in $(reverse_list ${RC_VOLUME_ORDER}) ; do
+	stop_addon "${x}"
+done
 
 # This is a function because its used twice below
 ups_kill_power() {
@@ -181,9 +183,6 @@ mount_readonly() {
 
 	return ${retval}
 }
-
-# Remount unionfs branches as readonly
-stop_addon unionfs
 
 # Since we use `mount` in mount_readonly(), but we parse /proc/mounts, we 
 # have to make sure our /etc/mtab and /proc/mounts agree

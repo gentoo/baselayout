@@ -194,20 +194,12 @@ svc_stop() {
 	      ${SOFTLEVEL} != "single" ]] ; then
 		ewarn "WARNING:  you are stopping a boot service."
 	fi
-	
+
 	if [[ ${svcpause} != "yes" && ${RC_NO_DEPS} != "yes" ]] ; then
 		if net_service "${SVCNAME}" ; then
-			# A net.* service
-			if in_runlevel "${SVCNAME}" "${BOOTLEVEL}" || \
-			   in_runlevel "${SVCNAME}" "${mylevel}" ; then
-				# Only worry about net.* services if this is the last one
-				# running or if RC_NET_STRICT_CHECKING is set ...
-				! is_net_up && mydeps="net"
-			fi
-			mydeps="${mydeps} ${SVCNAME}"
-		else
-			mydeps="${SVCNAME}"
+			is_net_up || mydeps="net"
 		fi
+		mydeps="${mydeps} ${SVCNAME}"
 	fi
 
 	# Save the IN_BACKGROUND var as we need to clear it for stopping depends
@@ -216,11 +208,8 @@ svc_stop() {
 
 	for mydep in ${mydeps} ; do
 		for x in $(needsme "${mydep}") ; do
-			# Service not currently running, continue
-			if service_started "${x}" ; then
-				stop_service "${x}"
-				service_list=( "${service_list[@]}" "${x}" )
-			fi
+			service_started "${x}" && stop_service "${x}"
+			service_list=( "${service_list[@]}" "${x}" )
 		done
 	done
 
