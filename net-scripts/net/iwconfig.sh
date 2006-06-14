@@ -713,10 +713,10 @@ iwconfig_defaults() {
 	local iface="$1"
 
 	# Set some defaults
+	iwconfig "${iface}" txpower auto 2>/dev/null
 	iwconfig "${iface}" rate auto 2>/dev/null
 	iwconfig "${iface}" rts auto 2>/dev/null
 	iwconfig "${iface}" frag auto 2>/dev/null
-	iwconfig "${iface}" txpower auto 2>/dev/null
 }
 
 # void iwconfig_strip_associated(char *iface)
@@ -932,6 +932,8 @@ iwconfig_pre_start() {
 
 	eerror "Failed to configure wireless for ${iface}"
 	iwconfig_defaults "${iface}"
+	# Save power
+	iwconfig "${iface}" txpower off 2>/dev/null
 	unset ESSID ESSIDVAR
 	interface_down "${iface}"
 	return 1
@@ -940,7 +942,6 @@ iwconfig_pre_start() {
 iwconfig_post_stop() {
 	interface_exists "${iface}" || return 0
 	iwconfig_defaults "${iface}"
-	
 	# Save power
 	iwconfig "${iface}" txpower off 2>/dev/null
 }

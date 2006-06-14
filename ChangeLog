@@ -3,6 +3,10 @@
 
   14 Jun 2006; Roy Marples <uberlord@gentoo.org>:
 
+    {start,stop}_volumes moved to rc and halt.sh respectively.
+
+    net services are now depended upon more correctly.
+
     wireless cards now get their txpower set to auto before starting.
 
     Fix "before net" dependencies, #135872 thanks to Oldrich Jedlicka.

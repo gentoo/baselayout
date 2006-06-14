@@ -42,6 +42,7 @@ RC_USE_CONFIG_PROFILE="${RC_USE_CONFIG_PROFILE:-yes}"
 RC_FORCE_AUTO="${RC_FORCE_AUTO:-no}"
 RC_DEVICES="${RC_DEVICES:-auto}"
 RC_DOWN_INTERFACE="${RC_DOWN_INTERFACE:-yes}"
+RC_VOLUME_ORDER="${RC_VOLUME_ORDER:-raid evms lvm dm}"
 
 #
 # Default values for e-message indentation and dots
@@ -685,20 +686,6 @@ start_addon() {
 	return 0
 }
 
-# void start_volumes()
-#
-#   Starts all volumes in RC_VOLUME_ORDER.
-#
-start_volumes() {
-	local x=
-
-	for x in ${RC_VOLUME_ORDER} ; do
-		start_addon "${x}"
-	done
-
-	return 0
-}
-
 # void stop_addon(addon)
 #
 #   Stops addon.
@@ -706,20 +693,6 @@ start_volumes() {
 stop_addon() {
 	local addon=$1
 	(import_addon "${addon}-stop.sh")
-	return 0
-}
-
-# void stop_volumes()
-#
-#   Stops all volumes in RC_VOLUME_ORDER (reverse order).
-#
-stop_volumes() {
-	local x=
-
-	for x in $(reverse_list ${RC_VOLUME_ORDER}) ; do
-		stop_addon "${x}"
-	done
-
 	return 0
 }
 
