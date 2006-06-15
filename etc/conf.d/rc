@@ -6,7 +6,9 @@
 RC_TTY_NUMBER=11
 
 # Set to "yes" if you want the rc system to try and start services
-# in parallel for a slight speed improvement.
+# in parallel for a slight speed improvement. NOTE: When RC_PARALLEL_STARTUP
+# is enabled, init script output his replaced with simple "service foo
+# starting/stopping" messages so that output is not mixed up.
 
 RC_PARALLEL_STARTUP="no"
 
