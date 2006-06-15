@@ -399,17 +399,16 @@
 #username_ppp0='user'
 #password_ppp0='password'
 #
-# NOTE: You can set a blank password like so
-#password_ppp0=
-#
 # The PPP daemon has many options you can specify - although there are many
 # and may seem daunting, it is recommended that you read the pppd man page
 # before enabling any of them
 #pppd_ppp0=(
-#	"updetach" 	# WARNING: If you don't specify this then we will
-#			# not wait for the actual PPP link to go up
 #	"maxfail 0"	# WARNING: It's not recommended you use change this
 #			# if you don't specify maxfail then we assume 0
+#	"updetach" 	# If not set, "/etc/init.d/net.ppp0 start" will return
+#			# immediately,  without waiting the link to come up
+#			# for the first time.
+#			# Do not use it for dial-on-demand links!
 #	"debug" 	# Enables syslog debugging
 #	"noauth"	# Do not require the peer to authenticate itself
 #	"defaultroute"	# Make this PPP interface the default route

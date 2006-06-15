@@ -932,7 +932,6 @@ iwconfig_pre_start() {
 
 	eerror "Failed to configure wireless for ${iface}"
 	iwconfig_defaults "${iface}"
-	# Save power
 	iwconfig "${iface}" txpower off 2>/dev/null
 	unset ESSID ESSIDVAR
 	interface_down "${iface}"
@@ -940,9 +939,9 @@ iwconfig_pre_start() {
 }
 
 iwconfig_post_stop() {
+	${IN_BACKGROUND} && return 0
 	interface_exists "${iface}" || return 0
 	iwconfig_defaults "${iface}"
-	# Save power
 	iwconfig "${iface}" txpower off 2>/dev/null
 }
 
