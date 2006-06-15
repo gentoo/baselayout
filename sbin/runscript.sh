@@ -242,7 +242,11 @@ svc_stop() {
 			exit "$@"
 		}
 		# Stop einfo/ebegin/eend from working as parallel messes us up
-		[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && RC_QUIET_STDOUT="yes"
+		if [[ ${RC_PARALLEL_STARTUP} == "yes" ]] ; then
+			[[ ${RC_VERBOSE} != "yes" \
+			|| -e ${svcdir}/exclusive/${SVCNAME} ]] \
+				&& RC_QUIET_STDOUT="yes"
+		fi
 		stop
 		)
 		retval="$?"
@@ -417,9 +421,13 @@ svc_start() {
 
 		# Apply any ulimits if defined
 		[[ -n ${RC_ULIMIT} ]] && ulimit ${RC_ULIMIT}
-		
+	
 		# Stop einfo/ebegin/eend from working as parallel messes us up
-		[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && RC_QUIET_STDOUT="yes"
+		if [[ ${RC_PARALLEL_STARTUP} == "yes" ]] ; then
+			[[ ${RC_VERBOSE} != "yes" \
+			|| -e ${svcdir}/exclusive/${SVCNAME} ]] \
+				&& RC_QUIET_STDOUT="yes"
+		fi
 		
 		start
 		)
@@ -676,7 +684,7 @@ for arg in $* ; do
 		retval="$?"
 		svcpause="no"
 		;;
-	--quiet|--nocolor|--nodeps)
+	--quiet|--nocolor|--nodeps|--verbose)
 		;;
 	help)
 		exec "${svclib}"/sh/rc-help.sh "${myscript}" help
