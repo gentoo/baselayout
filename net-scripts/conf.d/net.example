@@ -398,6 +398,8 @@
 # against the specified username
 #username_ppp0='user'
 #password_ppp0='password'
+# NOTE: You can set a blank password like so
+#password_ppp0=
 #
 # The PPP daemon has many options you can specify - although there are many
 # and may seem daunting, it is recommended that you read the pppd man page
