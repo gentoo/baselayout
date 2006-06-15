@@ -1,6 +1,13 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  15 Jun 2006; Roy Marples <uberlord@gentoo.org>:
+
+    runscript.sh now supports the --verbose flag setting RC_VERBOSE="yes"
+    When RC_VERBOSE="yes" and RC_PARALLEL_STARTUP="yes" and there is no
+    exclusive lock (ie, init script not started via rc) then we don't hide
+    init script output by setting RC_QUIET_STDOUT, #136034.
+
   14 Jun 2006; Roy Marples <uberlord@gentoo.org>:
 
     {start,stop}_volumes moved to rc and halt.sh respectively.

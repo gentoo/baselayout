@@ -7,8 +7,10 @@ RC_TTY_NUMBER=11
 
 # Set to "yes" if you want the rc system to try and start services
 # in parallel for a slight speed improvement. NOTE: When RC_PARALLEL_STARTUP
-# is enabled, init script output his replaced with simple "service foo
+# is enabled, init script output is replaced with simple "service foo
 # starting/stopping" messages so that output is not mixed up.
+# You can stop this from happening on the command line by passing --verbose
+# to the init script or by setting RC_VERBOSE="yes" below.
 
 RC_PARALLEL_STARTUP="no"
 
@@ -72,6 +74,8 @@ RC_VOLUME_ORDER="raid evms lvm dm"
 # RC_VERBOSE will make init scripts more verbose. Only networking scripts
 # really use this at this time, and this is useful for trouble shooting
 # any issues you may have.
+# This is also used to re-enable init script output for init scripts
+# started or stopped from the command line.
 
 RC_VERBOSE="no"
 
