@@ -35,6 +35,14 @@ start() {
 		eend $? $"Failed to mount USB device filesystem"
 	fi
 
+	# Setup Kernel Support for miscellaneous Binary Formats
+	local binfmt=$(grep -Fow binfmt_misc /proc/filesystems)
+	if [[ -n ${binfmt} ]] && [[ -e /proc/sys/fs/binfmt_misc ]] ; then
+		ebegin $"Mounting misc binary format filesystem"
+		mount -t binfmt_misc binfmt_misc /proc/sys/fs/binfmt_misc \
+			-o nodev,noexec,nosuid
+		eend $?
+	fi
 
 	# We do our swapping here instead of rc so we can get urandom started
 	# before us for people that like an encrypted swap.
