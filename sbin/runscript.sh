@@ -602,7 +602,7 @@ for arg in $* ; do
 		
 		if [[ ${IN_BACKGROUND} == "true" ]] ; then
 			for x in $(dolisting "${svcdir}/snapshot/$$/") ; do
-				if service_stopped "${x##*/}" ; then
+				if [[ -x ${x} ]] && service_stopped "${x##*/}" ; then
 					svc_schedule_start "${SVCNAME}" "${x##*/}"
 				fi
 			done
@@ -664,7 +664,7 @@ for arg in $* ; do
 	
 		# Restart dependencies as well
 		for x in $(dolisting "${svcdir}/snapshot/$$/") ; do
-			if service_stopped "${x##*/}" ; then
+			if [[ -x ${x} ]] && service_stopped "${x##*/}" ; then
 				if service_inactive "${SVCNAME}" \
 					|| service_wasinactive "${SVCNAME}" ; then
 					svc_schedule_start "${SVCNAME}" "${x##*/}"
