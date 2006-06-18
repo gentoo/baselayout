@@ -131,7 +131,8 @@ vlan_post_start() {
 			sed -n -e 's/^\([^ \t]*\) *| '"${vlan}"' *| .*'"${iface}"'$/\1/p' \
 			/proc/net/vlan/config
 		)"
-		iface_start "${ifname}"
+		mark_service_started "net.${ifname}"
+		iface_start "${ifname}" || mark_service_stopped "net.${ifname}"
 	done
 
 	return 0
@@ -149,8 +150,10 @@ vlan_stop() {
 
 	for vlan in $(vlan_get_vlans "${iface}"); do
 		einfo "Removing VLAN ${vlan##*.} from ${iface}"
-		iface_stop "${vlan}"
-		vconfig rem "${vlan}" >/dev/null
+		if iface_stop "${vlan}" ; then
+			mark_service_stopped "net.${vlan}"
+			vconfig rem "${vlan}" >/dev/null
+		fi
 	done
 
 	return 0

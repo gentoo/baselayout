@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  18 Jun 2006; Roy Marples <uberlord@gentoo.org>:
+
+    vlan id's can now be treated as individual interfaces via init scripts
+    provided they depend on the real interface, #137029
+
   15 Jun 2006; Roy Marples <uberlord@gentoo.org>:
 
     runscript.sh now supports the --verbose flag setting RC_VERBOSE="yes"
