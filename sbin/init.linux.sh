@@ -36,7 +36,7 @@ if [[ ${RC_USE_FSTAB} = "yes" ]] ; then
 else
 	unset mntcmd
 fi
-try mount -n ${mntcmd:--t proc proc /proc}
+try mount -n ${mntcmd:--t proc proc /proc -o noexec,nosuid,nodev}
 eend $?
 
 # Read off the kernel commandline to see if there's any special settings
@@ -52,7 +52,7 @@ if [[ $(get_KV) -ge "$(KV_to_int '2.6.0')" ]] ; then
 		else
 			unset mntcmd
 		fi
-		try mount -n ${mntcmd:--t sysfs sysfs /sys}
+		try mount -n ${mntcmd:--t sysfs sysfs /sys -o noexec,nosuid,nodev}
 		eend $?
 	else
 		ewarn "No /sys to mount sysfs needed in 2.6 and later kernels!"
@@ -150,7 +150,7 @@ if [[ "$(get_KV)" -ge "$(KV_to_int '2.5.68')" ]] ; then
 			else
 				unset mntcmd
 			fi
-			try mount -n ${mntcmd:--t devpts -o gid=5,mode=0620 devpts /dev/pts}
+			try mount -n ${mntcmd:--t devpts devpts /dev/pts -o gid=5,mode=0620,noexec,nosuid}
 			eend $?
 		fi
 	fi

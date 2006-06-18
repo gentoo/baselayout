@@ -5,6 +5,9 @@
 
     Mount binfmt_misc automatically in localmount if available.
 
+    Force stricter mount options on /proc /sys /dev/pts /proc/bus/usb as
+    suggested by the PaX Team.
+
   18 Jun 2006; Roy Marples <uberlord@gentoo.org>:
 
     vlan id's can now be treated as individual interfaces via init scripts
