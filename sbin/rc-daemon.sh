@@ -98,7 +98,7 @@ rc_setup_daemon_vars() {
 
 	# We may want to launch the daemon with a custom command
 	# This is mainly useful for debugging with apps like valgrind, strace
-	local bash_service="$( bash_variable "${SVCNAME}" )"
+	local bash_service=$(bash_variable "${SVCNAME}")
 	if [[ -n ${RC_DAEMON} ]]; then
 		local -a d=( ${RC_DAEMON} )
 		if ${stopping}; then
@@ -142,7 +142,7 @@ rc_try_kill_pid() {
 				pkill "-${signal}" -s "${pid}"
 				pgrep -s "${pid}" >/dev/null || return 0
 			else
-				local pids="$(ps eo pid,sid | sed -n "s/ ${pid}\$//p")"
+				local pids=$(ps eo pid,sid | sed -n "s/ ${pid}\$//p")
 				[[ -z ${pids} ]] && return 0
 				kill -s "${signal}" ${pids} 2>/dev/null
 				e=false
@@ -213,7 +213,7 @@ is_daemon_running() {
 		pidfile="$1"
 	fi
 
-	pids="$( pidof ${cmd} )"
+	pids=$(pidof ${cmd})
 	[[ -z ${pids} ]] && return 1
 
 	[[ -s ${pidfile} ]] || return 0
@@ -270,7 +270,7 @@ rc_stop_daemon() {
 		if ! is_daemon_running ${cmd} "${pidfile}" ; then
 			[[ ${RC_FAIL_ON_ZOMBIE} == "yes" ]] && return 1
 		fi
-		pids="$( pidof ${cmd} )"
+		pids=$(pidof ${cmd})
 	fi
 
 	if [[ -s ${pidfile} ]]; then
@@ -353,7 +353,7 @@ update_service_status() {
 # Return the result of start_daemon or stop_daemon depending on
 # how we are called
 start-stop-daemon() {
-	local args="$( requote "$@" )" result i
+	local args=$(requote "$@") result i
 	local cmd pidfile pid stopping signal nothing=false 
 	local daemonfile="${svcdir}/daemons/${SVCNAME}"
 	local -a RC_DAEMONS=() RC_PIDFILES=()

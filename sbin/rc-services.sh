@@ -67,7 +67,7 @@ get_service_index() {
 	fi
 
 	for (( x=1; x<=${RC_DEPEND_TREE[0]}; x++ )); do
-		index="$(( ${x} * ${rc_index_scale} ))"
+		index=$(( ${x} * ${rc_index_scale} ))
 		if [[ ${myservice} == "${RC_DEPEND_TREE[${index}]}" ]] ; then
 			echo "${index}"
 			return 0
@@ -90,7 +90,7 @@ get_dep_info() {
 	# We already have the right stuff ...
 	[[ ${myservice} == "${rc_name}" && -n ${rc_mtime} ]] && return 0
 
-	rc_index="$(get_service_index "${myservice}" "${rc_index}")"
+	rc_index=$(get_service_index "${myservice}" "${rc_index}")
 	rc_mtime="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_mtime}))]}"
 
 	# Verify that we have the correct index (rc_index) ...
@@ -213,7 +213,7 @@ is_fake_service() {
 	[[ -z $1 || -z $2 ]] && return 1
 
 	[[ $2 != "${BOOTLEVEL}" && -e /etc/runlevels/"${BOOTLEVEL}"/.fake ]] && \
-		fake_services="$( < /etc/runlevels/"${BOOTLEVEL}"/.fake )"
+		fake_services=$(</etc/runlevels/"${BOOTLEVEL}"/.fake)
 
 	[[ -e /etc/runlevels/"$2"/.fake ]] && \
 		fake_services="${fake_services} $( < /etc/runlevels/"$2"/.fake )"
@@ -371,8 +371,8 @@ wait_service() {
 	# This will block until the service fifo is touched
 	# Otheriwse we don't block
 	# We need to use cat instead of the bash inbuilt < so we don't see errors
-	local tmp="$( cat "${fifo}" 2>/dev/null )"
-	local exitstatus="$( < "${svcdir}/exitcodes/${service}" )"
+	local tmp=$(cat "${fifo}" 2>/dev/null)
+	local exitstatus=$(<"${svcdir}/exitcodes/${service}")
 
 	return "${exitstatus}"
 }
@@ -704,12 +704,12 @@ is_net_up() {
 			return 0
 			;;
 		lo)
-			netcount="$(ls -1 "${svcdir}"/started/net.* 2> /dev/null | \
-			            egrep -c "\/net\..*$")"
+			netcount=$(ls -1 "${svcdir}"/started/net.* 2> /dev/null | \
+			            egrep -c "\/net\..*$")
 			;;
 		*)
-			netcount="$(ls -1 "${svcdir}"/started/net.* 2> /dev/null | \
-			            grep -v 'net\.lo' | egrep -c "\/net\..*$")"
+			netcount=$(ls -1 "${svcdir}"/started/net.* 2> /dev/null | \
+			            grep -v 'net\.lo' | egrep -c "\/net\..*$")
 			;;
 	esac
 
@@ -872,7 +872,7 @@ query_before() {
 
 	[[ -z $1 || -z $2 ]] && return 1
 
-	list="$( trace_dependencies "$1" )"
+	list=$(trace_dependencies "$1")
 
 	net_service "$2" && netservice="yes"
 	

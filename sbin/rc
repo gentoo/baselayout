@@ -26,7 +26,7 @@ fi
 #   but it does not block waiting for input
 #
 noblock_read() {
-	local old_tty_settings="$(stty -g)"
+	local old_tty_settings=$(stty -g)
 	stty -icanon min 0 time 0
 	read "$@"
 	stty "${old_tty_settings}"
@@ -162,7 +162,7 @@ then
 	
 elif [[ ${RUNLEVEL} != "S" && ${RUNLEVEL} != "1" && -e "${svcdir}/ksoftlevel" ]]
 then
-	argv1="$(< "${svcdir}"/ksoftlevel)"
+	argv1=$(<"${svcdir}"/ksoftlevel)
 	rm -f "${svcdir}/ksoftlevel"
 elif [[ ${RUNLEVEL} != "S" && ${RUNLEVEL} != "1" && ${argv1} == "single" ]]
 then
@@ -188,14 +188,14 @@ source "${svclib}/sh/rc-services.sh"
 
 if [[ -f "${svcdir}/softlevel" ]] ; then
 	# Set OLDSOFTLEVEL if we had a valid SOFTLEVEL
-	export OLDSOFTLEVEL="$(< "${svcdir}/softlevel")"
+	export OLDSOFTLEVEL=$(<"${svcdir}/softlevel")
 else
 	export OLDSOFTLEVEL=
 fi
 	
 if [[ -z ${argv1} ]] ; then
 	if [[ -f "${svcdir}/softlevel" ]] ; then
-		export SOFTLEVEL="$(< "${svcdir}/softlevel")"
+		export SOFTLEVEL=$(<"${svcdir}/softlevel")
 	else
 		export SOFTLEVEL="${BOOTLEVEL}"
 	fi
@@ -208,7 +208,7 @@ if [[ ! -f "${svcdir}/softlevel" ]] ; then
 fi
 
 [[ -e "${svcdir}/interactive" ]] && \
-	svcinteractive="$(< "${svcdir}/interactive")"
+	svcinteractive=$(<"${svcdir}/interactive")
 
 # For keeping a list of services that fails during boot/halt
 if [[ ! -d "${svcdir}/failed" ]] ; then
@@ -231,11 +231,11 @@ else
 
 	if [[ ${SOFTLEVEL} != "${BOOTLEVEL}" ]] ; then
 		# Normal runlevels *include* boot scripts
-		mylevels="$(dolisting "/etc/runlevels/${SOFTLEVEL}/")"
+		mylevels=$(dolisting "/etc/runlevels/${SOFTLEVEL}/")
 		mylevels="${mylevels} $(dolisting "/etc/runlevels/${BOOTLEVEL}/")"
 	else
 		# Non-normal runlevels don't include boot scripts as default
-		mylevels="$(dolisting "/etc/runlevels/${SOFTLEVEL}/")"
+		mylevels=$(dolisting "/etc/runlevels/${SOFTLEVEL}/")
 
 		# As we're in the bootlevel, add any services that failed due
 		# to /dev/.rcsysinit existing to the list

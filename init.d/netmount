@@ -86,7 +86,7 @@ stop() {
 		# Populate $remaining with a newline-delimited list of network 
 		# filesystems.  Mount points have spaces swapped for '\040' (see 
 		# fstab(5)) so we have to translate them back to spaces.
-		remaining="$(awk '$3 ~ /'${NET_FS_LIST// /|}'/ { if ($2 != "/") print $2 }' /proc/mounts | sort -r)"
+		remaining=$(awk '$3 ~ /'${NET_FS_LIST// /|}'/ { if ($2 != "/") print $2 }' /proc/mounts | sort -r)
 		# Since we have to worry about the spaces being quoted properly, 
 		# we'll use `set --` and then "$@" to get the correct result.
 		IFS=$'\n'

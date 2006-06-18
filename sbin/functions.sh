@@ -173,7 +173,7 @@ get_libdir() {
 	if [[ -n ${CONF_LIBDIR_OVERRIDE} ]] ; then
 		CONF_LIBDIR="${CONF_LIBDIR_OVERRIDE}"
 	elif [[ -x /usr/bin/portageq ]] ; then
-		CONF_LIBDIR="$(/usr/bin/portageq envvar CONF_LIBDIR)"
+		CONF_LIBDIR=$(/usr/bin/portageq envvar CONF_LIBDIR)
 	fi
 	echo "${CONF_LIBDIR:=lib}"
 }
@@ -303,7 +303,7 @@ ebegin() {
 	[[ ${RC_QUIET_STDOUT} == "yes" ]] && return 0
 
 	if [[ -n ${RC_DOT_PATTERN} ]] ; then
-		dots="$(printf "%$((COLS - 3 - ${#RC_INDENTATION} - ${#msg} - 7))s" '')"
+		dots=$(printf "%$((COLS - 3 - ${#RC_INDENTATION} - ${#msg} - 7))s" '')
 		dots="${dots//${spaces}/${RC_DOT_PATTERN}}"
 		msg="${msg}${dots}"
 	else
@@ -312,7 +312,7 @@ ebegin() {
 	einfon "${msg}"
 	[[ ${RC_ENDCOL} == "yes" ]] && echo
 
-	LAST_E_LEN="$(( 3 + ${#RC_INDENTATION} + ${#msg} ))"
+	LAST_E_LEN=$(( 3 + ${#RC_INDENTATION} + ${#msg} ))
 	LAST_E_CMD="ebegin"
 	return 0
 }
@@ -443,10 +443,10 @@ KV_micro() {
 KV_to_int() {
 	[[ -z $1 ]] && return 1
 
-	local KV_MAJOR="$(KV_major "$1")"
-	local KV_MINOR="$(KV_minor "$1")"
-	local KV_MICRO="$(KV_micro "$1")"
-	local KV_int="$(( KV_MAJOR * 65536 + KV_MINOR * 256 + KV_MICRO ))"
+	local KV_MAJOR=$(KV_major "$1")
+	local KV_MINOR=$(KV_minor "$1")
+	local KV_MICRO=$(KV_micro "$1")
+	local KV_int=$(( KV_MAJOR * 65536 + KV_MINOR * 256 + KV_MICRO ))
 
 	# We make version 2.2.0 the minimum version we will handle as
 	# a sanity check ... if its less, we fail ...
@@ -468,7 +468,7 @@ KV_to_int() {
 _RC_GET_KV_CACHE=""
 get_KV() {
 	[[ -z ${_RC_GET_KV_CACHE} ]] \
-		&& _RC_GET_KV_CACHE="$(uname -r)"
+		&& _RC_GET_KV_CACHE=$(uname -r)
 
 	echo "$(KV_to_int "${_RC_GET_KV_CACHE}")"
 
@@ -580,7 +580,7 @@ add_suffix() {
 #
 get_base_ver() {
 	[[ ! -r /etc/gentoo-release ]] && return 0
-	local ver="$(</etc/gentoo-release)"
+	local ver=$(</etc/gentoo-release)
 	echo "${ver##* }"
 }
 
@@ -599,9 +599,9 @@ is_net_fs() {
 	local fstype
 	# /proc/mounts is always accurate but may not always be available
 	if [[ -e /proc/mounts ]] ; then
-		fstype="$( sed -n -e '/^rootfs/!s:.* '"$1"' \([^ ]*\).*:\1:p' /proc/mounts )"
+		fstype=$(sed -n -e '/^rootfs/!s:.* '"$1"' \([^ ]*\).*:\1:p' /proc/mounts)
 	else
-		fstype="$( mount | sed -n -e 's:.* on '"$1"' type \([^ ]*\).*:\1:p' )"
+		fstype=$(mount | sed -n -e 's:.* on '"$1"' type \([^ ]*\).*:\1:p')
 	fi
 	[[ " ${NET_FS_LIST} " == *" ${fstype} "* ]]
 	return $?
@@ -773,7 +773,7 @@ if [[ -z ${EBUILD} ]] ; then
 	# have a TTY. rc unsets it at the end of running so it shouldn't hang
 	# around
 	if [[ -z ${CONSOLETYPE} ]] ; then
-		export CONSOLETYPE="$( /sbin/consoletype 2>/dev/null )"
+		export CONSOLETYPE=$(/sbin/consoletype 2>/dev/null)
 	fi
 	if [[ ${CONSOLETYPE} == "serial" ]] ; then
 		RC_NOCOLOR="yes"
@@ -800,7 +800,7 @@ else
 	# Should we use colors ?
 	if [[ $* != *depend* ]] ; then
 		# Check user pref in portage
-		RC_NOCOLOR="$(portageq envvar NOCOLOR 2>/dev/null)"
+		RC_NOCOLOR=$(portageq envvar NOCOLOR 2>/dev/null)
 		[[ ${RC_NOCOLOR} == "true" ]] && RC_NOCOLOR="yes"
 	else
 		# We do not want colors during emerge depend
@@ -816,7 +816,7 @@ if [[ -n ${EBUILD} && $* == *depend* ]] ; then
 else
 	# Setup COLS and ENDCOL so eend can line up the [ ok ]
 	COLS="${COLUMNS:-0}"		# bash's internal COLUMNS variable
-	(( COLS == 0 )) && COLS="$(set -- `stty size 2>/dev/null` ; echo "$2")"
+	(( COLS == 0 )) && COLS=$(set -- `stty size 2>/dev/null` ; echo "$2")
 	(( COLS > 0 )) || (( COLS = 80 ))	# width of [ ok ] == 7
 fi
 

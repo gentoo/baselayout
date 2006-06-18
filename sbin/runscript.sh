@@ -13,7 +13,7 @@ fi
 
 myscript="$1"
 if [[ -L $1 && ! -L "/etc/init.d/${1##*/}" ]] ; then
-	SVCNAME="$(readlink "$1")"
+	SVCNAME=$(readlink "$1")
 else
 	SVCNAME="$1"
 fi
@@ -89,12 +89,12 @@ search_lang="${LC_ALL:-${LC_MESSAGES:-${LANG}}}"
 #     configuration, if the system administrator chose to put it
 #     there (if it exists).
 if net_service "${SVCNAME}" ; then
-	conf="$(add_suffix /etc/conf.d/net)"
+	conf=$(add_suffix /etc/conf.d/net)
 	[[ -e ${conf} ]] && source "${conf}"
 fi
-conf="$(add_suffix "/etc/conf.d/${SVCNAME}")"
+conf=$(add_suffix "/etc/conf.d/${SVCNAME}")
 [[ -e ${conf} ]] && source "${conf}"
-conf="$(add_suffix /etc/rc.conf)"
+conf=$(add_suffix /etc/rc.conf)
 [[ -e ${conf} ]] && source "${conf}"
 
 mylevel="${SOFTLEVEL}"
@@ -513,7 +513,7 @@ svc_status() {
 	[[ ${state} == "started" ]]
 }
 
-rcscript_errors="$(bash -n "${myscript}" 2>&1)" || {
+rcscript_errors=$(bash -n "${myscript}" 2>&1) || {
 	[[ -n ${rcscript_errors} ]] && echo "${rcscript_errors}" >&2
 	eerror "ERROR:  ${myscript} has syntax errors in it; aborting ..."
 	exit 1

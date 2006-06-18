@@ -9,7 +9,7 @@ depend() {
 start() {
 	if [[ -f /etc/hostname ]] ; then
 		ewarn "You should stop using /etc/hostname and use /etc/conf.d/hostname"
-		HOSTNAME="$(< /etc/hostname)"
+		HOSTNAME=$(</etc/hostname)
 	fi
 
 	ebegin "Setting hostname to ${HOSTNAME}"
