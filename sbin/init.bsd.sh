@@ -24,7 +24,7 @@ fi
 check_statedir /proc
 
 ebegin "Mounting linprocfs at /proc"
-try mount -t linprocfs none /proc
+try mount -t linprocfs proc /proc
 eend $?
 
 source "${svclib}"/sh/init-common-post.sh
