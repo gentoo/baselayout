@@ -373,6 +373,8 @@ iwconfig_associate() {
 		[[ ${key} != "off" ]] && w=$(iwconfig_get_wep_status "${iface}")
 	fi
 
+	[[ -n ${mac} ]] && iwconfig "${iface}" ap "${mac}"
+
 	if ! iwconfig "${iface}" essid "${ESSID}" ; then
 		if [[ ${ESSID} != "any" ]]; then
 			ewarn "${iface} does not support setting ESSID to \"${dessid}\""
