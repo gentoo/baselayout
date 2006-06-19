@@ -59,6 +59,9 @@ iwconfig_check_installed() {
 #
 # Checks to see if wireless extensions are enabled on the interface
 iwconfig_exists() {
+	# Support new sysfs layout
+	[[ -L /sys/class/net/$1/wiphy ]] && return 0
+
 	[[ ! -e /proc/net/wireless ]] && return 1
 	grep -q "^[ \t]*$1:" /proc/net/wireless
 }
@@ -336,9 +339,12 @@ iwconfig_associate() {
 	local mac="$3" wep_required="$4" w="(WEP Disabled)"
 	local dessid="${ESSID//\\\\/\\\\}" key=
 
-	if ! iwconfig "${iface}" mode "${mode}" ; then
-		eerror "Unable to change mode to ${mode}"
-		return 1
+	local cur_mode=$(iwconfig_get_mode "${iface}")
+	if [[ ${cur_mode} != "${mode}" ]]; then
+		if ! iwconfig "${iface}" mode "${mode}" ; then
+			eerror "Unable to change mode to ${mode}"
+			return 1
+		fi
 	fi
 
 	if [[ ${ESSID} == "any" ]]; then
@@ -456,6 +462,7 @@ iwconfig_scan() {
 			*Address:*)
 				(( i++ ))
 				mac[i]=$(echo "${line#*: }" | tr '[:lower:]' '[:upper:]')
+				qual[i]=0
 				;;
 			*ESSID:*)
 				essid[i]="${line#*\"}"
@@ -542,8 +549,7 @@ iwconfig_scan() {
 		[[ ${mode[i]} == "ad-hoc" ]] && (( qual[i]-=10000 ))
 		sortline="${sortline}${qual[i]} ${i}\n"
 	done
-
-	sortline=( $( echo -e "${sortline}" | sort -nr ) )
+	sortline=( $(echo -e "${sortline}" | sort -nr) )
 
 	for (( i=0; i<${#mac[@]}; i++ )); do
 		(( x=(i * 2) + 1 ))

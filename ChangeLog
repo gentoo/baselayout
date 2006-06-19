@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  19 Jun 2006; Roy Marples <uberlord@gentoo.org>:
+ 
+    Preliminary support for dscape ieee80211 stack devices.
+ 
   18 Jun 2006; Roy Marples <uberlord@gentoo.org>:
 
     vlan id's can now be treated as individual interfaces via init scripts
