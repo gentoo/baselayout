@@ -44,7 +44,7 @@ ifconfig_check_installed() {
 #
 # Returns 1 if the interface exists, otherwise 0
 ifconfig_exists() {
-	local e="$(ifconfig -a | grep -o "^$1")" report="${2:-false}"
+	local e=$(ifconfig -a | grep -o "^$1") report="${2:-false}"
 	[[ -n ${e} ]] && return 0
 
 	if ${report} ; then
@@ -60,7 +60,7 @@ ifconfig_exists() {
 # Returns the netmask of a given CIDR
 cidr2netmask() {
 	local cidr="$1" netmask="" done=0 i sum=0 cur=128
-	local octets frac
+	local octets= frac=
 
 	(( octets=cidr/8 ))
 	(( frac=cidr%8 ))
@@ -129,7 +129,7 @@ ifconfig_set_flag() {
 ifconfig_get_address() {
 	local -a x=( $( ifconfig "$1" \
 	| sed -n -e 's/.*inet addr:\([^ ]*\).*Mask:\([^ ]*\).*/\1 \2/p' ) )
-	x[1]="$(netmask2cidr "${x[1]}")"
+	x[1]=$(netmask2cidr "${x[1]}")
 	[[ -n ${x[0]} ]] && echo "${x[0]}/${x[1]}"
 }
 
@@ -144,8 +144,8 @@ ifconfig_is_ethernet() {
 #
 # Fetch the mac address assingned to the network card
 ifconfig_get_mac_address() {
-	local mac="$(ifconfig "$1" | sed -n -e \
-		's/.*HWaddr[ \t]*\<\(..:..:..:..:..:..\)\>.*/\U\1/p')"
+	local mac=$(ifconfig "$1" | sed -n -e \
+		's/.*HWaddr[ \t]*\<\(..:..:..:..:..:..\)\>.*/\U\1/p')
 	[[ ${mac} != '00:00:00:00:00:00' \
 	&& ${mac} != '44:44:44:44:44:44' \
 	&& ${mac} != 'FF:FF:FF:FF:FF:FF' ]] \
@@ -167,7 +167,7 @@ ifconfig_set_name() {
 	[[ -z $2 ]] && return 1
 	local current="$1" new="$2"
 
-	local mac="$(ifconfig_get_mac_address "${current}")"
+	local mac=$(ifconfig_get_mac_address "${current}")
 	if [[ -z ${mac} ]]; then
 		eerror "${iface} does not have a MAC address"
 		return 1
@@ -192,7 +192,7 @@ ifconfig_get_aliases_rev() {
 # (false) if there were no addresses to remove.
 # If onlyinet is true then we only delete IPv4 / inet addresses
 ifconfig_del_addresses() {
-	local iface="$1" i onlyinet="${2:-false}"
+	local iface="$1" i= onlyinet="${2:-false}"
 	# We don't remove addresses from aliases
 	[[ ${iface} == *:* ]] && return 0
 
@@ -221,7 +221,7 @@ ifconfig_del_addresses() {
 #
 # Returns config and config_fallback for the given interface
 ifconfig_get_old_config() {
-	local iface="$1" ifvar="$(bash_variable "$1")" i inet6
+	local iface="$1" ifvar=$(bash_variable "$1") i= inet6=
 
 	config="ifconfig_${ifvar}[@]"
 	config=( "${!config}" )
@@ -235,7 +235,7 @@ ifconfig_get_old_config() {
 	i="iface_${ifvar}"
 	if [[ -n ${!i} && -z ${config} ]]; then
 		# Make sure these get evaluated as arrays
-		local -a aliases broadcasts netmasks
+		local -a aliases=() broadcasts=() netmasks=()
 
 		# Start with the primary interface
 		config=( ${!i} )
@@ -292,7 +292,7 @@ ifconfig_pre_start() {
 
 	interface_exists "${iface}" || return 0
 
-	local ifvar="$(bash_variable "$1")" mtu
+	local ifvar=$(bash_variable "$1") mtu=
 
 	# MTU support
 	mtu="mtu_${ifvar}"
@@ -311,7 +311,7 @@ ifconfig_pre_start() {
 # fail, the routine should still return success to indicate that
 # net.eth0 was successful
 ifconfig_post_start() {
-	local iface="$1" ifvar="$(bash_variable "$1")" routes x metric mtu cidr
+	local iface="$1" ifvar=$(bash_variable "$1") routes= x= metric= mtu= cidr=
 	metric="metric_${ifvar}"
 
 	ifconfig_exists "${iface}" || return 0
@@ -374,7 +374,7 @@ ifconfig_post_start() {
 #
 # Adds the given address to the interface
 ifconfig_add_address() {
-	local iface="$1" i=0 r e real_iface="$(interface_device "$1")"
+	local iface="$1" i=0 r= e= real_iface=$(interface_device "$1")
 
 	ifconfig_exists "${real_iface}" true || return 1
 	
@@ -390,17 +390,17 @@ ifconfig_add_address() {
 		# for multiple addresses
 		if ifconfig "${iface}" | grep -Eq "\<inet addr:.*" ; then
 			# Get the last alias made for the interface and add 1 to it
-			i="$(ifconfig | tac | grep -m 1 -o "^${iface}:[0-9]*" \
-				| sed -n -e 's/'"${iface}"'://p')"
+			i=$(ifconfig | tac | grep -m 1 -o "^${iface}:[0-9]*" \
+				| sed -n -e 's/'"${iface}"'://p')
 			i="${i:-0}"
 			(( i++ ))
 			iface="${iface}:${i}"
 		fi
 
 		# ifconfig doesn't like CIDR addresses
-		local ip="${config[0]%%/*}" cidr="${config[0]##*/}" netmask
+		local ip="${config[0]%%/*}" cidr="${config[0]##*/}" netmask=
 		if [[ -n ${cidr} && ${cidr} != "${ip}" ]]; then
-			netmask="$(cidr2netmask "${cidr}")"
+			netmask=$(cidr2netmask "${cidr}")
 			config[0]="${ip} netmask ${netmask}"
 		fi	
 

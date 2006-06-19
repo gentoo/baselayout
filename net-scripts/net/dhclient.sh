@@ -43,7 +43,7 @@ dhclient_stop() {
 	[[ ! -f ${pidfile} ]] && return 0
 
 	ebegin "Stopping dhclient on ${iface}"
-	local ifvar="$(bash_variable "${iface}")"
+	local ifvar=$(bash_variable "${iface}")
 	local d="dhcp_${ifvar}"
 	[[ -z ${!d} ]] && d="dhcp"
 	if [[ " ${!d} " == *" release "* ]] ; then
@@ -60,7 +60,7 @@ dhclient_stop() {
 #
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 dhclient_start() {
-	local iface="$1" ifvar="$(bash_variable "$1")" dhconf=
+	local iface="$1" ifvar=$(bash_variable "$1") dhconf=
 	local pidfile="/var/run/dhclient-${iface}.pid"
 
 	interface_exists "${iface}" true || return 1
@@ -95,7 +95,7 @@ dhclient_start() {
 	
 	# Send our hostname by editing cffile
 	if [[ " ${!d} " != *" nosendhost "* ]] ; then
-		local hname="$(hostname)"
+		local hname=$(hostname)
 		if [[ ${hname} != "(none)" && ${hname} != "localhost" ]]; then
 			dhconf="${dhconf} interface \"${iface}\" {\n"
 			dhconf="${dhconf} send host-name \"${hname}\"\n;"
@@ -110,7 +110,7 @@ dhclient_start() {
 	eend $? || return 1 
 
 	# DHCP succeeded, show address retrieved
-	local addr="$(interface_get_address "${iface}")"
+	local addr=$(interface_get_address "${iface}")
 	einfo "${iface} received address ${addr}"
 
 	return 0

@@ -10,7 +10,7 @@ ccwgroup_expose() {
 }
 
 ccwgroup_pre_start() {
-	local iface="$1" ifvar="$(bash_variable "$1")"
+	local iface="$1" ifvar=$(bash_variable "$1")
 	local ccw="ccwgroup_${ifvar}[@]"
 	local -a ccwgroup=( "${!ccw}" )
 
@@ -33,16 +33,16 @@ ccwgroup_pre_stop() {
 	save_options ccwgroup_device ""
 	
 	[[ ! -L /sys/class/net/"${iface}"/driver ]] && return 0
-	local driver="$(readlink /sys/class/net/"${iface}"/driver)"
+	local driver=$(readlink /sys/class/net/"${iface}"/driver)
 	[[ ${driver} != *"/bus/ccwgroup/"* ]] && return 0
 
-	local device="$(readlink /sys/class/net/"${iface}"/device)"
+	local device=$(readlink /sys/class/net/"${iface}"/device)
 	device="${device##*/}"
 	save_options ccwgroup_device "${device}"
 }
 
 ccwgroup_post_stop() {
-	local iface="$1" device="$(get_options ccwgroup_device)"
+	local iface="$1" device=$(get_options ccwgroup_device)
 	
 	[[ -z ${device} ]] && return 0
 	

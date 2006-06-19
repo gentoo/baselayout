@@ -30,9 +30,9 @@ essidnet_pre_start() {
 
 	wireless_exists "${iface}" || return 0
 
-	local mac="$(wireless_get_ap_mac_address "${iface}")"
-	local ESSID="$(wireless_get_essid "${iface}")"
-	local essid="$(bash_variable "${ESSID}")"
+	local mac=$(wireless_get_ap_mac_address "${iface}")
+	local ESSID=$(wireless_get_essid "${iface}")
+	local essid=$(bash_variable "${ESSID}")
 	mac="${mac//:/}"
 
 	vebegin "Configuring ${iface} for ESSID \"${ESSID//\\\\/\\\\}\"" 2>/dev/null

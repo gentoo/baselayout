@@ -24,7 +24,7 @@ macchanger_pre_start() {
 	# We don't change MAC addresses from background
 	${IN_BACKGROUND} && return 0
 
-	local iface="$1" mac opts ifvar="$(bash_variable "$1")"
+	local iface="$1" mac= opts= ifvar=$(bash_variable "$1")
 
 	mac="mac_${ifvar}"
 	[[ -z ${!mac} ]] && return 0
@@ -36,7 +36,7 @@ macchanger_pre_start() {
 	# The interface needs to be up for macchanger to work most of the time
 	interface_down "${iface}"
 	
-	mac="$(echo "${!mac}" | tr '[:upper:]' '[:lower:]')"
+	mac=$(echo "${!mac}" | tr '[:upper:]' '[:lower:]')
 	case "${mac}" in
 		# specific mac-addr, i wish there were a shorter way to specify this 
 		[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f])
@@ -44,7 +44,7 @@ macchanger_pre_start() {
 			interface_set_mac_address "${iface}" "${mac}"
 			eend "$?"
 			if [[ $? == "0" ]] ; then
-				mac="$(interface_get_mac_address "${iface}")"
+				mac=$(interface_get_mac_address "${iface}")
 				eindent
 				einfo "changed to ${mac}"
 				eoutdent
@@ -76,14 +76,14 @@ macchanger_pre_start() {
 		return 1
 	fi
 
-	mac="$( /sbin/macchanger ${opts} "${iface}" \
-		| sed -n -e 's/^Faked MAC:.*\<\(..:..:..:..:..:..\)\>.*/\U\1/p' )"
+	mac=$(/sbin/macchanger ${opts} "${iface}" \
+		| sed -n -e 's/^Faked MAC:.*\<\(..:..:..:..:..:..\)\>.*/\U\1/p' )
 
 	# Sometimes the interface needs to be up ....
 	if [[ -z ${mac} ]] ; then
 		interface_up "${iface}"
-		mac="$( /sbin/macchanger ${opts} "${iface}" \
-			| sed -n -e 's/^Faked MAC:.*\<\(..:..:..:..:..:..\)\>.*/\U\1/p' )"
+		mac=$(/sbin/macchanger ${opts} "${iface}" \
+			| sed -n -e 's/^Faked MAC:.*\<\(..:..:..:..:..:..\)\>.*/\U\1/p' )
 	fi
 
 	if [[ -z ${mac} ]] ; then

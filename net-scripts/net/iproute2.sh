@@ -46,7 +46,7 @@ iproute2_check_installed() {
 #
 # Returns 1 if the interface exists, otherwise 0
 iproute2_exists() {
-	local e="$( ip addr show label "$1" )" report="${2:-false}"
+	local e=$( ip addr show label "$1" ) report="${2:-false}"
 	[[ -n ${e} ]] && return 0
 
 	if ${report} ; then
@@ -109,8 +109,8 @@ iproute2_is_ethernet() {
 #
 # Fetch the mac address assingned to the network card
 iproute2_get_mac_address() {
-	local mac="$( ip link show "$1" | sed -n -e \
-		'/link\// s/^.*\<\(..:..:..:..:..:..\)\>.*/\U\1/p' )"
+	local mac=$( ip link show "$1" | sed -n -e \
+		'/link\// s/^.*\<\(..:..:..:..:..:..\)\>.*/\U\1/p' )
 	[[ ${mac} != '00:00:00:00:00:00' \
 	&& ${mac} != '44:44:44:44:44:44' \
 	&& ${mac} != 'FF:FF:FF:FF:FF:FF' ]] \
@@ -138,7 +138,7 @@ iproute2_set_name() {
 # Outputs a space-separated list on stdout, in reverse order, for
 # example "eth0:2 eth0:1"
 iproute2_get_aliases_rev() {
-	local iface="$( interface_device "$1" )"
+	local iface=$( interface_device "$1" )
 	ip addr show dev "${iface}" | grep -o "${iface}:[0-9].*" | tac
 }
 
@@ -147,7 +147,7 @@ iproute2_get_aliases_rev() {
 # Remove addresses from interface.
 # If onlyinet is true, then we only remove IPv4 / inet addresses.
 iproute2_del_addresses() {
-	local pre=""
+	local pre=
 	${2:-false} && pre="-f inet"
 	ip ${pre} addr flush label "$1" scope global &>/dev/null
 	ip ${pre} addr flush label "$1" scope site &>/dev/null
@@ -159,7 +159,7 @@ iproute2_del_addresses() {
 #
 # Returns config and config_fallback for the given interface
 iproute2_get_old_config() {
-	local ifvar="$( bash_variable "$1" )" inet6="" t=""
+	local ifvar=$( bash_variable "$1" ) inet6= t=
 
 	# iproute2-style config vars
 	t="ipaddr_${ifvar}[@]"
@@ -191,7 +191,7 @@ iproute2_get_old_config() {
 #
 # Returns 0 (true) when successful, non-zero (false) on failure
 iproute2_iface_stop() {
-	local label="$1" iface="$( interface_device "$1" )"
+	local label="$1" iface=$( interface_device "$1" )
 
 	# Shut down the link if this isn't an alias or vlan
 	if [[ ${label} == "${iface}" ]] ; then
@@ -206,7 +206,7 @@ iproute2_iface_stop() {
 # Adds an the specified address to the interface
 # returns 0 on success and non-zero on failure
 iproute2_add_address() {
-	local iface="$1" x=""
+	local iface="$1" x=
 
 	iproute2_exists "${iface}" true || return 1
 
@@ -263,7 +263,7 @@ iproute2_pre_start() {
 
 	interface_exists "${iface}" || return 0
 
-	local ifvar="$( bash_variable "$1" )"
+	local ifvar=$( bash_variable "$1" )
 
 	# MTU support
 	local mtu="mtu_${ifvar}"
@@ -277,7 +277,7 @@ iproute2_pre_start() {
 # Runs any post_start stuff on our interface and adds routes
 # Always returns 0
 iproute2_post_start() {
-	local iface="$1" ifvar="$( bash_variable "$1" )" x=""
+	local iface="$1" ifvar=$( bash_variable "$1" ) x=
 
 	iproute2_exists "${iface}" || return 0
 	
@@ -338,7 +338,7 @@ iproute2_post_start() {
 
 # void iproute2_post_stop(char* interface)
 iproute2_post_stop() {
-	local iface="$1" rule=""
+	local iface="$1" rule=
 
 	iproute2_exists "${iface}" || return
 

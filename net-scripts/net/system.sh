@@ -19,7 +19,7 @@ system_expose() {
 }
 
 system_dns() {
-	local iface="$1" ifvar="$(bash_variable "$1")" x= domain= search=
+	local iface="$1" ifvar=$(bash_variable "$1") x= domain= search=
 	local buffer=
 	local -a servers=()
 
@@ -52,7 +52,7 @@ system_dns() {
 }
 
 system_ntp() {
-	local iface="$1" ifvar="$(bash_variable "$1")" x= buffer=
+	local iface="$1" ifvar=$(bash_variable "$1") x= buffer=
 	local -a servers=()
 
 	servers="ntp_servers_${ifvar}[@]"
@@ -76,7 +76,7 @@ system_ntp() {
 }
 
 system_nis() {
-	local iface="$1" ifvar="$(bash_variable "$1")" domain= x= buffer=
+	local iface="$1" ifvar=$(bash_variable "$1") domain= x= buffer=
 	local -a servers=()
 
 	servers="nis_servers_${ifvar}[@]"

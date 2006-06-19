@@ -64,10 +64,10 @@ wpa_supplicant_exists() {
 #
 # Gets the current ESSID of iface
 wpa_supplicant_get_essid() {
-	local i essid
+	local i= essid=
 
 	for (( i=0; i<5; i++ )); do
-		essid="$( wpa_cli -i"$1" status | sed -n -e 's/^ssid=//p' )"
+		essid=$( wpa_cli -i"$1" status | sed -n -e 's/^ssid=//p' )
 		if [[ -n ${essid} ]] ; then
 			echo "${essid}"
 			return 0
@@ -92,7 +92,7 @@ wpa_supplicant_get_ap_mac_address() {
 # Note that just because we are associated does not mean we are using the
 # correct encryption keys
 wpa_supplicant_associated() {
-	local -a status
+	local -a status=()
 	eval status=( $(wpa_cli -i"$1" status \
 		| sed -n -e 's/^\(key_mgmt\|wpa_state\|EAP state\)=\([^=]\+\).*/\U\"\2\"/p')
 	)
@@ -116,7 +116,7 @@ wpa_supplicant_associated() {
 #
 # Kills any existing wpa_supplicant process on the interface
 wpa_supplicant_kill() {
-	local iface="$1" report="${2:-false}" pidfile
+	local iface="$1" report="${2:-false}" pidfile=
 
 	# Shutdown wpa_cli first, if it's running
 	# This is important as future versions of wpa_supplicant
@@ -147,7 +147,7 @@ wpa_supplicant_kill() {
 # Returns 0 if wpa_supplicant associates and authenticates to an AP
 # otherwise, 1
 wpa_supplicant_associate() {
-	local iface="$1" ifvar="$(bash_variable "$1")" timeout
+	local iface="$1" ifvar=$(bash_variable "$1") timeout=
 	timeout="associate_timeout_${ifvar}"
 	[[ -z ${!timeout} ]] && timeout="wpa_timeout_${ifvar}"
 	timeout="${!timeout:--1}"
@@ -200,15 +200,15 @@ wpa_supplicant_associate() {
 # Start wpa_supplicant on an interface and wait for association
 # Returns 0 (true) when successful, non-zero otherwise
 wpa_supplicant_pre_start() {
-	local iface="$1" opts="" timeout="" actfile="" cfgfile=""
+	local iface="$1" opts= timeout= actfile= cfgfile=
 
 	# We don't configure wireless if we're being called from
 	# the background unless we're not currently running
 	if ${IN_BACKGROUND} ; then
 		if service_started_daemon "net.${iface}" /sbin/wpa_supplicant ; then
 			if wpa_supplicant_exists "${iface}" ; then
-				ESSID="$( wpa_supplicant_get_essid "${iface}" )"
-				ESSIDVAR="$( bash_variable "${ESSID}" )"
+				ESSID=$(wpa_supplicant_get_essid "${iface}")
+				ESSIDVAR=$(bash_variable "${ESSID}")
 				save_options "ESSID" "${ESSID}"
 				metric=2000
 			fi
@@ -218,7 +218,7 @@ wpa_supplicant_pre_start() {
 
 	save_options "ESSID" ""
 
-	local ifvar="$( bash_variable "${iface}" )"
+	local ifvar=$(bash_variable "${iface}")
 	opts="wpa_supplicant_${ifvar}"
 	opts=" ${!opts} "
 	[[ ${opts} != *" -D"* ]] \
@@ -275,7 +275,7 @@ wpa_supplicant_pre_start() {
 	fi
 
 	# Work out where the ctrl_interface dir is if it's not specified
-	local ctrl_dir="$( sed -n -e 's/[ \t]*#.*//g;s/[ \t]*$//g;s/^ctrl_interface=//p' "${cfgfile}" )"
+	local ctrl_dir=$(sed -n -e 's/[ \t]*#.*//g;s/[ \t]*$//g;s/^ctrl_interface=//p' "${cfgfile}")
 	if [[ -z ${ctrl_dir} ]] ; then
 		ctrl_dir="${opts##* -C}"
 		if [[ -n ${ctrl_dir} && ${ctrl_dir} != "${opts}" ]] ; then
@@ -330,11 +330,11 @@ wpa_supplicant_pre_start() {
 	# Only report wireless info for wireless interfaces
 	if wpa_supplicant_exists "${iface}" ; then
 		# Set ESSID for essidnet and report
-		ESSID="$( wpa_supplicant_get_essid "${iface}" )"
-		ESSIDVAR="$( bash_variable "${ESSID}" )"
+		ESSID=$(wpa_supplicant_get_essid "${iface}" )
+		ESSIDVAR=$(bash_variable "${ESSID}")
 		save_options "ESSID" "${ESSID}"
 
-		local -a status
+		local -a status=()
 		eval status=( $(wpa_cli -i"${iface}" status | sed -n -e 's/^\(bssid\|pairwise_cipher\|key_mgmt\)=\([^=]\+\).*/\"\U\2\"/p' | tr '[:lower:]' '[:upper:]') )
 		einfo "${iface} connected to \"${ESSID//\\\\/\\\\}\" at ${status[0]}"
 
@@ -353,7 +353,7 @@ wpa_supplicant_pre_start() {
 	fi
 
 	if [[ -n ${actfile} ]] ; then
-		local addr="$(interface_get_address "${iface}")"
+		local addr=$(interface_get_address "${iface}")
 		einfo "${iface} configured with address ${addr}"
 		exit 0 
 	fi

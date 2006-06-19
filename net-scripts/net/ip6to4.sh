@@ -26,7 +26,7 @@ ip6to4_expose() {
 # Returns 0 on success, otherwise 1.
 ip6to4_start() {
 	local iface="$1" addr=""
-	local ifvar="$(bash_variable "${iface}")"
+	local ifvar=$(bash_variable "${iface}")
 
 	# Ensure the interface is sit0 if we're using ifconfig
 	if [[ " ${MODULES[@]} " == *" ifconfig "* && ${iface} != "sit0" ]] ; then
@@ -59,14 +59,14 @@ ip6to4_start() {
 		[[ ${ip} == "127."* ]] && continue
 		[[ ${ip} == "10."* ]] && continue
 		[[ ${ip} == "192.168."* ]] && continue
-		local i
+		local i=
 		for ((i=16; i<32; i++)); do
 			[[ ${ip} == "172.${i}."* ]] && break 
 		done
 		[[ ${i} -lt 32 ]] && continue
 	
 		veinfo "IPv4 address on ${!host}: ${ip}"
-		local ip6="$(printf "2002:%02x%02x:%02x%02x::1" ${ip//./ })"
+		local ip6=$(printf "2002:%02x%02x:%02x%02x::1" ${ip//./ })
 		veinfo "Derived IPv6 address: ${ip6}"
 
 		# Now apply our IPv6 address to our config

@@ -14,7 +14,7 @@ apipa_depend() {
 #
 # Tries to detect a config based on arpinging things
 apipa_start() {
-	local iface="$1" i1 i2 addr i=0
+	local iface="$1" i1= i2= addr= i=0
 
 	interface_exists "$1" true || return 1
 	

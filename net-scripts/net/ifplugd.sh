@@ -34,7 +34,7 @@ ifplugd_check_installed() {
 #
 # Start ifplugd on an interface
 ifplugd_pre_start() {
-	local iface="$1" ifvar="$(bash_variable "$1")" timeout opts
+	local iface="$1" ifvar=$(bash_variable "$1") timeout= opts=
 	local pidfile="/var/run/ifplugd.${iface}.pid"
 
 	# We don't start ifplugd if we're being called from the background
@@ -50,7 +50,7 @@ ifplugd_pre_start() {
 
 	# We need a valid MAC address
 	# It's a basic test to ensure it's not a virtual interface
-	local mac="$(interface_get_mac_address "${iface}")"
+	local mac=$(interface_get_mac_address "${iface}")
 	if [[ -z ${mac} ]] ; then
 		vewarn "ifplugd only works on interfaces with a valid MAC address"
 		return 0
@@ -112,7 +112,7 @@ ifplugd_pre_start() {
 	local i=0
 	while true ; do
 		if service_started "net.${iface}" ; then
-			local addr="$(interface_get_address "${iface}")"
+			local addr=$(interface_get_address "${iface}")
 			einfo "${iface} configured with address ${addr}"
 			exit 0
 		fi

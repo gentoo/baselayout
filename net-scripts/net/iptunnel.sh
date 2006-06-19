@@ -21,8 +21,8 @@ iptunnel_expose() {
 #
 # Create the device, give it the right perms
 iptunnel_pre_start() {
-	local iface="$1" opts ifvar="$(bash_variable "$1")"
-
+	local iface="$1" opts= ifvar=$(bash_variable "$1")
+	
 	# Get our options
 	eval opts="iptunnel_${ifvar}"
 	[[ -z ${!opts} ]] && return 0

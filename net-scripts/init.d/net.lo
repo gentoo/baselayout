@@ -84,8 +84,8 @@ calculate_metric() {
 	local iface="$1" metric="$2"
 
 	# Have we already got a metric?
-	local m="$( awk '$1=="'${iface}'" && $2=="00000000" { print $7 }' \
-		/proc/net/route )"
+	local m=$(awk '$1=="'${iface}'" && $2=="00000000" { print $7 }' \
+		/proc/net/route)
 	if [[ -n ${m} ]] ; then
 		echo "${m}"
 		return 0
@@ -101,7 +101,7 @@ calculate_metric() {
 	done < /proc/net/route
 
 	# Now, sort our metrics
-	metrics="$(echo -e "${metrics}" | sort -n)"
+	metrics=$(echo -e "${metrics}" | sort -n)
 
 	# Now, find the lowest we can use
 	local gotbase=false
@@ -118,7 +118,7 @@ calculate_metric() {
 #
 # Returns the CIDR of a given netmask
 netmask2cidr() {
-	local binary="" i bin
+	local binary= i= bin=
 
 	for i in ${1//./ }; do
 		bin=""
@@ -146,11 +146,11 @@ is_function() {
 # wraps function calls - for example function_wrap(this, that)
 # maps function names this_* to that_*
 function_wrap() {
-	local i
+	local i=
 
 	is_function "${2}_depend" && return
 
-	for i in $( typeset -f | grep -o '^'"${1}"'_[^ ]*' ); do
+	for i in $(typeset -f | grep -o '^'"${1}"'_[^ ]*'); do
 		eval "${2}${i#${1}}() { ${i} \"\$@\"; }"
 	done
 }
@@ -170,7 +170,7 @@ function_wrap() {
 # "192.168.3.2/24 brd +"
 # "192.168.3.3/24 brd +"
 expand_parameters() {
-	local x="$( eval echo ${@// /_} )"
+	local x=$(eval echo ${@// /_})
 	local -a a=( ${x} )
 
 	a=( "${a[@]/#/\"}" )
@@ -185,14 +185,14 @@ expand_parameters() {
 configure_variables() {
 	local iface="$1" option1="$2" option2="$3"
 
-	local mod func x i
-	local -a ivars ovars1 ovars2
-	local ifvar="$(bash_variable "${iface}")"
+	local mod= func= x= i=
+	local -a ivars=() ovars1=() ovars2=()
+	local ifvar=$(bash_variable "${iface}")
 
 	for mod in ${MODULES[@]}; do
 		is_function ${mod}_variables || continue
 		for v in $(${mod}_variables) ; do
-			x=""
+			x=
 			[[ -n ${option2} ]] && x="${v}_${option2}[@]"
 			[[ -z ${!x} ]] && x="${v}_${option1}[@]"
 			[[ -n ${!x} ]] && eval "${v}_${ifvar}=( \"\${!x}\" )"
@@ -311,9 +311,9 @@ modules_check_installed() {
 
 # bool modules_check_user(void)
 modules_check_user() {
-	local iface="$1" ifvar="$(bash_variable "${IFACE}")"
-	local i j k l nmods="${#MODULES[@]}"
-	local -a umods
+	local iface="$1" ifvar=$(bash_variable "${IFACE}")
+	local i= j= k= l= nmods="${#MODULES[@]}"
+	local -a umods=()
 
 	# Has the interface got any specific modules?
 	umods="modules_${ifvar}[@]"
@@ -376,7 +376,7 @@ modules_check_user() {
 		fi
 
 		if is_function "${umods[i]}_provide" ; then
-			mod="$(${umods[i]}_provide )"
+			mod=$(${umods[i]}_provide)
 		else
 			mod="${umods[i]}"
 		fi
@@ -419,7 +419,7 @@ modules_check_user() {
 #
 # Sort our modules
 modules_sort() {
-	local i j nmods=${#MODULES[@]} m
+	local i= j= nmods=${#MODULES[@]} m=
 	local -a provide=() provide_list=() after=() dead=() sorted=() sortedp=()
 
 	# Make our provide list
@@ -469,7 +469,7 @@ modules_sort() {
 	
 	# We then use the below code to provide a topologial sort
     module_after_visit() {
-        local name=$1 i x
+        local name="$1" i= x=
 
 		for ((i=0; i<nmods; i++)); do
 			[[ ${MODULES[i]} == "$1" ]] && break
@@ -496,12 +496,12 @@ modules_sort() {
 
 # bool modules_check_depends(bool showprovides)
 modules_check_depends() {
-	local showprovides="${1:-false}" nmods="${#MODULES[@]}" i j needmod
-	local missingdeps p interface=false
+	local showprovides="${1:-false}" nmods="${#MODULES[@]}" i= j= needmod=
+	local missingdeps= p= interface=false
 
 	for (( i=0; i<nmods; i++ )); do
 		if is_function "${MODULES[i]}_need" ; then
-			for needmod in $( ${MODULES[i]}_need ); do
+			for needmod in $(${MODULES[i]}_need); do
 				missingdeps=true
 				for (( j=0; j<nmods; j++ )); do
 					if [[ ${needmod} == "${MODULES[j]}" \
@@ -518,7 +518,7 @@ modules_check_depends() {
 		fi
 
 		if is_function "${MODULES[i]}_functions" ; then
-			for f in $( ${MODULES[i]}_functions ); do
+			for f in $(${MODULES[i]}_functions); do
 				if ! is_function "${f}" ; then
 					eerror "${MODULES[i]}: missing required function \"${f}\""
 					return 1
@@ -547,10 +547,10 @@ modules_check_depends() {
 # Loads the defined handler and modules for the interface
 # Returns 0 on success, otherwise 1
 modules_load()  {
-	local iface="$1" starting="${2:-true}" MODULE p=false i j k
-	local -a x
+	local iface="$1" starting="${2:-true}" MODULE= p=false i= j= k=
+	local -a x=()
 	local RC_INDENTATION="${RC_INDENTATION}"
-	local -a PROVIDES WRAP_MODULES
+	local -a PROVIDES=() WRAP_MODULES=()
 
 	if ! is_loopback "${iface}" ; then
 		x="modules_force_${iface}[@]"
@@ -592,7 +592,7 @@ modules_load()  {
 
 		# If no provide is given, assume module name
 		if is_function "${MODULES[i]}_provide" ; then
-			PROVIDES[i]="$(${MODULES[i]}_provide)"
+			PROVIDES[i]=$(${MODULES[i]}_provide)
 		else
 			PROVIDES[i]="${MODULES[i]}"
 		fi
@@ -655,8 +655,8 @@ modules_load()  {
 iface_start() {
 	local iface="$1" mod config_counter="-1" x config_worked=false
 	local RC_INDENTATION="${RC_INDENTATION}"
-	local -a config fallback fallback_route conf a b 
-	local ifvar="$(bash_variable "$1")" i j metric=0
+	local -a config=() fallback=() fallback_route=() conf=() a=() b=()
+	local ifvar=$(bash_variable "$1") i= j= metric=0
 
 	# pre Start any modules with
 	for mod in ${MODULES[@]}; do
@@ -809,7 +809,7 @@ iface_start() {
 # iface_start ran.  Instead query for current configuration and bring
 # down the interface.
 iface_stop() {
-	local iface="$1" i aliases need_begin=false mod
+	local iface="$1" i= aliases= need_begin=false mod=
 	local RC_INDENTATION="${RC_INDENTATION}"
 
 	# pre Stop any modules
@@ -825,7 +825,7 @@ iface_stop() {
 	# Collect list of aliases for this interface.
 	# List will be in reverse order.
 	if interface_exists "${iface}" ; then
-		aliases="$(interface_get_aliases_rev "${iface}")"
+		aliases=$(interface_get_aliases_rev "${iface}")
 	fi
 
 	# Stop aliases before primary interface.
@@ -875,7 +875,7 @@ iface_stop() {
 # We cannot check that the device exists ourselves as modules like
 # tuntap make create it.
 run_start() {
-	local iface="$1" IFVAR="$(bash_variable "$1")"
+	local iface="$1" IFVAR=$(bash_variable "$1")
 
 	# We do this so users can specify additional addresses for lo if they
 	# need too - additional routes too
@@ -914,7 +914,7 @@ run_start() {
 
 	# If config is set to noop and the interface is up with an address
 	# then we don't start it
-	local config
+	local config=
 	config="config_${IFVAR}[@]"
 	config=( "${!config}" )
 	if [[ ${config[0]} == "noop" ]] && interface_is_up "${iface}" true ; then
@@ -962,12 +962,12 @@ run_start() {
 # stop returns non-zero to indicate failure bringing down device.
 # In all other cases stop returns 0 to indicate success.
 run_stop() {
-	local iface="$1" IFVAR="$(bash_variable "$1")" x
+	local iface="$1" IFVAR=$(bash_variable "$1") x
 
 	# Load our ESSID variable so users can use it in predown() instead
 	# of having to write code.
-	local ESSID="$(get_options ESSID)" ESSIDVAR
-	[[ -n ${ESSID} ]] && ESSIDVAR="$(bash_variable "${ESSID}")"
+	local ESSID=$(get_options ESSID) ESSIDVAR=
+	[[ -n ${ESSID} ]] && ESSIDVAR=$(bash_variable "${ESSID}")
 
 	# Call user-defined predown function if it exists
 	if is_function predown ; then
@@ -1021,7 +1021,7 @@ run_stop() {
 run() {
 	local iface="$1" cmd="$2" r=1 RC_INDENTATION="${RC_INDENTATION}"
 	local starting=true
-	local -a MODULES mods
+	local -a MODULES=() mods=()
 	local IN_BACKGROUND="${IN_BACKGROUND}"
 
 	if [[ ${IN_BACKGROUND} == "true" || ${IN_BACKGROUND} == "1" ]] ; then
