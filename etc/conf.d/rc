@@ -65,6 +65,11 @@ RC_NET_STRICT_CHECKING="no"
 
 RC_DOWN_INTERFACE="yes"
 
+# RC_DOWN_HARDDISK allows you to specify if RC will put harddisks to
+# standby mode when it stops.
+
+RC_DOWN_HARDDISK="yes"
+
 # RC_VOLUME_ORDER allows you to specify, or even remove the volume setup
 # for various volume managers (MD, EVMS2, LVM, DM, etc).  Note that they are
 # stopped in reverse order.

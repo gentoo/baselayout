@@ -20,7 +20,7 @@ start() {
 		cp /etc/nologin /etc/nologin.boot &> /dev/null
 	fi
 
-	if [[ -e /etc/sysctl.conf ]] ; then
+	if [[ -e /etc/sysctl.conf ]] && ! is_vps_sys ; then
 		ebegin $"Configuring kernel parameters"
 		/sbin/sysctl -q -p /etc/sysctl.conf
 		eend 0
@@ -65,9 +65,12 @@ start() {
 	fi
 
 	# Reset pam_console permissions if we are actually using it
-	if [[ -x /sbin/pam_console_apply && ! -c /dev/.devfsd && \
-	      -n $(grep -v -e '^[[:space:]]*#' /etc/pam.d/* | grep 'pam_console') ]] ; then
-		/sbin/pam_console_apply -r
+	if [[ -x /sbin/pam_console_apply && ! -c /dev/.devfsd ]] ; then
+		if [[ -n $(grep -v -e '^[[:space:]]*#' /etc/pam.d/* | grep 'pam_console') ]] ; then
+			if ! is_vps_sys ; then
+				/sbin/pam_console_apply -r
+			fi
+		fi
 	fi
 
 	# Create the .keep to stop portage from removing /var/lock

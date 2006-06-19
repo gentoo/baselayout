@@ -42,6 +42,7 @@ RC_USE_CONFIG_PROFILE="${RC_USE_CONFIG_PROFILE:-yes}"
 RC_FORCE_AUTO="${RC_FORCE_AUTO:-no}"
 RC_DEVICES="${RC_DEVICES:-auto}"
 RC_DOWN_INTERFACE="${RC_DOWN_INTERFACE:-yes}"
+RC_DOWN_HARDDISK="${RC_DOWN_HARDDISK:-yes}"
 RC_VOLUME_ORDER="${RC_VOLUME_ORDER:-raid evms lvm dm}"
 
 #
@@ -628,6 +629,16 @@ is_uml_sys() {
 	grep -qs 'UML' /proc/cpuinfo
 }
 
+# bool is_openvz_sys()
+#
+#   return 0 if the currently running system is an OpenVZ VPS
+#
+#   EXAMPLE:  if is_openvz_sys ; then ...
+#
+is_openvz_sys() {
+	grep -qs '^envID:[[:space:]]*[1-9]' /proc/self/status
+}
+
 # bool is_vserver_sys()
 #
 #   return 0 if the currently running system is a Linux VServer
@@ -635,7 +646,18 @@ is_uml_sys() {
 #   EXAMPLE:  if is_vserver_sys ; then ...
 #
 is_vserver_sys() {
-	grep -qs '^s_context:[[:space:]]*[1-9]' /proc/self/status
+	grep -qs '^s_context:[[:space:]]*[1-9]' /proc/self/status \
+	|| grep -qs '^VxID:[[:space:]]*[1-9]' /proc/self/status
+}
+
+# bool is_vps_sys()
+#
+#   return 0 if the currently running system is a Linux VServer or OpenVZ
+#
+#   EXAMPLE:  if is_vps_sys ; then ...
+#
+is_vps_sys() {
+	is_vserver_sys || is_openvz_sys
 }
 
 # bool is_xenU_sys()
@@ -840,6 +862,17 @@ else
 	HILITE=$'\e[36;01m'
 	BRACKET=$'\e[34;01m'
 	NORMAL=$'\e[0m'
+fi
+
+# VPS stuff needs to force some values
+if is_vserver_sys ; then
+	RC_NET_STRICT_CHECKING="none"
+fi
+if is_vps_sys ; then
+	RC_TTY_NUMBER="0"
+	RC_DEVICES="static"
+	RC_DOWN_INTERFACE="no"
+	RC_DOWN_HARDDISK="no"
 fi
 
 ##############################################################################

@@ -389,7 +389,11 @@ if [[ ${SOFTLEVEL} == "reboot" || ${SOFTLEVEL} == "shutdown" ]] ; then
 fi
 
 if [[ ${SOFTLEVEL} == "single" ]] ; then
-	/sbin/sulogin ${CONSOLE}
+	if is_vps_sys ; then
+		/sbin/halt -f
+	else
+		/sbin/sulogin ${CONSOLE}
+	fi
 	exit 0
 fi
 

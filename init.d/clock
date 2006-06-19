@@ -12,14 +12,11 @@ setupopts() {
 	if is_uml_sys ; then
 		TBLURB="UML"
 		fakeit=1
-	elif is_vserver_sys ; then
-		TBLURB="VServer"
+	elif is_vps_sys ; then
+		TBLURB="VPS"
 		fakeit=1
 	elif is_xenU_sys ; then
 		TBLURB="xen"
-		fakeit=1
-	elif [[ -d /proc/vz ]] ; then
-		TBLURB="VZ"
 		fakeit=1
 	elif grep -q ' cobd$' /proc/devices ; then
 		TBLURB="coLinux"

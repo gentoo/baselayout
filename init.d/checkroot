@@ -10,7 +10,7 @@ start() {
 	local retval=0
 
 	if [[ ! -f /fastboot && -z ${CDBOOT} ]] \
-	&& ! is_net_fs / && ! is_union_fs / ; then
+	&& ! is_net_fs / && ! is_union_fs / && ! is_vps_sys ; then
 		if touch -c / >& /dev/null ; then
 			ebegin $"Remounting root filesystem read-only"
 			mount -n -o remount,ro /
@@ -69,7 +69,7 @@ start() {
 
 	# Should we mount root rw ?  the touch check is to see if the / is
 	# already mounted rw in which case there's nothing for us to do
-	if mount -vf -o remount / 2> /dev/null | \
+	if ! is_vps_sys && mount -vf -o remount / 2> /dev/null | \
 	   awk '{ if ($6 ~ /rw/) exit 0; else exit 1; }' && \
 	   ! touch -c / >& /dev/null
 	then

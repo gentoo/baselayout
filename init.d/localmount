@@ -7,6 +7,8 @@ depend() {
 }
 
 start() {
+	is_vps_sys && return 0
+
 	# Mount local filesystems in /etc/fstab.
 	ebegin $"Mounting local filesystems"
 	mount -at noproc,noshm${NET_FS_LIST:+,no}${NET_FS_LIST// /,no} \

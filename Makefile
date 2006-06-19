@@ -70,16 +70,8 @@ basedev-linux:
 	if ! test -d $(DEVDIR) ; then \
 		install -m 0755 -d $(DEVDIR) ; \
 	fi
-	if ! test -e $(DEVDIR)/null ; then \
-		mknod -m 0660 $(DEVDIR)/null c 1 3 ; \
-	fi
-	if ! test -e $(DEVDIR)/console ; then \
-		mknod -m 0660 $(DEVDIR)/console c 5 1 ; \
-	fi
-	# tty1 is used by splashutils for silent mode
-	if ! test -e $(DEVDIR)/tty1 ; then \
-		mknod -m 0660 $(DEVDIR)/tty1 c 4 1 ; \
-	fi
+	( curdir=`pwd` ; cd $(DEVDIR) ; \
+		$$curdir/sbin/MAKEDEV generic-base ) 
 
 dev-linux:
 	install -m 0755 -d $(DEVDIR)

@@ -6,6 +6,12 @@
 #  Drop to a shell, remount / ro, and then reboot
 #
 single_user() {
+	if is_vps_sys ; then
+		einfo "Halting"
+		/sbin/halt -f
+		return
+	fi
+	
 	/sbin/sulogin ${CONSOLE}
 	einfo "Unmounting filesystems"
 	if [[ -c /dev/null ]] ; then
@@ -30,21 +36,23 @@ if [[ ${RC_INTERACTIVE} == "yes" ]] ; then
 fi
 check_statedir /proc
 
-ebegin "Mounting proc at /proc"
-if [[ ${RC_USE_FSTAB} = "yes" ]] ; then
-	mntcmd=$(get_mount_fstab /proc)
-else
-	unset mntcmd
+if ! is_vserver_sys ; then
+	ebegin "Mounting proc at /proc"
+	if [[ ${RC_USE_FSTAB} = "yes" ]] ; then
+		mntcmd=$(get_mount_fstab /proc)
+	else
+		unset mntcmd
+	fi
+	try mount -n ${mntcmd:--t proc proc /proc -o noexec,nosuid,nodev}
+	eend $?
 fi
-try mount -n ${mntcmd:--t proc proc /proc -o noexec,nosuid,nodev}
-eend $?
 
 # Read off the kernel commandline to see if there's any special settings
 # especially check to see if we need to set the  CDBOOT environment variable
 # Note: /proc MUST be mounted
 [[ -f /sbin/livecd-functions.sh ]] && livecd_read_commandline
 
-if [[ $(get_KV) -ge "$(KV_to_int '2.6.0')" ]] ; then
+if ! is_vps_sys && [[ $(get_KV) -ge "$(KV_to_int '2.6.0')" ]] ; then
 	if [[ -d /sys ]] ; then
 		ebegin "Mounting sysfs at /sys"
 		if [[ ${RC_USE_FSTAB} == "yes" ]] ; then

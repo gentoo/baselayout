@@ -1,0 +1,123 @@
+--- MAKEDEV.orig	2006-04-22 19:22:27.499598250 +0200
++++ MAKEDEV	2006-04-22 19:27:14.013504250 +0200
+@@ -102,8 +102,8 @@
+ 
+ if [ "$opt_V" ]
+ then
+-	echo "This is Debian MAKEDEV.  For version info, try 'dpkg --list makedev'"
+-	echo "See /usr/share/doc/makedev/ for more information on Debian MAKEDEV."
++	echo "This is MAKEDEV based on Debian's makedev_2.3.1-78."
++	echo "See the MAKEDEV(8) manpage for more information."
+ 	exit 0
+ fi
+ 
+@@ -308,60 +308,25 @@
+ 	done
+ }
+ 
++get_arch() {
++	case `uname -m` in
++		arm*)   echo arm;;
++		i?86)   echo i386;;
++		ppc*)   echo powerpc;;
++		s390*)  echo s390;;
++		sh*)    echo sh;;
++		x86_64) echo i386;;
++		# alpha|hppa|ia64|m68k|mips|sparc
++		*)      echo $a;;
++	esac
++}
++
+ for arg in $*
+ do
+ #	case `cvt $arg` in
+ 	case $arg in
+ 	generic)
+-		# pick the right generic-<arch> using dpkg's knowledge
+-		case `dpkg --print-installation-architecture` in
+-			alpha)
+-				$0 $opts generic-alpha
+-				;;
+-			arm)
+-				$0 $opts generic-arm
+-				;;
+-			hppa)
+-				$0 $opts generic-hppa
+-				;;
+-			i386)
+-				$0 $opts generic-i386
+-				;;
+-			amd64)
+-				$0 $opts generic-i386
+-				;;
+-			ia64)
+-				$0 $opts generic-ia64
+-				;;
+-			m68k)
+-				$0 $opts generic-m68k
+-				;;
+-			mips)
+-				$0 $opts generic-mips
+-				;;
+-			mipsel)
+-				$0 $opts generic-mipsel
+-				;;
+-			powerpc)
+-				$0 $opts generic-powerpc
+-				;;
+-			ppc64)
+-				$0 $opts generic-powerpc
+-				;;
+-			s390)
+-				$0 $opts generic-s390
+-				;;
+-			sh*)	
+-				$0 $opts generic-sh
+-				;;
+-			sparc)
+-				$0 $opts generic-sparc
+-				;;
+-			*)
+-				echo "$0: no support for generic on this arch" >&2
+-				exit 1
+-				;;
+-		esac
++		$0 $opts generic-`get_arch`
+ 		;;
+ 	generic-alpha)
+ 		$0 $opts std
+@@ -596,6 +561,24 @@
+ 		symlink mouse sunmouse
+ 		makedev openprom  c 10 139 root root 0664
+ 		;;
++	generic-vserver)
++		makedev null c 1 3 $public
++		makedev zero c 1 5 $public
++		makedev full c 1 7 $public
++		makedev random c 1 8 $public
++		makedev urandom c 1 9 $readable
++		makedev tty c 5 0 $tty
++		$0 $opts fd
++		$0 $opts ptmx
++		;;
++	generic-openvz)
++		$0 $opts generic-vserver
++		$0 $opts pty
++		;;
++	generic-*)
++		echo "$0: no support for generic on this arch" >&2
++		exit 1
++		;;
+ 	local)
+ 		$0.local $opts
+ 		;;
+@@ -690,8 +673,7 @@
+ 		done
+ 		;;
+ 	adb)
+-		# pick the right arch device using dpkg's knowledge
+-		case `dpkg --print-installation-architecture` in
++		case `get_arch` in
+ 			powerpc)
+ 				# ADB bus devices (char)
+ 				makedev adb c 56 0 $mouse
