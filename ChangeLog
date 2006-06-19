@@ -3,6 +3,8 @@
 
   19 Jun 2006; Roy Marples <uberlord@gentoo.org>:
 
+    Preliminary support for dscape ieee80211 stack devices.
+
     Apply vserver patches from Benedikt Boehm.
 
   18 Jun 2006; Mike Frysinger <vapier@gentoo.org>:
