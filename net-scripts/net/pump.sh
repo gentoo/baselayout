@@ -39,7 +39,7 @@ pump_check_installed() {
 # Return 0 if pump is not running or we stop it successfully
 # Otherwise 1
 pump_stop() {
-	local iface="$1" count e
+	local iface="$1" count= e=
 
 	# We check for a pump process first as querying for status
 	# causes pump to spawn a process
@@ -62,7 +62,7 @@ pump_stop() {
 # Returns 0 (true) when a dhcp address is obtained, otherwise
 # the return value from pump
 pump_start() {
-	local iface="$1" opts d ifvar="$(bash_variable "$1")" search
+	local iface="$1" opts= d= ifvar=$(bash_variable "$1") search=
 
 	interface_exists "${iface}" true || return 1
 
@@ -93,7 +93,7 @@ pump_start() {
 	eend $? || return $?
 
 	# pump succeeded, show address retrieved
-	local addr="$(interface_get_address "${iface}")"
+	local addr=$(interface_get_address "${iface}")
 	einfo "${iface} received address ${addr}"
 
 	return 0

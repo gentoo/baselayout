@@ -38,14 +38,14 @@ udhcpc_check_installed() {
 # Stops udhcpc running on an interface
 # Return 1 if we fail to stop udhcpc (if it's running) otherwise 0
 udhcpc_stop() {
-	local iface="$1" pidfile="/var/run/udhcpc-$1.pid" d
+	local iface="$1" pidfile="/var/run/udhcpc-$1.pid" d=
 
 	[[ ! -f ${pidfile} ]] && return 0
 
 	ebegin "Stopping udhcpc on ${iface}"
-	local pid="$(<"${pidfile}")" e=true
+	local pid=$(<"${pidfile}") e=true
 
-	local ifvar="$(bash_variable "${iface}")"
+	local ifvar=$(bash_variable "${iface}")
 	d="dhcp_${ifvar}"
 	[[ -z ${!d} ]] && d="dhcp" 
 
@@ -69,12 +69,12 @@ udhcpc_stop() {
 #
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 udhcpc_start() {
-	local iface="$1" opts pidfile="/var/run/udhcpc-$1.pid"
+	local iface="$1" opts= pidfile="/var/run/udhcpc-$1.pid"
 	local cachefile="/var/cache/udhcpc-$1.lease" d
 
 	interface_exists "${iface}" true || return 1
 
-	local ifvar="$(bash_variable "${iface}" )" opts 
+	local ifvar=$(bash_variable "${iface}" ) opts= 
 	opts="udhcpc_${ifvar}"
 	opts="${!opts}"
 
@@ -83,7 +83,7 @@ udhcpc_start() {
 
 	if [[ " ${!d} " != *" nosendhost "* ]]; then
 		if [[ ! " ${opts}" =~ " -([hH] |-hostname=)" ]]; then
-			local hname="$(hostname)"
+			local hname=$(hostname)
 			[[ -n ${hname} && ${hname} != "(none)" && ${hname} != "localhost" ]] \
 				&& opts="${opts} --hostname=${hname}"
 		fi
@@ -118,7 +118,7 @@ udhcpc_start() {
 	# Try and load the cache if it exists
 	if [[ -f ${cachefile} ]]; then
 		if [[ " ${opts}" != *" --request="* && " ${opts} " != *" -r "* ]]; then
-			local x="$(<"${cachefile}")"
+			local x=$(<"${cachefile}")
 			# Check for a valid ip
 			[[ ${x} == *.*.*.* ]] && opts="${opts} --request=${x}"
 		fi
@@ -138,7 +138,7 @@ udhcpc_start() {
 	eend $? || return 1
 
 	# DHCP succeeded, show address retrieved
-	local addr="$(interface_get_address "${iface}")"
+	local addr=$(interface_get_address "${iface}")
 	einfo "${iface} received address ${addr}"
 
 	return 0

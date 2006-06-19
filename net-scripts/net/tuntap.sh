@@ -55,7 +55,7 @@ tuntap_exists() {
 #
 # Create the device, give it the right perms
 tuntap_pre_start() {
-	local iface="$1" ifvar="$(bash_variable "$1")"
+	local iface="$1" ifvar=$(bash_variable "$1")
 	local tuntap="tuntap_${ifvar}"
 
 	[[ -z ${!tuntap} ]] && return 0

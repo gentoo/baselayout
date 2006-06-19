@@ -70,10 +70,10 @@ bridge_exists() {
 # Creates the bridge - no ports are added here though
 # Returns 0 on success otherwise 1
 bridge_create() {
-	local iface="$1" ifvar="$(bash_variable "$1")" x i opts
+	local iface="$1" ifvar=$(bash_variable "$1") x= i= opts=
 
 	ebegin "Creating bridge ${iface}"
-	x="$(brctl addbr "${iface}" 2>&1)"
+	x=$(brctl addbr "${iface}" 2>&1)
 	if [[ -n ${x} ]] ; then
 		if [[ ${x//Package not installed/} != "${x}" ]] ; then
 			eend 1 "Bridging (802.1d) support is not present in this kernel"
@@ -87,7 +87,7 @@ bridge_create() {
 	for i in "${!opts}" ; do
 		x="${i/ / ${iface} }"
 		[[ ${x} == "${i}" ]] && x="${x} ${iface}"
-		x="$(brctl ${x} 2>&1 1>/dev/null)"
+		x=$(brctl ${x} 2>&1 1>/dev/null)
 		[[ -n ${x} ]] && ewarn "${x}"
 	done
 	eend 0
@@ -97,11 +97,11 @@ bridge_create() {
 #
 # Adds the port to the bridge
 bridge_add_port() {
-	local iface="$1" port="$2" e
+	local iface="$1" port="$2" e=
 
 	interface_set_flag "${port}" promisc true
 	interface_up "${port}"
-	e="$(brctl addif "${iface}" "${port}" 2>&1)"
+	e=$(brctl addif "${iface}" "${port}" 2>&1)
 	if [[ -n ${e} ]] ; then
 		interface_set_flag "${port}" promisc false
 		echo "${e}" >&2
@@ -124,7 +124,7 @@ bridge_delete_port() {
 # This can also be called by non-bridges so that the bridge can be created
 # dynamically
 bridge_pre_start() {
-	local iface="$1" ports briface i ifvar="$(bash_variable "$1")" opts
+	local iface="$1" ports= briface= i= ifvar=$(bash_variable "$1") opts=
 	ports="bridge_${ifvar}[@]"
 	briface="bridge_add_${ifvar}"
 	opts="brctl_${ifvar}[@]"
@@ -171,18 +171,18 @@ bridge_pre_start() {
 # Removes the device
 # returns 0
 bridge_stop() {
-	local iface="$1" ports i deletebridge=false extra=""
+	local iface="$1" ports= i= deletebridge=false extra=""
 
 	if bridge_exists "${iface}" ; then
 		ebegin "Destroying bridge ${iface}"
 		interface_down "${iface}"
-		ports="$(bridge_get_ports "${iface}")"
+		ports=$(bridge_get_ports "${iface}")
 		deletebridge=true
 		eindent
 	else
 		# Work out if we're added to a bridge for removal or not
 		ports="${iface}"
-		iface="$(bridge_get_bridge "${iface}")"
+		iface=$(bridge_get_bridge "${iface}")
 		[[ -z ${iface} ]] && return 0
 		extra=" from ${iface}"
 	fi

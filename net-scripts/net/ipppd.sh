@@ -30,7 +30,7 @@ ipppd_check_installed() {
 #
 # Returns 0 (true) when successful, non-zero otherwise
 ipppd_pre_start() {
-	local iface="$1" opts itype="$(interface_type "$1")"
+	local iface="$1" opts= itype=$(interface_type "$1")
 	local pidfile="/var/run/ipppd-${iface}.pid"
 
 	# Check that we are a valid isdn interface
@@ -39,7 +39,7 @@ ipppd_pre_start() {
 	# Check that the interface exists
 	interface_exists "${iface}" true || return 1
 
-	local ifvar="$(bash_variable "${iface}")"
+	local ifvar=$(bash_variable "${iface}")
 	# Might or might not be set in conf.d/net
 	opts="ipppd_${ifvar}"
 
@@ -68,5 +68,4 @@ ipppd_stop() {
 	eend $?
 }
 
-# vim:ts=4
 # vim: set ts=4 :

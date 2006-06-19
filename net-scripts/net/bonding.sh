@@ -38,8 +38,8 @@ bonding_exists() {
 #
 # Bonds the interface
 bonding_pre_start() {
-	local iface="$1" s ifvar="$(bash_variable "$1")"
-	local -a slaves
+	local iface="$1" s= ifvar=$(bash_variable "$1")
+	local -a slaves=()
 
 	slaves="slaves_${ifvar}[@]"
 	[[ -z ${!slaves} ]] && return 0
@@ -86,16 +86,16 @@ bonding_pre_start() {
 #
 # Always returns 0 (true) 
 bonding_stop() {
-	local iface="$1" slaves s
+	local iface="$1" slaves= s=
 
 	# return silently if this is not a bonding interface
 	! bonding_exists "${iface}" && return 0
 
 	# don't trust the config, get the active list instead
-	slaves="$( \
+	slaves=$( \
 		sed -n -e 's/^Slave Interface: //p' "/proc/net/bonding/${iface}" \
 		| tr '\n' ' ' \
-	)"
+	)
 	[[ -z ${slaves} ]] && return 0
 
 	# remove all slaves

@@ -31,7 +31,7 @@ pppd_check_installed() {
 pppd_start() {
 	${IN_BACKGROUND} && return 0
 
-	local iface="$1" ifvar="$(bash_variable "$1")" opts="" link= i=
+	local iface="$1" ifvar=$(bash_variable "$1") opts= link= i=
 	if [[ ${iface%%[0-9]*} != "ppp" ]] ; then
 		eerror "PPP can only be invoked from net.ppp[0-9]"
 		return 1
@@ -81,6 +81,8 @@ pppd_start() {
 		# fd 3 maybe in use, so find another one
 		while [[ -e /proc/$$/fd/${fd} ]] ; do
 			((fd++))
+			# Don't use fd 5
+			[[ ${fd} == 5 ]] && ((fd++))
 		done
 
 		password="${!password//\\/\\\\}"
@@ -179,7 +181,7 @@ pppd_start() {
 	ebegin "Running pppd"
 	mark_service_inactive "net.${iface}"
 	eval start-stop-daemon --start --exec /usr/sbin/pppd \
-		--pidfile "/var/run/ppp-${iface}.pid" -- "${opts}" >/dev/null
+		--pidfile "/var/run/ppp-${iface}.pid" -- "${opts}" >/dev/null 
 
 	if [[ $? != "0" ]] ; then
 		eend $? "Failed to start PPP"
@@ -188,7 +190,7 @@ pppd_start() {
 	fi
 
 	if [[ " ${opts} " == *" updetach "* ]] ; then
-		local addr="$(interface_get_address "${iface}")"
+		local addr=$(interface_get_address "${iface}")
 		einfo "${iface} received address ${addr}"
 	else
 		einfo "Backgrounding ..."

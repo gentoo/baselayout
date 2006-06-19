@@ -22,7 +22,7 @@ adsl_check_installed() {
 #
 # Checks to see if the ADSL script has been created or not
 adsl_setup_vars() {
-	local iface="$1" startstop="$2" cfgexe
+	local iface="$1" startstop="$2" cfgexe=
 
 	if [[ -x /usr/sbin/pppoe-start ]]; then
 		exe="/usr/sbin/pppoe-${startstop}"
@@ -52,7 +52,7 @@ adsl_setup_vars() {
 #
 # Returns 0 (true) when successful, non-zero otherwise
 adsl_start() {
-	local iface="$1" exe cfgfile user ifvar="$(bash_variable "$1")"
+	local iface="$1" exe= cfgfile= user= ifvar=$(bash_variable "$1")
 
 	adsl_setup_vars "${iface}" start || return 1
 
@@ -74,7 +74,7 @@ adsl_start() {
 # Returns 0 when there is no ADSL to stop or we stop ADSL successfully
 # Otherwise 1
 adsl_stop() {
-	local iface="$1" exe cfgfile
+	local iface="$1" exe= cfgfile=
 
 	adsl_check_installed || return 1
 	[[ ! -f "/var/run/rp-pppoe-${iface}.pid" ]] && return 0

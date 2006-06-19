@@ -28,7 +28,7 @@ arping_sleep() {
 	local iface="$1"
 	[[ ${ARPING_SLEPT} == "1" ]] && return
 
-	local ifvar="$(bash_variable "${iface}")"
+	local ifvar=$(bash_variable "${iface}")
 	local s="arping_sleep_${ifvar}"
 	s="${!s}"
 	if [[ -z ${s} ]] ; then
@@ -60,22 +60,22 @@ arping_address_exists() {
 
 	arping_sleep
 
-	local ifvar="$(bash_variable "${iface}")"
+	local ifvar=$(bash_variable "${iface}")
 	w="arping_wait_${ifvar}"
 	w="${!w}"
 	[[ -z ${w} ]] && w="${arping_wait:-3}"
 
 	if [[ -x /sbin/arping ]] ; then
-		foundmac="$(arping -c 2 -w "${w}" -D -f -I "${iface}" \
+		foundmac=$(arping -c 2 -w "${w}" -D -f -I "${iface}" \
 			"${ip}" 2>/dev/null \
-			| sed -n 's/.*\[\([^]]*\)\].*/\U\1/p')"
+			| sed -n 's/.*\[\([^]]*\)\].*/\U\1/p')
 	elif [[ -x /usr/sbin/arping2 ]] ; then
 		for (( i=0; i<w; i++ )) ; do
-			foundmac="$(arping2 -r -0 -c 1 -i "${iface}" \
-				"${ip}" 2>/dev/null)"
+			foundmac=$(arping2 -r -0 -c 1 -i "${iface}" \
+				"${ip}" 2>/dev/null)
 			if [[ $? == "0" ]] ; then
-				foundmac="$(echo "${foundmac}" \
-					| tr '[:lower:]' '[:upper:]')"
+				foundmac=$(echo "${foundmac}" \
+					| tr '[:lower:]' '[:upper:]')
 				break
 			fi
 			foundmac=
@@ -99,8 +99,8 @@ arping_address_exists() {
 # arpings a list of gateways
 # If one is foung then apply it's configuration
 arping_start() {
-	local iface="$1" gateways x conf i
-	local ifvar="$(bash_variable "${iface}")"
+	local iface="$1" gateways= x= conf= i=
+	local ifvar=$(bash_variable "${iface}")
 
 	einfo "Pinging gateways on ${iface} for configuration"
 
@@ -116,8 +116,8 @@ arping_start() {
 		local -a a=( ${x//,/ } )
 		local ip="${a[0]}" mac="${a[1]}" extra=
 		if [[ -n ${mac} ]] ; then
-			mac="$(echo "${mac}" | tr '[:lower:]' '[:upper:]')"
-			extra="(MAC ${mac})"
+			mac=$(echo "${mac}" | tr '[:lower:]' '[:upper:]')
+			extra=(MAC ${mac})
 		fi
 
 		vebegin "${ip} ${extra}"

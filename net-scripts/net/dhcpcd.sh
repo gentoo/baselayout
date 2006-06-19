@@ -43,13 +43,13 @@ dhcpcd_check_installed() {
 # Returns 0 (true) when a DHCP address dropped
 # otherwise return 1
 dhcpcd_stop() {
-	local iface=$1 signal pidfile="/var/run/dhcpcd-$1.pid" d
+	local iface=$1 signal= pidfile="/var/run/dhcpcd-$1.pid" d=
 
 	[[ ! -f ${pidfile} ]] && return 0
 
 	ebegin "Stopping dhcpcd on ${iface}"
 	
-	local ifvar="$(bash_variable "${iface}")"
+	local ifvar=$(bash_variable "${iface}")
 	d="dhcp_${ifvar}"
 	d=" ${!d} "
 	[[ ${d} == "  " ]] && d=" ${dhcp} "
@@ -68,8 +68,8 @@ dhcpcd_stop() {
 #
 # Returns 0 (true) when a DHCP address is obtained, otherwise 1
 dhcpcd_start() {
-	local iface="$1" opts pidfile="/var/run/dhcpcd-$1.pid"
-	local ifvar="$(bash_variable "${iface}")" metric d
+	local iface="$1" opts= pidfile="/var/run/dhcpcd-$1.pid"
+	local ifvar=$(bash_variable "${iface}") metric= d=
 
 	interface_exists "${iface}" true || return 1
 
@@ -88,7 +88,7 @@ dhcpcd_start() {
 
 	# We transmit the hostname by default
 	if [[ " ${d} " != *" nosendhost "* && " ${opts} " != *" -h "* ]]; then
-		local hname="$(hostname)"
+		local hname=$(hostname)
 		[[ -n ${hname} && ${hname} != "(none)" && ${hname} != "localhost" ]] \
 			&& opts="-h \"${hname}\" ${opts}"
 	fi
@@ -107,7 +107,7 @@ dhcpcd_start() {
 	eend $? || return 1
 
 	# DHCP succeeded, show address retrieved
-	local addr="$( interface_get_address "${iface}" )"
+	local addr=$(interface_get_address "${iface}")
 	einfo "${iface} received address ${addr}"
 
 	return 0

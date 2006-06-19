@@ -66,7 +66,7 @@ vlan_check_kernel() {
 #
 # Setup vconfig
 vlan_pre_start() {
-	local iface="$1" opts i x e ifvar="$(bash_variable "$1")"
+	local iface="$1" opts= i= x= e= ifvar=$(bash_variable "$1")
 	
 	opts="vconfig_${ifvar}[@]"
 	[[ -z ${!opts} ]] && return 0
@@ -82,7 +82,7 @@ vlan_pre_start() {
 			x="${opts[i]/ / ${iface} }"
 			[[ ${x} == "${opts[i]}" ]] && x="${x} ${iface}"
 		fi
-		e="$(vconfig ${x} 2>&1 1>/dev/null)"
+		e=$(vconfig ${x} 2>&1 1>/dev/null)
 		[[ -z ${e} ]] && continue
 		eerror "vconfig ${x}"
 		eerror "${e}"
@@ -98,8 +98,8 @@ vlan_pre_start() {
 #
 # Always returns 0 (true) 
 vlan_post_start() {
-	local iface="$1" vlan vlans vlans_old ifname ifvar="$(bash_variable "$1")"
-	vlans="vlans_${ifvar}[@]"
+	local iface="$1" ifvar=$(bash_variable "$1")
+	local vlan= vlans= vlans_old= ifname= vlans="vlans_${ifvar}[@]"
 	local start="vlan_start_${ifvar}"
 
 	# BACKWARD COMPATIBILITY: check for old vlan variable name
@@ -114,7 +114,7 @@ vlan_post_start() {
 	# Start vlans for this interface
 	for vlan in ${!vlans} ; do
 		einfo "Adding VLAN ${vlan} to ${iface}"
-		e="$(vconfig add "${iface}" "${vlan}" 2>&1 1>/dev/null)"
+		e=$(vconfig add "${iface}" "${vlan}" 2>&1 1>/dev/null)
 		if [[ -n ${e} ]] ; then
 			eend 1 "${e}"
 			continue
@@ -127,10 +127,10 @@ vlan_post_start() {
 		[[ -n ${!start} && ${!start} != "yes" ]] && continue
 		
 		# We need to work out the interface name of our new vlan id
-		ifname="$( \
+		ifname=$( \
 			sed -n -e 's/^\([^ \t]*\) *| '"${vlan}"' *| .*'"${iface}"'$/\1/p' \
 			/proc/net/vlan/config
-		)"
+		)
 		mark_service_started "net.${ifname}"
 		iface_start "${ifname}" || mark_service_stopped "net.${ifname}"
 	done
@@ -144,7 +144,7 @@ vlan_post_start() {
 #
 # Always returns 0 (true) 
 vlan_stop() {
-	local iface="$1" vlan
+	local iface="$1" vlan=
 
 	vlan_check_installed || return 0
 

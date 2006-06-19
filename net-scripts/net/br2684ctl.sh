@@ -19,7 +19,7 @@ br2684ctl_check_installed() {
 
 # bool br2684ctl_start(char *iface)
 br2684ctl_pre_start() {
-	local iface="$1" ifvar="$(bash_variable "$1")" opts=
+	local iface="$1" ifvar=$(bash_variable "$1") opts=
 	local number="${iface#${iface%%[0-9]}}"
 	
 	opts="br2684ctl_${ifvar}"

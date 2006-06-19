@@ -22,8 +22,7 @@ rename_expose() {
 #
 # Checks to see if we have to rename the interface 
 rename_pre_start() {
-	local iface="$1" newname="" mac ifvar="$(bash_variable "$1")"
-
+	local iface="$1" newname= mac= ifvar=$(bash_variable "$1")
 	interface_exists "${iface}" || return 0
 
 	newname="rename_${ifvar}"
