@@ -44,7 +44,7 @@ DEFAULT_LEVEL = hdparm local netmount
 # Basically, don't hit the users key config files
 ETC_SKIP = hosts passwd shadow group fstab
 
-KEEP_DIRS = boot proc home sys \
+KEEP_DIRS = boot dev proc home sys \
 	mnt/cdrom mnt/floppy \
 	usr/local/bin usr/local/sbin usr/local/share/doc usr/local/share/man \
 	var/lib/init.d var/run
