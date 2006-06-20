@@ -869,10 +869,12 @@ if is_vserver_sys ; then
 	RC_NET_STRICT_CHECKING="none"
 fi
 if is_vps_sys ; then
+	RC_INTERACTIVE="no"
 	RC_TTY_NUMBER="0"
 	RC_DEVICES="static"
 	RC_DOWN_INTERFACE="no"
 	RC_DOWN_HARDDISK="no"
+	RC_VOLUME_ORDER=
 fi
 
 ##############################################################################

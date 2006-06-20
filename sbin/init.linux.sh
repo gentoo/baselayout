@@ -138,7 +138,7 @@ else
 fi
 
 # From linux-2.5.68 we need to mount /dev/pts again ...
-if [[ "$(get_KV)" -ge "$(KV_to_int '2.5.68')" ]] ; then
+if [[ "$(get_KV)" -ge "$(KV_to_int '2.5.68')" ]] && ! is_vserver_sys ; then
 	have_devpts=$(awk '($2 == "devpts") { print "yes"; exit 0 }' /proc/filesystems)
 
 	if [[ ${have_devpts} = "yes" ]] ; then
@@ -186,6 +186,5 @@ if touch /var/run/utmp 2>/dev/null ; then
 else
 	ewarn "Skipping /var/run/utmp initialization (ro root?)"
 fi
-
 
 # vim:ts=4

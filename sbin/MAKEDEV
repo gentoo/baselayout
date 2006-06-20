@@ -572,11 +572,9 @@ do
 		makedev full c 1 7 $public
 		makedev random c 1 8 $public
 		makedev urandom c 1 9 $readable
+		makedev tty c 5 0 $tty
 		$0 $opts fd
 		$0 $opts ptmx
-		;;
-	generic-openvz)
-		$0 $opts generic-vserver
 		$0 $opts pty
 		;;
 	generic-*)

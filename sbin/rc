@@ -382,7 +382,12 @@ if [[ ${SOFTLEVEL} == "reboot" || ${SOFTLEVEL} == "shutdown" ]] ; then
 
 	# Call halt.sh with LC_ALL=C so that bash doesn't load any locales
 	# which could interfere with unmounting /usr
-	LC_ALL=C exec /etc/init.d/halt.sh "${SOFTLEVEL}"
+	if is_vps_sys ; then
+		halt -w
+		LC_ALL=C exec /etc/init.d/"${SOFTLEVEL}".sh
+	else
+		LC_ALL=C exec /etc/init.d/halt.sh "${SOFTLEVEL}"
+	fi
 
 	# Should never get here
 	exit 0

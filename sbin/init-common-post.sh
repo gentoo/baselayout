@@ -68,7 +68,9 @@ for fs in tmpfs ramfs ramdisk ; do
 		break
 	fi
 done
-if [[ ${svcmount} == "yes" ]] ; then
+
+# vservers cannot mount anything
+if [[ ${svcmount} == "yes" ]] && ! is_vserver_sys ; then
 	ebegin "Mounting ${svcfstype} at ${svcdir}"
 	case "${svcfstype}" in
 	ramfs)
@@ -104,7 +106,7 @@ rm -rf $(ls -d1 "${svcdir}/"* 2>/dev/null | \
 echo "sysinit" > "${svcdir}/softlevel"
 echo "${svcinteractive}" > "${svcdir}/interactive"
 
-# Ensure all critical services have are in the boot runlevel
+# Ensure all critical services we have are in the boot runlevel
 check_critical_services
 
 # Update the dependency cache
