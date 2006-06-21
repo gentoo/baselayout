@@ -67,9 +67,6 @@ load_modules() {
 }
 
 start() {
-	# Don't load any modules for vservers
-	is_vps_sys && return 0
-	
 	local KV=$(uname -r)
 	local KV_MAJOR=$(KV_major "${KV}")
 	local KV_MINOR=$(KV_minor "${KV}")

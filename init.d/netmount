@@ -32,8 +32,6 @@ remove_net_fs() {
 }
 
 start() {
-	is_vps_sys && return 0
-
 	local rcfilesystems=${NET_FS_LIST}
 
 	# Only try to mount NFS filesystems if portmap was started.
@@ -57,8 +55,6 @@ start() {
 }
 
 stop() {
-	is_vps_sys && return 0
-
 	local rcfilesystems=${NET_FS_LIST}
 
 	# We let the afs init script handle unmounting afs stuff
