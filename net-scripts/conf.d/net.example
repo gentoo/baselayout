@@ -668,7 +668,7 @@
 #modules_eth0=( "!plug" )
 
 # To use specific ifplugd options, fex specifying wiress mode
-#ifplugd_eth0="--api-mode wlan"
+#ifplugd_eth0="--api-mode=wlan"
 # man ifplugd for more options
 
 ##############################################################################
