@@ -60,7 +60,7 @@ wpa_supplicant_exists() {
 	[[ -L /sys/class/net/$1/wiphy ]] && return 0
 	
 	[[ ! -e /proc/net/wireless ]] && return 1
-	grep -q "^[ \t]*$1:" /proc/net/wireless
+	[[ $(</proc/net/wireless) =~ $'\n'"[ \t]*$1:" ]]
 }
 
 # char* wpa_supplicant_get_essid(char *interface)

@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  23 Jun 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Replace grep with [[ $(</proc/foo) =~ reges ]]  where appropriate.
+
   19 Jun 2006; Roy Marples <uberlord@gentoo.org>:
 
     Preliminary support for dscape ieee80211 stack devices.

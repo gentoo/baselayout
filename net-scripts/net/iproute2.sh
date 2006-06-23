@@ -78,7 +78,7 @@ iproute2_down() {
 iproute2_is_up() {
 	local check="\<UP\>" addr="${2:-false}"
 	${addr} && check="${check}.*inet "
-	ip addr show "$1" | tr '\n' ' ' | grep -Eq "${check}"
+	[[ $(ip addr show "$1") =~ "${check}" ]]
 }
 
 # void iproute2_set_flag(char *iface, char *flag, bool enabled)
@@ -102,7 +102,7 @@ iproute2_get_address() {
 #
 # Return 0 if the link is ethernet, otherwise 1.
 iproute2_is_ethernet() {
-	ip link show "$1" | grep -q "^[[:space:]]*link/ether[[:space:]]*"
+	[[ $(ip link show "$1") =~ $'\n'"[[:space:]]*link/ether[[:space:]]*" ]]
 }
 
 # void iproute2_get_mac_address(char *interface)

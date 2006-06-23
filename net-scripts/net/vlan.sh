@@ -38,7 +38,7 @@ vlan_check_installed() {
 # Returns 0 if the interface is a vlan, otherwise 1
 vlan_exists() {
 	[[ ! -d /proc/net/vlan ]] && return 1
-	egrep -q "^$1[[:space:]]+" /proc/net/vlan/config
+	[[ $(</proc/net/vlan/config) =~ $'\n'"$1[[:space:]]+" ]]
 }
 
 # char* vlan_get_vlans(char *interface)

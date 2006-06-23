@@ -622,40 +622,31 @@ is_union_fs() {
 # bool is_uml_sys()
 #
 #   return 0 if the currently running system is User Mode Linux
-#
-#   EXAMPLE:  if is_uml_sys ; then ...
-#
 is_uml_sys() {
-	grep -qs 'UML' /proc/cpuinfo
+    [[ -e /proc/cpuinfo ]] || return 1
+    [[ $(</proc/cpuinfo) =~ "UML" ]]
 }
 
 # bool is_openvz_sys()
 #
 #   return 0 if the currently running system is an OpenVZ VPS
-#
-#   EXAMPLE:  if is_openvz_sys ; then ...
-#
 is_openvz_sys() {
-	grep -qs '^envID:[[:space:]]*[1-9]' /proc/self/status
+    [[ -e /proc/self/status ]] || return 1
+    [[ $'\n'$(</proc/self/status) =~ $'\n''envID:[[:space:]]*[1-9]' ]]
 }
 
 # bool is_vserver_sys()
 #
 #   return 0 if the currently running system is a Linux VServer
-#
-#   EXAMPLE:  if is_vserver_sys ; then ...
-#
 is_vserver_sys() {
-	grep -qs '^s_context:[[:space:]]*[1-9]' /proc/self/status \
-	|| grep -qs '^VxID:[[:space:]]*[1-9]' /proc/self/status
+    [[ -e /proc/self/status ]] || return 1
+    [[ $'\n'$(</proc/self/status) =~ $'\n''s_context:[[:space:]]*[1-9]' \
+	|| $'\n'$(</proc/self/status) =~ $'\n''VxID:[[:space:]]*[1-9]' ]]
 }
 
 # bool is_vps_sys()
 #
 #   return 0 if the currently running system is a Linux VServer or OpenVZ
-#
-#   EXAMPLE:  if is_vps_sys ; then ...
-#
 is_vps_sys() {
 	is_vserver_sys || is_openvz_sys
 }
@@ -663,14 +654,10 @@ is_vps_sys() {
 # bool is_xenU_sys()
 #
 #   return 0 if the currently running system is an unprivileged Xen domain
-#
-#   EXAMPLE:  if is_xenU_sys ; then ...
-#
 is_xenU_sys() {
 	[[ ! -d /proc/xen ]] && return 1
 	[[ ! -r /proc/xen/capabilities ]] && return 1
-	grep -q "control_d" /proc/xen/capabilities && return 1
-	return 0
+	[[ ! $(</proc/xen/capabilities) =~ "control_d" ]]
 }
 
 # bool get_mount_fstab(path)

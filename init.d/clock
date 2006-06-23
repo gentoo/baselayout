@@ -18,7 +18,7 @@ setupopts() {
 	elif is_xenU_sys ; then
 		TBLURB="xen"
 		fakeit=1
-	elif grep -q ' cobd$' /proc/devices ; then
+	elif [[ $(</proc/devices)$'\n' =~ ' cobd'$'\n' ]] ; then
 		TBLURB="coLinux"
 		fakeit=1
 	elif [[ $(uname -m) == s390* ]] ; then
@@ -48,7 +48,7 @@ setupopts() {
 	myopts="${myopts} ${CLOCK_OPTS}"
 
 	# Make sure user isn't using rc.conf anymore.
-	if grep -qs ^CLOCK= /etc/rc.conf ; then
+	if [[ '$\n'$(</etc/rc.conf) =~ $'\n'"CLOCK=" ]] ; then
 		ewarn $"CLOCK should not be set in /etc/rc.conf but in /etc/conf.d/clock"
 	fi
 }

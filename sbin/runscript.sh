@@ -642,9 +642,11 @@ for arg in $* ; do
 
 		# Simple way to try and detect if the service use svc_{start,stop}
 		# to restart if it have a custom restart() funtion.
-		if [[ -n $(egrep '^[[:space:]]*restart[[:space:]]*()' "/etc/init.d/${SVCNAME}") ]] ; then
-			if [[ -z $(egrep 'svc_stop' "/etc/init.d/${SVCNAME}") || \
-			      -z $(egrep 'svc_start' "/etc/init.d/${SVCNAME}") ]] ; then
+		svcres=$(sed -ne '/[[:space:]]*restart[[:space:]]*()/,/}/ p' \
+			/etc/init.d/"${SVCNAME}" )
+		if [[ -n ${svcres} ]] ; then
+			if [[ ! ${svcres} =~ "svc_stop" \
+				|| ! ${svcres} =~ "svc_start" ]] ; then
 				echo
 				ewarn "Please use 'svc_stop; svc_start' and not 'stop; start' to"
 				ewarn "restart the service in its custom 'restart()' function."

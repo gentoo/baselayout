@@ -44,8 +44,7 @@ ifconfig_check_installed() {
 #
 # Returns 1 if the interface exists, otherwise 0
 ifconfig_exists() {
-	local e=$(ifconfig -a | grep -o "^$1") report="${2:-false}"
-	[[ -n ${e} ]] && return 0
+	[[ $'\n'$(ifconfig -a) =~ $'\n'"$1 " ]] && return 0
 
 	if ${report} ; then
 		eerror "network interface $1 does not exist"
@@ -109,8 +108,7 @@ ifconfig_down() {
 ifconfig_is_up() {
 	local check="\<UP\>" addr="${2:-false}"
 	${addr} && check="\<inet addr:.*${check}"
-	ifconfig "$1" | tr '\n' ' ' | grep -Eq "${check}" && return 0
-	return 1
+	[[ $(ifconfig "$1") =~ "${check}" ]]
 }
 
 # void ifconfig_set_flag(char *iface, char *flag, bool enabled)
@@ -137,7 +135,8 @@ ifconfig_get_address() {
 #
 # Return 0 if the link is ethernet, otherwise 1.
 ifconfig_is_ethernet() {
-	ifconfig "$1" | grep -q "^$1[[:space:]]*Link encap:Ethernet[[:space:]]"
+	[[ $'\n'$(ifconfig "$1") \
+		=~ $'\n'"$1[[:space:]]*Link encap:Ethernet[[:space:]]" ]]
 }
 
 # void ifconfig_get_mac_address(char *interface)

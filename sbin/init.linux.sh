@@ -109,8 +109,10 @@ else
 
 	# Check devfs prerequisites and kernel params
 	if [[ ${devfs} == "yes" ]] ; then
-		if get_bootparam "nodevfs" || [[ ${udev} == "yes" ]] || \
-		   ! grep -qs '[[:space:]]devfs$' /proc/filesystems ; then
+		if get_bootparam "nodevfs" || [[ ${udev} == "yes" \
+			|| ! -r /proc/filesystems ]] ; then
+			devfs="no"
+		elif [[ ! $(</proc/filesystems)$'\n' =~ '[[:space:]]devfs'$'\n' ]]; then
 			devfs="no"
 		fi
 	fi

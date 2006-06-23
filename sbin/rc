@@ -13,7 +13,7 @@ umask 022
 
 # Quick test to see if we can be interactive or not
 if [[ ${RC_INTERACTIVE:-yes} == "yes" ]] ; then
-	if tty -s && stty -a | grep -q " icanon" ; then
+	if tty -s && [[ $(stty -a) =~ " icanon" ]] ; then
 		RC_INTERACTIVE="yes"
 	else
 		RC_INTERACTIVE="no"

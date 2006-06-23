@@ -13,7 +13,7 @@ checkconfig() {
 	fi
 
 	# Make sure user isn't using rc.conf anymore
-	if grep -qs ^KEYMAP= /etc/rc.conf ; then
+	if [[ '$\n'$(</etc/rc.conf) ]] =~ $'\n'"KEYMAP=" ]] ; then
 		ewarn $"KEYMAP should not be set in /etc/rc.conf but in /etc/conf.d/keymaps"
 	fi
 }

@@ -675,7 +675,8 @@ service_started_daemon() {
 	local daemonfile="${svcdir}/daemons/${service}"
 
 	[[ ! -e ${daemonfile} ]] && return 1
-	grep -q '^RC_DAEMONS\['"${index}"'\]="'${daemon}'"$' "${daemonfile}"
+	[[ $'\n'$(<"${daemonfile}")'$\n' =~ \
+		$'\n''RC_DAEMONS\['"${index}"'\]="'${daemon}'"'$'\n' ]]
 }
 
 # bool net_service(service)
@@ -697,29 +698,28 @@ net_service() {
 #            so there have to be at least one other interface up.
 #      yes   All interfaces must be up.
 is_net_up() {
-	local netcount=0
-
 	case "${RC_NET_STRICT_CHECKING}" in
 		none)
 			return 0
 			;;
 		lo)
-			netcount=$(ls -1 "${svcdir}"/started/net.* 2> /dev/null | \
-			            egrep -c "\/net\..*$")
+			service_started "net.lo"
+			return $?
+			;;
+		yes)
+			for x in $(ls /etc/runlevels/${BOOTLEVEL}/net.* 2>/dev/null) \
+			$(ls /etc/runlevels/${SOFTLEVEL}/net.* 2>/dev/null) ; do
+				service_started "${x##*/}" || return 1
+			done
+			return 0
 			;;
 		*)
-			netcount=$(ls -1 "${svcdir}"/started/net.* 2> /dev/null | \
-			            grep -v 'net\.lo' | egrep -c "\/net\..*$")
-			;;
+			for x in $(ls "${svcdir}"/started/net.* 2>/dev/null) ; do
+				[[ ${x##*/} != "net.lo" ]] && return 0
+			done
+			return 1 
+		;;
 	esac
-
-	# Only worry about net.* services if this is the last one running,
-	# or if RC_NET_STRICT_CHECKING is set ...
-	if [[ ${netcount} -lt 1 || ${RC_NET_STRICT_CHECKING} == "yes" ]] ; then
-		return 1
-	fi
-
-	return 0
 }
 
 # bool dependon(service1, service2)

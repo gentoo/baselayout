@@ -46,8 +46,8 @@ pump_stop() {
 	pidof /sbin/pump &>/dev/null || return 0
 
 	# Check that pump is running on the interface
-	pump --status --interface "${iface}" 2>/dev/null \
-		| grep -q "^Device ${iface}" || return 0
+	[[ $(pump --status --interface "${iface}" 2>/dev/null) \
+		=~ "Device ${iface}" ]] || return 0
 
 	# Pump always releases the lease
 	ebegin "Stopping pump on ${iface}"

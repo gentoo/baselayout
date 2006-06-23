@@ -31,8 +31,8 @@ rename_pre_start() {
 	# We cannot rename vlan interfaces as /proc/net/vlan/config always
 	# returns the old interface name. We don't bail out though as it's
 	# not critical that the interface gets renamed.
-	if [[ -d /proc/net/vlan/config ]] ; then
-		if grep -q "^${iface} " /proc/net/vlan/config ; then
+	if is_function vlan_exists ; then
+		if vlan_exists "${iface}" ; then
 			eerror "Cannot rename VLAN interfaces"
 			return 0
 		fi
