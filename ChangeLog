@@ -3,6 +3,8 @@
 
   23 Jun 2006; Roy Marples <uberlord@gentoo.org>:
 
+    Fix rc-status broken link reporting properly, #137656
+
     Replace grep with [[ $(</proc/foo) =~ reges ]]  where appropriate.
 
   19 Jun 2006; Roy Marples <uberlord@gentoo.org>:
