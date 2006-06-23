@@ -71,10 +71,9 @@ iwconfig_exists() {
 # Echos a string showing whether WEP is enabled or disabled
 # for the given interface
 iwconfig_get_wep_status() {
-	local key=$(iwconfig "$1" | grep -i -o "Encryption key:[0-9,A-F]")
 	local mode= status="disabled"
 
-	if [[ -n ${key} ]]; then
+	if [[ $(iwconfig "$1") =~ $'\n'" +Encryption key:[0-9,A-F]" ]]; then
 		status="enabled"
 		mode=$(iwconfig "$1" | sed -n -e 's/^.*Security mode:\(.*[^ ]\).*/\1/p')
 		[[ -n ${mode} ]] && mode=" - ${mode}"
