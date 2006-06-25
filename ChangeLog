@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  25 Jun 2006; Mike Frysinger <vapier@gentoo.org>:
+
+    Make sure modprobe.conf is generated properly when done by hand otheriwse 
+    old syntax can leak in #132668 by Alexander Skwar.
+
   23 Jun 2006; Roy Marples <uberlord@gentoo.org>:
 
     Fix rc-status broken link reporting properly, #137656
