@@ -251,7 +251,7 @@ fi
 #
 
 if ! ${KERNEL_2_6} ; then
-	vewarn "Skipping ${CFG_NEW_FILE} generation (not needed for 2.6 kernels)"
+	vewarn "Skipping ${CFG_NEW_FILE} generation (not needed for 2.4 kernels)"
 
 elif ! type -p generate-modprobe.conf > /dev/null ; then
 	vewarn "Skipping ${CFG_NEW_FILE} generation (generate-modprobe.conf doesn't exist)"
