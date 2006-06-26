@@ -115,6 +115,19 @@ iwconfig_get_mode() {
 	iwgetid --mode "$1" | sed -n -e 's/^.*Mode:\(.*\)/\L\1/p'
 }
 
+iwconfig_set_mode() {
+	local iface="$1" mode="$2"
+	[[ ${mode} == $(iwconfig_get_mode "${iface}") ]] && return 0
+
+	# Devicescape stack requires the interface to be down
+	interface_down "${iface}"
+	if ! iwconfig "${iface}" mode "${mode}" ; then
+		eerror "${iface} does not support setting the mode to \"${mode}\""
+		return 1
+	fi
+	interface_up "${iface}"
+}
+
 # char* iwconfig_get_type(char *interface)
 #
 # Returns the type of interface - the IEEE part
@@ -207,14 +220,7 @@ iwconfig_setup_specific() {
 	ESSIDVAR=$(bash_variable "${ESSID}")
 	key=$(iwconfig_get_wep_key)
 
-	# We only change the mode if it's not the same
-	local cur_mode=$(iwconfig_get_mode "${iface}")
-	if [[ ${cur_mode} != "${mode}" ]]; then
-		if ! iwconfig "${iface}" mode "${mode}" ; then
-			eerror "${iface} does not support setting the mode to \"${mode}\""
-			return 1
-		fi
-	fi
+	iwconfig_set_mode "${iface}" "${mode}"
 
 	channel="channel_${ifvar}"
 	# We default the channel to 3
@@ -286,6 +292,12 @@ iwconfig_test_associated() {
 	# Some drivers don't set MAC to a bogus value when assocation is lost/fails
 	# whereas they do set link quality to 0
 
+	# Use sysfs if we can
+	if [[ -e /sys/class/net/${iface}/carrier ]] ; then
+		[[ $(</sys/class/net/"${iface}"/carrier) == "1" ]]
+		return $?
+	fi
+	
 	x="associate_test_${ifvar}"
 	ttype=$(echo "${!x:-mac}" | tr '[:upper:]' '[:lower:]')
 	if [[ ${ttype} != "mac" && ${ttype} != "quality" && ${ttype} != "all" ]]; then
@@ -335,16 +347,10 @@ iwconfig_wait_for_association() {
 # so we can fail gracefully without even trying to connect
 iwconfig_associate() {
 	local iface="$1" mode="${2:-managed}"
-	local mac="$3" wep_required="$4" w="(WEP Disabled)"
+	local mac="$3" wep_required="$4" freq="$5" w="(WEP Disabled)"
 	local dessid="${ESSID//\\\\/\\\\}" key=
 
-	local cur_mode=$(iwconfig_get_mode "${iface}")
-	if [[ ${cur_mode} != "${mode}" ]]; then
-		if ! iwconfig "${iface}" mode "${mode}" ; then
-			eerror "Unable to change mode to ${mode}"
-			return 1
-		fi
-	fi
+	iwconfig_set_mode "${iface}" "${mode}"
 
 	if [[ ${ESSID} == "any" ]]; then
 		iwconfig "${iface}" ap any 2>/dev/null
@@ -372,6 +378,7 @@ iwconfig_associate() {
 		[[ ${key} != "off" ]] && w=$(iwconfig_get_wep_status "${iface}")
 	fi
 
+	[[ -n ${freq} ]] && iwconfig "${iface}" freq "${freq}"
 	[[ -n ${mac} ]] && iwconfig "${iface}" ap "${mac}"
 
 	if ! iwconfig "${iface}" essid "${ESSID}" ; then
@@ -427,16 +434,7 @@ iwconfig_associate() {
 iwconfig_scan() {
 	local iface="$1" mode= x= ifvar=$(bash_variable "$1")
 
-	# First, we may need to change mode to scan in
-	x="scan_mode_${ifvar}"
-	mode=$(echo "${!x}" | tr '[:upper:]' '[:lower:]')
-	if [[ -n ${mode} ]]; then
-		if ! iwconfig "${iface}" mode "${mode}" ; then
-			ewarn "${iface} does not support setting the mode to \"${mode}\""
-		fi
-	fi
-
-	# Next we set any private driver ioctls needed
+	# Set any private driver ioctls needed
 	x="iwpriv_scan_pre_${ifvar}"
 	if [[ -n ${!x} ]]; then
 		if ! eval iwpriv "${iface}" "${!x}" ; then
@@ -475,6 +473,9 @@ iwconfig_scan() {
 				;;
 			*'Encryption key:'*)
 				enc[i]="${line#*:}"
+				;;
+			*Frequency:*)
+				freq[i]="${line#*:}"
 				;;
 			*Quality*)
 				qual[i]="${line#*:}"
@@ -515,11 +516,6 @@ iwconfig_scan() {
 		fi
 	fi
 
-	# Change back mode if needed
-	x="mode_${ifvar}"
-	x=$(echo "${!x:-managed}" | tr '[:upper:]' '[:lower:]')
-	[[ ${mode} != "${x}" ]] && iwconfig "${iface}" mode "${x}"
-
 	# Strip any duplicates
 	local i= j= x="${#mac[@]}" y=
 	for (( i=0; i<x-1; i++ )) ; do
@@ -536,6 +532,7 @@ iwconfig_scan() {
 				unset essid[y]
 				unset mode[y]
 				unset enc[y]
+				unset freq[y]
 			fi
 		done
 	done
@@ -544,6 +541,7 @@ iwconfig_scan() {
 	essid=( "${essid[@]}" )
 	mode=( "${mode[@]}" )
 	enc=( "${enc[@]}" )
+	freq=( "${freq[@]}" )
 
 	for (( i=0; i<${#mac[@]}; i++ )); do
 		# Don't like ad-hoc nodes by default
@@ -558,6 +556,7 @@ iwconfig_scan() {
 		essid_APs[i]="${essid[${sortline[x]}]}"
 		mode_APs[i]="${mode[${sortline[x]}]}"
 		enc_APs[i]="${enc[${sortline[x]}]}"
+		freq_APs[i]="${freq[${sortline[x]}]}"
 	done
 
 	return 0
@@ -629,6 +628,7 @@ iwconfig_scan_report() {
 		unset mode_APs[i]
 		unset mac_APs[i]
 		unset enc_APs[i]
+		unset freq_APs[i]
 	done
 
 	# We need to squash our arrays so indexes work again
@@ -636,6 +636,7 @@ iwconfig_scan_report() {
 	mode_APs=( "${mode_APs[@]}" )
 	mac_APs=( "${mac_APs[@]}" )
 	enc_APs=( "${enc_APs[@]}" )
+	freq_APs=( "${freq_APs[@]}" )
 }
 
 # bool iwconfig_force_preferred(char *iface)
@@ -678,7 +679,7 @@ iwconfig_connect_preferred() {
 			if [[ ${essid} == "${essid_APs[i]}" ]]; then
 				ESSID="${essid}"
 				iwconfig_associate "${iface}" "${mode_APs[i]}" "${mac_APs[i]}" \
-					"${enc_APs[i]}" && return 0
+					"${enc_APs[i]}" "${freq_APs[i]}" && return 0
 				break
 			fi
 		done
@@ -705,7 +706,7 @@ iwconfig_connect_not_preferred() {
 		if ! ${has_preferred} ; then
 			ESSID="${essid_APs[i]}"
 			iwconfig_associate "${iface}" "${mode_APs[i]}" "${mac_APs[i]}" \
-				"${enc_APs[i]}" && return 0
+				"${enc_APs[i]}" "${freq_APs[i]}" && return 0
 		fi
 	done
 
@@ -749,11 +750,13 @@ iwconfig_strip_associated() {
 				unset mode_Aps[j]
 				unset mac_APs[j]
 				unset enc_APs[j]
+				unset freq_APs[j]
 				# We need to squash our arrays so that indexes work
 				essid_APs=( "${essid_APs[@]}" )
 				mode_APs=( "${mode_APs[@]}" )
 				mac_APs=( "${mac_APs[@]}" )
 				enc_APs=( "${enc_APs[@]}" )
+				freq_APs=( "${freq_APs[@]}" )
 				break
 			fi
 		done
@@ -777,7 +780,7 @@ iwconfig_strip_associated() {
 # variables for the ESSID
 iwconfig_configure() {
 	local iface="$1" e= x= ifvar=$(bash_variable "$1")
-	local -a essid_APs=() mac_APs=() mode_APs=() enc_APs=()
+	local -a essid_APs=() mac_APs=() mode_APs=() enc_APs=() freq_APs=()
 
 	ESSID="essid_${ifvar}"
 	ESSID="${!ESSID}"
@@ -795,18 +798,9 @@ iwconfig_configure() {
 		return 1
 	fi
 
-	# We only change the mode if it's not the same as some drivers
-	# only do managed and throw an error changing to managed
-	local cur_mode=$(iwconfig_get_mode "${iface}")
-	if [[ ${cur_mode} != "${x}" ]]; then
-		if ! iwconfig "${iface}" mode "${x}" ; then
-			eerror "${iface} does not support setting the mode to \"${x}\""
-			return 1
-		fi
-	fi
-
 	# Has an ESSID been forced?
 	if [[ -n ${ESSID} ]]; then
+		iwconfig_set_mode "${iface}" "${x}"
 		iwconfig_associate "${iface}" && return 0
 		[[ ${ESSID} == "any" ]] && iwconfig_force_preferred "${iface}" && return 0
 
