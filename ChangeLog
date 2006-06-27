@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  27 Jun 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Document that depend_eth0() only works in conf.d/net and
+    not conf.d/net.$profile, #137727.
+
   27 Jun 2006; Mike Frysinger <vapier@gentoo.org>:
 
     Make sure modules-update generates the devfs config files properly #136174.
