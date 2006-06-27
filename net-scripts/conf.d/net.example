@@ -346,6 +346,8 @@
 # depend_vlan1() {
 #	need net.eth0
 # }
+# NOTE: depend functions only work in /etc/conf.d/net
+# and not in profile configs such as /etc/conf.d/net.foo
 
 #-----------------------------------------------------------------------------
 # Bonding
@@ -362,7 +364,8 @@
 #depend_br0() {
 #       need net.eth0 net.eth1
 #}
-
+# NOTE: depend functions only work in /etc/conf.d/net
+# and not in profile configs such as /etc/conf.d/net.foo
 
 #-----------------------------------------------------------------------------
 # PPP
@@ -467,6 +470,8 @@
 #depend_ppp0() {
 #	need net.nas0
 #}
+# NOTE: depend functions only work in /etc/conf.d/net
+# and not in profile configs such as /etc/conf.d/net.foo
 
 #-----------------------------------------------------------------------------
 # ADSL
@@ -566,7 +571,8 @@
 #depend_br0() {
 #	need net.eth0 net.eth1
 #}
-
+# NOTE: depend functions only work in /etc/conf.d/net
+# and not in profile configs such as /etc/conf.d/net.foo
 # NOTE: This creates an interface called br0 - you can give the interface
 # any name you like
 
@@ -613,10 +619,13 @@
 # depend_6to4() {
 #	need net.eth0
 # }
+# NOTE: depend functions only work in /etc/conf.d/net
+# and not in profile configs such as /etc/conf.d/net.foo
 # To ensure that eth0 is configured before 6to4. Of course, the tunnel could be
 # any name and this also works for any configured interface.
 # NOTE: If you're not using iproute2 then your 6to4 tunnel has to be called
 # sit0 - otherwise use a different name like 6to4 in the example above.
+
 
 #-----------------------------------------------------------------------------
 # System
