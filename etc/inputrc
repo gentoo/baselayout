@@ -3,6 +3,14 @@
 # For more information on how this file works, please see the
 # INITIALIZATION FILE section of the readline(3) man page
 #
+# Quick dirty little note:
+#  To get the key sequence for binding, you can abuse bash.
+#  While running bash, hit CTRL+V, and then type the key sequence.
+#  So, typing 'ALT + left arrow' in Konsole gets you back:
+#    ^[[1;3D
+#  The readline entry to make this skip back a word will then be:
+#    "\e[1;3D" backward-word
+#
 
 # do not bell on tab-completion
 #set bell-style none
@@ -34,6 +42,7 @@ $if mode=emacs
 # konsole / xterm / rxvt (escape + arrow key)
 "\e\e[C": forward-word
 "\e\e[D": backward-word
+# konsole (alt + arrow key)
 # aterm / eterm (control + arrow key)
 "\eOc": forward-word
 "\eOd": backward-word
