@@ -698,6 +698,8 @@ net_service() {
 #            so there have to be at least one other interface up.
 #      yes   All interfaces must be up.
 is_net_up() {
+	local x=
+	
 	case "${RC_NET_STRICT_CHECKING}" in
 		none)
 			return 0
