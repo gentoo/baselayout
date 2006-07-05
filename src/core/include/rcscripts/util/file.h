@@ -57,7 +57,7 @@ int rc_rmtree (const char *pathname);
 /* The following return a pointer on success, or NULL with errno set on error.
  * If it returned NULL, but errno is not set, then there was no error, but
  * there is nothing to return. */
-char **rc_ls_dir (const char *pathname, int hidden);
+char **rc_ls_dir (const char *pathname, int hidden, int sort);
 
 /* Below two functions (rc_file_map and rc_file_unmap) are from
  * udev-050 (udev_utils.c).  Please see misc.c for copyright info.

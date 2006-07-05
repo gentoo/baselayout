@@ -242,7 +242,7 @@ rc_rmtree (const char *pathname)
       return -1;
     }
 
-  dirlist = rc_ls_dir (pathname, 1);
+  dirlist = rc_ls_dir (pathname, 1, 0);
   if ((NULL == dirlist) && (0 != errno))
     {
       /* Do not error out - caller should decide itself if it
@@ -291,7 +291,7 @@ error:
 }
 
 char **
-rc_ls_dir (const char *pathname, int hidden)
+rc_ls_dir (const char *pathname, int hidden, int sort)
 {
   DIR *dp;
   struct dirent *dir_entry;
@@ -337,7 +337,10 @@ rc_ls_dir (const char *pathname, int hidden)
 	      goto error;
 	    }
 
-	  str_list_add_item (dirlist, str_ptr, error);
+	  if (sort)
+	    str_list_add_item_sorted (dirlist, str_ptr, error);
+	  else
+	    str_list_add_item (dirlist, str_ptr, error);
 	}
     }
   while (NULL != dir_entry);

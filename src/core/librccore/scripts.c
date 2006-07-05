@@ -40,7 +40,7 @@ get_rcscripts (void)
   char *confd_file = NULL;
   int count;
 
-  file_list = rc_ls_dir (RCSCRIPTS_INITDDIR, 0);
+  file_list = rc_ls_dir (RCSCRIPTS_INITDDIR, 0, 0);
   if (NULL == file_list)
     {
       errno = ENOENT;

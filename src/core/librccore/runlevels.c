@@ -41,7 +41,7 @@ get_runlevel_dirs (void)
   char *dir_item;
   int count;
 
-  dir_list = rc_ls_dir (RUNLEVELS_DIR, 0);
+  dir_list = rc_ls_dir (RUNLEVELS_DIR, 0, 0);
   if (NULL == dir_list)
     {
       errno = ENOENT;
@@ -117,7 +117,7 @@ get_runlevels (void)
 
       INIT_LIST_HEAD (&runlevel_info->entries);
 
-      dir_list = rc_ls_dir (runlevel, 0);
+      dir_list = rc_ls_dir (runlevel, 0, 0);
       if (NULL == dir_list)
 	{
 	  if (0 != errno)
