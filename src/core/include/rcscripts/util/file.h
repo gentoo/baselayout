@@ -38,14 +38,14 @@
  * 1 if 'pathname' exist, and is the type requested, or else 0.
  * This is only if pathname is valid ...  They also might clear errno */
 int rc_file_exists (const char *pathname);
-int rc_is_file (const char *pathname, int follow_link);
+int rc_is_file (const char *pathname, bool follow_link);
 int rc_is_link (const char *pathname);
-int rc_is_dir (const char *pathname, int follow_link);
+int rc_is_dir (const char *pathname, bool follow_link);
 
 /* The following function do not care about errors - it only returns
  * the mtime of 'pathname' if it exists, and is the type requested,
  * or else 0.  It also might clear errno */
-time_t rc_get_mtime (const char *pathname, int follow_link);
+time_t rc_get_mtime (const char *pathname, bool follow_link);
 
 /* The following functions return 0 on success, or -1 with errno set on error. */
 #if !defined(HAVE_REMOVE)
@@ -57,7 +57,7 @@ int rc_rmtree (const char *pathname);
 /* The following return a pointer on success, or NULL with errno set on error.
  * If it returned NULL, but errno is not set, then there was no error, but
  * there is nothing to return. */
-char **rc_ls_dir (const char *pathname, int hidden, int sort);
+char **rc_ls_dir (const char *pathname, bool hidden, bool sort);
 
 /* Below two functions (rc_file_map and rc_file_unmap) are from
  * udev-050 (udev_utils.c).  Please see misc.c for copyright info.

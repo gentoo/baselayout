@@ -54,7 +54,7 @@ rc_file_exists (const char *pathname)
 }
 
 int
-rc_is_file (const char *pathname, int follow_link)
+rc_is_file (const char *pathname, bool follow_link)
 {
   struct stat buf;
   int retval;
@@ -92,7 +92,7 @@ rc_is_link (const char *pathname)
 }
 
 int
-rc_is_dir (const char *pathname, int follow_link)
+rc_is_dir (const char *pathname, bool follow_link)
 {
   struct stat buf;
   int retval;
@@ -111,7 +111,7 @@ rc_is_dir (const char *pathname, int follow_link)
 }
 
 time_t
-rc_get_mtime (const char *pathname, int follow_link)
+rc_get_mtime (const char *pathname, bool follow_link)
 {
   struct stat buf;
   int retval;
@@ -138,7 +138,7 @@ remove (const char *pathname)
   if (!check_arg_str (pathname))
     return -1;
 
-  if (1 == rc_is_dir (pathname, 0))
+  if (1 == rc_is_dir (pathname, FALSE))
     retval = rmdir (pathname);
   else
     retval = unlink (pathname);
@@ -199,7 +199,7 @@ rc_mktree (const char *pathname, mode_t mode)
 	    }
 	  /* Not a directory or symlink pointing to a directory */
 	}
-      else if (1 != rc_is_dir (temp_name, 1))
+      else if (1 != rc_is_dir (temp_name, TRUE))
 	{
 	  errno = ENOTDIR;
 	  DBG_MSG ("Component in pathname is not a directory!\n");
@@ -242,7 +242,7 @@ rc_rmtree (const char *pathname)
       return -1;
     }
 
-  dirlist = rc_ls_dir (pathname, 1, 0);
+  dirlist = rc_ls_dir (pathname, TRUE, FALSE);
   if ((NULL == dirlist) && (0 != errno))
     {
       /* Do not error out - caller should decide itself if it
@@ -255,7 +255,7 @@ rc_rmtree (const char *pathname)
     {
       /* If it is a directory, call rc_rmtree() again with
        * it as argument */
-      if (1 == rc_is_dir (dirlist[i], 0))
+      if (1 == rc_is_dir (dirlist[i], FALSE))
 	{
 	  if (-1 == rc_rmtree (dirlist[i]))
 	    {
@@ -291,7 +291,7 @@ error:
 }
 
 char **
-rc_ls_dir (const char *pathname, int hidden, int sort)
+rc_ls_dir (const char *pathname, bool hidden, bool sort)
 {
   DIR *dp;
   struct dirent *dir_entry;

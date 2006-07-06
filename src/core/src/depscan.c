@@ -66,7 +66,7 @@ create_directory (const char *name)
     return -1;
 
   /* Check if directory exist, and is not a symlink */
-  if (!rc_is_dir (name, 0))
+  if (!rc_is_dir (name, FALSE))
     {
       if (rc_file_exists (name))
 	{
