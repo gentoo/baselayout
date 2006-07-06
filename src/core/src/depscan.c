@@ -197,7 +197,7 @@ main (void)
       exit (EXIT_FAILURE);
     }
 
-  svcdir = rc_get_cnf_entry (RC_CONFD_FILE_NAME, SVCDIR_CONFIG_ENTRY);
+  svcdir = rc_get_cnf_entry (RC_CONFD_FILE_NAME, SVCDIR_CONFIG_ENTRY, NULL);
   if (NULL == svcdir)
     {
       EERROR ("Failed to get config entry '%s'!\n", SVCDIR_CONFIG_ENTRY);

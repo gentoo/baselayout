@@ -32,7 +32,7 @@
  * ('entry="$(pwd)"' or such), it will obviously not work, but current behaviour
  * should be fine for the type of variables we want. */
 char *
-rc_get_cnf_entry (const char *pathname, const char *entry)
+rc_get_cnf_entry (const char *pathname, const char *entry, const char *sep)
 {
   dyn_buf_t *dynbuf = NULL;
   char *buf = NULL;
@@ -99,7 +99,7 @@ rc_get_cnf_entry (const char *pathname, const char *entry)
 	      /* We might have 'entry=' and later 'entry="bar"',
 	       * so just continue for now ... we will handle
 	       * it below when 'value == NULL' */
-	      if (NULL != value)
+	      if ((!check_str(sep)) && (NULL != value))
 		{
 		  free (value);
 		  value = NULL;
@@ -107,17 +107,35 @@ rc_get_cnf_entry (const char *pathname, const char *entry)
 	      goto _continue;
 	    }
 
-	  /* If we have already allocated 'value', free it */
-	  if (NULL != value)
-	    free (value);
-
-	  value = xstrndup (token, strlen (token));
-	  if (NULL == value)
+	  if ((!check_str(sep)) ||
+	      ((check_str(sep)) && (NULL == value)))
 	    {
-	      free_dyn_buf (dynbuf);
-	      free (buf);
+	      /* If we have already allocated 'value', free it */
+	      if (NULL != value)
+		free (value);
 
-	      return NULL;
+	      value = xstrndup (token, strlen (token));
+	      if (NULL == value)
+		{
+		  free_dyn_buf (dynbuf);
+		  free (buf);
+
+		  return NULL;
+		}
+	    }
+	  else
+	    {
+	      value = xrealloc (value, strlen(value) + strlen(token) +
+				strlen(sep));
+	      if (NULL == value)
+		{
+		  free_dyn_buf (dynbuf);
+		  free (buf);
+
+		  return NULL;
+		}
+	      snprintf(value + strlen(value), strlen(token) + strlen(sep),
+		       "%s%s", sep, token);
 	    }
 
 	  /* We do not break, as there might be more than one entry

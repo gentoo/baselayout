@@ -37,7 +37,8 @@ rc_init (void)
   if (TRUE == rc_initialized)
     return 0;
 
-  rc_config_svcdir = rc_get_cnf_entry (RC_CONFD_FILE_NAME, SVCDIR_CONFIG_ENTRY);
+  rc_config_svcdir = rc_get_cnf_entry (RC_CONFD_FILE_NAME, SVCDIR_CONFIG_ENTRY,
+				       NULL);
   if (NULL == rc_config_svcdir)
     {
       DBG_MSG ("Failed to get config entry '%s'!\n", SVCDIR_CONFIG_ENTRY);

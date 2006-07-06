@@ -30,7 +30,11 @@
 /* The following return a pointer on success, or NULL with errno set on error.
  * If it returned NULL, but errno is not set, then there was no error, but
  * there is nothing to return. */
-char *rc_get_cnf_entry (const char *pathname, const char *entry);
+/* rc_get_cnf_entry() will get the last config entry (ala bash variable
+ * assignment rules) if 'sep' equals NULL, else it will concat all values
+ * together seperated by 'sep'. */
+char *rc_get_cnf_entry (const char *pathname, const char *entry,
+			const char *sep);
 char ** rc_get_list_file (char **list, char *filename);
 
 #endif /* __RC_CONFIG_H__ */

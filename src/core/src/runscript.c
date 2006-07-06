@@ -114,7 +114,7 @@ filter_environ (char *caller)
 
 	  snprintf (tmp_env_name, tmp_len, "export %s", env_name);
 
-	  env_var = rc_get_cnf_entry (PROFILE_ENV, tmp_env_name);
+	  env_var = rc_get_cnf_entry (PROFILE_ENV, tmp_env_name, NULL);
 	  free (tmp_env_name);
 	  if ((NULL == env_var) && (0 != errno) && (ENOMSG != errno))
 	    goto error;
