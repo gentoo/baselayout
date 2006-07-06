@@ -32,13 +32,14 @@
 
 #include "rcscripts/rcutil.h"
 
-static char log_domain[] = "rcscripts";
+static char log_domain_default[] = "rcscripts";
+static char *log_domain = log_domain_default;
 
 void
 rc_log_domain (const char *new_domain)
 {
-  if (check_str)
-    log_domain = new_domain;
+  if (check_str (new_domain))
+    log_domain = (char *)new_domain;
 }
 
 void
