@@ -74,19 +74,19 @@ filter_environ (char *caller)
      * environment should be fine */
     return environ;
 
-  if (1 == rc_is_file (SYS_WHITELIST, TRUE))
+  if (rc_is_file (SYS_WHITELIST, TRUE))
     whitelist = rc_get_list_file (whitelist, SYS_WHITELIST);
   else
     EWARN ("System environment whitelist missing!\n");
 
-  if (1 == rc_is_file (USR_WHITELIST, TRUE))
+  if (rc_is_file (USR_WHITELIST, TRUE))
     whitelist = rc_get_list_file (whitelist, USR_WHITELIST);
 
   if (NULL == whitelist)
     /* If no whitelist is present, revert to old behaviour */
     return environ;
 
-  if (1 != rc_is_file (PROFILE_ENV, TRUE))
+  if (!rc_is_file (PROFILE_ENV, TRUE))
     /* XXX: Maybe warn here? */
     check_profile = 0;
 

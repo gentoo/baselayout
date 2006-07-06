@@ -35,12 +35,12 @@
 		    _ext, strlen(_ext))))
 
 /* The following functions do not care about errors - they only return
- * 1 if 'pathname' exist, and is the type requested, or else 0.
- * This is only if pathname is valid ...  They also might clear errno */
-int rc_file_exists (const char *pathname);
-int rc_is_file (const char *pathname, bool follow_link);
-int rc_is_link (const char *pathname);
-int rc_is_dir (const char *pathname, bool follow_link);
+ * TRUE if 'pathname' exist, and is the type requested, or else FALSE.
+ * This is only if pathname is valid ... */
+bool rc_file_exists (const char *pathname);
+bool rc_is_file (const char *pathname, bool follow_link);
+bool rc_is_link (const char *pathname);
+bool rc_is_dir (const char *pathname, bool follow_link);
 
 /* The following function do not care about errors - it only returns
  * the mtime of 'pathname' if it exists, and is the type requested,

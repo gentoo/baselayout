@@ -34,80 +34,92 @@
 
 #include "rcscripts/rcutil.h"
 
-int
+bool
 rc_file_exists (const char *pathname)
 {
   struct stat buf;
   int retval;
 
-  if (!check_arg_str (pathname))
-    return -1;
+  if (!check_str (pathname))
+    return FALSE;
+
+  save_errno ();
 
   retval = lstat (pathname, &buf);
   if (-1 != retval)
-    return 1;
+    retval = TRUE;
+  else
+    retval = FALSE;
 
-  /* Clear errno, as we do not want debugging to trigger */
-  errno = 0;
+  restore_errno ();
 
-  return 0;
+  return retval;
 }
 
-int
+bool
 rc_is_file (const char *pathname, bool follow_link)
 {
   struct stat buf;
   int retval;
 
-  if (!check_arg_str (pathname))
-    return -1;
+  if (!check_str (pathname))
+    return FALSE;
+
+  save_errno ();
 
   retval = follow_link ? stat (pathname, &buf) : lstat (pathname, &buf);
   if ((-1 != retval) && (S_ISREG (buf.st_mode)))
-    return 1;
+    retval = TRUE;
+  else
+    retval = FALSE;
 
-  /* Clear errno, as we do not want debugging to trigger */
-  errno = 0;
+  restore_errno ();
 
-  return 0;
+  return retval;
 }
 
-int
+bool
 rc_is_link (const char *pathname)
 {
   struct stat buf;
   int retval;
 
-  if (!check_arg_str (pathname))
-    return -1;
+  if (!check_str (pathname))
+    return FALSE;
+
+  save_errno ();
 
   retval = lstat (pathname, &buf);
   if ((-1 != retval) && (S_ISLNK (buf.st_mode)))
-    return 1;
+    retval = TRUE;
+  else
+    retval = FALSE;
 
-  /* Clear errno, as we do not want debugging to trigger */
-  errno = 0;
+  restore_errno ();
 
-  return 0;
+  return retval;
 }
 
-int
+bool
 rc_is_dir (const char *pathname, bool follow_link)
 {
   struct stat buf;
   int retval;
 
-  if (!check_arg_str (pathname))
-    return -1;
+  if (!check_str (pathname))
+    return FALSE;
+
+  save_errno ();
 
   retval = follow_link ? stat (pathname, &buf) : lstat (pathname, &buf);
   if ((-1 != retval) && (S_ISDIR (buf.st_mode)))
-    return 1;
+    retval = TRUE;
+  else
+    retval = FALSE;
 
-  /* Clear errno, as we do not want debugging to trigger */
-  errno = 0;
+  restore_errno ();
 
-  return 0;
+  return retval;
 }
 
 time_t
@@ -138,7 +150,7 @@ remove (const char *pathname)
   if (!check_arg_str (pathname))
     return -1;
 
-  if (1 == rc_is_dir (pathname, FALSE))
+  if (rc_is_dir (pathname, FALSE))
     retval = rmdir (pathname);
   else
     retval = unlink (pathname);
@@ -189,7 +201,7 @@ rc_mktree (const char *pathname, mode_t mode)
 
       /* If it does not exist, create the dir.  If it does exit,
        * but is not a directory, we will catch it below. */
-      if (1 != rc_file_exists (temp_name))
+      if (!rc_file_exists (temp_name))
 	{
 	  retval = mkdir (temp_name, mode);
 	  if (-1 == retval)
@@ -199,7 +211,7 @@ rc_mktree (const char *pathname, mode_t mode)
 	    }
 	  /* Not a directory or symlink pointing to a directory */
 	}
-      else if (1 != rc_is_dir (temp_name, TRUE))
+      else if (!rc_is_dir (temp_name, TRUE))
 	{
 	  errno = ENOTDIR;
 	  DBG_MSG ("Component in pathname is not a directory!\n");
@@ -235,7 +247,7 @@ rc_rmtree (const char *pathname)
   if (!check_arg_str (pathname))
     return -1;
 
-  if (1 != rc_file_exists (pathname))
+  if (!rc_file_exists (pathname))
     {
       errno = ENOENT;
       DBG_MSG ("'%s' does not rc_file_exists!\n", pathname);
@@ -255,7 +267,7 @@ rc_rmtree (const char *pathname)
     {
       /* If it is a directory, call rc_rmtree() again with
        * it as argument */
-      if (1 == rc_is_dir (dirlist[i], FALSE))
+      if (rc_is_dir (dirlist[i], FALSE))
 	{
 	  if (-1 == rc_rmtree (dirlist[i]))
 	    {
@@ -266,7 +278,7 @@ rc_rmtree (const char *pathname)
 
       /* Now actually remove it.  Note that if it was a directory,
        * it should already be removed by above rc_rmtree() call */
-      if ((1 == rc_file_exists (dirlist[i]) && (-1 == remove (dirlist[i]))))
+      if ((rc_file_exists (dirlist[i]) && (-1 == remove (dirlist[i]))))
 	{
 	  DBG_MSG ("Failed to remove '%s'!\n", dirlist[i]);
 	  goto error;
