@@ -122,6 +122,28 @@ rc_is_dir (const char *pathname, bool follow_link)
   return retval;
 }
 
+off_t
+rc_get_size (const char *pathname, bool follow_link)
+{
+  struct stat buf;
+  int retval;
+
+  if (!check_str (pathname))
+    return 0;
+
+  save_errno ();
+
+  retval = follow_link ? stat (pathname, &buf) : lstat (pathname, &buf);
+  if (-1 != retval)
+    retval = buf.st_size;
+  else
+    retval = 0;
+
+  restore_errno ();
+
+  return retval;
+}
+
 time_t
 rc_get_mtime (const char *pathname, bool follow_link)
 {
