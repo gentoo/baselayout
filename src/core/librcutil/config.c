@@ -126,7 +126,7 @@ rc_get_cnf_entry (const char *pathname, const char *entry, const char *sep)
 	  else
 	    {
 	      value = xrealloc (value, strlen(value) + strlen(token) +
-				strlen(sep));
+				strlen(sep) + 1);
 	      if (NULL == value)
 		{
 		  free_dyn_buf (dynbuf);

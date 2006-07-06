@@ -64,7 +64,7 @@ rc_strcatpaths (const char *pathname1, const char *pathname2)
     return NULL;
 
   snprintf (new_path, lenght, "%s%s%s", pathname1,
-	    (new_path[strlen (new_path) - 1] != '/') ? "/" : "",
+	    (pathname1[strlen (pathname1) - 1] != '/') ? "/" : "",
 	    pathname2);
 
   return new_path;
