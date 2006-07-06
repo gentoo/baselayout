@@ -45,10 +45,10 @@ rc_get_cnf_entry (const char *pathname, const char *entry)
     return NULL;
 
   /* If it is not a file or symlink pointing to a file, bail */
-  if (rc_is_file (pathname, TRUE))
+  if (!rc_is_file (pathname, TRUE))
     {
       errno = ENOENT;
-      DBG_MSG ("Given pathname is not a file or do not exist!\n");
+      DBG_MSG ("'%s' is not a file or do not exist!\n", pathname);
       return NULL;
     }
 
