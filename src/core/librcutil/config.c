@@ -134,7 +134,7 @@ rc_get_cnf_entry (const char *pathname, const char *entry, const char *sep)
 
 		  return NULL;
 		}
-	      snprintf(value + strlen(value), strlen(token) + strlen(sep),
+	      snprintf(value + strlen(value), strlen(token) + strlen(sep) + 1,
 		       "%s%s", sep, token);
 	    }
 
