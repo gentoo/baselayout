@@ -33,6 +33,8 @@
 #define saved_errno	old_errno
 
 void
+rc_log_domain (const char *new_domain);
+void
 debug_message (const char *file, const char *func, int line,
 	       const char *format, ...);
 

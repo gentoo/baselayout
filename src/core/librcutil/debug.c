@@ -35,6 +35,13 @@
 static char log_domain[] = "rcscripts";
 
 void
+rc_log_domain (const char *new_domain)
+{
+  if (check_str)
+    log_domain = new_domain;
+}
+
+void
 debug_message (const char *file, const char *func, int line,
 	       const char *format, ...)
 {
