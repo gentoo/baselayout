@@ -128,17 +128,20 @@ rc_get_mtime (const char *pathname, bool follow_link)
   struct stat buf;
   int retval;
 
-  if (!check_arg_str (pathname))
-    return -1;
+  if (!check_str (pathname))
+    return 0;
+
+  save_errno ();
 
   retval = follow_link ? stat (pathname, &buf) : lstat (pathname, &buf);
   if (-1 != retval)
-    return buf.st_mtime;
+    retval = buf.st_mtime;
+  else
+    retval = 0;
 
-  /* Clear errno, as we do not want debugging to trigger */
-  errno = 0;
+  restore_errno ();
 
-  return 0;
+  return retval;
 }
 
 #if !defined(HAVE_REMOVE)

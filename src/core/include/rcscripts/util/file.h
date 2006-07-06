@@ -44,7 +44,7 @@ bool rc_is_dir (const char *pathname, bool follow_link);
 
 /* The following function do not care about errors - it only returns
  * the mtime of 'pathname' if it exists, and is the type requested,
- * or else 0.  It also might clear errno */
+ * or else 0. */
 time_t rc_get_mtime (const char *pathname, bool follow_link);
 
 /* The following functions return 0 on success, or -1 with errno set on error. */
