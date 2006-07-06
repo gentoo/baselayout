@@ -52,6 +52,13 @@ rc_get_cnf_entry (const char *pathname, const char *entry)
       return NULL;
     }
 
+  if (0 == rc_get_size (pathname, TRUE))
+    {
+      /* XXX: Should we set errno here ? */
+      DBG_MSG ("'%s' have a size of 0!\n", pathname);
+      return NULL;
+    }
+
   dynbuf = new_dyn_buf_mmap_file (pathname);
   if (NULL == dynbuf)
     {
