@@ -108,7 +108,7 @@ filter_environ (char *caller)
 	  /* The entries in PROFILE_ENV is of the form:
 	   * export VAR_NAME=value */
 	  tmp_len = strlen (env_name) + strlen ("export ") + 1;
-	  tmp_env_name = xcalloc (tmp_len, sizeof (char *));
+	  tmp_env_name = xmalloc (tmp_len * sizeof (char));
 	  if (NULL == tmp_env_name)
 	    goto error;
 
@@ -126,7 +126,7 @@ filter_environ (char *caller)
 
 add_entry:
       env_len = strlen (env_name) + strlen (env_var) + 2;
-      tmp_p = xcalloc (env_len, sizeof (char *));
+      tmp_p = xmalloc (env_len * sizeof (char));
       if (NULL == tmp_p)
 	goto error;
 
