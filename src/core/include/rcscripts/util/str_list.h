@@ -56,6 +56,38 @@
    _string_list[_i+1] = NULL; \
  } while (0)
 
+/* Same as above, just makes a copy of the item, so calling code do not need
+ * to do this. */
+#define str_list_add_item_copy(_string_list, _item, _error) \
+ do { \
+   char *_tmp_str; \
+   char **_tmp_p; \
+   int _i = 0; \
+   if (!check_str (_item)) \
+     { \
+       goto _error; \
+     } \
+   while ((NULL != _string_list) && (NULL != _string_list[_i])) \
+     { \
+       _i++; \
+     } \
+   /* Amount of entries + new + terminator */ \
+   _tmp_p = xrealloc (_string_list, sizeof (char *) * (_i + 2)); \
+   if (NULL == _tmp_p) \
+     { \
+       goto _error; \
+     } \
+   _string_list = _tmp_p; \
+   _tmp_str = xstrndup (_item, strlen (_item)); \
+   if (NULL == _tmp_str) \
+     { \
+       goto _error; \
+     } \
+   _string_list[_i] = _tmp_str; \
+   /* Terminator */ \
+   _string_list[_i+1] = NULL; \
+ } while (0)
+
 /* Add a new item to a string list (foundamental the same as above), but make
  * sure we have all the items alphabetically sorted. */
 #define str_list_add_item_sorted(_string_list, _item, _error) \
