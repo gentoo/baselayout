@@ -213,7 +213,9 @@ svc_stop() {
 
 	for mydep in ${mydeps} ; do
 		for x in $(needsme "${mydep}") ; do
-			service_started "${x}" && stop_service "${x}"
+			if service_started "${x}" || service_inactive "${x}" ; then
+				stop_service "${x}"
+			fi
 			service_list=( "${service_list[@]}" "${x}" )
 		done
 	done
@@ -222,8 +224,7 @@ svc_stop() {
 		# We need to test if the service has been marked stopped
 		# as the fifo may still be around if called by custom code
 		# such as postup from a net script.
-		service_stopped "${mynetservice}" && continue
-		
+		service_stopped "${x}" && continue
 		wait_service "${x}"
 		if ! service_stopped "${x}" ; then
 			retval=1
@@ -355,9 +356,7 @@ svc_start() {
 						service_stopped "${y}" && start_service "${y}"
 					done
 				elif [[ ${x} != "net" ]] ; then
-					if service_stopped "${x}" ; then
-						start_service "${x}"
-					fi	
+					service_stopped "${x}" && start_service "${x}"
 				fi
 			done
 		fi
