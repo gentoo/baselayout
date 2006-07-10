@@ -795,7 +795,8 @@ trace_dependencies() {
 		done
 	else
 		for x in $(dolisting "/etc/runlevels/${BOOTLEVEL}/net.*") \
-			$(dolisting "/etc/runlevels/${SOFTLEVEL}/net.*") ; do
+			$(dolisting "/etc/runlevels/${SOFTLEVEL}/net.*") \
+			$(dolisting "/etc/runlevels/coldplugged/net.*") ; do
 			net_services="${net_services} ${x##*/}"
 		done
 	fi

@@ -146,9 +146,8 @@ svc_schedule_start() {
 	local service="$1" start="$2"
 	[[ ! -d "${svcdir}/scheduled/${service}" ]] \
 		&& mkdir -p "${svcdir}/scheduled/${service}"
-	[[ ! -e "${svcdir}/scheduled/${service}/${start}" ]] \
-		&& ln -snf "/etc/init.d/${service}" \
-			"${svcdir}/scheduled/${service}/${start}"
+	ln -snf "/etc/init.d/${service}" \
+		"${svcdir}/scheduled/${service}/${start}"
 }
 
 svc_start_scheduled() {
@@ -196,9 +195,7 @@ svc_stop() {
 	fi
 
 	if [[ ${svcpause} != "yes" && ${RC_NO_DEPS} != "yes" ]] ; then
-		if net_service "${SVCNAME}" ; then
-			is_net_up || mydeps="net"
-		fi
+		net_service "${SVCNAME}" && mydeps="net"
 		mydeps="${mydeps} ${SVCNAME}"
 	fi
 
@@ -216,9 +213,6 @@ svc_stop() {
 	done
 
 	for x in "${service_list[@]}" ; do
-		# We need to test if the service has been marked stopped
-		# as the fifo may still be around if called by custom code
-		# such as postup from a net script.
 		service_stopped "${x}" && continue
 		wait_service "${x}"
 		if ! service_stopped "${x}" ; then
@@ -338,7 +332,8 @@ svc_start() {
 		local startupservices="$(ineed "${SVCNAME}") $(valid_iuse "${SVCNAME}")"
 		local netservices=
 		for x in $(dolisting "/etc/runlevels/${BOOTLEVEL}/net.*") \
-			$(dolisting "/etc/runlevels/${mylevel}/net.*") ; do
+			$(dolisting "/etc/runlevels/${mylevel}/net.*") \
+			$(dolisting "/etc/runlevels/coldplugged/net.*") ; do 
 			netservices="${netservices} ${x##*/}"
 		done
 
@@ -378,14 +373,13 @@ svc_start() {
 			if ! service_started "${x}" ; then
 				# A 'need' dependency is critical for startup
 				if ineed -t "${SVCNAME}" "${x}" >/dev/null \
-					|| net_service "${x}" && ineed -t "${SVCNAME}" net \
-					&& ! is_net_up ; then
+					|| ( net_service "${x}" && ineed -t "${SVCNAME}" net \
+					&& ! is_net_up ) ; then
 					if service_inactive "${x}" || service_wasinactive "${x}" || \
 						[[ -n $(ls "${svcdir}"/scheduled/*/"${x}" 2>/dev/null) ]] ; then
-						if svc_schedule_start "${x}" "${SVCNAME}" ; then
-							[[ -n ${startinactive} ]] && startinactive="${startinactive}, "
-							startinactive="${startinactive}${x}"
-						fi
+						svc_schedule_start "${x}" "${SVCNAME}"
+						[[ -n ${startinactive} ]] && startinactive="${startinactive}, "
+						startinactive="${startinactive}${x}"
 					else
 						startfail="${x}"
 						break
@@ -427,11 +421,11 @@ svc_start() {
 			|| -e ${svcdir}/exclusive/${SVCNAME} ]] \
 				&& RC_QUIET_STDOUT="yes"
 		fi
-		
+
 		start
 		)
 		retval="$?"
-		
+
 		# If a service has been marked inactive, exit now as something
 		# may attempt to start it again later
 		if [[ ${retval} == "0" ]] && service_inactive "${SVCNAME}" ; then
@@ -600,6 +594,7 @@ for arg in $* ; do
 					svc_schedule_start "${SVCNAME}" "${x##*/}"
 				fi
 			done
+			rm -f "${svcdir}/snapshot/$$"
 		else
 			rm -f "${svcdir}"/scheduled/*/"${SVCNAME}"
 		fi
