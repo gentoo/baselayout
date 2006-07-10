@@ -394,6 +394,7 @@ if [[ ${SOFTLEVEL} == "reboot" || ${SOFTLEVEL} == "shutdown" ]] ; then
 fi
 
 if [[ ${SOFTLEVEL} == "single" ]] ; then
+	rm -rf "${svcdir}/softscripts.new"
 	if is_vps_sys ; then
 		/sbin/halt -f
 	else
