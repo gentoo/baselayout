@@ -711,15 +711,15 @@ is_net_up() {
 		yes)
 			for x in $(dolisting "/etc/runlevels/${BOOTLEVEL}/net.*") \
 				$(dolisting "/etc/runlevels/${SOFTLEVEL}/net.*") ; do
-				service_started "${x##*/}" || return 1
+				local y="${x##*/}"
+				[[ ${y} == "$1" ]] && return 1
+				service_started "${y}" || return 1
 			done
 			return 0
 			;;
 		*)
 			for x in $(dolisting "${svcdir}/started/net.*") ; do
 				local y="${x##*/}"
-				# Exlude the passed interface to test if we need to stop
-				# net dependant services
 				[[ ${y} == "$1" ]] && continue
 				[[ ${y} != "net.lo" ]] && return 0
 			done
