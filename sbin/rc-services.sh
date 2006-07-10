@@ -686,7 +686,7 @@ net_service() {
 	[[ -n $1 && ${1%%.*} == "net" && ${1#*.} != "$1" ]]
 }
 
-# bool is_net_up()
+# bool is_net_up(char *exclude)
 #
 #    Return true if service 'net' is considered up, else false.
 #
@@ -697,29 +697,34 @@ net_service() {
 #            so there have to be at least one other interface up.
 #      yes   All interfaces must be up.
 is_net_up() {
-	local netcount=0
-
+	local x=
+	
 	case "${RC_NET_STRICT_CHECKING}" in
 		none)
 			return 0
 			;;
 		lo)
-			netcount="$(ls -1 "${svcdir}"/started/net.* 2> /dev/null | \
-			            egrep -c "\/net\..*$")"
+			service_started "net.lo"
+			return $?
+			;;
+		yes)
+			for x in $(dolisting "/etc/runlevels/${BOOTLEVEL}/net.*") \
+				$(dolisting "/etc/runlevels/${SOFTLEVEL}/net.*") ; do
+				service_started "${x##*/}" || return 1
+			done
+			return 0
 			;;
 		*)
-			netcount="$(ls -1 "${svcdir}"/started/net.* 2> /dev/null | \
-			            grep -v 'net\.lo' | egrep -c "\/net\..*$")"
-			;;
+			for x in $(dolisting "${svcdir}/started/net.*") ; do
+				local y="${x##*/}"
+				# Exlude the passed interface to test if we need to stop
+				# net dependant services
+				[[ ${y} == "$1" ]] && continue
+				[[ ${y} != "net.lo" ]] && return 0
+			done
+			return 1 
+		;;
 	esac
-
-	# Only worry about net.* services if this is the last one running,
-	# or if RC_NET_STRICT_CHECKING is set ...
-	if [[ ${netcount} -lt 1 || ${RC_NET_STRICT_CHECKING} == "yes" ]] ; then
-		return 1
-	fi
-
-	return 0
 }
 
 # bool dependon(service1, service2)
