@@ -196,7 +196,9 @@ svc_stop() {
 
 	if [[ ${svcpause} != "yes" && ${RC_NO_DEPS} != "yes" ]] ; then
 		if net_service "${SVCNAME}" ; then
-			is_runlevel_stop || is_net_up "${SVCNAME}" || mydeps="net"
+			if is_runlevel_stop || is_net_up "${SVCNAME}" ; then
+				mydeps="net"
+			fi
 		fi
 		mydeps="${mydeps} ${SVCNAME}"
 	fi
