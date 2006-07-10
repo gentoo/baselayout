@@ -687,7 +687,7 @@ net_service() {
 	[[ -n $1 && ${1%%.*} == "net" && ${1#*.} != "$1" ]]
 }
 
-# bool is_net_up()
+# bool is_net_up(char *exclude)
 #
 #    Return true if service 'net' is considered up, else false.
 #
@@ -709,15 +709,19 @@ is_net_up() {
 			return $?
 			;;
 		yes)
-			for x in $(ls /etc/runlevels/${BOOTLEVEL}/net.* 2>/dev/null) \
-			$(ls /etc/runlevels/${SOFTLEVEL}/net.* 2>/dev/null) ; do
+			for x in $(dolisting "/etc/runlevels/${BOOTLEVEL}/net.*") \
+				$(dolisting "/etc/runlevels/${SOFTLEVEL}/net.*") ; do
 				service_started "${x##*/}" || return 1
 			done
 			return 0
 			;;
 		*)
-			for x in $(ls "${svcdir}"/started/net.* 2>/dev/null) ; do
-				[[ ${x##*/} != "net.lo" ]] && return 0
+			for x in $(dolisting "${svcdir}/started/net.*") ; do
+				local y="${x##*/}"
+				# Exlude the passed interface to test if we need to stop
+				# net dependant services
+				[[ ${y} == "$1" ]] && continue
+				[[ ${y} != "net.lo" ]] && return 0
 			done
 			return 1 
 		;;
