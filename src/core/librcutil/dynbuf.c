@@ -189,7 +189,8 @@ write_dyn_buf (dyn_buf_t *dynbuf, const char *buf, size_t length)
 
 int write_dyn_buf_from_fd (int fd, dyn_buf_t *dynbuf, size_t length)
 {
-  int len = length;
+  size_t len;
+  size_t total = 0;
 
   if (!check_arg_dyn_buf (dynbuf))
     return -1;
@@ -211,20 +212,40 @@ int write_dyn_buf_from_fd (int fd, dyn_buf_t *dynbuf, size_t length)
       return -1;
     }
 
-  len = read (fd, (dynbuf->data + dynbuf->wr_index), len);
+  do
+    {
+      len = read (fd, (dynbuf->data + dynbuf->wr_index + total),
+		  (length - total));
+      if (-1 == len)
+	{
+	  if (EINTR == errno)
+	    {
+	      /* We were interrupted, continue reading */
+	      errno = 0;
+	      /* Make sure we retry */
+	      len = 1;
+	    }
+	  else
+	    {
+	      break;
+	    }
+	}
+      else
+	{
+	  total += len;
+	}
+    }
+  while ((0 < len) && (total < len));
 
-  if (length > len)
-    length = len;
-
-  if (0 < length)
-    dynbuf->wr_index += length;
+  if (0 < total)
+    dynbuf->wr_index += total;
 
   dynbuf->data[dynbuf->wr_index] = '\0';
 
-  if (-1 == length)
+  if (-1 == len)
     DBG_MSG ("Failed to write to dynamic buffer!\n");
 
-  return length;
+  return (-1 == len) ? len : total;
 }
 
 int
@@ -310,7 +331,9 @@ read_dyn_buf (dyn_buf_t *dynbuf, char *buf, size_t length)
 int
 read_dyn_buf_to_fd (int fd, dyn_buf_t *dynbuf, size_t length)
 {
-  int len = length;
+  size_t len;
+  size_t total = 0;
+  size_t max_read = length;
 
   if (!check_arg_dyn_buf (dynbuf))
     return -1;
@@ -322,19 +345,40 @@ read_dyn_buf_to_fd (int fd, dyn_buf_t *dynbuf, size_t length)
     return 0;
 
   if (dynbuf->wr_index < (dynbuf->rd_index + length))
-    len = dynbuf->wr_index - dynbuf->rd_index;
+    max_read = dynbuf->wr_index - dynbuf->rd_index;
 
-  len = write (fd, (dynbuf->data + dynbuf->rd_index), len);
-  if (length > len)
-    length = len;
+  do
+    {
+      len = write (fd, (dynbuf->data + dynbuf->rd_index + total),
+		   (max_read - total));
+      if (-1 == len)
+	{
+	  if (EINTR == errno)
+	    {
+	      /* We were interrupted, continue reading */
+	      errno = 0;
+	      /* Make sure we retry */
+	      len = 1;
+	    }
+	  else
+	    {
+	      break;
+	    }
+	}
+      else
+	{
+	  total += len;
+	}
+    }
+  while ((0 < len) && (total < len));
 
-  if (0 < length)
-    dynbuf->rd_index += length;
+  if (0 < total)
+    dynbuf->rd_index += total;
 
-  if (-1 == length)
+  if (-1 == len)
     DBG_MSG ("Failed to write from dynamic buffer!\n");
 
-  return length;
+  return (-1 == len) ? len : total;
 }
 
 char *
