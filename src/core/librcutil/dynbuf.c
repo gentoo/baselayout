@@ -412,6 +412,30 @@ read_line_dyn_buf (dyn_buf_t *dynbuf)
   return buf;
 }
 
+int
+dyn_buf_replace_char (dyn_buf_t *dynbuf, const char old, const char new)
+{
+  int i;
+  int count = 0;
+
+  if (!check_arg_dyn_buf (dynbuf))
+    return -1;
+
+  if (0 == dynbuf->wr_index)
+    return 0;
+
+  for (i = 0; i < dynbuf->wr_index; i++)
+    {
+      if (old == dynbuf->data[i])
+	{
+	  dynbuf->data[i] = new;
+	  count++;
+	}
+    }
+
+  return count;
+}
+
 bool
 dyn_buf_rd_eof (dyn_buf_t *dynbuf)
 {

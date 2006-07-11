@@ -54,6 +54,8 @@ int read_dyn_buf_to_fd (int fd, dyn_buf_t *dynbuf, size_t length);
 
 char *read_line_dyn_buf (dyn_buf_t *dynbuf);
 
+int dyn_buf_replace_char (dyn_buf_t *dynbuf, const char old, const char new);
+
 bool dyn_buf_rd_eof (dyn_buf_t *dynbuf);
 
 inline bool check_dyn_buf (dyn_buf_t *dynbuf);
