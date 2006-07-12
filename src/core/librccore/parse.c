@@ -348,18 +348,11 @@ generate_stage2 (rc_dynbuf_t *data)
 	      tmp_count = rc_dynbuf_read_fd (stage1_data,
 					     PARENT_WRITE_PIPE (pipe_fds),
 					     PARSE_BUFFER_SIZE);
-	      if ((-1 == tmp_count) && (EINTR != errno))
+	      /* We handle EINTR in rc_dynbuf_read_fd() */
+	      if (-1 == tmp_count)
 		{
 		  DBG_MSG ("Error writing to PARENT_WRITE_PIPE!\n");
 		  goto failed;
-		}
-	      /* We were interrupted, try to write again */
-	      if (-1 == tmp_count)
-		{
-		  errno = 0;
-		  /* Make sure we retry */
-		  tmp_count = 1;
-		  continue;
 		}
 
 	      /* Close the write pipe if we done
@@ -383,16 +376,11 @@ generate_stage2 (rc_dynbuf_t *data)
 
 	      tmp_count = rc_dynbuf_write_fd (data, PARENT_READ_PIPE (pipe_fds),
 					      PARSE_BUFFER_SIZE);
-	      if ((-1 == tmp_count) && (EINTR != errno))
+	      /* We handle EINTR in rc_dynbuf_write_fd() */
+	      if (-1 == tmp_count)
 		{
 		  DBG_MSG ("Error reading PARENT_READ_PIPE!\n");
 		  goto failed;
-		}
-	      /* We were interrupted, try to read again */
-	      if ((-1 == tmp_count) || (0 == tmp_count))
-		{
-		  errno = 0;
-		  continue;
 		}
 
 	      write_count += tmp_count;
