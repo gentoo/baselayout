@@ -178,7 +178,7 @@ _continue:
 int
 main (void)
 {
-  dyn_buf_t *data;
+  rc_dynbuf_t *data;
   FILE *cachefile_fd = NULL;
   char *svcdir = NULL;
   char *cachefile = NULL;
@@ -249,7 +249,7 @@ main (void)
       EINFO ("Caching service dependencies ...\n");
       DBG_MSG ("Regenerating cache file '%s'.\n", cachefile);
 
-      data = new_dyn_buf ();
+      data = rc_dynbuf_new ();
 
       datasize = generate_stage2 (data);
       if (-1 == datasize)
@@ -267,11 +267,11 @@ main (void)
       if (-1 == parse_cache (data))
 	{
 	  EERROR ("Failed to parse stage2 output!\n");
-	  free_dyn_buf (data);
+	  rc_dynbuf_free (data);
 	  exit (EXIT_FAILURE);
 	}
 
-      free_dyn_buf (data);
+      rc_dynbuf_free (data);
 
       if (-1 == service_resolve_dependencies ())
 	{

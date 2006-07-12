@@ -25,8 +25,6 @@
 #ifndef __RC_DYNBUF_H__
 #define __RC_DYNBUF_H__
 
-#define DYNAMIC_BUFFER_SIZE (sizeof (char) * 2 * 1024)
-
 typedef struct
 {
   char *data;			/* Actual data */
@@ -34,35 +32,36 @@ typedef struct
   size_t rd_index;		/* Current read index */
   size_t wr_index;		/* Current write index */
   bool file_map;		/* File mapped as dynbuf */
-} dyn_buf_t;
+} rc_dynbuf_t;
 
-dyn_buf_t *new_dyn_buf (void);
+rc_dynbuf_t *rc_dynbuf_new (void);
 
-dyn_buf_t *new_dyn_buf_mmap_file (const char *name);
+rc_dynbuf_t *rc_dynbuf_new_mmap_file (const char *name);
 
-void free_dyn_buf (dyn_buf_t *dynbuf);
+void rc_dynbuf_free (rc_dynbuf_t *dynbuf);
 
-int write_dyn_buf (dyn_buf_t *dynbuf, const char *buf, size_t length);
+int rc_dynbuf_write (rc_dynbuf_t *dynbuf, const char *buf, size_t length);
 
-int write_dyn_buf_from_fd (int fd, dyn_buf_t *dynbuf, size_t length);
+int rc_dynbuf_write_fd (rc_dynbuf_t *dynbuf, int fd, size_t length);
 
-int sprintf_dyn_buf (dyn_buf_t *dynbuf, const char *format, ...);
+int rc_dynbuf_sprintf (rc_dynbuf_t *dynbuf, const char *format, ...);
 
-int read_dyn_buf (dyn_buf_t *dynbuf, char *buf, size_t length);
+int rc_dynbuf_read (rc_dynbuf_t *dynbuf, char *buf, size_t length);
 
-int read_dyn_buf_to_fd (int fd, dyn_buf_t *dynbuf, size_t length);
+int rc_dynbuf_read_fd (rc_dynbuf_t *dynbuf, int fd, size_t length);
 
-char *read_line_dyn_buf (dyn_buf_t *dynbuf);
+char *rc_dynbuf_read_line (rc_dynbuf_t *dynbuf);
 
-int dyn_buf_replace_char (dyn_buf_t *dynbuf, const char old, const char new);
+int rc_dynbuf_replace_char (rc_dynbuf_t *dynbuf, const char old, const char new);
 
-bool dyn_buf_rd_eof (dyn_buf_t *dynbuf);
+bool rc_dynbuf_read_eof (rc_dynbuf_t *dynbuf);
 
-inline bool check_dyn_buf (dyn_buf_t *dynbuf);
-inline bool __check_arg_dyn_buf (dyn_buf_t *dynbuf, const char *file,
+inline bool rc_check_dynbuf (rc_dynbuf_t *dynbuf);
+inline bool __rc_check_arg_dynbuf (rc_dynbuf_t *dynbuf, const char *file,
 				 const char *func, size_t line);
 
-#define check_arg_dyn_buf(_dynbuf) \
- __check_arg_dyn_buf (_dynbuf, __FILE__, __FUNCTION__, __LINE__)
+#define rc_check_arg_dynbuf(_dynbuf) \
+ __rc_check_arg_dynbuf (_dynbuf, __FILE__, __FUNCTION__, __LINE__)
 
 #endif /* __RC_DYNBUF_H__ */
+

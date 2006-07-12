@@ -53,29 +53,29 @@
 
 #define PARSE_BUFFER_SIZE		256
 
-static size_t parse_rcscript (char *scriptname, dyn_buf_t *data);
+static size_t parse_rcscript (char *scriptname, rc_dynbuf_t *data);
 
-static size_t parse_print_start (dyn_buf_t *data);
-static size_t parse_print_header (char *scriptname, dyn_buf_t *data);
-static size_t parse_print_body (char *scriptname, dyn_buf_t *data);
+static size_t parse_print_start (rc_dynbuf_t *data);
+static size_t parse_print_header (char *scriptname, rc_dynbuf_t *data);
+static size_t parse_print_body (char *scriptname, rc_dynbuf_t *data);
 
 /* Return count on success, -1 on error.  If it was critical, errno will be set. */
 size_t
-parse_rcscript (char *scriptname, dyn_buf_t *data)
+parse_rcscript (char *scriptname, rc_dynbuf_t *data)
 {
   regex_data_t tmp_data;
-  dyn_buf_t *dynbuf = NULL;
+  rc_dynbuf_t *dynbuf = NULL;
   char *buf = NULL;
   size_t write_count = 0;
   size_t tmp_count;
 
-  if (!check_arg_dyn_buf (data))
+  if (!rc_check_arg_dynbuf (data))
     return -1;
 
   if (!check_arg_str (scriptname))
     return -1;
 
-  dynbuf = new_dyn_buf_mmap_file (scriptname);
+  dynbuf = rc_dynbuf_new_mmap_file (scriptname);
   if (NULL == dynbuf)
     {
       DBG_MSG ("Could not open '%s' for reading!\n", rc_basename (scriptname));
@@ -92,7 +92,7 @@ parse_rcscript (char *scriptname, dyn_buf_t *data)
     }
   write_count += tmp_count;
 
-  while (NULL != (buf = read_line_dyn_buf(dynbuf)))
+  while (NULL != (buf = rc_dynbuf_read_line (dynbuf)))
     {
       /* Check for lines with comments, and skip them */
       DO_REGEX (tmp_data, buf, "^[ \t]*#", error);
@@ -125,16 +125,16 @@ parse_rcscript (char *scriptname, dyn_buf_t *data)
       free (buf);
     }
 
-  /* read_line_dyn_buf() returned NULL with errno set */
+  /* rc_dynbuf_read_line() returned NULL with errno set */
   if ((NULL == buf) && (0 != errno))
     {
       DBG_MSG ("Failed to read line from dynamic buffer!\n");
-      free_dyn_buf (dynbuf);
+      rc_dynbuf_free (dynbuf);
 
       return -1;
     }
 
-  free_dyn_buf (dynbuf);
+  rc_dynbuf_free (dynbuf);
 
   return write_count;
 
@@ -142,20 +142,20 @@ error:
   if (NULL != buf)
     free (buf);
   if (NULL != dynbuf)
-    free_dyn_buf (dynbuf);
+    rc_dynbuf_free (dynbuf);
 
   return -1;
 }
 
 
 size_t
-generate_stage1 (dyn_buf_t *data)
+generate_stage1 (rc_dynbuf_t *data)
 {
   rcscript_info_t *info;
   size_t write_count = 0;
   size_t tmp_count;
 
-  if (!check_arg_dyn_buf (data))
+  if (!rc_check_arg_dynbuf (data))
     return -1;
 
   write_count = parse_print_start (data);
@@ -194,14 +194,14 @@ sig_handler (int signum)
 
 /* Returns data's lenght on success, else -1 on error. */
 size_t
-generate_stage2 (dyn_buf_t *data)
+generate_stage2 (rc_dynbuf_t *data)
 {
   int pipe_fds[2][2] = { {0, 0}, {0, 0} };
   pid_t child_pid;
   size_t write_count = 0;
   int old_errno = 0;
 
-  if (!check_arg_dyn_buf (data))
+  if (!rc_check_arg_dynbuf (data))
     return -1;
 
   /* Pipe to send data to parent */
@@ -267,7 +267,7 @@ generate_stage2 (dyn_buf_t *data)
        ***   In parent
        ***/
 
-      dyn_buf_t *stage1_data;
+      rc_dynbuf_t *stage1_data;
       struct sigaction act_new;
       struct sigaction act_old;
       struct pollfd poll_fds[2];
@@ -291,7 +291,7 @@ generate_stage2 (dyn_buf_t *data)
       close (CHILD_READ_PIPE (pipe_fds));
       CHILD_READ_PIPE (pipe_fds) = 0;
 
-      stage1_data = new_dyn_buf ();
+      stage1_data = rc_dynbuf_new ();
       if (NULL == stage1_data)
 	{
 	  DBG_MSG ("Failed to allocate dynamic buffer!\n");
@@ -322,7 +322,7 @@ generate_stage2 (dyn_buf_t *data)
 	  poll_fds[WRITE_PIPE].events = POLLOUT;
 	  poll_fds[READ_PIPE].fd = PARENT_READ_PIPE (pipe_fds);
 	  poll_fds[READ_PIPE].events = POLLIN | POLLPRI;
-	  if (!dyn_buf_rd_eof (stage1_data))
+	  if (!rc_dynbuf_read_eof (stage1_data))
 	    {
 	      poll (poll_fds, 2, -1);
 	      if (poll_fds[WRITE_PIPE].revents & POLLOUT)
@@ -340,13 +340,14 @@ generate_stage2 (dyn_buf_t *data)
 	    {
 	      /* While we can write, or there is nothing to
 	       * read, keep feeding the write pipe */
-	      if ((dyn_buf_rd_eof (stage1_data))
+	      if ((rc_dynbuf_read_eof (stage1_data))
 		  || (1 == do_read)
 		  || (1 != do_write))
 		break;
 
-	      tmp_count = read_dyn_buf_to_fd (PARENT_WRITE_PIPE (pipe_fds),
-					      stage1_data, PARSE_BUFFER_SIZE);
+	      tmp_count = rc_dynbuf_read_fd (stage1_data,
+					     PARENT_WRITE_PIPE (pipe_fds),
+					     PARSE_BUFFER_SIZE);
 	      if ((-1 == tmp_count) && (EINTR != errno))
 		{
 		  DBG_MSG ("Error writing to PARENT_WRITE_PIPE!\n");
@@ -364,13 +365,13 @@ generate_stage2 (dyn_buf_t *data)
 	      /* Close the write pipe if we done
 	       * writing to get a EOF signaled to
 	       * bash */
-	      if (dyn_buf_rd_eof (stage1_data))
+	      if (rc_dynbuf_read_eof (stage1_data))
 		{
 		  close (PARENT_WRITE_PIPE (pipe_fds));
 		  PARENT_WRITE_PIPE (pipe_fds) = 0;
 		}
 	    }
-	  while ((tmp_count > 0) && (!dyn_buf_rd_eof (stage1_data)));
+	  while ((tmp_count > 0) && (!rc_dynbuf_read_eof (stage1_data)));
 
 	  /* Reset tmp_count for below read loop */
 	  tmp_count = 0;
@@ -380,8 +381,8 @@ generate_stage2 (dyn_buf_t *data)
 	      if (1 != do_read)
 		continue;
 
-	      tmp_count = write_dyn_buf_from_fd (PARENT_READ_PIPE (pipe_fds),
-						 data, PARSE_BUFFER_SIZE);
+	      tmp_count = rc_dynbuf_write_fd (data, PARENT_READ_PIPE (pipe_fds),
+					      PARSE_BUFFER_SIZE);
 	      if ((-1 == tmp_count) && (EINTR != errno))
 		{
 		  DBG_MSG ("Error reading PARENT_READ_PIPE!\n");
@@ -405,7 +406,7 @@ failed:
       if (0 != errno)
 	old_errno = errno;
 
-      free_dyn_buf (stage1_data);
+      rc_dynbuf_free (stage1_data);
 
       if (0 != PARENT_WRITE_PIPE (pipe_fds))
 	close (PARENT_WRITE_PIPE (pipe_fds));
@@ -544,7 +545,7 @@ write_legacy_stage3 (FILE * output)
 }
 
 int
-parse_cache (const dyn_buf_t *data)
+parse_cache (const rc_dynbuf_t *data)
 {
   service_info_t *info;
   service_type_t type = ALL_SERVICE_TYPE_T;
@@ -556,10 +557,10 @@ parse_cache (const dyn_buf_t *data)
   char *field;
   int retval;
 
-  if (!check_arg_dyn_buf ((dyn_buf_t *) data))
+  if (!rc_check_arg_dynbuf ((rc_dynbuf_t *) data))
     goto error;
 
-  while (NULL != (buf = read_line_dyn_buf ((dyn_buf_t *) data)))
+  while (NULL != (buf = rc_dynbuf_read_line ((rc_dynbuf_t *) data)))
     {
       str_ptr = buf;
 
@@ -672,7 +673,7 @@ _continue:
        * across loops */
     }
 
-  /* read_line_dyn_buf() returned NULL with errno set */
+  /* rc_dynbuf_read_line() returned NULL with errno set */
   if ((NULL == buf) && (0 != errno))
     {
       DBG_MSG ("Failed to read line from dynamic buffer!\n");
@@ -704,45 +705,45 @@ error:
 }
 
 size_t
-parse_print_start (dyn_buf_t *data)
+parse_print_start (rc_dynbuf_t *data)
 {
   size_t write_count;
 
-  if (!check_arg_dyn_buf (data))
+  if (!rc_check_arg_dynbuf (data))
     return -1;
 
   write_count =
-   sprintf_dyn_buf (data,
-		    ". /sbin/functions.sh\n"
-		    "[ -e /etc/rc.conf ] && . /etc/rc.conf\n"
-		    "\n"
-		    /*      "set -e\n" */
-		    "\n");
+   rc_dynbuf_sprintf (data,
+		      ". /sbin/functions.sh\n"
+		      "[ -e /etc/rc.conf ] && . /etc/rc.conf\n"
+		      "\n"
+		      /*      "set -e\n" */
+		      "\n");
 
   return write_count;
 }
 
 size_t
-parse_print_header (char *scriptname, dyn_buf_t *data)
+parse_print_header (char *scriptname, rc_dynbuf_t *data)
 {
   size_t write_count;
 
-  if (!check_arg_dyn_buf (data))
+  if (!rc_check_arg_dynbuf (data))
     return -1;
 
   write_count =
-   sprintf_dyn_buf (data,
-		    "#*** %s ***\n"
-		    "\n"
-		    "myservice=\"%s\"\n"
-		    "echo \"RCSCRIPT ${myservice}\"\n"
-		    "\n", scriptname, scriptname);
+   rc_dynbuf_sprintf (data,
+		      "#*** %s ***\n"
+		      "\n"
+		      "myservice=\"%s\"\n"
+		      "echo \"RCSCRIPT ${myservice}\"\n"
+		      "\n", scriptname, scriptname);
 
   return write_count;
 }
 
 size_t
-parse_print_body (char *scriptname, dyn_buf_t *data)
+parse_print_body (char *scriptname, rc_dynbuf_t *data)
 {
   size_t write_count;
   char *buf = NULL;
@@ -750,7 +751,7 @@ parse_print_body (char *scriptname, dyn_buf_t *data)
   char *base;
   char *ext;
 
-  if (!check_arg_dyn_buf (data))
+  if (!rc_check_arg_dynbuf (data))
     return -1;
 
   buf = xstrndup (scriptname, strlen (scriptname));
@@ -780,49 +781,49 @@ parse_print_body (char *scriptname, dyn_buf_t *data)
     ext = str_ptr;
 
   write_count =
-   sprintf_dyn_buf (data,
-		    "\n"
-		    "(\n"
-		    "  # Get settings for rc-script ...\n"
-		    "  [ -e \"/etc/conf.d/${myservice}\" ] && \\\n"
-		    "  	. \"/etc/conf.d/${myservice}\"\n"
-		    "  [ -e /etc/conf.d/net ] && \\\n"
-		    "  [ \"%s\" = \"net\" ] && \\\n"
-		    "  [ \"%s\" != \"${myservice}\" ] && \\\n"
-		    "  	. /etc/conf.d/net\n"
-		    "  depend() {\n"
-		    "    return 0\n"
-		    "  }\n"
-		    "  \n"
-		    "  # Actual depend() function ...\n"
-		    "  (\n"
-		    "    set -e\n"
-		    "    . \"/etc/init.d/%s\" >/dev/null 2>&1\n"
-		    "    set +e\n"
-		    "    \n"
-		    "    need() {\n"
-		    "      [ \"$#\" -gt 0 ] && echo \"NEED $*\"; return 0\n"
-		    "    }\n"
-		    "    \n"
-		    "    use() {\n"
-		    "      [ \"$#\" -gt 0 ] && echo \"USE $*\"; return 0\n"
-		    "    }\n"
-		    "    \n"
-		    "    before() {\n"
-		    "      [ \"$#\" -gt 0 ] && echo \"BEFORE $*\"; return 0\n"
-		    "    }\n"
-		    "    \n"
-		    "    after() {\n"
-		    "      [ \"$#\" -gt 0 ] && echo \"AFTER $*\"; return 0\n"
-		    "    }\n"
-		    "    \n"
-		    "    provide() {\n"
-		    "      [ \"$#\" -gt 0 ] && echo \"PROVIDE $*\"; return 0\n"
-		    "    }\n"
-		    "    \n"
-		    "    depend\n"
-		    "  ) || echo \"FAILED ${myservice}\"\n"
-		    ")\n" "\n\n", base, ext, scriptname);
+   rc_dynbuf_sprintf (data,
+		      "\n"
+		      "(\n"
+		      "  # Get settings for rc-script ...\n"
+		      "  [ -e \"/etc/conf.d/${myservice}\" ] && \\\n"
+		      "  	. \"/etc/conf.d/${myservice}\"\n"
+		      "  [ -e /etc/conf.d/net ] && \\\n"
+		      "  [ \"%s\" = \"net\" ] && \\\n"
+		      "  [ \"%s\" != \"${myservice}\" ] && \\\n"
+		      "  	. /etc/conf.d/net\n"
+		      "  depend() {\n"
+		      "    return 0\n"
+		      "  }\n"
+		      "  \n"
+		      "  # Actual depend() function ...\n"
+		      "  (\n"
+		      "    set -e\n"
+		      "    . \"/etc/init.d/%s\" >/dev/null 2>&1\n"
+		      "    set +e\n"
+		      "    \n"
+		      "    need() {\n"
+		      "      [ \"$#\" -gt 0 ] && echo \"NEED $*\"; return 0\n"
+		      "    }\n"
+		      "    \n"
+		      "    use() {\n"
+		      "      [ \"$#\" -gt 0 ] && echo \"USE $*\"; return 0\n"
+		      "    }\n"
+		      "    \n"
+		      "    before() {\n"
+		      "      [ \"$#\" -gt 0 ] && echo \"BEFORE $*\"; return 0\n"
+		      "    }\n"
+		      "    \n"
+		      "    after() {\n"
+		      "      [ \"$#\" -gt 0 ] && echo \"AFTER $*\"; return 0\n"
+		      "    }\n"
+		      "    \n"
+		      "    provide() {\n"
+		      "      [ \"$#\" -gt 0 ] && echo \"PROVIDE $*\"; return 0\n"
+		      "    }\n"
+		      "    \n"
+		      "    depend\n"
+		      "  ) || echo \"FAILED ${myservice}\"\n"
+		      ")\n" "\n\n", base, ext, scriptname);
 
   return write_count;
 }

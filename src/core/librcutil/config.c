@@ -34,7 +34,7 @@
 char *
 rc_get_cnf_entry (const char *pathname, const char *entry, const char *sep)
 {
-  dyn_buf_t *dynbuf = NULL;
+  rc_dynbuf_t *dynbuf = NULL;
   char *buf = NULL;
   char *str_ptr;
   char *value = NULL;
@@ -59,14 +59,14 @@ rc_get_cnf_entry (const char *pathname, const char *entry, const char *sep)
       return NULL;
     }
 
-  dynbuf = new_dyn_buf_mmap_file (pathname);
+  dynbuf = rc_dynbuf_new_mmap_file (pathname);
   if (NULL == dynbuf)
     {
       DBG_MSG ("Could not open config file for reading!\n");
       return NULL;
     }
 
-  while (NULL != (buf = read_line_dyn_buf (dynbuf)))
+  while (NULL != (buf = rc_dynbuf_read_line (dynbuf)))
     {
       str_ptr = buf;
 
@@ -117,7 +117,7 @@ rc_get_cnf_entry (const char *pathname, const char *entry, const char *sep)
 	      value = xstrndup (token, strlen (token));
 	      if (NULL == value)
 		{
-		  free_dyn_buf (dynbuf);
+		  rc_dynbuf_free (dynbuf);
 		  free (buf);
 
 		  return NULL;
@@ -129,7 +129,7 @@ rc_get_cnf_entry (const char *pathname, const char *entry, const char *sep)
 				strlen(sep) + 1);
 	      if (NULL == value)
 		{
-		  free_dyn_buf (dynbuf);
+		  rc_dynbuf_free (dynbuf);
 		  free (buf);
 
 		  return NULL;
@@ -147,11 +147,11 @@ _continue:
       free (buf);
     }
 
-  /* read_line_dyn_buf() returned NULL with errno set */
+  /* rc_dynbuf_read_line() returned NULL with errno set */
   if ((NULL == buf) && (0 != errno))
     {
       DBG_MSG ("Failed to read line from dynamic buffer!\n");
-      free_dyn_buf (dynbuf);
+      rc_dynbuf_free (dynbuf);
       if (NULL != value)
 	free (value);
 
@@ -162,7 +162,7 @@ _continue:
   if (NULL == value)
     DBG_MSG ("Failed to get value for config entry '%s'!\n", entry);
 
-  free_dyn_buf (dynbuf);
+  rc_dynbuf_free (dynbuf);
 
   return value;
 }
@@ -170,7 +170,7 @@ _continue:
 char **
 rc_get_list_file (char **list, char *filename)
 {
-  dyn_buf_t *dynbuf = NULL;
+  rc_dynbuf_t *dynbuf = NULL;
   char *buf = NULL;
   char *tmp_p = NULL;
   char *token = NULL;
@@ -178,11 +178,11 @@ rc_get_list_file (char **list, char *filename)
   if (!check_arg_str (filename))
     return NULL;
 
-  dynbuf = new_dyn_buf_mmap_file (filename);
+  dynbuf = rc_dynbuf_new_mmap_file (filename);
   if (NULL == dynbuf)
     return NULL;
 
-  while (NULL != (buf = read_line_dyn_buf (dynbuf)))
+  while (NULL != (buf = rc_dynbuf_read_line (dynbuf)))
     {
       tmp_p = buf;
 
@@ -200,7 +200,7 @@ rc_get_list_file (char **list, char *filename)
 	    {
 	      if (NULL != list)
 		str_list_free (list);
-	      free_dyn_buf (dynbuf);
+	      rc_dynbuf_free (dynbuf);
 	      free (buf);
 
 	      return NULL;
@@ -212,19 +212,19 @@ rc_get_list_file (char **list, char *filename)
       free (buf);
     }
 
-  /* read_line_dyn_buf() returned NULL with errno set */
+  /* rc_dynbuf_read_line() returned NULL with errno set */
   if ((NULL == buf) && (0 != errno))
     {
       DBG_MSG ("Failed to read line from dynamic buffer!\n");
 error:
       if (NULL != list)
 	str_list_free (list);
-      free_dyn_buf (dynbuf);
+      rc_dynbuf_free (dynbuf);
 
       return NULL;
     }
 
-  free_dyn_buf (dynbuf);
+  rc_dynbuf_free (dynbuf);
 
   return list;
 }

@@ -30,14 +30,16 @@
 
 #include "rcscripts/rcutil.h"
 
-static dyn_buf_t *reallocate_dyn_buf (dyn_buf_t *dynbuf, size_t needed);
+#define DYNAMIC_BUFFER_SIZE (sizeof (char) * 2 * 1024)
 
-dyn_buf_t *
-new_dyn_buf (void)
+static rc_dynbuf_t *rc_dynbuf_reallocate (rc_dynbuf_t *dynbuf, size_t needed);
+
+rc_dynbuf_t *
+rc_dynbuf_new (void)
 {
-  dyn_buf_t *dynbuf = NULL;
+  rc_dynbuf_t *dynbuf = NULL;
 
-  dynbuf = xmalloc (sizeof (dyn_buf_t));
+  dynbuf = xmalloc (sizeof (rc_dynbuf_t));
   if (NULL == dynbuf)
     return NULL;
 
@@ -56,12 +58,12 @@ new_dyn_buf (void)
   return dynbuf;
 }
 
-dyn_buf_t *
-new_dyn_buf_mmap_file (const char *name)
+rc_dynbuf_t *
+rc_dynbuf_new_mmap_file (const char *name)
 {
-  dyn_buf_t *dynbuf = NULL;
+  rc_dynbuf_t *dynbuf = NULL;
 
-  dynbuf = xmalloc (sizeof (dyn_buf_t));
+  dynbuf = xmalloc (sizeof (rc_dynbuf_t));
   if (NULL == dynbuf)
     return NULL;
 
@@ -80,12 +82,12 @@ new_dyn_buf_mmap_file (const char *name)
   return dynbuf;
 }
 
-dyn_buf_t *
-reallocate_dyn_buf (dyn_buf_t *dynbuf, size_t needed)
+rc_dynbuf_t *
+rc_dynbuf_reallocate (rc_dynbuf_t *dynbuf, size_t needed)
 {
   int len;
 
-  if (!check_arg_dyn_buf (dynbuf))
+  if (!rc_check_arg_dynbuf (dynbuf))
     return NULL;
 
   if (dynbuf->file_map)
@@ -118,7 +120,7 @@ reallocate_dyn_buf (dyn_buf_t *dynbuf, size_t needed)
 }
 
 void
-free_dyn_buf (dyn_buf_t *dynbuf)
+rc_dynbuf_free (rc_dynbuf_t *dynbuf)
 {
   if (NULL == dynbuf)
     return;
@@ -147,11 +149,11 @@ free_dyn_buf (dyn_buf_t *dynbuf)
 }
 
 int
-write_dyn_buf (dyn_buf_t *dynbuf, const char *buf, size_t length)
+rc_dynbuf_write (rc_dynbuf_t *dynbuf, const char *buf, size_t length)
 {
   int len;
 
-  if (!check_arg_dyn_buf (dynbuf))
+  if (!rc_check_arg_dynbuf (dynbuf))
     return -1;
 
   if (!check_arg_str (buf))
@@ -165,7 +167,7 @@ write_dyn_buf (dyn_buf_t *dynbuf, const char *buf, size_t length)
       return -1;
     }
 
-  if (NULL == reallocate_dyn_buf (dynbuf, length))
+  if (NULL == rc_dynbuf_reallocate (dynbuf, length))
     {
       DBG_MSG ("Could not reallocate dynamic buffer!\n");
       return -1;
@@ -187,12 +189,12 @@ write_dyn_buf (dyn_buf_t *dynbuf, const char *buf, size_t length)
   return length;
 }
 
-int write_dyn_buf_from_fd (int fd, dyn_buf_t *dynbuf, size_t length)
+int rc_dynbuf_write_fd (rc_dynbuf_t *dynbuf, int fd, size_t length)
 {
   size_t len;
   size_t total = 0;
 
-  if (!check_arg_dyn_buf (dynbuf))
+  if (!rc_check_arg_dynbuf (dynbuf))
     return -1;
 
   if (!check_arg_fd (fd))
@@ -206,7 +208,7 @@ int write_dyn_buf_from_fd (int fd, dyn_buf_t *dynbuf, size_t length)
       return -1;
     }
 
-  if (NULL == reallocate_dyn_buf (dynbuf, length))
+  if (NULL == rc_dynbuf_reallocate (dynbuf, length))
     {
       DBG_MSG ("Could not reallocate dynamic buffer!\n");
       return -1;
@@ -249,13 +251,13 @@ int write_dyn_buf_from_fd (int fd, dyn_buf_t *dynbuf, size_t length)
 }
 
 int
-sprintf_dyn_buf (dyn_buf_t *dynbuf, const char *format, ...)
+rc_dynbuf_sprintf (rc_dynbuf_t *dynbuf, const char *format, ...)
 {
   va_list arg1, arg2;
   char test_str[10];
   int needed, written = 0;
 
-  if (!check_arg_dyn_buf (dynbuf))
+  if (!rc_check_arg_dynbuf (dynbuf))
     return -1;
 
   if (!check_arg_str (format))
@@ -276,7 +278,7 @@ sprintf_dyn_buf (dyn_buf_t *dynbuf, const char *format, ...)
   needed = vsnprintf (test_str, sizeof (test_str), format, arg2);
   va_end (arg2);
 
-  if (NULL == reallocate_dyn_buf (dynbuf, needed))
+  if (NULL == rc_dynbuf_reallocate (dynbuf, needed))
     {
       DBG_MSG ("Could not reallocate dynamic buffer!\n");
       return -1;
@@ -296,11 +298,11 @@ sprintf_dyn_buf (dyn_buf_t *dynbuf, const char *format, ...)
 }
 
 int
-read_dyn_buf (dyn_buf_t *dynbuf, char *buf, size_t length)
+rc_dynbuf_read (rc_dynbuf_t *dynbuf, char *buf, size_t length)
 {
   int len = length;
 
-  if (!check_arg_dyn_buf (dynbuf))
+  if (!rc_check_arg_dynbuf (dynbuf))
     return -1;
 
   if (!check_arg_ptr (buf))
@@ -329,13 +331,13 @@ read_dyn_buf (dyn_buf_t *dynbuf, char *buf, size_t length)
 }
 
 int
-read_dyn_buf_to_fd (int fd, dyn_buf_t *dynbuf, size_t length)
+rc_dynbuf_read_fd (rc_dynbuf_t *dynbuf, int fd, size_t length)
 {
   size_t len;
   size_t total = 0;
   size_t max_read = length;
 
-  if (!check_arg_dyn_buf (dynbuf))
+  if (!rc_check_arg_dynbuf (dynbuf))
     return -1;
 
   if (!check_arg_fd (fd))
@@ -382,12 +384,12 @@ read_dyn_buf_to_fd (int fd, dyn_buf_t *dynbuf, size_t length)
 }
 
 char *
-read_line_dyn_buf (dyn_buf_t *dynbuf)
+rc_dynbuf_read_line (rc_dynbuf_t *dynbuf)
 {
   char *buf = NULL;
   size_t count = 0;
 
-  if (!check_arg_dyn_buf (dynbuf))
+  if (!rc_check_arg_dynbuf (dynbuf))
     return NULL;
 
   if (dynbuf->rd_index == dynbuf->wr_index)
@@ -413,12 +415,12 @@ read_line_dyn_buf (dyn_buf_t *dynbuf)
 }
 
 int
-dyn_buf_replace_char (dyn_buf_t *dynbuf, const char old, const char new)
+rc_dynbuf_replace_char (rc_dynbuf_t *dynbuf, const char old, const char new)
 {
   int i;
   int count = 0;
 
-  if (!check_arg_dyn_buf (dynbuf))
+  if (!rc_check_arg_dynbuf (dynbuf))
     return -1;
 
   if (0 == dynbuf->wr_index)
@@ -437,9 +439,9 @@ dyn_buf_replace_char (dyn_buf_t *dynbuf, const char old, const char new)
 }
 
 bool
-dyn_buf_rd_eof (dyn_buf_t *dynbuf)
+rc_dynbuf_read_eof (rc_dynbuf_t *dynbuf)
 {
-  if (!check_arg_dyn_buf (dynbuf))
+  if (!rc_check_arg_dynbuf (dynbuf))
     return FALSE;
 
   if (dynbuf->rd_index >= dynbuf->wr_index)
@@ -449,7 +451,7 @@ dyn_buf_rd_eof (dyn_buf_t *dynbuf)
 }
 
 inline bool
-check_dyn_buf (dyn_buf_t *dynbuf)
+rc_check_dynbuf (rc_dynbuf_t *dynbuf)
 {
   if ((NULL == dynbuf) || (NULL == dynbuf->data) || (0 == dynbuf->length))
     return FALSE;
@@ -458,10 +460,10 @@ check_dyn_buf (dyn_buf_t *dynbuf)
 }
 
 inline bool
-__check_arg_dyn_buf (dyn_buf_t *dynbuf, const char *file, const char *func,
+__rc_check_arg_dynbuf (rc_dynbuf_t *dynbuf, const char *file, const char *func,
 		     size_t line)
 {
-  if (!check_dyn_buf (dynbuf))
+  if (!rc_check_dynbuf (dynbuf))
     {
       errno = EINVAL;
 

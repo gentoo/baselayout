@@ -22,18 +22,18 @@ RCUTIL_0.0.0 {
     rc_get_list_file;
 
     # dynbuf.c
-    new_dyn_buf;
-    new_dyn_buf_mmap_file;
-    free_dyn_buf;
-    write_dyn_buf;
-    write_dyn_buf_from_fd;
-    sprintf_dyn_buf;
-    read_dyn_buf;
-    read_dyn_buf_to_fd;
-    read_line_dyn_buf;
-    dyn_buf_rd_eof;
-    check_dyn_buf;
-    __check_arg_dyn_buf;
+    rc_dynbuf_new;
+    rc_dynbuf_new_mmap_file;
+    rc_dynbuf_free;
+    rc_dynbuf_write;
+    rc_dynbuf_write_fd;
+    rc_dynbuf_sprintf;
+    rc_dynbuf_read;
+    rc_dynbuf_read_fd;
+    rc_dynbuf_read_line;
+    rc_dynbuf_read_eof;
+    rc_check_dynbuf;
+    __rc_check_arg_dynbuf;
 
     # file.c
     rc_file_exists;

@@ -63,10 +63,10 @@ get_rcscripts (void)
       else
 	{
 	  regex_data_t tmp_data;
-	  dyn_buf_t *dynbuf = NULL;
+	  rc_dynbuf_t *dynbuf = NULL;
 	  char *buf = NULL;
 
-	  dynbuf = new_dyn_buf_mmap_file (rcscript);
+	  dynbuf = rc_dynbuf_new_mmap_file (rcscript);
 	  if (NULL == dynbuf)
 	    {
 	      DBG_MSG ("Could not open '%s' for reading!\n",
@@ -74,8 +74,8 @@ get_rcscripts (void)
 	      goto error;
 	    }
 
-	  buf = read_line_dyn_buf (dynbuf);
-	  free_dyn_buf (dynbuf);
+	  buf = rc_dynbuf_read_line (dynbuf);
+	  rc_dynbuf_free (dynbuf);
 	  if ((NULL == buf) && (0 != errno))
 	    goto error;
 	  if (NULL == buf)
