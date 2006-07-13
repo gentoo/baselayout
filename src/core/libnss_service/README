@@ -7,3 +7,13 @@ I primarily wrote this to solve Gentoo bug #99564 where udev tries to find a
 user who is no longer provided by baselayout but is provided by an ebuild.
 Normally this isn't a problem, but if you're using ldap then it's not available
 at boot time which causes a big big problem. Hence, nss_service to the rescue.
+
+To use this, do something like this in /etc/nsswitch.conf
+
+passwd:      files service [UNAVAIL=return] ldap
+shadow:      files service [UNAVAIL=return] ldap
+group:       files service [UNAVAIL=return] ldap
+
+And this in /etc/nss_service.conf
+
+service openldap
