@@ -70,17 +70,19 @@ fi
 
 dnl Build libnss_service ? 
 AC_ARG_ENABLE([nss],
-	      AC_HELP_STRING([--enable-nss],
-			     [builds the libnss_service library (default=disabled)]),
-	      [enable_nss="$enableval"], [enable_nss="no"])
-LIBNSS_SERVICE=
+  AC_HELP_STRING([--enable-nss],
+    [builds the nss_service NSS module (default=disabled)]),
+  [enable_nss="$enableval"],
+  [enable_nss="no"]
+)
 if test x"$enable_nss" != xno ; then
-    AC_CHECK_HEADER([nss.h],
-		    [LIBNSS_SERVICE=libnss_service],
-		    [LIBNSS_SERVICE=]
-		    [AC_MSG_WARN(*** libnss_service.so will not be built)])
+  AC_CHECK_HEADER([nss.h],
+    [],
+    [enable_nss="no";
+     AC_MSG_WARN(nss_service will not be built)]
+  )
 fi
-AC_SUBST([LIBNSS_SERVICE])
+AM_CONDITIONAL([LIBNSS_SERVICE], [test x"$enable_nss" != xno])
 
 dnl Check if we want SELinux support
 AC_ARG_ENABLE([selinux],

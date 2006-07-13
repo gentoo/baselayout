@@ -6,9 +6,12 @@ SUBDIRS = \
 	include   \
 	librcutil \
 	librccore \
-	$(LIBNSS_SERVICE) \
 	src       \
 	tests
+
+if LIBNSS_SERVICE
+SUBDIRS += libnss_service
+endif
 
 DIST_SUBDIRS = \
 	$(SUBDIRS) \
