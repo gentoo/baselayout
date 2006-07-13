@@ -76,11 +76,16 @@ AC_ARG_ENABLE([nss],
   [enable_nss="no"]
 )
 if test x"$enable_nss" != xno ; then
-  AC_CHECK_HEADER([nss.h],
-    [],
-    [enable_nss="no";
-     AC_MSG_WARN(nss_service will not be built)]
-  )
+  if test x"$enable_shared" != xyes ; then
+    enable_nss="no"
+    AC_MSG_WARN([Shared linking disabled, nss_service will not be built])
+  else
+    AC_CHECK_HEADER([nss.h],
+      [],
+      [enable_nss="no";
+       AC_MSG_WARN([Cannot use nss.h, nss_service will not be built])]
+    )
+  fi
 fi
 AM_CONDITIONAL([LIBNSS_SERVICE], [test x"$enable_nss" != xno])
 
