@@ -68,6 +68,20 @@ if test x"$va_copy" != xva_copy ; then
   )
 fi
 
+dnl Build libnss_service ? 
+AC_ARG_ENABLE([nss],
+	      AC_HELP_STRING([--enable-nss],
+			     [builds the libnss_service library (default=disabled)]),
+	      [enable_nss="$enableval"], [enable_nss="no"])
+LIBNSS_SERVICE=
+if test x"$enable_nss" != xno ; then
+    AC_CHECK_HEADER([nss.h],
+		    [LIBNSS_SERVICE=libnss_service],
+		    [LIBNSS_SERVICE=]
+		    [AC_MSG_WARN(*** libnss_service.so will not be built)])
+fi
+AC_SUBST([LIBNSS_SERVICE])
+
 dnl Check if we want SELinux support
 AC_ARG_ENABLE([selinux],
   AS_HELP_STRING([--enable-selinux],
@@ -107,6 +121,7 @@ AC_OUTPUT([
   include/rcscripts/util/Makefile
   librcutil/Makefile
   librccore/Makefile
+  libnss_service/Makefile
   src/Makefile
   tests/Makefile
 ])

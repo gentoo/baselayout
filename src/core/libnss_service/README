@@ -1,0 +1,9 @@
+nss_service is a nss plugin for glibc that checks to see if the configured
+service has started yet. This is handy when nss uses either ldap or nis.
+In these cases we want the network service(s) to have started (if we're a
+client) or the ldap / nis service to have started (if we're a server).
+
+I primarily wrote this to solve Gentoo bug #99564 where udev tries to find a
+user who is no longer provided by baselayout but is provided by an ebuild.
+Normally this isn't a problem, but if you're using ldap then it's not available
+at boot time which causes a big big problem. Hence, nss_service to the rescue.
