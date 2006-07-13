@@ -32,6 +32,8 @@
 
 #include "rcscripts/rcutil.h"
 
+static bool debug_enabled = TRUE;
+
 static char log_domain_default[] = "rcscripts";
 static char *log_domain = log_domain_default;
 
@@ -43,12 +45,23 @@ rc_log_domain (const char *new_domain)
 }
 
 void
+rc_debug_enabled (bool enabled)
+{
+  debug_enabled = enabled;
+}
+
+void
 debug_message (const char *file, const char *func, int line,
 	       const char *format, ...)
 {
   va_list arg;
   char *format_str;
   int length;
+
+#if !defined(RC_DEBUG)
+  if (debug_enabled)
+    return;
+#endif
 
   save_errno ();
 

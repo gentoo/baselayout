@@ -35,6 +35,8 @@
 void
 rc_log_domain (const char *new_domain);
 void
+rc_debug_enabled (bool enabled);
+void
 debug_message (const char *file, const char *func, int line,
 	       const char *format, ...);
 
