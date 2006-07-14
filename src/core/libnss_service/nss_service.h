@@ -17,11 +17,18 @@
  * 02110-1301 USA
  */
 
+#ifndef __NSS_SERVICE_H__
+#define __NSS_SERVICE_H__
+
 #include <errno.h>
 #include <nss.h>
 
-#define NSS_SERVICE_CONF_FILE		"/etc/nss_service.conf"
+#include "rcscripts/rcdefines.h"
+
+#define NSS_SERVICE_CONF_FILE		RCSCRIPTS_ETCDIR "/nss_service.conf"
 #define NSS_SERVICE_SERVICES_ENTRY	"service"
 
 enum nss_status _nss_service_status (void);
 enum nss_status _nss_service_status_e (int *errnop);
+
+#endif

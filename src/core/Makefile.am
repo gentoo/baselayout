@@ -13,10 +13,6 @@ if LIBNSS_SERVICE
 SUBDIRS += libnss_service
 endif
 
-DIST_SUBDIRS = \
-	$(SUBDIRS) \
-	libnss_service
-
 EXTRA_DIST = \
 	autogen.sh  \
 	ChangeLog.0

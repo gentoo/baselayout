@@ -17,6 +17,9 @@
  * 02110-1301 USA
  */
 
+#ifndef __NSS_SERVICE_NETGRP_H__
+#define __NSS_SERVICE_NETGRP_H__
+
 struct netgrent
 {
   const char *host;
@@ -24,3 +27,4 @@ struct netgrent
   const char *domain;
 };
 
+#endif

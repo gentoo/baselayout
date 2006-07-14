@@ -17,6 +17,9 @@
  * 02110-1301 USA
  */
 
+#ifndef __NSS_SERVICE_ETHERS_H__
+#define __NSS_SERVICE_ETHERS_H__
+
 #include <net/ethernet.h>
 
 struct ether
@@ -25,3 +28,4 @@ struct ether
   struct ether_addr e_addr;
 };
 
+#endif
