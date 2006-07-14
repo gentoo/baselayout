@@ -16,6 +16,9 @@ depscan_CFLAGS = -DLEGACY_DEPSCAN
 depscan_LDADD = $(LIBRCCORE)
 depscan_SOURCES = depscan.c
 
-runscript_LDADD = $(LIBRCUTIL) -ldl
+runscript_LDADD = $(LIBRCUTIL)
+if WANT_SELINUX
+runscript_LDADD += -ldl
+endif
 runscript_SOURCES = runscript.c
 

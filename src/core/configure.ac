@@ -100,6 +100,7 @@ AC_ARG_ENABLE([selinux],
 if test x"$enable_selinux" != xno ; then
   AC_DEFINE([WANT_SELINUX], [], [Define if SELinux support is required.])
 fi
+AM_CONDITIONAL([WANT_SELINUX], [test x"$enable_selinux" != xno])
 
 dnl Check if we want debugging
 AC_ARG_ENABLE([debug],
