@@ -116,7 +116,7 @@ filter_environ (char *caller)
 
 	  env_var = rc_get_cnf_entry (PROFILE_ENV, tmp_env_name, NULL);
 	  free (tmp_env_name);
-	  if ((NULL == env_var) && (0 != errno) && (ENOMSG != errno))
+	  if ((NULL == env_var) && (rc_errno_is_set ()))
 	    goto error;
 	  else if (NULL != env_var)
 	    goto add_entry;

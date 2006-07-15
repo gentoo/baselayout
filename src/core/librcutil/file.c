@@ -43,15 +43,11 @@ rc_file_exists (const char *pathname)
   if (!check_str (pathname))
     return FALSE;
 
-  save_errno ();
-
   retval = lstat (pathname, &buf);
   if (-1 != retval)
     retval = TRUE;
   else
     retval = FALSE;
-
-  restore_errno ();
 
   return retval;
 }
@@ -65,15 +61,11 @@ rc_is_file (const char *pathname, bool follow_link)
   if (!check_str (pathname))
     return FALSE;
 
-  save_errno ();
-
   retval = follow_link ? stat (pathname, &buf) : lstat (pathname, &buf);
   if ((-1 != retval) && (S_ISREG (buf.st_mode)))
     retval = TRUE;
   else
     retval = FALSE;
-
-  restore_errno ();
 
   return retval;
 }
@@ -87,15 +79,11 @@ rc_is_link (const char *pathname)
   if (!check_str (pathname))
     return FALSE;
 
-  save_errno ();
-
   retval = lstat (pathname, &buf);
   if ((-1 != retval) && (S_ISLNK (buf.st_mode)))
     retval = TRUE;
   else
     retval = FALSE;
-
-  restore_errno ();
 
   return retval;
 }
@@ -109,15 +97,11 @@ rc_is_dir (const char *pathname, bool follow_link)
   if (!check_str (pathname))
     return FALSE;
 
-  save_errno ();
-
   retval = follow_link ? stat (pathname, &buf) : lstat (pathname, &buf);
   if ((-1 != retval) && (S_ISDIR (buf.st_mode)))
     retval = TRUE;
   else
     retval = FALSE;
-
-  restore_errno ();
 
   return retval;
 }
@@ -131,15 +115,11 @@ rc_get_size (const char *pathname, bool follow_link)
   if (!check_str (pathname))
     return 0;
 
-  save_errno ();
-
   retval = follow_link ? stat (pathname, &buf) : lstat (pathname, &buf);
   if (-1 != retval)
     retval = buf.st_size;
   else
     retval = 0;
-
-  restore_errno ();
 
   return retval;
 }
@@ -153,15 +133,11 @@ rc_get_mtime (const char *pathname, bool follow_link)
   if (!check_str (pathname))
     return 0;
 
-  save_errno ();
-
   retval = follow_link ? stat (pathname, &buf) : lstat (pathname, &buf);
   if (-1 != retval)
     retval = buf.st_mtime;
   else
     retval = 0;
-
-  restore_errno ();
 
   return retval;
 }
@@ -179,6 +155,12 @@ remove (const char *pathname)
     retval = rmdir (pathname);
   else
     retval = unlink (pathname);
+
+  if (0 != errno)
+    {
+      rc_errno_set (errno);
+      DBG_MSG ("Failed to remove() '%s'!\n", pathname);
+    }
 
   return retval;
 }
@@ -231,15 +213,16 @@ rc_mktree (const char *pathname, mode_t mode)
 	  retval = mkdir (temp_name, mode);
 	  if (-1 == retval)
 	    {
-	      DBG_MSG ("Failed to create directory!\n");
+	      rc_errno_set (errno);
+	      DBG_MSG ("Failed to create directory '%s'!\n", temp_name);
 	      goto error;
 	    }
 	  /* Not a directory or symlink pointing to a directory */
 	}
       else if (!rc_is_dir (temp_name, TRUE))
 	{
-	  errno = ENOTDIR;
-	  DBG_MSG ("Component in pathname is not a directory!\n");
+	  rc_errno_set (ENOTDIR);
+	  DBG_MSG ("Component in '%s' is not a directory!\n", temp_name);
 	  goto error;
 	}
 
@@ -274,17 +257,25 @@ rc_rmtree (const char *pathname)
 
   if (!rc_file_exists (pathname))
     {
-      errno = ENOENT;
-      DBG_MSG ("'%s' does not rc_file_exists!\n", pathname);
+      rc_errno_set (ENOENT);
+      DBG_MSG ("'%s' does not exist!\n", pathname);
       return -1;
     }
 
+  if (!rc_is_dir (pathname, FALSE))
+    {
+      rc_errno_set (ENOTDIR);
+      DBG_MSG ("'%s' is not a directory!\n", pathname);
+      return -1;
+    }
+
+
   dirlist = rc_ls_dir (pathname, TRUE, FALSE);
-  if ((NULL == dirlist) && (0 != errno))
+  if ((NULL == dirlist) && (rc_errno_is_set ()))
     {
       /* Do not error out - caller should decide itself if it
        * it is an issue */
-      DBG_MSG ("Could not get listing for '%s'!\n", pathname);
+      DBG_MSG ("Failed to ls_dir() directory '%s'!\n", pathname);
       return -1;
     }
 
@@ -296,7 +287,7 @@ rc_rmtree (const char *pathname)
 	{
 	  if (-1 == rc_rmtree (dirlist[i]))
 	    {
-	      DBG_MSG ("Failed to delete sub directory!\n");
+	      DBG_MSG ("Failed to rm_tree() directory '%s'!\n", dirlist[i]);
 	      goto error;
 	    }
 	}
@@ -305,7 +296,8 @@ rc_rmtree (const char *pathname)
        * it should already be removed by above rc_rmtree() call */
       if ((rc_file_exists (dirlist[i]) && (-1 == remove (dirlist[i]))))
 	{
-	  DBG_MSG ("Failed to remove '%s'!\n", dirlist[i]);
+	  rc_errno_set (errno);
+	  DBG_MSG ("Failed to remove() '%s'!\n", dirlist[i]);
 	  goto error;
 	}
       i++;
@@ -316,6 +308,7 @@ rc_rmtree (const char *pathname)
   /* Now remove the parent */
   if (-1 == remove (pathname))
     {
+      rc_errno_set (errno);
       DBG_MSG ("Failed to remove '%s'!\n", pathname);
       goto error;
     }
@@ -337,10 +330,18 @@ rc_ls_dir (const char *pathname, bool hidden, bool sort)
   if (!check_arg_str (pathname))
     return NULL;
 
+  if (!rc_is_dir (pathname, TRUE))
+    {
+      /* XXX: Should we error here? */
+      DBG_MSG ("'%s' is not a directory.\n", pathname);
+      return NULL;
+    }
+
   dp = opendir (pathname);
   if (NULL == dp)
     {
-      DBG_MSG ("Failed to call opendir()!\n");
+      rc_errno_set (errno);
+      DBG_MSG ("Failed to opendir() '%s'!\n", pathname);
       /* errno will be set by opendir() */
       goto error;
     }
@@ -353,7 +354,8 @@ rc_ls_dir (const char *pathname, bool hidden, bool sort)
       /* Only an error if 'errno' != 0, else EOF */
       if ((NULL == dir_entry) && (0 != errno))
 	{
-	  DBG_MSG ("Failed to call readdir()!\n");
+	  rc_errno_set (errno);
+	  DBG_MSG ("Failed to readdir() '%s'!\n", pathname);
 	  goto error;
 	}
       if ((NULL != dir_entry)
@@ -387,7 +389,7 @@ rc_ls_dir (const char *pathname, bool hidden, bool sort)
       if (NULL != dirlist)
 	str_list_free (dirlist);
 
-      DBG_MSG ("Directory is empty.\n");
+      DBG_MSG ("Directory '%s' is empty.\n", pathname);
     }
 
   closedir (dp);
@@ -399,12 +401,7 @@ error:
   str_list_free (dirlist);
 
   if (NULL != dp)
-    {
-      save_errno ();
       closedir (dp);
-      /* closedir() might have changed it */
-      restore_errno ();
-    }
 
   return NULL;
 }
@@ -441,29 +438,27 @@ rc_file_map (const char *filename, char **buf, size_t * bufsize)
   fd = open (filename, O_RDONLY);
   if (fd < 0)
     {
+      rc_errno_set (errno);
       DBG_MSG ("Failed to open file!\n");
       return -1;
     }
 
   if (fstat (fd, &stats) < 0)
     {
+      rc_errno_set (errno);
       DBG_MSG ("Failed to stat file!\n");
 
-      save_errno ();
       close (fd);
-      restore_errno ();
 
       return -1;
     }
 
   if (0 == stats.st_size)
     {
-      errno = EINVAL;
+      rc_errno_set (EINVAL);
       DBG_MSG ("Failed to mmap file with 0 size!\n");
 
-      save_errno ();
       close (fd);
-      restore_errno ();
 
       return -1;
     }
@@ -471,11 +466,10 @@ rc_file_map (const char *filename, char **buf, size_t * bufsize)
   *buf = mmap (NULL, stats.st_size, PROT_READ, MAP_SHARED, fd, 0);
   if (*buf == MAP_FAILED)
     {
+      rc_errno_set (errno);
       DBG_MSG ("Failed to mmap file!\n");
 
-      save_errno ();
       close (fd);
-      restore_errno ();
 
       return -1;
     }

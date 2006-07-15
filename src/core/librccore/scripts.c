@@ -40,10 +40,12 @@ get_rcscripts (void)
   char *confd_file = NULL;
   int count;
 
+  rc_errno_save ();
+
   file_list = rc_ls_dir (RCSCRIPTS_INITDDIR, FALSE, FALSE);
   if (NULL == file_list)
     {
-      errno = ENOENT;
+      rc_errno_set (ENOENT);
       DBG_MSG ("'%s' is empty!\n", RCSCRIPTS_INITDDIR);
 
       return -1;
@@ -74,9 +76,11 @@ get_rcscripts (void)
 	      goto error;
 	    }
 
+	  /* Make sure we do not get false positives below */
+	  rc_errno_clear ();
 	  buf = rc_dynbuf_read_line (dynbuf);
 	  rc_dynbuf_free (dynbuf);
-	  if ((NULL == buf) && (0 != errno))
+	  if ((NULL == buf) && (rc_errno_is_set ()))
 	    goto error;
 	  if (NULL == buf)
 	    {
@@ -165,12 +169,14 @@ loop_error:
   /* Final check if we have some entries */
   if (!check_strv (file_list))
     {
-      errno = ENOENT;
+      rc_errno_set (ENOENT);
       DBG_MSG ("No rc-scripts to parse!\n");
       goto error;
     }
 
   str_list_free (file_list);
+
+  rc_errno_restore ();
 
   return 0;
 

@@ -73,6 +73,7 @@ create_directory (const char *name)
 	  /* Remove it if not a directory */
 	  if (-1 == unlink (name))
 	    {
+	      rc_errno_set (errno);
 	      DBG_MSG ("Failed to remove '%s'!\n", name);
 	      return -1;
 	    }
@@ -250,6 +251,11 @@ main (void)
       DBG_MSG ("Regenerating cache file '%s'.\n", cachefile);
 
       data = rc_dynbuf_new ();
+      if (NULL == data)
+	{
+	  DBG_MSG ("Failed to allocate buffer!\n");
+	  exit (EXIT_FAILURE);
+	}
 
       datasize = generate_stage2 (data);
       if (-1 == datasize)

@@ -46,7 +46,7 @@
  *                           (this of course exclude the use of '^' in a 'list').
  *
  * - If an invalid argument was passed, the functions returns 0 with
- *   'regex_data-match == 0' (no error with no match) rather than -1.  It may
+ *   'regex_data->match == 0' (no error with no match) rather than -1.  It may
  *   not be consistant with other practices, but I personally do not feel it is
  *   a critical error for these types of functions, and there are debugging you
  *   can enable to verify that there are no such issues.
@@ -81,8 +81,8 @@
        || (NULL == _regex_data->regex) \
        || (0 == strlen(_regex_data->regex))) \
      { \
-       errno = EINVAL; \
-       DBG_MSG("Invalid argument passed!\n"); \
+       rc_errno_set (EINVAL); \
+       DBG_MSG ("Invalid argument passed!\n"); \
        goto _on_error; \
      } \
  } while (0)
@@ -244,7 +244,7 @@ get_list_size (const char *regex)
 
   if ('[' != regex[0])
     {
-      errno = EINVAL;
+      rc_errno_set (EINVAL);
       DBG_MSG ("Invalid argument passed!\n");
       return 0;
     }
@@ -538,7 +538,7 @@ __match_wildcard (regex_data_t * regex_data,
 
   if (NULL == match_func)
     {
-      errno = EINVAL;
+      rc_errno_set (EINVAL);
       DBG_MSG ("NULL match_func was passed!\n");
       goto exit;
     }
@@ -867,3 +867,4 @@ error:
 
   return -1;
 }
+

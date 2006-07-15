@@ -34,7 +34,7 @@ main (void)
 
   if (-1 == rc_file_map ("/etc/fstab", &buf, &bufsize))
     {
-      DBG_MSG ("Failed to mmap file");
+      DBG_MSG ("Failed to mmap file!\n");
       exit (EXIT_FAILURE);
     }
   

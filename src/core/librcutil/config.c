@@ -40,6 +40,7 @@ rc_get_cnf_entry (const char *pathname, const char *entry, const char *sep)
   char *value = NULL;
   char *token;
 
+  rc_errno_save ();
 
   if ((!check_arg_str (pathname)) || (!check_arg_str (entry)))
     return NULL;
@@ -47,7 +48,7 @@ rc_get_cnf_entry (const char *pathname, const char *entry, const char *sep)
   /* If it is not a file or symlink pointing to a file, bail */
   if (!rc_is_file (pathname, TRUE))
     {
-      errno = ENOENT;
+      rc_errno_set (ENOENT);
       DBG_MSG ("'%s' is not a file or do not exist!\n", pathname);
       return NULL;
     }
@@ -66,6 +67,8 @@ rc_get_cnf_entry (const char *pathname, const char *entry, const char *sep)
       return NULL;
     }
 
+  /* Make sure we do not get false positives below */
+  rc_errno_clear ();
   while (NULL != (buf = rc_dynbuf_read_line (dynbuf)))
     {
       str_ptr = buf;
@@ -148,7 +151,7 @@ _continue:
     }
 
   /* rc_dynbuf_read_line() returned NULL with errno set */
-  if ((NULL == buf) && (0 != errno))
+  if ((NULL == buf) && (rc_errno_is_set ()))
     {
       DBG_MSG ("Failed to read line from dynamic buffer!\n");
       rc_dynbuf_free (dynbuf);
@@ -160,9 +163,13 @@ _continue:
 
 
   if (NULL == value)
+    /* NULL without errno set means everything went OK, but we did not get a
+     * entry */
     DBG_MSG ("Failed to get value for config entry '%s'!\n", entry);
 
   rc_dynbuf_free (dynbuf);
+
+  rc_errno_restore ();
 
   return value;
 }
@@ -175,6 +182,8 @@ rc_get_list_file (char **list, char *filename)
   char *tmp_p = NULL;
   char *token = NULL;
 
+  rc_errno_save ();
+
   if (!check_arg_str (filename))
     return NULL;
 
@@ -182,6 +191,8 @@ rc_get_list_file (char **list, char *filename)
   if (NULL == dynbuf)
     return NULL;
 
+  /* Make sure we do not get false positives below */
+  rc_errno_clear ();
   while (NULL != (buf = rc_dynbuf_read_line (dynbuf)))
     {
       tmp_p = buf;
@@ -213,7 +224,7 @@ rc_get_list_file (char **list, char *filename)
     }
 
   /* rc_dynbuf_read_line() returned NULL with errno set */
-  if ((NULL == buf) && (0 != errno))
+  if ((NULL == buf) && (rc_errno_is_set ()))
     {
       DBG_MSG ("Failed to read line from dynamic buffer!\n");
 error:
@@ -226,5 +237,8 @@ error:
 
   rc_dynbuf_free (dynbuf);
 
+  rc_errno_restore ();
+
   return list;
 }
+

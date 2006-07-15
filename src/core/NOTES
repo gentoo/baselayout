@@ -1,0 +1,24 @@
+Error handling
+==============
+
+Currently the source uses an errno based error system, that in theory should
+give usable 'traces' if an error occurs.  This can be set/get via the errno
+related functions (rc_errno_*) in include/rcscripts/util/debug.h.  DBG_MSG
+should now, if called frequently throughout the code, print hopefully
+meaningful debug messages.
+
+Because of this 'tracing' feature of the debugging, functions should set our
+errno if a critical error occurred, with suitable debug messages.  Normally
+it should not be needed to set our errno for these library functions, as they
+should have done that, but if not, and not commented, it might be a bug. If
+some function might need to clear our errno the make sure a called function
+succeeded, it should use rc_errno_save() and rc_errno_restore() to make sure
+the trace will not be lost.
+
+All references in function comments to errno, should be to our private
+implementation.
+
+I know this is currently a rather weak system, but it should hopefully be
+a bit better than using errno directly, and will give me some time to work
+on something better and less prone to future overhauls.
+

@@ -92,7 +92,7 @@ rc_dynbuf_reallocate (rc_dynbuf_t *dynbuf, size_t needed)
 
   if (dynbuf->file_map)
     {
-      errno = EPERM;
+      rc_errno_set (EPERM);
       DBG_MSG ("Cannot reallocate mmap()'d file!\n");
 
       return NULL;
@@ -135,9 +135,7 @@ rc_dynbuf_free (rc_dynbuf_t *dynbuf)
     }
   else
     {
-      save_errno ();
       rc_file_unmap (dynbuf->data, dynbuf->length);
-      restore_errno ();
     }
 
   dynbuf->length = 0;
@@ -161,7 +159,7 @@ rc_dynbuf_write (rc_dynbuf_t *dynbuf, const char *buf, size_t length)
 
   if (dynbuf->file_map)
     {
-      errno = EPERM;
+      rc_errno_set (EPERM);
       DBG_MSG ("Cannot write to readonly mmap()'d file!\n");
 
       return -1;
@@ -184,7 +182,10 @@ rc_dynbuf_write (rc_dynbuf_t *dynbuf, const char *buf, size_t length)
     dynbuf->wr_index += length;
 
   if (-1 == length)
-    DBG_MSG ("Failed to write to dynamic buffer!\n");
+    {
+      rc_errno_set (errno);
+      DBG_MSG ("Failed to write to dynamic buffer!\n");
+    }
 
   return length;
 }
@@ -202,7 +203,7 @@ int rc_dynbuf_write_fd (rc_dynbuf_t *dynbuf, int fd, size_t length)
 
   if (dynbuf->file_map)
     {
-      errno = EPERM;
+      rc_errno_set (EPERM);
       DBG_MSG ("Cannot write to readonly mmap()'d file!\n");
 
       return -1;
@@ -229,6 +230,7 @@ int rc_dynbuf_write_fd (rc_dynbuf_t *dynbuf, int fd, size_t length)
 	    }
 	  else
 	    {
+	      rc_errno_set (errno);
 	      break;
 	    }
 	}
@@ -245,6 +247,7 @@ int rc_dynbuf_write_fd (rc_dynbuf_t *dynbuf, int fd, size_t length)
   dynbuf->data[dynbuf->wr_index] = '\0';
 
   if (-1 == len)
+    /* XXX: We set errno in above while loop. */
     DBG_MSG ("Failed to write to dynamic buffer!\n");
 
   return (-1 == len) ? len : total;
@@ -265,7 +268,7 @@ rc_dynbuf_sprintf (rc_dynbuf_t *dynbuf, const char *format, ...)
 
   if (dynbuf->file_map)
     {
-      errno = EPERM;
+      rc_errno_set (EPERM);
       DBG_MSG ("Cannot write to readonly mmap()'d file!\n");
 
       return -1;
@@ -292,7 +295,10 @@ rc_dynbuf_sprintf (rc_dynbuf_t *dynbuf, const char *format, ...)
     dynbuf->wr_index += written;
 
   if (-1 == written)
-    DBG_MSG ("Failed to write to dynamic buffer!\n");
+    {
+      rc_errno_set (errno);
+      DBG_MSG ("Failed to write to dynamic buffer!\n");
+    }
 
   return written;
 }
@@ -325,7 +331,10 @@ rc_dynbuf_read (rc_dynbuf_t *dynbuf, char *buf, size_t length)
     dynbuf->rd_index += length;
 
   if (-1 == length)
-    DBG_MSG ("Failed to write from dynamic buffer!\n");
+    {
+      rc_errno_set (errno);
+      DBG_MSG ("Failed to write from dynamic buffer!\n");
+    }
 
   return length;
 }
@@ -364,6 +373,7 @@ rc_dynbuf_read_fd (rc_dynbuf_t *dynbuf, int fd, size_t length)
 	    }
 	  else
 	    {
+	      rc_errno_set (errno);
 	      break;
 	    }
 	}
@@ -378,6 +388,7 @@ rc_dynbuf_read_fd (rc_dynbuf_t *dynbuf, int fd, size_t length)
     dynbuf->rd_index += total;
 
   if (-1 == len)
+    /* XXX: We set errno in above while loop. */
     DBG_MSG ("Failed to write from dynamic buffer!\n");
 
   return (-1 == len) ? len : total;
@@ -465,7 +476,7 @@ __rc_check_arg_dynbuf (rc_dynbuf_t *dynbuf, const char *file, const char *func,
 {
   if (!rc_check_dynbuf (dynbuf))
     {
-      errno = EINVAL;
+      rc_errno_set (EINVAL);
 
       debug_message (file, func, line, "Invalid dynamic buffer passed!\n");
 

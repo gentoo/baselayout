@@ -156,7 +156,7 @@
      } \
    if (NULL == _string_list) \
      { \
-       errno = EINVAL; \
+       rc_errno_set (EINVAL); \
        DBG_MSG ("Invalid string list passed!\n"); \
        goto _error; \
      } \
@@ -173,7 +173,7 @@
      } \
    if (NULL == _string_list[_i]) \
      { \
-       errno = EINVAL; \
+       rc_errno_set (EINVAL); \
        DBG_MSG ("Invalid string list item passed!\n"); \
        goto _error; \
      } \

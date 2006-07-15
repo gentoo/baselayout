@@ -44,7 +44,7 @@ get_runlevel_dirs (void)
   dir_list = rc_ls_dir (RUNLEVELS_DIR, FALSE, FALSE);
   if (NULL == dir_list)
     {
-      errno = ENOENT;
+      rc_errno_set (ENOENT);
       DBG_MSG ("Failed to get any entries in '%' !\n", RUNLEVELS_DIR);
 
       return NULL;
@@ -120,7 +120,7 @@ get_runlevels (void)
       dir_list = rc_ls_dir (runlevel, FALSE, FALSE);
       if (NULL == dir_list)
 	{
-	  if (0 != errno)
+	  if (rc_errno_is_set ())
 	    goto error;
 
 	  goto no_entries;
@@ -210,6 +210,7 @@ is_runlevel (const char *runlevel)
 
   snprintf (runlevel_dir, len, "%s/%s", RUNLEVELS_DIR, runlevel);
 
+  /* XXX: Should we allow symlinks ? */
   if (rc_is_dir (runlevel_dir, FALSE))
     return TRUE;
 

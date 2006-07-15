@@ -69,6 +69,8 @@ parse_rcscript (char *scriptname, rc_dynbuf_t *data)
   size_t write_count = 0;
   size_t tmp_count;
 
+  rc_errno_save ();
+
   if (!rc_check_arg_dynbuf (data))
     return -1;
 
@@ -87,11 +89,14 @@ parse_rcscript (char *scriptname, rc_dynbuf_t *data)
   tmp_count = parse_print_header (rc_basename (scriptname), data);
   if (-1 == tmp_count)
     {
+      rc_errno_set (errno);
       DBG_MSG ("Failed to call parse_print_header()!\n");
       goto error;
     }
   write_count += tmp_count;
 
+  /* Make sure we do not get false positives below */
+  rc_errno_clear ();
   while (NULL != (buf = rc_dynbuf_read_line (dynbuf)))
     {
       /* Check for lines with comments, and skip them */
@@ -111,6 +116,7 @@ parse_rcscript (char *scriptname, rc_dynbuf_t *data)
 	  tmp_count = parse_print_body (rc_basename (scriptname), data);
 	  if (-1 == tmp_count)
 	    {
+	      rc_errno_set (errno);
 	      DBG_MSG ("Failed to call parse_print_body()!\n");
 	      goto error;
 	    }
@@ -126,7 +132,7 @@ parse_rcscript (char *scriptname, rc_dynbuf_t *data)
     }
 
   /* rc_dynbuf_read_line() returned NULL with errno set */
-  if ((NULL == buf) && (0 != errno))
+  if ((NULL == buf) && (rc_errno_is_set ()))
     {
       DBG_MSG ("Failed to read line from dynamic buffer!\n");
       rc_dynbuf_free (dynbuf);
@@ -135,6 +141,8 @@ parse_rcscript (char *scriptname, rc_dynbuf_t *data)
     }
 
   rc_dynbuf_free (dynbuf);
+
+  rc_errno_restore ();
 
   return write_count;
 
@@ -161,6 +169,7 @@ generate_stage1 (rc_dynbuf_t *data)
   write_count = parse_print_start (data);
   if (-1 == write_count)
     {
+      rc_errno_set (errno);
       DBG_MSG ("Failed to call parse_print_start()!\n");
       return -1;
     }
@@ -173,7 +182,7 @@ generate_stage1 (rc_dynbuf_t *data)
 	  DBG_MSG ("Failed to parse '%s'!\n", rc_basename (info->filename));
 
 	  /* If 'errno' is set, it is critical (hopefully) */
-	  if (0 != errno)
+	  if (rc_errno_is_set ())
 	    return -1;
 	}
       else
@@ -199,7 +208,7 @@ generate_stage2 (rc_dynbuf_t *data)
   int pipe_fds[2][2] = { {0, 0}, {0, 0} };
   pid_t child_pid;
   size_t write_count = 0;
-  int old_errno = 0;
+  bool io_failed = FALSE;
 
   if (!rc_check_arg_dynbuf (data))
     return -1;
@@ -207,12 +216,14 @@ generate_stage2 (rc_dynbuf_t *data)
   /* Pipe to send data to parent */
   if (-1 == pipe (pipe_fds[0]))
     {
+      rc_errno_set (errno);
       DBG_MSG ("Failed to open pipe!\n");
       goto error;
     }
   /* Pipe to send data to child */
   if (-1 == pipe (pipe_fds[1]))
     {
+      rc_errno_set (errno);
       DBG_MSG ("Failed to open pipe!\n");
       /* Close parent_pfds */
       goto error;
@@ -221,6 +232,7 @@ generate_stage2 (rc_dynbuf_t *data)
   child_pid = fork ();
   if (-1 == child_pid)
     {
+      rc_errno_set (errno);
       DBG_MSG ("Failed to fork()!\n");
       /* Close all pipes */
       goto error;
@@ -244,19 +256,31 @@ generate_stage2 (rc_dynbuf_t *data)
       close (PARENT_READ_PIPE (pipe_fds));
 
       /* dup2 child side read pipe to STDIN */
-      dup2 (CHILD_READ_PIPE (pipe_fds), STDIN_FILENO);
+      if (-1 == dup2 (CHILD_READ_PIPE (pipe_fds), STDIN_FILENO))
+	{
+	  rc_errno_set (errno);
+	  DBG_MSG ("Failed to dup2() STDIN!\n");
+	  exit (EXIT_FAILURE);
+	}
       /* dup2 child side write pipe to STDOUT */
-      dup2 (CHILD_WRITE_PIPE (pipe_fds), STDOUT_FILENO);
+      if (-1 == dup2 (CHILD_WRITE_PIPE (pipe_fds), STDOUT_FILENO))
+	{
+	  rc_errno_set (errno);
+	  DBG_MSG ("Failed to dup2() STDOUT!\n");
+	  exit (EXIT_FAILURE);
+	}
 
       /* We need to be in RCSCRIPTS_INITDDIR for 'before'/'after' '*' to work */
       if (-1 == chdir (RCSCRIPTS_INITDDIR))
 	{
+	  rc_errno_set (errno);
 	  DBG_MSG ("Failed to chdir to '%s'!\n", RCSCRIPTS_INITDDIR);
 	  exit (EXIT_FAILURE);
 	}
 
       if (-1 == execv (SHELL_PARSER, argv))
 	{
+	  rc_errno_set (errno);
 	  DBG_MSG ("Failed to execv %s!\n", SHELL_PARSER);
 	  exit (EXIT_FAILURE);
 	}
@@ -351,6 +375,7 @@ generate_stage2 (rc_dynbuf_t *data)
 	      /* We handle EINTR in rc_dynbuf_read_fd() */
 	      if (-1 == tmp_count)
 		{
+		  rc_errno_set (errno);
 		  DBG_MSG ("Error writing to PARENT_WRITE_PIPE!\n");
 		  goto failed;
 		}
@@ -379,6 +404,7 @@ generate_stage2 (rc_dynbuf_t *data)
 	      /* We handle EINTR in rc_dynbuf_write_fd() */
 	      if (-1 == tmp_count)
 		{
+		  rc_errno_set (errno);
 		  DBG_MSG ("Error reading PARENT_READ_PIPE!\n");
 		  goto failed;
 		}
@@ -390,9 +416,9 @@ generate_stage2 (rc_dynbuf_t *data)
       while (!(poll_fds[READ_PIPE].revents & POLLHUP));
 
 failed:
-      /* Set old_errno to disable child exit code checking below */
-      if (0 != errno)
-	old_errno = errno;
+      /* Set io_failed to disable child exit code checking below */
+      if (rc_errno_is_set ())
+	io_failed = TRUE;
 
       rc_dynbuf_free (stage1_data);
 
@@ -407,12 +433,12 @@ failed:
       waitpid (child_pid, &status, 0);
       /* If old_errno is set, we had an error in the read loop, so do
        * not worry about the child's exit code */
-      if (0 == old_errno)
+      if (!io_failed)
 	{
 	  if ((!WIFEXITED (status)) || (0 != WEXITSTATUS (status)))
 	    {
 	      /* FIXME: better errno ? */
-	      errno = ECANCELED;
+	      rc_errno_set (ECANCELED);
 	      DBG_MSG ("Bash failed with status 0x%x!\n", status);
 
 	      return -1;
@@ -420,8 +446,7 @@ failed:
 	}
       else
 	{
-	  /* Right, we had an error, so set errno, and exit */
-	  errno = old_errno;
+	  /* Right, we had an error, so just return */
 	  return -1;
 	}
     }
@@ -431,7 +456,6 @@ failed:
   /* Close parent side pipes */
 error:
   /* Close all pipes */
-  old_errno = errno;
   if (0 != CHILD_READ_PIPE (pipe_fds))
     close (CHILD_READ_PIPE (pipe_fds));
   if (0 != CHILD_WRITE_PIPE (pipe_fds))
@@ -440,8 +464,6 @@ error:
     close (PARENT_READ_PIPE (pipe_fds));
   if (0 != PARENT_WRITE_PIPE (pipe_fds))
     close (PARENT_WRITE_PIPE (pipe_fds));
-  /* close() might have changed it */
-  errno = old_errno;
 
   return -1;
 }
@@ -545,9 +567,13 @@ parse_cache (const rc_dynbuf_t *data)
   char *field;
   int retval;
 
+  rc_errno_save ();
+
   if (!rc_check_arg_dynbuf ((rc_dynbuf_t *) data))
     goto error;
 
+  /* Make sure we do not get false positives below */
+  rc_errno_clear ();
   while (NULL != (buf = rc_dynbuf_read_line ((rc_dynbuf_t *) data)))
     {
       str_ptr = buf;
@@ -564,7 +590,7 @@ parse_cache (const rc_dynbuf_t *data)
 	  /* We got an empty FIELD value */
 	  || (!check_str (str_ptr)))
 	{
-	  errno = EMSGSIZE;
+	  rc_errno_set (EMSGSIZE);
 	  DBG_MSG ("Parsing stopped due to short read!\n");
 
 	  goto error;
@@ -662,7 +688,7 @@ _continue:
     }
 
   /* rc_dynbuf_read_line() returned NULL with errno set */
-  if ((NULL == buf) && (0 != errno))
+  if ((NULL == buf) && (rc_errno_is_set ()))
     {
       DBG_MSG ("Failed to read line from dynamic buffer!\n");
       return -1;
@@ -683,6 +709,8 @@ _continue:
 	  return -1;
 	}
     }
+
+  rc_errno_restore ();
 
   return 0;
 

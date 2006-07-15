@@ -41,6 +41,7 @@ rc_init (void)
 				       NULL);
   if (NULL == rc_config_svcdir)
     {
+      rc_errno_set (ENOENT);
       DBG_MSG ("Failed to get config entry '%s'!\n", SVCDIR_CONFIG_ENTRY);
       return -1;
     }

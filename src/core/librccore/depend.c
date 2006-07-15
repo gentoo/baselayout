@@ -69,7 +69,7 @@ service_get_info (char *servicename)
 
   /* We use this to check if a service exists, so rather do not
    * add debugging, otherwise it is very noisy! */
-  /* DBG_MSG("Invalid service name '%s'!\n", servicename); */
+  /* DBG_MSG ("Invalid service name '%s'!\n", servicename); */
 
   return NULL;
 }
@@ -119,6 +119,7 @@ service_add (char *servicename)
     }
   else
     {
+      rc_errno_set (EINVAL);
       DBG_MSG ("Tried to add duplicate service '%s'!\n", servicename);
     }
 
@@ -228,6 +229,7 @@ service_add_dependency (char *servicename, char *dependency,
     }
   else
     {
+      rc_errno_set (EINVAL);
       DBG_MSG ("Invalid service name '%s'!\n", servicename);
     }
 
@@ -285,7 +287,7 @@ service_get_virtual (char *virtual)
 
   /* We use this to check if a virtual exists, so rather do not
    * add debugging, otherwise it is very noisy! */
-  /* DBG_MSG("Invalid service name '%s'!\n", virtual); */
+  /* DBG_MSG ("Invalid service name '%s'!\n", virtual); */
 
   return NULL;
 }
@@ -357,6 +359,7 @@ service_set_mtime (char *servicename, time_t mtime)
     }
   else
     {
+      rc_errno_set (EINVAL);
       DBG_MSG ("Invalid service name '%s'!\n", servicename);
     }
 

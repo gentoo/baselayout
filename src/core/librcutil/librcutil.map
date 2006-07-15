@@ -1,6 +1,12 @@
 RCUTIL_0.0.0 {
   global:
     # debug.c
+    rc_log_domain;
+    rc_debug_enabled;
+    rc_errno_set;
+    rc_errno_clear;
+    rc_errno_get;
+    rc_errno_is_set;
     debug_message;
     check_ptr;
     check_str;

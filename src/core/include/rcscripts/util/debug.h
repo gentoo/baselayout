@@ -36,6 +36,28 @@ void
 rc_log_domain (const char *new_domain);
 void
 rc_debug_enabled (bool enabled);
+
+/* Using errno to try and create a debug system that will 'trace' from the
+ * point the initial error occured, is highly messy and needs strict errno
+ * accounting.  So we rather implement our own private errno system.
+ * Currently it still is a form of errno (I'd rather move to something less
+ * messy, but it can be changed after I have a better idea of what exactly is
+ * needed), as its easier to map to the normal errno system, but without the
+ * issue of needing to keep in mind what others might do with errno's value,
+ * and slightly less of an accounting nightmare. */
+void
+rc_errno_set (int rc_errno);
+void
+rc_errno_clear (void);
+int
+rc_errno_get (void);
+bool
+rc_errno_is_set (void);
+
+#define rc_errno_save()		int _rc_old_errno = rc_errno_get ();
+#define rc_errno_restore()	rc_errno_set (_rc_old_errno);
+#define rc_errno_saved		_rc_old_errno
+
 void
 debug_message (const char *file, const char *func, int line,
 	       const char *format, ...);
