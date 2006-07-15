@@ -42,6 +42,9 @@ $if mode=emacs
 # konsole / xterm / rxvt (escape + arrow key)
 "\e\e[C": forward-word
 "\e\e[D": backward-word
+# konsole (alt + arrow key)
+"\e[1;3C": forward-word
+"\e[1;3D": backward-word
 # aterm / eterm (control + arrow key)
 "\eOc": forward-word
 "\eOd": backward-word
