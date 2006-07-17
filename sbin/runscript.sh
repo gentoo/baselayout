@@ -603,7 +603,7 @@ for arg in $* ; do
 					svc_schedule_start "${SVCNAME}" "${x##*/}"
 				fi
 			done
-			rm -f "${svcdir}/snapshot/$$"
+			rm -rf "${svcdir}/snapshot/$$"
 		else
 			rm -f "${svcdir}"/scheduled/*/"${SVCNAME}"
 		fi
