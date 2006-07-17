@@ -385,7 +385,7 @@ svc_start() {
 					|| ( net_service "${x}" && ineed -t "${SVCNAME}" net \
 					&& ! is_net_up ) ; then
 					if service_inactive "${x}" || service_wasinactive "${x}" || \
-						[[ -n $(ls "${svcdir}"/scheduled/*/"${x}" 2>/dev/null) ]] ; then
+						[[ -n $(dolisting "${svcdir}"/scheduled/*/"${x}") ]] ; then
 						svc_schedule_start "${x}" "${SVCNAME}"
 						[[ -n ${startinactive} ]] && startinactive="${startinactive}, "
 						startinactive="${startinactive}${x}"
