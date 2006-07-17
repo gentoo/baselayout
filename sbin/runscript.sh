@@ -342,7 +342,7 @@ svc_start() {
 		local netservices=
 		for x in $(dolisting "/etc/runlevels/${BOOTLEVEL}/net.*") \
 			$(dolisting "/etc/runlevels/${mylevel}/net.*") \
-			$(dolisting "/etc/runlevels/coldplugged/net.*") ; do 
+			$(dolisting "/var/lib/init.d/coldplugged/net.*") ; do 
 			netservices="${netservices} ${x##*/}"
 		done
 
