@@ -355,10 +355,13 @@ update_service_status() {
 start-stop-daemon() {
 	local args="$( requote "$@" )" result i
 	local cmd pidfile pid stopping signal nothing=false 
-	local daemonfile="${svcdir}/daemons/${SVCNAME}"
+	local daemonfile=
 	local -a RC_DAEMONS=() RC_PIDFILES=()
 
-	[[ -e ${daemonfile} ]] && source "${daemonfile}"
+	if [[ -n ${SVCNAME} ]] ; then
+		daemonfile="${svcdir}/daemons/${SVCNAME}"
+		[[ -e ${daemonfile} ]] && source "${daemonfile}"
+	fi
 
 	rc_setup_daemon_vars
 
@@ -371,7 +374,7 @@ start-stop-daemon() {
 	if ${stopping}; then
 		rc_stop_daemon
 		result="$?"
-		if [[ ${result} == "0" ]]; then
+		if [[ ${result} == "0" && -n ${daemonfile} ]]; then
 			# We stopped the daemon successfully
 			# so we remove it from our state
 			for (( i=0; i<${#RC_DAEMONS[@]}; i++ )); do
@@ -389,7 +392,7 @@ start-stop-daemon() {
 	else
 		rc_start_daemon
 		result="$?"
-		if [[ ${result} == "0" ]]; then
+		if [[ ${result} == "0" && -n ${daemonfile} ]]; then
 			# We started the daemon sucessfully
 			# so we add it to our state
 			local max="${#RC_DAEMONS[@]}"
@@ -410,7 +413,7 @@ start-stop-daemon() {
 	# Write the new list of daemon states for this service
 	if [[ ${#RC_DAEMONS[@]} == "0" ]]; then
 		[[ -f ${daemonfile} ]] && rm -f "${daemonfile}"
-	else
+	elif [[ -n ${daemonfile} ]] ; then
 		echo "RC_DAEMONS[0]=\"${RC_DAEMONS[0]}\"" > "${daemonfile}"
 		echo "RC_PIDFILES[0]=\"${RC_PIDFILES[0]}\"" >> "${daemonfile}"
 
