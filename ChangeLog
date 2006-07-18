@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  18 Jul 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Report services scheduled to be started by another service as
+    started OK for splash.
+
   12 Jul 2006; Roy Marples <uberlord@gentoo.org>:
 
     Add bootmisc as a CRITICAL_SERVICE as too many init scripts don't
