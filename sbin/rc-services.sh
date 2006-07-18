@@ -408,7 +408,8 @@ start_service() {
 		# if we can not start the services in parallel
 		# then just start it and return the exit status
 		( "/etc/init.d/${service}" start )
-		service_started "${service}" || service_inactive "${service}"
+		service_started "${service}" || service_inactive "${service}" \
+			|| service_scheduled "${service}"
 		retval=$?
 		end_service "${service}" "${retval}"
 		splash "svc_started" "${service}" "${retval}"
@@ -417,7 +418,8 @@ start_service() {
 		# if parallel startup is allowed, start it in background
 		(
 			"/etc/init.d/${service}" start
-			service_started "${service}" || service_inactive "${service}"
+			service_started "${service}" || service_inactive "${service}" \
+				|| service_scheduled "${service}"
 			retval=$?
 			end_service "${service}" "${retval}"
 			splash "svc_started" "${service}" "${retval}"
@@ -644,6 +646,31 @@ service_stopped() {
 	service_inactive "$1" && return 1
 
 	return 0
+}
+
+# char service_scheduled_by(service)
+#
+#   Returns a list of services which will try and start 'service' when they
+#   are started
+#
+service_scheduled_by() {
+	[[ -z $1 ]] && return 1
+
+	local x= s= r=
+	for x in $(dolisting "${svcdir}/scheduled/*/$1") ; do
+		s="${x%/*}"
+		r="${r} ${s##*/}"
+	done
+
+	echo "${r:1}"
+}
+
+# bool service_scheduled()
+#
+#   Returns true if 'service' is scheduled to be started by another service
+#
+service_scheduled() {
+	[[ -n $(service_scheduled_by "$@") ]]
 }
 
 # bool mark_service_failed(service)
