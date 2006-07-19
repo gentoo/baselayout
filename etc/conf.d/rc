@@ -30,8 +30,9 @@ RC_HOTPLUG="yes"
 # start before we are ready for them. If this happens, we can defer these
 # services to start in the boot runlevel. Set RC_COLDPLUG="no" if you don't
 # want this.
-# NOTE: This does not affect anything coldplug/udev related, just the
-# starting/stopping of the init.d service triggered by coldplug.
+# NOTE: This also affects module coldplugging in udev-096 and higher
+# If you want module coldplugging but not coldplugging of services then you
+# can set RC_COLDPLUG="yes" and RC_PLUG_SERVICES="!*"
 
 RC_COLDPLUG="yes"
 
