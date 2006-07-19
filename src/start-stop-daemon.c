@@ -28,7 +28,7 @@
  * Daemon binary will be stat()ed correctly if it's going to be chrooted
  * with -r|--chroot.
  *
- * Changes by Scot Dial <scot@scottdial.com>
+ * Changes by Scott Dial <scott@scottdial.com>
  *   Provides PAM support
  */
 

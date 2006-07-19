@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  19 Jul 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Rework dolisting and net.lo to use bash globbing instead of ls to save
+    on un-needed forking.
+
   18 Jul 2006; Roy Marples <uberlord@gentoo.org>:
 
     Report services scheduled to be started by another service as

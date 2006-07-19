@@ -234,14 +234,9 @@ modules_load_auto() {
 	local i j inst
 
 	# Populate the MODULES array
-	# Basically we treat evey file in ${MODULES_DIR} as a module
-	MODULES=( $( cd "${MODULES_DIR}" ; ls *.sh ) )
+	# Basically we treat evey file .sh in ${MODULES_DIR} as a module
+	MODULES=( $(dolisting "${MODULES_DIR}") )
 	j="${#MODULES[@]}"
-	for (( i=0; i<j; i++ )); do
-		MODULES[i]="${MODULES_DIR}/${MODULES[i]}"
-		[[ ! -f ${MODULES[i]} ]] && unset MODULES[i]
-	done
-	MODULES=( "${MODULES[@]}" )
 
 	# Each of these sources into the global namespace, so it's
 	# important that module functions and variables are prefixed with

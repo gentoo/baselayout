@@ -520,35 +520,27 @@ get_bootparam() {
 #          also, error checking is not that extensive ...
 #
 dolisting() {
-	local x=
-	local y=
-	local tmpstr=
-	local mylist=
-	local mypath="$*"
+	local x= y= mylist= mypath="$*"
 
-	if [[ ${mypath%/\*} != "${mypath}" ]] ; then
-		mypath=${mypath%/\*}
-	fi
+	[[ ${mypath%/\*} != "${mypath}" ]] && mypath=${mypath%/\*}
 
+	# Here we use bash file globbing instead of ls to save on forking
 	for x in ${mypath} ; do
 		[[ ! -e ${x} ]] && continue
 
-		if [[ ! -d ${x} ]] && [[ -L ${x} || -f ${x} ]] ; then
-			mylist="${mylist} $(ls "${x}" 2> /dev/null)"
-		else
+		if [[ -L ${x} || -f ${x} ]] ; then
+			mylist="${mylist} "${x}
+		elif [[ -d ${x} ]] ; then
 			[[ ${x%/} != "${x}" ]] && x=${x%/}
-
-			cd "${x}"; tmpstr=$(ls)
-
-			for y in ${tmpstr} ; do
-				mylist="${mylist} ${x}/${y}"
+			
+			for y in "${x}"/* ; do
+				mylist="${mylist} ${y}"
 			done
 		fi
 	done
 
 	echo "${mylist}"
 }
-
 
 # char *add_suffix(char * configfile)
 #
@@ -624,7 +616,7 @@ is_union_fs() {
 #   return 0 if the currently running system is User Mode Linux
 is_uml_sys() {
     [[ -e /proc/cpuinfo ]] || return 1
-    [[ $(</proc/cpuinfo) =~ "UML" ]]
+    [[ $(</proc/cpuinfo) == *"UML"* ]]
 }
 
 # bool is_openvz_sys()
@@ -657,7 +649,7 @@ is_vps_sys() {
 is_xenU_sys() {
 	[[ ! -d /proc/xen ]] && return 1
 	[[ ! -r /proc/xen/capabilities ]] && return 1
-	[[ ! $(</proc/xen/capabilities) =~ "control_d" ]]
+	[[ ! $(</proc/xen/capabilities) == *"control_d"* ]]
 }
 
 # bool get_mount_fstab(path)
