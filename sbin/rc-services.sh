@@ -767,9 +767,8 @@ dependon() {
 #   This is the main code for valid_after and valid_iuse
 #   No point in writing it twice!
 valid_i() {
-	local x
 	# Just set to dummy for now (don't know if $svcdir/softlevel exists yet).
-	local mylevel="${BOOTLEVEL}"
+	local mylevel="${BOOTLEVEL}" x= valid=
 
 	[[ $1 != "after" && $1 != "use" ]] && return 1
 
@@ -780,8 +779,10 @@ valid_i() {
 		[[ -e "/etc/runlevels/${BOOTLEVEL}/${x}" || \
 		   -e "/etc/runlevels/${mylevel}/${x}" || \
 		   ${x} == "net" ]] \
-				&& echo "${x}"
+				&& valid="${valid} ${x}"
 	done
+
+	echo "${valid:1}"	
 	return 0
 }
 
