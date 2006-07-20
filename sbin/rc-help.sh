@@ -225,6 +225,20 @@ echo -e "    /etc/conf.d/${SERVICE}${NL}    /etc/rc.conf"
 
 if [[ ${BE_VERBOSE} == "yes" ]] ; then
 echo -e "
+    You can add extra dependencies to ${SERVICE} by adding some variables to
+	/etc/conf.d/${SERVICE}
+    RC_NEED=\"openvpn ntpd\"
+    RC_USE=\"dns\"
+
+    This makes ${SERVICE} need openvpn and ntpd, while it just uses dns.
+
+    A good example of this is nfsmount needing openvpn if the nfs mounts in
+    /etc/fstab are over the vpn link.
+"
+fi
+
+if [[ ${BE_VERBOSE} == "yes" ]] ; then
+echo -e "
 ${CYAN}Management:${OFF}
 
     Services are added and removed via the 'rc-update' tool.  Running it without
