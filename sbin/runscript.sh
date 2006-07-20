@@ -225,6 +225,7 @@ svc_stop() {
 		service_stopped "${x}" && continue
 		wait_service "${x}"
 		if ! service_stopped "${x}" ; then
+			eerror "ERROR:  cannot stop ${SVCNAME} as ${x} is still up."
 			retval=1
 			break
 		fi
@@ -232,10 +233,7 @@ svc_stop() {
 
 	IN_BACKGROUND="${ib_save}"
 
-	if [[ ${retval} != "0" ]] ; then
-		eerror "ERROR:  problems stopping dependent services."
-		eerror "        ${SVCNAME} is still up."
-	else
+	if [[ ${retval} == "0" ]] ; then
 		# Now that deps are stopped, stop our service
 		( 
 		exit() {
@@ -297,7 +295,7 @@ svc_stop() {
 }
 
 svc_start() {
-	local x= y= retval=0 startfail= startinactive=
+	local x= y= retval=0 startinactive=
 
 	# Do not try to start if i have done so already on runlevel change
 	if is_runlevel_start && service_failed "${SVCNAME}" ; then
@@ -390,18 +388,15 @@ svc_start() {
 						[[ -n ${startinactive} ]] && startinactive="${startinactive}, "
 						startinactive="${startinactive}${x}"
 					else
-						startfail="${x}"
+						eerror "ERROR:  cannot start ${SVCNAME} as ${x} could not start"
+						retval=1
 						break
 					fi
 				fi
 			fi
 		done
 
-		if [[ -n ${startfail} ]] ; then
-			eerror "ERROR:  Problem starting needed service ${startfail}"
-			eerror "        ${SVCNAME} was not started."
-			retval=1
-		elif [[ -n ${startinactive} ]] ; then
+		if [[ -n ${startinactive} && ${retval} == "0" ]] ; then
 			# Change the last , to or for correct grammar.
 			x="${startinactive##*, }"
 			startinactive="${startinactive/%, ${x}/ or ${x}}"
