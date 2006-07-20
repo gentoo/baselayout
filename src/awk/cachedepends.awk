@@ -1,6 +1,5 @@
-# Copyright 1999-2004 Gentoo Foundation
+# Copyright 1999-2006 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header$
 
 function print_start() {
 	print "source /sbin/functions.sh" >> TMPCACHE
@@ -48,7 +47,7 @@ function print_header2(mtime) {
 	print "" >> TMPCACHE
 	print "  [ -e /etc/conf.d/net ]                   && \\" >> TMPCACHE
 	print "  [ \"${SVCNAME%%.*}\" = \"net\" ]           && \\" >> TMPCACHE
-	print "  [ \"${SVCNAME##*.}\" != \"${SVCNAME}\" ] && source /etc/conf.d/net" >> TMPCACHE
+	print "  [ \"${SVCNAME#*.}\" != \"${SVCNAME}\" ] && source /etc/conf.d/net" >> TMPCACHE
 	print "" >> TMPCACHE
 	print "  [ -e \"/etc/conf.d/${SVCNAME}\" ]        && source \"/etc/conf.d/${SVCNAME}\"" >> TMPCACHE
 	print "" >> TMPCACHE
@@ -63,6 +62,16 @@ function print_header2(mtime) {
 function print_end() {
 	print "" >> TMPCACHE
 	print "  depend" >> TMPCACHE
+
+	# Support user defined RC_NEED and RC_USE
+	print "" >> TMPCACHE
+	print "  for x in ${RC_NEED} ; do" >> TMPCACHE
+	print "    need \"${x}\"" >> TMPCACHE
+	print "  done" >> TMPCACHE
+	print "" >> TMPCACHE
+	print "  for x in ${RC_USE} ; do" >> TMPCACHE
+	print "    use \"${x}\"" >> TMPCACHE
+	print "  done" >> TMPCACHE
 	print ")" >> TMPCACHE
 	print "" >> TMPCACHE
 }
