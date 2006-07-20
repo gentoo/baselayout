@@ -141,7 +141,11 @@ install:
 	install -m 0755 -d $(SHDIR)
 	for x in $(SBINTOLIB) ; do \
 		n=`echo $$x | sed -e 's/\.$(KERNEL)//'` ; \
-		install -m 0644 "sbin/$$x" $(SHDIR)/$$n ; \
+		if test $$x = "rc-help.sh" ; then \
+			install -m 0755 "sbin/$$x" $(SHDIR)/$$n ; \
+		else \
+			install -m 0644 "sbin/$$x" $(SHDIR)/$$n ; \
+		fi \
 	done
 	# awk
 	install -m 0755 -d $(AWKDIR)
