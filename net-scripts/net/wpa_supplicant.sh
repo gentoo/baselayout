@@ -152,7 +152,6 @@ wpa_supplicant_kill() {
 wpa_supplicant_associate() {
 	local iface="$1" ifvar=$(bash_variable "$1") timeout=
 	timeout="associate_timeout_${ifvar}"
-	[[ -z ${!timeout} ]] && timeout="wpa_timeout_${ifvar}"
 	timeout="${!timeout:--1}"
 
 	[[ -z ${actfile} && ${timeout} -lt 0 ]] && timeout="60"
@@ -251,8 +250,15 @@ wpa_supplicant_pre_start() {
 	# cards may in the future
 	if [[ -e "/sys/class/net/${iface}/device/rf_kill" ]] ; then
 		if [[ $( < "/sys/class/net/${iface}/device/rf_kill" ) != 0 ]] ; then
-			eerror "Wireless radio has been killed for interface ${iface}"
-			return 1
+			ewarn "Wireless radio has been killed for interface ${iface}"
+			local asc="associate_timeout_${ifvar}"
+			if [[ -n ${!asc} && ${!asc} -ge 0 ]] ; then
+				eerror "As you have ${asc} set to 0 or greater"
+				eerror "we will abort as we cannot associate"
+				return 1
+			fi
+			ewarn "wpa_supplicant will launch, but not associate until"
+			ewarn "wireles radio is re-enabled for interface ${iface}"
 		fi
 	fi
 	
