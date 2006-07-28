@@ -194,8 +194,9 @@ svc_stop() {
 		ewarn "WARNING:  you are stopping a boot service."
 	fi
 
-	if [[ ${svcpause} != "yes" && ${RC_NO_DEPS} != "yes" ]] ; then
-		if net_service "${SVCNAME}" ; then
+	if [[ ${svcpause} != "yes" && ${RC_NO_DEPS} != "yes" ]] \
+		&& ! service_wasinactive "${SVCNAME}" ; then
+		if net_service "${SVCNAME}" ; then 
 			if is_runlevel_stop || ! is_net_up "${SVCNAME}" ; then
 				mydeps="net"
 			fi
