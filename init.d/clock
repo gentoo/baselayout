@@ -70,7 +70,7 @@ start() {
 	setupopts
 
 	if [[ ${fakeit} -ne 1 && -e /proc/modules && ! -e /dev/rtc ]] ; then
-		modprobe rtc &> /dev/null
+		modprobe rtc &> /dev/null || modprobe genrtc &> /dev/null
 	fi
 
 	ebegin $"Setting system clock using the hardware clock" "[${TBLURB}]"
