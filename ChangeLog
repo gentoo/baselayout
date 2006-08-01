@@ -6,6 +6,8 @@
     If modprobing the rtc module in the clock init.d script failed, fall 
     back to the genrtc module #142140 by Robin Johnson.
 
+* baselayout-1.12.2 (01 Aug 2006)
+
   26 Jul 2007; Roy Marples <uberlord@gentoo.org>:
 
     wpa_supplicant now launches even when wireless radio has been killed
