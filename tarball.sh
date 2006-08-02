@@ -1,6 +1,6 @@
 #!/bin/bash
 export TMP="${TMP:-/tmp}"
-export V="1.12.1"
+export V="1.12.4"
 export NAME="baselayout"
 export DEST="${TMP}/${NAME}-${V}"
 
@@ -26,6 +26,10 @@ done
 
 # do not yet package src/core stuff
 #rm -rf ${DEST}/src/core
+
+# Make clean
+(cd ${DEST}/src; make clean)
+(cd ${DEST}/src/core; make clean)
 
 # copy net-scripts and remove older stuff
 install -d -m0755 ${DEST}/lib/rcscripts
