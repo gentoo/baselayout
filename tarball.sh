@@ -1,6 +1,6 @@
 #!/bin/bash
 export TMP="${TMP:-/tmp}"
-export V="1.12.1"
+export V="1.12.3"
 export NAME="baselayout"
 export DEST="${TMP}/${NAME}-${V}"
 
@@ -25,7 +25,10 @@ for x in bin etc init.d sbin src rc-lists man ; do
 done
 
 # do not yet package src/core stuff
-#rm -rf ${DEST}/src/core
+rm -rf ${DEST}/src/core
+
+# Make clean
+(cd ${DEST}/src; make clean)
 
 # copy net-scripts and remove older stuff
 install -d -m0755 ${DEST}/lib/rcscripts
