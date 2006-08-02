@@ -24,8 +24,11 @@ for x in bin etc init.d sbin src rc-lists man ; do
 	cp -ax $x ${DEST}
 done
 
+(cd ${DEST}/src; make clean)
+
 # do not yet package src/core stuff
-#rm -rf ${DEST}/src/core
+rm -rf ${DEST}/src/core
+#[[ -f ${DEST}/Makefile ]] && (cd ${DEST}/src; make distclean)
 
 # copy net-scripts and remove older stuff
 install -d -m0755 ${DEST}/lib/rcscripts
