@@ -87,6 +87,11 @@ RC_VERBOSE="no"
 
 RC_BOOTLOG="no"
 
+# Set to "yes" if you want to benchmark system boot with bootchart.
+# You'll need to emerge the apps-benchmark/bootchart package for this to work.
+
+RC_BOOTCHART="no"
+
 # RC_USE_FSTAB allows you to override the default mount options for the 
 # standard /proc, /sys, /dev, and /dev/pts mount points.  Note that this 
 # is the new way for selecting ramfs/tmpfs/etc... for udev mounting.
