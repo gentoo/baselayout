@@ -1,20 +1,24 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
-* baselayout-1.12.3 (02 Aug 2006)
+  04 Aug 2006; Roy Marples <uberlord@gentoo.org>:
 
-  02 Aug 2007; Roy Marples <uberlord@gentoo.org>:
+    Add bootchart suppport, #74425 and #141114. Thanks to Paul Pacheco.
+
+* baselayout-1.12.4 (02 Aug 2006)
+
+  02 Aug 2006; Roy Marples <uberlord@gentoo.org>:
 
     Updated tarball.sh to make clean before making the tarball, bug #142457
 
-  30 Jul 2007; Mike Frysinger <vapier@gentoo.org>:
+  30 Jul 2006; Mike Frysinger <vapier@gentoo.org>:
 
     If modprobing the rtc module in the clock init.d script failed, fall 
     back to the genrtc module #142140 by Robin Johnson.
 
 * baselayout-1.12.2 (01 Aug 2006)
 
-  26 Jul 2007; Roy Marples <uberlord@gentoo.org>:
+  26 Jul 2006; Roy Marples <uberlord@gentoo.org>:
 
     wpa_supplicant now launches even when wireless radio has been killed
     as if the user enables it then it will associate and work without the 

@@ -115,6 +115,8 @@ check_critical_services
 # Now that the dependency cache are up to date, make sure these
 # are marked as started ...
 (
+	profiling "mark started"
+
 	# Needed for mark_service_started()
 	source "${svclib}"/sh/rc-services.sh
 	

@@ -407,20 +407,29 @@ start_service() {
 		  ${START_CRITICAL} == "yes" ]] ; then
 		# if we can not start the services in parallel
 		# then just start it and return the exit status
-		( "/etc/init.d/${service}" start )
+		(
+			profiling name "/etc/init.d/${service} start"
+			"/etc/init.d/${service}" start
+		)
+		
 		service_started "${service}" || service_inactive "${service}" \
 			|| service_scheduled "${service}"
 		retval=$?
+		
 		end_service "${service}" "${retval}"
 		splash "svc_started" "${service}" "${retval}"
+		
 		return "${retval}"
 	else
 		# if parallel startup is allowed, start it in background
 		(
+			profiling name "/etc/init.d/${service} start"
 			"/etc/init.d/${service}" start
+			
 			service_started "${service}" || service_inactive "${service}" \
 				|| service_scheduled "${service}"
 			retval=$?
+			
 			end_service "${service}" "${retval}"
 			splash "svc_started" "${service}" "${retval}"
 		) &

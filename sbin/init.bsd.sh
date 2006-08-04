@@ -27,6 +27,9 @@ ebegin "Mounting linprocfs at /proc"
 try mount -t linprocfs proc /proc
 eend $?
 
+# Start profiling init now we have /proc
+profiling start
+
 source "${svclib}"/sh/init-common-post.sh
 
 # vim:ts=4

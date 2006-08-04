@@ -47,6 +47,9 @@ if ! is_vserver_sys ; then
 	eend $?
 fi
 
+# Start profiling init now we have /proc
+profiling start
+
 # Read off the kernel commandline to see if there's any special settings
 # especially check to see if we need to set the  CDBOOT environment variable
 # Note: /proc MUST be mounted

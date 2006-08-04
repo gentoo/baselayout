@@ -71,6 +71,8 @@ start_critical_service() {
 	# Needed for some addons like dm-crypt that starts in critical services
 	local myservice=$1
 
+	profiling name "/etc/init.d/${service}"
+
 	source "/etc/init.d/${service}"
 	retval=$?
 	if [[ ${retval} -ne 0 ]]; then
