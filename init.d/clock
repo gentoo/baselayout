@@ -91,12 +91,14 @@ start() {
 		else
 			ret=0
 		fi
-		errstr="Failed to set system clock to hardware clock"
+		errstr="Failed to set clock"
 	else
 		ret=1
 		errstr="/sbin/hwclock not found"
 	fi
-	eend ${ret} "${errstr}"
+	eend ${ret} "${errstr}" "You will need to set the clock yourself"
+
+	return 0
 }
 
 stop() {
