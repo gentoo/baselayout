@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  05 Aug 2006; Mike Frysinger <vapier@gentoo.org>:
+
+    Don't use chown while booting in case user is using ldap auth so we
+    dont inadvertently trigger a network lookup #139411.
+
   04 Aug 2006; Roy Marples <uberlord@gentoo.org>:
 
     Add bootchart suppport, #74425 and #141114. Thanks to Paul Pacheco.
