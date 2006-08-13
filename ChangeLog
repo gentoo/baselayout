@@ -10,6 +10,8 @@
 
     Fix frequency parsing and add channel parsing to iwconfig, #143698
 
+    Start dhclient on the right interface, #130670 thanks to Petr Svoboda.
+
   04 Aug 2006; Roy Marples <uberlord@gentoo.org>:
 
     Add bootchart suppport, #74425 and #141114. Thanks to Paul Pacheco.
