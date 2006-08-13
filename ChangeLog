@@ -9,6 +9,8 @@
 
     Fix frequency parsing and add channel parsing to iwconfig, #143698
 
+    Start dhclient on the right interface, #130670 thanks to Petr Svoboda.
+
   06 Aug 2006; Mike Frysinger <vapier@gentoo.org>:
 
     Since the clock init.d script has been moved to critical services level,

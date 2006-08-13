@@ -106,7 +106,7 @@ dhclient_start() {
 	# Bring up DHCP for this interface (or alias)
 	ebegin "Running dhclient"
 	echo -e "${dhconf}" | start-stop-daemon --start --exec /sbin/dhclient \
-		--pidfile "${pidfile}" -- ${opts} -q -1 -pf "${pidfile}"
+		--pidfile "${pidfile}" -- ${opts} -q -1 -pf "${pidfile}" "${iface}"
 	eend $? || return 1 
 
 	# DHCP succeeded, show address retrieved
