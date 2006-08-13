@@ -23,15 +23,7 @@ dhcpcd_expose() {
 #
 # Returns 1 if dhcpcd is installed, otherwise 0
 dhcpcd_check_installed() {
-	if [[ -x /sbin/dhcpcd ]]; then
-		if dhcpcd -h 2>&1 | grep -q "etcDir" ; then
-			return 0
-		else
-			${1:-false} && eerror "We require dhcpcd-2.0.0 or newer"
-			return 1
-		fi
-	fi
-
+	[[ -x /sbin/dhcpcd ]] && return 0
 	${1:-false} && eerror "For DHCP (dhcpcd) support, emerge net-misc/dhcpcd"
 	return 1
 }
@@ -92,9 +84,6 @@ dhcpcd_start() {
 		[[ -n ${hname} && ${hname} != "(none)" && ${hname} != "localhost" ]] \
 			&& opts="-h \"${hname}\" ${opts}"
 	fi
-
-	# Stop dhcpcd from bringing the interface down when we exit
-	opts="${opts} -o"
 
 	# Add our route metric
 	metric="metric_${ifvar}"

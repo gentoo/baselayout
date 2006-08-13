@@ -1,6 +1,15 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  13 Aug 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Remove silly dhcpcd version check. Drop -o from dhcpcd options as
+    all dhcpcd versions in portage have been patches to not bring the interface
+    down and future versions may not support that option as they won't bring
+    the interface down at all.
+
+    Fix frequency parsing and add channel parsing to iwconfig, #143698
+
   04 Aug 2006; Roy Marples <uberlord@gentoo.org>:
 
     Add bootchart suppport, #74425 and #141114. Thanks to Paul Pacheco.
