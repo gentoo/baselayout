@@ -2,9 +2,8 @@
  * runscript.c
  * Handle launching of Gentoo init scripts.
  *
- * Copyright 1999-2004 Gentoo Foundation
+ * Copyright 1999-2006 Gentoo Foundation
  * Distributed under the terms of the GNU General Public License v2
- * $Header$
  */
 
 #include <stdio.h>
@@ -41,9 +40,10 @@ static void (*selinux_run_init_new) (int argc, char **argv);
 
 extern char **environ;
 
-void setup_selinux(int argc, char **argv) {
+void setup_selinux(int argc, char **argv)
+{
 	void *lib_handle = NULL;
-	
+
 	lib_handle = dlopen(SELINUX_LIB, RTLD_NOW | RTLD_GLOBAL);
 	if (NULL != lib_handle) {
 		selinux_run_init_old = dlsym(lib_handle, "selinux_runscript");
@@ -62,7 +62,8 @@ void setup_selinux(int argc, char **argv) {
 	}
 }
 
-char **get_whitelist(char **whitelist, char *filename) {
+char **get_whitelist(char **whitelist, char *filename)
+{
 	char *buf = NULL;
 	char *tmp_buf = NULL;
 	char *tmp_p = NULL;
@@ -70,7 +71,7 @@ char **get_whitelist(char **whitelist, char *filename) {
 	size_t lenght = 0;
 	int count = 0;
 	int current = 0;
-			
+
 	if (-1 == file_map(filename, &buf, &lenght))
 		return NULL;
 
@@ -83,7 +84,7 @@ char **get_whitelist(char **whitelist, char *filename) {
 			goto error;
 		}
 		tmp_p = tmp_buf;
-		
+
 		/* Strip leading spaces/tabs */
 		while ((tmp_p[0] == ' ') || (tmp_p[0] == '\t'))
 			tmp_p++;
@@ -102,7 +103,7 @@ char **get_whitelist(char **whitelist, char *filename) {
 		 * to free below */
 		tmp_buf = NULL;
 	}
-				
+
 
 	file_unmap(buf, lenght);
 
@@ -117,7 +118,8 @@ error:
 	return NULL;
 }
 
-char **filter_environ(char *caller) {
+char **filter_environ(char *caller)
+{
 	char **myenv = NULL;
 	char **whitelist = NULL;
 	char *env_name = NULL;
@@ -136,20 +138,20 @@ char **filter_environ(char *caller) {
 
 	if (1 == is_file(USR_WHITELIST, 1))
 		whitelist = get_whitelist(whitelist, USR_WHITELIST);
-	
+
 	if (NULL == whitelist)
 		/* If no whitelist is present, revert to old behaviour */
 		return environ;
-		
+
 	if (1 != is_file(PROFILE_ENV, 1))
 		/* XXX: Maybe warn here? */
 		check_profile = 0;
-	
+
 	STRING_LIST_FOR_EACH(whitelist, env_name, count) {
 		char *env_var = NULL;
 		char *tmp_p = NULL;
 		int env_len = 0;
-	
+
 		env_var = getenv(env_name);
 		if (NULL != env_var)
 			goto add_entry;
@@ -157,7 +159,7 @@ char **filter_environ(char *caller) {
 		if (1 == check_profile) {
 			char *tmp_env_name = NULL;
 			int tmp_len = 0;
-			
+
 			/* The entries in PROFILE_ENV is of the form:
 			 * export VAR_NAME=value */
 			tmp_len = strlen(env_name) + strlen("export ") + 1;
@@ -167,7 +169,7 @@ char **filter_environ(char *caller) {
 				goto error;
 			}
 			snprintf(tmp_env_name, tmp_len, "export %s", env_name);
-			
+
 			/* Clear errno so that subsequent calls do not trigger
 			 * DBG_MSG */
 			errno = 0;
@@ -180,7 +182,7 @@ char **filter_environ(char *caller) {
 		}
 
 		continue;
-		
+
 add_entry:
 		env_len = strlen(env_name) + strlen(env_var) + 2;
 		tmp_p = calloc(env_len, sizeof(char *));
@@ -197,22 +199,23 @@ add_entry:
 	if (NULL == myenv)
 		/* If all else fails, just add a default PATH */
 		STRING_LIST_ADD(myenv, strdup(DEFAULT_PATH), error);
-	
+
 	return myenv;
 
 error:
 	STRING_LIST_FREE(myenv);
 	STRING_LIST_FREE(whitelist);
-	
+
 	return NULL;
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
 	char *myargs[32];
 	char **myenv = NULL;
 	char *caller = argv[1];
 	int new = 1;
-	
+
 	/* Need to be /bin/bash, else BASH is invalid */
 	myargs[0] = "/bin/bash";
 	while (argv[new] != 0) {
