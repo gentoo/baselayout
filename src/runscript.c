@@ -225,7 +225,7 @@ int main(int argc, char *argv[])
 	myargs[new] = NULL;
 
 	/* Do not do help for /sbin/rc */
-	if (argc < 3 && !IS_SBIN_RC()) {
+	if ((argc < 2) || (argc < 3 && !IS_SBIN_RC())) {
 		execv(RCSCRIPT_HELP, myargs);
 		exit(1);
 	}
