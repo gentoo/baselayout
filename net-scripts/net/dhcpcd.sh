@@ -24,7 +24,6 @@ dhcpcd_expose() {
 # Returns 1 if dhcpcd is installed, otherwise 0
 dhcpcd_check_installed() {
 	[[ -x /sbin/dhcpcd ]] && return 0
-	
 	${1:-false} && eerror "For DHCP (dhcpcd) support, emerge net-misc/dhcpcd"
 	return 1
 }
@@ -85,9 +84,6 @@ dhcpcd_start() {
 		[[ -n ${hname} && ${hname} != "(none)" && ${hname} != "localhost" ]] \
 			&& opts="-h \"${hname}\" ${opts}"
 	fi
-
-	# Stop dhcpcd from bringing the interface down when we exit
-	opts="${opts} -o"
 
 	# Add our route metric
 	metric="metric_${ifvar}"
