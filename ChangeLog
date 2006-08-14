@@ -5,6 +5,8 @@
 
     Only send a process the TERM signal once, #141832
 
+    Set frequency, channel and ap after ESSID, #143716 thanks to damage.
+
   13 Aug 2006; Roy Marples <uberlord@gentoo.org>:
 
     Remove silly dhcpcd version check. Drop -o from dhcpcd options as
