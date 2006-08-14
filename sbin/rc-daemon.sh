@@ -155,7 +155,7 @@ rc_try_kill_pid() {
 				${e} || return 0
 			fi
 		else
-			kill -s "${signal}" "${pid}" 2>/dev/null
+			[[ ${i} == "0" ]] && kill -s "${signal}" "${pid}" 2>/dev/null
 			[[ ! -d "/proc/${pid}" ]] && return 0
 		fi
 		LC_ALL=C /bin/sleep "${s}"
