@@ -237,7 +237,7 @@ ifconfig_get_old_config() {
 		local -a aliases=() broadcasts=() netmasks=()
 
 		# Start with the primary interface
-		config=( ${!i} )
+		config=( "${!i}" )
 
 		# ..then add aliases
 		aliases="alias_${ifvars}"
@@ -256,6 +256,24 @@ ifconfig_get_old_config() {
 
 	# Add inet6 addresses to our config if required
 	[[ -n ${inet6} ]] && config=( "${config[@]}" "${inet6[@]}" )
+
+	# BACKWARD COMPATIBILITY: set the default gateway
+	if [[ ${gateway} == "${iface}/"* ]]; then
+		i="routes_${ifvar}[@]"
+		local -a routes=( "${!i}" )
+		
+		# We don't add the old gateway if one has been set in routes_IFACE
+		local gw=true
+		for i in "${routes[@]}"; do
+			[[ ${i} != *"default gw"* ]] && continue
+			gw=false
+			break
+		done
+	
+		if ${gw} ; then
+			eval "routes_${ifvar}=( \"default gw \${gateway#*/}\" \"\${routes[@]}\" )"
+		fi
+	fi
 
 	return 0
 }
@@ -310,7 +328,8 @@ ifconfig_pre_start() {
 # fail, the routine should still return success to indicate that
 # net.eth0 was successful
 ifconfig_post_start() {
-	local iface="$1" ifvar=$(bash_variable "$1") routes= x= metric= mtu= cidr=
+	local iface="$1" ifvar=$(bash_variable "$1") x= metric= mtu= cidr=
+	local -a routes=()
 	metric="metric_${ifvar}"
 
 	ifconfig_exists "${iface}" || return 0
@@ -322,20 +341,8 @@ ifconfig_post_start() {
 	mtu="mtu_${ifvar}"
 	[[ -n ${!mtu} ]] && ifconfig "${iface}" mtu "${!mtu}"
 
-	routes="routes_${ifvar}[@]"
-	routes=( "${!routes}" )
-
-	# BACKWARD COMPATIBILITY: set the default gateway
-	if [[ ${gateway} == "${iface}/"* ]]; then
-		# We don't add the old gateway if one has been set in routes_IFACE
-		local gw=true
-		for x in "${routes[@]}"; do
-			[[ ${x} != *"default gw"* ]] && continue
-			gw=false
-			break
-		done
-		${gw} && routes=( "${routes[@]}" "default gw ${gateway#*/}" )
-	fi
+	x="routes_${ifvar}[@]"
+	routes=( "${!x}" )
 
 	[[ -z ${routes} ]] && return 0
 
