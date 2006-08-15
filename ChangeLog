@@ -3,6 +3,9 @@
 
   15 Aug 2006; Roy Marples <uberlord@gentoo.org>:
 
+    Fix start-stop-daemon using the --name option
+    #143951 thanks to Dustin J. Mitchell
+
     Support old gateway variable with iproute2.
     arpinging of available address can be disabled with
     modules=( "!arping" )

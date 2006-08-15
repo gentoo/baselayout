@@ -30,7 +30,7 @@ RC_WAIT_ON_START="0.1"
 # Proccess vars - makes things easier by using the shift command
 # and indirect variables
 rc_shift_args() {
-	local addvar
+	local addvar=
 	
 	while [[ $# != "0" ]]; do
 		if [[ $1 != "-"* && -n ${addvar} ]]; then
@@ -86,15 +86,13 @@ rc_shift_args() {
 #
 # Setup our vars based on the start-stop-daemon command
 rc_setup_daemon_vars() {
-	local name i
-	local -a sargs=( "${args%% \'--\' *}" )
-	local -a eargs
-	local x="${args// \'--\' /}"
+	local -a sargs=( "${args%% \'--\' *}" ) eargs=()
+	local x="${args// \'--\' /}" i=
 	[[ ${x} != "${args}" ]] && eargs=( "${args##* \'--\' }" )
 
 	eval rc_shift_args "${sargs[@]}"
 
-	[[ -z ${cmd} ]] && cmd="${name}"
+	[[ -n ${name} ]] && cmd="${name}"
 
 	# We may want to launch the daemon with a custom command
 	# This is mainly useful for debugging with apps like valgrind, strace
@@ -130,7 +128,7 @@ rc_setup_daemon_vars() {
 # via pkill
 # Returns 0 if successfuly otherwise 1
 rc_try_kill_pid() {
-	local pid="$1" signal="${2:-TERM}" session="${3:-false}" i s p e
+	local pid="$1" signal="${2:-TERM}" session="${3:-false}" i= s= p= e=
 
 	# We split RC_RETRY_TIMEOUT into tenths of seconds
 	# So we return as fast as possible
@@ -184,7 +182,7 @@ rc_kill_pid() {
 # Returns a space seperated list of pids associated with the command
 # This is to handle the rpc.nfsd program which acts weird
 pidof() {
-	local arg args 
+	local arg= args=
 
 	for arg in "$@"; do
 		[[ ${arg##*/} == "rpc.nfsd" ]] && arg="${arg%/*}/nfsd"
@@ -200,7 +198,7 @@ pidof() {
 # If a pidfile is supplied, the pid inside it must match
 # a pid in the list of pidof ${cmd}
 is_daemon_running() {
-	local cmd pidfile pids pid
+	local cmd= pidfile= pids= pid=
 
 	if [[ $# == "1" ]]; then
 		cmd="$1"
@@ -264,7 +262,7 @@ rc_start_daemon() {
 # kill the process ourselves and any children left over
 # Returns 0 if everything was successful otherwise 1
 rc_stop_daemon() {
-	local pid pids retval="0"
+	local pid= pids= retval="0"
 	
 	if [[ -n ${cmd} ]]; then
 		if ! is_daemon_running ${cmd} "${pidfile}" ; then
@@ -326,7 +324,7 @@ rc_stop_daemon() {
 # running - hopefully on their correct pids too
 # If not, we stop the service
 update_service_status() {
-	local service="$1" daemonfile="${svcdir}/daemons/$1" i
+	local service="$1" daemonfile="${svcdir}/daemons/$1" i=
 	local -a RC_DAEMONS=() RC_PIDFILES=()
 
 	# We only care about marking started services as stopped if the daemon(s)
@@ -353,8 +351,8 @@ update_service_status() {
 # Return the result of start_daemon or stop_daemon depending on
 # how we are called
 start-stop-daemon() {
-	local args=$(requote "$@") result i
-	local cmd pidfile pid stopping signal nothing=false 
+	local args=$(requote "$@") result= i=
+	local cmd= name= pidfile= pid= stopping= signal= nothing=false 
 	local daemonfile=
 	local -a RC_DAEMONS=() RC_PIDFILES=()
 
