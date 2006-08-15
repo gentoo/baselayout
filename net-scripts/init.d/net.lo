@@ -698,7 +698,7 @@ iface_start() {
 	if [[ -z ${config} ]] ; then
 		interface_get_old_config "${iface}" || return 1
 		if [[ -n ${config} ]] ; then
-			ewarn "You are using a depreciated configuration syntax for ${iface}"
+			ewarn "You are using a deprecated configuration syntax for ${iface}"
 			ewarn "You are advised to read /etc/conf.d/net.example and upgrade it accordingly"
 		fi
 	fi
@@ -754,7 +754,7 @@ iface_start() {
 		elif [[ ${conf[0]:0:1} == [[:digit:]] || ${conf[0]} == *:* ]] ; then
 			x="0"
 			if ! is_loopback "${iface}" ; then
-				if is_function arping_address_exists ; then
+				if [[ " ${MODULES[@]} " == *" arping "* ]] ; then
 					if arping_address_exists "${iface}" "${conf[0]}" ; then
 						eerror "${conf[0]%%/*} already taken on ${iface}"
 						x="1"
