@@ -3,6 +3,8 @@
 
   16 Aug 2006; Roy Marples <uberlord@gentoo.org>:
 
+    Fix typo's in net.example, #144144 thanks to Christian 'Opfer' Faulhammer.
+
     /sys/class/net/$iface/wireless means it's a wireless device too in
     iwconfig.sh and wpa_supplicant.sh
 
