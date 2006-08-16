@@ -60,7 +60,8 @@ iwconfig_check_installed() {
 # Checks to see if wireless extensions are enabled on the interface
 iwconfig_exists() {
 	# Support new sysfs layout
-	[[ -L /sys/class/net/$1/wiphy ]] && return 0
+	[[ -L /sys/class/net/$1/wiphy || -d /sys/class/net/$1/wireless ]] \
+		&& return 0
 
 	[[ ! -e /proc/net/wireless ]] && return 1
 	[[ $(</proc/net/wireless) =~ $'\n'"[ \t]*$1:" ]]
