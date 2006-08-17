@@ -19,7 +19,16 @@ depend() {
 	# For example, br0 may need eth0 and eth1
 	local iface="${SVCNAME#*.}"
 	[[ $(type -t "depend_${iface}") == "function" ]] && depend_${iface}
-	[[ ${iface} != "lo" && ${iface} != "lo0" ]] && after net.lo net.lo0
+
+	if [[ ${iface} != "lo" && ${iface} != "lo0" ]] ; then
+		after net.lo net.lo0
+
+		# Support new style RC_NEED and RC_USE in one net file
+		local x="RC_NEED_${iface}"
+		[[ -n ${!x} ]] && need ${!x}
+		x="RC_USE_${iface}"
+		[[ -n ${!x} ]] && use ${!x}
+	fi
 
 	return 0
 }
