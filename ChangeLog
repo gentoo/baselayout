@@ -3,6 +3,8 @@
 
   17 Aug 2006; Roy Marples <uberlord@gentoo.org>:
 
+    Document ppp plugin options, #144194.
+
     Allow RC_NEED_$iface to work in the same was as RC_NEED.
 
   16 Aug 2006; Roy Marples <uberlord@gentoo.org>:

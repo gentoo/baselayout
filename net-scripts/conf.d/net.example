@@ -6,14 +6,11 @@
 # necessary, though the startup script will warn you that you haven't
 # specified anything.
 
-#
 # WARNING :- some examples have a mixture of IPv4 (ie 192.168.0.1) and IPv6
 # (ie 4321:0:1:2:3:4:567:89ab) internet addresses. They only work if you have
 # the relevant kernel option enabled. So if you don't have an IPv6 enabled
 # kernel then remove the IPv6 address from your config.
-#
 
-#
 # If you want to use a static address or use DHCP explicitly, jump
 # down to the section labelled INTERFACE HANDLERS.
 #
@@ -367,8 +364,7 @@
 # this module first.
 #
 # You need to create the PPP net script yourself. Make it like so
-#cd /etc/init.d
-#ln -s net.lo net.ppp0
+#ln -s net.lo /etc/init.d/net.ppp0
 #
 # We have to instruct ppp0 to actually use ppp
 #config_ppp0=( "ppp" )
@@ -383,9 +379,9 @@
 # Available plugins are: pppoe, pppoa, capi, dhcpc, minconn, radius,
 #			 radattr, radrealms and winbind 
 #plugins_ppp0=(
-#	"pppoe"	# Required plugin for PPPoE
-#	"pppoa"	# Required plugin for PPPoA
-#	"capi"	# Required plugin for ISDN
+#	"pppoe"				# Required plugin for PPPoE
+#	"pppoa 0.8.35 vc-encaps"	# Example plugin for PPPoA
+#	"capi"				# Required plugin for ISDN
 #)
 #
 # PPP requires at least a username. You can optionally set a password here too
