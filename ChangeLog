@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  17 Aug 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Allow RC_NEED_$iface to work in the same was as RC_NEED.
+
   16 Aug 2006; Roy Marples <uberlord@gentoo.org>:
 
     Fix typo's in net.example, #144144 thanks to Christian 'Opfer' Faulhammer.
