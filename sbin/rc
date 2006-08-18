@@ -584,7 +584,7 @@ then
 		# the first time /sbin/rc is called with argv1 != sysinit|boot
 		echo "${DEFAULTLEVEL}" > "${svcdir}/ksoftlevel"
 	fi
-	
+
 	# $BOOT can be used by rc-scripts to test if it is the first time
 	# the 'boot' runlevel is executed
 	export BOOT="yes"
@@ -737,13 +737,12 @@ get_stop_services() {
 }
 
 dep_stop() {
-	local x dep needsme depservice
-	local service=${1##*/}
+	local dep needsme service="${1##*/}"
 
 	service_stopped "${service}" && return 0
 	
 	# Candidate for zapping ?
-	[[ -L ${svcdir}/softscripts.new/${service} ]] \
+	[[ -L "${svcdir}/softscripts.new/${service}" ]] \
 		&& return 0
 
 	if [[ ${SOFTLEVEL} != "reboot" \
@@ -757,25 +756,17 @@ dep_stop() {
 		fi
 	fi
 
-	# Should not work for 'use'
-	if [[ -z $(needsme "${service}") ]] ; then
-		# Nothing depends on me
-		stop_service "${service}"
-	else
-		# Something may depend on me
-		needsme=0
-		
-		for dep in $(needsme "${service}") ; do
-			if [[ -L "${svcdir}/softscripts.new/${dep}" ]] ; then
-				# This dep is valid
-				needsme=1
-				
-				break
-			fi
-		done
-		
-		[[ ${needsme} -eq 0 ]] && stop_service "${service}"
-	fi
+	# Something may depend on me
+	needsme=0
+	for dep in $(needsme "${service}") ; do
+		if [[ -L "${svcdir}/softscripts.new/${dep}" ]] \
+		|| service_coldplugged "${dep}" ; then
+			# This dep is valid
+			needsme=1
+			break
+		fi
+	done
+	[[ ${needsme} -eq 0 ]] && stop_service "${service}"
 }
 
 # Stop services
