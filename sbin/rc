@@ -291,12 +291,11 @@ get_stop_services() {
 }
 
 dep_stop() {
-	local x dep needsme depservice
-	local service="${1##*/}"
+	local dep= needsme= service="${1##*/}"
 
 	service_stopped "${service}" && return 0
 
-	[[ -L ${svcdir}/softscripts.new/${service} ]] \
+	[[ -L "${svcdir}/softscripts.new/${service}" ]] \
 		&& return 0
 
 	if [[ ${SOFTLEVEL} != "reboot" \
@@ -310,23 +309,17 @@ dep_stop() {
 		fi
 	fi
 
-	# Should not work for 'use'
-	if [[ -z $(needsme "${service}") ]] ; then
-		# Nothing depends on me
-		stop_service "${service}"
-	else
-		# Something may depend on me
-		needsme=0
-		
-		for dep in $(needsme "${service}") ; do
-			if [[ -L "${svcdir}/softscripts.new/${dep}" ]] ; then
-				needsme=1
-				break
-			fi
-		done
-		
-		[[ ${needsme} -eq 0 ]] && stop_service "${service}"
-	fi
+	# Something may depend on me
+	needsme=0
+	for dep in $(needsme "${service}") ; do
+		if [[ -L "${svcdir}/softscripts.new/${dep}" ]] \
+		|| service_coldplugged "${dep}" ; then
+			# This dep is valid
+			needsme=1
+			break
+		fi
+	done
+	[[ ${needsme} -eq 0 ]] && stop_service "${service}"
 }
 
 # Stop services
