@@ -372,30 +372,16 @@ then
 	# Start logging console output since we have all /dev stuff setup
 	bootlog start
 
-	# Start RAID/LVM/EVMS/DM volumes for /usr, /var, etc.
-	for x in ${RC_VOLUME_ORDER} ; do
-		start_addon "${x}"
-	done
-
-	# We set the forced softlevel from the kernel command line
-	# It needs to be run right after proc is mounted for the
-	# boot runlevel
-	setup_defaultlevels
-
-	# $BOOT can be used by rc-scripts to test if it is the first time
-	# the 'boot' runlevel is executed.  Now also needed by some stuff in
-	# the 'sysinit' runlevel ...
-	export BOOT="yes"
-
 	start_critical_service() {
+		local service="$1"
 		(
 		local retval=
-		local service="$1"
 		# Needed for some addons like dm-crypt that starts in critical services
-		local myservice="$1"
+		local myservice="${service}"
 
 		profiling name "/etc/init.d/${service} start"
-
+		splash "svc_start" "${service}"
+		
 		source "/etc/init.d/${service}"
 		retval=$?
 		if [[ ${retval} -ne 0 ]] ; then
@@ -409,12 +395,35 @@ then
 		[[ -e ${conf} ]] && source "${conf}"
 
 		start
-		retval=$?
-		[[ ${retval} -ne 0 ]] && eerror "Failed to start /etc/init.d/${service}"
-
-		return "${retval}"
 		)
+		
+		if [[ $? == "0" ]] ; then
+			splash "svc_started" "${service}" "0"
+			return 0
+		fi
+
+		eerror "Failed to start /etc/init.d/${service}"
+		splash "critical" &>/dev/null &
+		echo
+		eerror "One or more critical startup scripts failed to start!"
+		eerror "Please correct this, and reboot ..."
+		echo; echo
+		/sbin/sulogin ${CONSOLE}
+		einfo "Unmounting filesystems"
+		/bin/mount -a -o remount,ro &>/dev/null
+		einfo "Rebooting"
+		/sbin/reboot -f
 	}
+
+	# $BOOT can be used by rc-scripts to test if it is the first time
+	# the 'boot' runlevel is executed.  Now also needed by some stuff in
+	# the 'sysinit' runlevel ...
+	export BOOT="yes"
+
+	# We set the forced softlevel from the kernel command line
+	# It needs to be run right after proc is mounted for the
+	# boot runlevel
+	setup_defaultlevels
 
 	# We first try to find a locally defined list of critical services
 	# for a particular runlevel.  If we cannot find it, we use the
@@ -423,28 +432,23 @@ then
 
 	splash "rc_init" "${argv1}"
 
+	# Start checkroot and modules before we load volumes
 	export START_CRITICAL="yes"
+	for x in checkroot modules ; do
+		[[ " ${CRITICAL_SERVICES} " != *" ${x} "* ]] && continue
+		start_critical_service "${x}"
+	done
 	
+	# Start RAID/LVM/EVMS/DM volumes for /usr, /var, etc.
+	for x in ${RC_VOLUME_ORDER} ; do
+		start_addon "${x}"
+	done
+
 	# We do not want to break compatibility, so we do not fully integrate
 	# these into /sbin/rc, but rather start them by hand ...
-	for x in ${CRITICAL_SERVICES}
-	do
-		splash "svc_start" "${x}"
-		if ! start_critical_service "${x}" ; then
-			splash "critical" &>/dev/null &
-			
-			echo
-			eerror "One or more critical startup scripts failed to start!"
-			eerror "Please correct this, and reboot ..."
-			echo; echo
-			/sbin/sulogin ${CONSOLE}
-			einfo "Unmounting filesystems"
-			/bin/mount -a -o remount,ro &>/dev/null
-			einfo "Rebooting"
-			/sbin/reboot -f
-		fi
-
-		splash "svc_started" "${x}" "0"
+	for x in ${CRITICAL_SERVICES} ; do
+		[[ ${x} == "checkroot" || ${x} == "modules" ]] && continue
+		start_critical_service "${x}"
 	done
 
 	unset START_CRITICAL
