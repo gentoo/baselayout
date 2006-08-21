@@ -67,7 +67,7 @@ dhcpcd_start() {
 
 	# Get our options
 	opts="dhcpcd_${ifvar}"
-	opts="${!opts}"
+	opts="${!opts} ${dhcpcd}"
 
 	# Map some generic options to dhcpcd
 	d="dhcp_${ifvar}"
