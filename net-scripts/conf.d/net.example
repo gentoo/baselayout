@@ -356,6 +356,27 @@
 # ppp devices - we need to depend function on the bonded interfaces
 #RC_NEED_bond0="net.eth0 net.eth1"
 
+
+#-----------------------------------------------------------------------------
+# Classical IP over ATM 
+# For CLIP support emerge net-dialup/linux-atm
+
+# Ensure that you have /etc/atmsigd.conf setup correctly
+# Now setup each clip interface like so
+#clip_atm0=( "peer_ip [if.]vpi.vci [opts]" ... )
+#  where "peer_ip" is the IP address of a PVC peer (in case of an ATM connection
+#  with your ISP, your only peer is usually the ISP gateway closest to you),
+#  "if" is the number of the ATM interface which will carry the PVC, "vpi.vci"
+#  is the ATM VC address, and "opts" may optionally specify VC parameters like
+#  qos, pcr, and the like (see "atmarp -s" for further reference). Please also
+#  note quoting: it is meant to distinguish the VCs you want to create. You may,
+#  in example, create an atm0 interface to more peers, like this:
+#clip_atm0=( "1.1.1.254 0.8.35" "1.1.1.253 1.8.35" )
+
+#  By default, the PVC will use the LLC/SNAP encapsulation. If you rather need a
+#  null encapsulation (aka "VC mode"), please add the keyword "null" to opts.
+
+
 #-----------------------------------------------------------------------------
 # PPP
 # For PPP support, emerge net-dialup/ppp
