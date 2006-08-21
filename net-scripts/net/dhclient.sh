@@ -67,7 +67,7 @@ dhclient_start() {
 
 	# Load our default options
 	opts="dhclient_${ifvar}"
-	opts="${!opts}"
+	opts="${!opts} ${dhclient}"
 
 	local d="dhcp_${ifvar}"
 	[[ -z ${!d} ]] && d="dhcp"
