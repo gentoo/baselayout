@@ -1,7 +1,6 @@
 # Copyright (c) 2005-2006 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # Contributed by Giampaolo Tomassoni <g.tomassoni@libero.it>
-#
 
 # int atmclip_svc_start(char *name, char *desc)
 #
@@ -15,9 +14,9 @@
 atmclip_svc_start() {
     ebegin "Starting $2 Daemon ($1)"
     start-stop-daemon --start \
-	--background \
-	--make-pidfile --pidfile "/var/run/$1.pid" \
-	--exec "/usr/sbin/$1" -- -l syslog
+		--background \
+		--make-pidfile --pidfile "/var/run/$1.pid" \
+		--exec "/usr/sbin/$1" -- -l syslog
     eend $?
 }
 
@@ -25,15 +24,15 @@ atmclip_svc_start() {
 #
 # This starts the whole set of atm services needed by clip
 atmclip_svcs_start() {
-    einfo 'First CLIP instance: starting ATM CLIP daemons'
+    einfo "First CLIP instance: starting ATM CLIP daemons"
     eindent
 
-    if [[ ${clip_full} == 'yes' ]]; then
-	atmclip_svc_start atmsigd 'Signaling' && \
-	atmclip_svc_start ilmid	  'Integrated Local Management Interface' && \
-	atmclip_svc_start atmarpd 'Address Resolution Protocol'
+    if [[ ${clip_full:-yes} == "yes" ]]; then
+		atmclip_svc_start atmsigd "Signaling" && \
+		atmclip_svc_start ilmid	  "Integrated Local Management Interface" && \
+		atmclip_svc_start atmarpd "Address Resolution Protocol"
     else
-	atmclip_svc_start atmarpd 'Address Resolution Protocol'
+		atmclip_svc_start atmarpd "Address Resolution Protocol"
     fi
 
     local r=$?
@@ -47,25 +46,25 @@ atmclip_svcs_start() {
 atmclip_svc_stop() {
     ebegin "Stopping $2 Daemon ($1)"
     start-stop-daemon --stop \
-	--retry \
-	--pidfile "/var/run/$1.pid" \
-	--exec "/usr/sbin/$1"
+		--retry \
+		--pidfile "/var/run/$1.pid" \
+		--exec "/usr/sbin/$1"
     eend $?
 }
 
 # void atmclip_svcs_stop()
 #
 atmclip_svcs_stop() {
-    einfo 'Last CLIP instance: stopping ATM CLIP daemons'
+    einfo "Last CLIP instance: stopping ATM CLIP daemons"
     eindent
 
     # Heartake operation!
     sync
 
-    atmclip_svc_stop atmarpd 'Address Resolution Protocol'
-    if [[ ${clip_full} == 'yes' ]]; then
-	atmclip_svc_stop ilmid 'Integrated Local Management Interface'
-	atmclip_svc_stop atmsigd 'Signaling'
+    atmclip_svc_stop atmarpd "Address Resolution Protocol"
+    if [[ ${clip_full:-yes} == "yes" ]]; then
+		atmclip_svc_stop ilmid "Integrated Local Management Interface"
+		atmclip_svc_stop atmsigd "Signaling"
     fi
 
     eoutdent
@@ -76,9 +75,9 @@ atmclip_svcs_stop() {
 #
 are_atmclip_svcs_running() {
     is_daemon_running atmarpd || return 1
-    if [[ ${clip_full} == "yes" ]]; then
-	is_daemon_running ilmid	  || return 1
-	is_daemon_running atmsigd || return 1
+    if [[ ${clip_full:-yes} == "yes" ]]; then
+		is_daemon_running ilmid	  || return 1
+		is_daemon_running atmsigd || return 1
     fi
 
     return 0
@@ -107,20 +106,20 @@ clip_depend() {
 # daemons which are not needed in case you set "clip_full=no". They are part of
 # the linux-atm package anyway, so it shouldn't hurt to check them too out.
 clip_check_installed() {
-    if [[ ! -r /proc/net/atm/arp ]]; then
-	[ -x /sbin/modprobe ] && /sbin/modprobe clip && sleep 2
-	if [[ ! -r "/proc/net/atm/arp" ]]; then
-	    eerror "You need first to enable kernel support for ATM CLIP"
-	    return 1
-	fi
+    if [[ ! -r /proc/net/atm/arp ]] ; then
+		modprobe clip && sleep 2
+		if [[ ! -r /proc/net/atm/arp ]] ; then
+	    	eerror "You need first to enable kernel support for ATM CLIP"
+	    	return 1
+		fi
     fi
 
     local x
     for x in atmsigd ilmid atmarpd atmarp ; do
-	if [[ ! -x "/usr/sbin/${x}" ]]; then
-	    eerror 'clip: You need first to "emerge net-dialup/linux-atm"'
-	    return 1
-	fi
+		if [[ ! -x "/usr/sbin/${x}" ]]; then
+		    eerror "You need first to emerge net-dialup/linux-atm"
+	    	return 1
+		fi
     done
 
     return 0
@@ -141,20 +140,20 @@ clip_pre_start() {
     clip_check_installed || return 1
 
     local started_here
-    if ! are_atmclip_svcs_running; then
-	atmclip_svcs_start || return 1
-	started_here=1
+    if ! are_atmclip_svcs_running ; then
+		atmclip_svcs_start || return 1
+		started_here=1
     fi
 
-    if ! interface_exists "${iface}"; then
-	ebegin "Creating CLIP interface ${iface}"
-	atmarp -c "${iface}"
-	eend $?
+    if ! interface_exists "${iface}" ; then
+		ebegin "Creating CLIP interface ${iface}"
+		atmarp -c "${iface}"
+		eend $?
 
-	if [[ $? -ne 0 && ! -z ${started_here} ]]; then
-	    atmclip_svcs_stop
-	    return 1
-	fi
+		if [[ $? != "0" && ! -z ${started_here} ]]; then
+	    	atmclip_svcs_stop
+	    	return 1
+		fi
     fi
 
     return 0
@@ -172,7 +171,7 @@ clip_post_start() {
     clip_check_installed || return 1
     are_atmclip_svcs_running || return 1
 
-    # The atm tools (atmarpd?) are silly enough that they woun't work with
+    # The atm tools (atmarpd?) are silly enough that they would not work with
     # iproute2 interface setup as opposed to the ifconfig one.
     # The workaround is to temporarily toggle the interface state from up
     # to down and then up again, without touching its address. This (should)
@@ -188,34 +187,34 @@ clip_post_start() {
     # we stop the ATM daemons.
     local has_failures i
     for (( i=0; i<${#opts[@]}; i++ )); do
-	set -- ${opts[${i}]}
-	local peerip="$1"; shift
-	local ifvpivci="$1"; shift
+		set -- ${opts[${i}]}
+		local peerip="$1"; shift
+		local ifvpivci="$1"; shift
 
-	ebegin "Creating PVC ${ifvpivci} for peer ${peerip}"
+		ebegin "Creating PVC ${ifvpivci} for peer ${peerip}"
 
-	local nleftretries emsg ecode
-	for ((nleftretries=10; nleftretries > 0; nleftretries--)); do
-	    emsg=$(atmarp -s "${peerip}" "${ifvpivci}" "$@" 2>&1)
-	    ecode=$?
-	    [[ ${ecode} -eq 0 ]] && break
-	    sleep 2
-	done
+		local nleftretries emsg ecode
+		for ((nleftretries=10; nleftretries > 0; nleftretries--)); do
+	    	emsg=$(atmarp -s "${peerip}" "${ifvpivci}" "$@" 2>&1)
+	    	ecode=$?
+	    	[[ ${ecode} == "0" ]] && break
+	    	sleep 2
+		done
 
 	eend ${ecode}
 
-	if [[ ${ecode} -ne 0 ]]; then
+	if [[ ${ecode} != "0" ]]; then
 	    eerror "Creation failed for PVC ${ifvpivci}: ${emsg}"
 	    has_failures=1
 	fi
     done
 
     if [[ -n ${has_failures} ]]; then
-	clip_pre_stop "${iface}"
-	clip_post_stop "${iface}"
-	return 1
+		clip_pre_stop "${iface}"
+		clip_post_stop "${iface}"
+		return 1
     else
-	return 0
+		return 0
     fi
 }
 
@@ -232,7 +231,8 @@ clip_pre_stop() {
 
     [[ -z ${opts} ]] && return 0
 
-    if are_atmclip_svcs_running; then
+    are_atmclip_svcs_running || return 0
+
 	# We remove all the PVCs which may have been created by
 	# clip_post_start for this interface. This shouldn't be
 	# needed by the ATM stack, but sometimes I got a panic
@@ -240,21 +240,19 @@ clip_pre_stop() {
 	# every active CLIP PVCs.
 	# The linux 2.6's ATM stack is really a mess...
 	local itf t encp idle ipaddr left
-	einfo 'Removing PVCs on this interface'
+	einfo "Removing PVCs on this interface"
 	eindent
 	{
-	    read left && \
-	    while read itf t encp idle ipaddr left
-	    do
-		if [[ ${itf} == "${iface}" ]]; then
-		    ebegin "Removing PVC to ${ipaddr}"
-		    atmarp -d "${ipaddr}"
-		    eend $?
-		fi
-	    done
+		read left && \
+		while read itf t encp idle ipaddr left ; do
+			if [[ ${itf} == "${iface}" ]]; then
+				ebegin "Removing PVC to ${ipaddr}"
+				atmarp -d "${ipaddr}"
+				eend $?
+			fi
+		done
 	} < /proc/net/atm/arp
 	eoutdent
-    fi
 }
 
 # bool clip_post_stop(char *iface)
@@ -275,18 +273,17 @@ clip_post_stop() {
 
     local itf left hasothers
     {
-	read left && \
-	while read itf left
-	do
-	    if [[ ${itf} != "${iface}" ]]; then
-		hasothers=1
-		break
-	    fi
-	done
+		read left && \
+		while read itf left ; do
+	    	if [[ ${itf} != "${iface}" ]] ; then
+				hasothers=1
+				break
+	    	fi
+		done
     } < /proc/net/atm/arp
 
-    if [[ -z ${hasothers} ]]; then
-	atmclip_svcs_stop || return 1
+    if [[ -z ${hasothers} ]] ; then
+		atmclip_svcs_stop || return 1
     fi
 }
 
