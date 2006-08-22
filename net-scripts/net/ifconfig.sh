@@ -328,7 +328,7 @@ ifconfig_pre_start() {
 # fail, the routine should still return success to indicate that
 # net.eth0 was successful
 ifconfig_post_start() {
-	local iface="$1" ifvar=$(bash_variable "$1") x= metric= mtu= cidr=
+	local iface="$1" ifvar=$(bash_variable "$1") x= y= metric= mtu=
 	local -a routes=()
 	metric="metric_${ifvar}"
 
@@ -356,8 +356,15 @@ ifconfig_post_start() {
 		x="${x//via/gw} "
 		x="${x//scope * / }"
 
-		# Assume we're a net device unless told otherwise
-		[[ " ${x} " != *" -net "* && " ${x} " != *" -host "* ]] && x="-net ${x}"
+		# Work out if we're a host or a net if not told
+		if [[ " ${x} " != *" -net "* && " ${x} " != *" -host "* ]] ; then
+			y="${x%% *}"
+			if [[ ${y} == *.*.*.* && ${y} != *.*.*.0 && ${y} != *.*.*.0/* ]] ; then
+				x="-host ${x}"
+			else
+				x="-net ${x}"
+			fi
+		fi
 
 		# Support adding IPv6 addresses easily
 		if [[ ${x} == *:* ]]; then
