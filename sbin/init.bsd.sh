@@ -9,6 +9,23 @@ single_user() {
 	exit 1
 }
 
+# This basically mounts $svcdir as a ramdisk, but preserving its content
+# which allows us to run depscan.sh
+# FreeBSD has a nice ramdisk - we don't set a size as we should always
+# be fairly small and we unmount them after the boot level is done anyway
+# NOTE we don't set a size for Linux either
+mount_svcdir() {
+	try mdconfig -a -t malloc -u 0
+	try newfs -U /dev/md0
+	try mount /dev/md0 "${svclib}"/tmp
+	try cp -apR "${svcdir}/"{depcache,deptree} "${svclib}"/tmp
+	try mdconfig -a -t malloc -u 1 
+	try newfs -U /dev/md1
+	try mount /dev/md1 "${svcdir}"
+	try cp -apR "${svclib}"/tmp/* "${svcdir}"
+	try umount "${svclib}"/tmp
+}
+
 source "${svclib}"/sh/init-functions.sh
 source "${svclib}"/sh/init-common-pre.sh
 

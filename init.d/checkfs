@@ -3,11 +3,17 @@
 # Distributed under the terms of the GNU General Public License v2
 
 depend() {
-	need checkroot modules
+	need checkroot
+	after modules
 }
 
 start() {
-	local retval=0
+	local retval=0 x=
+
+	# Start our volumes, RAID, LVM, etc
+    	for x in ${RC_VOLUME_ORDER} ; do
+		start_addon "${x}"
+   	done
 
 	# Setup dm-crypt mappings if any
 	start_addon dm-crypt
@@ -28,9 +34,9 @@ start() {
 		if [[ ${retval} -eq 0 ]] ; then
 			eend 0
 		elif [[ ${retval} -ge 1 && ${retval} -le 3 ]] ; then
-			ewend 1 "Filesystem errors corrected."
+			eend 1 "Filesystem errors corrected."
 			# Everything should be ok, so return a pass
-			return 0
+			retval=0	
 		else
 			if [[ ${RC_FORCE_AUTO} == "yes" ]] ; then
 				eend 2 "Fsck could not correct all errors, rerunning"
@@ -40,11 +46,12 @@ start() {
 
 			if [[ ${retval} -gt 3 ]] ; then
 				eend 2 "Fsck could not correct all errors, manual repair needed"
-				/sbin/sulogin ${CONSOLE}
+				sulogin "${CONSOLE}"
 			fi
 		fi
 	fi
+
+	return ${retval}
 }
 
-
-# vim:ts=4
+# vim: set ts=4 :

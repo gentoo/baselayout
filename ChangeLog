@@ -1,6 +1,15 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  22 Aug 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Critical services are now defined as RC_CRITICAL_SERVICES in /etc/conf.d/rc
+    We also force svcdir to /lib/rcscripts/init.d so we can mount it as tmpfs
+    so we can run depscan early. This means we can run every init script
+    through our generic functions and they get full dependencies. Fixes #70009.
+
+    Above changes require irqbalance needing its own init script.
+
   21 Aug 2006; Roy Marples <uberlord@gentoo.org>:
 
     Each dhcp client now supports global options - ie dhcpcd="-a"

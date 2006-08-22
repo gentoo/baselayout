@@ -47,7 +47,7 @@ ETC_SKIP = hosts passwd shadow group fstab
 KEEP_DIRS = boot dev proc home sys \
 	mnt/cdrom mnt/floppy \
 	usr/local/bin usr/local/sbin usr/local/share/doc usr/local/share/man \
-	var/lib/init.d var/run
+	var/run lib/rcscripts/init.d lib/rcscripts/tmp
 
 SUBDIRS = src
 

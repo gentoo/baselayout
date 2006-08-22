@@ -321,8 +321,6 @@ begin_service() {
 	local service="$1"
 	[[ -z ${service} ]] && return 1
 	
-	[[ ${START_CRITICAL} == "yes" || ${STOP_CRITICAL} == "yes" ]] && return 0
-
 	mkfifo "${svcdir}/exclusive/${service}" 2> /dev/null
 }
 
@@ -334,9 +332,6 @@ begin_service() {
 end_service() {
 	local service="$1" exitstatus="$2"
 	[[ -z ${service} ]] && return
-
-	# if we are doing critical services, there is no fifo
-	[[ ${START_CRITICAL} == "yes" || ${STOP_CRITICAL} == "yes" ]] && return
 
 	if [[ -n ${exitstatus} ]] ; then
 		echo "${exitstatus}" > "${svcdir}/exitcodes/${service}"
@@ -365,7 +360,6 @@ wait_service() {
 	local service="$1"
 	local fifo="${svcdir}/exclusive/${service}"
 	
-	[[ ${START_CRITICAL} == "yes" || ${STOP_CRITICAL} == "yes" ]] && return 0
 	[[ ! -e ${fifo} ]] && return 0
 
 	# This will block until the service fifo is touched
@@ -376,6 +370,7 @@ wait_service() {
 
 	return "${exitstatus}"
 }
+
 
 # int start_service(service)
 #
@@ -403,8 +398,7 @@ start_service() {
 
 	begin_service "${service}" || return 0
 	splash "svc_start" "${service}"
-	if [[ ${RC_PARALLEL_STARTUP} != "yes" || \
-		  ${START_CRITICAL} == "yes" ]] ; then
+	if [[ ${RC_PARALLEL_STARTUP} != "yes" ]] ; then
 		# if we can not start the services in parallel
 		# then just start it and return the exit status
 		(
@@ -466,8 +460,7 @@ stop_service() {
 	begin_service "${service}" || return 0
 
 	splash "svc_stop" "${service}"
-	if [[ ${RC_PARALLEL_STARTUP} != "yes" || \
-		  ${STOP_CRITICAL} == "yes" ]] ; then
+	if [[ ${RC_PARALLEL_STARTUP} != "yes" ]] ; then
 		# if we can not start the services in parallel
 		# then just start it and return the exit status
 		( "/etc/init.d/${service}" stop )

@@ -1,6 +1,6 @@
 #!/bin/bash
 export TMP="${TMP:-/tmp}"
-export V="1.13.0"
+export V="1.13.0_alpha1"
 export NAME="baselayout"
 export DEST="${TMP}/${NAME}-${V}"
 
@@ -20,7 +20,7 @@ echo "Creating tarball ..."
 rm -rf ${DEST}
 install -d -m0755 ${DEST}
 
-for x in bin etc init.d sbin src rc-lists man ; do
+for x in ChangeLog Makefile bin etc init.d net-scripts sbin src rc-lists man ; do
 	cp -ax $x ${DEST}
 done
 
@@ -29,15 +29,6 @@ done
 # do not yet package src/core stuff
 rm -rf ${DEST}/src/core
 #[[ -f ${DEST}/Makefile ]] && (cd ${DEST}/src; make distclean)
-
-# copy net-scripts and remove older stuff
-install -d -m0755 ${DEST}/lib/rcscripts
-cp -ax net-scripts/init.d ${DEST}
-cp -ax net-scripts/net ${DEST}/lib/rcscripts
-cp -ax net-scripts/conf.d ${DEST}/etc
-ln -sfn net.lo ${DEST}/init.d/net.eth0
-
-cp ChangeLog ${DEST}
 
 chown -R root:root ${DEST}
 chmod 0755 ${DEST}/sbin/*

@@ -8,19 +8,43 @@
 single_user() {
 	if is_vps_sys ; then
 		einfo "Halting"
-		/sbin/halt -f
+		halt -f
 		return
 	fi
 	
-	/sbin/sulogin ${CONSOLE}
+	sulogin ${CONSOLE}
 	einfo "Unmounting filesystems"
 	if [[ -c /dev/null ]] ; then
-		/bin/mount -a -o remount,ro &>/dev/null
+		mount -a -o remount,ro &>/dev/null
 	else
-		/bin/mount -a -o remount,ro
+		mount -a -o remount,ro
 	fi
 	einfo "Rebooting"
-	/sbin/reboot -f
+	reboot -f
+}
+
+# This basically mounts $svcdir as a ramdisk, but preserving its content
+# which allows us to run depscan.sh
+# The tricky part is finding something our kernel supports
+# tmpfs and ramfs are easy, so force one or the other
+mount_svcdir() {
+	local filesystems=$(</proc/filesystems)$'\n' fs=
+	if [[ ${filesystems} =~ "[[:space:]]tmpfs"$'\n' ]] ; then
+		fs="tmpfs"
+	elif [[ ${filesystems} =~ "[[:space:]]ramfs"$'\n' ]] ; then
+		fs="ramfs"
+	else
+		echo
+		eerror "Gentoo Linux requires tmpfs or ramfs compiled into the kernel"
+		echo
+		single_user
+	fi
+	
+	try mount -t "${fs}" none "${svclib}"/tmp
+	try cp -apR "${svcdir}/"{depcache,deptree} "${svclib}"/tmp
+	try mount -t "${fs}" none "${svcdir}"
+	try cp -apR "${svclib}"/tmp/* "${svcdir}"
+	try umount "${svclib}"/tmp
 }
 
 source "${svclib}"/sh/init-functions.sh
@@ -170,26 +194,5 @@ if [[ "$(get_KV)" -ge "$(KV_to_int '2.5.68')" ]] && ! is_vserver_sys ; then
 fi
 
 source "${svclib}"/sh/init-common-post.sh
-
-# Have to run this after /var/run is mounted rw, bug #85304
-if [[ -x /sbin/irqbalance && $(get_KV) -ge "$(KV_to_int '2.5.0')" ]] ; then
-	ebegin "Starting irqbalance"
-	/sbin/irqbalance
-	eend $?
-fi
-
-# Setup login records ... this has to be done here because when 
-# we exit this runlevel, init will write a boot record to utmp
-# If /var/run is readonly, then print a warning, not errors
-if touch /var/run/utmp 2>/dev/null ; then
-	> /var/run/utmp
-	touch /var/log/wtmp
-	chgrp utmp /var/run/utmp /var/log/wtmp
-	chmod 0664 /var/run/utmp /var/log/wtmp
-	# Remove /var/run/utmpx (bug from the past)
-	rm -f /var/run/utmpx
-else
-	ewarn "Skipping /var/run/utmp initialization (ro root?)"
-fi
 
 # vim:ts=4

@@ -146,9 +146,6 @@ RC_DEVICE_TARBALL="no"
 RC_SWAP_ERASE="no"
 
 
-
-
-
 #
 # Controlling start-stop-daemon behavior
 
@@ -211,36 +208,6 @@ RC_WAIT_ON_START="0.1"
 # Pass ulimit parameters 
 #RC_ULIMIT="-u 30"
 
-##############################################################################
-
-
-#
-# Internal configuration variables
-#
-# NB:  These are for advanced users, and you should really
-#      know what you are doing before changing them!
-#
- 
-# rc-scripts dep-cache directory
-#
-# NOTE:  Do not remove the next line, as its needed by the baselayout ebuild!
-#
-#  svcdir="/var/lib/init.d"
-
-svcdir="/var/lib/init.d"
-
-# Should we mount $svcdir in a ram disk for some speed increase 
-# for slower machines, or for the more extreme setups ?
-
-svcmount="no"
-
-# FS type that should be used for $svcdir.  Note that you need 
-# $svcmount above set to "yes" for this to work ...  Currently 
-# tmpfs, ramfs, and ramdisk are supported (tmpfs is the default).
-
-svcfstype="tmpfs"
-
-# Size of $svcdir in KB.  Note that ramfs doesn't support this 
-# due to kernel limitations.
-
-svcsize=2048
+# It's possible to define extra dependencies for services like so
+#RC_NEED="openvpn"
+#RC_USE="net.eth0"

@@ -4,10 +4,11 @@
 # Start logging console output since we have all /dev stuff setup
 bootlog start
 
-# Start RAID/LVM/EVMS/DM volumes for /usr, /var, etc.
-for x in ${RC_VOLUME_ORDER} ; do
-	start_addon "${x}"
-done
+# mount $svcdir as something we can write to
+mount_svcdir
+
+# Update init dependencies if needed
+depscan.sh
 
 # We set the forced softlevel from the kernel command line
 # It needs to be run right after proc is mounted for the
@@ -19,76 +20,7 @@ setup_defaultlevels
 # the 'sysinit' runlevel ...
 export BOOT="yes"
 
-# We first try to find a locally defined list of critical services
-# for a particular runlevel.  If we cannot find it, we use the
-# defaults.
-get_critical_services
-
 splash "rc_init" "${argv1}"
-
-export START_CRITICAL="yes"
-
-# We do not want to break compatibility, so we do not fully integrate
-# these into /sbin/rc, but rather start them by hand ...
-for x in ${CRITICAL_SERVICES} ; do
-	splash "svc_start" "${x}"
-	user_want_interactive && svcinteractive="yes"
-	if ! start_critical_service "${x}" ; then
-		splash "critical" &>/dev/null &
-		
-		echo
-		eerror "One or more critical startup scripts failed to start!"
-		eerror "Please correct this, and reboot ..."
-		echo; echo
-		/sbin/sulogin ${CONSOLE}
-		einfo "Unmounting filesystems"
-		/bin/mount -a -o remount,ro &>/dev/null
-		einfo "Rebooting"
-		/sbin/reboot -f
-	fi
-
-	splash "svc_started" "${x}" "0"
-done
-
-unset START_CRITICAL
-
-# /var/log should be writable now, so starting saving the boot output
-bootlog sync
-
-# Check that $svcdir exists ...
-check_statedir "${svcdir}"
-
-# Should we use tmpfs/ramfs/ramdisk for caching dependency and 
-# general initscript data?  Note that the 'gentoo=<fs>' kernel 
-# option should override any other setting ...
-for fs in tmpfs ramfs ramdisk ; do
-	if get_bootparam "${fs}" ; then
-		svcmount="yes"
-		svcfstype="${fs}"
-		break
-	fi
-done
-
-# vservers cannot mount anything
-if [[ ${svcmount} == "yes" ]] && ! is_vserver_sys ; then
-	ebegin "Mounting ${svcfstype} at ${svcdir}"
-	case "${svcfstype}" in
-	ramfs)
-		try mount -t ramfs svcdir "${svcdir}" \
-			-o rw,mode=0755,size="${svcsize}"k
-		;;
-	ramdisk)
-		try dd if=/dev/zero of=/dev/ram0 bs=1k count="${svcsize}"
-		try /sbin/mke2fs -i 1024 -vm0 /dev/ram0 "${svcsize}"
-		try mount -t ext2 /dev/ram0 "${svcdir}" -o rw
-		;;
-	tmpfs|*)
-		try mount -t tmpfs svcdir "${svcdir}" \
-			-o rw,mode=0755,size="${svcsize}"k
-		;;
-	esac
-	eend 0
-fi
 
 # If booting off CD, we want to update inittab before setting the runlevel
 if [[ -f /sbin/livecd-functions.sh && -n ${CDBOOT} ]] ; then
@@ -98,32 +30,8 @@ if [[ -f /sbin/livecd-functions.sh && -n ${CDBOOT} ]] ; then
 	/sbin/telinit q &>/dev/null
 fi
 
-# Clear $svcdir from stale entries, but leave the caches around, as it
-# should help speed things up a bit
-rm -rf $(ls -d1 "${svcdir}/"* 2>/dev/null | \
-	 grep -ve '\(depcache\|deptree\|envcache\)')
-
 echo "sysinit" > "${svcdir}/softlevel"
 echo "${svcinteractive}" > "${svcdir}/interactive"
-
-# Ensure all critical services we have are in the boot runlevel
-check_critical_services
-
-# Update the dependency cache
-/sbin/depscan.sh
-
-# Now that the dependency cache are up to date, make sure these
-# are marked as started ...
-(
-	profiling "mark started"
-
-	# Needed for mark_service_started()
-	source "${svclib}"/sh/rc-services.sh
-	
-	for x in ${CRITICAL_SERVICES} ; do
-		mark_service_started "${x}"
-	done
-)
 
 # sysinit is now done, so allow init scripts to run normally
 [[ -e /dev/.rcsysinit ]] && rm -f /dev/.rcsysinit
@@ -147,4 +55,4 @@ echo "${svcinteractive:-no}" > "${svcdir}/interactive"
 # All done logging
 bootlog quit
 
-# vim:ts=4
+# vim: set ts=4 :

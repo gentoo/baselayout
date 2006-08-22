@@ -58,11 +58,14 @@ do_interactive() {
 		return $?
 	fi
 
+	# Wait for any services so display is not jumbled
+	[[ ${RC_PARALLEL_STARTUP} = "yes" ]] && wait
+
 	local start_text="Start service"
 	local skip_text="Skip service"
 	local continue_text="Continue boot process"
 	local shell_text="Exit to shell"
-	
+
 	echo
 	echo "About to start the service ${service}"
 	PS3="Enter your selection: "
@@ -85,44 +88,12 @@ do_interactive() {
 			"${shell_text}")
 				echo
 				sulogin "${CONSOLE}"
+				echo
+				echo "About to start the service ${service}"
+				echo -e "1) ${start_text}          3) ${continue_text}"
+				echo -e "2) ${skip_text}           4) ${shell_text}"
 				;;
 		esac
-	done
-}
-
-# void get_critical_services()
-#
-#  Get critical services needed for bootup, and exports CRITICAL_SERVICES
-#
-get_critical_services() {
-	local x=
-	CRITICAL_SERVICES=
-	
-	if [[ -f "/etc/runlevels/${BOOTLEVEL}/.critical" ]] ; then
-		for x in $(< "/etc/runlevels/${BOOTLEVEL}/.critical") ; do
-			CRITICAL_SERVICES="${CRITICAL_SERVICES} ${x##*/}"
-		done
-	else
-		CRITICAL_SERVICES="checkroot modules checkfs localmount clock bootmisc"
-	fi
-
-	export CRITICAL_SERVICES
-
-	return 0
-}
-
-# void check_critical_services()
-#
-#     Ensure that critical services are in the boot runlevel
-#
-check_critical_services() {
-	local x
-
-	for x in ${CRITICAL_SERVICES} ; do
-		if [[ ! -L "/etc/runlevels/${BOOTLEVEL}/${x}" ]] ; then
-			ewarn "WARNING:  Adding critical service ${x} to the ${BOOTLEVEL} runlevel"
-			ln -snf "/etc/init.d/${x}" "/etc/runlevels/${BOOTLEVEL}/${x}"
-		fi
 	done
 }
 
@@ -182,8 +153,6 @@ then
 fi
 
 # Ensure all critical services have are in the boot runlevel
-get_critical_services
-check_critical_services
 source "${svclib}/sh/rc-services.sh"
 
 if [[ -f "${svcdir}/softlevel" ]] ; then
@@ -222,7 +191,7 @@ splash "rc_init" "${argv1}"
 if [[ ${SOFTLEVEL} == "reboot" || ${SOFTLEVEL} == "shutdown" ]] ; then
 	myscripts=
 elif [[ ${SOFTLEVEL} = "single" ]] ; then
-	myscripts="${CRITICAL_SERVICES}"
+	myscripts="${RC_CRITICAL_SERVICES}"
 elif [[ ! -d "/etc/runlevels/${SOFTLEVEL}" ]] ; then
 	eerror "ERROR:  runlevel ${SOFTLEVEL} does not exist; exiting ..."
 	exit 1
@@ -333,13 +302,11 @@ if [[ ${SOFTLEVEL} != "single" && \
 	# Wait for any services that may still be stopping ...
 	[[ ${RC_PARALLEL_STARTUP} = "yes" ]] && wait
 else
-	get_critical_services
-
 	is_critical_service() {
 		local x
 		local myservice="${1##*/}"
 
-		for x in ${CRITICAL_SERVICES} ${LOGGER_SERVICE} ; do
+		for x in ${RC_CRITICAL_SERVICES} ${LOGGER_SERVICE} ; do
 			[[ ${myservice} == "${x}" ]] && return 0
 		done
 
@@ -348,18 +315,18 @@ else
 
 	# First stop non critical services
 	for i in $(get_stop_services) ; do
-		is_critical_service "${i}" || dep_stop "${i}"
+		[[ " ${RC_CRITICAL_SERVICES} " == *" ${i} "* ]] && continue
+		[[ ${LOGGER_SERVICE} == "${i}" ]] && continue
+		dep_stop "${i}"
 	done
 
 	# Wait for any services that may still be stopping ...
 	[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && wait
 
-	export STOP_CRITICAL="yes"
 	# Now stop the rest
 	for i in $(get_stop_services) ; do
 		dep_stop "${i}"
 	done
-	unset STOP_CRITICAL
 fi
 
 # Only change softlevel AFTER all the services have been stopped,
@@ -368,11 +335,6 @@ fi
 echo "${SOFTLEVEL}" > "${svcdir}/softlevel"
 
 if [[ ${SOFTLEVEL} == "reboot" || ${SOFTLEVEL} == "shutdown" ]] ; then
-	# Clear $svcdir from stale entries, but leave the caches around, as it
-	# should help speed things up a bit
-	rm -rf $(ls -d1 "${svcdir}/"* 2>/dev/null | \
-	         grep -ve '\(depcache\|deptree\|envcache\)')
-
 	# Call halt.sh with LC_ALL=C so that bash doesn't load any locales
 	# which could interfere with unmounting /usr
 	if is_vps_sys ; then
@@ -389,9 +351,9 @@ fi
 if [[ ${SOFTLEVEL} == "single" ]] ; then
 	rm -rf "${svcdir}/softscripts.new"
 	if is_vps_sys ; then
-		/sbin/halt -f
+		halt -f
 	else
-		/sbin/sulogin ${CONSOLE}
+		sulogin "${CONSOLE}"
 	fi
 	exit 0
 fi
@@ -405,9 +367,6 @@ mv -f "${svcdir}/softscripts.new" "${svcdir}/softscripts"
 get_start_services() {
 	local x list
 
-	get_critical_services
-	list="${CRITICAL_SERVICES}"
-
 	[[ -n ${LOGGER_SERVICE} && \
 	   -L "${svcdir}/softscripts/${LOGGER_SERVICE}" ]] && \
 		list="${list} ${LOGGER_SERVICE}"
@@ -419,24 +378,51 @@ get_start_services() {
 	trace_dependencies ${list}
 }
 
+check_critical_failed() {
+	local x= failed=0
+	for x in ${RC_CRITICAL_SERVICES} ; do
+		if service_failed "${x}" ; then
+			failed=1
+			break
+		fi
+	done
+	[[ ${failed} == "0" ]] && return 1
+	
+	splash "critical"
+
+	# We need to wait so this is the last thing displayed
+	[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && wait
+	
+	echo
+	eerror "One or more critical startup scripts failed to start!"
+	eerror "Please correct this, and reboot ..."
+	echo; echo
+	sulogin "${CONSOLE}"
+
+	einfo "Unmounting filesystems"
+	mount -a -o remount,ro &>/dev/null
+	einfo "Rebooting"
+	reboot -f
+}
+
 # Start scripts
 for i in $(get_start_services) ; do
 	if service_stopped "${i}" ; then
 		do_interactive start_service "${i}"
 	fi
+	# We have to check to see if a critical service failed or not as often
+	# as we can thanks to the wonders of parallel startup
+	check_critical_failed && break
 done
 
 # Wait for any services that may still be running ...
 [[ ${RC_PARALLEL_STARTUP} == "yes" ]] && wait
 
+# A final check for failed critical services - needed for parallel
+check_critical_failed
+
 # Clean the old runlevel
 rm -rf "${svcdir}/softscripts.old" &>/dev/null
-
-# Depends gets nuked, so update them
-# (this problem should be solved now, but i think it will be a good idea
-#  to recreate the deps after a change in runlevel)
-
-#/sbin/depscan.sh &>/dev/null
 
 # We want devfsd running after a change of runlevel (this is mostly if we return
 # from runlevel 'single')
@@ -453,9 +439,18 @@ rm -rf "${svcdir}/failed" &>/dev/null
 # If we were in the boot runlevel, it is done now ...
 if [[ -n ${BOOT} ]] ; then
 	unset BOOT
+	bootlog sync
+
 	# Save our interactive mode into the default runlevel
 	user_want_interactive && svcinteractive="yes"
 	echo "${svcinteractive}" > "${svcdir}/interactive"
+	
+	# Swap our svcdir around now we are done
+	tar cjpf "/tmp/init.d.$$.tar.bz2" -C "${svcdir}" .
+	umount "${svcdir}"
+	rm -rf "${svcdir}"/*
+	tar xjpf "/tmp/init.d.$$.tar.bz2" -C "${svcdir}"
+	rm -f "/tmp/init.d.$$.tar.bz2"
 else
 	# As we're not boot, we remove the interactive file
 	[[ -e ${svcdir}/interactive ]] && rm -f "${svcdir}/interactive"
@@ -466,4 +461,4 @@ unset CONSOLETYPE
 
 splash "rc_exit"
 
-# vim:ts=4
+# vim: set ts=4 :
