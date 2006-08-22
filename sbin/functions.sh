@@ -10,8 +10,7 @@ RC_GOT_FUNCTIONS="yes"
 declare -r svclib="/lib/rcscripts"
 declare -r svcdir="${svcdir:-/var/lib/init.d}"
 svcmount="${svcmount:-no}"
-svcfstype="${svcfstype:-tmpfs}"
-svcsize="${svcsize:-1024}"
+svcsize="${svcsize:-2048}"
 
 # Different types of dependencies
 deptypes="need use"

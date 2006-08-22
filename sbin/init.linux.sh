@@ -28,21 +28,33 @@ single_user() {
 # The tricky part is finding something our kernel supports
 # tmpfs and ramfs are easy, so force one or the other
 mount_svcdir() {
-	local filesystems=$(</proc/filesystems)$'\n' fs=
+	local filesystems=$(</proc/filesystems)$'\n'
+	local fs= devdir="none" devtmp="none" x=
+	
 	if [[ ${filesystems} =~ "[[:space:]]tmpfs"$'\n' ]] ; then
 		fs="tmpfs"
 	elif [[ ${filesystems} =~ "[[:space:]]ramfs"$'\n' ]] ; then
 		fs="ramfs"
+	elif [[ -e /dev/ram0 && -e /dev/ram1 \
+		&& ${filesystems} =~ "[[:space:]]ext2"$'\n' ]] ; then
+		devdir="/dev/ram0"
+		devtmp="/dev/ram1"
+		fs="ext2"
+		for x in ${devdir} ${devtmp} ; do
+			try dd if=/dev/zero of="${x}" bs=1k count="${svcsize}"
+			try mkfs -t "${fs}" -i 1024 -vm0 "${x}" "${svcsize}"
+		done
 	else
 		echo
-		eerror "Gentoo Linux requires tmpfs or ramfs compiled into the kernel"
+		eerror "Gentoo Linux requires tmpfs, ramfs or 2 ramdisks + ext2"
+		eerror "compiled into the kernel"
 		echo
 		single_user
 	fi
 	
-	try mount -t "${fs}" none "${svclib}"/tmp
-	try cp -apR "${svcdir}/"{depcache,deptree} "${svclib}"/tmp
-	try mount -t "${fs}" none "${svcdir}"
+	try mount -t "${fs}" "${devtmp}" "${svclib}"/tmp -o rw
+	try cp -apR "${svcdir}"/depcache "${svcdir}"/deptree "${svclib}"/tmp
+	try mount -t "${fs}" "${devdir}" "${svcdir}" -o rw
 	try cp -apR "${svclib}"/tmp/* "${svcdir}"
 	try umount "${svclib}"/tmp
 }
