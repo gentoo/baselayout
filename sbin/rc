@@ -456,14 +456,6 @@ then
 	# /var/log should be writable now, so starting saving the boot output
 	bootlog sync
 
-	# have to run this after /var/run is mounted rw #85304
-	if [ -x /sbin/irqbalance -a "$(get_KV)" -ge "$(KV_to_int '2.5.0')" ]
-	then
-		ebegin "Starting irqbalance"
-		/sbin/irqbalance
-		eend $?
-	fi
-
 	# Check that $svcdir exists ...
 	check_statedir "${svcdir}"
 
