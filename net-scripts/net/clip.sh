@@ -106,18 +106,10 @@ clip_depend() {
 # daemons which are not needed in case you set "clip_full=no". They are part of
 # the linux-atm package anyway, so it shouldn't hurt to check them too out.
 clip_check_installed() {
-    if [[ ! -r /proc/net/atm/arp ]] ; then
-		modprobe clip && sleep 2
-		if [[ ! -r /proc/net/atm/arp ]] ; then
-	    	eerror "You need first to enable kernel support for ATM CLIP"
-	    	return 1
-		fi
-    fi
-
     local x
     for x in atmsigd ilmid atmarpd atmarp ; do
-		if [[ ! -x "/usr/sbin/${x}" ]]; then
-		    eerror "You need first to emerge net-dialup/linux-atm"
+		if [[ ! -x "/usr/sbin/${x}" ]] ; then
+		    ${1:-false} && eerror "You need first to emerge net-dialup/linux-atm"
 	    	return 1
 		fi
     done
@@ -139,6 +131,14 @@ clip_pre_start() {
     [[ -z ${opts} ]] && return 0
     clip_check_installed || return 1
 
+    if [[ ! -r /proc/net/atm/arp ]] ; then
+		modprobe clip && sleep 2
+		if [[ ! -r /proc/net/atm/arp ]] ; then
+	    	eerror "You need first to enable kernel support for ATM CLIP"
+	    	return 1
+		fi
+    fi
+	
     local started_here
     if ! are_atmclip_svcs_running ; then
 		atmclip_svcs_start || return 1
