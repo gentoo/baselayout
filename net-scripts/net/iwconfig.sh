@@ -743,7 +743,7 @@ iwconfig_defaults() {
 	iwconfig "${iface}" frag auto 2>/dev/null
 
 	# Release the AP forced
-	iwconfig "${iface}" ap any 2>/dev/null
+	iwconfig "${iface}" ap off 2>/dev/null
 }
 
 # void iwconfig_strip_associated(char *iface)
