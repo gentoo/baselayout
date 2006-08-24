@@ -145,6 +145,14 @@ RC_DEVICE_TARBALL="no"
 
 RC_SWAP_ERASE="no"
 
+# RC_DMESG_LEVEL sets the level at which logging of messages is done to the
+# console.  See dmesg(8) for more info.
+
+RC_DMESG_LOGLEVEL="1"
+
+
+
+
 
 #
 # Controlling start-stop-daemon behavior

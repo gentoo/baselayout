@@ -11,7 +11,7 @@ export PATH="/bin:/sbin:/usr/bin:/usr/sbin:${PATH}"
 # Set the console loglevel to 1 for a cleaner boot
 # the logger should anyhow dump the ring-0 buffer at start to the
 # logs, and that with dmesg can be used to check for problems
-/bin/dmesg -n 1
+${RC_DMESG_LEVEL+/bin/dmesg -n ${RC_DMESG_LEVEL}}
 
 
 # vim:ts=4
