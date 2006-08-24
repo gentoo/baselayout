@@ -448,9 +448,6 @@ iwconfig_scan() {
 		fi
 	fi
 
-	# Set the essid to any. This is required for scanning
-	iwconfig "${iface}" essid any
-	
 	veinfo "Scanning for access points"
 
 	# Sleep if required
@@ -743,7 +740,9 @@ iwconfig_defaults() {
 	iwconfig "${iface}" frag auto 2>/dev/null
 
 	# Release the AP forced
+	# Must do ap and then essid otherwise scanning borks
 	iwconfig "${iface}" ap off 2>/dev/null
+	iwconfig "${iface}" essid off 2>/dev/null
 }
 
 # void iwconfig_strip_associated(char *iface)
