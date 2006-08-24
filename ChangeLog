@@ -6,6 +6,9 @@
     Add RC_DMESG_LEVEL for people to control the dmesg console loglevel at boot
     time #142810 by Viktors Rotanovs.
 
+    If /etc/conf.d/rc-extra exists, source it at the top of `rc` so users can
+    inject whatever catches their fancy #144892 by Deadpan110.
+
   22 Aug 2006; Roy Marples <uberlord@gentoo.org>:
 
     Critical services are now defined as RC_CRITICAL_SERVICES in /etc/conf.d/rc
