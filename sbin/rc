@@ -453,7 +453,6 @@ fi
 # If we were in the boot runlevel, it is done now ...
 if [[ -n ${BOOT} ]] ; then
 	unset BOOT
-	bootlog sync
 
 	# Save our interactive mode into the default runlevel
 	user_want_interactive && svcinteractive="yes"

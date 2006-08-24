@@ -52,7 +52,4 @@ fi
 user_want_interactive && svcinteractive="yes"
 echo "${svcinteractive:-no}" > "${svcdir}/interactive"
 
-# All done logging
-bootlog quit
-
 # vim: set ts=4 :

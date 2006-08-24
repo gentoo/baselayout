@@ -13,6 +13,9 @@ start() {
 		-O no_netdev >/dev/null
 	eend $? $"Some local filesystem failed to mount"
 
+	# Sync bootlog now as /var should be mounted
+	bootlog sync 2>/dev/null
+
 	# Make sure we insert usbcore if its a module
 	if [[ -f /proc/modules && ! -d /proc/bus/usb ]] ; then
 		# >/dev/null to hide errors from non-USB users
@@ -54,4 +57,4 @@ start() {
 	start_addon dm-crypt
 }
 
-# vim:ts=4
+# vim: set ts=4 :
