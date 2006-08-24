@@ -694,7 +694,9 @@ else
 					mark_service_coldplugged "${x}"
 				fi
 			done
-			einfo "Device initiated services:${HILITE}${myscripts}${NORMAL}"
+			if [[ -n ${myscripts} ]] ; then
+				einfo "Device initiated services:${HILITE}${myscripts}${NORMAL}"
+			fi
 			rm -rf /dev/.rcboot
 		fi
 	fi
