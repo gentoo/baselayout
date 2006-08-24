@@ -223,7 +223,9 @@ else
 					mark_service_coldplugged "${x}"
 				fi
 			done
-			einfo "Device initiated services:${HILITE}${myscripts}${NORMAL}"
+			if [[ -n ${myscripts} ]] ; then
+				einfo "Device initiated services:${HILITE}${myscripts}${NORMAL}"
+			fi
 			rm -rf /dev/.rcboot
 		fi
  	fi
@@ -439,6 +441,15 @@ fi
 # Runlevel end, so clear stale fail list
 rm -rf "${svcdir}/failed" &>/dev/null
 
+# If $svcdir is mounted in ram, save it back to disk and unmount
+if [[ $(</proc/mounts) =~ $'\n'*"[[:space:]]${svcdir}[[:space:]]" ]] ; then
+	tar cpf "/tmp/init.d.$$.tar.bz2" -C "${svcdir}" .
+	umount "${svcdir}"
+	rm -rf "${svcdir}"/*
+	tar xpf "/tmp/init.d.$$.tar.bz2" -C "${svcdir}"
+	rm -f "/tmp/init.d.$$.tar.bz2"
+fi
+
 # If we were in the boot runlevel, it is done now ...
 if [[ -n ${BOOT} ]] ; then
 	unset BOOT
@@ -448,12 +459,6 @@ if [[ -n ${BOOT} ]] ; then
 	user_want_interactive && svcinteractive="yes"
 	echo "${svcinteractive}" > "${svcdir}/interactive"
 	
-	# Swap our svcdir around now we are done
-	tar cpf "/tmp/init.d.$$.tar.bz2" -C "${svcdir}" .
-	umount "${svcdir}"
-	rm -rf "${svcdir}"/*
-	tar xpf "/tmp/init.d.$$.tar.bz2" -C "${svcdir}"
-	rm -f "/tmp/init.d.$$.tar.bz2"
 else
 	# As we're not boot, we remove the interactive file
 	[[ -e ${svcdir}/interactive ]] && rm -f "${svcdir}/interactive"

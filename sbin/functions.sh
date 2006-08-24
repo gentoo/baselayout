@@ -8,8 +8,7 @@ RC_GOT_FUNCTIONS="yes"
 
 # Check /etc/conf.d/rc for a description of these ...
 declare -r svclib="/lib/rcscripts"
-declare -r svcdir="${svcdir:-/var/lib/init.d}"
-svcmount="${svcmount:-no}"
+declare -r svcdir="${svclib}/init.d"
 svcsize="${svcsize:-2048}"
 
 # Different types of dependencies
@@ -850,5 +849,4 @@ fi
 #                                                                            #
 ##############################################################################
 
-
-# vim:ts=4
+# vim: set ts=4 :
