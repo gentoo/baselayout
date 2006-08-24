@@ -6,6 +6,8 @@ trap ":" INT QUIT TSTP
 source /sbin/functions.sh
 # Only source this when this is a livecd booting ...
 [ -f /sbin/livecd-functions.sh ] && source /sbin/livecd-functions.sh
+# Silly users
+[[ -f /etc/conf.d/rc-extra ]] && source /etc/conf.d/rc-extra
 umask 022
 
 # Quick test to see if we can be interactive or not
