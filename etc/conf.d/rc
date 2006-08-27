@@ -93,7 +93,7 @@ RC_VERBOSE="no"
 RC_BOOTLOG="no"
 
 # Set to "yes" if you want to benchmark system boot with bootchart.
-# You'll need to emerge the app-benchmarks/bootchart package for this to work.
+# You'll need to emerge the app-benchmark/bootchart package for this to work.
 
 RC_BOOTCHART="no"
 
