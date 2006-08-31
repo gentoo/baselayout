@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  30 Aug 2006; Mike Frysinger <vapier@gentoo.org>:
+
+    Change the default cdrom fstab entry to use the udev/old name /dev/cdrom 
+    and set fs type to auto #145142 by Matt Courney/Chris Gianelloni.
+
   23 Aug 2006; Mike Frysinger <vapier@gentoo.org>:
 
     Add RC_DMESG_LEVEL for people to control the dmesg console loglevel at boot
