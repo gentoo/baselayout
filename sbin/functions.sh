@@ -20,9 +20,10 @@ ordtypes="before after"
 # Internal variables
 #
 
-# Dont output to stdout?
-RC_QUIET_STDOUT="${RC_QUIET_STDOUT:-no}"
+# Script verbosity 
 RC_VERBOSE="${RC_VERBOSE:-no}"
+RC_QUIET="${RC_QUIET:-no}"
+RC_QUIET_STDOUT="${RC_QUIET_STDOUT:-no}"
 
 # Should we use color?
 RC_NOCOLOR="${RC_NOCOLOR:-no}"
@@ -54,6 +55,9 @@ RC_DOT_PATTERN=''
 # Setup i18n variables
 TEXTDOMAINDIR="${svclib}/locale"
 TEXTDOMAIN="rc-scripts"
+
+# Ensure that _ebuffer is emtpy
+unset _ebuffer
 
 # void import_addon(char *addon)
 #
@@ -177,6 +181,21 @@ get_libdir() {
 	echo "${CONF_LIBDIR:=lib}"
 }
 
+# char *ebuffer(char *buffer)
+#
+#    buffer e* commands to a file for output later
+#    This is used for parallel startup/shutdown prettyness
+#
+ebuffer() {
+	if  [[ $# == "0" ]] ; then
+		echo "$_ebuffer"
+	else
+		_ebuffer="$1"
+	fi
+
+	return 0
+}
+
 # void esyslog(char* priority, char* tag, char* message)
 #
 #    use the system logger to log a message
@@ -203,6 +222,11 @@ esyslog() {
 #    increase the indent used for e-commands.
 #
 eindent() {
+	if [[ -n ${_ebuffer} ]] ; then
+		echo "eindent $(requote "$@")" >> "${_ebuffer}"
+		return 0
+	fi
+
 	local i="$1"
 	(( i > 0 )) || (( i = RC_DEFAULT_INDENT ))
 	esetdent $(( ${#RC_INDENTATION} + i ))
@@ -213,6 +237,11 @@ eindent() {
 #    decrease the indent used for e-commands.
 #
 eoutdent() {
+	if [[ -n ${_ebuffer} ]] ; then
+		echo "eoutdent $(requote "$@")" >> "${_ebuffer}"
+		return 0
+	fi
+
 	local i="$1"
 	(( i > 0 )) || (( i = RC_DEFAULT_INDENT ))
 	esetdent $(( ${#RC_INDENTATION} - i ))
@@ -234,6 +263,11 @@ esetdent() {
 #    show an informative message (with a newline)
 #
 einfo() {
+	if [[ -n ${_ebuffer} && ${RC_QUIET_STDOUT} != "yes" ]] ; then
+		echo "einfo $(requote "$@")" >> "${_ebuffer}"
+		return 0
+	fi
+
 	einfon "$*\n"
 	LAST_E_CMD="einfo"
 	return 0
@@ -256,6 +290,11 @@ einfon() {
 #    show a warning message + log it
 #
 ewarn() {
+	if [[ -n ${_ebuffer} ]] ; then
+		echo "ewarn $(requote "$@")" >> "${_ebuffer}"
+		return 0
+	fi
+
 	if [[ ${RC_QUIET_STDOUT} == "yes" ]] ; then
 		echo " $*"
 	else
@@ -277,6 +316,11 @@ ewarn() {
 #    show an error message + log it
 #
 eerror() {
+	if [[ -n ${_ebuffer} ]] ; then
+		echo "eerror $(requote "$@")" >> "${_ebuffer}"
+		return 0
+	fi
+
 	if [[ ${RC_QUIET_STDOUT} == "yes" ]] ; then
 		echo " $*" >/dev/stderr
 	else
@@ -287,7 +331,7 @@ eerror() {
 	local name="rc-scripts"
 	[[ $0 != "/sbin/runscript.sh" ]] && name="${0##*/}"
 	# Log errors to system log
-	esyslog "daemon.err" "rc-scripts" "$*"
+	esyslog "daemon.err" "${name}" "$*"
 
 	LAST_E_CMD="eerror"
 	return 0
@@ -298,8 +342,13 @@ eerror() {
 #    show a message indicating the start of a process
 #
 ebegin() {
-	local msg="$*" dots spaces="${RC_DOT_PATTERN//?/ }"
 	[[ ${RC_QUIET_STDOUT} == "yes" ]] && return 0
+	if [[ -n ${_ebuffer} ]] ; then
+		echo "ebegin $(requote "$@")" >> "${_ebuffer}"
+		return 0
+	fi
+
+	local msg="$*" dots spaces="${RC_DOT_PATTERN//?/ }"
 
 	if [[ -n ${RC_DOT_PATTERN} ]] ; then
 		dots=$(printf "%$((COLS - 3 - ${#RC_INDENTATION} - ${#msg} - 7))s" '')
@@ -324,7 +373,7 @@ ebegin() {
 #    This function is private to functions.sh.  Do not call it from a
 #    script.
 #
-_eend() {
+_eend() {	
 	local retval="${1:-0}" efunc="${2:-eerror}" msg
 	shift 2
 
@@ -360,10 +409,14 @@ _eend() {
 #
 eend() {
 	local retval="${1:-0}"
+	if [[ -n ${_ebuffer} ]] ; then
+		[[ ${RC_QUIET_STDOUT} == "yes" && ${retval} == "0" ]] && return 0
+		echo "eend $(requote "$@")" >> "${_ebuffer}"
+		return "${retval}"
+	fi
+
 	shift
-
 	_eend "${retval}" eerror "$*"
-
 	LAST_E_CMD="eend"
 	return ${retval}
 }
@@ -375,12 +428,58 @@ eend() {
 #
 ewend() {
 	local retval="${1:-0}"
+	if [[ -n ${_ebuffer} ]] ; then
+		[[ ${RC_QUIET_STDOUT} == "yes" && ${retval} == "0" ]] && return 0
+		echo "ewend $(requote "$@")" >> "${_ebuffer}"
+		return "${1:-0}"
+	fi
+
 	shift
-
 	_eend "${retval}" ewarn "$*"
-
 	LAST_E_CMD="ewend"
 	return ${retval}
+}
+
+# void _eflush(void)
+#
+#    This the the backgroud job to flush the ebuffer
+#
+_eflush() {
+	[[ ! -e ${_ebuffer} ]] && return
+	local buf="${_ebuffer}"
+	_ebuffer=
+
+	# Store our job buffer
+	mv "${buf}" "${buf}.$$"
+
+	# Wait until we can acquire a lock
+	# mkfifo is nice as is returns 0 or 1 if we made the file or not
+	while ! mkfifo "${svcdir}/ebuffer/.lock" 2>/dev/null ; do
+		LC_ALL=C sleep 0.1
+	done
+
+	# OK, we have the lock so process the buffer
+	local l= x=
+	while read l ; do
+		# Sanity check
+		for x in ebegin eend ewend einfo ewarn eerror eindent eoutdent ; do
+			eval "${l}"
+			break
+		done
+	done < "${buf}.$$"
+
+	rm -f "${buf}.$$" "${svcdir}/ebuffer/.lock"
+	_ebuffer="${buf}"
+}
+
+# void _eflush(void)
+#
+#   Flush the ebuffer
+#   The real work is done in a background job - this just launches it
+#
+eflush() {
+	_eflush &
+	return 0
 }
 
 # v-e-commands honor RC_VERBOSE which defaults to no.
@@ -390,6 +489,8 @@ veinfon() { [[ ${RC_VERBOSE} != "yes" ]] || einfon "$@"; }
 vewarn() { [[ ${RC_VERBOSE} != "yes" ]] || ewarn "$@"; }
 veerror() { [[ ${RC_VERBOSE} != "yes" ]] || eerror "$@"; }
 vebegin() { [[ ${RC_VERBOSE} != "yes" ]] || ebegin "$@"; }
+veindent() { [[ ${RC_VERBOSE} != "yes" ]] || eindent "$@"; }
+veoutdent() { [[ ${RC_VERBOSE} != "yes" ]] || eoutdent "$@"; }
 veend() {
 	[[ ${RC_VERBOSE} == "yes" ]] && { eend "$@"; return $?; }
 	return ${1:-0}

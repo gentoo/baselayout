@@ -1,6 +1,12 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  03 Sep 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Document RC_QUIET.
+    We now buffer e* messages when in parallel so we can display them properly
+    (ie, init scripts don't mess up the display).
+
   30 Aug 2006; Mike Frysinger <vapier@gentoo.org>:
 
     Change the default cdrom fstab entry to use the udev/old name /dev/cdrom 

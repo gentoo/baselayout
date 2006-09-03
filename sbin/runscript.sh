@@ -191,7 +191,12 @@ svc_stop() {
 	trap "svc_quit" INT QUIT TSTP
 
 	mark_service_starting "${SVCNAME}"
-	service_message "Service ${SVCNAME} stopping"
+	
+	# Store our e* messages in a buffer so we pretty print when parallel
+	[[ ${RC_PARALLEL_STARTUP} == "yes" && ${RC_QUIET} != "yes" ]] \
+		&& ebuffer "${svcdir}/ebuffer/${SVCNAME}"
+
+	veinfo "Service ${SVCNAME} stopping"
 
 	if in_runlevel "${SVCNAME}" "${BOOTLEVEL}" && \
 	   [[ ${SOFTLEVEL} != "reboot" && ${SOFTLEVEL} != "shutdown" && \
@@ -236,23 +241,22 @@ svc_stop() {
 
 	if [[ ${retval} == "0" ]] ; then
 		# Now that deps are stopped, stop our service
+		veindent
 		( 
+		[[ ${RC_QUIET} == "yes" ]] && RC_QUIET_STDOUT="yes"
 		exit() {
-			RC_QUIET_STDOUT="no"
 			eerror "DO NOT USE EXIT IN INIT.D SCRIPTS"
 			eerror "This IS a bug, please fix your broken init.d"
 			unset -f exit
 			exit "$@"
 		}
-		# Stop einfo/ebegin/eend from working as parallel messes us up
-		if [[ ${RC_PARALLEL_STARTUP} == "yes" ]] ; then
-			[[ ${RC_VERBOSE} != "yes" \
-			|| -e ${svcdir}/exclusive/${SVCNAME} ]] \
-				&& RC_QUIET_STDOUT="yes"
-		fi
 		stop
 		)
 		retval="$?"
+
+		# Don't trust init scripts to reset indentation properly
+		# Needed for ebuffer
+		eoutdent 99999
 
 		# If a service has been marked inactive, exit now as something
 		# may attempt to start it again later
@@ -278,7 +282,7 @@ svc_stop() {
 			fi
 		fi
 
-		service_message "eerror" "ERROR:  ${SVCNAME} failed to stop"
+		eerror "ERROR:  ${SVCNAME} failed to stop"
 	else
 		svcstarted=1
 		if service_inactive "${SVCNAME}" ; then
@@ -286,7 +290,14 @@ svc_stop() {
 		else
 			mark_service_stopped "${SVCNAME}"
 		fi
-		service_message "Service ${SVCNAME} stopped"
+
+		veinfo "Service ${SVCNAME} stopped"
+	fi
+
+	# Flush the ebuffer 
+	if [[ ${RC_PARALLEL_STARTUP} == "yes" && ${RC_QUIET} != "yes" ]] ; then
+		eflush
+		ebuffer ""
 	fi
 
 	# Reset the trap
@@ -323,7 +334,11 @@ svc_start() {
 	# Ensure that we clean up if we abort for any reason
 	trap "svc_quit" INT QUIT TSTP
 
-	service_message "Service ${SVCNAME} starting"
+	# Store our e* messages in a buffer so we pretty print when parallel
+	[[ ${RC_PARALLEL_STARTUP} == "yes" && ${RC_QUIET} != "yes" ]] \
+		&& ebuffer "${svcdir}/ebuffer/${SVCNAME}"
+	
+	veinfo "Service ${SVCNAME} starting"
 
 	if broken "${SVCNAME}" ; then
 		eerror "ERROR:  Some services needed are missing.  Run"
@@ -408,9 +423,10 @@ svc_start() {
 		
 	if [[ ${retval} == "0" ]] ; then
 		IN_BACKGROUND="${ib_save}"
+		veindent
 		(
+		[[ ${RC_QUIET} == "yes" ]] && RC_QUIET_STDOUT="yes"
 		exit() {
-			RC_QUIET_STDOUT="no"
 			eerror "DO NOT USE EXIT IN INIT.D SCRIPTS"
 			eerror "This IS a bug, please fix your broken init.d"
 			unset -f exit
@@ -419,23 +435,24 @@ svc_start() {
 
 		# Apply any ulimits if defined
 		[[ -n ${RC_ULIMIT} ]] && ulimit ${RC_ULIMIT}
-	
-		# Stop einfo/ebegin/eend from working as parallel messes us up
-		if [[ ${RC_PARALLEL_STARTUP} == "yes" ]] ; then
-			[[ ${RC_VERBOSE} != "yes" \
-			|| -e ${svcdir}/exclusive/${SVCNAME} ]] \
-				&& RC_QUIET_STDOUT="yes"
-		fi
 
 		start
 		)
 		retval="$?"
 
+		# Don't trust init scripts to reset indentation properly
+		# Needed for ebuffer
+		eoutdent 99999
+
 		# If a service has been marked inactive, exit now as something
 		# may attempt to start it again later
 		if [[ ${retval} == "0" ]] && service_inactive "${SVCNAME}" ; then
 			svcinactive=0
-			service_message "ewarn" "WARNING:  ${SVCNAME} has started but is inactive"
+			ewarn "WARNING:  ${SVCNAME} has started but is inactive"
+			if [[ ${RC_PARALLEL_STARTUP} == "yes" && ${RC_QUIET} != "yes" ]] ; then
+				eflush
+				ebuffer ""
+			fi
 			return 1
 		fi
 	fi
@@ -449,12 +466,18 @@ svc_start() {
 
 		if [[ -z ${startinactive} ]] ; then
 			is_runlevel_start && mark_service_failed "${SVCNAME}"
-			service_message "eerror" "ERROR:  ${SVCNAME} failed to start"
+			eerror "ERROR:  ${SVCNAME} failed to start"
 		fi
 	else
 		svcstarted=0
 		mark_service_started "${SVCNAME}"
-		service_message "Service ${SVCNAME} started"
+		veinfo "Service ${SVCNAME} started"
+	fi
+
+	# Flush the ebuffer
+	if [[ ${RC_PARALLEL_STARTUP} == "yes" && ${RC_QUIET} != "yes" ]] ; then
+		eflush
+		ebuffer ""
 	fi
 
 	# Reset the trap

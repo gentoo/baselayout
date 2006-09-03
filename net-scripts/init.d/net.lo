@@ -556,6 +556,8 @@ modules_load()  {
 	local RC_INDENTATION="${RC_INDENTATION}"
 	local -a PROVIDES=() WRAP_MODULES=()
 
+	veinfo "Loading networking modules for ${iface}"
+
 	if ! is_loopback "${iface}" ; then
 		x="modules_force_${iface}[@]"
 		[[ -n ${!x} ]] && modules_force=( "${!x}" )
@@ -565,9 +567,6 @@ modules_load()  {
 			report=true
 		fi
 	fi
-
-	veinfo "Loading networking modules for ${iface}"
-	eindent
 
 	if [[ -z ${modules_force} ]] ; then
 		modules_load_auto || return 1
@@ -642,12 +641,18 @@ modules_load()  {
 		modules_sort || return 1
 	fi
 
+	veindent
 	veinfo "modules: ${MODULES[@]}"
-	eindent
+	veindent
 
+	i=0
 	${starting} && p=true
-	modules_check_depends "${p}" || return 1
-	return 0
+	modules_check_depends "${p}"
+	i="$?"
+
+	veoutdent
+	veoutdent
+	return "${i}"
 }
 
 # bool iface_start(char *interface)

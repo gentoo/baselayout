@@ -68,7 +68,7 @@ fi
 
 for x in softscripts snapshot options daemons \
 	started starting inactive wasinactive stopping failed \
-	exclusive exitcodes scheduled coldplugged ; do
+	exclusive exitcodes scheduled coldplugged ebuffer ; do
 	if [[ ! -d "${mysvcdir}/${x}" ]] ; then
 		if ! mkdir -p -m 0755 "${mysvcdir}/${x}" 2>/dev/null ; then
 			eerror "Could not create needed directory '${mysvcdir}/${x}'!"

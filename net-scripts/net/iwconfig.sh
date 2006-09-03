@@ -395,14 +395,14 @@ iwconfig_associate() {
 	# Finally apply the user Config
 	iwconfig_user_config "${iface}" "${ESSIDVAR}"
 
-	vebegin "Connecting to \"${dessid}\" in ${mode} mode ${w}"
+	ebegin "Connecting to \"${dessid}\" in ${mode} mode ${w}"
 
 	if [[ ${ESSID} != "any" ]] && is_function preassociate ; then
 		veinfo "Running preassociate function"
-		eindent
+		veindent
 		( preassociate "${iface}" )
 		e="$?"
-		eoutdent
+		veoutdent
 		if [[ ${e} != 0 ]]; then
 			veend 1 "preassociate \"${dessid}\" on ${iface} failed"
 			return 1
@@ -410,10 +410,10 @@ iwconfig_associate() {
 	fi
 
 	if ! iwconfig_wait_for_association "${iface}" ; then
-		veend 1
+		eend 1
 		return 1
 	fi
-	veend 0
+	eend 0
 
 	if [[ ${ESSID} == "any" ]]; then
 		ESSID=$(iwconfig_get_essid "${iface}")
@@ -425,9 +425,9 @@ iwconfig_associate() {
 
 	if is_function postassociate ; then
 		veinfo "Running postassociate function"
-		eindent
+		veindent
 		( postassociate "${iface}" )
-		eoutdent
+		veoutdent
 	fi
 
 	return 0
@@ -448,7 +448,7 @@ iwconfig_scan() {
 		fi
 	fi
 
-	veinfo "Scanning for access points"
+	einfo "Scanning for access points"
 
 	# Sleep if required
 	x="sleep_scan_${ifvar}"
@@ -592,9 +592,9 @@ iwconfig_scan_report() {
 		k="${k})"
 
 		if [[ -z ${essid_APs[i]} ]]; then
-			veinfo "Found ${mac_APs[i]} ${k}"
+			einfo "Found ${mac_APs[i]} ${k}"
 		else
-			veinfo "Found \"${essid_APs[i]//\\\\/\\\\}\" at ${mac_APs[i]} ${k}"
+			einfo "Found \"${essid_APs[i]//\\\\/\\\\}\" at ${mac_APs[i]} ${k}"
 		fi
 
 		eindent
@@ -602,7 +602,7 @@ iwconfig_scan_report() {
 		m="mac_essid_${mac_APs[i]//:/}"
 		if [[ -n ${!m} ]]; then
 			essid_APs[i]="${!m}"
-			veinfo "mapping to \"${!m//\\\\/\\\\}\""
+			einfo "mapping to \"${!m//\\\\/\\\\}\""
 		fi
 
 		remove=false
@@ -613,7 +613,7 @@ iwconfig_scan_report() {
 		else
 			for k in "${blacklist_aps[@]}"; do
 				if [[ ${k} == "${essid_APs[i]}" ]]; then
-					vewarn "\"${k//\\\\/\\\\}\" has been blacklisted - not connecting"
+					ewarn "\"${k//\\\\/\\\\}\" has been blacklisted - not connecting"
 					remove=true
 					break
 				fi

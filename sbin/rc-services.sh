@@ -284,30 +284,6 @@ get_options() {
 	fi
 }
 
-# void sevice_message([char *type] char *message)
-#
-# Print out a service message if we are on parallel
-service_message() {
-	[[ ${RC_PARALLEL_STARTUP} != "yes" || ${RC_QUIET} == "yes" ]] && return
-
-	local cmd="einfo"
-	case "$1" in
-		1|error|eerror)
-			cmd="eerror"
-			shift
-			;;
-		ewarn)
-			cmd="ewarn"
-			shift
-			;;
-	esac
-
-	local r="${RC_QUIET_STDOUT}"
-	RC_QUIET_STDOUT="no"
-	${cmd} "$@"
-	RC_QUIET_STDOUT="${r}"
-}
-
 # bool begin_service( service )
 #
 #   atomically marks the service as being executed
