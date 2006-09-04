@@ -73,6 +73,9 @@ while [[ -e ${svcdir}/.locked ]] ; do
 	sleep 1
 done
 
+# Change dir to $svcdir so we lock it for fuser until we finish
+cd "${svcdir}"
+
 # State variables
 svcpause="no"
 svcrestart="no"

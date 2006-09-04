@@ -440,6 +440,9 @@ _eflush() {
 	local buf="${_ebuffer}"
 	_ebuffer=
 
+	# Change to $svcdir so we lock rc until we complete if rc is umounting it
+	cd "${svcdir}"
+	
 	# Store our job buffer
 	mv "${buf}" "${buf}.$$"
 
@@ -612,8 +615,6 @@ get_bootparam() {
 dolisting() {
 	local x= y= mylist= mypath="$*"
 
-	[[ ${mypath%/\*} != "${mypath}" ]] && mypath=${mypath%/\*}
-
 	# Here we use bash file globbing instead of ls to save on forking
 	for x in ${mypath} ; do
 		[[ ! -e ${x} ]] && continue
@@ -624,7 +625,7 @@ dolisting() {
 			[[ ${x%/} != "${x}" ]] && x=${x%/}
 			
 			for y in "${x}"/* ; do
-				mylist="${mylist} ${y}"
+				[[ -e ${y} ]] && mylist="${mylist} ${y}"
 			done
 		fi
 	done
