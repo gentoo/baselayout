@@ -12,12 +12,18 @@ if [[ ${EUID} != "0" ]] && ! [[ $2 == "status" && $# -eq 2 ]] ; then
 fi
 
 myscript="$1"
+rcscript_errors=$(bash -n "${myscript}" 2>&1) || {
+	[[ -n ${rcscript_errors} ]] && echo "${rcscript_errors}" >&2
+	eerror "ERROR:  ${myscript} has syntax errors in it; aborting ..."
+	exit 1
+}
+myscript="$(pwd)/${myscript}"
+
 if [[ -L $1 && ! -L "/etc/init.d/${1##*/}" ]] ; then
 	SVCNAME=$(readlink "$1")
 else
 	SVCNAME="$1"
 fi
-
 declare -r SVCNAME="${SVCNAME##*/}"
 export SVCNAME
 # Support deprecated myservice variable
@@ -536,12 +542,6 @@ svc_status() {
 	status
 	# Return 0 if started, otherwise 1
 	[[ ${state} == "started" ]]
-}
-
-rcscript_errors=$(bash -n "${myscript}" 2>&1) || {
-	[[ -n ${rcscript_errors} ]] && echo "${rcscript_errors}" >&2
-	eerror "ERROR:  ${myscript} has syntax errors in it; aborting ..."
-	exit 1
 }
 
 # set *after* wrap_rcscript, else we get duplicates.
