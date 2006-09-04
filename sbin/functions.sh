@@ -57,7 +57,7 @@ TEXTDOMAINDIR="${svclib}/locale"
 TEXTDOMAIN="rc-scripts"
 
 # Ensure that _ebuffer is emtpy
-unset _ebuffer
+_ebuffer=
 
 # void import_addon(char *addon)
 #
@@ -109,9 +109,7 @@ bootlog() {
 #    parameters.
 #
 get_bootconfig() {
-	local copt=
-	local newbootlevel=
-	local newsoftlevel=
+	local copt= newbootlevel= newsoftlevel=
 
 	if [[ -r /proc/cmdline ]] ; then
 		for copt in $(</proc/cmdline) ; do
@@ -201,8 +199,7 @@ ebuffer() {
 #    use the system logger to log a message
 #
 esyslog() {
-	local pri=
-	local tag=
+	local pri= tag=
 
 	if [[ -x /usr/bin/logger ]] ; then
 		pri="$1"
@@ -374,21 +371,14 @@ ebegin() {
 #    script.
 #
 _eend() {	
-	local retval="${1:-0}" efunc="${2:-eerror}" msg
+	local retval="${1:-0}" efunc="${2:-eerror}" msg=
 	shift 2
 
 	if [[ ${retval} == "0" ]] ; then
 		[[ ${RC_QUIET_STDOUT} == "yes" ]] && return 0
 		msg="${BRACKET}[ ${GOOD}ok${BRACKET} ]${NORMAL}"
 	else
-		if [[ -c /dev/null ]] ; then
-			rc_splash "stop" &>/dev/null &
-		else
-			rc_splash "stop" &
-		fi
-		if [[ -n $* ]] ; then
-			${efunc} "$*"
-		fi
+		[[ -n $* ]] && ${efunc} "$*"
 		msg="${BRACKET}[ ${BAD}!!${BRACKET} ]${NORMAL}"
 	fi
 
@@ -446,6 +436,7 @@ ewend() {
 #
 _eflush() {
 	[[ ! -e ${_ebuffer} ]] && return
+
 	local buf="${_ebuffer}"
 	_ebuffer=
 
@@ -582,7 +573,7 @@ get_KV() {
 #   EXAMPLE:  if get_bootparam "nodevfs" ; then ....
 #
 get_bootparam() {
-	local x copt params retval=1
+	local x= copt= params= retval=1
 
 	[[ ! -r /proc/cmdline ]] && return 1
 
@@ -803,8 +794,7 @@ stop_addon() {
 #
 #   EXAMPLE: if is_older_than a.out *.o ; then ...
 is_older_than() {
-	local x=
-	local ref="$1"
+	local x= ref="$1"
 	shift
 
 	for x in "$@" ; do

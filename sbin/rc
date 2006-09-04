@@ -443,11 +443,21 @@ rm -rf "${svcdir}/failed" &>/dev/null
 
 # If $svcdir is mounted in ram, save it back to disk and unmount
 if [[ $(</proc/mounts) =~ $'\n'*"[[:space:]]${svcdir}[[:space:]]" ]] ; then
+	# Lock svcdir
+	touch "${svcdir}/.locked"
+	# Wait for processes to finish
+	while fuser -m "${svcdir}" &>/dev/null ; do
+		ewarn "Waiting for services to finish"
+		sleep 1
+	done
+
 	tar cpf "/tmp/init.d.$$.tar.bz2" -C "${svcdir}" .
 	umount "${svcdir}"
+	touch "${svcdir}/.locked"
 	rm -rf "${svcdir}"/*
-	tar xpf "/tmp/init.d.$$.tar.bz2" -C "${svcdir}"
-	rm -f "/tmp/init.d.$$.tar.bz2"
+	# Pipe errors to /dev/null as we may have future timestamps
+	tar xpf "/tmp/init.d.$$.tar.bz2" -C "${svcdir}" 2>/dev/null
+	rm -f "${svcdir}/.locked" "/tmp/init.d.$$.tar.bz2"
 fi
 
 # If we were in the boot runlevel, it is done now ...

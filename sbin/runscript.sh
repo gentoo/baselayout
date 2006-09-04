@@ -67,6 +67,12 @@ if [[ ${IN_HOTPLUG} == "1" ]] ; then
 	set +f
 fi
 
+# Sleep until svcdir is unlocked
+while [[ -e ${svcdir}/.locked ]] ; do
+	ewarn "Sleeping while svcdir is locked"
+	sleep 1
+done
+
 # State variables
 svcpause="no"
 svcrestart="no"
@@ -337,7 +343,7 @@ svc_start() {
 	# Store our e* messages in a buffer so we pretty print when parallel
 	[[ ${RC_PARALLEL_STARTUP} == "yes" && ${RC_QUIET} != "yes" ]] \
 		&& ebuffer "${svcdir}/ebuffer/${SVCNAME}"
-	
+
 	veinfo "Service ${SVCNAME} starting"
 
 	if broken "${SVCNAME}" ; then
