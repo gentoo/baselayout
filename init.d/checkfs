@@ -18,7 +18,7 @@ start() {
 	# Setup dm-crypt mappings if any
 	start_addon dm-crypt
 
-	if [[ -f /fastboot ]] || [[ -n ${CDBOOT} ]] || is_vps_sys ; then
+	if [[ -f /fastboot ]] || [[ -n ${CDBOOT} ]] ; then
 		rm -f /fastboot
 	else
 		ebegin $"Checking all filesystems"
@@ -46,7 +46,11 @@ start() {
 
 			if [[ ${retval} -gt 3 ]] ; then
 				eend 2 "Fsck could not correct all errors, manual repair needed"
-				sulogin "${CONSOLE}"
+				if is_vps_sys ; then
+					halt -f
+				else
+					sulogin "${CONSOLE}"
+				fi
 			fi
 		fi
 	fi

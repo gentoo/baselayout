@@ -342,12 +342,7 @@ echo "${SOFTLEVEL}" > "${svcdir}/softlevel"
 if [[ ${SOFTLEVEL} == "reboot" || ${SOFTLEVEL} == "shutdown" ]] ; then
 	# Call halt.sh with LC_ALL=C so that bash doesn't load any locales
 	# which could interfere with unmounting /usr
-	if is_vps_sys ; then
-		halt -w
-		LC_ALL=C exec /etc/init.d/"${SOFTLEVEL}".sh
-	else
-		LC_ALL=C exec /etc/init.d/halt.sh "${SOFTLEVEL}"
-	fi
+	LC_ALL=C exec /etc/init.d/halt.sh "${SOFTLEVEL}"
 
 	# Should never get here
 	exit 0
@@ -402,12 +397,17 @@ check_critical_failed() {
 	eerror "One or more critical startup scripts failed to start!"
 	eerror "Please correct this, and reboot ..."
 	echo; echo
-	sulogin "${CONSOLE}"
 
-	einfo "Unmounting filesystems"
-	mount -a -o remount,ro &>/dev/null
-	einfo "Rebooting"
-	reboot -f
+	if is_vps_sys ; then
+		einfo "Halting"
+		halt -f
+	else
+		sulogin "${CONSOLE}"
+		einfo "Unmounting filesystems"
+		mount -a -o remount,ro &>/dev/null
+		einfo "Rebooting"
+		reboot -f
+	fi
 }
 
 # Start scripts

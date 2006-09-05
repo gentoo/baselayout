@@ -72,16 +72,14 @@ if [[ ${RC_INTERACTIVE} == "yes" ]] ; then
 fi
 check_statedir /proc
 
-if ! is_vserver_sys ; then
-	ebegin "Mounting proc at /proc"
-	if [[ ${RC_USE_FSTAB} = "yes" ]] ; then
-		mntcmd=$(get_mount_fstab /proc)
-	else
-		unset mntcmd
-	fi
-	try mount -n ${mntcmd:--t proc proc /proc -o noexec,nosuid,nodev}
-	eend $?
+ebegin "Mounting proc at /proc"
+if [[ ${RC_USE_FSTAB} = "yes" ]] ; then
+	mntcmd=$(get_mount_fstab /proc)
+else
+	unset mntcmd
 fi
+try mount -n ${mntcmd:--t proc proc /proc -o noexec,nosuid,nodev}
+eend $?
 
 # Start profiling init now we have /proc
 profiling start
@@ -91,7 +89,7 @@ profiling start
 # Note: /proc MUST be mounted
 [[ -f /sbin/livecd-functions.sh ]] && livecd_read_commandline
 
-if ! is_vps_sys && [[ $(get_KV) -ge "$(KV_to_int '2.6.0')" ]] ; then
+if [[ $(get_KV) -ge "$(KV_to_int '2.6.0')" ]] ; then
 	if [[ -d /sys ]] ; then
 		ebegin "Mounting sysfs at /sys"
 		if [[ ${RC_USE_FSTAB} == "yes" ]] ; then
@@ -179,7 +177,7 @@ else
 fi
 
 # From linux-2.5.68 we need to mount /dev/pts again ...
-if [[ "$(get_KV)" -ge "$(KV_to_int '2.5.68')" ]] && ! is_vserver_sys ; then
+if [[ "$(get_KV)" -ge "$(KV_to_int '2.5.68')" ]] ; then
 	have_devpts=$(awk '($2 == "devpts") { print "yes"; exit 0 }' /proc/filesystems)
 
 	if [[ ${have_devpts} = "yes" ]] ; then

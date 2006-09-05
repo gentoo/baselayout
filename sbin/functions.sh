@@ -725,28 +725,14 @@ is_uml_sys() {
     [[ $(</proc/cpuinfo) == *"UML"* ]]
 }
 
-# bool is_openvz_sys()
-#
-#   return 0 if the currently running system is an OpenVZ VPS
-is_openvz_sys() {
-    [[ -e /proc/self/status ]] || return 1
-    [[ $'\n'$(</proc/self/status) =~ $'\n''envID:[[:space:]]*[1-9]' ]]
-}
-
-# bool is_vserver_sys()
-#
-#   return 0 if the currently running system is a Linux VServer
-is_vserver_sys() {
-    [[ -e /proc/self/status ]] || return 1
-    [[ $'\n'$(</proc/self/status) =~ $'\n''s_context:[[:space:]]*[1-9]' \
-	|| $'\n'$(</proc/self/status) =~ $'\n''VxID:[[:space:]]*[1-9]' ]]
-}
-
 # bool is_vps_sys()
 #
 #   return 0 if the currently running system is a Linux VServer or OpenVZ
 is_vps_sys() {
-	is_vserver_sys || is_openvz_sys
+    [[ -e /proc/self/status ]] || return 1
+    [[ $'\n'$(</proc/self/status) =~ $'\n''s_context:[[:space:]]*[1-9]' \
+	|| $'\n'$(</proc/self/status) =~ $'\n''VxID:[[:space:]]*[1-9]' \
+    || $'\n'$(</proc/self/status) =~ $'\n''envID:[[:space:]]*[1-9]' ]]
 }
 
 # bool is_xenU_sys()

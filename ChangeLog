@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  05 Sep 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Merged more vserver changes from Benedikt Boehm as vserver can now mount.
+
   03 Sep 2006; Roy Marples <uberlord@gentoo.org>:
 
     Document RC_QUIET.
