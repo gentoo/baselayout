@@ -219,13 +219,13 @@ esyslog() {
 #    increase the indent used for e-commands.
 #
 eindent() {
-	local i="$1"
-	(( i > 0 )) || (( i = RC_DEFAULT_INDENT ))
 	if [[ -n ${_ebuffer} ]] ; then
 		echo -E "eindent $*" >> "${_ebuffer}"
 		return 0
 	fi
 
+	local i="$1"
+	(( i > 0 )) || (( i = RC_DEFAULT_INDENT ))
 	esetdent $(( ${#RC_INDENTATION} + i ))
 }
 
@@ -234,13 +234,13 @@ eindent() {
 #    decrease the indent used for e-commands.
 #
 eoutdent() {
-	local i="$1"
-	(( i > 0 )) || (( i = RC_DEFAULT_INDENT ))
 	if [[ -n ${_ebuffer} ]] ; then
 		echo -E "eoutdent $*" >> "${_ebuffer}"
 		return 0
 	fi
 
+	local i="$1"
+	(( i > 0 )) || (( i = RC_DEFAULT_INDENT ))
 	esetdent $(( ${#RC_INDENTATION} - i ))
 }
 
