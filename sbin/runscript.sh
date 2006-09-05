@@ -2,6 +2,15 @@
 # Copyright 1999-2006 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
+if [[ $1 == "/"* ]] ; then
+	myscript="$1"
+else
+	myscript="$(pwd)/$1"
+fi
+
+# Change dir to $svcdir so we lock it for fuser until we finish
+cd "${svcdir}"
+
 # Common functions
 [[ ${RC_GOT_FUNCTIONS} != "yes" ]] && source /sbin/functions.sh
 
@@ -10,14 +19,6 @@ if [[ ${EUID} != "0" ]] && ! [[ $2 == "status" && $# -eq 2 ]] ; then
 	eerror "$0: must be root to run init scripts"
 	exit 1
 fi
-
-myscript="$1"
-rcscript_errors=$(bash -n "${myscript}" 2>&1) || {
-	[[ -n ${rcscript_errors} ]] && echo "${rcscript_errors}" >&2
-	eerror "ERROR:  ${myscript} has syntax errors in it; aborting ..."
-	exit 1
-}
-myscript="$(pwd)/${myscript}"
 
 if [[ -L $1 && ! -L "/etc/init.d/${1##*/}" ]] ; then
 	SVCNAME=$(readlink "$1")
@@ -36,6 +37,13 @@ svc_trap() {
 
 # Setup a default trap
 svc_trap
+
+# Now check script for syntax errors
+rcscript_errors=$(bash -n "${myscript}" 2>&1) || {
+	[[ -n ${rcscript_errors} ]] && echo "${rcscript_errors}" >&2
+	eerror "ERROR:  $1 has syntax errors in it; aborting ..."
+	exit 1
+}
 
 # coldplug events can trigger init scripts, but we don't want to run them
 # until after rc sysinit has completed so we punt them to the boot runlevel
@@ -79,8 +87,6 @@ while [[ -e ${svcdir}/.locked ]] ; do
 	sleep 1
 done
 
-# Change dir to $svcdir so we lock it for fuser until we finish
-cd "${svcdir}"
 
 # State variables
 svcpause="no"

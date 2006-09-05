@@ -421,7 +421,7 @@ ewend() {
 	if [[ -n ${_ebuffer} ]] ; then
 		[[ ${RC_QUIET_STDOUT} == "yes" && ${retval} == "0" ]] && return 0
 		echo "ewend $(requote "$@")" >> "${_ebuffer}"
-		return "${1:-0}"
+		return "${retval}"
 	fi
 
 	shift
@@ -592,7 +592,6 @@ get_bootparam() {
 			# Parse gentoo option
 			for x in ${params} ; do
 				if [[ ${x} == "$1" ]] ; then
-#					echo "YES"
 					retval=0
 				fi
 			done
@@ -827,9 +826,10 @@ bash_variable() {
 #
 requote() {
 	local q=\'
-	set -- "${@//\'/$q\'$q}"	# quote inner instances of '
-	set -- "${@/#/$q}"			# add ' to start of each param
-	set -- "${@/%/$q}"			# add ' to end of each param
+	set -- "${@//\\/\\\\\\\\}"			# quote inner instances of \ 
+	set -- "${@//\'/$q\"\'\"$q}"	# quote inner instances of '
+	set -- "${@/#/$q}"				# add ' to start of each param
+	set -- "${@/%/$q}"				# add ' to end of each param
 	echo "$*"
 }
 
