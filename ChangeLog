@@ -3,6 +3,8 @@
 
   05 Sep 2006; Roy Marples <uberlord@gentoo.org>:
 
+    wpa_supplicant packet socket checks have been moved to the ebuild.
+
     Merged more vserver changes from Benedikt Boehm as vserver can now mount.
 
   03 Sep 2006; Roy Marples <uberlord@gentoo.org>:
