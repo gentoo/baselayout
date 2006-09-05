@@ -219,13 +219,13 @@ esyslog() {
 #    increase the indent used for e-commands.
 #
 eindent() {
+	local i="$1"
+	(( i > 0 )) || (( i = RC_DEFAULT_INDENT ))
 	if [[ -n ${_ebuffer} ]] ; then
-		echo "eindent $(requote "$@")" >> "${_ebuffer}"
+		echo -E "eindent $*" >> "${_ebuffer}"
 		return 0
 	fi
 
-	local i="$1"
-	(( i > 0 )) || (( i = RC_DEFAULT_INDENT ))
 	esetdent $(( ${#RC_INDENTATION} + i ))
 }
 
@@ -234,13 +234,13 @@ eindent() {
 #    decrease the indent used for e-commands.
 #
 eoutdent() {
+	local i="$1"
+	(( i > 0 )) || (( i = RC_DEFAULT_INDENT ))
 	if [[ -n ${_ebuffer} ]] ; then
-		echo "eoutdent $(requote "$@")" >> "${_ebuffer}"
+		echo -E "eoutdent $*" >> "${_ebuffer}"
 		return 0
 	fi
 
-	local i="$1"
-	(( i > 0 )) || (( i = RC_DEFAULT_INDENT ))
 	esetdent $(( ${#RC_INDENTATION} - i ))
 }
 
@@ -261,7 +261,7 @@ esetdent() {
 #
 einfo() {
 	if [[ -n ${_ebuffer} && ${RC_QUIET_STDOUT} != "yes" ]] ; then
-		echo "einfo $(requote "$@")" >> "${_ebuffer}"
+		echo -E "einfo $*" >> "${_ebuffer}"
 		return 0
 	fi
 
@@ -288,7 +288,7 @@ einfon() {
 #
 ewarn() {
 	if [[ -n ${_ebuffer} ]] ; then
-		echo "ewarn $(requote "$@")" >> "${_ebuffer}"
+		echo -E "ewarn $*" >> "${_ebuffer}"
 		return 0
 	fi
 
@@ -314,8 +314,8 @@ ewarn() {
 #
 eerror() {
 	if [[ -n ${_ebuffer} ]] ; then
-		echo "eerror $(requote "$@")" >> "${_ebuffer}"
-		return 0
+		echo -E "eerror $*" >> "${_ebuffer}"
+		return 1 
 	fi
 
 	if [[ ${RC_QUIET_STDOUT} == "yes" ]] ; then
@@ -331,7 +331,7 @@ eerror() {
 	esyslog "daemon.err" "${name}" "$*"
 
 	LAST_E_CMD="eerror"
-	return 0
+	return 1
 }
 
 # void ebegin(char* message)
@@ -341,7 +341,7 @@ eerror() {
 ebegin() {
 	[[ ${RC_QUIET_STDOUT} == "yes" ]] && return 0
 	if [[ -n ${_ebuffer} ]] ; then
-		echo "ebegin $(requote "$@")" >> "${_ebuffer}"
+		echo -E "ebegin $*" >> "${_ebuffer}"
 		return 0
 	fi
 
@@ -399,9 +399,10 @@ _eend() {
 #
 eend() {
 	local retval="${1:-0}"
+
 	if [[ -n ${_ebuffer} ]] ; then
 		[[ ${RC_QUIET_STDOUT} == "yes" && ${retval} == "0" ]] && return 0
-		echo "eend $(requote "$@")" >> "${_ebuffer}"
+		echo -E "eend $*" >> "${_ebuffer}"
 		return "${retval}"
 	fi
 
@@ -418,9 +419,10 @@ eend() {
 #
 ewend() {
 	local retval="${1:-0}"
+
 	if [[ -n ${_ebuffer} ]] ; then
 		[[ ${RC_QUIET_STDOUT} == "yes" && ${retval} == "0" ]] && return 0
-		echo "ewend $(requote "$@")" >> "${_ebuffer}"
+		echo -E "eend $*" >> "${_ebuffer}"
 		return "${retval}"
 	fi
 
@@ -432,7 +434,7 @@ ewend() {
 
 # void _eflush(void)
 #
-#    This the the backgroud job to flush the ebuffer
+#   This the the backgroud job to flush the ebuffer
 #
 _eflush() {
 	[[ ! -e ${_ebuffer} ]] && return
@@ -453,11 +455,25 @@ _eflush() {
 	done
 
 	# OK, we have the lock so process the buffer
-	local l= x=
+	local l= x= cmd= args= n=
 	while read l ; do
+		cmd="${l%% *}"
+		args="${l#* }"
+		[[ ${args} == "${l}" ]] && args=
 		# Sanity check
 		for x in ebegin eend ewend einfo ewarn eerror eindent eoutdent ; do
-			eval "${l}"
+			[[ ${x} != ${cmd} ]] && continue
+			case "${x}" in
+				eend|ewend|eindent|eoutdent)
+					n="${args%% *}"
+					args="${args#* }"
+					[[ ${args} == "${n}" ]] && args=
+					${x} "${n}" "${args}"
+					;;
+				*)
+					${x} "${args}"
+					;;
+			esac
 			break
 		done
 	done < "${buf}.$$"
@@ -826,8 +842,7 @@ bash_variable() {
 #
 requote() {
 	local q=\'
-	set -- "${@//\\/\\\\\\\\}"			# quote inner instances of \ 
-	set -- "${@//\'/$q\"\'\"$q}"	# quote inner instances of '
+	set -- "${@//\'/$q\'$q}"	# quote inner instances of '
 	set -- "${@/#/$q}"				# add ' to start of each param
 	set -- "${@/%/$q}"				# add ' to end of each param
 	echo "$*"

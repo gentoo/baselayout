@@ -31,7 +31,7 @@ export SVCNAME
 myservice="${SVCNAME}"
 
 svc_trap() {
-	trap 'eerror "ERROR:  ${SVCNAME} caught an interrupt"; exit 1' \
+	trap 'eerror "ERROR:  ${SVCNAME} caught an interrupt"; eflush; exit 1' \
 		INT QUIT TSTP
 }
 
@@ -130,6 +130,7 @@ service_inactive "${SVCNAME}"
 svcinactive="$?"
 svc_quit() {
 	eerror "ERROR:  ${SVCNAME} caught an interrupt"
+	eflush
 	if service_inactive "${SVCNAME}" || [[ ${svcinactive} == "0" ]] ; then
 		mark_service_inactive "${SVCNAME}"
 	elif [[ ${svcstarted} == "0" ]] ; then
