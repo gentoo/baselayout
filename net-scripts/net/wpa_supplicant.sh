@@ -37,19 +37,9 @@ wpa_supplicant_expose() {
 #
 # Returns 0 if wpa_supplicant is installed, otherwise 1
 wpa_supplicant_check_installed() {
-	local report="${1:-false}" installed="0"
-	if [[ ! -x /sbin/wpa_supplicant ]] ; then
-		installed="1"
-		${report} && eerror "For WPA support (wpa_supplicant) support, emerge net-wireless/wpa_supplicant"
-	fi
-	if [[ ! -e /proc/net/packet ]] ; then
-		installed="1"
-		if ${report} ; then
-			eerror "wpa_supplicant requires Packet Socket"
-			eerror "(CONFIG_PACKET=y) enabled in the kernel"
-		fi
-	fi
-	return "${installed}"
+	[[ -x /sbin/wpa_supplicant ]] && return 0
+	${1:-false} && eerror "For WPA support (wpa_supplicant) support, emerge net-wireless/wpa_supplicant"
+	return 1 
 }
 
 # bool wpa_supplicant_exists(char *interface)

@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  05 Sep 2006; Roy Marples <uberlord@gentoo.org>:
+  
+    wpa_supplicant packet socket checks have been moved to the ebuild.
+
   21 Aug 2006; Roy Marples <uberlord@gentoo.org>:
 
     Each dhcp client now supports global options - ie dhcpcd="-a"
