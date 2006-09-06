@@ -30,23 +30,16 @@ iproute2_expose() {
 #
 # Returns 1 if iproute2 is installed, otherwise 0
 iproute2_check_installed() {
-	local report="${1:-false}" installed="0"
-	if [[ ! -x /sbin/ip ]] ; then
-		installed="1"
-		${report} && eerror "For iproute2 support, emerge sys-apps/iproute2"
-	fi
-	if [[ ! -e /proc/net/netlink ]] ; then
-		installed="1"
-		${report} && eerror "iproute2 requires NetLink enabled in the kernel"
-	fi
-	return "${installed}"
+	[[ -x /sbin/ip ]] && return 0
+	${1:-false} && eerror "For iproute2 support, emerge sys-apps/iproute2"
+	return 1
 }
 
 # bool iproute2_exists(char *interface, bool report)
 #
 # Returns 1 if the interface exists, otherwise 0
 iproute2_exists() {
-	local e=$( ip addr show label "$1" ) report="${2:-false}"
+	local e=$(ip addr show label "$1") report="${2:-false}"
 	[[ -n ${e} ]] && return 0
 
 	if ${report} ; then
