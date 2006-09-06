@@ -6,6 +6,10 @@ trap ":" INT QUIT TSTP
 
 source /sbin/functions.sh
 
+# Cache some vars so our spawned subshells know our width and if we
+# can do colour
+export COLS CONSOLETYPE
+
 # Only source this when this is a livecd booting ...
 [[ -f /sbin/livecd-functions.sh ]] && source /sbin/livecd-functions.sh
 

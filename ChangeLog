@@ -3,6 +3,9 @@
 
   06 Sep 2006; Roy Marples <uberlord@gentoo.org>:
 
+    Add _ewrap to functions.sh which handles new lines and word wrapping
+    for our e* commands.
+
     Fix PPPoA usage, #144194 thanks to Giampaolo Tomassoni.
 
     iproute2 netlink check has been moved to the ebuild.

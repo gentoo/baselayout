@@ -259,16 +259,12 @@ esetdent() {
 #
 #    show an informative message (with a newline)
 #
-einfo() {
-	if [[ -n ${_ebuffer} && ${RC_QUIET_STDOUT} != "yes" ]] ; then
-		echo -E "einfo $*" >> "${_ebuffer}"
-		return 0
-	fi
-
+_einfo() {
 	einfon "$*\n"
 	LAST_E_CMD="einfo"
 	return 0
 }
+
 
 # void einfon(char* message)
 #
@@ -286,12 +282,7 @@ einfon() {
 #
 #    show a warning message + log it
 #
-ewarn() {
-	if [[ -n ${_ebuffer} ]] ; then
-		echo -E "ewarn $*" >> "${_ebuffer}"
-		return 0
-	fi
-
+_ewarn() {
 	if [[ ${RC_QUIET_STDOUT} == "yes" ]] ; then
 		echo " $*"
 	else
@@ -312,12 +303,7 @@ ewarn() {
 #
 #    show an error message + log it
 #
-eerror() {
-	if [[ -n ${_ebuffer} ]] ; then
-		echo -E "eerror $*" >> "${_ebuffer}"
-		return 1 
-	fi
-
+_eerror() {
 	if [[ ${RC_QUIET_STDOUT} == "yes" ]] ; then
 		echo " $*" >/dev/stderr
 	else
@@ -361,6 +347,68 @@ ebegin() {
 	LAST_E_CMD="ebegin"
 	return 0
 }
+
+# void _ewrap(char *cmd, char *...)
+#
+#   Enures that each einfo, ewarn and error statement does not exceed console
+#   width - if it does then
+_ewrap() {
+	local cmd="$1"
+	shift
+
+	local c="${COLS}"
+	[[ ${RC_ENDCOL} == "yes" ]] && c="${ENDCOL}"
+	local p="$* "
+	local max=$((COLS - ${#RC_INDENTATION} - 9))
+
+	# Only use what we have space for
+	local d="${p%%\\n*}"
+	if [[ ${d} == "${p}" ]] ; then
+		d="${p:0:${max}}"
+	else
+		d="${d} "
+	fi
+
+	# Grab the last whole word
+	[[ ${#d} == "${max}" ]] && d="${d% *}"
+	
+	# Print that
+	_${cmd} "${d}"
+
+	# Recurse on the rest
+	local r="$*"
+	d="${d} "
+	r="${r:${#d}}"
+	[[ -n ${r} ]] && ${cmd} "${r}"
+}
+
+# wrappers for einfo, ewarn and eerror
+# They work in exactly the same way, but allow us to use ebuffer and ewrap
+einfo() {
+	if [[ -n ${_ebuffer} && ${RC_QUIET_STDOUT} != "yes" ]] ; then
+		echo "einfo ${*//\\/\\\\}" >> "${_ebuffer}"
+		return 0
+	fi
+
+	_ewrap einfo "$*"
+}
+ewarn() {
+	if [[ -n ${_ebuffer} ]] ; then
+		echo "ewarn ${*//\\/\\\\}" >> "${_ebuffer}"
+		return 0
+	fi
+
+	_ewrap ewarn "$*"
+}
+eerror() {
+	if [[ -n ${_ebuffer} ]] ; then
+		echo "eerror ${*//\\/\\\\}" >> "${_ebuffer}"
+		return 1 
+	fi
+
+	_ewrap eerror "$*"
+}
+
 
 # void _eend(int error, char *efunc, char* errstr)
 #
@@ -861,12 +909,7 @@ if [[ -z ${EBUILD} ]] ; then
 	# doing 'su -c foo', or for something like:  PATH= rcscript start
 	PATH="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/sbin:${PATH}"
 
-	# Cache the CONSOLETYPE - this is important as backgrounded shells don't
-	# have a TTY. rc unsets it at the end of running so it shouldn't hang
-	# around
-	if [[ -z ${CONSOLETYPE} ]] ; then
-		export CONSOLETYPE=$(/sbin/consoletype 2>/dev/null)
-	fi
+	[[ -z ${CONSOLETYPE} ]] && CONSOLETYPE=$(/sbin/consoletype 2>/dev/null)
 	if [[ ${CONSOLETYPE} == "serial" ]] ; then
 		RC_NOCOLOR="yes"
 		RC_ENDCOL="no"
@@ -905,7 +948,7 @@ fi
 if [[ -n ${EBUILD} && $* == *depend* ]] ; then
 	# We do not want stty to run during emerge depend
 	COLS=80
-else
+elif [[ -z ${COLS} || -n ${COLUMNS} ]] ; then
 	# Setup COLS and ENDCOL so eend can line up the [ ok ]
 	COLS="${COLUMNS:-0}"		# bash's internal COLUMNS variable
 	(( COLS == 0 )) && COLS=$(set -- `stty size 2>/dev/null` ; echo "$2")
