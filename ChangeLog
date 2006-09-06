@@ -3,6 +3,8 @@
 
   06 Sep 2006; Roy Marples <uberlord@gentoo.org>:
 
+    Fix PPPoA usage, #144194 thanks to Giampaolo Tomassoni.
+
     iproute2 netlink check has been moved to the ebuild.
 
     When stopping a ppp link, don't remove the IP address, #145034.
