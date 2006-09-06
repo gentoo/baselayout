@@ -393,7 +393,8 @@
 # Each PPP interface requires an interface to use as a "Link"
 #link_ppp0="/dev/ttyS0" 		# Most PPP links will use a serial port
 #link_ppp0="eth0"       		# PPPoE requires an ethernet interface
-#link_ppp0="/dev/null"			# PPPoA and ISDN links should have this
+#link_ppp0="[itf.]vpi.vci"		# PPPoA requires the ATM VC's address
+#link_ppp0="/dev/null"			# ISDN links should have this
 #link_ppp0="pty 'your_link_command'"	# PPP links over ssh, rsh, etc
 #
 # Here you should specify what pppd plugins you want to use
@@ -401,7 +402,7 @@
 #			 radattr, radrealms and winbind 
 #plugins_ppp0=(
 #	"pppoe"				# Required plugin for PPPoE
-#	"pppoa 0.8.35 vc-encaps"	# Example plugin for PPPoA
+#	"pppoa vc-encaps"		# Required plugin for PPPoA with an option
 #	"capi"				# Required plugin for ISDN
 #)
 #

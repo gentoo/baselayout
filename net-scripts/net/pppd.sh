@@ -151,9 +151,11 @@ pppd_start() {
 		[[ ${plugin[0]} == "pppoa" ]] && plugin[0]="pppoatm"
 		[[ ${plugin[0]} == "capi" ]] && plugin[0]="capiplugin"
 
-		[[ ${plugin[0]} == "rp-pppoe" ]] && opts="${opts} connect true"
-		opts="${opts} plugin ${plugin[0]}.so ${plugin[@]:1}"
-		[[ ${plugin[0]} == "rp-pppoe" ]] && opts="${opts} ${!link}"
+		if [[ ${plugin[0]} == "rp-pppoe" || ( ${plugin[0]} == "pppoatm" && ${!link} != '/dev/null' ) ]] ; then
+			opts="${opts} connect true plugin ${plugin[0]}.so ${plugin[@]:1} ${!link}"
+		else
+			opts="${opts} plugin ${plugin[0]}.so ${plugin[@]:1}"
+		fi
 	done
 
 	#Specialized stuff. Insert here actions particular to connection type (pppoe,pppoa,capi)
@@ -175,6 +177,12 @@ pppd_start() {
 	fi
 
 	if [[ " ${opts} " == *" plugin pppoatm.so "* ]] ; then
+		if [[ ${!link} =~ '^[ \t]*([1-9]*[0-9]\.){1,2}[1-9]*[0-9][ \t]*$' ]] ; then
+			insert_link_in_opts=0
+		else
+			ewarn "WARNING: An [itf.]vpi.vci ATM address was expected in ${link}"
+		fi
+
 		if [[ ! -d /proc/net/atm ]] ; then
 			# Load the PPPoA kernel module
 			if ! modprobe pppoatm ; then
