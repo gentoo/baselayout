@@ -23,6 +23,13 @@ pppd_check_installed() {
 	return 0
 }
 
+# bool pppd_exists(char *interface)
+#
+# Returns 0 if the interface is ppp controlled, otherwise 1
+pppd_exists() {
+	[[ -e /var/run/ppp-$1.pid ]]
+}
+
 # bool pppd_start(char *iface)
 #
 # Start PPP on an interface by calling pppd

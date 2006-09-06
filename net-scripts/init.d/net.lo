@@ -855,8 +855,11 @@ iface_stop() {
 			continue
 		fi
 
-		# Delete all the addresses for this alias
-		interface_del_addresses "${i}"
+		# We don't delete ppp assigned addresses
+		if ! is_function pppd_exists || ! pppd_exists "${i}" ; then
+			# Delete all the addresses for this alias
+			interface_del_addresses "${i}"
+		fi
 
 		# Do final shut down of this alias
 		if [[ ${IN_BACKGROUND} != "true" \

@@ -1,6 +1,12 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  06 Sep 2006; Roy Marples <uberlord@gentoo.org>:
+
+    iproute2 netlink check has been moved to the ebuild.
+
+    When stopping a ppp link, don't remove the IP address, #145034.
+
   05 Sep 2006; Roy Marples <uberlord@gentoo.org>:
   
     wpa_supplicant packet socket checks have been moved to the ebuild.
