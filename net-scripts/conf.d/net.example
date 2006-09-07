@@ -156,7 +156,7 @@
 #wpa_supplicant_eth0="-Dwext" # For generic wireless
 #wpa_supplicant_ath0="-Dmadwifi" # For Atheros based cards
 # Consult wpa_supplicant for more drivers
-# By default don't wait for wpa_suppliant to associate and authenticate.
+# By default we don't wait for wpa_suppliant to associate and authenticate.
 # If you would like to, so can specify how long in seconds
 #associate_timeout_eth0=60
 # A value of 0 means wait forever.

@@ -4,8 +4,13 @@
 # Start logging console output since we have all /dev stuff setup
 bootlog start
 
-# mount $svcdir as something we can write to
-mount_svcdir
+# mount $svcdir as something we can write to if it's not rw
+# On vservers, / is always rw at this point
+if touch "${svcdir}/.test" 2>/dev/null ; then
+	rm -f "${svcdir}/.test"
+else
+	mount_svcdir
+fi
 
 # Update init dependencies if needed
 depscan.sh
