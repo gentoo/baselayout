@@ -105,6 +105,9 @@ get_dep_info() {
 	rc_iafter="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_iafter}))]}"
 	rc_broken="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_broken}))]}"
 	rc_mtime="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_mtime}))]}"
+	rc_iprovide="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_iprovide}))]}"
+	rc_provided="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_provided}))]}"
+
 	return 0
 }
 
@@ -121,7 +124,7 @@ get_dep_info() {
 check_dependency() {
 	[[ -z $1 || -z $2 ]] && return 1
 	
-	local x myservice deps
+	local x= myservice= deps=
 
 	# Set the dependency variables to relate to 'service1'
 	if [[ $2 == "-t" ]] ; then
@@ -150,57 +153,116 @@ check_dependency() {
 		done
 		return 1
 	else
+		if [[ $1 == "iprovide" ]] ; then
+			echo "${!deps}"
+			return 0
+		fi
+
 		# Just list all services that 'service1' have 'deptype' dependency on.
-		echo "${!deps}"
+		# Resolve provides here
+
+		# Cannot be SOFTLEVEL, as we need to know current runlevel
+		local mylevel="${BOOTLEVEL}" ret=
+		[[ -f "${svcdir}/softlevel" ]] && mylevel=$( < "${svcdir}/softlevel" )
+
+		for x in ${!deps} ; do
+			if [[ -x "/etc/init.d/${x}" ]] ; then
+				ret="${ret} ${x}"
+			else
+				# Handle provides here. First check what's already started
+				local y= p=1
+				for y in ${rc_provided} ; do
+					if is_runlevel_stop ; then
+						service_stopping "${y}" || service_stopped "${y}"
+					else	
+						service_starting "${y}" || service_started "${y}"
+					fi
+					if [[ $? == 0 ]] ; then
+						ret="${ret} $?"
+						continue 2
+					fi
+				done
+
+				# Now check runlevels
+				for y in ${rc_provided} ; do
+					if in_runlevel "${y}" "${mylevel}" ; then
+						ret="${ret} ${y}"
+						continue 2
+					fi
+				done
+				if [[ ${mylevel} != "${BOOTLEVEL}" ]] ; then
+					for y in ${rc_provided} ; do
+						if in_runlevel "${y}" "${BOOTLEVEL}" ; then
+							ret="${ret} ${y}"
+							continue 2
+						fi
+					done
+				fi
+
+				# OK, not in runlevel. Use first alphabetical
+				local z=$(echo "${rc_provided// /$'\n'}" | sort)
+				for y in ${z} ; do
+					if [[ -x "/etc/init.d/${y}" ]] ; then
+						ret="${ret} ${y}"
+						continue 2
+					fi
+				done
+
+				# OK, no provided services exist, so use first
+				for y in ${z} ; do
+					ret="${ret} ${y}"
+					continue 2
+				done
+			fi
+		done
+		
+		echo "${ret:1}"
 		return 0
 	fi
 }
 
 # Same as for check_dependency, except 'deptype' is set to
 # 'ineed'.  It will return all the services 'service1' NEED's.
+iprovide() {
+	check_dependency iprovide "$@" 
+}
 ineed() {
 	check_dependency ineed "$@" 
 }
-
-# Same as for check_dependency, except 'deptype' is set to
-# 'needsme'.  It will return all the services that NEED 'service1'.
 needsme() {
 	check_dependency needsme "$@"
 }
-
-# Same as for check_dependency, except 'deptype' is set to
-# 'iuse'.  It will return all the services 'service1' USE's.
 iuse() {
 	check_dependency iuse "$@"
 }
-
-# Same as for check_dependency, except 'deptype' is set to
-# 'usesme'.  It will return all the services that USE 'service1'.
 usesme() {
 	check_dependency usesme "$@"
 }
-
-# Same as for check_dependency, except 'deptype' is set to
-# 'ibefore'.  It will return all the services that are started
-# *after* 'service1' (iow, it will start 'service1' before the
-# list of services returned).
 ibefore() {
 	check_dependency ibefore "$@"
 }
-
-# Same as for check_dependency, except 'deptype' is set to
-# 'iafter'.  It will return all the services that are started
-# *before* 'service1' (iow, it will start 'service1' after the
-# list of services returned).
 iafter() {
 	check_dependency iafter "$@"
 }
-
-# Same as for check_dependency, except 'deptype' is set to
-# 'broken'.  It will return all the services that 'service1'
-# NEED, but are not present.
 broken() {
 	check_dependency broken "$@"
+}
+
+# char *provides(service)
+#
+#   Returns a list of services that provide service
+provides() {
+	[[ -z $1 ]] && return 1
+
+	local x=
+	for x in "${RC_PROVIDED_BY[@]}" ; do
+		if [[ ${x} == "$1 "* ]] ; then
+			echo "${x#* }"
+			return 0
+		fi
+	done
+
+	return 1
 }
 
 # bool is_fake_service(service, runlevel)
@@ -374,6 +436,7 @@ start_service() {
 
 	begin_service "${service}" || return 0
 	splash "svc_start" "${service}"
+
 	if [[ ${RC_PARALLEL_STARTUP} != "yes" ]] ; then
 		# if we can not start the services in parallel
 		# then just start it and return the exit status

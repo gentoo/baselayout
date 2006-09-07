@@ -909,7 +909,9 @@ if [[ -z ${EBUILD} ]] ; then
 	# doing 'su -c foo', or for something like:  PATH= rcscript start
 	PATH="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/sbin:${PATH}"
 
-	[[ -z ${CONSOLETYPE} ]] && CONSOLETYPE=$(/sbin/consoletype 2>/dev/null)
+	if [[ -z ${CONSOLETYPE} ]] ; then
+		export CONSOLETYPE=$(/sbin/consoletype 2>/dev/null)
+	fi
 	if [[ ${CONSOLETYPE} == "serial" ]] ; then
 		RC_NOCOLOR="yes"
 		RC_ENDCOL="no"

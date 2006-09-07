@@ -301,46 +301,26 @@ dep_stop() {
 }
 
 # Stop services
-if [[ ${SOFTLEVEL} != "single" && \
-      ${SOFTLEVEL} != "reboot" && \
-      ${SOFTLEVEL} != "shutdown" ]] ; then
-	for i in $(get_stop_services) ; do
-		dep_stop "${i}"
-	done
-	
-	# Wait for any services that may still be stopping ...
-	[[ ${RC_PARALLEL_STARTUP} = "yes" ]] && wait
-else
-	is_critical_service() {
-		local x
-		local myservice="${1##*/}"
+# First stop non critical services
+for i in $(get_stop_services) ; do
+	[[ " ${RC_CRITICAL_SERVICES} " == *" ${i} "* ]] && continue
+	[[ $(iprovide "${i}") == "logger" ]] && continue
+	dep_stop "${i}"
+done
 
-		for x in ${RC_CRITICAL_SERVICES} ${LOGGER_SERVICE} ; do
-			[[ ${myservice} == "${x}" ]] && return 0
-		done
+# Wait for any services that may still be stopping ...
+[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && wait
 
-		return 1
-	}
+# Now stop the rest
+for i in $(get_stop_services) ; do
+	dep_stop "${i}"
+done
 
-	# First stop non critical services
-	for i in $(get_stop_services) ; do
-		[[ " ${RC_CRITICAL_SERVICES} " == *" ${i} "* ]] && continue
-		[[ ${LOGGER_SERVICE} == "${i}" ]] && continue
-		dep_stop "${i}"
-	done
-
-	# Wait for any services that may still be stopping ...
-	[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && wait
-
-	# Now stop the rest
-	for i in $(get_stop_services) ; do
-		dep_stop "${i}"
-	done
-fi
+# Wait for any services that may still be stopping ...
+[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && wait
 
 # Only change softlevel AFTER all the services have been stopped,
 # else they will not get the depend's right (wrong SOFTLEVEL)
-
 echo "${SOFTLEVEL}" > "${svcdir}/softlevel"
 
 if [[ ${SOFTLEVEL} == "reboot" || ${SOFTLEVEL} == "shutdown" ]] ; then
@@ -369,12 +349,7 @@ mv -f "${svcdir}/softscripts" "${svcdir}/softscripts.old"
 mv -f "${svcdir}/softscripts.new" "${svcdir}/softscripts"
 
 get_start_services() {
-	local x list
-
-	[[ -n ${LOGGER_SERVICE} && \
-	   -L "${svcdir}/softscripts/${LOGGER_SERVICE}" ]] && \
-		list="${list} ${LOGGER_SERVICE}"
-
+	local x= list=
 	for x in $(dolisting "${svcdir}/softscripts/") ; do 
 		list="${list} ${x##*/}"
 	done

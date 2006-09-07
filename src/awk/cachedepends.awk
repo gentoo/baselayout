@@ -63,14 +63,22 @@ function print_end() {
 	print "" >> TMPCACHE
 	print "  depend" >> TMPCACHE
 
-	# Support user defined RC_NEED and RC_USE
+	# Support user defined RC_NEED, RC_USE, RC_AFTER, RC_BEFORE AND RC_PROVIDE
 	print "" >> TMPCACHE
 	print "  for x in ${RC_NEED} ; do" >> TMPCACHE
 	print "    need \"${x}\"" >> TMPCACHE
 	print "  done" >> TMPCACHE
-	print "" >> TMPCACHE
 	print "  for x in ${RC_USE} ; do" >> TMPCACHE
 	print "    use \"${x}\"" >> TMPCACHE
+	print "  done" >> TMPCACHE
+	print "  for x in ${RC_AFTER} ; do" >> TMPCACHE
+	print "    after \"${x}\"" >> TMPCACHE
+	print "  done" >> TMPCACHE
+	print "  for x in ${RC_BEFORE} ; do" >> TMPCACHE
+	print "    before \"${x}\"" >> TMPCACHE
+	print "  done" >> TMPCACHE
+	print "  for x in ${RC_PROVIDE} ; do" >> TMPCACHE
+	print "    provide \"${x}\"" >> TMPCACHE
 	print "  done" >> TMPCACHE
 	print ")" >> TMPCACHE
 	print "" >> TMPCACHE

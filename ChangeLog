@@ -1,6 +1,13 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  07 Sep 2006; Roy Marples <uberlord@gentoo.org>:
+
+    It is now possible to have >1 service that can provide foo.
+    If something then uses foo it selects which service to depend on using
+    the following criteria - not stopped, in runlevel, alphabetical.
+    Fixes #46897.
+
   06 Sep 2006; Roy Marples <uberlord@gentoo.org>:
 
     Add _ewrap to functions.sh which handles new lines and word wrapping

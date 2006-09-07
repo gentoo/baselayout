@@ -151,36 +151,39 @@ function add_provide(service, provide)
 		eerror(" Cannot add provide '" provide "', as a service with the same name exists!")
 		return 0
 	}
-		
-	if (check_provide(provide)) {
-		# We cannot have more than one service Providing a virtual ...
-		ewarn(" Service '" get_provide(provide) "' already provided by '" provide "'!;")
-		ewarn(" Not adding service '" service "'...")
-		# Do not fail here as we do have a service that resolves the virtual
-	} else {
-		# Sanity check
-		if (check_service(service)) {
-			PROVIDE_LIST[provide] = service
-		} else {
-			eerror(" Cannot add provide '" provide "', as service '" service "' does not exist!")
-			return 0
-		}
+	
+	# Sanity check
+	if (!check_service(service)) {
+		eerror(" Cannot add provide '" provide "', as service '" service "' does not exist!")
+		return 0
 	}
 
+	if (provide in PROVIDE_LIST)
+		PROVIDE_LIST[provide] = PROVIDE_LIST[provide] " " service
+	else
+		PROVIDE_LIST[provide] = service
 	return 1
 }
 
 # string get_provide(provide)
 #
-#   Return the name of the service that Provides 'provide'
+#   Return the name of the services that Provides 'provide'
 #
-function get_provide(provide)
+function get_provides(provide)
 {
-	if (provide in PROVIDE_LIST)
-		if (check_service(PROVIDE_LIST[provide]))
-			return PROVIDE_LIST[provide]
-	
-	return ""
+	if (provide in PROVIDE_LIST) {
+		split(PROVIDE_LIST[provide], tmpsplit)
+		for (x in tmpsplit) {
+			if (check_service(tmpsplit[x])) {
+				if (provides)
+					provides = provides " " tmpsplit[x]
+				else
+					provides = tmpsplit[x]
+			}
+		}
+	}
+
+	return provides
 }
 
 # bool check_provide(provide)
@@ -236,27 +239,34 @@ function resolve_depend(type, service, deplist,    x, deparray)
 
 	# If there are no existing service 'service', resolve possible
 	# provided services
-	if (!check_service(service)) {
-		if (check_provide(service))
-			service = get_provide(service)
-		else
-			return
-	}
+	if (!check_service(service))
+		return
 
 	split(deplist, deparray)
 
 	for (x in deparray) {
-
-		# If there are no existing service 'deparray[x]', resolve possible
-		# provided services
-		if (!check_service(deparray[x])) {
-			if (check_provide(deparray[x]))
-				deparray[x] = get_provide(deparray[x])
-		}
-
 		# Handle 'need', as it is the only dependency type that
 		# should handle invalid database entries currently.
 		if (!check_service(deparray[x])) {
+
+			# OK, is it provided? If so, RC should handle the deps
+			if (check_provide(deparray[x])) {
+				add_db_entry(service, type, deparray[x])
+				# Reverse map
+				split(PROVIDE_LIST[deparray[x]], tmplist)
+				for (y in tmplist) {
+					add_db_entry(service, PROVIDED, tmplist[y])
+					if (type == NEED)
+						add_db_entry(tmplist[y], NEEDME, service)
+					else if (type == USE)
+						add_db_entry(tmplist[y], USEME, service)
+					else if (type == AFTER)
+						add_db_entry(tmplist[y], BEFORE, service)
+					else if (type == BEFORE)
+						add_db_entry(tmplist[y], AFTER, service)
+				}
+				continue
+			}
 
 			if (((type == NEED) || (type == NEEDME)) && (deparray[x] != "net")) {
 
@@ -371,9 +381,10 @@ BEGIN {
 	AFTER = 7
 	BROKEN = 8
 	MTIME = 9
-	PROVIDE = 10	# Not part of Types as when finally printed ...
+	PROVIDE = 10
+	PROVIDED = 11
 	TYPES_MIN = 2
-	TYPES_MAX = 9
+	TYPES_MAX = 11
 
 	TYPE_NAMES[NEED] = "ineed"
 	TYPE_NAMES[NEEDME] = "needsme"
@@ -382,7 +393,8 @@ BEGIN {
 	TYPE_NAMES[BEFORE] = "ibefore"
 	TYPE_NAMES[AFTER] = "iafter"
 	TYPE_NAMES[BROKEN] = "broken"
-	TYPE_NAMES[PROVIDE] = "provide"
+	TYPE_NAMES[PROVIDE] = "iprovide"
+	TYPE_NAMES[PROVIDED] = "provided"
 	TYPE_NAMES[MTIME] = "mtime"
 
 	# Get our environment variables
@@ -477,7 +489,8 @@ END {
 	# Calculate all the provides ...
 	for (x = 1;x <= RC_NUMBER;x++) {
 		if ((x,PROVIDE) in DEPTREE)
-			add_provide(DEPTREE[x,NAME], DEPTREE[x,PROVIDE])
+			if (add_provide(DEPTREE[x,NAME], DEPTREE[x,PROVIDE]))
+				add_db_entry(DEPTREE[x,NAME], PROVIDE, DEPTREE[x,PROVIDE])
 	}
 
 	# Now do NEED
@@ -541,18 +554,25 @@ END {
 
 		print "" >> (CACHEDTREE)
 	}
+
 	# Ensure that no-one changes our tree
 	print "declare -r RC_DEPEND_TREE" >> (CACHEDTREE)
+
+	# Store our PROVIDED_LIST
+	printf "declare -r RC_PROVIDED_BY=(" >> (CACHEDTREE)
+	for (x in PROVIDE_LIST) {
+		printf " \"" x >> (CACHEDTREE)
+		split(PROVIDE_LIST[x], tmplist)
+		for (y in tmplist)
+			printf " " tmplist[y] >> (CACHEDTREE)
+		printf "\"" >> (CACHEDTREE)
+	}
+	print ")" >> (CACHEDTREE)
 
 	# Do not export these, as we want them local
 	print "declare -r RC_GOT_DEPTREE_INFO=\"yes\"" >> (CACHEDTREE)
 	print "" >> (CACHEDTREE)
 
-	if (check_provide("logger"))
-		print "declare -r LOGGER_SERVICE=\"" get_provide("logger") "\"" >> (CACHEDTREE)
-	else
-		print "declare -r LOGGER_SERVICE=" >> (CACHEDTREE)
-		
 	close(CACHEDTREE)
 
 	assert(dosystem("rm -f "ORIGCACHEDTREE), "system(rm -f "ORIGCACHEDTREE")")
