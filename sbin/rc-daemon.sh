@@ -65,6 +65,12 @@ rc_shift_args() {
 			--pid=*)
 				pidfile="${1##--pid=}"
 				;;
+			-b|--background)
+				background=true
+				;;
+			-m|--make-pidfile)
+				makepidfile=true
+				;;
 			-R|--retry)
 				unset RC_RETRY_COUNT
 				addvar="RC_RETRY_COUNT"
@@ -91,8 +97,6 @@ rc_setup_daemon_vars() {
 	[[ ${x} != "${args}" ]] && eargs=( "${args##* \'--\' }" )
 
 	eval rc_shift_args "${sargs[@]}"
-
-	[[ -n ${name} ]] && cmd="${name}"
 
 	# We may want to launch the daemon with a custom command
 	# This is mainly useful for debugging with apps like valgrind, strace
@@ -201,11 +205,11 @@ is_daemon_running() {
 	local cmd= pidfile= pids= pid=
 
 	if [[ $# == "1" ]]; then
-		cmd="$1"
+		cmd="$(basename "$1")"
 	else
 		local i j="$#"
 		for (( i=0; i<j-1; i++ )); do
-			cmd="${cmd} $1"
+			cmd="${cmd} $(basename "$1")"
 			shift
 		done
 		pidfile="$1"
@@ -213,7 +217,6 @@ is_daemon_running() {
 
 	pids=$(pidof ${cmd})
 	[[ -z ${pids} ]] && return 1
-
 	[[ -s ${pidfile} ]] || return 0
 
 	read pid < "${pidfile}"
@@ -226,11 +229,33 @@ is_daemon_running() {
 # We don't do anyting fancy - just pass the given options
 # to start-stop-daemon and return the value
 rc_start_daemon() {
-	eval /sbin/start-stop-daemon "${args}"
-	local retval="$?"
+	# s-s-d requires /proc
+	local retval=
+	if [[ -e /proc/self ]] ; then
+		eval /sbin/start-stop-daemon "${args}"
+		retval=$?
+	else
+		local eargs="${args##* \'--\' }"
+		[[ ${eargs} == "${args}" ]] && unset eargs
+		if ! ${background} ; then
+			eval "${cmd}" "${eargs}"
+			retval=$?
+		else
+			(eval "${cmd}" "${eargs}") &
+			retval=$?
+			if [[ ${retval} == "0" ]] ; then
+				if [[ -n ${pidfile} && ${makepidfile} ]] ; then
+					echo "$!" > "${pidfile}"
+				fi
+			fi
+		fi
+	fi
 
 	[[ ${retval} != "0" ]] && return "${retval}"
 	[[ ${RC_WAIT_ON_START} == "0" ]] && return "${retval}"
+
+	# Now we are started, check the process name if requested
+	[[ -n ${name} ]] && cmd="${name}"
 
 	# Give the daemon upto 1 second to fork after s-s-d returns
 	# Some daemons like acpid and vsftpd need this when system is under load
@@ -352,7 +377,8 @@ update_service_status() {
 # how we are called
 start-stop-daemon() {
 	local args=$(requote "$@") result= i=
-	local cmd= name= pidfile= pid= stopping= signal= nothing=false 
+	local cmd= name= pidfile= pid= stopping= signal= nothing=false
+	local background=false makepidfile=false
 	local daemonfile=
 	local -a RC_DAEMONS=() RC_PIDFILES=()
 

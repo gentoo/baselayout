@@ -8,11 +8,11 @@ else
 	myscript="$(pwd)/$1"
 fi
 
-# Change dir to $svcdir so we lock it for fuser until we finish
-cd "${svcdir}"
-
 # Common functions
 [[ ${RC_GOT_FUNCTIONS} != "yes" ]] && source /sbin/functions.sh
+
+# Change dir to $svcdir so we lock it for fuser until we finish
+cd "${svcdir}"
 
 # User must be root to run most script stuff (except status)
 if [[ ${EUID} != "0" ]] && ! [[ $2 == "status" && $# -eq 2 ]] ; then
@@ -264,7 +264,8 @@ svc_stop() {
 	if [[ ${retval} == "0" ]] ; then
 		# Now that deps are stopped, stop our service
 		veindent
-		( 
+		(
+		cd /
 		[[ ${RC_QUIET} == "yes" ]] && RC_QUIET_STDOUT="yes"
 		exit() {
 			eerror "DO NOT USE EXIT IN INIT.D SCRIPTS"
@@ -338,7 +339,8 @@ svc_start() {
 		ewarn "WARNING:  ${SVCNAME} has already been started."
 		return 0
 	elif service_inactive "${SVCNAME}" ; then
-		if [[ ${IN_BACKGROUND} != "true" ]] ; then
+		if [[ ${IN_BACKGROUND} != "true" \
+		&& ${IN_BACKGROUND} != "1" ]] ; then
 			ewarn "WARNING:  ${SVCNAME} has already been started."
 			return 0
 		fi
@@ -414,7 +416,7 @@ svc_start() {
 		# Wait for dependencies to finish.
 		for x in ${startupservices} ; do
 			service_started "${x}" && continue
-			wait_service "${x}"
+			! service_inactive "${x}" && wait_service "${x}"
 			if ! service_started "${x}" ; then
 				# A 'need' dependency is critical for startup
 				if ineed -t "${SVCNAME}" "${x}" >/dev/null \
@@ -447,6 +449,7 @@ svc_start() {
 		IN_BACKGROUND="${ib_save}"
 		veindent
 		(
+		cd /
 		[[ ${RC_QUIET} == "yes" ]] && RC_QUIET_STDOUT="yes"
 		exit() {
 			eerror "DO NOT USE EXIT IN INIT.D SCRIPTS"
@@ -457,7 +460,7 @@ svc_start() {
 
 		# Apply any ulimits if defined
 		[[ -n ${RC_ULIMIT} ]] && ulimit ${RC_ULIMIT}
-
+		
 		start
 		)
 		retval="$?"
@@ -649,7 +652,7 @@ for arg in $* ; do
 		retval="$?"
 		service_started "${SVCNAME}" && svc_start_scheduled
 		;;
-	needsme|ineed|usesme|iuse|broken)
+	needsme|ineed|usesme|iuse|broken|iafter)
 		trace_dependencies "-${arg}"
 		;;
 	status)
@@ -676,7 +679,7 @@ for arg in $* ; do
 		# Simple way to try and detect if the service use svc_{start,stop}
 		# to restart if it have a custom restart() funtion.
 		svcres=$(sed -ne '/[[:space:]]*restart[[:space:]]*()/,/}/ p' \
-			/etc/init.d/"${SVCNAME}" )
+			"${myscript}" )
 		if [[ -n ${svcres} ]] ; then
 			if [[ ! ${svcres} =~ "svc_stop" \
 				|| ! ${svcres} =~ "svc_start" ]] ; then

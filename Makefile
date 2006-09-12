@@ -13,7 +13,7 @@ VERSION = 1.13.0_alpha1
 PKG = $(NAME)-$(VERSION)
 
 ARCH = x86
-KERNEL = linux
+OS = Linux
 DESTDIR =
 ROOT = /
 LIB = lib
@@ -34,17 +34,16 @@ AWKDIR = $(RCDIR)/awk
 LVLDIR = $(DESTDIR)/etc/runlevels
 
 # Default init scripts for the boot runlevel
-BOOT_LEVEL = bootmisc checkroot checkfs clock consolefont hostname keymaps \
-	localmount modules net.lo rmnologin urandom 
-
+BOOT_LEVEL = bootmisc checkroot checkfs clock hostname localmount \
+	rmnologin urandom 
 # Default init scripts for the default runlevel
-DEFAULT_LEVEL = hdparm local netmount
+DEFAULT_LEVEL = local netmount
 
 # Don't install these files if they already exist in ROOT
 # Basically, don't hit the users key config files
 ETC_SKIP = hosts passwd shadow group fstab
 
-KEEP_DIRS = boot dev proc home sys \
+KEEP_DIRS = boot dev proc home \
 	mnt/cdrom mnt/floppy \
 	usr/local/bin usr/local/sbin usr/local/share/doc usr/local/share/man \
 	var/run lib/rcscripts/init.d lib/rcscripts/tmp
@@ -52,7 +51,18 @@ KEEP_DIRS = boot dev proc home sys \
 SUBDIRS = src
 
 SBINTOLIB = rc-daemon.sh rc-help.sh rc-services.sh \
-	init.$(KERNEL).sh init-functions.sh init-common-pre.sh init-common-post.sh
+	init.$(OS).sh init-functions.sh init-common-pre.sh init-common-post.sh
+
+ifeq ($(OS),Linux)
+BOOTLEVEL += consolefont keymaps modules
+NET_LO = net.lo
+DEFAULT_LEVEL += hdparm
+KEEP_DIRS += sys
+endif
+ifeq ($(OS),BSD)
+NET_LO = net.lo0
+endif
+BOOT_LEVEL += $(NET_LO)
 
 default:
 	for x in $(SUBDIRS) ; do \
@@ -66,15 +76,16 @@ clean:
 		$(MAKE) clean ; \
 	done
 
-basedev-linux:
+basedev-Linux:
 	if ! test -d $(DEVDIR) ; then \
 		install -m 0755 -d $(DEVDIR) ; \
 	fi
 	( curdir=`pwd` ; cd $(DEVDIR) ; \
 		$$curdir/sbin/MAKEDEV generic-base ) 
 
-dev-linux:
+dev-Linux:
 	install -m 0755 -d $(DEVDIR)
+	ln -snf ../sbin/MAKEDEV $(DEVDIR)/MAKEDEV \
 	( curdir=`pwd` ; cd $(DEVDIR) ; \
 		suffix= ; \
 		case $(ARCH) in \
@@ -96,10 +107,9 @@ dev-linux:
 		$$curdir/sbin/MAKEDEV input audio video ; \
 	)
 
-basedev: basedev-$(KERNEL)
+basedev: basedev-$(OS)
 
-dev: dev-$(KERNEL)
-	ln -snf ../sbin/MAKEDEV $(DEVDIR)/MAKEDEV
+dev: dev-$(OS)
 
 layout:
 	# Create base filesytem layout
@@ -140,7 +150,7 @@ install:
 	# lib
 	install -m 0755 -d $(SHDIR)
 	for x in $(SBINTOLIB) ; do \
-		n=`echo $$x | sed -e 's/\.$(KERNEL)//'` ; \
+		n=`echo $$x | sed -e 's/\.$(OS)//'` ; \
 		if test $$x = "rc-help.sh" ; then \
 			install -m 0755 "sbin/$$x" $(SHDIR)/$$n ; \
 		else \
@@ -193,12 +203,14 @@ install:
 	done
 	# net scripts
 	install -m 0755 net-scripts/init.d/net.lo $(INITDIR)
-	ln -snf net.lo $(INITDIR)/net.eth0
 	for x in `ls net-scripts/conf.d` ; do \
 		install -m 0644 net-scripts/conf.d/"$$x" $(DESTDIR)/etc/conf.d ; \
 	done
 	install -m 0755 -d $(NETDIR)
 	for x in `ls net-scripts/net` ; do \
+		install -m 0644 net-scripts/net/"$$x" $(NETDIR) ; \
+	done
+	for x in `ls net-scripts/net.$(OS)` ; do \
 		install -m 0644 net-scripts/net/"$$x" $(NETDIR) ; \
 	done
 	# Wang our man pages in

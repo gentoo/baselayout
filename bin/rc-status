@@ -121,7 +121,10 @@ declare -a runlevels
 arridx=0
 for level in ${runlevelidxs} ; do
 	if [[ ${level} == ${runlevel} || -n ${ALL} ]] ; then
-		runlevels[${arridx}]=$(find ${runleveldir}/${level} -maxdepth 1 -type l -printf '%f ')
+		runlevels[${arridx}]=
+		for f in $(find ${runleveldir}/${level} -maxdepth 1 -type l); do
+			runlevels[${arridx}]="${runlevels[${arridx}]} ${f##*/}"
+		done
 		let "arridx += 1"
 	fi
 done
@@ -180,7 +183,7 @@ fi
 ################################################################################
 # Define a helper method for printing the status of a service; '[ xxx ]'
 print_msg() {
-	printf " %-$((COLS - 5 - ${#3}))s%s\n" "$1" "${BRACKET}[ $2$3 ${BRACKET}]${NORMAL}"
+	printf " %-$((COLS - 6 - ${#3}))s%s\n" "$1" "${BRACKET}[ $2$3 ${BRACKET}]${NORMAL}"
 }
 
 # if --all wasnt specified, dont print everything

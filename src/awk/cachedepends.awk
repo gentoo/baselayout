@@ -97,7 +97,7 @@ BEGIN {
 
 	# Since this could be called more than once simultaneously, use a
 	# temporary cache and rename when finished.  See bug 47111
-	("/bin/mktemp "SVCDIR"/depcache.XXXXXXX") | getline TMPCACHE
+	("echo -n \"${SVCDIR}/depcache.$$\"") | getline TMPCACHE
 	if (TMPCACHE == "") {
 		eerror("Failed to create temporary cache!")
 		exit 1

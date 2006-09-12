@@ -558,6 +558,17 @@ vewend() {
 	return ${1:-0}
 }
 
+
+# Many init scripts use uname - lets cache it
+uname() {
+	if [[ $# == "0" ]] ; then
+		[[ -z ${_uname} ]] && declare -r _uname=$(/bin/uname)
+		echo "${_uname}"
+	else
+		/bin/uname "$@"
+	fi
+}
+
 # char *KV_major(string)
 #
 #    Return the Major (X of X.Y.Z) kernel version
@@ -958,7 +969,7 @@ elif [[ -z ${COLS} || -n ${COLUMNS} ]] ; then
 fi
 
 if [[ ${RC_ENDCOL} == "yes" ]] ; then
-	ENDCOL=$'\e[A\e['$(( COLS - 8 ))'C'
+	ENDCOL=$'\e[A\e['$(( COLS - 9 ))'C'
 else
 	ENDCOL=''
 fi

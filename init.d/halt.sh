@@ -13,7 +13,7 @@
 # livecd-functions.sh should _ONLY_ set this differently if CDBOOT is
 # set, else the default one should be used for normal boots.
 # say:  RC_NO_UMOUNTS="/mnt/livecd|/newroot"
-RC_NO_UMOUNTS=${RC_NO_UMOUNTS:-/mnt/livecd|/newroot}
+RC_NO_UMOUNTS=${RC_NO_UMOUNTS:-^(/|/mnt/livecd|/newroot)$}
 RC_NO_UMOUNT_FS="^(proc|devpts|sysfs|devfs|tmpfs|usb(dev)?fs|unionfs|rootfs)$"
 
 # Reset pam_console permissions if we are actually using it
@@ -27,53 +27,51 @@ stop_addon udev
 
 # Try to unmount all tmpfs filesystems not in use, else a deadlock may
 # occure, bug #13599.
-umount -at tmpfs &>/dev/null
+umount -a -t tmpfs &>/dev/null
 
-# Turn off swap and perhaps zero it out for fun
-swap_list=$(swapon -s 2>/dev/null)
-
-if [[ -n ${swap_list} ]] ; then
-	ebegin $"Deactivating swap"
-	swapoff -a
-	eend $?
-
-	if [[ ${RC_SWAP_ERASE} == "yes" ]] ; then
-		for s in $(echo "${swap_list}" | awk '$2 == "partition" {print $1}') ; do
-			ebegin $"Erasing swap space" ${s}
-			ssize=$(awk '$4 == "'${s##*/}'" {print $3}' /proc/partitions 2> /dev/null)
-			dd if=/dev/zero of=${s} bs=1024 count=${ssize} 2> /dev/null
-			eend $?
+erase_swap() {
+	while [[ -n $* ]] ; do
+		local p=$1 t=$2 s=$3
+		[[ -z ${s} ]] && return
+		ebegin $"Erasing swap space" ${s}
+		dd if=/dev/zero of="${p}" bs=1024 count="${s}" >/dev/null
+		eend $?
+		if [[ $(uname) == "Linux" ]] ; then
 			ebegin $"Creating swap space" ${s}
 			mkswap ${s} > /dev/null
 			eend $?
-		done
-	fi
+		fi
+		shift ; shift ; shift
+	done
+}
+
+# Turn off swap and perhaps zero it out for fun
+if [[ $(uname) == "Linux" ]] ; then
+	swap_list=$(swapon -s 2>/dev/null)
+else
+	swap_list=$(swapctl -l 2>/dev/null \
+		| sed -e '1 d; s,^\([^ ]*\) *\([^ ]*\).*,\1 partiton \2,')
+fi
+
+if [[ -n ${swap_list} ]] ; then
+	ebegin $"Deactivating swap"
+	swapoff -a >/dev/null
+	eend $?
+
+	[[ ${RC_SWAP_ERASE} == "yes" ]] && erase_swap ${swaplist}
 fi
 
 # Write a reboot record to /var/log/wtmp before unmounting
+[[ $(uname) == "Linux" ]] && halt -w &>/dev/null
 
-halt -w &>/dev/null
-
-# Unmounting should use /proc/mounts and work with/without devfsd running
-
-# Credits for next function to unmount loop devices, goes to:
-#
-#	Miquel van Smoorenburg, <miquels@drinkel.nl.mugnet.org>
-#	Modified for RHS Linux by Damien Neil
-#
-#
 # Unmount file systems, killing processes if we have to.
+
 # Unmount loopback stuff first
 # Use `umount -d` to detach the loopback device
-
-# Remove loopback devices started by dm-crypt
-
-remaining=$(awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts | \
-            sort -r | egrep -v "^(${RC_NO_UMOUNTS})$")
-[[ -n ${remaining} ]] && {
-	sig=
+remaining=$(mount | awk '/^\/dev\/loop/ {print $3}' \
+	| sort -ur | egrep -v "${RC_NO_UMOUNTS}")
+if [[ -n ${remaining} ]] ; then
 	retry=3
-
 	while [[ -n ${remaining} && ${retry} -gt 0 ]]; do
 		if [[ ${retry} -lt 3 ]]; then
 			ebegin $"Unmounting loopback filesystems (retry)"
@@ -85,39 +83,33 @@ remaining=$(awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mou
 			eend $? $"Failed to unmount filesystems"
 		fi
 
-		remaining=$(awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts | \
-		            sort -r | egrep -v "^(${RC_NO_UMOUNTS})$")
+		remaining=$(mount | awk '/^\/dev\/loop/ {print $2}' \
+			| sort -ur | egrep -v "^(${RC_NO_UMOUNTS})$")
 		[[ -z ${remaining} ]] && break
 		
-		/bin/fuser -s -k ${sig} -m ${remaining}
+		fuser -s -k -m ${remaining}
 		sleep 5
 		retry=$((${retry} - 1))
-		sig=-9
 	done
-}
+fi
 
 # Try to unmount all filesystems (no /proc,tmpfs,devfs,etc).
 # This is needed to make sure we dont have a mounted filesystem 
 # on a LVM volume when shutting LVM down ...
-ebegin $"Unmounting filesystems"
-unmounts=$(awk -v NO_UMOUNT_FS="${RC_NO_UMOUNT_FS}" \
-	'{ \
-	    if (($3 !~ NO_UMOUNT_FS) && \
-	        ($1 != "none") && \
-	        ($1 !~ /^(rootfs|\/dev\/root)$/) && \
-	        ($2 != "/")) \
-	      print $2 \
-	}' /proc/mounts | sort -ur)
-for x in ${unmounts}; do
-	# Do not umount these ... will be different depending on value of CDBOOT
-	if [[ -n $(echo "${x}" | egrep "^(${RC_NO_UMOUNTS})$") ]] ; then
-		continue
-	fi
+# First sed call makes bsd mount look like linux :)
 
-	x=${x//\\040/ }
+ebegin $"Unmounting filesystems"
+for x in $(mount | sed -e 's/ (/ type /g' -e 's/, / /g' \
+	| awk -v NO_UMOUNT_FS="${RC_NO_UMOUNT_FS}" \
+	'{ \
+	    if (($5 !~ NO_UMOUNT_FS) && \
+	        ($1 !~ /^(none|rootfs|\/dev\/root)$/)) \
+	      print $3 \
+	}' | sort -ur) ; do
+	[[ ${x} =~ "${RC_NO_UMOUNTS}" ]] && continue
 	if ! umount "${x}" &>/dev/null; then
 		# Kill processes still using this mount
-		/bin/fuser -s -k -9 -m "${x}"
+		fuser -s -k -m "${x}"
 		sleep 2
 		# Now try to unmount it again ...
 		umount -f -r "${x}" &>/dev/null
@@ -155,27 +147,30 @@ ups_kill_power() {
 }
 
 mount_readonly() {
-	local x=
-	local retval=0
-	local cmd=$1
+	local x= retval=0 cmd="$1" unmounts=
 
 	# Get better results with a sync and sleep
 	sync; sync
 	sleep 1
 
-	for x in $(awk -v NO_UMOUNT_FS="${RC_NO_UMOUNT_FS}" \
+	for x in $(mount | sed -e 's/ (/ type /g' -e 's/, / /g' \
+			| awk -v NO_UMOUNT_FS="${RC_NO_UMOUNT_FS}" \
 	           	'{ \
-	           		if (($1 != "none") && ($3 !~ NO_UMOUNT_FS)) \
-	           			print $2 \
-	           	}' /proc/mounts | sort -ur) ; do
-		x=${x//\\040/ }
-		if [[ -n $(echo "${x}" | egrep "^(${RC_NO_UMOUNTS})$") ]] ; then
-			continue
-		fi
+	           		if (($1 != "none") && ($5 !~ NO_UMOUNT_FS)) \
+	           			print $3 \
+	           	}' | sort -ur) ; do
 		if [[ ${cmd} == "u" ]]; then
-			umount -n -r "${x}"
+			if [[ $(uname) == "Linux" ]] ; then
+				umount -n -r "${x}"
+			else
+				umount -f "${x}"
+			fi
 		else
-			mount -n -o remount,ro "${x}" &>/dev/null
+			if [[ $(uname) == "Linux" ]] ; then
+				mount -n -o remount,ro "${x}"
+			else
+				mount -u -o ro "${x}"
+			fi
 		fi
 		retval=$((${retval} + $?))
 	done
@@ -184,9 +179,12 @@ mount_readonly() {
 	return ${retval}
 }
 
-# Since we use `mount` in mount_readonly(), but we parse /proc/mounts, we 
-# have to make sure our /etc/mtab and /proc/mounts agree
-cp /proc/mounts /etc/mtab &>/dev/null
+if [[ $(uname) == "Linux" ]] ; then
+	# Since we use `mount` in mount_readonly(), but we parse /proc/mounts,
+	# we have to make sure our /etc/mtab and /proc/mounts agree
+	cp /proc/mounts /etc/mtab &>/dev/null
+fi
+
 ebegin $"Remounting remaining filesystems readonly"
 mount_worked=0
 if ! mount_readonly ; then
@@ -201,16 +199,11 @@ fi
 eend ${mount_worked}
 if [[ ${mount_worked} -eq 1 ]]; then
 	ups_kill_power
-	/sbin/sulogin -t 10 /dev/console
-fi
-
-# Inform if there is a forced or skipped fsck
-if [[ -f /fastboot ]]; then
-	echo
-	ewarn $"Fsck will be skipped on next startup"
-elif [[ -f /forcefsck ]]; then
-	echo
-	ewarn $"A full fsck will be forced on next startup"
+	if [[ -x /sbin/sulogin ]] ; then
+		/sbin/sulogin -t 10 /dev/console
+	else
+		exit 1
+	fi
 fi
 
 ups_kill_power
@@ -218,4 +211,4 @@ ups_kill_power
 # Load the final script depending on how we are called
 [[ -e /etc/init.d/"$1".sh ]] && source /etc/init.d/"$1".sh
 
-# vim:ts=4
+# vim: set ts=4 :

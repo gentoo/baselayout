@@ -65,6 +65,12 @@ dhclient_start() {
 
 	interface_exists "${iface}" true || return 1
 
+	if ! interface_has_carrier "${iface}" ; then
+		ewarn "${iface} does not have a carrier, backgrounding"
+		mark_service_inactive "net.${iface}"
+		exit 0 
+	fi
+
 	# Load our default options
 	opts="dhclient_${ifvar}"
 	opts="${!opts} ${dhclient}"

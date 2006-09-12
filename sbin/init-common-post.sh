@@ -20,12 +20,34 @@ depscan.sh
 # boot runlevel
 setup_defaultlevels
 
+splash "rc_init" "${argv1}"
+
 # $BOOT can be used by rc-scripts to test if it is the first time
 # the 'boot' runlevel is executed.  Now also needed by some stuff in
 # the 'sysinit' runlevel ...
 export BOOT="yes"
 
-splash "rc_init" "${argv1}"
+# Coldplug any net devices found in /dev/
+if [[ ${RC_COLDPLUG:-yes} == "yes" ]] ; then
+	for n in $(dolisting /dev/net) ; do
+		n="net.${n##*/}"
+		[[ -e /etc/init.d/"${n}" ]] || continue
+		doit=0
+		set -f
+		for x in ${RC_PLUG_SERVICES} ; do
+			[[ ${n} == ${x} ]] && break
+			if [[ "!${n}" == ${x} ]] ; then
+				doit=1
+				break
+			fi
+		done
+		set +f
+		if [[ ${doit} == "0" ]] ; then
+			ln -snf "/etc/init.d/${n}" \
+				"${svcdir}"/coldplugged/"${n}"
+		fi
+	done
+fi
 
 # If booting off CD, we want to update inittab before setting the runlevel
 if [[ -f /sbin/livecd-functions.sh && -n ${CDBOOT} ]] ; then
@@ -36,7 +58,6 @@ if [[ -f /sbin/livecd-functions.sh && -n ${CDBOOT} ]] ; then
 fi
 
 echo "sysinit" > "${svcdir}/softlevel"
-echo "${svcinteractive}" > "${svcdir}/interactive"
 
 # sysinit is now done, so allow init scripts to run normally
 [[ -e /dev/.rcsysinit ]] && rm -f /dev/.rcsysinit

@@ -166,7 +166,7 @@ check_dependency() {
 		[[ -f "${svcdir}/softlevel" ]] && mylevel=$( < "${svcdir}/softlevel" )
 
 		for x in ${!deps} ; do
-			if [[ -x "/etc/init.d/${x}" ]] ; then
+			if [[ -x "/etc/init.d/${x}" || ${x} == "net" ]] ; then
 				ret="${ret} ${x}"
 			else
 				# Handle provides here. First check what's already started
@@ -399,6 +399,7 @@ wait_service() {
 	local fifo="${svcdir}/exclusive/${service}"
 	
 	[[ ! -e ${fifo} ]] && return 0
+	# ewarn "${SVCNAME} waiting for ${service}"
 
 	# This will block until the service fifo is touched
 	# Otheriwse we don't block
@@ -406,6 +407,7 @@ wait_service() {
 	local tmp=$(cat "${fifo}" 2>/dev/null)
 	local exitstatus=$(<"${svcdir}/exitcodes/${service}")
 
+	# ewarn "${SVCNAME} finished waiting for ${service}"
 	return "${exitstatus}"
 }
 
@@ -820,6 +822,7 @@ valid_i() {
 	for x in $( i$1 "$2" ) ; do
 		[[ -e "/etc/runlevels/${BOOTLEVEL}/${x}" || \
 		   -e "/etc/runlevels/${mylevel}/${x}" || \
+		   -e "${svcdir}/coldplugged/${x}" || \
 		   ${x} == "net" ]] \
 				&& valid="${valid} ${x}"
 	done
@@ -852,7 +855,7 @@ valid_iafter() {
 #
 trace_dependencies() {
 	local -a services=( "$@" ) net_deps=()
-	local i= j= net_services= x=
+	local i= j= net_services= x= deptype=
 
 	if [[ $1 == -* ]]; then
 		deptype="${1/-/}"
@@ -871,7 +874,7 @@ trace_dependencies() {
 	else
 		for x in $(dolisting "/etc/runlevels/${BOOTLEVEL}/net.*") \
 			$(dolisting "/etc/runlevels/${SOFTLEVEL}/net.*") \
-			$(dolisting "/etc/runlevels/coldplugged/net.*") ; do
+			$(dolisting "/${svcdir}/coldplugged/net.*") ; do
 			net_services="${net_services} ${x##*/}"
 		done
 	fi
@@ -915,7 +918,7 @@ trace_dependencies() {
 		done
 		sorted=( "${sorted[@]}" "${service}" )
 	}
-		
+	
 	for (( i=0; i<${#services[@]}; i++)); do
 		visit_service "${services[i]}"
 	done

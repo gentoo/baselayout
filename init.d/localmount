@@ -9,8 +9,7 @@ depend() {
 start() {
 	# Mount local filesystems in /etc/fstab.
 	ebegin $"Mounting local filesystems"
-	mount -at noproc,noshm${NET_FS_LIST:+,no}${NET_FS_LIST// /,no} \
-		-O no_netdev >/dev/null
+	mount -at noproc,noshm${NET_FS_LIST:+,no}${NET_FS_LIST// /,no} >/dev/null
 	eend $? $"Some local filesystem failed to mount"
 
 	# Sync bootlog now as /var should be mounted
@@ -21,36 +20,38 @@ start() {
 		# >/dev/null to hide errors from non-USB users
 		modprobe usbcore &> /dev/null
 	fi
-	
-	# Check what USB fs the kernel support.  Currently
-	# 2.5+ kernels, and later 2.4 kernels have 'usbfs',
-	# while older kernels have 'usbdevfs'.
-	local usbfs=$(grep -Fow usbfs /proc/filesystems ||
-		grep -Fow usbdevfs /proc/filesystems)
 
-	if [[ -n ${usbfs} ]] && \
-	   [[ -e /proc/bus/usb && ! -e /proc/bus/usb/devices ]]
-	then
-		ebegin $"Mounting USB device filesystem" "(${usbfs})"
-		usbgid=$(echo $(getent group usb) | awk -F: '{print $3}')
-		mount -t ${usbfs} usbfs /proc/bus/usb \
-			-o ${usbgid:+devmode=0664,devgid=${usbgid},}noexec,nosuid
-		eend $? $"Failed to mount USB device filesystem"
-	fi
+	if [[ -e /proc/filessystems ]] ; then
+		# Check what USB fs the kernel support.  Currently
+		# 2.5+ kernels, and later 2.4 kernels have 'usbfs',
+		# while older kernels have 'usbdevfs'.
+		local usbfs=$(grep -Fow usbfs /proc/filesystems ||
+			grep -Fow usbdevfs /proc/filesystems)
 
-	# Setup Kernel Support for miscellaneous Binary Formats
-	local binfmt=$(grep -Fow binfmt_misc /proc/filesystems)
-	if [[ -n ${binfmt} ]] && [[ -e /proc/sys/fs/binfmt_misc ]] ; then
-		ebegin $"Mounting misc binary format filesystem"
-		mount -t binfmt_misc binfmt_misc /proc/sys/fs/binfmt_misc \
-			-o nodev,noexec,nosuid
-		eend $?
+		if [[ -n ${usbfs} ]] && \
+		   [[ -e /proc/bus/usb && ! -e /proc/bus/usb/devices ]] ; then
+			ebegin $"Mounting USB device filesystem" "(${usbfs})"
+			usbgid=$(echo $(getent group usb) | awk -F: '{print $3}')
+			mount -t ${usbfs} usbfs /proc/bus/usb \
+				-o ${usbgid:+devmode=0664,devgid=${usbgid},}noexec,nosuid
+			eend $? $"Failed to mount USB device filesystem"
+		fi
+
+		# Setup Kernel Support for miscellaneous Binary Formats
+		local binfmt=$(grep -Fow binfmt_misc /proc/filesystems)
+		if [[ -n ${binfmt} && -e /proc/sys/fs/binfmt_misc ]] ; then
+			ebegin $"Mounting misc binary format filesystem"
+			mount -t binfmt_misc binfmt_misc \
+				/proc/sys/fs/binfmt_misc \
+				-o nodev,noexec,nosuid
+			eend $?
+		fi
 	fi
 
 	# We do our swapping here instead of rc so we can get urandom started
 	# before us for people that like an encrypted swap.
 	ebegin $"Activating (possible) swap"
-	/sbin/swapon -a
+	swapon -a
 	eend $?
 
 	# Start dm-crypt mappings, if any

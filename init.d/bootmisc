@@ -3,9 +3,10 @@
 # Distributed under the terms of the GNU General Public License v2
 
 depend() {
-	use clock hostname
+	use hostname
 	need localmount
 	before logger
+	after clock
 }
 
 start() {
@@ -21,17 +22,27 @@ start() {
 	fi
 
 	if [[ -e /etc/sysctl.conf ]] ; then
+		local retval=0
 		ebegin $"Configuring kernel parameters"
-		/sbin/sysctl -q -p /etc/sysctl.conf
-		eend 0
+		if [[ $(uname) == "Linux" ]] ; then
+			sysctl -q -p /etc/sysctl.conf
+			retval=$?
+		else
+			while read line ; do
+				if [[ $'\n'${line} =~ $'\n'"[[:space:]]*[^#]" ]] ; then
+					sysctl "${line}" || retval=1
+				fi
+			done < /etc/sysctl.conf
+		fi
+		eend ${retval}
 	fi
 
-	if [[ -z ${CDBOOT} ]] && ! touch /var/run/.keep 2> /dev/null ; then
+	if [[ -z ${CDBOOT} ]] && ! touch -c /var/run 2> /dev/null ; then
 		ewarn $"Skipping /var and /tmp initialization (ro root?)"
 		return 0
 	fi
 
-	# Setup login records 
+	# Setup login records
 	> /var/run/utmp
 	touch /var/log/wtmp
 	chgrp utmp /var/run/utmp /var/log/wtmp
@@ -39,8 +50,8 @@ start() {
 
 	if [[ -x /sbin/env-update.sh ]] ; then
 		ebegin $"Updating environment"
-		/sbin/env-update.sh -u > /dev/null
-		eend 0
+		/sbin/env-update.sh -u
+		eend $?
 	fi
 
 	#
@@ -58,15 +69,14 @@ start() {
 		#
 		# Clean up /var/run and create /var/run/utmp so that we can login.
 		#
-		for x in $(find /var/run/ ! -type d ! -name utmp ! -name innd.pid ! -name random-seed) ; do
-			local daemon=${x##*/}
-			daemon=${daemon%*.pid}
+		for x in $(find /var/run/ ! -type d ! -name utmp ! -name innd.pid ! -name random-seed); do
 			# Do not remove pidfiles of already running daemons
-			if [[ -z $(ps --no-heading -C "${daemon}") ]] ; then
-				if [[ -f ${x} || -L ${x} ]] ; then
-					rm -f "${x}"
-				fi
+			if [[ ${x} == *".pid" ]] ; then
+				[[ $(<"${x}") != $(pidof $(basename "${x}" .pid))* ]] \
+					&& continue
 			fi
+			[[ ! -f ${x} && ! -L ${x} ]] && continue
+			rm -f "${x}"
 		done
 	fi
 

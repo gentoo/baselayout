@@ -15,19 +15,17 @@ single_user() {
 # be fairly small and we unmount them after the boot level is done anyway
 # NOTE we don't set a size for Linux either
 mount_svcdir() {
-	try mdconfig -a -t malloc -u 0
-	try newfs -U /dev/md0
-	try mount /dev/md0 "${svclib}"/tmp
-	try cp -apR "${svcdir}/"{depcache,deptree} "${svclib}"/tmp
-	try mdconfig -a -t malloc -u 1 
+	try mdconfig -a -t malloc -s 1m -u 1 
 	try newfs -U /dev/md1
-	try mount /dev/md1 "${svcdir}"
-	try cp -apR "${svclib}"/tmp/* "${svcdir}"
+	try mount /dev/md1 "${svclib}"/tmp
+	try cp -p "${svcdir}/"{depcache,deptree} "${svclib}"/tmp
+	try mdconfig -a -t malloc -s 2m -u 0
+	try newfs -U /dev/md0
+	try mount /dev/md0 "${svcdir}"
+	try cp -p "${svclib}"/tmp/* "${svcdir}"
 	try umount "${svclib}"/tmp
+	try mdconfig -d -u 1
 }
-
-source "${svclib}"/sh/init-functions.sh
-source "${svclib}"/sh/init-common-pre.sh
 
 echo
 echo -e "${GOOD}Gentoo/FreeBSD $(get_base_ver); ${BRACKET}http://gentoo-alt.gentoo.org/${NORMAL}"
@@ -38,15 +36,14 @@ if [[ ${RC_INTERACTIVE} == "yes" ]] ; then
 	echo
 fi
 
-check_statedir /proc
-
-ebegin "Mounting linprocfs at /proc"
-try mount -t linprocfs proc /proc
-eend $?
-
-# Start profiling init now we have /proc
+# Start profiling init
 profiling start
 
+# Disable devd until we need it
+sysctl hw.bus.devctl_disable=1 >/dev/null
+
+source "${svclib}"/sh/init-functions.sh
+source "${svclib}"/sh/init-common-pre.sh
 source "${svclib}"/sh/init-common-post.sh
 
 # vim:ts=4

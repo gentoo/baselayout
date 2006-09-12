@@ -93,12 +93,20 @@ calculate_metric() {
 	local iface="$1" metric="$2"
 
 	# Have we already got a metric?
-	local m=$(awk '$1=="'${iface}'" && $2=="00000000" { print $7 }' \
+	local m=
+	if [[ -e /proc/net/route ]] ; then
+		m=$(gawk '$1=="'${iface}'" && $2=="00000000" { print $7 }' \
 		/proc/net/route)
+	else
+		[[ $(ifconfig "${iface}") =~ "metric ([^ ]*)" ]] \
+			&& m="${BASH_REMATCH[1]}"
+	fi
 	if [[ -n ${m} ]] ; then
 		echo "${m}"
 		return 0
 	fi
+
+	[[ ! -e /proc/net/route ]] && return 1
 
 	local i= dest= gw= flags= ref= u= m= mtu= metrics=
 	while read i dest gw flags ref u m mtu ; do
@@ -667,6 +675,9 @@ iface_start() {
 	local -a config=() fallback=() fallback_route=() conf=() a=() b=()
 	local ifvar=$(bash_variable "$1") i= j= metric=0
 
+	# Bring the interface up if we exist
+	interface_exists "${iface}" && interface_up "${iface}"
+
 	# pre Start any modules with
 	for mod in ${MODULES[@]}; do
 		if is_function "${mod}_pre_start" ; then
@@ -719,7 +730,6 @@ iface_start() {
 			eend 0
 			return 0
 		fi
-
 		# Remove noop from the config var
 		config=( "${config[@]:1}" )
 	fi
@@ -738,6 +748,7 @@ iface_start() {
 
 	einfo "Bringing up ${iface}"
 	eindent
+
 	for (( config_counter=0; config_counter<${#config[@]}; config_counter++ )); do
 		# Handle null and noop correctly
 		if [[ ${config[config_counter]} == "null" \
@@ -895,11 +906,11 @@ run_start() {
 	if [[ ${iface} == "lo" ]] ; then
 		metric_lo="0"
 		config_lo=( "127.0.0.1/8 brd 127.255.255.255" "${config_lo[@]}" )
-		routes_lo=( "127.0.0.0/8" "${routes_lo[@]}" )
+		routes_lo=( "127.0.0.0/8 via 127.0.0.1" "${routes_lo[@]}" )
 	elif [[ ${iface} == "lo0" ]] ; then
 		metric_lo0="0"
 		config_lo0=( "127.0.0.1/8 brd 127.255.255.255" "${config_lo[@]}" )
-		routes_lo0=( "127.0.0.0/8" "${routes_lo[@]}" )
+		routes_lo0=( "127.0.0.0/8 via 127.0.0.1" "${routes_lo[@]}" )
 	fi
 
 	# We may not have a loaded module for ${iface}

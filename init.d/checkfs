@@ -18,17 +18,23 @@ start() {
 	# Setup dm-crypt mappings if any
 	start_addon dm-crypt
 
-	if [[ -f /fastboot ]] || [[ -n ${CDBOOT} ]] ; then
-		rm -f /fastboot
-	else
+	if [[ -z ${CDBOOT} ]] ; then
 		ebegin $"Checking all filesystems"
-		if [[ -f /forcefsck ]] ; then
+		if get_bootparam "forcefsck" ; then
 			ewarn $"A full fsck has been forced"
-			fsck -C -T -R -A -a -f
+			if [[ $(uname) == "Linux" ]] ; then
+				fsck -C -T -R -A -a -f
+			else
+				fsck
+			fi
 			retval=$?
-			rm -f /forcefsck
 		else
-			fsck -C -T -R -A -a
+			if [[ $(uname) == "Linux" ]] ; then
+				fsck -C -T -R -A -a
+			else
+				#fsck -p
+				true
+			fi
 			retval=$?
 		fi
 		if [[ ${retval} -eq 0 ]] ; then
@@ -40,7 +46,11 @@ start() {
 		else
 			if [[ ${RC_FORCE_AUTO} == "yes" ]] ; then
 				eend 2 "Fsck could not correct all errors, rerunning"
-				fsck -C -T -R -A -y
+				if [[ $(uname) == "Linux" ]] ; then
+					fsck -C -T -R -A -y
+				else
+					fsck -y
+				fi
 				retval=$?
 			fi
 
@@ -48,8 +58,10 @@ start() {
 				eend 2 "Fsck could not correct all errors, manual repair needed"
 				if is_vps_sys ; then
 					halt -f
+				elif [[ -x /sbin/sulogin ]] ; then
+					/sbin/sulogin "${CONSOLE}"
 				else
-					sulogin "${CONSOLE}"
+					return 1
 				fi
 			fi
 		fi

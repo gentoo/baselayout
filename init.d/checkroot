@@ -6,20 +6,62 @@ depend() {
 	before *
 }
 
+do_mtab() {
+	local x=
+	local y=
+
+	# Don't create mtab if /etc is readonly
+	if ! touch /etc/mtab 2> /dev/null ; then
+		ewarn $"Skipping /etc/mtab initialization" "(ro root?)"
+		return 0
+	fi
+
+	# Clear the existing mtab
+	> /etc/mtab
+
+	# Add the entry for / to mtab
+	mount -f /
+
+	# Don't list root more than once
+	gawk '$2 != "/" {print}' /proc/mounts >> /etc/mtab
+
+	# Now make sure /etc/mtab have additional info (gid, etc) in there
+	for x in $(gawk '{ print $2 }' /proc/mounts | sort -u) ; do
+		for y in $(gawk '{ print $2 }' /etc/fstab) ; do
+			if [[ ${x} == ${y} ]] ; then
+				mount -f -o remount $x
+				continue
+			fi
+		done
+	done
+
+	# Remove stale backups
+	rm -f /etc/mtab~ /etc/mtab~~
+}
+
 start() {
 	local retval=0
 
-	if [[ ! -f /fastboot && -z ${CDBOOT} ]] \
+	if [[ -z ${CDBOOT} ]] \
 	&& ! is_net_fs / && ! is_union_fs / && ! is_vps_sys ; then
-		if touch -c / >& /dev/null ; then
+		if touch /.test.$$ >& /dev/null ; then
+			rm -f /.test.$$
 			ebegin $"Remounting root filesystem read-only"
-			mount -n -o remount,ro /
+			if [[ $(uname) == "Linux" ]] ; then
+				mount -n -o remount,ro /
+			else
+				mount -u -o ro /
+			fi
 			eend $?
 		fi
 
-		if [[ -f /forcefsck ]] || get_bootparam "forcefsck" ; then
+		if get_bootparam "forcefsck" ; then
 			ebegin $"Checking root filesystem (full fsck forced)"
-			fsck -C -a -f /
+			if [[ $(uname) == "Linux" ]] ; then
+				fsck -C -a -f /
+			else
+				fsck -F /
+			fi
 			# /forcefsck isn't deleted because checkfs needs it.
 			# it'll be deleted in that script.
 			retval=$?
@@ -28,11 +70,14 @@ start() {
 			# - find the / entry
 			# - make sure we have 6 fields
 			# - see if fs_passno is something other than 0
-			if [[ -n $(awk '($1 ~ /^(\/|UUID|LABEL)/ && $2 == "/" \
-			                && NF == 6 && $6 != 0) { print }' /etc/fstab) ]]
-			then
+			if [[ $'\n'$(</etc/fstab) =~ $'\n'".*[[:space:]]/[[:space:]].*[[:space:]].*[[:space:]](.*)[[:space:]]" ]] \
+			&& [[ ${BASH_REMATCH[1]} == "0" ]] ; then
 				ebegin $"Checking root filesystem"
-				fsck -C -T -a /
+				if [[ $(uname) == "Linux" ]] ; then
+					fsck -C -T -a /
+				else
+					fsck -p -F /
+				fi
 				retval=$?
 			else
 				ebegin $"Skipping root filesystem check" "(fstab's passno == 0)"
@@ -44,6 +89,7 @@ start() {
 			eend 0
 		elif [[ ${retval} -eq 1 ]] ; then
 			ewend 1 "Filesystem repaired"
+			retval=0
 		elif [[ ${retval} -eq 2 || ${retval} -eq 3 ]] ; then
 			ewend 1 "Filesystem repaired, but reboot needed!"
 			echo -ne "\a"; sleep 1; echo -ne "\a"; sleep 1
@@ -55,72 +101,51 @@ start() {
 		else
 			if [[ ${RC_FORCE_AUTO} == "yes" ]] ; then
 				eend 2 "Rerunning fsck in force mode"
-				fsck -y -C -T /
+				if [[ $(uname) == "Linux" ]] ; then
+					fsck -y -C -T /
+				else
+					fsck -y /
+				fi
+				retval=$?
 			else
 				eend 2 "Filesystem couldn't be fixed :("
-				/sbin/sulogin ${CONSOLE}
+				[[ $(uname) == "Linux" ]] || return 1
+				sulogin "${CONSOLE}"
 			fi
-			einfo $"Unmounting filesystems"
-			/bin/mount -a -o remount,ro &> /dev/null
-			einfo $"Rebooting"
-			/sbin/reboot -f
+			if [[ ${retval} != "0" ]] ; then
+				einfo $"Unmounting filesystems"
+				if [[ $(uname) == "Linux" ]] ; then
+					mount -a -o remount,ro /
+				else
+					mount -u -o ro /
+				fi
+				einfo $"Rebooting"
+				reboot -f
+			fi
 		fi
 	fi
 
 	# Should we mount root rw ?  the touch check is to see if the / is
 	# already mounted rw in which case there's nothing for us to do
-	if ! is_vps_sys && mount -vf -o remount / 2> /dev/null | \
-	   awk '{ if ($6 ~ /rw/) exit 0; else exit 1; }' && \
-	   ! touch -c / >& /dev/null
-	then
+	if ! touch /.test.$$ >& /dev/null ; then
 		ebegin $"Remounting root filesystem read/write"
-		mount -n -o remount,rw / &> /dev/null
-		if [[ $? -ne 0 ]] ; then
-			eend 2 "Root filesystem could not be mounted read/write :("
-			if [[ ${RC_FORCE_AUTO} != "yes" ]] ; then
-				/sbin/sulogin ${CONSOLE}
-			fi
+		if [[ $(uname) == "Linux" ]] ; then
+			mount -n -o remount,rw /
 		else
-			eend 0
+			mount -u -o rw /
 		fi
+		eend $? "Root filesystem could not be mounted read/write :("
+		[[ $? != "0" ]] && return 1
+	else
+		rm -f /.test.$$
 	fi
 
 	if [[ ${BOOT} == "yes" ]] ; then
-		local x=
-		local y=
-
-		#
-		# Create /etc/mtab
-		#
-
-		# Don't create mtab if /etc is readonly
-		if ! touch /etc/mtab 2> /dev/null ; then
-			ewarn $"Skipping /etc/mtab initialization" "(ro root?)"
-			return 0
-		fi
-
-		# Clear the existing mtab
-		> /etc/mtab
-
-		# Add the entry for / to mtab
-		mount -f /
-
-		# Don't list root more than once
-		awk '$2 != "/" {print}' /proc/mounts >> /etc/mtab
-
-		# Now make sure /etc/mtab have additional info (gid, etc) in there
-		for x in $(awk '{ print $2 }' /proc/mounts | sort -u) ; do
-			for y in $(awk '{ print $2 }' /etc/fstab) ; do
-				if [[ ${x} == ${y} ]] ; then
-					mount -f -o remount $x
-					continue
-				fi
-			done
-		done
-
-		# Remove stale backups
-		rm -f /etc/mtab~ /etc/mtab~~
+		# Only Linux has mtab
+		[[ $(uname) == "Linux" ]] && do_mtab
 	fi
+
+	return ${retval}
 }
 
-# vim:ts=4
+# vim: set ts=4 :

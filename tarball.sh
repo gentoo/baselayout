@@ -8,7 +8,7 @@ if [[ $1 != "-f" ]] ; then
 	echo "Performing sanity checks (run with -f to skip) ..."
 
 	# Check that we're updated
-	svnfiles=$( svn status --no-ignore 2>&1 | egrep -v '^(U|P)' )
+	svnfiles=$(svn status --no-ignore 2>&1 | egrep -v '^(U|P)')
 	if [[ -n ${svnfiles} ]] ; then
 		echo "Refusing to package tarball until svn is in sync:"
 		echo "$svnfiles"
@@ -21,22 +21,27 @@ rm -rf ${DEST}
 install -d -m0755 ${DEST}
 
 for x in ChangeLog Makefile bin etc init.d net-scripts sbin src rc-lists man ; do
-	cp -ax $x ${DEST}
+	cp -R $x ${DEST}
 done
 
-(cd ${DEST}/src; make clean)
+(cd ${DEST}/src; gmake clean)
 
 # do not yet package src/core stuff
 rm -rf ${DEST}/src/core
-#[[ -f ${DEST}/Makefile ]] && (cd ${DEST}/src; make distclean)
+#[[ -f ${DEST}/Makefile ]] && (cd ${DEST}/src; gmake distclean)
 
-chown -R root:root ${DEST}
+( cd $TMP/${NAME}-${V} ; rm -rf `find . -name .svn` )
+
+if [[ $(uname) == "Linux" ]] ; then
+	chown -R root:root ${DEST}
+else
+	chown -R root:wheel ${DEST}
+fi
 chmod 0755 ${DEST}/sbin/*
 chmod 0755 ${DEST}/init.d/*
-( cd $TMP/${NAME}-${V} ; rm -rf `find -iname .svn` )
 cd $TMP
 tar cjvf ${TMP}/${NAME}-${V}.tar.bz2 ${NAME}-${V}
-rm -rf ${NAME}-${V}
+#rm -rf ${NAME}-${V}
 
 echo
-du -b ${TMP}/${NAME}-${V}.tar.bz2
+du -k ${TMP}/${NAME}-${V}.tar.bz2

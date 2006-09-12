@@ -94,6 +94,7 @@ do_interactive() {
 				;;
 			"${shell_text}")
 				echo
+				[[ ! -x /sbin/sulogin ]] && exit 1 
 				sulogin "${CONSOLE}"
 				echo
 				echo "About to start the service ${service}"
@@ -144,19 +145,23 @@ then
 	rm -f "${svcdir}/ksoftlevel"
 elif [[ ${RUNLEVEL} != "S" && ${RUNLEVEL} != "1" && ${argv1} == "single" ]]
 then
-	/sbin/telinit S
-	exit 0
+	if [[ -x /sbin/telinit ]] ; then
+		/sbin/telinit S
+		exit 0
+	fi
 elif [[ ( ${RUNLEVEL} == "S" || ${RUNLEVEL} == "1" ) && ${argv1} != "single" ]]
 then
-	level=$(awk -v level="${argv1}" '
-		$2 == level {
-			split($0, fields, ":")
-			print fields[2]
-			exit
-		}' /etc/inittab 2>/dev/null)
-	[[ -z ${level} ]] && level=3
-	/sbin/telinit "${level}"
-	exit 0
+	if [[ -x /sbin/telinit ]] ; then
+		level=$(awk -v level="${argv1}" '
+			$2 == level {
+				split($0, fields, ":")
+				print fields[2]
+				exit
+			}' /etc/inittab 2>/dev/null)
+		[[ -z ${level} ]] && level=3
+		/sbin/telinit "${level}"
+		exit 0
+	fi	
 fi
 
 # Ensure all critical services have are in the boot runlevel
@@ -216,21 +221,20 @@ else
 		# As we're in the bootlevel, add any services that failed due
 		# to /dev/.rcsysinit existing to the list
 		if [[ -d /dev/.rcboot ]] ; then
-			COLDPLUG_SERVICES=
 			for x in $(dolisting /dev/.rcboot/) ; do
-				[[ -L ${x} ]] && COLDPLUG_SERVICES="${COLDPLUG_SERVICES} ${x##*/}"
+				[[ -L ${x} ]] && mark_service_coldplugged "${x##*/}"
 			done
-			for x in ${COLDPLUG_SERVICES} ; do
-				if [[ ! -e /etc/runlevels/"${BOOTLEVEL}"/"${x}" \
-				&& ! -e /etc/runlevels/"${DEFAULTLEVEL}"/"${x}" ]] ; then
-					myscripts="${myscripts} ${x}"
-					mark_service_coldplugged "${x}"
-				fi
-			done
-			if [[ -n ${myscripts} ]] ; then
-				einfo "Device initiated services:${HILITE}${myscripts}${NORMAL}"
-			fi
 			rm -rf /dev/.rcboot
+		fi
+		for x in $(dolisting "${svcdir}"/coldplugged) ; do
+			x="${x##*/}"
+			[[ ! -e /etc/runlevels/"${BOOTLEVEL}"/"${x}" \
+			&& ! -e /etc/runlevels/"${DEFAULTLEVEL}"/"${x}" \
+			&& -x /etc/init.d/"${x}" ]] \
+				&& myscripts="${myscripts} ${x}"
+		done
+		if [[ -n ${myscripts} ]] ; then
+			einfo "Device initiated services:${HILITE}${myscripts}${NORMAL}"
 		fi
  	fi
 	
@@ -336,7 +340,7 @@ if [[ ${SOFTLEVEL} == "single" ]] ; then
 	rm -rf "${svcdir}/softscripts.new"
 	if is_vps_sys ; then
 		halt -f
-	else
+	elif [[ -x sulogin ]] ; then
 		sulogin "${CONSOLE}"
 	fi
 	exit 0
@@ -410,10 +414,9 @@ rm -rf "${svcdir}/softscripts.old" &>/dev/null
 
 # We want devfsd running after a change of runlevel (this is mostly if we return
 # from runlevel 'single')
-if [[ -z $(ps --no-heading -C 'devfsd') && \
-      -n $(gawk '/\/dev devfs/ { print }' /proc/mounts 2>/dev/null) ]] ; then
-	if [[ ${RC_DEVFSD_STARTUP} != "no" ]] ; then
-		/sbin/devfsd /dev &>/dev/null
+if [[ -d /proc/mounts ]] ; then
+	if grep -q "/dev devfs" /proc/mounts ; then
+		pidof /sbin/devfsd >/dev/null || /sbin/devfsd /dev
 	fi
 fi
 
@@ -421,11 +424,11 @@ fi
 rm -rf "${svcdir}/failed" &>/dev/null
 
 # If $svcdir is mounted in ram, save it back to disk and unmount
-if [[ $(</proc/mounts) =~ $'\n'*"[[:space:]]${svcdir}[[:space:]]" ]] ; then
+if [[ $'\n'$(mount) =~ $'\n'"* ${svcdir} " ]] ; then
 	# Lock svcdir
 	touch "${svcdir}/.locked"
 	# Wait for processes to finish
-	while fuser -m "${svcdir}" &>/dev/null ; do
+	while [[ -n $(fuser -m "${svcdir}" 2>/dev/null) ]] ; do
 		ewarn "Waiting for services to finish"
 		sleep 1
 	done
@@ -437,6 +440,8 @@ if [[ $(</proc/mounts) =~ $'\n'*"[[:space:]]${svcdir}[[:space:]]" ]] ; then
 	# Pipe errors to /dev/null as we may have future timestamps
 	tar xpf "/tmp/init.d.$$.tar.bz2" -C "${svcdir}" 2>/dev/null
 	rm -f "${svcdir}/.locked" "/tmp/init.d.$$.tar.bz2"
+
+	[[ $(uname) == "FreeBSD" ]] && mdconfig -d -u 0
 fi
 
 # If we were in the boot runlevel, it is done now ...
