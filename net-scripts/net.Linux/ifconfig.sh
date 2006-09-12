@@ -111,6 +111,14 @@ ifconfig_is_up() {
 	[[ $(ifconfig "$1") =~ "${check}" ]]
 }
 
+# bool ifconfig_has_carrier(char *iface)
+#
+# Return 0 if we have a carrier
+# Don't trust Linux drivers yet, so always 0
+ifconfig_has_carrier() {
+	return 0
+}
+
 # void ifconfig_set_flag(char *iface, char *flag, bool enabled)
 #
 # Sets or disables the interface flag 
