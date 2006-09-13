@@ -10,7 +10,7 @@ depend() {
 }
 
 start() {
-	[[ ${BOOT} != "yes" ]] && return 0
+#	[[ ${BOOT} != "yes" ]] && return 0
 
 	#
 	# Put a nologin file in /etc to prevent people from logging in before
@@ -28,11 +28,12 @@ start() {
 			sysctl -q -p /etc/sysctl.conf
 			retval=$?
 		else
-			while read line ; do
-				if [[ $'\n'${line} =~ $'\n'"[[:space:]]*[^#]" ]] ; then
-					sysctl "${line}" || retval=1
-				fi
-			done < /etc/sysctl.conf
+			grep -v '^[[:space:]]*#' /etc/sysctl.conf \
+			| while read var comments ; do
+				[[ -n ${var} ]] \
+					&& sysctl "${var}" >/dev/null \
+					|| retval=1
+			done
 		fi
 		eend ${retval}
 	fi
