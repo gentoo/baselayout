@@ -107,13 +107,22 @@ for x in $(mount | sed -e 's/ (/ type /g' -e 's/, / /g' \
 	      print $3 \
 	}' | sort -ur) ; do
 	[[ ${x} =~ "${RC_NO_UMOUNTS}" ]] && continue
-	if ! umount "${x}" &>/dev/null; then
+	i=0
+	while ! umount "${x}" &>/dev/null; do
 		# Kill processes still using this mount
 		fuser -s -k -m "${x}"
 		sleep 2
-		# Now try to unmount it again ...
-		umount -f -r "${x}" &>/dev/null
-	fi
+		((i++))
+		if [[ ${i} -gt 2 ]] ; then
+			# OK, bad, try read only
+			if [[ $(uname) == "Linux" ]] ; then
+				mount -n -o remount,ro "${x}"
+			else
+				mount -u -o ro "${x}"
+			fi
+			break
+		fi
+	done
 done
 eend 0
 
@@ -174,7 +183,7 @@ mount_readonly() {
 		fi
 		retval=$((${retval} + $?))
 	done
-	[[ ${retval} -ne 0 ]] && killall5 -9 &>/dev/null
+	[[ ${retval} != 0 ]] && fuser -s -k -m "${x}"
 
 	return ${retval}
 }
