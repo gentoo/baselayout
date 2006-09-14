@@ -20,9 +20,8 @@ echo "Creating tarball ..."
 rm -rf ${DEST}
 install -d -m0755 ${DEST}
 
-for x in ChangeLog Makefile bin etc init.d net-scripts sbin src rc-lists man ; do
-	cp -R $x ${DEST}
-done
+cp -R . ${DEST}
+rm -rf ${DEST}/tarball.sh ${DEST}/po ${DEST}/rc-lists
 
 (cd ${DEST}/src; gmake clean)
 
@@ -41,7 +40,7 @@ chmod 0755 ${DEST}/sbin/*
 chmod 0755 ${DEST}/init.d/*
 cd $TMP
 tar cjvf ${TMP}/${NAME}-${V}.tar.bz2 ${NAME}-${V}
-#rm -rf ${NAME}-${V}
+rm -rf ${NAME}-${V}
 
 echo
 du -k ${TMP}/${NAME}-${V}.tar.bz2

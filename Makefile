@@ -149,6 +149,9 @@ install:
 		modules-update MAKEDEV ; do \
 		install -m 0755 "sbin/$$x" $(SBINDIR) ; \
 	done
+	if test $(OS) = "Linux" ; then \
+		install -m 0755 sbin/MAKEDEV $(SBINDIR) ; \
+	fi
 	# lib
 	install -m 0755 -d $(SHDIR)
 	for x in $(SBINTOLIB) ; do \
@@ -300,11 +303,11 @@ distforce: clean
 	install -d /tmp/$(PKG)
 	cp -axr . /tmp/$(PKG)
 	cd /tmp/$(PKG) ; \
-	rm -rf *.sh rc-lists `find . -iname .svn` sbin/MAKEDEV-gentoo.patch \
-		src/core ; \
+	rm -rf *.sh rc-lists `find . -name .svn` sbin/MAKEDEV-gentoo.patch \
+		src/core po ; \
 	cd .. ; \
 	tar -cvjpf $(PKG).tar.bz2 $(PKG)
-	rm -rf /tmp/$(PKG)
+	rm -Rf /tmp/$(PKG)
 	du /tmp/$(PKG).tar.bz2
 
 dist: distcheck	distforce
