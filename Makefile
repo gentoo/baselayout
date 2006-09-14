@@ -23,7 +23,7 @@ BINDIR = $(DESTDIR)/bin
 SBINDIR = $(DESTDIR)/sbin
 LIBDIR = $(DESTDIR)/$(LIB)
 INITDIR = $(DESTDIR)/etc/init.d
-CONFDIR = $(DESDIR)/etc/conf.d
+CONFDIR = $(DESTDIR)/etc/conf.d
 MANDIR = $(DESTDIR)/usr/share/man
 LOGDIR = $(DESTDIR)/var/log
 RUNDIR = $(DESTDIR)/var/run
@@ -139,8 +139,8 @@ layout:
 install:
 	# bin
 	install -m 0755 -d $(BINDIR)
-	for x in `ls bin` ; do \
-		install -m 0755 "bin/$$x" $(BINDIR) ; \
+	for x in `find bin -type f ! -path "*/.svn/*"` ; do \
+		install -m 0755 "$$x" $(BINDIR) ; \
 	done
 	# sbin
 	install -m 0755 -d $(SBINDIR)
@@ -164,16 +164,16 @@ install:
 	done
 	# awk
 	install -m 0755 -d $(AWKDIR)
-	for x in `ls src/awk` ; do \
-		install -m 0644 "src/awk/$$x" $(AWKDIR) ; \
+	for x in `find src/awk -type f ! -path "*/.svn/*"` ; do \
+		install -m 0644 "$$x" $(AWKDIR) ; \
 		if test $(LIB) != "lib" ; then \
 			sed -i -e 's:/lib/rcscripts:/'$(LIB)'/rcscripts:' $(AWKDIR)/$$x ; \
 		fi ; \
 	done
 	# init.d
 	install -m 0755 -d $(INITDIR)
-	for x in `ls init.d` ; do \
-		install -m 0755 "init.d/$$x" $(INITDIR) ; \
+	for x in `find init.d -type f ! -path "*/.svn/*"` ; do \
+		install -m 0755 "$$x" $(INITDIR) ; \
 	done
 	# Create our symlinks
 	for x in depscan.sh functions.sh runscript.sh ; do \
@@ -181,54 +181,55 @@ install:
 	done
 	# init.d for OS
 	if test -d init.d.$(OS) ; then \
-		for x in `ls init.d.$(OS)` ; do \
-			install -m 0755 "init.d.$(OS)/$$x" $(INITDIR) ; \
+		for x in `find init.d.$(OS) -type f ! -path "*/.svn/*"` ; do \
+			install -m 0755 "$$x" $(INITDIR) ; \
 		done \
 	fi
 	# conf.d
 	install -m 0755 -d $(CONFDIR)
-	for x in `ls conf.d` ; do \
-		install -m 0755 "conf.d/$$x" $(CONFDIR) ; \
+	for x in `find conf.d -type f ! -path "*/.svn/*"` ; do \
+		install -m 0755 "$$x" $(CONFDIR) ; \
 	done
 	# conf.d for OS
 	if test -d conf.d.$(OS) ; then \
-		for x in `ls conf.d.$(OS)` ; do \
-			install -m 0755 "conf.d.$(OS)/$$x" $(CONFDIR) ; \
+		for x in `find conf.d.$(OS) -type f ! -path "*/.svn/*"` ; do \
+			install -m 0755 "$$x" $(CONFDIR) ; \
 		done \
 	fi
 	# etc
 	# Assume that everything is a flat layout
-	for x in `ls -R etc` ; do \
-		if test `echo "$$x" | sed -e 's/.*\(.\)$$/\1/'` = ":" ; then \
-			d=`echo "$$x" | sed -e 's/\(.*\).$$/\1/'` ; \
+	for x in `find etc ! -path "*.svn*"` ; do \
+		f=`basname "$$x"` ; \
+		if test -d "$$x" ; then \
+			d="$$x" ; \
 			install -m 0755 -d $(DESTDIR)/"$$d" ; \
-		elif test -f "$$d/$$x" ; then \
+		elif test -f "$$x" ; then \
 			skip=0 ; \
 			for y in $(ETC_SKIP) ; do \
-				if test "$$d/$$x" = "etc/$$y" ; then \
-					if test -f $(ROOT)/$$d/$$x ; then \
+				if test "$$d/$$f" = "etc/$$y" ; then \
+					if test -f $(ROOT)/$$d/$$f ; then \
 						skip=1 ; \
 						break ; \
 					fi ; \
 				fi ; \
 			done ; \
 			if test $$skip -eq 0 ; then \
-				install -m 0644 "$$d/$$x" $(DESTDIR)/"$$d/$$x" ; \
+				install -m 0644 "$$x" $(DESTDIR)/"$$d/$$f" ; \
 			fi ; \
 		fi; \
 	done
 	# etc for OS
 	# Assume that everything is a flat layout
-	for x in `ls -R etc.$(OS)` ; do \
-		if test `echo "$$x" | sed -e 's/.*\(.\)$$/\1/'` = ":" ; then \
-			t=`echo "$$x" | sed -e 's/\(.*\).$$/\1/'` ; \
-			d=`echo "$$x" | sed -e 's/^etc.$(OS)/etc/' -e 's/\(.*\).$$/\1/'` ; \
+	for x in `find etc.$(OS) ! -path "*.svn*"` ; do \
+		f=`basename "$$x"` ; \
+		if test -d "$$x" ; then \
+			d=`echo "$$x" | sed -e 's/^etc.$(OS)/etc/'` ; \
 			install -m 0755 -d $(DESTDIR)/"$$d" ; \
-		elif test -f "$$t/$$x" ; then \
+		elif test -f "$$x" ; then \
 			skip=0 ; \
 			for y in $(ETC_SKIP) ; do \
-				if test "$$t/$$x" = "etc/$$y" ; then \
-					if test -f $(ROOT)/$$d/$$x ; then \
+				if test "$$d/$$f" = "etc/$$y" ; then \
+					if test -f $(ROOT)/$$d/$$f ; then \
 						skip=1 ; \
 						break ; \
 					fi ; \
@@ -236,33 +237,33 @@ install:
 			done ; \
 			if test $$skip -eq 0 ; then \
 				m=0644 ; \
-				if test "$$d/$$x" = "etc/shadow" ; then \
+				if test "$$d/$$f" = "etc/shadow" ; then \
 					m=0600 ; \
-				elif test "$$d/$$x" = "/etc/sysctl.conf" ; then \
+				elif test "$$d/$$f" = "/etc/sysctl.conf" ; then \
 					m=0640 ; \
 				fi ; \
-				install -m $$m "$$t/$$x" $(DESTDIR)/"$$d/$$x" ; \
+				install -m $$m "$$x" $(DESTDIR)/"$$d/$$f" ; \
 			fi ; \
 		fi; \
 	done
 	# net scripts
-	install -m 0755 net-scripts/init.d/net.lo $(SH_DIR)/net.lo
-	ln -snf $(SH_DIR)/net.lo $(INITDIR)/$(NET_LO)
-	for x in `ls net-scripts/conf.d` ; do \
-		install -m 0644 net-scripts/conf.d/"$$x" $(DESTDIR)/etc/conf.d ; \
+	install -m 0755 net-scripts/init.d/net.lo $(SHDIR)/net.lo
+	ln -snf ../../lib/rcscripts/sh/net.lo $(INITDIR)/$(NET_LO)
+	for x in `find net-scripts/conf.d -type f ! -path "*/.svn/*"` ; do \
+		install -m 0644 "$$x" $(DESTDIR)/etc/conf.d ; \
 	done
 	install -m 0755 -d $(NETDIR)
-	for x in `ls net-scripts/net` ; do \
-		install -m 0644 net-scripts/net/"$$x" $(NETDIR) ; \
+	for x in `find net-scripts/net -type f ! -path "*/.svn/*"` ; do \
+		install -m 0644 "$$x" $(NETDIR) ; \
 	done
-	for x in `ls net-scripts/net.$(OS)` ; do \
-		install -m 0644 net-scripts/net.$(OS)/"$$x" $(NETDIR) ; \
+	for x in `find net-scripts/net.$(OS) -type f ! -path "*/.svn/*"` ; do \
+		install -m 0644 "$$x" $(NETDIR) ; \
 	done
 	# Wang our man pages in
-	for x in `ls man` ; do \
-		d=`echo "$$x" | sed -e 's/.*\.\([0-9]\+\)$$/\1/'` ; \
+	for x in `find man -type f ! -path "*/.svn/*"` ; do \
+		d=`echo "$$x" | sed -e 's/.*\.\([0-9]*\)$$/\1/'` ; \
 		install -m 0755 -d $(MANDIR)/man"$$d" ; \
-		install -m 0644 man/"$$x" $(MANDIR)/man"$$d" ; \
+		install -m 0644 "$$x" $(MANDIR)/man"$$d" ; \
 	done
 	# Populate our runlevel folders
 	if ! test -d $(ROOT)/etc/runlevels/boot ; then \

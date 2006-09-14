@@ -7,9 +7,16 @@ if [[ $1 == "/"* ]] ; then
 else
 	myscript="$(pwd)/$1"
 fi
+cd /
 
 # Common functions
 [[ ${RC_GOT_FUNCTIONS} != "yes" ]] && source /sbin/functions.sh
+
+# Sleep until svcdir is unlocked
+while [[ -e ${svcdir}/.locked ]] ; do
+	ewarn "Sleeping while svcdir is locked"
+	sleep 1
+done
 
 # Change dir to $svcdir so we lock it for fuser until we finish
 cd "${svcdir}"
@@ -80,12 +87,6 @@ if [[ ${IN_HOTPLUG} == "1" ]] ; then
 	done
 	set +f
 fi
-
-# Sleep until svcdir is unlocked
-while [[ -e ${svcdir}/.locked ]] ; do
-	ewarn "Sleeping while svcdir is locked"
-	sleep 1
-done
 
 
 # State variables
