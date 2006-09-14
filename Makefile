@@ -23,6 +23,7 @@ BINDIR = $(DESTDIR)/bin
 SBINDIR = $(DESTDIR)/sbin
 LIBDIR = $(DESTDIR)/$(LIB)
 INITDIR = $(DESTDIR)/etc/init.d
+CONFDIR = $(DESDIR)/etc/conf.d
 MANDIR = $(DESTDIR)/usr/share/man
 LOGDIR = $(DESTDIR)/var/log
 RUNDIR = $(DESTDIR)/var/run
@@ -60,6 +61,7 @@ DEFAULT_LEVEL += hdparm
 KEEP_DIRS += sys
 endif
 ifeq ($(OS),BSD)
+BOOTLEVEL += syscons
 NET_LO = net.lo0
 endif
 BOOT_LEVEL += $(NET_LO)
@@ -174,9 +176,47 @@ install:
 	for x in depscan.sh functions.sh runscript.sh ; do \
 		ln -snf ../../sbin/"$$x" $(INITDIR)/"$$x" ; \
 	done
+	# init.d for OS
+	if test -d init.d.$(OS) ; then \
+		for x in `ls init.d.$(OS)` ; do \
+			install -m 0755 "init.d/$$x" $(INITDIR) ; \
+		done \
+	fi
+	# conf.d
+	install -m 0755 -d $(CONFDIR)
+	for x in `ls conf.d` ; do \
+		install -m 0755 "conf.d/$$x" $(CONFDIR) ; \
+	done
+	# conf.d for OS
+	if test -d conf.d.$(OS) ; then \
+		for x in `ls conf.d.$(OS)` ; do \
+			install -m 0755 "init.d/$$x" $(CONFDIR) ; \
+		done \
+	fi
 	# etc
 	# Assume that everything is a flat layout
 	for x in `ls -R etc` ; do \
+		if test `echo "$$x" | sed -e 's/.*\(.\)$$/\1/'` = ":" ; then \
+			d=`echo "$$x" | sed -e 's/\(.*\).$$/\1/'` ; \
+			install -m 0755 -d $(DESTDIR)/"$$d" ; \
+		elif test -f "$$d/$$x" ; then \
+			skip=0 ; \
+			for y in $(ETC_SKIP) ; do \
+				if test "$$d/$$x" = "etc/$$y" ; then \
+					if test -f $(ROOT)/$$d/$$x ; then \
+						skip=1 ; \
+						break ; \
+					fi ; \
+				fi ; \
+			done ; \
+			if test $$skip -eq 0 ; then \
+				install -m 0644 "$$d/$$x" $(DESTDIR)/"$$d/$$x" ; \
+			fi ; \
+		fi; \
+	done
+	# etc for OS
+	# Assume that everything is a flat layout
+	for x in `ls -R etc.$(OS)` ; do \
 		if test `echo "$$x" | sed -e 's/.*\(.\)$$/\1/'` = ":" ; then \
 			d=`echo "$$x" | sed -e 's/\(.*\).$$/\1/'` ; \
 			install -m 0755 -d $(DESTDIR)/"$$d" ; \
