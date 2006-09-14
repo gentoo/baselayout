@@ -44,10 +44,11 @@ DEFAULT_LEVEL = local netmount
 # Basically, don't hit the users key config files
 ETC_SKIP = hosts passwd shadow group fstab
 
+BASE_DIRS = lib/rcscripts/init.d lib/rcscripts/tmp
 KEEP_DIRS = boot dev proc home \
 	mnt/cdrom mnt/floppy \
 	usr/local/bin usr/local/sbin usr/local/share/doc usr/local/share/man \
-	var/run lib/rcscripts/init.d lib/rcscripts/tmp
+	var/run 
 
 SUBDIRS = src
 
@@ -113,6 +114,11 @@ basedev: basedev-$(OS)
 
 dev: dev-$(OS)
 
+base-dirs:
+	# These dirs may not exist from prior versions
+	for x in $(BASE_DIRS) ; do \
+		install -m 0755 -d $(DESTDIR)/$$x ; \
+	done
 layout:
 	# Create base filesytem layout
 	for x in $(KEEP_DIRS) ; do \
@@ -126,17 +132,11 @@ layout:
 	touch $(DESTDIR)/var/tmp/.keep
 	install -m 1777 -d $(DESTDIR)/tmp
 	touch $(DESTDIR)/tmp/.keep
-	# Needed log files
-	install -m 0755 -d $(LOGDIR)
-	touch $(LOGDIR)/lastlog
-	install -m 0644 -g utmp /dev/null $(LOGDIR)/wtmp
-	install -m 0755 -d $(RUNDIR)
-	install -m 0664 -g utmp /dev/null $(RUNDIR)/utmp
 	# FHS compatibility symlinks stuff
 	ln -snf /var/tmp $(DESTDIR)/usr/tmp
 	ln -snf share/man $(DESTDIR)/usr/local/man
 
-install:
+install: base-dirs
 	# bin
 	install -m 0755 -d $(BINDIR)
 	for x in `find bin -type f ! -path "*/.svn/*"` ; do \

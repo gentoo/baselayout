@@ -434,7 +434,10 @@ ifconfig_add_address() {
 
 	# Some kernels like to apply lo with an address when they are brought up
 	if [[ ${config[@]} == "127.0.0.1 netmask 255.0.0.0 broadcast 127.255.255.255" ]]; then
-		is_loopback "${iface}" && ifconfig "${iface}" 0.0.0.0
+		if is_loopback "${real_iface}" ; then
+			ifconfig "${real_iface}" ${config[@]}
+			return 0
+		fi
 	fi
 
 	ifconfig "${iface}" ${config[@]}
