@@ -142,7 +142,7 @@ ifconfig_is_ethernet() {
 #
 # Return 0 if we have a carrier
 ifconfig_has_carrier() {
-	[[ $(ifconfig "$1") \
+	[[ $(ifconfig "$1")$'\n' \
 	=~ $'\n'"[[:space:]]status: (active|associated)"$'\n' ]]
 }
 
