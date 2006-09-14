@@ -52,13 +52,21 @@ RC_DEFAULT_INDENT=2
 #RC_DOT_PATTERN=' .'
 RC_DOT_PATTERN=''
 
+# bool has_addon(addon)
+#
+#   See if addon exists.
+#
+has_addon() {
+	[[ -e ${svclib}/addons/$1 ]]
+}
+
 # void import_addon(char *addon)
 #
 #  Import code from the specified addon if it exists
 #
 import_addon() {
 	local addon="${svclib}/addons/$1"
-	if [[ -r ${addon} ]] ; then
+	if has_addon $1 ; then
 		source "${addon}"
 		return 0
 	fi
