@@ -35,7 +35,7 @@ LVLDIR = $(DESTDIR)/etc/runlevels
 
 # Default init scripts for the boot runlevel
 BOOT_LEVEL = bootmisc checkroot checkfs clock hostname localmount \
-	rmnologin urandom 
+	urandom 
 # Default init scripts for the default runlevel
 DEFAULT_LEVEL = local netmount
 
@@ -54,7 +54,7 @@ SBINTOLIB = rc-daemon.sh rc-help.sh rc-services.sh \
 	init.$(OS).sh init-functions.sh init-common-pre.sh init-common-post.sh
 
 ifeq ($(OS),Linux)
-BOOTLEVEL += consolefont keymaps modules
+BOOTLEVEL += consolefont keymaps modules rmnologin
 NET_LO = net.lo
 DEFAULT_LEVEL += hdparm
 KEEP_DIRS += sys
