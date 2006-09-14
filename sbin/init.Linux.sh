@@ -136,16 +136,16 @@ else
 	esac
 
 	# Check udev prerequisites and kernel params
-	if [[ ${udev} == "yes" ]] ; then
+	if [[ ${udev} == "yes" ]] && has_addon udev ; then
 		if get_bootparam "noudev" || \
-		   [[ ! -x /sbin/udev || ${devfs_automounted} == "yes" || \
+		   [[ ${devfs_automounted} == "yes" || \
 		      $(get_KV) -lt "$(KV_to_int '2.6.0')" ]] ; then
 			udev="no"
 		fi
 	fi
 
 	# Check devfs prerequisites and kernel params
-	if [[ ${devfs} == "yes" ]] ; then
+	if [[ ${devfs} == "yes" ]] && has_addon devfs ; then
 		if get_bootparam "nodevfs" || [[ ${udev} == "yes" \
 			|| ! -r /proc/filesystems ]] ; then
 			devfs="no"
