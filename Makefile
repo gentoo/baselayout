@@ -61,7 +61,7 @@ DEFAULT_LEVEL += hdparm
 KEEP_DIRS += sys
 endif
 ifeq ($(OS),BSD)
-BOOTLEVEL += syscons
+BOOTLEVEL += sysctl syscons
 NET_LO = net.lo0
 endif
 BOOT_LEVEL += $(NET_LO)
@@ -179,7 +179,7 @@ install:
 	# init.d for OS
 	if test -d init.d.$(OS) ; then \
 		for x in `ls init.d.$(OS)` ; do \
-			install -m 0755 "init.d/$$x" $(INITDIR) ; \
+			install -m 0755 "init.d.$(OS)/$$x" $(INITDIR) ; \
 		done \
 	fi
 	# conf.d
@@ -190,7 +190,7 @@ install:
 	# conf.d for OS
 	if test -d conf.d.$(OS) ; then \
 		for x in `ls conf.d.$(OS)` ; do \
-			install -m 0755 "init.d/$$x" $(CONFDIR) ; \
+			install -m 0755 "conf.d.$(OS)/$$x" $(CONFDIR) ; \
 		done \
 	fi
 	# etc
@@ -218,12 +218,13 @@ install:
 	# Assume that everything is a flat layout
 	for x in `ls -R etc.$(OS)` ; do \
 		if test `echo "$$x" | sed -e 's/.*\(.\)$$/\1/'` = ":" ; then \
-			d=`echo "$$x" | sed -e 's/\(.*\).$$/\1/'` ; \
+			t=`echo "$$x" | sed -e 's/\(.*\).$$/\1/'` ; \
+			d=`echo "$$x" | sed -e 's/^etc.$(OS)/etc/' -e 's/\(.*\).$$/\1/'` ; \
 			install -m 0755 -d $(DESTDIR)/"$$d" ; \
-		elif test -f "$$d/$$x" ; then \
+		elif test -f "$$t/$$x" ; then \
 			skip=0 ; \
 			for y in $(ETC_SKIP) ; do \
-				if test "$$d/$$x" = "etc/$$y" ; then \
+				if test "$$t/$$x" = "etc/$$y" ; then \
 					if test -f $(ROOT)/$$d/$$x ; then \
 						skip=1 ; \
 						break ; \
@@ -237,7 +238,7 @@ install:
 				elif test "$$d/$$x" = "/etc/sysctl.conf" ; then \
 					m=0640 ; \
 				fi ; \
-				install -m $$m "$$d/$$x" $(DESTDIR)/"$$d/$$x" ; \
+				install -m $$m "$$t/$$x" $(DESTDIR)/"$$d/$$x" ; \
 			fi ; \
 		fi; \
 	done
@@ -252,7 +253,7 @@ install:
 		install -m 0644 net-scripts/net/"$$x" $(NETDIR) ; \
 	done
 	for x in `ls net-scripts/net.$(OS)` ; do \
-		install -m 0644 net-scripts/net/"$$x" $(NETDIR) ; \
+		install -m 0644 net-scripts/net.$(OS)/"$$x" $(NETDIR) ; \
 	done
 	# Wang our man pages in
 	for x in `ls man` ; do \
