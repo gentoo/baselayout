@@ -31,7 +31,7 @@ iproute2_expose() {
 # Returns 1 if iproute2 is installed, otherwise 0
 iproute2_check_installed() {
 	[[ -x /sbin/ip ]] && return 0
-	${1:-false} && eerror "For iproute2 support, emerge sys-apps/iproute2"
+	${1:-false} && eerror $"For iproute2 support, emerge sys-apps/iproute2"
 	return 1
 }
 
@@ -43,8 +43,8 @@ iproute2_exists() {
 	[[ -n ${e} ]] && return 0
 
 	if ${report} ; then
-		eerror "network interface $1 does not exist"
-		eerror "Please verify hardware or kernel module (driver)"
+		eerror $"network interface" "$1" $"does not exist"
+		eerror $"Please verify hardware or kernel module (driver)"
 	fi
 	return 1
 }
@@ -243,9 +243,6 @@ iproute2_add_address() {
 			&& config=( "${config[@]}" "brd +" )
 	fi
 
-	# Ensure that the interface is up so we can add IPv6 addresses
-	interface_up "${iface}"
-
 	# Some kernels like to apply lo with an address when they are brought up
 	if [[ ${config[@]} == "127.0.0.1/8 brd 127.255.255.255 scope host" ]] ; then
 		is_loopback "${iface}" && ip addr del dev "${iface}" 127.0.0.1/8 2>/dev/null
@@ -282,9 +279,6 @@ iproute2_post_start() {
 
 	iproute2_exists "${iface}" || return 0
 	
-	# Make sure interface is marked UP
-	iproute2_up "${iface}"
-
 	# MTU support
 	local mtu="mtu_${ifvar}"
 	[[ -n ${!mtu} ]] && ip link set mtu "${!mtu}" dev "${iface}"
@@ -301,7 +295,7 @@ iproute2_post_start() {
 
 	# Set routes with ip route -- this might also include default route
 	if [[ -n ${routes} ]] ; then
-		einfo "Adding routes"
+		einfo $"Adding routes"
 		eindent
 		for x in "${routes[@]}"; do
 			ebegin "${x}"

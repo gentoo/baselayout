@@ -30,14 +30,14 @@ ip6to4_start() {
 
 	# Ensure the interface is sit0 if we're using ifconfig
 	if [[ " ${MODULES[@]} " == *" ifconfig "* && ${iface} != "sit0" ]] ; then
-		eerror "ip6to4 can only on interface sit0 using ifconfig"
-		eerror "emerge sys-apps/iproute2 to use other interfaces"
+		eerror $"ip6to4 can only on interface sit0 using ifconfig"
+		eerror $"emerge sys-apps/iproute2 to use other interfaces"
 		return 1
 	fi
 
 	local host="link_${ifvar}"
 	if [[ -z ${!host} ]] ; then
-		eerror "link_${ifvar} is not set"
+		eerror "link_${ifvar}" $"is not set"
 		return 1
 	fi
 	
@@ -46,7 +46,7 @@ ip6to4_start() {
 	# An interface can have more than 1 ip address
 	local -a addrs=( $(interface_get_address "${!host}") )
 	if [[ -z ${addrs} ]] ; then
-		eerror "${!host} is not configured with an IPv4 address"
+		eerror "${!host}" $"is not configured with an IPv4 address"
 		return 1
 	fi
 
@@ -65,21 +65,21 @@ ip6to4_start() {
 		done
 		[[ ${i} -lt 32 ]] && continue
 	
-		veinfo "IPv4 address on ${!host}: ${ip}"
+		veinfo $"IPv4 address on" "${!host}: ${ip}"
 		local ip6=$(printf "2002:%02x%02x:%02x%02x::1" ${ip//./ })
-		veinfo "Derived IPv6 address: ${ip6}"
+		veinfo $"Derived IPv6 address:" "${ip6}"
 
 		# Now apply our IPv6 address to our config
 		new=( "${new[@]}" "${ip6}/16" )
 	done	
 
 	if [[ -z ${new} ]] ; then
-		eerror "No global IPv4 addresses found on interface ${!host}"
+		eerror $"No global IPv4 addresses found on interface" "${!host}"
 		return 1
 	fi
 
 	if [[ ${iface} != "sit0" ]] ; then
-		ebegin "Creating 6to4 tunnel on ${iface}"
+		ebegin $"Creating 6to4 tunnel on" "${iface}"
 		interface_tunnel add "${iface}" mode sit ttl 255 remote any local "${ip}"
 		eend $? || return 1
 	fi
@@ -93,5 +93,4 @@ ip6to4_start() {
 			\"2003::/3 via ::192.88.99.1 metric 2147483647\" )"
 }
 	
-# vim:ts=4
 # vim: set ts=4 :

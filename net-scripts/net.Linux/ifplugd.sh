@@ -24,7 +24,7 @@ ifplugd_expose() {
 # Returns 0 if ifplugd is installed, otherwise 1
 ifplugd_check_installed() {
 	if [[ ! -x /usr/sbin/ifplugd ]]; then
-		${1:-false} && eerror "For ifplugd support, emerge sys-apps/ifplugd"
+		${1:-false} && eerror $"For ifplugd support, emerge sys-apps/ifplugd"
 		return 1
 	fi
 	return 0
@@ -44,7 +44,7 @@ ifplugd_pre_start() {
 
 	# ifplugd could have been started by the old init script
 	if [[ -e ${pidfile} ]] ; then
-		vewarn "ifplugd is already running on ${iface}"
+		vewarn $"ifplugd is already running on" "${iface}"
 		return 0
 	fi
 
@@ -52,7 +52,7 @@ ifplugd_pre_start() {
 	# It's a basic test to ensure it's not a virtual interface
 	local mac=$(interface_get_mac_address "${iface}")
 	if [[ -z ${mac} ]] ; then
-		vewarn "ifplugd only works on interfaces with a valid MAC address"
+		vewarn $"ifplugd only works on interfaces with a valid MAC address"
 		return 0
 	fi
 
@@ -60,7 +60,7 @@ ifplugd_pre_start() {
 	for f in bonding bridge tuntap vlan ; do
 		if is_function "${f}_exists" ; then
 			if ${f}_exists "${iface}" ; then
-				veinfo "ifplugd does not work with ${f}"
+				veinfo $"ifplugd does not work with" "${f}"
 				return 0
 			fi
 		fi
@@ -76,13 +76,13 @@ ifplugd_pre_start() {
 		&& " ${!opts} " != *" --api-mode=wlan "* ]] ; then
 		if is_function wireless_exists ; then
 			if wireless_exists "${iface}" ; then
-				veinfo "ifplugd does not work on wireless interfaces"
+				veinfo $"ifplugd does not work on wireless interfaces"
 				return 0
 			fi
 		fi
 	fi
 
-	ebegin "Starting ifplugd on ${iface}"
+	ebegin $"Starting ifplugd on" "${iface}"
 
 	# We need the interface up for ifplugd to listen to netlink events
 	interface_up "${iface}"
@@ -101,19 +101,19 @@ ifplugd_pre_start() {
 	timeout="timeout_${ifvar}"
 	timeout="${!timeout:--1}"
 	if [[ ${timeout} == "0" ]] ; then
-		ewarn "WARNING: infinite timeout set for ${iface} to come up"
+		ewarn $"WARNING: infinite timeout set for" "${iface}" $"to come up"
 	elif [[ ${timeout} -lt 0 ]] ; then
-		einfo "Backgrounding ..."
+		einfo $"Backgrounding ..."
 		exit 0
 	fi
 
-	veinfo "Waiting for ${iface} to be marked as started"
+	veinfo $"Waiting for" "${iface}" $"to be marked as started"
 
 	local i=0
 	while true ; do
 		if service_started "net.${iface}" ; then
 			local addr=$(interface_get_address "${iface}")
-			einfo "${iface} configured with address ${addr}"
+			einfo "${iface}" $"configured with address" "${addr}"
 			exit 0
 		fi
 		sleep 1
@@ -122,7 +122,7 @@ ifplugd_pre_start() {
 		[[ ${i} == "${timeout}" || ${i} -gt "${timeout}" ]] && break
 	done
 
-	eend 1 "Failed to configure ${iface} in the background"
+	eend 1 $"Failed to configure" "${iface}" $"in the background"
 	exit 0
 }
 
@@ -137,7 +137,7 @@ ifplugd_stop() {
 
 	[[ ! -e ${pidfile} ]] && return 0
 	
-	ebegin "Stopping ifplugd on ${iface}"
+	ebegin $"Stopping ifplugd on" "${iface}"
 	start-stop-daemon --stop --exec /usr/sbin/ifplugd \
 		--pidfile "${pidfile}" --signal 3
 	eend $?

@@ -35,7 +35,8 @@ essidnet_pre_start() {
 	local essid=$(bash_variable "${ESSID}")
 	mac="${mac//:/}"
 
-	vebegin "Configuring ${iface} for ESSID \"${ESSID//\\\\/\\\\}\"" 2>/dev/null
+	vebegin $"Configuring" "${iface}" $"for ESSID" \
+		"\"${ESSID//\\\\/\\\\}\"" 2>/dev/null
 	configure_variables "${iface}" "${essid}" "${mac}"
 
 	# Backwards compat for old gateway var

@@ -12,7 +12,7 @@
 # see to overcame this is to use the --background option in start-stop-daemon,
 # which is reported as a "last resort" method, but it acts correctly about this.
 atmclip_svc_start() {
-    ebegin "Starting $2 Daemon ($1)"
+    ebegin $"Starting" "$2" $"Daemon" "($1)"
     start-stop-daemon --start \
 		--background \
 		--make-pidfile --pidfile "/var/run/$1.pid" \
@@ -24,15 +24,15 @@ atmclip_svc_start() {
 #
 # This starts the whole set of atm services needed by clip
 atmclip_svcs_start() {
-    einfo "First CLIP instance: starting ATM CLIP daemons"
+    einfo $"First CLIP instance: starting ATM CLIP daemons"
     eindent
 
     if [[ ${clip_full:-yes} == "yes" ]]; then
-		atmclip_svc_start atmsigd "Signaling" && \
-		atmclip_svc_start ilmid	  "Integrated Local Management Interface" && \
-		atmclip_svc_start atmarpd "Address Resolution Protocol"
+		atmclip_svc_start atmsigd $"Signaling" && \
+		atmclip_svc_start ilmid	  $"Integrated Local Management Interface" && \
+		atmclip_svc_start atmarpd $"Address Resolution Protocol"
     else
-		atmclip_svc_start atmarpd "Address Resolution Protocol"
+		atmclip_svc_start atmarpd $"Address Resolution Protocol"
     fi
 
     local r=$?
@@ -44,7 +44,7 @@ atmclip_svcs_start() {
 # void atmclip_svc_stop(char *name, char* desc)
 #
 atmclip_svc_stop() {
-    ebegin "Stopping $2 Daemon ($1)"
+    ebegin $"Stopping" "$2" $"Daemon" "($1)"
     start-stop-daemon --stop \
 		--retry \
 		--pidfile "/var/run/$1.pid" \
@@ -55,16 +55,16 @@ atmclip_svc_stop() {
 # void atmclip_svcs_stop()
 #
 atmclip_svcs_stop() {
-    einfo "Last CLIP instance: stopping ATM CLIP daemons"
+    einfo $"Last CLIP instance: stopping ATM CLIP daemons"
     eindent
 
     # Heartake operation!
     sync
 
-    atmclip_svc_stop atmarpd "Address Resolution Protocol"
+    atmclip_svc_stop atmarpd $"Address Resolution Protocol"
     if [[ ${clip_full:-yes} == "yes" ]]; then
-		atmclip_svc_stop ilmid "Integrated Local Management Interface"
-		atmclip_svc_stop atmsigd "Signaling"
+		atmclip_svc_stop ilmid $"Integrated Local Management Interface"
+		atmclip_svc_stop atmsigd $"Signaling"
     fi
 
     eoutdent
@@ -87,7 +87,6 @@ atmarp() {
     /usr/sbin/atmarp "$@"
 }
 
-
 # void clip_depend(void)
 #
 # Sets up the dependancies for this module
@@ -97,7 +96,6 @@ clip_depend() {
     functions interface_down interface_up interface_exists is_daemon_running
     variables clip
 }
-
 
 # bool clip_check_installed(void)
 #
@@ -109,7 +107,7 @@ clip_check_installed() {
     local x
     for x in atmsigd ilmid atmarpd atmarp ; do
 		if [[ ! -x "/usr/sbin/${x}" ]] ; then
-		    ${1:-false} && eerror "You need first to emerge net-dialup/linux-atm"
+		    ${1:-false} && eerror $"You need first to emerge net-dialup/linux-atm"
 	    	return 1
 		fi
     done
@@ -134,7 +132,7 @@ clip_pre_start() {
     if [[ ! -r /proc/net/atm/arp ]] ; then
 		modprobe clip && sleep 2
 		if [[ ! -r /proc/net/atm/arp ]] ; then
-	    	eerror "You need first to enable kernel support for ATM CLIP"
+	    	eerror $"You need first to enable kernel support for ATM CLIP"
 	    	return 1
 		fi
     fi
@@ -146,7 +144,7 @@ clip_pre_start() {
     fi
 
     if ! interface_exists "${iface}" ; then
-		ebegin "Creating CLIP interface ${iface}"
+		ebegin $"Creating CLIP interface" "${iface}"
 		atmarp -c "${iface}"
 		eend $?
 
@@ -191,7 +189,7 @@ clip_post_start() {
 		local peerip="$1"; shift
 		local ifvpivci="$1"; shift
 
-		ebegin "Creating PVC ${ifvpivci} for peer ${peerip}"
+		ebegin $"Creating PVC" "${ifvpivci}" $"for peer" "${peerip}"
 
 		local nleftretries emsg ecode
 		for ((nleftretries=10; nleftretries > 0; nleftretries--)); do
@@ -204,7 +202,7 @@ clip_post_start() {
 	eend ${ecode}
 
 	if [[ ${ecode} != "0" ]]; then
-	    eerror "Creation failed for PVC ${ifvpivci}: ${emsg}"
+	    eerror $"Creation failed for PVC" "${ifvpivci}: ${emsg}"
 	    has_failures=1
 	fi
     done
@@ -240,13 +238,13 @@ clip_pre_stop() {
 	# every active CLIP PVCs.
 	# The linux 2.6's ATM stack is really a mess...
 	local itf t encp idle ipaddr left
-	einfo "Removing PVCs on this interface"
+	einfo $"Removing PVCs on this interface"
 	eindent
 	{
 		read left && \
 		while read itf t encp idle ipaddr left ; do
 			if [[ ${itf} == "${iface}" ]]; then
-				ebegin "Removing PVC to ${ipaddr}"
+				ebegin $"Removing PVC to" "${ipaddr}"
 				atmarp -d "${ipaddr}"
 				eend $?
 			fi

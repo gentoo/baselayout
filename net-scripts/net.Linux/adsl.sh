@@ -14,7 +14,7 @@ adsl_depend() {
 # Returns 1 if rp-pppoe is installed, otherwise 0
 adsl_check_installed() {
 	[[ -x /usr/sbin/adsl-start || -x /usr/sbin/pppoe-start ]] && return 0
-	${1:-false} && eerror "For ADSL support, emerge net-dialup/rp-pppoe"
+	${1:-false} && eerror $"For ADSL support, emerge net-dialup/rp-pppoe"
 	return 1
 }
 
@@ -38,8 +38,8 @@ adsl_setup_vars() {
 	[[ -f ${cfgfile} ]] || cfgfile="/etc/ppp/pppoe.conf"
 
 	if [[ ! -f ${cfgfile} ]]; then
-		eerror "no pppoe.conf file found!"
-		eerror "Please run ${cfgexe} to create one"
+		eerror $"no pppoe.conf file found!"
+		eerror $"Please run" "${cfgexe}" $"to create one"
 		return 1
 	fi
 
@@ -60,7 +60,7 @@ adsl_start() {
 	user="adsl_user_${ifvar}"
 
 	# Start ADSL with the cfgfile, but override ETH and PIDFILE
-	einfo "Starting ADSL for ${iface}"
+	einfo $"Starting ADSL for" "${iface}"
 	${exe} <(cat "${cfgfile}"; \
 		echo "ETH=${iface}"; \
 		echo "PIDFILE=/var/run/rp-pppoe-${iface}.pid"; \
@@ -81,7 +81,7 @@ adsl_stop() {
 
 	adsl_setup_vars "${iface}" stop || return 1
 
-	einfo "Stopping ADSL for ${iface}"
+	einfo $"Stopping ADSL for" "${iface}"
 	${exe} <(cat "${cfgfile}"; \
 		echo "ETH=${iface}"; echo "PIDFILE=/var/run/rp-pppoe-${iface}.pid") \
 		>/dev/null

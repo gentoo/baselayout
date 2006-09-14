@@ -30,7 +30,7 @@ iptunnel_pre_start() {
 	# Set our base metric to 1000
 	metric=1000
 	
-	ebegin "Creating tunnel ${iface}"
+	ebegin $"Creating tunnel" "${iface}"
 	interface_tunnel add "${iface}" ${!opts}
 	eend "$?"
 }
@@ -47,7 +47,7 @@ iptunnel_stop() {
 	interface_exists "${iface}" || return 0
 	[[ -z $(interface_tunnel show "${iface}" 2>/dev/null) ]] && return 0
 
-	ebegin "Destroying tunnel ${iface}"
+	ebegin $"Destroying tunnel" "${iface}"
 	interface_tunnel del "${iface}"
 	eend $?
 }

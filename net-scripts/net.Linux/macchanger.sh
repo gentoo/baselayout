@@ -31,7 +31,7 @@ macchanger_pre_start() {
 
 	interface_exists "${iface}" true || return 1
 
-	ebegin "Changing MAC address of ${iface}"
+	ebegin $"Changing MAC address of" "${iface}"
 
 	# The interface needs to be up for macchanger to work most of the time
 	interface_down "${iface}"
@@ -46,7 +46,7 @@ macchanger_pre_start() {
 			if [[ $? == "0" ]] ; then
 				mac=$(interface_get_mac_address "${iface}")
 				eindent
-				einfo "changed to ${mac}"
+				einfo $"changed to" "${mac}"
 				eoutdent
 				return 0
 			fi
@@ -72,28 +72,29 @@ macchanger_pre_start() {
 	esac
 
 	if [[ ! -x /sbin/macchanger ]] ; then
-		eerror "For changing MAC addresses, emerge net-analyzer/macchanger"
+		eerror $"For changing MAC addresses, emerge net-analyzer/macchanger"
 		return 1
 	fi
 
+	interface_down "${iface}"
 	mac=$(/sbin/macchanger ${opts} "${iface}" \
 		| sed -n -e 's/^Faked MAC:.*\<\(..:..:..:..:..:..\)\>.*/\U\1/p' )
+	interface_up "${iface}"
 
 	# Sometimes the interface needs to be up ....
 	if [[ -z ${mac} ]] ; then
-		interface_up "${iface}"
 		mac=$(/sbin/macchanger ${opts} "${iface}" \
 			| sed -n -e 's/^Faked MAC:.*\<\(..:..:..:..:..:..\)\>.*/\U\1/p' )
 	fi
 
 	if [[ -z ${mac} ]] ; then
-		eend 1 "Failed to set MAC address"
+		eend 1 $"Failed to set MAC address"
 		return 1
 	fi
 
 	eend 0
 	eindent
-	einfo "changed to ${mac}"
+	einfo $"changed to" "${mac}"
 	eoutdent
 
 	return 0 #important

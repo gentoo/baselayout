@@ -29,7 +29,7 @@ vlan_expose() {
 # Returns 0 if vconfig is installed, otherwise 1
 vlan_check_installed() {
 	[[ -x /sbin/vconfig ]] && return 0
-	${1:-false} && eerror "For VLAN (802.1q) support, emerge net-misc/vconfig"
+	${1:-false} && eerror $"For VLAN (802.1q) support, emerge net-misc/vconfig"
 	return 1
 }
 
@@ -58,7 +58,7 @@ vlan_check_kernel() {
 	[[ -d /proc/net/vlan ]] && return 0
 	/sbin/modprobe 8021q &>/dev/null
 	[[ -d /proc/net/vlan ]] && return 0
-	eerror "VLAN (802.1q) support is not present in this kernel"
+	eerror $"VLAN (802.1q) support is not present in this kernel"
 	return 1
 }
 
@@ -84,7 +84,7 @@ vlan_pre_start() {
 		fi
 		e=$(vconfig ${x} 2>&1 1>/dev/null)
 		[[ -z ${e} ]] && continue
-		eerror "vconfig ${x}"
+		eerror $"vconfig" "${x}"
 		eerror "${e}"
 		return 1
 	done
@@ -113,7 +113,7 @@ vlan_post_start() {
 
 	# Start vlans for this interface
 	for vlan in ${!vlans} ; do
-		einfo "Adding VLAN ${vlan} to ${iface}"
+		einfo $"Adding VLAN" "${vlan}" $"to" "${iface}"
 		e=$(vconfig add "${iface}" "${vlan}" 2>&1 1>/dev/null)
 		if [[ -n ${e} ]] ; then
 			eend 1 "${e}"
@@ -149,7 +149,7 @@ vlan_stop() {
 	vlan_check_installed || return 0
 
 	for vlan in $(vlan_get_vlans "${iface}"); do
-		einfo "Removing VLAN ${vlan##*.} from ${iface}"
+		einfo $"Removing VLAN" "${vlan##*.}" $"from" "${iface}"
 		if iface_stop "${vlan}" ; then
 			mark_service_stopped "net.${vlan}"
 			vconfig rem "${vlan}" >/dev/null

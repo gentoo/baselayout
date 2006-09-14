@@ -15,7 +15,7 @@ arping_depend() {
 arping_check_installed() {
 	[[ -x /sbin/arping || -x /usr/sbin/arping2 ]] && return 0
 	if ${1:-false}; then
-		eerror "For arping support emerge net-misc/iputils or net-analyzer/arping"
+		eerror $"For arping support emerge net-misc/iputils or net-analyzer/arping"
 	fi
 	return 1
 }
@@ -86,7 +86,7 @@ arping_address_exists() {
 	
 	if [[ -n ${mac} ]] ; then
 		if [[ ${mac} != "${foundmac}" ]] ; then
-			vewarn "Found ${ip} but MAC ${foundmac} does not match"
+			vewarn $"Found" "${ip}" $"but MAC" "${foundmac}" $"does not match"
 			return 1
 		fi
 	fi
@@ -102,11 +102,11 @@ arping_start() {
 	local iface="$1" gateways= x= conf= i=
 	local ifvar=$(bash_variable "${iface}")
 
-	einfo "Pinging gateways on ${iface} for configuration"
+	einfo $"Pinging gateways on" "${iface}" $"for configuration"
 
 	gateways="gateways_${ifvar}[@]"
 	if [[ -z "${!gateways}" ]] ; then
-		eerror "No gateways have been defined (gateways_${ifvar}=( \"...\"))"
+		eerror $"No gateways have been defined" "(gateways_${ifvar}=( \"...\"))"
 		return 1
 	fi
 
@@ -135,7 +135,7 @@ arping_start() {
 			
 			veend 0
 			eoutdent
-			veinfo "Configuring ${iface} for ${ip} ${extra}"
+			veinfo $"Configuring" "${iface}" $"for" "${ip} ${extra}"
 			configure_variables "${iface}" "${conf}"
 
 			# Call the system module as we've aleady passed it by ....

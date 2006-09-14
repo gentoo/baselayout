@@ -9,7 +9,7 @@ depend() {
 start() {
 	# Mount local filesystems in /etc/fstab.
 	ebegin $"Mounting local filesystems"
-	mount -at noproc,noshm${NET_FS_LIST:+,no}${NET_FS_LIST// /,no} >/dev/null
+	mount -at noproc,noshm${NET_FS_LIST:+,no}${NET_FS_LIST// /,no}
 	eend $? $"Some local filesystem failed to mount"
 
 	# Sync bootlog now as /var should be mounted
@@ -56,6 +56,9 @@ start() {
 
 	# Start dm-crypt mappings, if any
 	start_addon dm-crypt
+
+	# Always return 0 - some local mounts may not be critical for boot
+	return 0
 }
 
 # vim: set ts=4 :

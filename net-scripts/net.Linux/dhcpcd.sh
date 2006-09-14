@@ -24,7 +24,7 @@ dhcpcd_expose() {
 # Returns 1 if dhcpcd is installed, otherwise 0
 dhcpcd_check_installed() {
 	[[ -x /sbin/dhcpcd ]] && return 0
-	${1:-false} && eerror "For DHCP (dhcpcd) support, emerge net-misc/dhcpcd"
+	${1:-false} && eerror $"For DHCP (dhcpcd) support, emerge net-misc/dhcpcd"
 	return 1
 }
 
@@ -39,7 +39,7 @@ dhcpcd_stop() {
 
 	[[ ! -f ${pidfile} ]] && return 0
 
-	ebegin "Stopping dhcpcd on ${iface}"
+	ebegin $"Stopping dhcpcd on" "${iface}"
 	
 	local ifvar=$(bash_variable "${iface}")
 	d="dhcp_${ifvar}"
@@ -90,14 +90,14 @@ dhcpcd_start() {
 	[[ -n ${!metric} && ${!metric} != "0" ]] && opts="${opts} -m ${!metric}"
 
 	# Bring up DHCP for this interface (or alias)
-	ebegin "Running dhcpcd"
+	ebegin $"Running dhcpcd"
 
 	eval /sbin/dhcpcd "${opts}" "${iface}"
 	eend $? || return 1
 
 	# DHCP succeeded, show address retrieved
 	local addr=$(interface_get_address "${iface}")
-	einfo "${iface} received address ${addr}"
+	einfo "${iface}" $"received address" "${addr}"
 
 	return 0
 }

@@ -23,7 +23,7 @@ bonding_expose() {
 # Returns 0 if ifenslave is installed, otherwise 1
 bonding_check_installed() {
 	[[ -x /sbin/ifenslave ]] && return 0
-	${1:-false} && eerror "For link aggregation (bonding) support, emerge net-misc/ifenslave"
+	${1:-false} && eerror $"For link aggregation (bonding) support, emerge net-misc/ifenslave"
 	return 1
 }
 
@@ -51,11 +51,11 @@ bonding_pre_start() {
 	interface_exists "${iface}" true || return 1
 
 	if ! bonding_exists "${iface}" ; then
-		eerror "${iface} is not capable of bonding"
+		eerror "${iface}" $"is not capable of bonding"
 		return 1
 	fi
 
-	ebegin "Adding slaves to ${iface}"
+	ebegin $"Adding slaves to" "${iface}"
 	eindent
 	einfo "${slaves[@]}"
 
@@ -99,7 +99,7 @@ bonding_stop() {
 	[[ -z ${slaves} ]] && return 0
 
 	# remove all slaves
-	ebegin "Removing slaves from ${iface}"
+	ebegin $"Removing slaves from" "${iface}"
 	eindent
 	einfo "${slaves}"
 	eoutdent

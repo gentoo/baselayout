@@ -20,7 +20,7 @@ ipppd_depend() {
 # Returns 1 if isnd4k-utils is installed, otherwise 0
 ipppd_check_installed() {
 	[[ -x /usr/sbin/ipppd ]] && return 0
-	${1:-false} && eerror "For ISDN (ipppd) support, emerge net-dialup/isdn4k-utils"
+	${1:-false} && eerror $"For ISDN (ipppd) support, emerge net-dialup/isdn4k-utils"
 	return 1
 }
 
@@ -43,7 +43,7 @@ ipppd_pre_start() {
 	# Might or might not be set in conf.d/net
 	opts="ipppd_${ifvar}"
 
-	einfo "Starting ipppd for ${iface}"
+	einfo $"Starting ipppd for" "${iface}"
 	start-stop-daemon --start --exec /usr/sbin/ipppd \
 		--pidfile "${pidfile}" \
 		-- ${!opts} pidfile "${pidfile}" \
@@ -62,7 +62,7 @@ ipppd_stop() {
 
 	[[ ! -f ${pidfile} ]] && return 0
 
-	einfo "Stopping ipppd for ${iface}"
+	einfo $"Stopping ipppd for" "${iface}"
 	start-stop-daemon --stop --exec /usr/sbin/ippd \
 		--pidfile "${pidfile}"
 	eend $?

@@ -18,7 +18,7 @@ apipa_start() {
 
 	interface_exists "$1" true || return 1
 	
-	einfo "Searching for free addresses in 169.254.0.0/16"
+	einfo $"Searching for free addresses in" "169.254.0.0/16"
 	eindent
 
 	while [[ ${i} -lt 64516 ]]; do
@@ -38,7 +38,7 @@ apipa_start() {
 		(( i++ ))
 	done
 
-	eerror "No free address found!"
+	eerror $"No free address found!"
 	eoutdent
 	return 1
 }

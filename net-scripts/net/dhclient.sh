@@ -29,7 +29,7 @@ dhclient_expose() {
 # Returns 1 if dhclient is installed, otherwise 0
 dhclient_check_installed() {
 	[[ -x /sbin/dhclient ]] && return 0
-	${1:-false} && eerror "For DHCP (dhclient) support, emerge net-misc/dhcp"
+	${1:-false} && eerror $"For DHCP (dhclient) support, emerge net-misc/dhcp"
 	return 1
 }
 
@@ -42,7 +42,7 @@ dhclient_stop() {
 
 	[[ ! -f ${pidfile} ]] && return 0
 
-	ebegin "Stopping dhclient on ${iface}"
+	ebegin $"Stopping dhclient on" "${iface}"
 	local ifvar=$(bash_variable "${iface}")
 	local d="dhcp_${ifvar}"
 	[[ -z ${!d} ]] && d="dhcp"
@@ -66,7 +66,7 @@ dhclient_start() {
 	interface_exists "${iface}" true || return 1
 
 	if ! interface_has_carrier "${iface}" ; then
-		ewarn "${iface} does not have a carrier, backgrounding"
+		ewarn "${iface}" $"does not have a carrier, backgrounding"
 		mark_service_inactive "net.${iface}"
 		exit 0 
 	fi
@@ -110,14 +110,14 @@ dhclient_start() {
 	fi
 
 	# Bring up DHCP for this interface (or alias)
-	ebegin "Running dhclient"
+	ebegin $"Running dhclient"
 	echo -e "${dhconf}" | start-stop-daemon --start --exec /sbin/dhclient \
 		--pidfile "${pidfile}" -- ${opts} -q -1 -pf "${pidfile}" "${iface}"
 	eend $? || return 1 
 
 	# DHCP succeeded, show address retrieved
 	local addr=$(interface_get_address "${iface}")
-	einfo "${iface} received address ${addr}"
+	einfo "${iface}" $"received address" "${addr}"
 
 	return 0
 }

@@ -29,7 +29,7 @@ pump_expose() {
 # Returns 1 if pump is installed, otherwise 0
 pump_check_installed() {
 	[[ -x /sbin/pump ]] && return 0
-	${1:-false} && eerror "For DHCP (pump) support, emerge net-misc/pump"
+	${1:-false} && eerror $"For DHCP (pump) support, emerge net-misc/pump"
 	return 1
 }
 
@@ -50,9 +50,9 @@ pump_stop() {
 		=~ "Device ${iface}" ]] || return 0
 
 	# Pump always releases the lease
-	ebegin "Stopping pump on ${iface}"
+	ebegin $"Stopping pump on" "${iface}"
 	pump --release --interface "${iface}"
-	eend $? "Failed to stop pump"
+	eend $? $"Failed to stop pump"
 }
 
 # bool pump_start(char *iface)
@@ -88,13 +88,13 @@ pump_start() {
 	opts="${opts} --keep-up --interface ${iface}"
 
 	# Bring up DHCP for this interface (or alias)
-	ebegin "Running pump"
+	ebegin $"Running pump"
 	eval pump "${opts}"
 	eend $? || return $?
 
 	# pump succeeded, show address retrieved
 	local addr=$(interface_get_address "${iface}")
-	einfo "${iface} received address ${addr}"
+	einfo "${iface}" $"received address" "${addr}"
 
 	return 0
 }

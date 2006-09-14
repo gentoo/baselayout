@@ -25,14 +25,10 @@ macnet_pre_start() {
 
 	interface_exists "${iface}" || return 0
 
-	# We need to bring the interface up for some interfaces, otherwise the MAC
-	# address isn't consistent - mainly wireless cards with firmware uploading.
-	interface_up "${iface}"
-
 	local mac=$(interface_get_mac_address "${iface}")
 	[[ -z ${mac} ]] && return 0
 
-	vebegin "Configuring ${iface} for MAC address ${mac}" 2>/dev/null
+	vebegin $"Configuring" "${iface}" $"for MAC address" "${mac}" 2>/dev/null
 	mac="${mac//:/}"
 	configure_variables "${iface}" "${mac}"
 	veend 0 2>/dev/null

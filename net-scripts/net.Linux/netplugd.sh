@@ -24,7 +24,7 @@ netplugd_expose() {
 # Returns 0 if netplug is installed, otherwise 1
 netplugd_check_installed() {
 	if [[ ! -x /sbin/netplugd ]]; then
-		${1:-false} && eerror "For netplug support, emerge sys-apps/netplug"
+		${1:-false} && eerror $"For netplug support, emerge sys-apps/netplug"
 		return 1
 	fi
 	return 0
@@ -47,7 +47,7 @@ netplugd_pre_start() {
 	# It's a basic test to ensure it's not a virtual interface
 	local mac=$(interface_get_mac_address "${iface}")
 	if [[ -z ${mac} ]] ; then
-		vewarn "netplug only works on interfaces with a valid MAC address"
+		vewarn $"netplug only works on interfaces with a valid MAC address"
 		return 0
 	fi
 
@@ -55,13 +55,13 @@ netplugd_pre_start() {
 	for f in bonding bridge tuntap vlan wireless ; do
 		if is_function "${f}_exists" ; then
 			if ${f}_exists "${iface}" ; then
-				veinfo "netplug does not work with ${f}"
+				veinfo $"netplug does not work with" "${f}"
 				return 0
 			fi
 		fi
 	done
 
-	ebegin "Starting netplug on ${iface}"
+	ebegin $"Starting netplug on" "${iface}"
 
 	# We need the interface up for netplug to listen to netlink events
 	interface_up "${iface}"
@@ -80,19 +80,19 @@ netplugd_pre_start() {
 	timeout="plug_timeout_${ifvar}"
 	timeout="${!timeout:--1}"
 	if [[ ${timeout} == "0" ]] ; then
-		ewarn "WARNING: infinite timeout set for ${iface} to come up"
+		ewarn $"WARNING: infinite timeout set for" "${iface}" $"to come up"
 	elif [[ ${timeout} -lt 0 ]] ; then
-		einfo "Backgrounding ..."
+		einfo $"Backgrounding ..."
 		exit 0
 	fi
 
-	veinfo "Waiting for ${iface} to be marked as started"
+	veinfo $"Waiting for" "${iface}" $"to be marked as started"
 
 	local i=0
 	while true ; do
 		if service_started "net.${iface}" ; then
 			local addr=$(interface_get_address "${iface}")
-			einfo "${iface} configured with address ${addr}"
+			einfo "${iface}" $"configured with address" "${addr}"
 			exit 0
 		fi
 		sleep 1
@@ -101,7 +101,7 @@ netplugd_pre_start() {
 		[[ ${i} == "${timeout}" || ${i} -gt "${timeout}" ]] && break
 	done
 
-	eend 1 "Failed to configure ${iface} in the background"
+	eend 1 $"Failed to configure" "${iface}" $"in the background"
 	exit 0
 }
 
@@ -116,7 +116,7 @@ netplugd_stop() {
 
 	[[ ! -e ${pidfile} ]] && return 0
 	
-	ebegin "Stopping netplug on ${iface}"
+	ebegin $"Stopping netplug on" "${iface}"
 	start-stop-daemon --stop --exec /sbin/netplugd \
 		--pidfile "${pidfile}"
 	eend $?

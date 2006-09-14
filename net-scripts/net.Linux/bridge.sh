@@ -27,7 +27,7 @@ bridge_expose() {
 # Returns 1 if bridge is installed, otherwise 0
 bridge_check_installed() {
 	[[ -x /sbin/brctl ]] && return 0
-	${1:-false} && eerror "For bridge support, emerge net-misc/bridge-utils"
+	${1:-false} && eerror $"For bridge support, emerge net-misc/bridge-utils"
 	return 1
 }
 
@@ -72,11 +72,11 @@ bridge_exists() {
 bridge_create() {
 	local iface="$1" ifvar=$(bash_variable "$1") x= i= opts=
 
-	ebegin "Creating bridge ${iface}"
+	ebegin $"Creating bridge" "${iface}"
 	x=$(brctl addbr "${iface}" 2>&1)
 	if [[ -n ${x} ]] ; then
 		if [[ ${x//Package not installed/} != "${x}" ]] ; then
-			eend 1 "Bridging (802.1d) support is not present in this kernel"
+			eend 1 $"Bridging (802.1d) support is not present in this kernel"
 		else
 			eend 1 "${x}"
 		fi
@@ -148,7 +148,7 @@ bridge_pre_start() {
 	bridge_exists "${iface}" || bridge_create "${iface}"
 
 	if [[ -n ${ports} ]] ; then
-		einfo "Adding ports to ${iface}"
+		einfo $"Adding ports to" "${iface}"
 		eindent
 
 		for i in ${ports} ; do
@@ -174,7 +174,7 @@ bridge_stop() {
 	local iface="$1" ports= i= deletebridge=false extra=""
 
 	if bridge_exists "${iface}" ; then
-		ebegin "Destroying bridge ${iface}"
+		ebegin $"Destroying bridge" "${iface}"
 		interface_down "${iface}"
 		ports=$(bridge_get_ports "${iface}")
 		deletebridge=true
@@ -188,7 +188,7 @@ bridge_stop() {
 	fi
 
 	for i in ${ports} ; do
-		ebegin "Removing port ${i}${extra}"
+		ebegin $"Removing port" "${i}${extra}"
 		bridge_delete_port "${iface}" "${i}"
 		eend $?
 	done

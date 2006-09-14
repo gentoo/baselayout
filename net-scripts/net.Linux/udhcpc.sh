@@ -29,7 +29,7 @@ udhcpc_expose() {
 # Returns 1 if udhcpc is installed, otherwise 0
 udhcpc_check_installed() {
 	[[ -x /sbin/udhcpc ]] && return 0
-	${1:-false} && eerror "For DHCP (udhcpc) support, emerge net-misc/udhcp"
+	${1:-false} && eerror $"For DHCP (udhcpc) support, emerge net-misc/udhcp"
 	return 1
 }
 
@@ -42,7 +42,7 @@ udhcpc_stop() {
 
 	[[ ! -f ${pidfile} ]] && return 0
 
-	ebegin "Stopping udhcpc on ${iface}"
+	ebegin $"Stopping udhcpc on ${iface}"
 	local pid=$(<"${pidfile}") e=true
 
 	local ifvar=$(bash_variable "${iface}")
@@ -113,7 +113,7 @@ udhcpc_start() {
 	fi
 
 	# Bring up DHCP for this interface (or alias)
-	ebegin "Running udhcpc"
+	ebegin $"Running udhcpc"
 
 	# Try and load the cache if it exists
 	if [[ -f ${cachefile} ]]; then
@@ -139,7 +139,7 @@ udhcpc_start() {
 
 	# DHCP succeeded, show address retrieved
 	local addr=$(interface_get_address "${iface}")
-	einfo "${iface} received address ${addr}"
+	einfo "${iface}" $"received address" "${addr}"
 
 	return 0
 }

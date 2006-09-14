@@ -13,7 +13,7 @@ br2684ctl_expose() {
 # bool br2684ctl_check_installed(void)
 br2684ctl_check_installed() {
 	[[ -x /sbin/br2684ctl ]] && return 0
-	${1:-false} && eerror "For RFC 2684 Bridge control support, emerge net-misc/br2684ctl"
+	${1:-false} && eerror $"For RFC 2684 Bridge control support, emerge net-misc/br2684ctl"
 	return 1
 }
 
@@ -26,21 +26,21 @@ br2684ctl_pre_start() {
 	[[ -z ${!opts} ]] && return 0
 
 	if [[ $(interface_type "${iface}") != "nas" || -z ${number} ]] ; then
-		eerror "interface must be called nas[0-9] for RFC 2684 Bridging"
+		eerror $"interface must be called nas[0-9] for RFC 2684 Bridging"
 		return 1
 	fi
 	
 	if [[ " ${!opts} " != *" -a "* ]] ; then
-		eerror "-a option (VPI and VCI) is required in br2684_ctl"
+		eerror $"-a option (VPI and VCI) is required in br2684_ctl"
 		return 1
 	fi
 
 	if [[ " ${!opts} " == *" -b "* || " {!opts} " == *" -c "* ]] ; then
-		eerror "The -b and -c options are not allowed for br2684ctl_${ifvar}"
+		eerror $"The -b and -c options are not allowed for" "br2684ctl_${ifvar}"
 		return 1
 	fi
 	
-	einfo "Starting RFC 2684 Bridge control on ${iface}"
+	einfo $"Starting RFC 2684 Bridge control on" "${iface}"
 	start-stop-daemon --start --exec /sbin/br2684ctl --background \
 		--make-pidfile --pidfile "/var/run/br2684ctl-${iface}.pid" \
 		-- -c "${number}" ${!opts}
@@ -57,7 +57,7 @@ br2684ctl_post_stop() {
 	
 	[[ -e ${pidfile} ]] || return 0
 	
-	einfo "Stopping RFC 2684 Bridge control on ${iface}"
+	einfo $"Stopping RFC 2684 Bridge control on" "${iface}"
 	start-stop-daemon --stop --exec /sbin/br2684ctl --pidfile "${pidfile}"
 	eend $?
 }

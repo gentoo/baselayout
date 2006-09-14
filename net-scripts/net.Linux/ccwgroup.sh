@@ -16,11 +16,11 @@ ccwgroup_pre_start() {
 
 	[[ -z ${!ccw} ]] && return 0
 	if [[ ! -d /sys/bus/ccwgroup ]] ; then
-		eerror "ccwgroup support missing in kernel"
+		eerror $"ccwgroup support missing in kernel"
 		return 1
 	fi
 
-	einfo "Enabling ccwgroup on ${iface}"
+	einfo $"Enabling ccwgroup on" "${iface}"
 	echo "${!ccw// /,}" > /sys/bus/ccwgroup/drivers/qeth/group
 	echo "1" > /sys/devices/qeth/"${ccwgroup[0]}"/online
 	eend $?
@@ -46,7 +46,7 @@ ccwgroup_post_stop() {
 	
 	[[ -z ${device} ]] && return 0
 	
-	einfo "Disabling ccwgroup on ${iface}"
+	einfo $"Disabling ccwgroup on" "${iface}"
 	echo "0"  > /sys/devices/qeth/"${device}"/online
 	echo "1"  > /sys/devices/qeth/"${device}"/ungroup
 	eend $?

@@ -35,7 +35,7 @@ ifconfig_expose() {
 # Returns 1 if ifconfig is installed, otherwise 0
 ifconfig_check_installed() {
 	[[ -x /sbin/ifconfig ]] && return 0
-	${1:-false} && eerror "For ifconfig support, emerge sys-freebds/freebsd-sbin"
+	${1:-false} && eerror $"For ifconfig support, emerge sys-freebds/freebsd-sbin"
 	return 1
 }
 
@@ -46,8 +46,8 @@ ifconfig_exists() {
 	[[ $'\n'$(ifconfig -a) =~ $'\n'"$1( |: )" ]] && return 0
 
 	if ${report} ; then
-		eerror "network interface $1 does not exist"
-		eerror "Please verify hardware or kernel module (driver)"
+		eerror $"network interface" "$1" $"does not exist"
+		eerror $"Please verify hardware or kernel module (driver)"
 	fi
 
 	return 1
@@ -142,7 +142,8 @@ ifconfig_is_ethernet() {
 #
 # Return 0 if we have a carrier
 ifconfig_has_carrier() {
-	[[ $(ifconfig "$1") =~ $'\n'"[[:space:]]status: active" ]]
+	[[ $(ifconfig "$1") \
+	=~ $'\n'"[[:space:]]status: (active|associated)"$'\n' ]]
 }
 
 # void ifconfig_get_mac_address(char *interface)
@@ -303,7 +304,7 @@ ifconfig_post_start() {
 	[[ -z ${routes} ]] && return 0
 
 	# Add routes for this interface, might even include default gw
-	einfo "Adding routes"
+	einfo $"Adding routes"
 	eindent
 	for x in "${routes[@]}"; do
 		ebegin "${x}"

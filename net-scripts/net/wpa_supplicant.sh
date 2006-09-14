@@ -38,7 +38,7 @@ wpa_supplicant_expose() {
 # Returns 0 if wpa_supplicant is installed, otherwise 1
 wpa_supplicant_check_installed() {
 	[[ -x /sbin/wpa_supplicant ]] && return 0
-	${1:-false} && eerror "For WPA support (wpa_supplicant) support, emerge net-wireless/wpa_supplicant"
+	${1:-false} && eerror $"For WPA support (wpa_supplicant) support, emerge net-wireless/wpa_supplicant"
 	return 1 
 }
 
@@ -49,7 +49,11 @@ wpa_supplicant_exists() {
 	# Support new sysfs layout
 	[[ -L /sys/class/net/$1/wiphy || -d /sys/class/net/$1/wireless ]] \
 		&& return 0
-	
+
+	[[ $(ifconfig "$1") \
+	=~ $'\n'"[[:space:]]*media: IEEE 802.11 Wireless" ]] \
+	&& return 0
+
 	[[ ! -e /proc/net/wireless ]] && return 1
 	[[ $(</proc/net/wireless) =~ $'\n'"[ \t]*$1:" ]]
 }
@@ -77,33 +81,8 @@ wpa_supplicant_get_essid() {
 # Returns the MAC address of the Access Point
 # the interface is connected to
 wpa_supplicant_get_ap_mac_address() {
-	wpa_cli -i"$1" status | sed -n -e 's/^bssid=\([^=]\+\).*/\U\1/p'
-}
-
-# bool wpa_supplicant_associated(char *interface)
-#
-# Returns 0 if we're associated correctly or 1 if not
-# Note that just because we are associated does not mean we are using the
-# correct encryption keys
-wpa_supplicant_associated() {
-	local -a status=()
-	eval status=( $(wpa_cli -i"$1" status \
-		| sed -n -e 's/^\(key_mgmt\|wpa_state\|EAP state\)=\([^=]\+\).*/\U\"\2\"/p')
-	)
-
-	case "${status[0]}" in
-		"NONE")
-			[[ ${status[1]} == "ASSOCIATED" || ${status[1]} == "COMPLETED" ]]
-			;;
-		"IEEE 802.1X (no WPA)")
-			[[ ${status[2]} == "SUCCESS" ]]
-			;;
-		*)
-			[[ ${status[1]} == "COMPLETED" ]]
-			;;
-	esac
-
-	return $?
+	wpa_cli -i"$1" status | sed -n -e 's/^bssid=\(.*\)$/\1/p' \
+		| tr '[:lower:]' '[:upper:]'
 }
 
 # void wpa_supplicant_kill(char *interface, bool report)
@@ -117,15 +96,16 @@ wpa_supplicant_kill() {
 	# may send a disconnect message to wpa_cli when it shutsdown
 	pidfile="/var/run/wpa_cli-${iface}.pid"
 	if [[ -f ${pidfile} ]] ; then
-		${report} && ebegin "Stopping wpa_cli on ${iface}"
-		start-stop-daemon --stop --exec /bin/wpa_cli --pidfile "${pidfile}"
+		${report} && ebegin $"Stopping wpa_cli on" "${iface}"
+		start-stop-daemon --stop --exec /bin/wpa_cli \
+			--pidfile "${pidfile}"
 		${report} && eend "$?"
 	fi
 
 	# Now shutdown wpa_supplicant
 	pidfile="/var/run/wpa_supplicant-${iface}.pid"
 	if [[ -f ${pidfile} ]] ; then
-		${report} && ebegin "Stopping wpa_supplicant on ${iface}"
+		${report} && ebegin $"Stopping wpa_supplicant on" "${iface}"
 		start-stop-daemon --stop --exec /sbin/wpa_supplicant \
 			--pidfile "${pidfile}"
 		${report} && eend "$?"
@@ -145,47 +125,24 @@ wpa_supplicant_associate() {
 	timeout="associate_timeout_${ifvar}"
 	timeout="${!timeout:--1}"
 
-	[[ -z ${actfile} && ${timeout} -lt 0 ]] && timeout="60"
-
 	if [[ ${timeout} == "0" ]] ; then
-		ewarn "WARNING: infinite timeout set for association on ${iface}"
+		ewarn $"WARNING: infinite timeout set for association on" "${iface}"
 	elif [[ ${timeout} -lt 0 ]] ; then
-		einfo "Backgrounding ..."
+		einfo $"Backgrounding ..."
 		exit 0
 	fi
 
 	local i=0
+	ebegin $"Waiting for" "${timeout}" $"seconds to associate"
 	while true ; do
-		if [[ -n ${actfile} ]] ; then
-			service_started "net.${iface}" && return 0
-		else
-			if ! wpa_cli -i"${iface}" status &>/dev/null ; then
-				eend 1 "wpa_supplicant has exited unexpectedly"
-				return 1
-			fi
-			wpa_supplicant_associated "${iface}" && return 0
-		fi
+		service_started "net.${iface}" && return 0
 		sleep 1
 		[[ ${timeout} == "0" ]] && continue
 		(( i++ ))
 		[[ ${i} == "${timeout}" || ${i} -gt "${timeout}" ]] && break
 	done
-
-	# Spit out an appropriate error
-	if [[ -n ${actfile} ]] ; then
-		eend 1 "Failed to configure ${iface} in the background"
-	else
-		
-		eend 1 "Timed out"
-	fi
-
-	# exit without error with wpa_supplicant-0.4.x as we may get kickstarted
-	# when an AP comes in range
-	[[ -n ${actfile} ]] && exit 0
-
-	# Kill wpa_supplicant for 0.3.x
-	wpa_supplicant_kill "${iface}"
-	return 1
+	eend 1 $"Failed to configure" ${iface} $"in the background"
+	exit 1
 }
 
 # bool wpa_supplicant_pre_start(char *interface)
@@ -214,15 +171,14 @@ wpa_supplicant_pre_start() {
 	local ifvar=$(bash_variable "${iface}")
 	opts="wpa_supplicant_${ifvar}"
 	opts=" ${!opts} "
-	[[ ${opts} != *" -D"* ]] \
-		&& vewarn "wpa_supplicant_${ifvar} does not define a driver"
 	
 	# We only work on wirelesss interfaces unless a driver for wired
 	# has been defined
 	if [[ ${opts} != *" -Dwired "* && ${opts} != *" -D wired "* ]] ; then
 		if ! wpa_supplicant_exists "${iface}" ; then
-			veinfo "wpa_supplicant only works on wireless interfaces"
-			veinfo "unless the -D wired option is specified"
+			veinfo $"wpa_supplicant only works on wireless" \
+				"interfaces unless the -D wired option" \
+				"is specified"
 			return 0
 		fi
 	fi
@@ -241,19 +197,21 @@ wpa_supplicant_pre_start() {
 	# cards may in the future
 	if [[ -e "/sys/class/net/${iface}/device/rf_kill" ]] ; then
 		if [[ $( < "/sys/class/net/${iface}/device/rf_kill" ) != 0 ]] ; then
-			ewarn "Wireless radio has been killed for interface ${iface}"
+			ewarn $"Wireless radio has been killed for interface" "${iface}"
 			local asc="associate_timeout_${ifvar}"
 			if [[ -n ${!asc} && ${!asc} -ge 0 ]] ; then
-				eerror "As you have ${asc} set to 0 or greater"
-				eerror "we will abort as we cannot associate"
+				eerror $"As you have" "${asc}" $"set to 0 or" \
+					$"greater we will abort as we cannot" \
+					$"associate"
 				return 1
 			fi
-			ewarn "wpa_supplicant will launch, but not associate until"
-			ewarn "wireles radio is re-enabled for interface ${iface}"
+			ewarn $"wpa_supplicant will launch, but not associate" \
+				$"until wireles radio is re-enabled for" \
+				$"interface" "${iface}"
 		fi
 	fi
 	
-	ebegin "Starting wpa_supplicant on ${iface}"
+	ebegin "Starting wpa_supplicant on" "${iface}"
 
 	cfgfile="${opts##* -c}"
 	if [[ -n ${cfgfile} && ${cfgfile} != "${opts}" ]] ; then
@@ -270,7 +228,8 @@ wpa_supplicant_pre_start() {
 	fi
 
 	if [[ ! -f ${cfgfile} ]] ; then
-		eend 1 "configuration file ${cfgfile} not found!"
+		eend 1 $"configuration file" \
+			"/etc/wpa_supplicant/wpa_supplicant.conf" $"not found!"
 		return 1
 	fi
 
@@ -298,10 +257,7 @@ wpa_supplicant_pre_start() {
 	# The downside of this is that we don't see the interface being configured
 	# for DHCP/static.
 	actfile="/etc/wpa_supplicant/wpa_cli.sh"
-	# Support old file location
-	[[ ! -x ${actfile} ]] && actfile="/sbin/wpa_cli.action"
-	[[ ! -x ${actfile} ]] && unset actfile
-	[[ -n ${actfile} ]] && opts="${opts} -W"
+	opts="${opts} -W"
 
 	eval start-stop-daemon --start --exec /sbin/wpa_supplicant \
 		--pidfile "/var/run/wpa_supplicant-${iface}.pid" \
@@ -311,20 +267,15 @@ wpa_supplicant_pre_start() {
 
 	# Starting wpa_supplication-0.4.0, we can get wpa_cli to
 	# start/stop our scripts from wpa_supplicant messages
-	if [[ -n ${actfile} ]] ; then
-		mark_service_inactive "net.${iface}"
-		ebegin "Starting wpa_cli on ${iface}"
-		start-stop-daemon --start --exec /bin/wpa_cli \
-			--pidfile "/var/run/wpa_cli-${iface}.pid" \
-			-- -a"${actfile}" -p"${ctrl_dir}" -i"${iface}" \
-			-P"/var/run/wpa_cli-${iface}.pid" -B
-		eend "$?" || return 1
-	fi
+	mark_service_inactive "net.${iface}"
+	ebegin $"Starting wpa_cli on" "${iface}"
+	start-stop-daemon --start --exec /bin/wpa_cli \
+		--pidfile "/var/run/wpa_cli-${iface}.pid" \
+		-- -a"${actfile}" -p"${ctrl_dir}" -i"${iface}" \
+		-P"/var/run/wpa_cli-${iface}.pid" -B
+	eend "$?" || return 1
 
 	eindent
-	veinfo "Waiting for association"
-	eend 0
-
 	wpa_supplicant_associate "${iface}" || return 1
 
 	# Only report wireless info for wireless interfaces
@@ -334,27 +285,16 @@ wpa_supplicant_pre_start() {
 		ESSIDVAR=$(bash_variable "${ESSID}")
 		save_options "ESSID" "${ESSID}"
 
-		local -a status=()
-		eval status=( $(wpa_cli -i"${iface}" status | sed -n -e 's/^\(bssid\|pairwise_cipher\|key_mgmt\)=\([^=]\+\).*/\"\U\2\"/p' | tr '[:lower:]' '[:upper:]') )
-		einfo "${iface} connected to \"${ESSID//\\\\/\\\\}\" at ${status[0]}"
-
-		if [[ ${status[2]} == "NONE" ]] ; then
-			if [[ ${status[1]} == "NONE" ]] ; then
-				ewarn "not using any encryption"
-			else
-				veinfo "using ${status[1]}"
-			fi
-		else
-			veinfo "using ${status[2]}/${status[1]}"
-		fi
+		einfo "${iface}" $"connected to" "\"${ESSID//\\\\/\\\\}\"" \
+			$"at" $(wpa_supplicant_get_ap_mac_address "${iface}")
 		eoutdent
 	else
-		einfo "${iface} connected"
+		einfo "${iface}" $"connected"
 	fi
 
 	if [[ -n ${actfile} ]] ; then
 		local addr=$(interface_get_address "${iface}")
-		einfo "${iface} configured with address ${addr}"
+		einfo "${iface}" $"configured with address ${addr}"
 		exit 0 
 	fi
 

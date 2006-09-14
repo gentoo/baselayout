@@ -663,7 +663,7 @@
 
 # If you don't want to use netplug on a specific interface but you have it
 # installed, you can disable it for that interface via the modules statement
-#modules_eth0=( "!netplug" )
+#modules_eth0=( "!netplugd" )
 # You can do the same for ifplugd
 #
 # You can disable them both with the generic plug

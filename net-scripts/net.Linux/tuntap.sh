@@ -28,7 +28,7 @@ tuntap_depend() {
 tuntap_check_installed() {
 	[[ -x /usr/sbin/openvpn ]] && return 0
 	[[ -x /usr/bin/tunctl ]] && return 0
-	${1:-false} && eerror "For TunTap support, emerge net-misc/openvpn or sys-apps/usermode-utilities"
+	${1:-false} && eerror $"For TunTap support, emerge net-misc/openvpn or sys-apps/usermode-utilities"
 	return 1
 }
 
@@ -40,7 +40,7 @@ tuntap_check_kernel() {
 	[[ -a /dev/net/tun ]] && return 0
 	/sbin/modprobe tun && sleep 1
 	[[ -a /dev/net/tun ]] && return 0
-	eerror "TUN/TAP support is not present in this kernel"
+	eerror $"TUN/TAP support is not present in this kernel"
 	return 1
 }
 
@@ -61,7 +61,7 @@ tuntap_pre_start() {
 	[[ -z ${!tuntap} ]] && return 0
 	tuntap_check_kernel || return 1
 
-	ebegin "Creating Tun/Tap interface ${iface}"
+	ebegin $"Creating Tun/Tap interface" "${iface}"
 
 	# Set the base metric to 1000
 	metric=1000
@@ -85,7 +85,7 @@ tuntap_stop() {
 	tuntap_check_installed || return 0
 	tuntap_exists "${iface}" || return 0
 
-	ebegin "Destroying Tun/Tap interface ${iface}"
+	ebegin $"Destroying Tun/Tap interface" "${iface}"
 	if [[ -x /usr/sbin/openvpn ]] ; then
 		openvpn --rmtun \
 			--dev-type "$(get_options tuntap)" \
@@ -96,4 +96,4 @@ tuntap_stop() {
 	eend $?
 }
 
-# vim:ts=4
+# vim: set ts=4 :

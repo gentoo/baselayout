@@ -17,7 +17,7 @@ pppd_depend() {
 # Returns 1 if pppd is installed, otherwise 0
 pppd_check_installed() {
 	if [[ ! -x /usr/sbin/pppd ]] ; then
-		${1:-false} && eerror "For PPP support, emerge net-dialup/ppp"
+		${1:-false} && eerror $"For PPP support, emerge net-dialup/ppp"
 		return 1
 	fi
 	return 0
@@ -40,13 +40,13 @@ pppd_start() {
 
 	local iface="$1" ifvar=$(bash_variable "$1") opts= link= i=
 	if [[ ${iface%%[0-9]*} != "ppp" ]] ; then
-		eerror "PPP can only be invoked from net.ppp[0-9]"
+		eerror $"PPP can only be invoked from net.ppp[0-9]"
 		return 1
 	fi
 
 	local unit="${iface#ppp}"
 	if [[ -z ${unit} ]] ; then
-		eerror "PPP requires a unit - use net.ppp[0-9] instead of net.ppp"
+		eerror $"PPP requires a unit - use net.ppp[0-9] instead of net.ppp"
 		return 1
 	fi
 
@@ -56,13 +56,13 @@ pppd_start() {
 	# In all cases, the link needs to be available before we start PPP
 	link="link_${ifvar}"
 	if [[ -z ${!link} ]] ; then
-		eerror "${link} has not been set in /etc/conf.d/net"
+		eerror "${link}" $"has not been set in /etc/conf.d/net"
 		return 1
 	fi
 
 	if [[ ${!link} == "/"* && ! -e ${!link} ]] ; then
-		eerror "${link} does not exist"
-		eerror "Please verify hardware or kernel module (driver)"
+		eerror "${link}" $"does not exist"
+		eerror $"Please verify hardware or kernel module (driver)"
 		return 1
 	fi
 
@@ -73,7 +73,7 @@ pppd_start() {
 	# We don't work with these options set by the user
 	for i in unit nodetach linkname ; do
 		if [[ " ${opts} " == *" ${i} "* ]] ; then
-			eerror "The option \"${i}\" is not allowed in pppd_${ifvar}"
+			eerror $"The option" "\"${i}\"" $"is not allowed in" "pppd_${ifvar}"
 			return 1
 		fi
 	done
@@ -164,7 +164,7 @@ pppd_start() {
 		if [[ ! -e /proc/net/pppoe ]] ; then
 			# Load the PPPoE kernel module
 			if ! modprobe pppoe ; then
-				eerror "kernel does not support PPPoE"
+				eerror $"kernel does not support PPPoE"
 				return 1
 			fi
 		fi
@@ -180,35 +180,35 @@ pppd_start() {
 		if [[ ${!link} =~ '^[ \t]*([1-9]*[0-9]\.){1,2}[1-9]*[0-9][ \t]*$' ]] ; then
 			insert_link_in_opts=0
 		else
-			ewarn "WARNING: An [itf.]vpi.vci ATM address was expected in ${link}"
+			ewarn $"WARNING: An [itf.]vpi.vci ATM address was expected in" "${link}"
 		fi
 
 		if [[ ! -d /proc/net/atm ]] ; then
 			# Load the PPPoA kernel module
 			if ! modprobe pppoatm ; then
-				eerror "kernel does not support PPPoATM"
+				eerror $"kernel does not support PPPoATM"
 				return 1
 			fi
 		fi
 	fi
 	[[ ${insert_link_in_opts} -eq 0 ]] || opts="${!link} ${opts}"
 
-	ebegin "Running pppd"
+	ebegin $"Running pppd"
 	mark_service_inactive "net.${iface}"
 	eval start-stop-daemon --start --exec /usr/sbin/pppd \
 		--pidfile "/var/run/ppp-${iface}.pid" -- "${opts}" >/dev/null 
 
 	if [[ $? != "0" ]] ; then
-		eend $? "Failed to start PPP"
+		eend $? $"Failed to start PPP"
 		mark_service_starting "net.${iface}"
 		return $?
 	fi
 
 	if [[ " ${opts} " == *" updetach "* ]] ; then
 		local addr=$(interface_get_address "${iface}")
-		einfo "${iface} received address ${addr}"
+		einfo "${iface}" $"received address" "${addr}"
 	else
-		einfo "Backgrounding ..."
+		einfo $"Backgrounding ..."
 	fi
 
 	# pppd will re-call us when we bring the interface up
@@ -227,7 +227,7 @@ pppd_stop() {
 
 	[[ ! -s ${pidfile} ]] && return 0
 
-	einfo "Stopping pppd on ${iface}"
+	einfo $"Stopping pppd on" "${iface}"
 	start-stop-daemon --stop --exec /usr/sbin/pppd --pidfile "${pidfile}"
 	eend $?
 }

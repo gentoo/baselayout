@@ -106,7 +106,10 @@ calculate_metric() {
 		return 0
 	fi
 
-	[[ ! -e /proc/net/route ]] && return 1
+	if [[ ! -e /proc/net/route ]] ; then
+		echo "${metric}"
+		return 0
+	fi
 
 	local i= dest= gw= flags= ref= u= m= mtu= metrics=
 	while read i dest gw flags ref u m mtu ; do
@@ -225,18 +228,18 @@ module_load_minimum() {
 	local f="$1.sh" MODULE="${1##*/}"
 
 	if [[ ! -f ${f} ]] ; then
-		eerror "${f} does not exist"
+		eerror "${f}" $"does not exist"
 		return 1
 	fi
 
 	if ! source "${f}" ; then
-		eerror "${MODULE} failed a sanity check"
+		eerror "${MODULE}" $"failed a sanity check"
 		return 1
 	fi
 
 	for f in depend; do
 		is_function "${MODULE}_${f}" && continue
-		eerror "${MODULE}.sh does not support the required function ${f}"
+		eerror "${MODULE}.sh" $"does not support the required function" "${f}"
 		return 1
 	done
 
@@ -264,7 +267,7 @@ modules_load_auto() {
 	for (( i=0; i<j; i++ )); do
 		MODULES[i]="${MODULES[i]%.sh*}"
 		if [[ ${MODULES[i]##*/} == "interface" ]] ; then
-			eerror "interface is a reserved name - cannot load a module called interface"
+			eerror $"interface is a reserved name - cannot load a module called interface"
 			return 1
 		fi
 		
@@ -382,7 +385,7 @@ modules_check_user() {
 				is_function "${umods[i]}_check_installed" \
 					&& ${umods[i]}_check_installed true
 			else
-				eerror "The module \"${umods[i]}\" does not exist"
+				eerror $"The module" "\"${umods[i]}\"" $"does not exist"
 			fi
 			return 1
 		fi
@@ -532,7 +535,7 @@ modules_check_depends() {
 		if is_function "${MODULES[i]}_functions" ; then
 			for f in $(${MODULES[i]}_functions); do
 				if ! is_function "${f}" ; then
-					eerror "${MODULES[i]}: missing required function \"${f}\""
+					eerror "${MODULES[i]}:" $"missing required function" "\"${f}\""
 					return 1
 				fi
 			done
@@ -542,12 +545,12 @@ modules_check_depends() {
 
 		if ${showprovides} ; then
 			[[ ${PROVIDES[i]} != "${MODULES[i]}" ]] \
-			&& veinfo "${MODULES[i]} provides ${PROVIDES[i]}"
+			&& veinfo "${MODULES[i]}" $"provides" "${PROVIDES[i]}"
 		fi
 	done
 
 	if ! ${interface} ; then
-		eerror "no interface module has been loaded"
+		eerror $"no interface module has been loaded"
 		return 1
 	fi
 
@@ -564,14 +567,14 @@ modules_load()  {
 	local RC_INDENTATION="${RC_INDENTATION}"
 	local -a PROVIDES=() WRAP_MODULES=()
 
-	veinfo "Loading networking modules for ${iface}"
+	veinfo "Loading networking modules for" "${iface}"
 
 	if ! is_loopback "${iface}" ; then
 		x="modules_force_${iface}[@]"
 		[[ -n ${!x} ]] && modules_force=( "${!x}" )
 		if [[ -n ${modules_force} ]] ; then
-			ewarn "WARNING: You are forcing modules!"
-			ewarn "Do not complain or file bugs if things start breaking"
+			ewarn $"WARNING: You are forcing modules!"
+			ewarn $"Do not complain or file bugs if things start breaking"
 			report=true
 		fi
 	fi
@@ -718,15 +721,15 @@ iface_start() {
 	if [[ -z ${config} ]] ; then
 		interface_get_old_config "${iface}" || return 1
 		if [[ -n ${config} ]] ; then
-			ewarn "You are using a deprecated configuration syntax for ${iface}"
-			ewarn "You are advised to read /etc/conf.d/net.example and upgrade it accordingly"
+			ewarn $"You are using a deprecated configuration syntax for" "${iface}"
+			ewarn $"You are advised to read /etc/conf.d/net.example and upgrade it accordingly"
 		fi
 	fi
 
 	# Handle "noop" correctly
 	if [[ ${config[0]} == "noop" ]] ; then
 		if interface_is_up "${iface}" true ; then
-			einfo "Keeping current configuration for ${iface}"
+			einfo $"Keeping current configuration for" "${iface}"
 			eend 0
 			return 0
 		fi
@@ -737,16 +740,16 @@ iface_start() {
 	# Provide a default of DHCP if no configuration is set and we're auto
 	# Otherwise a default of NULL
 	if [[ -z ${config} ]] ; then
-		ewarn "Configuration not set for ${iface} - assuming DHCP"
+		ewarn $"Configuration not set for" "${iface}" $", assuming DHCP"
 		if is_function "dhcp_start" ; then
 			config=( "dhcp" )
 		else
-			eerror "No DHCP client installed"
+			eerror $"No DHCP client installed"
 			return 1
 		fi
 	fi
 
-	einfo "Bringing up ${iface}"
+	einfo $"Bringing up" "${iface}"
 	eindent
 
 	for (( config_counter=0; config_counter<${#config[@]}; config_counter++ )); do
@@ -776,7 +779,7 @@ iface_start() {
 			if ! is_loopback "${iface}" ; then
 				if [[ " ${MODULES[@]} " == *" arping "* ]] ; then
 					if arping_address_exists "${iface}" "${conf[0]}" ; then
-						eerror "${conf[0]%%/*} already taken on ${iface}"
+						eerror "${conf[0]%%/*}" $"already taken on" "${iface}"
 						x="1"
 					fi
 				fi
@@ -785,14 +788,14 @@ iface_start() {
 			eend "${x}" && config_worked=true && continue
 		else
 			if [[ ${conf[0]} == "dhcp" ]] ; then
-				eerror "No DHCP client installed"
+				eerror $"No DHCP client installed"
 			else
-				eerror "No loaded modules provide \"${conf[0]}\" (${conf[0]}_start)"
+				eerror $"No loaded modules provide" "\"${conf[0]}\" (${conf[0]}_start)"
 			fi
 		fi
 
 		if [[ -n ${fallback[config_counter]} ]] ; then
-			einfo "Trying fallback configuration"
+			einfo $"Trying fallback configuration"
 			config[config_counter]="${fallback[config_counter]}"
 			fallback[config_counter]=""
 
@@ -839,7 +842,7 @@ iface_stop() {
 		fi
 	done
 
-	einfo "Bringing down ${iface}"
+	einfo $"Bringing down" "${iface}"
 	eindent
 
 	# Collect list of aliases for this interface.
@@ -875,7 +878,7 @@ iface_stop() {
 		# Do final shut down of this alias
 		if [[ ${IN_BACKGROUND} != "true" \
 			&& ${RC_DOWN_INTERFACE} == "yes" ]] ; then
-			ebegin "Shutting down ${i}"
+			ebegin $"Shutting down" "${i}"
 			interface_iface_stop "${i}"
 			eend "$?"
 		fi
@@ -928,10 +931,10 @@ run_start() {
 
 	# Call user-defined preup function if it exists
 	if is_function preup ; then
-		einfo "Running preup function"
+		einfo $"Running preup function"
 		eindent
 		( preup "${iface}" )
-		eend "$?" "preup ${iface} failed" || return 1
+		eend "$?" $"preup" "${iface}" $"failed" || return 1
 		eoutdent
 	fi
 
@@ -941,7 +944,7 @@ run_start() {
 	config="config_${IFVAR}[@]"
 	config=( "${!config}" )
 	if [[ ${config[0]} == "noop" ]] && interface_is_up "${iface}" true ; then
-		einfo "Keeping current configuration for ${iface}"
+		einfo $"Keeping current configuration for" "${iface}"
 		eend 0
 	else
 		# Remove noop from the config var
@@ -970,7 +973,7 @@ run_start() {
 		# postdown function wants to restart services that depend on us
 		mark_service_started "net.${iface}"
 		end_service "net.${iface}" 0
-		einfo "Running postup function"
+		einfo $"Running postup function"
 		eindent
 		( postup "${iface}" )
 		eoutdent
@@ -994,19 +997,19 @@ run_stop() {
 
 	# Call user-defined predown function if it exists
 	if is_function predown ; then
-		einfo "Running predown function"
+		einfo $"Running predown function"
 		eindent
 		( predown "${iface}" )
-		eend $? "predown ${iface} failed" || return 1
+		eend $? $"predown" "${iface}" $"failed" || return 1
 		eoutdent
 	elif is_net_fs / ; then
-		eerror "root filesystem is network mounted -- can't stop ${iface}"
+		eerror $"root filesystem is network mounted -- can't stop" "${iface}"
 		return 1
 	elif is_union_fs / ; then
 		for x in $(unionctl "${dir}" --list \
 		| sed -e 's/^\(.*\) .*/\1/') ; do
 			if is_net_fs "${x}" ; then
-				eerror "Part of the root filesystem is network mounted - cannot stop ${iface}"
+				eerror $"Part of the root filesystem is network mounted - cannot stop" "${iface}"
 				return 1
 			fi
 		done
@@ -1026,7 +1029,7 @@ run_stop() {
 		# postdown function wants to restart services that depend on us
 		[[ ${IN_BACKGROUND} != "true" ]] && mark_service_stopped "net.${iface}"
 		end_service "net.${iface}" 0
-		einfo "Running postdown function"
+		einfo $"Running postdown function"
 		eindent
 		( postdown "${iface}" )
 		eoutdent
@@ -1062,7 +1065,7 @@ run() {
 
 	# We force lo to only use these modules for a major speed boost
 	if is_loopback "${iface}" ; then	
-		modules_force=( "iproute2" "ifconfig" "system" )
+		modules_force=( "ifconfig" "system" )
 	fi
 
 	if modules_load "${iface}" "${starting}" ; then
@@ -1078,7 +1081,7 @@ run() {
 			# Only hotplug on ethernet interfaces
 			if [[ ${IN_HOTPLUG} == 1 ]] ; then
 				if ! interface_is_ethernet "${iface}" ; then
-					eerror "We only hotplug for ethernet interfaces"
+					eerror $"We only hotplug for ethernet interfaces"
 					return 1
 				fi
 			fi
@@ -1091,7 +1094,7 @@ run() {
 		if [[ ${cmd} == "start" ]] ; then
 			# Call user-defined failup if it exists
 			if is_function failup ; then
-				einfo "Running failup function"
+				einfo $"Running failup function"
 				eindent
 				( failup "${iface}" )
 				eoutdent
@@ -1099,7 +1102,7 @@ run() {
 		else
 			# Call user-defined faildown if it exists
 			if is_function faildown ; then
-				einfo "Running faildown function"
+				einfo $"Running faildown function"
 				eindent
 				( faildown "${iface}" )
 				eoutdent

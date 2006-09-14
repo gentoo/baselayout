@@ -36,7 +36,7 @@ ifconfig_expose() {
 # Returns 1 if ifconfig is installed, otherwise 0
 ifconfig_check_installed() {
 	[[ -x /sbin/ifconfig ]] && return 0
-	${1:-false} && eerror "For ifconfig support, emerge sys-apps/net-tools"
+	${1:-false} && eerror $"For ifconfig support, emerge sys-apps/net-tools"
 	return 1
 }
 
@@ -47,8 +47,8 @@ ifconfig_exists() {
 	[[ $'\n'$(ifconfig -a) =~ $'\n'"$1 " ]] && return 0
 
 	if ${report} ; then
-		eerror "network interface $1 does not exist"
-		eerror "Please verify hardware or kernel module (driver)"
+		eerror $"network interface" "$1" $"does not exist"
+		eerror $"Please verify hardware or kernel module (driver)"
 	fi
 
 	return 1
@@ -176,7 +176,7 @@ ifconfig_set_name() {
 
 	local mac=$(ifconfig_get_mac_address "${current}")
 	if [[ -z ${mac} ]]; then
-		eerror "${iface} does not have a MAC address"
+		eerror "${iface}" $"does not have a MAC address"
 		return 1
 	fi
 
@@ -355,7 +355,7 @@ ifconfig_post_start() {
 	[[ -z ${routes} ]] && return 0
 
 	# Add routes for this interface, might even include default gw
-	einfo "Adding routes"
+	einfo $"Adding routes"
 	eindent
 	for x in "${routes[@]}"; do
 		ebegin "${x}"
@@ -431,9 +431,6 @@ ifconfig_add_address() {
 		config=( "${config[@]//brd/broadcast}" )
 		config=( "${config[@]//peer/pointopoint}" )
 	fi
-
-	# Ensure that the interface is up so we can add IPv6 addresses
-	interface_up "${real_iface}"
 
 	# Some kernels like to apply lo with an address when they are brought up
 	if [[ ${config[@]} == "127.0.0.1 netmask 255.0.0.0 broadcast 127.255.255.255" ]]; then
