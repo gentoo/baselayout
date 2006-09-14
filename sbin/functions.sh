@@ -507,7 +507,7 @@ _eflush() {
 	# Wait until we can acquire a lock
 	# mkfifo is nice as is returns 0 or 1 if we made the file or not
 	while ! mkfifo "${svcdir}/ebuffer/.lock" 2>/dev/null ; do
-		LC_ALL=C sleep 0.1
+		sleep 1
 	done
 
 	# OK, we have the lock so process the buffer
@@ -565,7 +565,6 @@ vewend() {
 	[[ ${RC_VERBOSE} == "yes" ]] && { ewend "$@"; return $?; }
 	return ${1:-0}
 }
-
 
 # Many init scripts use uname - lets cache it
 uname() {

@@ -18,7 +18,8 @@ setupopts() {
 	elif is_xenU_sys ; then
 		TBLURB="xen"
 		fakeit=1
-	elif [[ $(</proc/devices)$'\n' =~ ' cobd'$'\n' ]] ; then
+	elif [[ -e /proc/devices \
+	&& $(</proc/devices)$'\n' =~ ' cobd'$'\n' ]] ; then
 		TBLURB="coLinux"
 		fakeit=1
 	elif [[ $(uname -m) == s390* ]] ; then
@@ -61,10 +62,12 @@ start() {
 	local readonly="no"
 	local ret=0
 
-	if ! touch /etc/adjtime 2>/dev/null ; then
-		readonly="yes"
-	elif [[ ! -s /etc/adjtime ]] ; then
-		echo "0.0 0 0.0" > /etc/adjtime
+	if [[ $(uname) == "Linux" ]] ; then
+		if ! touch /etc/adjtime 2>/dev/null ; then
+			readonly="yes"
+		elif [[ ! -s /etc/adjtime ]] ; then
+			echo "0.0 0 0.0" > /etc/adjtime
+		fi
 	fi
 
 	setupopts
@@ -88,12 +91,19 @@ start() {
 		else
 			ret=0
 		fi
-		errstr="Failed to set clock"
+		errstr=$"Failed to set clock"
+	elif [[ -x /sbin/adjkerntz ]] ; then # BSD method
+		if [[ ${myopts/--localtime/} != ${myopts} ]]; then
+			touch /etc/wall_cmos_clock
+		else
+			rm -f /etc/wall_cmos_clock
+		fi
+		adjkerntz -i
 	else
 		ret=1
-		errstr="/sbin/hwclock not found"
+		errstr=$"neither /sbin/hwclock nor /sbin/adjkerntz found"
 	fi
-	eend ${ret} "${errstr}" "You will need to set the clock yourself"
+	eend ${ret} "${errstr}" $"You will need to set the clock yourself"
 
 	return 0
 }
@@ -114,16 +124,17 @@ stop() {
 	ebegin $"Setting hardware clock using the system clock" "[${TBLURB}]"
 	if [[ ${fakeit} -eq 1 ]] ; then
 		ret=0
-
 	elif [[ -x /sbin/hwclock ]] ; then
 		errstr=$(/sbin/hwclock --systohc ${myopts} 2>&1 >/dev/null)
-
 		if [[ -n ${errstr} ]] ; then
 			ret=1
 		else
 			ret=0
 		fi
 		errstr="Failed to sync clocks"
+	elif [[ -x /sbin/adjkerntz ]] ; then
+		# Nothing to do here
+		ret=0
 	else
 		ret=1
 		errstr="/sbin/hwclock not found"

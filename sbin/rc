@@ -312,9 +312,6 @@ for i in $(get_stop_services) ; do
 	dep_stop "${i}"
 done
 
-# Wait for any services that may still be stopping ...
-[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && wait
-
 # Now stop the rest
 for i in $(get_stop_services) ; do
 	dep_stop "${i}"
@@ -428,13 +425,16 @@ if [[ $'\n'$(mount) =~ $'\n'"* ${svcdir} " ]] ; then
 	# Lock svcdir
 	touch "${svcdir}/.locked"
 	# Wait for processes to finish
-	while [[ -n $(fuser -m "${svcdir}" 2>/dev/null) ]] ; do
+	while [ 1 ] ; do
+		while [[ -n $(fuser -m "${svcdir}" 2>/dev/null) ]] ; do
+			ewarn "Waiting for services to finish"
+			sleep 1
+		done
+		tar cpf "/tmp/init.d.$$.tar.bz2" -C "${svcdir}" .
+		umount "${svcdir}" 2>/dev/null && break
 		ewarn "Waiting for services to finish"
 		sleep 1
 	done
-
-	tar cpf "/tmp/init.d.$$.tar.bz2" -C "${svcdir}" .
-	umount "${svcdir}"
 	touch "${svcdir}/.locked"
 	rm -rf "${svcdir}"/*
 	# Pipe errors to /dev/null as we may have future timestamps

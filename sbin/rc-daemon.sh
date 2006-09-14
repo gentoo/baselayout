@@ -134,11 +134,7 @@ rc_setup_daemon_vars() {
 rc_try_kill_pid() {
 	local pid="$1" signal="${2:-TERM}" session="${3:-false}" i= s= p= e=
 
-	# We split RC_RETRY_TIMEOUT into tenths of seconds
-	# So we return as fast as possible
-	s=$(( ${RC_RETRY_TIMEOUT}/10 )).$(( ${RC_RETRY_TIMEOUT}%10 ))
-
-	for (( i=0; i<RC_RETRY_COUNT*10; i++ )); do
+	for (( i=0; i<RC_RETRY_COUNT; i++ )); do
 		if ${session} ; then
 			if [[ -x /usr/bin/pkill ]]; then
 				pkill "-${signal}" -s "${pid}"
@@ -160,7 +156,7 @@ rc_try_kill_pid() {
 			[[ ${i} == "0" ]] && kill -s "${signal}" "${pid}" 2>/dev/null
 			[[ ! -d "/proc/${pid}" ]] && return 0
 		fi
-		LC_ALL=C /bin/sleep "${s}"
+		sleep 1
 	done
 
 	return 1
@@ -257,20 +253,11 @@ rc_start_daemon() {
 	# Now we are started, check the process name if requested
 	[[ -n ${name} ]] && cmd="${name}"
 
-	# Give the daemon upto 1 second to fork after s-s-d returns
-	# Some daemons like acpid and vsftpd need this when system is under load
-	# Seems to be only daemons that do not create pid files though ...
-	local i=0
-	for ((i=0; i<10; i++)); do
-		is_daemon_running ${cmd} "${pidfile}" && break
-		LC_ALL=C /bin/sleep "0.1"
-	done
-
 	# We pause for RC_WAIT_ON_START seconds and then
 	# check if the daemon is still running - this is mainly
 	# to handle daemons who launch and then fail due to invalid
 	# configuration files
-	LC_ALL=C /bin/sleep "${RC_WAIT_ON_START}"
+	sleep "${RC_WAIT_ON_START}"
 	is_daemon_running ${cmd} "${pidfile}"
 	retval="$?"
 	[[ ${retval} == "0" ]] && return 0

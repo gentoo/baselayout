@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  14 Sep 2006; Roy Marples <uberlord@gentoo.org>:
+
+    RC_ERASE_SWAP has been removed. If you're that paranoid about the swap
+    space then use an encrypted swap.
+  
   13 Sep 2006; Mike Frysinger <vapier@gentoo.org>:
 
     Check for the udev/devfs addons rather than binaries #147221.

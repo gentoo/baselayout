@@ -202,7 +202,8 @@ install:
 		fi; \
 	done
 	# net scripts
-	install -m 0755 net-scripts/init.d/net.lo $(INITDIR)
+	install -m 0755 net-scripts/init.d/net.lo $(SH_DIR)/net.lo
+	ln -snf $(SH_DIR)/net.lo $(INITDIR)/$(NET_LO)
 	for x in `ls net-scripts/conf.d` ; do \
 		install -m 0644 net-scripts/conf.d/"$$x" $(DESTDIR)/etc/conf.d ; \
 	done

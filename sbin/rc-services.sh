@@ -380,10 +380,8 @@ end_service() {
 	if [[ -e ${fifo} ]] ; then
 		local tempname="${fifo}.$$"
 		mv -f "${fifo}" "${tempname}"
-
 		# wake up anybody that was waiting for the fifo
 		touch "${tempname}"
-
 		# We dont need the fifo anymore
 		rm -f "${tempname}"
 	fi
@@ -399,15 +397,22 @@ wait_service() {
 	local fifo="${svcdir}/exclusive/${service}"
 	
 	[[ ! -e ${fifo} ]] && return 0
-	# ewarn "${SVCNAME} waiting for ${service}"
 
 	# This will block until the service fifo is touched
 	# Otheriwse we don't block
-	# We need to use cat instead of the bash inbuilt < so we don't see errors
-	local tmp=$(cat "${fifo}" 2>/dev/null)
-	local exitstatus=$(<"${svcdir}/exitcodes/${service}")
+	# FreeBSD has numerous FIFO issues, so wait in a loop
+	# http://www.freebsd.org/cgi/query-pr.cgi?pr=kern/94772
+	if [[ $(uname) == "FreeBSD" ]] ; then
+		while [[ -e ${fifo} ]] ; do
+			sleep 1 
+		done
+		sync # Things don't work unless we sync
+	else
+		# Use cat as bash internals always throw errors to console
+		cat "${fifo}" &>/dev/null
+	fi
 
-	# ewarn "${SVCNAME} finished waiting for ${service}"
+	local exitstatus=$(<"${svcdir}/exitcodes/${service}")
 	return "${exitstatus}"
 }
 
