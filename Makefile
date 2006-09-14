@@ -199,7 +199,7 @@ install:
 	# etc
 	# Assume that everything is a flat layout
 	for x in `find etc ! -path "*.svn*"` ; do \
-		f=`basname "$$x"` ; \
+		f=`basename "$$x"` ; \
 		if test -d "$$x" ; then \
 			d="$$x" ; \
 			install -m 0755 -d $(DESTDIR)/"$$d" ; \
@@ -216,7 +216,7 @@ install:
 			if test $$skip -eq 0 ; then \
 				install -m 0644 "$$x" $(DESTDIR)/"$$d/$$f" ; \
 			fi ; \
-		fi; \
+		fi ; \
 	done
 	# etc for OS
 	# Assume that everything is a flat layout
