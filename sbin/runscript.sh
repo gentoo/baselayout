@@ -14,7 +14,7 @@ cd /
 
 # Sleep until svcdir is unlocked
 while [[ -e ${svcdir}/.locked ]] ; do
-	ewarn "Sleeping while svcdir is locked"
+	eerror "$0:" $"Sleeping while svcdir is locked"
 	sleep 1
 done
 
@@ -23,7 +23,7 @@ cd "${svcdir}"
 
 # User must be root to run most script stuff (except status)
 if [[ ${EUID} != "0" ]] && ! [[ $2 == "status" && $# -eq 2 ]] ; then
-	eerror "$0: must be root to run init scripts"
+	eerror "$0:" $"must be root to run init scripts"
 	exit 1
 fi
 
@@ -38,7 +38,7 @@ export SVCNAME
 myservice="${SVCNAME}"
 
 svc_trap() {
-	trap 'eerror "ERROR:  ${SVCNAME} caught an interrupt"; eflush; exit 1' \
+	trap 'eerror $"ERROR:" " ${SVCNAME}" $"caught an interrupt"; eflush; exit 1' \
 		INT QUIT TSTP
 }
 
@@ -48,21 +48,21 @@ svc_trap
 # Now check script for syntax errors
 rcscript_errors=$(bash -n "${myscript}" 2>&1) || {
 	[[ -n ${rcscript_errors} ]] && echo "${rcscript_errors}" >&2
-	eerror "ERROR:  $1 has syntax errors in it; aborting ..."
+	eerror $"ERROR:" " $1" $"has syntax errors in it; aborting ..."
 	exit 1
 }
 
 # coldplug events can trigger init scripts, but we don't want to run them
 # until after rc sysinit has completed so we punt them to the boot runlevel
 if [[ -e /dev/.rcsysinit ]] ; then
-	eerror "ERROR:  cannot run ${SVCNAME} until sysinit completes"
+	eerror $"ERROR:  cannot run" "${SVCNAME}" $"until sysinit completes"
 	[[ ${RC_COLDPLUG:-yes} != "yes" ]] && exit 1
 	set -f
 	for x in ${RC_PLUG_SERVICES} ; do
 		[[ ${SVCNAME} == ${x} ]] && break
 		[[ "!${SVCNAME}" == ${x} ]] && exit 1
 	done
-	eerror "${SVCNAME} will be started in the ${BOOTLEVEL} runlevel"
+	eerror "${SVCNAME}" $"will be started in the" "${BOOTLEVEL}" $"runlevel"
 	if [[ ! -L /dev/.rcboot/"${SVCNAME}" ]] ; then
 		[[ ! -d /dev/.rcboot ]] && mkdir /dev/.rcboot
 		ln -snf "$1" /dev/.rcboot/"${SVCNAME}"
@@ -73,7 +73,7 @@ fi
 # Only hotplug if we're allowed to
 if [[ ${IN_HOTPLUG} == "1" ]] ; then
 	if [[ ${RC_HOTPLUG:-yes} != "yes" ]] ; then
-		eerror "${SVCNAME} is not allowed to be hotplugged"
+		eerror "${SVCNAME}" $"is not allowed to be hotplugged"
 		exit 1
 	fi
 	
@@ -81,7 +81,7 @@ if [[ ${IN_HOTPLUG} == "1" ]] ; then
 	for x in ${RC_PLUG_SERVICES} ; do
 		[[ ${SVCNAME} == ${x} ]] && break
 		if [[ "!${SVCNAME}" == ${x} ]] ; then
-			eerror "${SVCNAME} is not allowed to be hotplugged"
+			eerror "${SVCNAME}" $"is not allowed to be hotplugged"
 			exit 1
 		fi
 	done
@@ -130,7 +130,7 @@ svcstarted="$?"
 service_inactive "${SVCNAME}"
 svcinactive="$?"
 svc_quit() {
-	eerror "ERROR:  ${SVCNAME} caught an interrupt"
+	eerror $"ERROR:" " ${SVCNAME}" $"caught an interrupt"
 	eflush
 	if service_inactive "${SVCNAME}" || [[ ${svcinactive} == "0" ]] ; then
 		mark_service_inactive "${SVCNAME}"
@@ -144,10 +144,10 @@ svc_quit() {
 
 usage() {
 	local IFS="|"
-	myline="Usage: ${SVCNAME} { $* "
+	myline=$"Usage:" "${SVCNAME} { $* "
 	echo
 	eerror "${myline}}"
-	eerror "       ${SVCNAME} without arguments for full help"
+	eerror "       ${SVCNAME}" $"without arguments for full help"
 }
 
 stop() {
@@ -156,7 +156,7 @@ stop() {
 }
 
 start() {
-	eerror "ERROR:  ${SVCNAME} does not have a start function."
+	eerror $"ERROR:" " ${SVCNAME}" $"does not have a start function."
 	# Return failure so the symlink doesn't get created
 	return 1
 }
@@ -202,11 +202,11 @@ svc_stop() {
 	if is_runlevel_stop && service_failed "${SVCNAME}" ; then
 		return 1
 	elif service_stopped "${SVCNAME}" ; then
-		ewarn "WARNING:  ${SVCNAME} has not yet been started."
+		ewarn $"WARNING:" " ${SVCNAME}" $"has not yet been started."
 		return 0
 	fi
 	if ! mark_service_stopping "${SVCNAME}" ; then
-		eerror "ERROR:  ${SVCNAME} is already stopping."
+		eerror $"ERROR:" " ${SVCNAME}" $"is already stopping."
 		return 1
 	fi
 	
@@ -219,12 +219,12 @@ svc_stop() {
 	[[ ${RC_PARALLEL_STARTUP} == "yes" && ${RC_QUIET} != "yes" ]] \
 		&& ebuffer "${svcdir}/ebuffer/${SVCNAME}"
 
-	veinfo "Service ${SVCNAME} stopping"
+	veinfo $"Service" "${SVCNAME}" $"stopping"
 
 	if in_runlevel "${SVCNAME}" "${BOOTLEVEL}" && \
 	   [[ ${SOFTLEVEL} != "reboot" && ${SOFTLEVEL} != "shutdown" && \
 	      ${SOFTLEVEL} != "single" ]] ; then
-		ewarn "WARNING:  you are stopping a boot service."
+		ewarn $"WARNING: you are stopping a boot service."
 	fi
 
 	if [[ ${svcpause} != "yes" && ${RC_NO_DEPS} != "yes" ]] \
@@ -254,7 +254,7 @@ svc_stop() {
 		service_stopped "${x}" && continue
 		wait_service "${x}"
 		if ! service_stopped "${x}" ; then
-			eerror "ERROR:  cannot stop ${SVCNAME} as ${x} is still up."
+			eerror $"ERROR:" $"cannot stop" "${SVCNAME}" $"as" "${x}" $"is still up."
 			retval=1
 			break
 		fi
@@ -269,8 +269,8 @@ svc_stop() {
 		cd /
 		[[ ${RC_QUIET} == "yes" ]] && RC_QUIET_STDOUT="yes"
 		exit() {
-			eerror "DO NOT USE EXIT IN INIT.D SCRIPTS"
-			eerror "This IS a bug, please fix your broken init.d"
+			eerror $"DO NOT USE EXIT IN INIT.D SCRIPTS"
+			eerror $"This IS a bug, please fix your broken init.d"
 			unset -f exit
 			exit "$@"
 		}
@@ -306,7 +306,7 @@ svc_stop() {
 			fi
 		fi
 
-		eerror "ERROR:  ${SVCNAME} failed to stop"
+		eerror $"ERROR:" " ${SVCNAME}" $"failed to stop"
 	else
 		svcstarted=1
 		if service_inactive "${SVCNAME}" ; then
@@ -315,7 +315,7 @@ svc_stop() {
 			mark_service_stopped "${SVCNAME}"
 		fi
 
-		veinfo "Service ${SVCNAME} stopped"
+		veinfo $"Service" "${SVCNAME}" $"stopped"
 	fi
 
 	# Flush the ebuffer 
@@ -337,21 +337,21 @@ svc_start() {
 	if is_runlevel_start && service_failed "${SVCNAME}" ; then
 		return 1
 	elif service_started "${SVCNAME}" ; then
-		ewarn "WARNING:  ${SVCNAME} has already been started."
+		ewarn $"WARNING:" " ${SVCNAME}" $"has already been started."
 		return 0
 	elif service_inactive "${SVCNAME}" ; then
 		if [[ ${IN_BACKGROUND} != "true" \
 		&& ${IN_BACKGROUND} != "1" ]] ; then
-			ewarn "WARNING:  ${SVCNAME} has already been started."
+			ewarn $"WARNING:" " ${SVCNAME}" $"has already been started."
 			return 0
 		fi
 	fi
 
 	if ! mark_service_starting "${SVCNAME}" ; then
 		if service_stopping "${SVCNAME}" ; then
-			eerror "ERROR:  ${SVCNAME} is already stopping."
+			eerror $"ERROR:" " ${SVCNAME}" $"is already stopping."
 		else
-			eerror "ERROR:  ${SVCNAME} is already starting."
+			eerror $"ERROR: "" ${SVCNAME}" $"is already starting."
 		fi
 		return 1
 	fi
@@ -363,12 +363,12 @@ svc_start() {
 	[[ ${RC_PARALLEL_STARTUP} == "yes" && ${RC_QUIET} != "yes" ]] \
 		&& ebuffer "${svcdir}/ebuffer/${SVCNAME}"
 
-	veinfo "Service ${SVCNAME} starting"
+	veinfo $"Service" "${SVCNAME}" $"starting"
 
 	if broken "${SVCNAME}" ; then
-		eerror "ERROR:  Some services needed are missing.  Run"
-		eerror "        './${SVCNAME} broken' for a list of those"
-		eerror "        services.  ${SVCNAME} was not started."
+		eerror $"ERROR:  Some services needed are missing.  Run"
+		eerror "        ""'./${SVCNAME}" $"broken' for a list of those"
+		eerror "        " $"services."  "${SVCNAME}" $"was not started."
 		retval=1	
 	fi
 
@@ -429,7 +429,7 @@ svc_start() {
 						[[ -n ${startinactive} ]] && startinactive="${startinactive}, "
 						startinactive="${startinactive}${x}"
 					else
-						eerror "ERROR:  cannot start ${SVCNAME} as ${x} could not start"
+						eerror "ERROR:" $"cannot start" "${SVCNAME}" $"as" "${x}" $"could not start"
 						retval=1
 						break
 					fi
@@ -441,7 +441,7 @@ svc_start() {
 			# Change the last , to or for correct grammar.
 			x="${startinactive##*, }"
 			startinactive="${startinactive/%, ${x}/ or ${x}}"
-			ewarn "WARNING:  ${SVCNAME} is scheduled to start when ${startinactive} has started."
+			ewarn "WARNING:" " ${SVCNAME}" $"is scheduled to start when" "${startinactive}" $"has started."
 			retval=1
 		fi
 	fi
@@ -453,8 +453,8 @@ svc_start() {
 		cd /
 		[[ ${RC_QUIET} == "yes" ]] && RC_QUIET_STDOUT="yes"
 		exit() {
-			eerror "DO NOT USE EXIT IN INIT.D SCRIPTS"
-			eerror "This IS a bug, please fix your broken init.d"
+			eerror $"DO NOT USE EXIT IN INIT.D SCRIPTS"
+			eerror $"This IS a bug, please fix your broken init.d"
 			unset -f exit
 			exit "$@"
 		}
@@ -474,7 +474,7 @@ svc_start() {
 		# may attempt to start it again later
 		if [[ ${retval} == "0" ]] && service_inactive "${SVCNAME}" ; then
 			svcinactive=0
-			ewarn "WARNING:  ${SVCNAME} has started but is inactive"
+			ewarn $"WARNING:" " ${SVCNAME}" $"has started but is inactive"
 			if [[ ${RC_PARALLEL_STARTUP} == "yes" && ${RC_QUIET} != "yes" ]] ; then
 				eflush
 				ebuffer ""
@@ -492,12 +492,12 @@ svc_start() {
 
 		if [[ -z ${startinactive} ]] ; then
 			is_runlevel_start && mark_service_failed "${SVCNAME}"
-			eerror "ERROR:  ${SVCNAME} failed to start"
+			eerror $"ERROR:" " ${SVCNAME}" $"failed to start"
 		fi
 	else
 		svcstarted=0
 		mark_service_started "${SVCNAME}"
-		veinfo "Service ${SVCNAME} started"
+		veinfo $"Service" "${SVCNAME}" $"started"
 	fi
 
 	# Flush the ebuffer
@@ -533,22 +533,22 @@ svc_status() {
 
 	if service_stopping "${SVCNAME}" ; then
 		efunc="eerror"
-		state="stopping"
+		state=$"stopping"
 	elif service_starting "${SVCNAME}" ; then
 		efunc="einfo"
-		state="starting"
+		state=$"starting"
 	elif service_inactive "${SVCNAME}" ; then
 		efunc="ewarn"
-		state="inactive"
+		state=$"inactive"
 	elif service_started "${SVCNAME}" ; then
 		efunc="einfo"
-		state="started"
+		state=$"started"
 	else
 		efunc="eerror"
-		state="stopped"
+		state=$"stopped"
 	fi
 	[[ ${RC_QUIET_STDOUT} != "yes" ]] \
-		&& ${efunc} "status:  ${state}"
+		&& ${efunc} $"status:" "${state}"
 
 	status
 	# Return 0 if started, otherwise 1
@@ -585,7 +585,7 @@ svc_homegrown() {
 
 	# If we're here, then the function wasn't in $opts.
 	[[ -n $* ]] && x="/ $* "
-	eerror "ERROR: wrong args ( "${arg}" ${x})"
+	eerror $"ERROR:" $"wrong args" "( "${arg}" ${x})"
 	# Do not quote this either ...
 	usage ${opts}
 	exit 1
@@ -593,7 +593,7 @@ svc_homegrown() {
 
 shift
 if [[ $# -lt 1 ]] ; then
-	eerror "ERROR: not enough args."
+	eerror $"ERROR:" $"not enough args."
 	usage ${opts}
 	exit 1
 fi
@@ -661,7 +661,7 @@ for arg in $* ; do
 		retval="$?"
 		;;
 	zap)
-		einfo "Manually resetting ${SVCNAME} to stopped state."
+		einfo $"Manually resetting" "${SVCNAME}" $"to stopped state."
 		mark_service_stopped "${SVCNAME}"
 		;;
 	restart)
@@ -685,9 +685,9 @@ for arg in $* ; do
 			if [[ ! ${svcres} =~ "svc_stop" \
 				|| ! ${svcres} =~ "svc_start" ]] ; then
 				echo
-				ewarn "Please use 'svc_stop; svc_start' and not 'stop; start' to"
-				ewarn "restart the service in its custom 'restart()' function."
-				ewarn "Run ${SVCNAME} without arguments for more info."
+				ewarn $"Please use 'svc_stop; svc_start' and not 'stop; start' to"
+				ewarn $"restart the service in its custom 'restart()' function."
+				ewarn $"Run" "${SVCNAME}" $"without arguments for more info."
 				echo
 				svc_restart
 			else
@@ -707,7 +707,7 @@ for arg in $* ; do
 				if service_inactive "${SVCNAME}" \
 					|| service_wasinactive "${SVCNAME}" ; then
 					svc_schedule_start "${SVCNAME}" "${x##*/}"
-					ewarn "WARNING:  ${x##*/} is scheduled to start when ${SVCNAME} has started."
+					ewarn $"WARNING:" " ${x##*/}" $"is scheduled to start when" "${SVCNAME}" $"has started."
 				elif service_started "${SVCNAME}" ; then
 					start_service "${x##*/}"
 				fi
@@ -743,4 +743,4 @@ done
 
 exit "${retval}"
 
-# vim:ts=4
+# vim: set ts=4 :

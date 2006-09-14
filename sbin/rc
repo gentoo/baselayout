@@ -68,14 +68,14 @@ do_interactive() {
 	# Wait for any services so display is not jumbled
 	[[ ${RC_PARALLEL_STARTUP} = "yes" ]] && wait
 
-	local start_text="Start service"
-	local skip_text="Skip service"
-	local continue_text="Continue boot process"
-	local shell_text="Exit to shell"
+	local start_text=$"Start service"
+	local skip_text=$"Skip service"
+	local continue_text=$"Continue boot process"
+	local shell_text=$"Exit to shell"
 
 	echo
-	echo "About to start the service ${service}"
-	PS3="Enter your selection: "
+	echo $"About to start the service" "${service}"
+	PS3=$"Enter your selection: "
 	select action in "${start_text}" "${skip_text}"	"${continue_text}" \
 		"${shell_text}"
 	do
@@ -97,7 +97,7 @@ do_interactive() {
 				[[ ! -x /sbin/sulogin ]] && exit 1 
 				sulogin "${CONSOLE}"
 				echo
-				echo "About to start the service ${service}"
+				echo $"About to start the service" "${service}"
 				echo -e "1) ${start_text}          3) ${continue_text}"
 				echo -e "2) ${skip_text}           4) ${shell_text}"
 				;;
@@ -205,7 +205,7 @@ if [[ ${SOFTLEVEL} == "reboot" || ${SOFTLEVEL} == "shutdown" ]] ; then
 elif [[ ${SOFTLEVEL} = "single" ]] ; then
 	myscripts="${RC_CRITICAL_SERVICES}"
 elif [[ ! -d "/etc/runlevels/${SOFTLEVEL}" ]] ; then
-	eerror "ERROR:  runlevel ${SOFTLEVEL} does not exist; exiting ..."
+	eerror $"ERROR:" $"runlevel" "${SOFTLEVEL}" $"does not exist; exiting ..."
 	exit 1
 else
 	myscripts=
@@ -234,7 +234,7 @@ else
 				&& myscripts="${myscripts} ${x}"
 		done
 		if [[ -n ${myscripts} ]] ; then
-			einfo "Device initiated services:${HILITE}${myscripts}${NORMAL}"
+			einfo $"Device initiated services:" "${HILITE}${myscripts}${NORMAL}"
 		fi
  	fi
 	
@@ -252,7 +252,7 @@ mkdir -p -m 0755 "${svcdir}/softscripts.new"
 
 for x in ${myscripts} ; do
 	if [[ ! -e "/etc/init.d/${x}" ]] ; then
-		ewarn "WARNING:  /etc/init.d/${x} missing; skipping ..."
+		ewarn $"WARNING:" " /etc/init.d/${x}" $" missing; skipping ..."
 		continue
 	fi
 	# The -f eliminates a warning if the symlink already exists,
@@ -374,18 +374,18 @@ check_critical_failed() {
 	[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && wait
 	
 	echo
-	eerror "One or more critical startup scripts failed to start!"
-	eerror "Please correct this, and reboot ..."
+	eerror $"One or more critical startup scripts failed to start!"
+	eerror $"Please correct this, and reboot ..."
 	echo; echo
 
 	if is_vps_sys ; then
-		einfo "Halting"
+		einfo $"Halting"
 		halt -f
 	else
 		sulogin "${CONSOLE}"
-		einfo "Unmounting filesystems"
+		einfo $"Unmounting filesystems"
 		mount -a -o remount,ro &>/dev/null
-		einfo "Rebooting"
+		einfo $"Rebooting"
 		reboot -f
 	fi
 }
@@ -422,17 +422,36 @@ rm -rf "${svcdir}/failed" &>/dev/null
 
 # If $svcdir is mounted in ram, save it back to disk and unmount
 if [[ $'\n'$(mount) =~ $'\n'"* ${svcdir} " ]] ; then
+	timeout=60
+	while [[ -n $(fuser -m "${svcdir}" 2>/dev/null) ]] ; do
+		ewarn $"Waiting for services to finish" "(${timeout}" $"seconds)"
+		sleep 1
+		((timeout--))
+		if [[ ${timeout} -le 0 ]] ; then
+			eerror $"Timed out! Killing some services"
+			fuser -k -m "${svcdir}"
+			timeout=10
+			break
+		fi
+	done
+
 	# Lock svcdir
 	touch "${svcdir}/.locked"
 	# Wait for processes to finish
 	while [ 1 ] ; do
 		while [[ -n $(fuser -m "${svcdir}" 2>/dev/null) ]] ; do
-			ewarn "Waiting for services to finish"
+			ewarn $"Waiting for services to finish" "(${timeout}" $"seconds)"
 			sleep 1
+			((timeout--))
+			if [[ ${timeout} -le 0 ]] ; then
+				eerror $"Timed out! Killing some services"
+				fuser -k -m "${svcdir}"
+				break
+			fi
 		done
 		tar cpf "/tmp/init.d.$$.tar.bz2" -C "${svcdir}" .
 		umount "${svcdir}" 2>/dev/null && break
-		ewarn "Waiting for services to finish"
+		ewarn $"Waiting for services to finish" "(${timeout}" $"seconds)"
 		sleep 1
 	done
 	touch "${svcdir}/.locked"
