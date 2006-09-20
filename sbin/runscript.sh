@@ -158,7 +158,7 @@ svc_start_scheduled() {
 		services="${services} ${x##*/}"
 	done
 		
-	for x in ${services} ; do
+	for x in $(trace_dependencies ${services}) ; do
 		service_stopped "${x}" && start_service "${x}"
 		rm -f "${svcdir}/scheduled/${SVCNAME}/${x}"
 	done
