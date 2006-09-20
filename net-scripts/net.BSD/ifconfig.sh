@@ -142,8 +142,8 @@ ifconfig_is_ethernet() {
 #
 # Return 0 if we have a carrier
 ifconfig_has_carrier() {
-	[[ $(ifconfig "$1")$'\n' \
-	=~ $'\n'"[[:space:]]status: (active|associated)"$'\n' ]]
+	local s=$(ifconfig "$1" | sed -ne 's/^[[:space:]]status: \(.*\)$/\1/p')
+	[[ -z ${s} || ${s} =~ "^(active|associated)$" ]]
 }
 
 # void ifconfig_get_mac_address(char *interface)
@@ -204,8 +204,7 @@ ifconfig_del_addresses() {
 
 	# Remove IPv6 addresses
 	if ! ${onlyinet} ; then
-		[[ $(ifconfig bge0) =~ $'\n'"[[:space:]]*inet6 ([^ ]*)" ]]
-		for i in $(ifconfig bge0 | \
+		for i in $(ifconfig "${iface}" | \
 		sed -n -e 's/^[[:space:]]*inet6 \([^ ]*\).*/\1/p') ; do
 			[[ ${i} == *"%${iface}" ]] && continue
 			ifconfig "${iface}" inet6 delete "${i}"

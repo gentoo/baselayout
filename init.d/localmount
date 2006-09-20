@@ -9,7 +9,7 @@ depend() {
 start() {
 	# Mount local filesystems in /etc/fstab.
 	ebegin $"Mounting local filesystems"
-	mount -at noproc,noshm${NET_FS_LIST:+,no}${NET_FS_LIST// /,no}
+	mount -at noproc,shm${NET_FS_LIST// /,}
 	eend $? $"Some local filesystem failed to mount"
 
 	# Sync bootlog now as /var should be mounted
@@ -51,8 +51,8 @@ start() {
 	# We do our swapping here instead of rc so we can get urandom started
 	# before us for people that like an encrypted swap.
 	ebegin $"Activating (possible) swap"
-	swapon -a
-	eend $?
+	swapon -a >/dev/null
+	eend 0 # If swapon has nothing todo it errors, so always return 0 
 
 	# Start dm-crypt mappings, if any
 	start_addon dm-crypt

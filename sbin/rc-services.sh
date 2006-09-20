@@ -265,28 +265,6 @@ provides() {
 	return 1
 }
 
-# bool is_fake_service(service, runlevel)
-#
-#   Returns ture if 'service' is a fake service in 'runlevel'.
-#
-is_fake_service() {
-	local x fake_services
-
-	[[ -z $1 || -z $2 ]] && return 1
-
-	[[ $2 != "${BOOTLEVEL}" && -e /etc/runlevels/"${BOOTLEVEL}"/.fake ]] && \
-		fake_services=$(</etc/runlevels/"${BOOTLEVEL}"/.fake)
-
-	[[ -e /etc/runlevels/"$2"/.fake ]] && \
-		fake_services="${fake_services} $( < /etc/runlevels/"$2"/.fake )"
-
-	for x in ${fake_services} ; do
-		[[ $1 == "${x##*/}" ]] && return 0
-	done
-
-	return 1
-}
-
 # bool in_runlevel(service, runlevel)
 #
 #   Returns true if 'service' is in runlevel 'runlevel'.
@@ -434,13 +412,6 @@ start_service() {
 	service_started "${service}" && return 0
 	service_inactive "${service}" && return 1
 
-	if is_fake_service "${service}" "${SOFTLEVEL}" ; then
-		mark_service_started "${service}"
-		splash "svc_start" "${service}"
-		splash "svc_started" "${service}" "0"
-		return 0
-	fi
-
 	begin_service "${service}" || return 0
 	splash "svc_start" "${service}"
 
@@ -495,13 +466,6 @@ stop_service() {
 	
 	local level="${SOFTLEVEL}"
 	is_runlevel_stop && level="${OLDSOFTLEVEL}"
-
-	if is_fake_service "${service}" "${level}" ; then
-		splash "svc_stop" "${service}"
-		mark_service_stopped "${service}"
-		splash "svc_stopped" "${service}" "0"
-		return 0
-	fi
 
 	begin_service "${service}" || return 0
 
@@ -780,7 +744,7 @@ is_net_up() {
 			return 0
 			;;
 		lo)
-			service_started "net.lo"
+			service_started "net.lo" || service_started "net.lo0"
 			return $?
 			;;
 		yes)
@@ -796,7 +760,8 @@ is_net_up() {
 			for x in $(dolisting "${svcdir}/started/net.*") ; do
 				local y="${x##*/}"
 				[[ ${y} == "$1" ]] && continue
-				[[ ${y} != "net.lo" ]] && return 0
+				[[ ${y} != "net.lo" && ${y} != "net.lo0" ]] \
+				&& return 0
 			done
 			return 1 
 		;;

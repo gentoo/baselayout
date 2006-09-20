@@ -228,8 +228,7 @@ wpa_supplicant_pre_start() {
 	fi
 
 	if [[ ! -f ${cfgfile} ]] ; then
-		eend 1 $"configuration file" \
-			"/etc/wpa_supplicant/wpa_supplicant.conf" $"not found!"
+		eend 1 "/etc/wpa_supplicant/wpa_supplicant.conf" $"not found!"
 		return 1
 	fi
 

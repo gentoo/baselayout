@@ -761,6 +761,26 @@ iface_start() {
 			continue
 		fi
 
+		if [[ ${config_counter} == 0 ]] && ! interface_has_carrier "${iface}" ; then
+			ebegin "Waiting for carrier"
+			local timeout=3
+			while [[ ${timeout} -gt 0 ]] ; do
+				((timeout--))
+				sleep 1
+				interface_has_carrier "${iface}" && break
+			done
+			if [[ ${timeout} -gt 0 ]] ; then
+				eend 0 
+			elif is_runlevel_start && [[ -e ${svcdir}/softscripts/devd ]] ; then
+				ewend 1 "No carrier - but devd will restart us when we get one"
+				mark_service_inactive "net.${iface}"
+				exit 0
+			else
+				eend 1 "No carrier - giving up"
+				return 1
+			fi
+		fi
+
 		# We convert it to an array - this has the added
 		# bonus of trimming spaces!
 		conf=( ${config[config_counter]} )

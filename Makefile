@@ -118,6 +118,7 @@ base-dirs:
 	# These dirs may not exist from prior versions
 	for x in $(BASE_DIRS) ; do \
 		install -m 0755 -d $(DESTDIR)/$$x ; \
+		touch $(DESTDIR)/$$x/.keep ; \
 	done
 layout:
 	# Create base filesytem layout
@@ -206,15 +207,15 @@ install: base-dirs
 		elif test -f "$$x" ; then \
 			skip=0 ; \
 			for y in $(ETC_SKIP) ; do \
-				if test "$$d/$$f" = "etc/$$y" ; then \
-					if test -f $(ROOT)/$$d/$$f ; then \
+				if test "$$x" = "etc/$$y" ; then \
+					if test -f "$(ROOT)/$$x" ; then \
 						skip=1 ; \
 						break ; \
 					fi ; \
 				fi ; \
 			done ; \
 			if test $$skip -eq 0 ; then \
-				install -m 0644 "$$x" $(DESTDIR)/"$$d/$$f" ; \
+				install -m 0644 "$$x" $(DESTDIR)/"$$x" ; \
 			fi ; \
 		fi ; \
 	done
@@ -227,9 +228,10 @@ install: base-dirs
 			install -m 0755 -d $(DESTDIR)/"$$d" ; \
 		elif test -f "$$x" ; then \
 			skip=0 ; \
+			t=`echo "$$x" | sed -e 's/^etc.$(OS)/etc/'` ; \
 			for y in $(ETC_SKIP) ; do \
-				if test "$$d/$$f" = "etc/$$y" ; then \
-					if test -f $(ROOT)/$$d/$$f ; then \
+				if test "$$t" = "etc/$$y" ; then \
+					if test -f "$(ROOT)/$$t" ; then \
 						skip=1 ; \
 						break ; \
 					fi ; \
@@ -237,12 +239,12 @@ install: base-dirs
 			done ; \
 			if test $$skip -eq 0 ; then \
 				m=0644 ; \
-				if test "$$d/$$f" = "etc/shadow" ; then \
+				if test "$$t" = "etc/shadow" ; then \
 					m=0600 ; \
-				elif test "$$d/$$f" = "/etc/sysctl.conf" ; then \
+				elif test "$$t" = "/etc/sysctl.conf" ; then \
 					m=0640 ; \
 				fi ; \
-				install -m $$m "$$x" $(DESTDIR)/"$$d/$$f" ; \
+				install -m $$m "$$x" $(DESTDIR)/"$$t" ; \
 			fi ; \
 		fi; \
 	done

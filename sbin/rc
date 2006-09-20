@@ -325,11 +325,16 @@ done
 echo "${SOFTLEVEL}" > "${svcdir}/softlevel"
 
 if [[ ${SOFTLEVEL} == "reboot" || ${SOFTLEVEL} == "shutdown" ]] ; then
-	# Call halt.sh with LC_ALL=C so that bash doesn't load any locales
-	# which could interfere with unmounting /usr
-	LC_ALL=C exec /etc/init.d/halt.sh "${SOFTLEVEL}"
+    	# Set LC_ALL=C so that bash doesn't load any locales
+    	# which could interfere with unmounting /usr
+	export LC_ALL="C"
 
-	# Should never get here
+	# Prefix LD_LIBRARY_PATH with /lib so that libgcc_s.so is used
+	# from there if anything requires it when unmounting /usr
+	export LD_LIBRARY_PATH="/lib:${LD_LIBRARY_PATH}"
+	exec /etc/init.d/halt.sh "${SOFTLEVEL}"
+
+	# BSD's get here, so exit 0
 	exit 0
 fi
 
@@ -422,37 +427,42 @@ rm -rf "${svcdir}/failed" &>/dev/null
 
 # If $svcdir is mounted in ram, save it back to disk and unmount
 if [[ $'\n'$(mount) =~ $'\n'"* ${svcdir} " ]] ; then
-	timeout=60
-	while [[ -n $(fuser -m "${svcdir}" 2>/dev/null) ]] ; do
-		ewarn $"Waiting for services to finish" "(${timeout}" $"seconds)"
+	# Function to show the timeout message
+	timeout=
+	do_timeout() {
+		if [[ -z ${timeout} ]] ; then
+			timeout=60
+		else
+			[[ -n ${ENDCOL} ]] && echo -n $'\e[A'
+		fi
+
+		ewarn $"Waiting for services to finish, timeout in" \
+		    "${timeout}" $"seconds" "  "
 		sleep 1
 		((timeout--))
-		if [[ ${timeout} -le 0 ]] ; then
-			eerror $"Timed out! Killing some services"
-			fuser -k -m "${svcdir}"
-			timeout=10
-			break
-		fi
+		[[ ${timeout} -gt 0 ]] && return 0
+	
+		eerror $"Timed out! Killing some services"
+		echo
+		fuser -k -m "${svcdir}"
+		return 1
+	}
+
+	while [[ -n $(fuser -m "${svcdir}" 2>/dev/null) ]] ; do
+		do_timeout || break
 	done
+	[[ ${timeout} -le 10 ]] && timeout=10
 
 	# Lock svcdir
 	touch "${svcdir}/.locked"
 	# Wait for processes to finish
 	while [ 1 ] ; do
 		while [[ -n $(fuser -m "${svcdir}" 2>/dev/null) ]] ; do
-			ewarn $"Waiting for services to finish" "(${timeout}" $"seconds)"
-			sleep 1
-			((timeout--))
-			if [[ ${timeout} -le 0 ]] ; then
-				eerror $"Timed out! Killing some services"
-				fuser -k -m "${svcdir}"
-				break
-			fi
+			do_timeout || break
 		done
 		tar cpf "/tmp/init.d.$$.tar.bz2" -C "${svcdir}" .
 		umount "${svcdir}" 2>/dev/null && break
-		ewarn $"Waiting for services to finish" "(${timeout}" $"seconds)"
-		sleep 1
+		do_timeout
 	done
 	touch "${svcdir}/.locked"
 	rm -rf "${svcdir}"/*

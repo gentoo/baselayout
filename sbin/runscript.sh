@@ -144,9 +144,10 @@ svc_quit() {
 
 usage() {
 	local IFS="|"
-	myline=$"Usage:" "${SVCNAME} { $* "
+	myline="${SVCNAME} { $* "
+	unset IFS
 	echo
-	eerror "${myline}}"
+	eerror $"Usage:" "${myline}}"
 	eerror "       ${SVCNAME}" $"without arguments for full help"
 }
 
@@ -186,7 +187,7 @@ svc_start_scheduled() {
 		services="${services} ${x##*/}"
 	done
 		
-	for x in ${services} ; do
+	for x in $(trace_dependencies ${services}) ; do
 		service_stopped "${x}" && start_service "${x}"
 		rm -f "${svcdir}/scheduled/${SVCNAME}/${x}"
 	done
@@ -626,7 +627,7 @@ for arg in $* ; do
 
 		# Stoped from the background - treat this as a restart so that
 		# stopped services come back up again when started.
-		if [[ ${IN_BACKGROUND} == "true" ]] ; then
+		if [[ ${IN_BACKGROUND} == "true" || ${IN_BACKGROUND} == "1" ]] ; then
 			rm -rf "${svcdir}/snapshot/$$"
 			mkdir -p "${svcdir}/snapshot/$$"
 			cp -pP "${svcdir}"/started/* "${svcdir}/snapshot/$$/"
@@ -636,7 +637,7 @@ for arg in $* ; do
 		svc_stop
 		retval="$?"
 		
-		if [[ ${IN_BACKGROUND} == "true" ]] ; then
+		if [[ ${IN_BACKGROUND} == "true" || ${IN_BACKGROUND} == "1" ]] ; then
 			for x in $(dolisting "${svcdir}/snapshot/$$/") ; do
 				if [[ -x ${x} ]] && service_stopped "${x##*/}" ; then
 					svc_schedule_start "${SVCNAME}" "${x##*/}"
