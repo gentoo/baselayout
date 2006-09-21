@@ -136,8 +136,8 @@ else
 	esac
 
 	# Check udev prerequisites and kernel params
-	if [[ ${udev} == "yes" ]] && has_addon udev ; then
-		if get_bootparam "noudev" || \
+	if [[ ${udev} == "yes" ]] ; then
+		if get_bootparam "noudev" || ! has_addon udev-start.sh || \
 		   [[ ${devfs_automounted} == "yes" || \
 		      $(get_KV) -lt "$(KV_to_int '2.6.0')" ]] ; then
 			udev="no"
@@ -145,9 +145,9 @@ else
 	fi
 
 	# Check devfs prerequisites and kernel params
-	if [[ ${devfs} == "yes" ]] && has_addon devfs ; then
-		if get_bootparam "nodevfs" || [[ ${udev} == "yes" \
-			|| ! -r /proc/filesystems ]] ; then
+	if [[ ${devfs} == "yes" ]] ; then
+		if get_bootparam "nodevfs" || ! has_addon devfs-start.sh ||
+		   [[ ${udev} == "yes" || ! -r /proc/filesystems ]] ; then
 			devfs="no"
 		elif [[ ! $(</proc/filesystems)$'\n' =~ '[[:space:]]devfs'$'\n' ]]; then
 			devfs="no"
