@@ -205,4 +205,4 @@ fi
 
 source "${svclib}"/sh/init-common-post.sh
 
-# vim:ts=4
+# vim: set ts=4 :

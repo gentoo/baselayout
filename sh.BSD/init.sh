@@ -46,4 +46,4 @@ source "${svclib}"/sh/init-functions.sh
 source "${svclib}"/sh/init-common-pre.sh
 source "${svclib}"/sh/init-common-post.sh
 
-# vim:ts=4
+# vim: set ts=4 :
