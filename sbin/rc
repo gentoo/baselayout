@@ -5,6 +5,7 @@
 trap ":" INT QUIT TSTP
 
 source /sbin/functions.sh
+source "${svclib}/sh/rc-functions.sh"
 
 # Cache some vars so our spawned subshells know our width and if we
 # can do colour
@@ -383,16 +384,7 @@ check_critical_failed() {
 	eerror $"Please correct this, and reboot ..."
 	echo; echo
 
-	if is_vps_sys ; then
-		einfo $"Halting"
-		halt -f
-	else
-		sulogin "${CONSOLE}"
-		einfo $"Unmounting filesystems"
-		mount -a -o remount,ro &>/dev/null
-		einfo $"Rebooting"
-		reboot -f
-	fi
+	single_user
 }
 
 # Start scripts
