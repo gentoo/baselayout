@@ -76,7 +76,7 @@ layout:
 	ln -snf share/man $(DESTDIR)/usr/local/man || exit $$?
 
 distcheck:
-	svnfiles=`svn status 2>&1 | egrep -v '^(U|P)'`
+	svnfiles=`svn status 2>&1 | egrep -v '^(U|P)'` ; \
 	if test "x$$svnfiles" != "x" ; then \
 		echo "Refusing to package tarball until svn is in sync:" ; \
 		echo "$$svnfiles" ; \
@@ -87,11 +87,10 @@ distcheck:
 distforce: clean
 	install -d /tmp/$(PKG)
 	cp -PRp . /tmp/$(PKG)
-	cd /tmp/$(PKG) ; \
-	rm -rf *.sh rc-lists `find . -name .svn` sbin.Linux/MAKEDEV-gentoo.patch \
-		src/core po ; \
-	cd .. ; \
-	tar -cvjpf $(PKG).tar.bz2 $(PKG)
+	find /tmp/$(PKG) -depth -path "*/.svn/*" -delete
+	find /tmp/$(PKG) -depth -path "*/.svn" -delete
+	rm -rf /tmp/$(PKG)/sbin.Linux/MAKEDEV-gentoo.patch /tmp/$(PKG)/src/core /tmp/$(PKG)/po
+	tar -C /tmp -cvjpf /tmp/$(PKG).tar.bz2 $(PKG)
 	rm -Rf /tmp/$(PKG)
 	du /tmp/$(PKG).tar.bz2
 
