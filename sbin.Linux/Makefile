@@ -1,8 +1,5 @@
-DIR = $(DESTDIR)/sbin 
-EXES = MAKEDEV modules-update
+DIR   = /sbin 
+EXES  = MAKEDEV modules-update
 
-install:
-	install -m 0755 -d $(DIR)
-	for x in $(EXES) ; do install -m 0755 $$x $(DIR) ; done
-
-.PHONY: clean
+TOPDIR = ..
+include $(TOPDIR)/default.mk

@@ -1,8 +1,5 @@
-DIR = $(DESTDIR)/$(LIB)/rcscripts/net 
+DIR   = /$(LIB)/rcscripts/net 
 FILES = ifconfig.sh
 
-install:
-	install -m 0755 -d $(DIR)
-	for x in $(FILES) ; do install -m 0644 $$x $(DIR) ; done
-
-.PHONY: clean
+TOPDIR = ..
+include $(TOPDIR)/default.mk
