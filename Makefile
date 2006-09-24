@@ -17,11 +17,11 @@ PKG = $(NAME)-$(VERSION)
 ARCH = x86
 OS = Linux
 
-BASE_DIRS = lib/rcscripts/init.d lib/rcscripts/tmp
-KEEP_DIRS = boot dev proc home \
-	mnt/cdrom mnt/floppy \
-	usr/local/bin usr/local/sbin usr/local/share/doc usr/local/share/man \
-	var/run 
+BASE_DIRS = /lib/rcscripts/init.d /lib/rcscripts/tmp
+KEEP_DIRS = /boot /dev /proc /home \
+	/mnt/cdrom /mnt/floppy \
+	/usr/local/bin /usr/local/sbin /usr/local/share/doc /usr/local/share/man \
+	/var/run
 
 ifeq ($(OS),Linux)
 	KEEP_DIRS += sys
