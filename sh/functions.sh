@@ -750,6 +750,20 @@ get_base_ver() {
 	echo "${ver##* }"
 }
 
+# char get_mounts(void)
+#
+# The mount command, whilst having unportable output always exists
+# We try to make it portable here, making out scripts easier to work with
+# Ouput is mount point, node, fs. Provided that we never have a space in a
+# node we will never break.
+get_mounts() {
+	local sedfoo='s/^\([^ ]*\) on \(.*\) (\([^,)]*\).*)$/\2 \1 \3/g'
+	if [[ $(uname) == "Linux" ]] ;then
+		sedfoo='s/^\([^ ]*\) on \(.*\) type \([^ ]*\) (.*)$/\2 \1 \3/g'
+	fi
+	LC_ALL=C mount | sed -e "${sedfoo}"
+}
+
 # Network filesystems list for common use in rc-scripts.
 # This variable is used in is_net_fs and other places such as
 # localmount.
