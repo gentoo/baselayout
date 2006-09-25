@@ -11,7 +11,7 @@ start() {
 	local retval=0 x=
 
 	# Start our volumes, RAID, LVM, etc
-    	for x in ${RC_VOLUME_ORDER} ; do
+   	for x in ${RC_VOLUME_ORDER} ; do
 		start_addon "${x}"
    	done
 

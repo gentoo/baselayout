@@ -856,7 +856,6 @@ reverse_list() {
 #
 start_addon() {
 	local addon="$1"
-	has_addon "${addon}" || return 1
 	(import_addon "${addon}-start.sh")
 	return 0
 }
@@ -867,7 +866,6 @@ start_addon() {
 #
 stop_addon() {
 	local addon=$1
-	has_addon "${addon}" || return 1
 	(import_addon "${addon}-stop.sh")
 	return 0
 }
