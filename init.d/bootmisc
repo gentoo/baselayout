@@ -92,7 +92,7 @@ start() {
 	#
 	# Clean up /tmp directory
 	#
-	if [[ -z ${CDBOOT} ]] && [[ -d /tmp ]] ; then
+	if [[ -z ${CDBOOT} && -d /tmp ]] ; then
 		cd /tmp
 		if [[ ${WIPE_TMP} == "yes" ]] ; then
 			ebegin $"Wiping /tmp directory"

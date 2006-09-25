@@ -42,54 +42,45 @@ fi
 # Write a reboot record to /var/log/wtmp before unmounting
 [[ $(uname) == "Linux" ]] && halt -w &>/dev/null
 
-# Unmount loopback stuff first
-# Use `umount -d` to detach the loopback device
-x=$(mount | awk '/^\/dev\/loop/ {print $3}' \
-	| sort -ur | egrep -v "${RC_NO_UMOUNTS}")
-if [[ -n ${x} ]] ; then
-	retry=3
-	ebegin $"Unmounting loopback filesystems"
-	while [[ -n ${x} && ${retry} -gt 0 ]]; do
-		umount -d ${x} &>/dev/null
-
-		x=$(mount | awk '/^\/dev\/loop/ {print $2}' \
-			| sort -ur | egrep -v "^(${RC_NO_UMOUNTS})$")
-		[[ -z ${x} ]] && break
-		
-		fuser -k -m ${x} &>/dev/null
-		sleep 2
-		((retry--))
-	done
-	[[ ${retry} -gt 0 ]]
-	eend $?
-fi
-
+# Handy function to handle all our unmounting needs
+# get_mounts is our portable function to get mount information
 do_unmount() {
-	local cmd="$1" no_unmounts="$2" x= retval=0
+	local cmd="$1" no_unmounts="$2" nodes="$3"
+	local l= fs= node= point=
 
-	# The sed call makes BSD mount look like Linux
-	# This keeps code similar
+	get_mounts | sort -ur | while read l ; do
+		fs=${l##* }
+		l=${l% *}
+		node=${l##* }
+		point=${l% *}
+		[[ ${fs} =~ "${RC_NO_UMOUNT_FS}" ]] && continue
+		[[ -n ${no_unmounts} && ${point} =~ "${no_unmounts}" ]] && continue
+		[[ -z ${nodes} && ${node} =~ "${nodes}" ]] || continue
 
-	for x in $(mount | sed -e 's/ (/ type /g' -e 's/, / /g' \
-	| awk '$5 !~ /'"${RC_NO_UMOUNT_FS}"'/ {print $3}' \
-	| sort -ur ); do
-		[[ ${x} =~ "${no_unmounts}" ]] && continue
-		retry=3
-		while ! ${cmd} "${x}" &>/dev/null; do
+		retry=2
+		while ! ${cmd} "${point}" &>/dev/null ; do
 			# Kill processes still using this mount
-			fuser -k -m "${x}" &>/dev/null
+			fuser -k -m "${point}" &>/dev/null
 			sleep 2
 			((retry--))
 
 			# OK, try forcing things
 			if [[ ${retry} -le 0 ]] ; then
-				${cmd} -f "${x}" || retval=1
+				${cmd} -f "${point}" || retval=1
 				break
 			fi
 		done
 	done
 	return ${retval}
 }
+
+# Flush all pending disk writes now
+sync ; sync
+
+# Umount loopback devies
+ebegin $"Unmounting loopback devices"
+do_unmount "umount -d" "${RC_NO_UMOUNTS}" "^/dev/loop"
+eend $?
 
 # Now everything else
 ebegin $"Unmounting filesystems"

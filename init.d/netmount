@@ -68,7 +68,7 @@ stop() {
 
 	local ret
 	ebegin $"Unmounting network filesystems"
-	[[ -z $(umount -art ${rcfilesystems} 2>&1) ]]
+	[[ -z $(umount -at ${rcfilesystems} 2>&1) ]]
 	ret=$?
 	eend ${ret} $"Failed to simply unmount filesystems"
 	[[ ${ret} == 0 ]] && return 0
@@ -79,28 +79,42 @@ stop() {
 	# We will gradually use harsher kill signals so that the 
 	# processes know we aren't screwing around here ;).
 	declare -a siglist=( "TERM" "KILL" "KILL" )
-	local retry=0
-	local remaining="go"
+	local retry=0 fs= node= point= l= retval=0
+	eindent
 
-	while [[ -n ${remaining} && ${retry} -lt 3 ]] ; do
-		# Populate $remaining with a newline-delimited list of network 
-		# filesystems.  Mount points have spaces swapped for '\040' (see 
-		# fstab(5)) so we have to translate them back to spaces.
-		remaining=$(awk '$3 ~ /'${NET_FS_LIST// /|}'/ { if ($2 != "/") print $2 }' /proc/mounts | sort -r)
-		# Since we have to worry about the spaces being quoted properly, 
-		# we'll use `set --` and then "$@" to get the correct result.
-		IFS=$'\n'
-		set -- ${remaining//\\040/ }
-		unset IFS
-		[[ -z ${remaining} ]] && break
+	get_mounts | sort -ur | while read l ; do
+		fs=${l##* }
+		l=${l% *}
+		node=${l##* }
+		point=${l% *}
+		[[ ${fs} =~ "^(${NET_FS_LIST// /|})$" ]] || continue
+		[[ ${point} == "/" ]] && continue
 
-		# try to unmount again
-		ebegin $'\t'"Unmounting network filesystems (retry #$((retry+1)))"
-		/bin/fuser -s -k -${siglist[$((retry++))]} -m "$@"
-		sleep 5
-		umount "$@" &>/dev/null
-		eend $? $'\t'"Failed to unmount filesystems"
+		retry=0
+		retval=0
+		ebegin "Attempting to unmount ${point}"
+		while ! umount "${point}" &>/dev/null ; do
+			# Kill processes still using this mount
+			if [[ $(uname) == "Linux" ]] ; then
+				fuser -k -"${siglist[${retry}]}" -m "${point}" &>/dev/null
+			else
+				fuser -k -s "${siglist[${retry}]}" -m "${point}" &>/dev/null
+			fi
+			sleep 2
+			((retry++))
+
+			# OK, try forcing things
+			if [[ ${retry} -gt 2 ]] ; then
+				umount -f "${point}" || retval=1
+				break
+			fi
+		done
+		[[ ${retry} -le 2 ]]
+		eend $? "Failed to unmount ${point}"
 	done
+	
+	eoutdent
+	return ${retval}
 }
 
-# vim:ts=4
+# vim: set ts=4 :

@@ -8,7 +8,7 @@
 # It also has the added bonus of being easier to install on systems
 # without an ebuild style package manager.
 
-SUBDIRS = bin conf.d etc init.d man net sbin sh src
+SUBDIRS = awk bin conf.d etc init.d man net sbin sh src
 
 NAME = baselayout
 VERSION = 1.13.0_alpha1
@@ -75,6 +75,43 @@ layout:
 	ln -snf /var/tmp $(DESTDIR)/usr/tmp || exit $$?
 	ln -snf share/man $(DESTDIR)/usr/local/man || exit $$?
 
+basedev-Linux:
+	if ! test -d $(DESTDIR)/dev ; then $(INSTALL_DIR) $(DESTDIR)/dev ; fi
+	( curdir=`pwd` ; cd $(DESTDIR)/dev ; $$curdir/sbin/MAKEDEV generic-base ) 
+
+dev-Linux:
+	$(INSTALL_DIR) $(DESTDIR)/dev
+	ln -snf ../sbin/MAKEDEV $(DESTDIR)/dev/MAKEDEV \
+	( curdir=`pwd` ; cd $(DESTDIR)/dev ; \
+		suffix= ; \
+		case $(ARCH) in \
+			arm*)    suffix=-arm ;; \
+			alpha)   suffix=-alpha ;; \
+			amd64)   suffix=-i386 ;; \
+			hppa)    suffix=-hppa ;; \
+			ia64)    suffix=-ia64 ;; \
+			m68k)    suffix=-m68k ;; \
+			mips*)   suffix=-mips ;; \
+			ppc*)    suffix=-powerpc ;; \
+			s390*)   suffix=-s390 ;; \
+			sh*)     suffix=-sh ;; \
+			sparc*)  suffix=-sparc ;; \
+			x86)     suffix=-i386 ;; \
+		esac ; \
+		$$curdir/sbin/MAKEDEV generic$$suffix ; \
+		$$curdir/sbin/MAKEDEV sg scd rtc hde hdf hdg hdh ; \
+		$$curdir/sbin/MAKEDEV input audio video ; \
+	)
+
+basedev-BSD:
+
+dev-BSD:
+	$(INSTALL_DIR) $(DESTDIR)/dev
+
+basedev: basedev-$(OS)
+
+dev: dev-$(OS)
+
 distcheck:
 	svnfiles=`svn status 2>&1 | egrep -v '^(U|P)'` ; \
 	if test "x$$svnfiles" != "x" ; then \
@@ -84,12 +121,13 @@ distcheck:
 		exit 1 ; \
 	fi 
 
-distforce: clean
+distforce:
 	install -d /tmp/$(PKG)
 	cp -PRp . /tmp/$(PKG)
 	find /tmp/$(PKG) -depth -path "*/.svn/*" -delete
 	find /tmp/$(PKG) -depth -path "*/.svn" -delete
 	rm -rf /tmp/$(PKG)/sbin.Linux/MAKEDEV-gentoo.patch /tmp/$(PKG)/src/core /tmp/$(PKG)/po
+	$(MAKE) -C /tmp/$(PKG) clean
 	tar -C /tmp -cvjpf /tmp/$(PKG).tar.bz2 $(PKG)
 	rm -Rf /tmp/$(PKG)
 	du /tmp/$(PKG).tar.bz2
