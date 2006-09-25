@@ -201,11 +201,11 @@ is_daemon_running() {
 	local cmd= pidfile= pids= pid=
 
 	if [[ $# == "1" ]]; then
-		cmd="$(basename "$1")"
+		cmd="$1"
 	else
 		local i j="$#"
 		for (( i=0; i<j-1; i++ )); do
-			cmd="${cmd} $(basename "$1")"
+			cmd="${cmd} $1"
 			shift
 		done
 		pidfile="$1"
