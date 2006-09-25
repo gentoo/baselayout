@@ -62,6 +62,11 @@ mount_svcdir() {
 source "${svclib}"/sh/init-functions.sh
 source "${svclib}"/sh/init-common-pre.sh
 
+# Set the console loglevel to 1 for a cleaner boot
+# the logger should anyhow dump the ring-0 buffer at start to the
+# logs, and that with dmesg can be used to check for problems
+${RC_DMESG_LEVEL+/bin/dmesg -n ${RC_DMESG_LEVEL}}
+
 echo
 echo -e "${GOOD}Gentoo Linux${GENTOO_VERS}; ${BRACKET}http://www.gentoo.org/${NORMAL}"
 echo -e " Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2"

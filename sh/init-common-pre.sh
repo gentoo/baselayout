@@ -8,10 +8,4 @@ export PATH="/bin:/sbin:/usr/bin:/usr/sbin:${PATH}"
 [[ -c /dev/null ]] && dev_null=1 || dev_null=0
 [[ -c /dev/console ]] && dev_console=1 || dev_console=0
 
-# Set the console loglevel to 1 for a cleaner boot
-# the logger should anyhow dump the ring-0 buffer at start to the
-# logs, and that with dmesg can be used to check for problems
-${RC_DMESG_LEVEL+/bin/dmesg -n ${RC_DMESG_LEVEL}}
-
-
-# vim:ts=4
+# vim: set ts=4 :
