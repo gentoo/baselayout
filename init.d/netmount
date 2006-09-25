@@ -11,10 +11,18 @@ depend() {
 	local nfsmounts=$(awk '!/^#/ && ($3=="nfs" || $3=="nfs4") && $4 !~ /noauto/ { print $0 }' /etc/fstab)
 
 	if [[ -n ${nfsmounts} ]] ; then
-		myneed="${myneed} portmap"
+		if [[ -x /etc/init.d/rpcbind ]] ; then
+			myneed="${myneed} rpcbind"
+		else
+			myneed="${myneed} portmap"
+		fi
 		myuse="${myuse} nfs nfsmount"
 	else
-		myuse="${myuse} portmap"
+		if [[ -x /etc/init.d/rpcbind ]] ; then
+			myuse="${myuse} rpcbind"
+		else
+			myuse="${myuse} portmap"
+		fi
 	fi
 
 	need ${myneed}
@@ -37,7 +45,7 @@ start() {
 	# Only try to mount NFS filesystems if portmap was started.
 	# This is to fix "hang" problems for new users who do not
 	# add portmap to the default runlevel.
-	if ! service_started portmap ; then
+	if ! service_started portmap && ! service_started rpcbind ; then
 		remove_net_fs nfs nfs4
 	fi
 	rcfilesystems=${rcfilesystems// /,}   # convert to comma-separated
