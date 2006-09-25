@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  25 Sep 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Don't rename bridged or bonded interfaces either, #145581.
+
   19 Sep 2006; Roy Marples <uberlord@gentoo.org>:
 
     Start scheduled services in the correct order, #148011.
