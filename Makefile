@@ -48,8 +48,9 @@ install::
 		$(INSTALL_DIR) $(DESTDIR)etc/runlevels/nonetwork || exit $$? ; \
 	fi
 	ln -snf ../../$(LIB)/rcscripts/sh/net.sh $(DESTDIR)/etc/init.d/$(NET_LO) || exit $$?
-	ln -snf ../../$(LIB)/rcscripts/sh/functions.sh /etc/init.d || exit $$?
-	ln -snf ../../sbin/{depscan,functions,run-script}.sh /etc/init.d || exit $$?
+	for x in depscan.sh functions.sh runscript.sh ; do \
+		ln -snf ../../sbin/$$x $(DESTDIR)/etc/init.d || exit $$? ; \
+	done
 	# SPARC fixes
 	# SPARC does not like stty, so we disable RC_INTERACTIVE which requires it
 	# see Gentoo bug #104067.
