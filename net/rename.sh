@@ -28,15 +28,15 @@ rename_pre_start() {
 	newname="rename_${ifvar}"
 	[[ -z ${!newname} || ${iface} == "${!newname}" ]] && return 0
 
-	# We cannot rename vlan interfaces as /proc/net/vlan/config always
-	# returns the old interface name. We don't bail out though as it's
-	# not critical that the interface gets renamed.
-	if is_function vlan_exists ; then
-		if vlan_exists "${iface}" ; then
-			eerror $"Cannot rename VLAN interfaces"
-			return 0
+	# We don't work on bonded, bridges, tun/tap or vlan
+	for f in bonding bridge tuntap vlan ; do
+		if is_function "${f}_exists" ; then
+			if ${f}_exists "${iface}" ; then
+				veinfo $"Cannot rename a" "${f}" $"interface"
+				return 0
+			fi
 		fi
-	fi
+	done
 
 	ebegin $"Renaming" "\"${iface}\"" $"to" "\"${!newname}\""
 
