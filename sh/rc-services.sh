@@ -41,7 +41,6 @@ rc_usesme=
 rc_ibefore=
 rc_iafter=
 rc_broken=
-rc_mtime=
 
 ############
 # Functions
@@ -88,13 +87,12 @@ get_dep_info() {
 	local myservice="$1"
 
 	# We already have the right stuff ...
-	[[ ${myservice} == "${rc_name}" && -n ${rc_mtime} ]] && return 0
+	[[ ${myservice} == "${rc_name}" ]] && return 0
 
 	rc_index=$(get_service_index "${myservice}" "${rc_index}")
-	rc_mtime="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_mtime}))]}"
 
 	# Verify that we have the correct index (rc_index) ...
-	# [[ ${rc_index} == "0" ]] && return 1
+	[[ ${rc_index} == "0" ]] && return 1
 		
 	rc_name="${RC_DEPEND_TREE[${rc_index}]}"
 	rc_ineed="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_ineed}))]}"
@@ -104,7 +102,6 @@ get_dep_info() {
 	rc_ibefore="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_ibefore}))]}"
 	rc_iafter="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_iafter}))]}"
 	rc_broken="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_broken}))]}"
-	rc_mtime="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_mtime}))]}"
 	rc_iprovide="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_iprovide}))]}"
 	rc_provided="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_provided}))]}"
 

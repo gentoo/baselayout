@@ -134,13 +134,13 @@ export SVCDIR DEPTYPES ORDTYPES
 
 cd /etc/init.d
 
-gawk \
+awk \
 	-f /lib/rcscripts/awk/functions.awk \
 	-f /lib/rcscripts/awk/cachedepends.awk || \
 	retval=1
 
 bash "${mysvcdir}/depcache" | \
-gawk \
+awk \
 	-f /lib/rcscripts/awk/functions.awk \
 	-f /lib/rcscripts/awk/gendepends.awk || \
 	retval=1

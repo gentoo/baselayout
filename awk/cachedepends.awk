@@ -26,7 +26,7 @@ function print_start() {
 	print "" >> TMPCACHE
 }
 
-function print_header1(mtime) {
+function print_header1() {
 	print "#*** " MYFILENAME " ***" >> TMPCACHE
 	print "" >> TMPCACHE
 	print "SVCNAME=\"" MYFILENAME "\"" >> TMPCACHE
@@ -37,11 +37,9 @@ function print_header1(mtime) {
 	
 	print "echo \"RCSCRIPT ${SVCNAME}\"" >> TMPCACHE
 	print "" >> TMPCACHE
-	print "echo \"MTIME " mtime "\"" >> TMPCACHE
-	print "" >> TMPCACHE
 }
 
-function print_header2(mtime) {
+function print_header2() {
 	print "(" >> TMPCACHE
 	print "  # Get settings for rc-script ..." >> TMPCACHE
 	print "" >> TMPCACHE
@@ -85,9 +83,6 @@ function print_end() {
 }
 
 BEGIN {
-
-	extension("/lib/rcscripts/filefuncs.so", "dlload")
-
 	# Get our environment variables
 	SVCDIR = ENVIRON["SVCDIR"]
 	if (SVCDIR == "") {
@@ -133,7 +128,6 @@ BEGIN {
 		
 		MYFNR = 1
 		MYFILENAME = RCSCRIPTS[count]
-		STAT_DATA[1] = 1
 
 		while (((getline < (RCSCRIPTS[count])) > 0) && (!NEXTFILE)) {
 
@@ -152,11 +146,8 @@ BEGIN {
 						continue
 					}
 
-					if (stat(MYFILENAME, STAT_DATA) != 0)
-						ewarn("Could not stat \"" MYFILENAME "\"")
-				
 					ISRCSCRIPT = 1
-					print_header1(STAT_DATA["mtime"])
+					print_header1()
 				} else  {
 			
 					NEXTFILE = 1

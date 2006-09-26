@@ -334,7 +334,7 @@ else
 
 		echo "${FULLHEADER/@MODDIR@/${CFG_NEW_DIR}}" > "${tmpfile_old}"
 		cp -f "${tmpfile_old}" "${tmpfile}"
-		gawk '$0 !~ /^[[:space:]]*include/ { print $0 }' \
+		awk '$0 !~ /^[[:space:]]*include/ { print $0 }' \
 			"${CFG_OLD_DEVFS}" >> "${tmpfile_old}"
 
 		if TESTING_MODPROBE_CONF=${tmpfile_old} \

@@ -8,6 +8,9 @@
 
     Give ppp at least 30 seconds to die, #147490, thanks to Alin Nastac.
 
+    Removed reliance on gawk - we are now fully compliant with BSD awk.
+    The only proviso is that awk is in /bin.
+
   25 Sep 2006; Roy Marples <uberlord@gentoo.org>:
 
     Don't rename bridged or bonded interfaces either, #145581.

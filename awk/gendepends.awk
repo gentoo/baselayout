@@ -380,11 +380,10 @@ BEGIN {
 	BEFORE = 6
 	AFTER = 7
 	BROKEN = 8
-	MTIME = 9
-	PROVIDE = 10
-	PROVIDED = 11
+	PROVIDE = 9 
+	PROVIDED = 10
 	TYPES_MIN = 2
-	TYPES_MAX = 11
+	TYPES_MAX = 10
 
 	TYPE_NAMES[NEED] = "ineed"
 	TYPE_NAMES[NEEDME] = "needsme"
@@ -395,7 +394,6 @@ BEGIN {
 	TYPE_NAMES[BROKEN] = "broken"
 	TYPE_NAMES[PROVIDE] = "iprovide"
 	TYPE_NAMES[PROVIDED] = "provided"
-	TYPE_NAMES[MTIME] = "mtime"
 
 	# Get our environment variables
 	SVCDIR = ENVIRON["SVCDIR"]
@@ -539,14 +537,12 @@ END {
 			tmpname = "RC_DEPEND_TREE[" (x * (TYPES_MAX + 1)) "+" y "]"
 
 			if ((x,y) in RESOLVED_DEPTREE) {
-			
-				split(RESOLVED_DEPTREE[x,y], tmparray1)
-				count = asort(tmparray1, tmparray2)
-				tmpstr = tmparray2[1]
-				
+				count = split(RESOLVED_DEPTREE[x,y], tmplist)
+				# Cannot use asort as it's GNU specific
+				insert_sort(tmplist, 1, count)
+				tmpstr = tmplist[1]
 				for (i = 2;i <= count;i++)
-					tmpstr = tmpstr " " tmparray2[i]
-				
+					tmpstr = tmpstr " " tmplist[i]
 				print tmpname "=\"" tmpstr "\"" >> (CACHEDTREE)
 			} else
 				print tmpname "=" >> (CACHEDTREE)

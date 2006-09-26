@@ -95,7 +95,7 @@ calculate_metric() {
 	# Have we already got a metric?
 	local m=
 	if [[ -e /proc/net/route ]] ; then
-		m=$(gawk '$1=="'${iface}'" && $2=="00000000" { print $7 }' \
+		m=$(awk '$1=="'${iface}'" && $2=="00000000" { print $7 }' \
 		/proc/net/route)
 	else
 		[[ $(ifconfig "${iface}") =~ "metric ([^ ]*)" ]] \

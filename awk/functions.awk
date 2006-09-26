@@ -17,115 +17,19 @@ function eerror(string)
 	printf(" %s %s%s" , "\033[31;01m*\033[0m", string, "\n")
 }
 
-function isfile(pathname,   x, ret, data)
+function isfile(pathname)
 {
-	ret = 0
-	data[1] = 1
-
-	if (pathname == "")
-		return 0
-
-	ret = stat(pathname, data)
-	if (ret < 0)
-		return 0
-
-	for (i in data) {
-		if (i == "type")
-			if (data[i] == "file")
-				ret = 1
-	}
-
-	return ret
+	return dosystem("test -f \"" pathname "\"");
 }
 
-function islink(pathname, 	x, ret, data)
+function islink(pathname)
 {
-	ret = 0
-	data[1] = 1
-
-	if (pathname == "")
-		return 0
-	
-	ret = stat(pathname, data)
-	if (ret < 0)
-		return 0
-	
-	for (i in data) {
-		if (i == "type")
-			if (data[i] == "symlink")
-				ret = 1
-	}
-
-	return ret
+	return dosystem("test -L \"" pathname "\"");
 }
 
-function isdir(pathname, 	x, ret, data)
+function isdir(pathname)
 {
-	ret = 0
-	data[1] = 1
-
-	if (pathname == "")
-		return 0
-
-	ret = stat(pathname, data)
-	if (ret < 0)
-		return 0
-
-	for (i in data) {
-		if (i == "type")
-			if (data[i] == "directory")
-				ret = 1
-	}
-
-	return ret
-}
-
-function mktree(pathname, mode,   x, max, ret, data, pathnodes, tmppath)
-{
-	ret = 0
-	data[1] = 1
-	pathnodes[1] = 1
-
-	if (pathname == "")
-		return 0
-
-	if (pathname ~ /^\//)
-		tmppath = ""
-	else
-		tmppath = "."
-
-	split(pathname, pathnodes, "/")
-
-	for (x in pathnodes)
-		max++
-
-	# We cannot use 'for (x in pathnodes)', as gawk likes to
-	# sort the order indexes are processed ...
-	for (x = 1;x <= max;x++) {
-		if (pathnodes[x] == "")
-			continue
-	
-		tmppath = tmppath "/" pathnodes[x]
-
-		ret = stat(tmppath, data)
-		if (ret < 0)
-			if (mkdir(tmppath, mode) < 0)
-				return 0
-	}
-
-	return 1
-}
-
-# symlink() wrapper that normalize return codes ...
-function dosymlink(oldpath, newpath, 	ret)
-{
-	ret = 0
-
-	ret = symlink(oldpath, newpath)
-	if (ret < 0)
-		return 0
-	else
-		return 1
+	return dosystem("test -d \"" pathname "\"");
 }
 
 # system() wrapper that normalize return codes ...
@@ -138,6 +42,20 @@ function dosystem(command, 	ret)
 		return 1
 	else
 		return 0
+}
+
+# Insert sort routine - cannot use asort as it's GNU specific
+function insert_sort(arr, start, end,		i,j,t) {
+	for (i = start + 1; i <= end; i++) {
+		if (arr[i] > arr[i-1])
+			continue
+		t = arr[i]
+		j=i-1
+		do 
+			arr[j+1] = arr[j]; 
+		while (--j>0 && t < arr[j]);
+		arr[j+1] = t
+	}
 }
 
 # assert --- assert that a condition is true. Otherwise exit.

@@ -23,11 +23,11 @@ do_mtab() {
 	mount -f /
 
 	# Don't list root more than once
-	gawk '$2 != "/" {print}' /proc/mounts >> /etc/mtab
+	awk '$2 != "/" {print}' /proc/mounts >> /etc/mtab
 
 	# Now make sure /etc/mtab have additional info (gid, etc) in there
-	for x in $(gawk '{ print $2 }' /proc/mounts | sort -u) ; do
-		for y in $(gawk '{ print $2 }' /etc/fstab) ; do
+	for x in $(awk '{ print $2 }' /proc/mounts | sort -u) ; do
+		for y in $(awk '{ print $2 }' /etc/fstab) ; do
 			if [[ ${x} == ${y} ]] ; then
 				mount -f -o remount $x
 				continue

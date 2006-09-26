@@ -665,7 +665,7 @@ get_bootparam() {
 
 	for copt in $(< /proc/cmdline) ; do
 		if [[ ${copt%=*} == "gentoo" ]] ; then
-			params=$(gawk -v PARAMS="${copt##*=}" '
+			params=$(awk -v PARAMS="${copt##*=}" '
 				BEGIN {
 					split(PARAMS, nodes, ",")
 					for (x in nodes)
@@ -834,7 +834,7 @@ is_xenU_sys() {
 #            mount -n ${cmd}
 #
 get_mount_fstab() {
-	gawk '$1 ~ "^#" { next }
+	awk '$1 ~ "^#" { next }
 	     $2 == "'$*'" { stab="-t "$3" -o "$4" "$1" "$2; }
 	     END { print stab; }
 	' /etc/fstab
