@@ -1,8 +1,7 @@
 # Copyright 1999-2006 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
-CC = gcc
-LD = gcc
+CC ?= gcc
 
 CFLAGS ?= -Wall -O2
 DESTDIR =
@@ -16,21 +15,22 @@ TARGET = $(BIN_TARGETS) $(SBIN_TARGETS)
 
 OS = Linux
 ifeq ($(OS),Linux)
-LDFLAGS_RS  = -ldl
+LDLIBS_RS  = -ldl
 endif
 ifeq ($(OS),BSD)
-LDFLAGS_SSD = -lkvm
+LDLIBS_SSD = -lkvm
 endif
 
 override CFLAGS += -DLIBDIR=\"$(LIB)\"
 
 all: $(TARGET)
 
+runscript: LDLIBS += $(LDLIBS_RS)
 runscript: rc-debug.o  rc-dynbuf.o  rc-misc.o runscript.o
-	$(LD) $(LDFLAGS) -o $@ $^ $(LDFLAGS_RS)
 
+start-stop-daemon: CFLAGS += $(PAMFLAGS)
+start-stop-daemon: LDLIBS += $(LDLIBS_SSD)
 start-stop-daemon: start-stop-daemon.c
-	$(CC) $(CFLAGS) ${PAMFLAGS} $(LDFLAGS) -o $@ $^ $(LDFLAGS_SSD)
 
 install: $(TARGET)
 	install -m 0755 -d $(DESTDIR)/sbin
