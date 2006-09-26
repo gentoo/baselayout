@@ -227,8 +227,10 @@ pppd_stop() {
 
 	[[ ! -s ${pidfile} ]] && return 0
 
+	# Give pppd at least 30 seconds do die, #147490
 	einfo "Stopping pppd on ${iface}"
-	start-stop-daemon --stop --exec /usr/sbin/pppd --pidfile "${pidfile}"
+	start-stop-daemon --stop --exec /usr/sbin/pppd 
+		--pidfile "${pidfile}" --retry 30
 	eend $?
 }
 

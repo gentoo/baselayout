@@ -1,6 +1,13 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  26 Sep 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Don't wait for scheduled services to restart when a service is
+    started in the background as this may tie up the calling daemon, #148700.
+
+    Give ppp at least 30 seconds to die, #147490, thanks to Alin Nastac.
+
   25 Sep 2006; Roy Marples <uberlord@gentoo.org>:
 
     Don't rename bridged or bonded interfaces either, #145581.

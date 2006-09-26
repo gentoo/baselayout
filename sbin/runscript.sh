@@ -154,6 +154,13 @@ svc_start_scheduled() {
 	[[ ! -d "${svcdir}/scheduled/${SVCNAME}" ]] && return
 	local x= services=
 
+	# If we're being started in the background, then don't
+	# tie up the daemon that called us starting our scheduled services
+	if [[ ${IN_BACKGROUND} == "true" || ${IN_BACKGROUND} == "1" ]] ; then
+		unset IN_BACKGROUND
+		svc_start_scheduled &
+	fi
+
 	for x in $(dolisting "${svcdir}/scheduled/${SVCNAME}/") ; do
 		services="${services} ${x##*/}"
 	done
