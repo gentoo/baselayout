@@ -72,9 +72,16 @@ for x in softscripts snapshot options daemons \
 	if [[ ! -d "${mysvcdir}/${x}" ]] ; then
 		if ! mkdir -p -m 0755 "${mysvcdir}/${x}" 2>/dev/null ; then
 			eerror "Could not create needed directory '${mysvcdir}/${x}'!"
+			exit 1
 		fi
 	fi
 done
+
+if ! touch "${mysvcdir}/.test" 2>/dev/null ; then
+	eerror "${mysvcdir} is read-only, cannot update deptree"
+	exit 1
+fi
+rm -f "${mysvcdir}/.test"
 
 # Only update if files have actually changed
 if ! ${update} ; then
@@ -85,7 +92,7 @@ if ! ${update} ; then
 	# for next mtime testing
 	if [[ ! -e "${mysvcdir}/depcache" ]] ; then
 		update=true
-		touch "${mysvcdir}/depcache"
+		touch "${mysvcdir}/depcache" 2>/dev/null
 	fi
 
 	touch "${mtime_test}"
