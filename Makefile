@@ -16,7 +16,6 @@ PKG = $(NAME)-$(VERSION)
 
 ARCH = x86
 OS = Linux
-LIB = lib
 
 BASE_DIRS = /$(LIB)/rcscripts/init.d /$(LIB)/rcscripts/tmp
 KEEP_DIRS = /boot /dev /proc /home \
