@@ -188,6 +188,7 @@ svc_start_scheduled() {
 	if [[ ${IN_BACKGROUND} == "true" || ${IN_BACKGROUND} == "1" ]] ; then
 		unset IN_BACKGROUND
 		svc_start_scheduled &
+		export IN_BACKGROUND=true
 		return
 	fi
 
@@ -727,7 +728,10 @@ for arg in $* ; do
 		service_started "${SVCNAME}" && svc_start_scheduled
 
 		# Wait for services to come up
-		[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && wait
+		if [[ ${IN_BACKGROUND} != "true" \
+		&& ${IN_BACKGROUND} != "1" ]] ; then
+			[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && wait
+		fi
 
 		svcrestart="no"
 		;;
