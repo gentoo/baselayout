@@ -52,6 +52,13 @@ install::
 	for x in depscan.sh functions.sh runscript.sh ; do \
 		ln -snf ../../sbin/$$x $(DESTDIR)/etc/init.d || exit $$? ; \
 	done
+	# Handle lib correctly
+	if test $(LIB) != "lib" ; then \
+		sed -i '/^declare -r svclib=/ s,/lib/,/$(LIB)/,' $(DESTDIR)/sbin/functions.sh || exit $$? ; \
+		for x in cachedepends.awk genenviron.awk ; do \
+			sed -i 's,/lib/,/$(LIB)/,g' $(DESTDIR)/$(LIB)/rcscripts/awk/$$x || exit $$? ; \
+		done ; \
+	fi
 	# SPARC fixes
 	# SPARC does not like stty, so we disable RC_INTERACTIVE which requires it
 	# see Gentoo bug #104067.

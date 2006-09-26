@@ -1,12 +1,10 @@
 # Copyright 1999-2006 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
+opts="-d"
 [[ ${INIT_HALT} != "HALT" ]] && opts="${opts}p"
-if [[ $(uname) == "Linux" ]] ; then
-	opts="-d"
-	[[ ${RC_DOWN_INTERFACE} == "yes" ]] && opts="${opts}i"
-	[[ ${RC_DOWN_HARDDISK} == "yes" ]] && opts="${opts}h"
-fi
+[[ ${RC_DOWN_INTERFACE} == "yes" ]] && opts="${opts}i"
+[[ ${RC_DOWN_HARDDISK} == "yes" ]] && opts="${opts}h"
 
 /sbin/halt "${opts}"
 
