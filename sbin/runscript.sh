@@ -188,6 +188,7 @@ svc_start_scheduled() {
 	if [[ ${IN_BACKGROUND} == "true" || ${IN_BACKGROUND} == "1" ]] ; then
 		unset IN_BACKGROUND
 		svc_start_scheduled &
+		return
 	fi
 
 	for x in $(dolisting "${svcdir}/scheduled/${SVCNAME}/") ; do
