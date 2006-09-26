@@ -16,8 +16,9 @@ PKG = $(NAME)-$(VERSION)
 
 ARCH = x86
 OS = Linux
+LIB = lib
 
-BASE_DIRS = /lib/rcscripts/init.d /lib/rcscripts/tmp
+BASE_DIRS = /$(LIB)/rcscripts/init.d /$(LIB)/rcscripts/tmp
 KEEP_DIRS = /boot /dev /proc /home \
 	/mnt/cdrom /mnt/floppy \
 	/usr/local/bin /usr/local/sbin /usr/local/share/doc /usr/local/share/man \
