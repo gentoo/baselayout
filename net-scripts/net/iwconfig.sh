@@ -452,7 +452,7 @@ iwconfig_scan() {
 
 	# Sleep if required
 	x="sleep_scan_${ifvar}"
-	[[ -z ${!x} || ${!x} -gt 0 ]] && sleep "${!x:-1}"
+	[[ -z ${!x} || ${!x} -gt 0 ]] && sleep "${!x:-2}"
 
 	local error=true i=-1 line=
 	local -a mac=() essid=() enc=() qual=() mode=() freq=() chan=()
