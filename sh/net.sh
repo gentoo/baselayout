@@ -11,6 +11,7 @@
 # For pcmcia users. note that pcmcia must be added to the same
 # runlevel as the net.* script that needs it.
 depend() {
+	provide net
 	need localmount
 	after bootmisc modules hostname
 	use isapnp isdn pcmcia usb wlan

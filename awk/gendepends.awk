@@ -253,18 +253,18 @@ function resolve_depend(type, service, deplist,    x, deparray)
 			if (check_provide(deparray[x])) {
 				add_db_entry(service, type, deparray[x])
 				# Reverse map
-				split(PROVIDE_LIST[deparray[x]], tmplist)
-				for (y in tmplist) {
-					add_db_entry(service, PROVIDED, tmplist[y])
-					if (type == NEED)
-						add_db_entry(tmplist[y], NEEDME, service)
-					else if (type == USE)
-						add_db_entry(tmplist[y], USEME, service)
-					else if (type == AFTER)
-						add_db_entry(tmplist[y], BEFORE, service)
-					else if (type == BEFORE)
-						add_db_entry(tmplist[y], AFTER, service)
-				}
+				#split(PROVIDE_LIST[deparray[x]], tmplist)
+				#for (y in tmplist) {
+				#	add_db_entry(service, PROVIDED, tmplist[y])
+				#	if (type == NEED)
+				#		add_db_entry(tmplist[y], NEEDME, service)
+				#	else if (type == USE)
+				#		add_db_entry(tmplist[y], USEME, service)
+				#	else if (type == AFTER)
+				#		add_db_entry(tmplist[y], BEFORE, service)
+				#	else if (type == BEFORE)
+				#		add_db_entry(tmplist[y], AFTER, service)
+				#}
 				continue
 			}
 
@@ -381,7 +381,7 @@ BEGIN {
 	AFTER = 7
 	BROKEN = 8
 	PROVIDE = 9 
-	PROVIDED = 10
+	PROVIDEDBY = 10
 	TYPES_MIN = 2
 	TYPES_MAX = 10
 
@@ -393,7 +393,7 @@ BEGIN {
 	TYPE_NAMES[AFTER] = "iafter"
 	TYPE_NAMES[BROKEN] = "broken"
 	TYPE_NAMES[PROVIDE] = "iprovide"
-	TYPE_NAMES[PROVIDED] = "provided"
+	TYPE_NAMES[PROVIDEDBY] = "providedby"
 
 	# Get our environment variables
 	SVCDIR = ENVIRON["SVCDIR"]
@@ -466,29 +466,23 @@ BEGIN {
 		if ($0 != "")
 			add_deptree_item(RC_NUMBER, PROVIDE, $0)
 	}
-
-	if ($1 == "MTIME") {
-		sub(/MTIME[[:space:]]*/, "")
-
-		if ($0 != "") {
-			# We add this directly to RESOLVED_DEPTREE
-			add_db_entry(DEPTREE[RC_NUMBER,NAME], MTIME, $0)
-		}
-	}
 }
 
 END {
-	# Add the 'net' service if it do not exist ...
-	if (!check_service("net")) {
-		RC_NUMBER++
-		DEPTREE[RC_NUMBER,NAME] = "net"
-	}
-	
 	# Calculate all the provides ...
 	for (x = 1;x <= RC_NUMBER;x++) {
 		if ((x,PROVIDE) in DEPTREE)
 			if (add_provide(DEPTREE[x,NAME], DEPTREE[x,PROVIDE]))
 				add_db_entry(DEPTREE[x,NAME], PROVIDE, DEPTREE[x,PROVIDE])
+	}
+
+	# Store our PROVIDED_LIST
+	for (x in PROVIDE_LIST) {
+		RC_NUMBER++
+	 	DEPTREE[RC_NUMBER,NAME] = x
+		split(PROVIDE_LIST[x], tmplist)
+		for (y in tmplist)
+			add_db_entry(DEPTREE[RC_NUMBER,NAME], PROVIDEDBY, tmplist[y])
 	}
 
 	# Now do NEED
@@ -512,6 +506,7 @@ END {
 		if ((x,AFTER) in DEPTREE)
 			resolve_depend(AFTER, DEPTREE[x,NAME], DEPTREE[x,AFTER])
 	}
+
 
 	for (x = TYPES_MIN; x <= TYPES_MAX; x++)
 		print "declare -r rc_type_" TYPE_NAMES[x] "=" x >> (CACHEDTREE)
@@ -538,7 +533,6 @@ END {
 
 			if ((x,y) in RESOLVED_DEPTREE) {
 				count = split(RESOLVED_DEPTREE[x,y], tmplist)
-				# Cannot use asort as it's GNU specific
 				insert_sort(tmplist, 1, count)
 				tmpstr = tmplist[1]
 				for (i = 2;i <= count;i++)
@@ -554,17 +548,6 @@ END {
 	# Ensure that no-one changes our tree
 	print "declare -r RC_DEPEND_TREE" >> (CACHEDTREE)
 
-	# Store our PROVIDED_LIST
-	printf "declare -r RC_PROVIDED_BY=(" >> (CACHEDTREE)
-	for (x in PROVIDE_LIST) {
-		printf " \"" x >> (CACHEDTREE)
-		split(PROVIDE_LIST[x], tmplist)
-		for (y in tmplist)
-			printf " " tmplist[y] >> (CACHEDTREE)
-		printf "\"" >> (CACHEDTREE)
-	}
-	print ")" >> (CACHEDTREE)
-
 	# Do not export these, as we want them local
 	print "declare -r RC_GOT_DEPTREE_INFO=\"yes\"" >> (CACHEDTREE)
 	print "" >> (CACHEDTREE)
@@ -575,5 +558,4 @@ END {
 	assert(dosystem("mv "CACHEDTREE" "ORIGCACHEDTREE), "system(mv "CACHEDTREE" "ORIGCACHEDTREE")")
 }
 
-
-# vim:ts=4
+# vim: set ts=4 :

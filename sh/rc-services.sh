@@ -41,6 +41,8 @@ rc_usesme=
 rc_ibefore=
 rc_iafter=
 rc_broken=
+rc_iprovide=
+rc_providedby=
 
 ############
 # Functions
@@ -103,7 +105,7 @@ get_dep_info() {
 	rc_iafter="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_iafter}))]}"
 	rc_broken="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_broken}))]}"
 	rc_iprovide="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_iprovide}))]}"
-	rc_provided="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_provided}))]}"
+	rc_providedby="${RC_DEPEND_TREE[$((${rc_index} + ${rc_type_providedby}))]}"
 
 	return 0
 }
@@ -141,17 +143,18 @@ check_dependency() {
 
 	# Do we have valid info for 'deptype' ?
 	deps="rc_$1"
-	[[ -z ${!deps} ]] && return 1
+	deps=${!deps}
+	[[ -z ${deps} ]] && return 1
 
 	if [[ $2 == "-t" && -n $4 ]]; then
 		# Check if 'service1' have 'deptype' dependency on 'service2'
-		for x in ${!deps} ; do
+		for x in ${deps} ; do
 			[[ ${x} == "$4" ]] && return 0
 		done
 		return 1
 	else
 		if [[ $1 == "iprovide" ]] ; then
-			echo "${!deps}"
+			echo "${deps}"
 			return 0
 		fi
 
@@ -160,12 +163,33 @@ check_dependency() {
 
 		# Cannot be SOFTLEVEL, as we need to know current runlevel
 		local mylevel="${BOOTLEVEL}" ret=
-		[[ -f "${svcdir}/softlevel" ]] && mylevel=$( < "${svcdir}/softlevel" )
+		[[ -f "${svcdir}/softlevel" ]] && mylevel=$(< "${svcdir}/softlevel")
 
-		for x in ${!deps} ; do
-			if [[ -x "/etc/init.d/${x}" || ${x} == "net" ]] ; then
+		for x in ${deps} ; do
+			if [[ -x "/etc/init.d/${x}" ]] ; then
 				ret="${ret} ${x}"
+			elif [[ ${x} == "net" ]] ; then
+				if is_runlevel_stop || is_net_up ; then
+					for y in $(dolisting "${svcdir}/started/net.*") \
+						$(dolisting "${svcdir}/inactive/net.*") ; do
+						ret="${ret} ${y##*/}"
+					done
+				else
+					for y in $(dolisting "/etc/runlevels/${BOOTLEVEL}/net.*") \
+						$(dolisting "/etc/runlevels/${SOFTLEVEL}/net.*") \
+						$(dolisting "/${svcdir}/coldplugged/net.*") ; do
+						ret="${ret} ${y##*/}"
+					done
+				fi
 			else
+				if ! get_dep_info "${x}" >/dev/null ; then
+					eerror "Could not get dependency info for ${myservice}!"
+					eerror "Please run:"
+					eerror "  # /sbin/depscan.sh"
+					eerror "to try and fix this."
+					return 1
+				fi
+				
 				# Handle provides here. First check what's already started
 				local y= p=1
 				for y in ${rc_provided} ; do
@@ -181,14 +205,14 @@ check_dependency() {
 				done
 
 				# Now check runlevels
-				for y in ${rc_provided} ; do
+				for y in ${rc_providedby} ; do
 					if in_runlevel "${y}" "${mylevel}" ; then
 						ret="${ret} ${y}"
 						continue 2
 					fi
 				done
 				if [[ ${mylevel} != "${BOOTLEVEL}" ]] ; then
-					for y in ${rc_provided} ; do
+					for y in ${rc_providedby} ; do
 						if in_runlevel "${y}" "${BOOTLEVEL}" ; then
 							ret="${ret} ${y}"
 							continue 2
@@ -197,7 +221,7 @@ check_dependency() {
 				fi
 
 				# OK, not in runlevel. Use first alphabetical
-				local z=$(echo "${rc_provided// /$'\n'}" | sort)
+				local z=$(echo "${rc_providedby// /$'\n'}" | sort)
 				for y in ${z} ; do
 					if [[ -x "/etc/init.d/${y}" ]] ; then
 						ret="${ret} ${y}"
@@ -244,22 +268,8 @@ iafter() {
 broken() {
 	check_dependency broken "$@"
 }
-
-# char *provides(service)
-#
-#   Returns a list of services that provide service
-provides() {
-	[[ -z $1 ]] && return 1
-
-	local x=
-	for x in "${RC_PROVIDED_BY[@]}" ; do
-		if [[ ${x} == "$1 "* ]] ; then
-			echo "${x#* }"
-			return 0
-		fi
-	done
-
-	return 1
+providedby() {
+	check_dependency providedby "$@"
 }
 
 # bool in_runlevel(service, runlevel)
@@ -822,34 +832,11 @@ valid_iafter() {
 #
 trace_dependencies() {
 	local -a services=( "$@" ) net_deps=()
-	local i= j= net_services= x= deptype=
+	local i= j= x= deptype=
 
-	if [[ $1 == -* ]]; then
+	if [[ $1 == -* ]] ; then
 		deptype="${1/-/}"
-		if net_service "${SVCNAME}" ; then
-			services=( "net" "${SVCNAME}" )
-		else
-			services=( "${SVCNAME}" )
-		fi
-	fi
-
-	if is_net_up || is_runlevel_stop ; then
-		for x in $(dolisting "${svcdir}/started/net.*") \
-			$(dolisting "${svcdir}/inactive/net.*") ; do
-			net_services="${net_services} ${x##*/}"
-		done
-	else
-		for x in $(dolisting "/etc/runlevels/${BOOTLEVEL}/net.*") \
-			$(dolisting "/etc/runlevels/${SOFTLEVEL}/net.*") \
-			$(dolisting "/${svcdir}/coldplugged/net.*") ; do
-			net_services="${net_services} ${x##*/}"
-		done
-	fi
-
-	# Cache the generic "net" depends
-	net_deps=( $( ineed net ) $( valid_iuse net )	)
-	if is_runlevel_start || is_runlevel_stop ; then
-		net_deps=( "${net_deps[@]}" $( valid_iafter net ) )
+		services=( "${SVCNAME}" )
 	fi
 
 	# OK, this is a topological sort
@@ -870,13 +857,6 @@ trace_dependencies() {
 			if is_runlevel_start || is_runlevel_stop ; then
 				deps=( "${deps[@]}" $( valid_iafter "${service}" ) )
 			fi
-
-			# If we're a net service, we have to get deps for ourself
-			# and the net service as we're both
-			net_service "${service}" && deps=( "${deps[@]}" "${net_deps[@]}" )
-			
-			x=" ${deps[@]} "
-			deps=( "${deps[@]}" ${x// net / ${net_services} } )
 		fi
 
 		services=( "${services[@]}" "${deps[@]}" )
@@ -896,12 +876,6 @@ trace_dependencies() {
 		# If deptype is set, we do not want the name of this service
 		x=" ${services[@]} "
 		services=( ${x// ${SVCNAME} / } )
-
-		# If its a net service, do not include "net"
-		if net_service "${SVCNAME}" ; then
-			x=" ${services[@]} "
-			sorted=( ${services// net / } )
-		fi
 	fi
 
 	echo "${services[@]}"

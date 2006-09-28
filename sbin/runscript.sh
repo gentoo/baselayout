@@ -172,17 +172,21 @@ status() {
 }
 
 svc_schedule_start() {
-	local service="$1" start="$2"
+	local service="$1" start="$2" x=
+
 	[[ ! -d "${svcdir}/scheduled/${service}" ]] \
 		&& mkdir -p "${svcdir}/scheduled/${service}"
 	ln -snf "/etc/init.d/${service}" \
 		"${svcdir}/scheduled/${service}/${start}"
+
+	for x in $(iprovide "${service}" ) ; do
+		[[ ! -d "${svcdir}/scheduled/${x}" ]] \
+			&& mkdir -p "${svcdir}/scheduled/${x}"
+		touch "${svcdir}/scheduled/${x}/${start}"
+	done
 }
 
 svc_start_scheduled() {
-	[[ ! -d "${svcdir}/scheduled/${SVCNAME}" ]] && return
-	local x= services=
-
 	# If we're being started in the background, then don't
 	# tie up the daemon that called us starting our scheduled services
 	if [[ ${IN_BACKGROUND} == "true" || ${IN_BACKGROUND} == "1" ]] ; then
@@ -192,16 +196,24 @@ svc_start_scheduled() {
 		return
 	fi
 
-	for x in $(dolisting "${svcdir}/scheduled/${SVCNAME}/") ; do
-		services="${services} ${x##*/}"
+	local x= y= services= provides=$(iprovide "${SVCNAME}")
+	for x in "${SVCNAME}" ${provides} ; do
+		for y in $(dolisting "${svcdir}/scheduled/${x}/") ; do
+			services="${services} ${y##*/}"
+		done
 	done
-		
+	
 	for x in $(trace_dependencies ${services}) ; do
 		service_stopped "${x}" && start_service "${x}"
 		rm -f "${svcdir}/scheduled/${SVCNAME}/${x}"
+		for y in ${provides} ; do
+			rm -f "${svcdir}/scheduled/${y}/${x}"
+		done
 	done
 
-	rmdir "${svcdir}/scheduled/${SVCNAME}"
+	for x in "${SVCNAME}" ${provides} ; do
+		rmdir "${svcdir}/scheduled/${x}" 2>/dev/null
+	done
 }
 
 svc_stop() {
@@ -388,40 +400,11 @@ svc_start() {
 
 	if [[ ${retval} == "0" && ${RC_NO_DEPS} != "yes" ]] ; then
 		local startupservices="$(ineed "${SVCNAME}") $(valid_iuse "${SVCNAME}")"
-		local netservices=
-		for x in $(dolisting "/etc/runlevels/${BOOTLEVEL}/net.*") \
-			$(dolisting "/etc/runlevels/${mylevel}/net.*") \
-			$(dolisting "/var/lib/init.d/coldplugged/net.*") ; do 
-			netservices="${netservices} ${x##*/}"
-		done
-
 		# Start dependencies, if any.
 		if ! is_runlevel_start ; then
 			for x in ${startupservices} ; do
-				if [[ ${x} == "net" ]] && ! net_service "${SVCNAME}" \
-					&& ! is_net_up ; then
-					for y in ${netservices} ; do
-						service_stopped "${y}" && start_service "${y}"
-					done
-				elif [[ ${x} != "net" ]] ; then
-					service_stopped "${x}" && start_service "${x}"
-				fi
+				service_stopped "${x}" && start_service "${x}"
 			done
-		fi
-
-		# We also wait for any services we're after to finish incase they
-		# have a "before" dep but we don't dep on them.
-		if is_runlevel_start ; then
-			startupservices="${startupservices} $(valid_iafter "${SVCNAME}")"
-			if net_service "${SVCNAME}" ; then
-				startupservices="${startupservices} $(valid_iafter "net")"
-			fi
-		fi
-
-		if [[ " ${startupservices} " == *" net "* ]] ; then
-			startupservices=" ${startupservices} "
-			startupservices="${startupservices/ net / ${netservices} }"
-			startupservices="${startupservices// net /}"
 		fi
 
 		# Wait for dependencies to finish.
@@ -436,7 +419,8 @@ svc_start() {
 					if service_inactive "${x}" || service_wasinactive "${x}" || \
 						[[ -n $(dolisting "${svcdir}"/scheduled/*/"${x}") ]] ; then
 						svc_schedule_start "${x}" "${SVCNAME}"
-						[[ -n ${startinactive} ]] && startinactive="${startinactive}, "
+
+					[[ -n ${startinactive} ]] && startinactive="${startinactive}, "
 						startinactive="${startinactive}${x}"
 					else
 						eerror "ERROR:" $"cannot start" "${SVCNAME}" $"as" "${x}" $"could not start"
@@ -640,7 +624,7 @@ for arg in $* ; do
 			rm -rf "${svcdir}/snapshot/$$"
 			mkdir -p "${svcdir}/snapshot/$$"
 			cp -pP "${svcdir}"/started/* "${svcdir}"/inactive/* \
-				"${svcdir}/snapshot/$$/"
+				"${svcdir}/snapshot/$$/" 2>/dev/null
 			rm -f "${svcdir}/snapshot/$$/${SVCNAME}"
 		fi
 	
@@ -664,7 +648,7 @@ for arg in $* ; do
 		retval="$?"
 		service_started "${SVCNAME}" && svc_start_scheduled
 		;;
-	needsme|ineed|usesme|iuse|broken|iafter)
+	needsme|ineed|usesme|iuse|broken|iafter|iprovide)
 		trace_dependencies "-${arg}"
 		;;
 	status)
@@ -686,7 +670,7 @@ for arg in $* ; do
 		rm -rf "${svcdir}/snapshot/$$"
 		mkdir -p "${svcdir}/snapshot/$$"
 		cp -pP "${svcdir}"/started/* "${svcdir}"/inactive/* \
-			"${svcdir}/snapshot/$$/"
+			"${svcdir}/snapshot/$$/" 2>/dev/null
 		rm -f "${svcdir}/snapshot/$$/${SVCNAME}"
 
 		# Simple way to try and detect if the service use svc_{start,stop}
