@@ -639,7 +639,8 @@ for arg in $* ; do
 		if [[ ${IN_BACKGROUND} == "true" || ${IN_BACKGROUND} == "1" ]] ; then
 			rm -rf "${svcdir}/snapshot/$$"
 			mkdir -p "${svcdir}/snapshot/$$"
-			cp -pP "${svcdir}"/started/* "${svcdir}/snapshot/$$/"
+			cp -pP "${svcdir}"/started/* "${svcdir}"/inactive/* \
+				"${svcdir}/snapshot/$$/"
 			rm -f "${svcdir}/snapshot/$$/${SVCNAME}"
 		fi
 	
@@ -677,14 +678,15 @@ for arg in $* ; do
 	restart)
 		svcrestart="yes"
 
-        # We don't kill child processes if we're restarting
+        	# We don't kill child processes if we're restarting
 		# This is especically important for sshd ....
 		RC_KILL_CHILDREN="no"				
 		
 		# Create a snapshot of started services
 		rm -rf "${svcdir}/snapshot/$$"
 		mkdir -p "${svcdir}/snapshot/$$"
-		cp -pP "${svcdir}"/started/* "${svcdir}/snapshot/$$/"
+		cp -pP "${svcdir}"/started/* "${svcdir}"/inactive/* \
+			"${svcdir}/snapshot/$$/"
 		rm -f "${svcdir}/snapshot/$$/${SVCNAME}"
 
 		# Simple way to try and detect if the service use svc_{start,stop}
