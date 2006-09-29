@@ -741,7 +741,7 @@ iface_start() {
 	# Provide a default of DHCP if no configuration is set and we're auto
 	# Otherwise a default of NULL
 	if [[ -z ${config} ]] ; then
-		ewarn $"Configuration not set for" "${iface}" $", assuming DHCP"
+		ewarn $"Configuration not set for" "${iface}," $"assuming DHCP"
 		if is_function "dhcp_start" ; then
 			config=( "dhcp" )
 		else
