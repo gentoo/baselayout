@@ -43,9 +43,9 @@ ifconfig_check_installed() {
 #
 # Returns 1 if the interface exists, otherwise 0
 ifconfig_exists() {
-	[[ $'\n'$(ifconfig -a) =~ $'\n'"$1( |: )" ]] && return 0
+	[[ -e /dev/net/$1 ]] && return 0
 
-	if ${report} ; then
+	if ${2:-false} ; then
 		eerror $"network interface" "$1" $"does not exist"
 		eerror $"Please verify hardware or kernel module (driver)"
 	fi

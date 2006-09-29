@@ -99,7 +99,7 @@ calculate_metric() {
 		m=$(awk '$1=="'${iface}'" && $2=="00000000" { print $7 }' \
 		/proc/net/route)
 	else
-		[[ $(ifconfig "${iface}") =~ "metric ([^ ]*)" ]] \
+		[[ $(ifconfig "${iface}" 2>/dev/null) =~ "metric ([^ ]*)" ]] \
 			&& m="${BASH_REMATCH[1]}"
 	fi
 	if [[ -n ${m} ]] ; then
@@ -762,7 +762,9 @@ iface_start() {
 			continue
 		fi
 
-		if [[ ${config_counter} == 0 ]] && ! interface_has_carrier "${iface}" ; then
+		if [[ ${config_counter} == 0 ]] \
+		&& interface_exists "${iface}" \
+		&& ! interface_has_carrier "${iface}" ; then
 			ebegin "Waiting for carrier"
 			local timeout=3
 			while [[ ${timeout} -gt 0 ]] ; do
@@ -946,7 +948,7 @@ run_start() {
 	# Not much we can do about this :(
 	# Also, we cannot error here as some modules - such as bridge
 	# create interfaces
-	if ! interface_exists "${iface}" ; then
+	if ! interface_exists "${iface}" && [[ -x /sbin/modprobe ]] ; then
 		/sbin/modprobe "${iface}" &>/dev/null
 	fi
 
