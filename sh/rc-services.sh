@@ -123,7 +123,7 @@ get_dep_info() {
 check_dependency() {
 	[[ -z $1 || -z $2 ]] && return 1
 	
-	local x= myservice= deps=
+	local x= y= myservice= deps=
 
 	# Set the dependency variables to relate to 'service1'
 	if [[ $2 == "-t" ]] ; then
@@ -144,6 +144,16 @@ check_dependency() {
 	# Do we have valid info for 'deptype' ?
 	deps="rc_$1"
 	deps=${!deps}
+
+	# Get the deps for stuff we provide for too
+	for x in ${rc_iprovide} ; do
+		[[ ${x} == "net" ]] && continue
+		if get_dep_info "${x}" ; then
+			y="rc_$1"
+			[[ -n ${!y} ]] && deps="${deps} ${!y}"
+		fi
+	done
+
 	[[ -z ${deps} ]] && return 1
 
 	if [[ $2 == "-t" && -n $4 ]]; then
@@ -189,9 +199,8 @@ check_dependency() {
 					eerror "to try and fix this."
 					return 1
 				fi
-				
+		
 				# Handle provides here. First check what's already started
-				local y= p=1
 				for y in ${rc_provided} ; do
 					if is_runlevel_stop ; then
 						service_stopping "${y}" || service_stopped "${y}"

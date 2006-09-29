@@ -278,8 +278,21 @@ dep_stop() {
 
 	service_stopped "${service}" && return 0
 
-	[[ -L "${svcdir}/softscripts.new/${service}" ]] \
-		&& return 0
+	# If service is in the new runlevel stop it if the config
+	# file it will use changes due to config profile
+	if [[ -L "${svcdir}/softscripts.new/${service}" ]] ; then
+		[[ ${RC_USE_CONFIG_PROFILE} != "yes" ]] && return 0
+		[[ ${OLDSOFTLEVEL} == "${SOFTLEVEL}" ]] && return 0
+		if [[ ! -e /etc/conf.d/"${service}.${OLDSOFTLEVEL}"
+		&& ! -e /etc/conf.d/"${service}.${SOFTLEVEL}" ]] ; then
+			return 0
+		fi
+
+		# OK, there was a config.runlevel and we are changing runlevels
+		# so we need to stop the script regardless
+		stop_service "${service}"
+		return 0
+	fi
 
 	if [[ ${SOFTLEVEL} != "reboot" \
 	      && ${SOFTLEVEL} != "shutdown" \
@@ -304,6 +317,12 @@ dep_stop() {
 	done
 	[[ ${needsme} -eq 0 ]] && stop_service "${service}"
 }
+
+# Store a list of coldplugged services
+COLDPLUG_SERVICES=
+for i in $(dolisting "${svcdir}/coldplugged/") ; do
+	COLDPLUG_SERVICES="${COLDPLUG_SERVICES} ${i##*/}"
+done
 
 # Stop services
 # First stop non critical services
@@ -351,9 +370,13 @@ fi
 
 # Move the old softscritps directory to a different one
 # and make the new softscripts directory the current
-
 mv -f "${svcdir}/softscripts" "${svcdir}/softscripts.old"
 mv -f "${svcdir}/softscripts.new" "${svcdir}/softscripts"
+
+# Add back any coldplug deps we had to stop
+for i in ${COLDPLUG_SERVICES} ; do
+	mark_service_coldplugged "${i}"
+done
 
 get_start_services() {
 	local x= list=

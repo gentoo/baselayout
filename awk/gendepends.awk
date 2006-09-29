@@ -253,18 +253,18 @@ function resolve_depend(type, service, deplist,    x, deparray)
 			if (check_provide(deparray[x])) {
 				add_db_entry(service, type, deparray[x])
 				# Reverse map
-				#split(PROVIDE_LIST[deparray[x]], tmplist)
-				#for (y in tmplist) {
-				#	add_db_entry(service, PROVIDED, tmplist[y])
-				#	if (type == NEED)
-				#		add_db_entry(tmplist[y], NEEDME, service)
-				#	else if (type == USE)
-				#		add_db_entry(tmplist[y], USEME, service)
-				#	else if (type == AFTER)
-				#		add_db_entry(tmplist[y], BEFORE, service)
-				#	else if (type == BEFORE)
-				#		add_db_entry(tmplist[y], AFTER, service)
-				#}
+				split(PROVIDE_LIST[deparray[x]], tmplist)
+				for (y in tmplist) {
+					add_db_entry(service, PROVIDED, tmplist[y])
+					if (type == NEED)
+						add_db_entry(tmplist[y], NEEDME, service)
+					else if (type == USE)
+						add_db_entry(tmplist[y], USEME, service)
+					else if (type == AFTER)
+						add_db_entry(tmplist[y], BEFORE, service)
+					else if (type == BEFORE)
+						add_db_entry(tmplist[y], AFTER, service)
+				}
 				continue
 			}
 
