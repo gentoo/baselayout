@@ -1,6 +1,5 @@
 DIR   = /etc/conf.d
-FILES_NOEXIST = bootmisc clock env_whitelist hostname local.start local.stop \
-		net net.example wireless.example rc
+FILES_NOEXIST = bootmisc clock env_whitelist hostname local.start local.stop rc
 
 TOPDIR = ..
 include $(TOPDIR)/default.mk

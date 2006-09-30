@@ -136,6 +136,7 @@
 # recommended. Here we rename eth1 to foo2.
 #rename_eth1="foo2"
 
+
 #-----------------------------------------------------------------------------
 # WIRELESS (802.11 support)
 # Wireless can be provided by iwconfig or wpa_supplicant
@@ -148,42 +149,32 @@
 
 # wpa_supplicant
 # emerge net-wireless/wpa-supplicant
-# Wireless options are held in /etc/wpa_supplicant.conf
-# Consult the sample file /etc/wpa_supplicant.conf.example for instructions
+# Wireless options are held in /etc/wpa_supplicant/wpa_supplicant.conf
+# Console the wpa_supplicant.conf.example that is installed in
+# /usr/share/doc/wpa_supplicant
 # To choose wpa_supplicant over iwconfig
 #modules=( "wpa_supplicant" )
 # To configure wpa_supplicant
 #wpa_supplicant_eth0="-Dwext" # For generic wireless
 #wpa_supplicant_ath0="-Dmadwifi" # For Atheros based cards
 # Consult wpa_supplicant for more drivers
+
 # By default we don't wait for wpa_suppliant to associate and authenticate.
 # If you would like to, so can specify how long in seconds
 #associate_timeout_eth0=60
 # A value of 0 means wait forever.
 
-# GENERIC WIRELESS OPTIONS
-# PLEASE READ THE INSTRUCTIONS IN /etc/conf.d/wireless.example FOR
-# HOW TO USE THIS ESSID VARIABLE
 # You can also override any settings found here per ESSID - which is very
-# handy if you use different networks a lot
+# handy if you use different networks a lot. See below for using the ESSID
+# in our variables
 #config_ESSID=( "dhcp" )
-#dhcpcd_ESSID="-t 5"
-
-# Setting name/domain server causes /etc/resolv.conf to be overwritten
-# Note that if DHCP is used, and you want this to take precedence then
-# set dhcp_ESSID="nodns"
-#dns_servers_ESSID=( "192.168.0.1" "192.168.0.2" )
-#dns_domain_ESSID="some.domain"
-#dns_search_ESSID="search.this.domain search.that.domain"
-# Please check the man page for resolv.conf for more information
-# as domain and search are mutually exclusive.
+# See the System module below for setting dns/nis/ntp per ESSID
 
 # You can also override any settings found here per MAC address of the AP
 # in case you use Access Points with the same ESSID but need different
 # networking configs. Below is an example - of course you use the same
 # method with other variables
 #mac_config_001122334455=( "dhcp" )
-#mac_dhcpcd_001122334455="-t 10"
 #mac_dns_servers_001122334455=( "192.168.0.1" "192.168.0.2" )
 
 # When an interface has been associated with an Access Point, a global
@@ -192,8 +183,39 @@
 # won't have associated then)
 
 # If you're using anything else to configure wireless on your interface AND
-# you have installed any of the above packages, you need to disable them
+# you have installed wpa_supplicant, you need to disable wpa_supplicant 
 #modules=( "!iwconfig" "!wpa_supplicant" )
+#or
+#modules=( "!wireless" )
+
+##############################################################################
+# WIRELESS ESSID IN VARIABLES 
+##############################################################################
+# Remember to change ESSID to your ESSID.
+# Say that your ESSID is My NET - the line
+#      #key_ESSID="s:passkey"
+# becomes
+#      #key_My_NET="s:passkey"
+# Notice that the space has changed to an underscore - do the same with all
+# characters not in a-z A-Z (English alphabet) 0-9. This only applies to
+# variables and not values.
+#
+# Any ESSID's in values like essid_eth0="My NET" may need to be escaped
+# This means placing the character \ before the character
+# \" need to be escaped for example
+# So if your ESSID is
+#      My "\ NET
+# it becomes
+#      My \"\\ NET
+# for example
+#      #essid_eth0="My\"\\NET"
+#
+# So using the above we can use
+#      #dns_domain_My____NET="My\"\\NET"
+# which is an invalid dns domain, but shows the how to use the variable
+# structure
+#########################################################
+
 
 #-----------------------------------------------------------------------------
 # DHCP
