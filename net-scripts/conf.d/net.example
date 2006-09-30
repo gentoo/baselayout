@@ -478,6 +478,11 @@
 # configured correctly.
 #RC_NEED_ppp0="net.nas0"
 
+#WARNING: if MTU of the PPP interface is less than 1500 and you use this
+#machine as a router, you should add the following rule to your firewall
+#
+#iptables -I FORWARD 1 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+
 #-----------------------------------------------------------------------------
 # ADSL
 # For ADSL support, emerge net-dialup/rp-pppoe
