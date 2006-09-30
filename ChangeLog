@@ -3,6 +3,9 @@
 
   30 Sep 2006; Roy Marples <uberlord@gentoo.org>:
 
+    Added warning about clamping MSS when running ppp on a router, #149525
+    thanks to Alin Nastac.
+
     Punted DISPLAYMANAGER from /etc/rc.conf as it's now in /etc/conf.d/xdm 
 
   29 Sep 2006; Roy Marples <uberlord@gentoo.org>:
