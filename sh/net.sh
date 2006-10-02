@@ -339,7 +339,7 @@ modules_check_user() {
 	umods=( "${umods[@]}" "${modules[@]}" )
 
 	# Add our preferred modules
-	local -a pmods=( "iproute2" "dhcpcd" "iwconfig" "netplugd" )
+	local -a pmods=( "iproute2" "dhcpcd" "wpa_supplicant" "netplugd" )
 	umods=( "${umods[@]}" "${pmods[@]}" )
 
 	# First we strip any modules that conflict from user settings

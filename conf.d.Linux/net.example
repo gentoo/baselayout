@@ -145,7 +145,7 @@
 # emerge net-wireless/wireless-tools
 # Wireless options are held in /etc/conf.d/wireless - but could be here too
 # Consult the sample file /etc/conf.d/wireless.example for instructions
-# iwconfig is the default
+# wpa_supplicant is the default if it is installed
 
 # wpa_supplicant
 # emerge net-wireless/wpa-supplicant

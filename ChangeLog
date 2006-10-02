@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  02 Oct 2006; Roy Marples <uberlord@gentoo.org>:
+
+    wpa_supplicant is now the default for wireless setup if installed.
+
   30 Sep 2006; Roy Marples <uberlord@gentoo.org>:
 
     Added warning about clamping MSS when running ppp on a router, #149525

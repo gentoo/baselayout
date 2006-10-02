@@ -68,7 +68,7 @@ source "${svclib}"/sh/init-common-pre.sh
 ${RC_DMESG_LEVEL+/bin/dmesg -n ${RC_DMESG_LEVEL}}
 
 echo
-echo -e "${GOOD}Gentoo Linux${GENTOO_VERS}; ${BRACKET}http://www.gentoo.org/${NORMAL}"
+echo -e "${GOOD}Gentoo/Linux $(get_base_ver); ${BRACKET}http://www.gentoo.org/${NORMAL}"
 echo -e " Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2"
 echo
 if [[ ${RC_INTERACTIVE} == "yes" ]] ; then
