@@ -43,8 +43,6 @@
 #  define OSLinux
 #elif defined(__GNU__)
 #  define OSHURD
-#elif defined(__sparc__)
-#  define OSsunos
 #elif defined(OPENBSD) || defined(__OpenBSD__)
 #  define OSOpenBSD
 #elif defined(hpux)
@@ -55,7 +53,9 @@
 #  define OSNetBSD
 #elif defined(__APPLE__)
 #  define OSDarwin
-#else
+#elif defined(__sparc__)
+#  define OSsunos
+else
 #  error Unknown architecture - cannot build start-stop-daemon
 #endif
 
