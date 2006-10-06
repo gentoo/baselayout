@@ -368,7 +368,7 @@ _ewrap() {
 	local c="${COLS}"
 	[[ ${RC_ENDCOL} == "yes" ]] && c="${ENDCOL}"
 	local p="$* "
-	local max=$((COLS - ${#RC_INDENTATION} - 9))
+	local max=$((COLS - ${#RC_INDENTATION} - 11))
 
 	# Only use what we have space for
 	local d="${p%%\\n*}"

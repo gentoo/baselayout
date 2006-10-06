@@ -408,7 +408,7 @@ svc_start() {
 		fi
 
 		# Wait for dependencies to finish.
-		for x in ${startupservices} ; do
+		for x in ${startupservices} $(valid_iafter "${SVCNAME}") ; do
 			service_started "${x}" && continue
 			! service_inactive "${x}" && wait_service "${x}"
 			if ! service_started "${x}" ; then

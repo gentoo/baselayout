@@ -235,7 +235,7 @@ else
 				&& myscripts="${myscripts} ${x}"
 		done
 		if [[ -n ${myscripts} ]] ; then
-			einfo $"Device initiated services:" "${HILITE}${myscripts}${NORMAL}"
+			einfo $"Device initiated services:" "${myscripts}"
 		fi
  	fi
 	
