@@ -17,6 +17,12 @@ CLOCK_OPTS=""
 
 CLOCK_SYSTOHC="no"
 
+# Newer FHS specs say this file should live in /var/lib rather than
+# /etc.  If you care about such things, feel free to change this value.
+
+#CLOCK_ADJTIME="/var/lib/adjtime"
+CLOCK_ADJTIME="/etc/adjtime"
+
 
 ### ALPHA SPECIFIC OPTIONS ###
 

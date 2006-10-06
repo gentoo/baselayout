@@ -62,11 +62,13 @@ start() {
 	local readonly="no"
 	local ret=0
 
+	CLOCK_ADJTIME=${CLOCK_ADJTIME:-/etc/adjtime}
+
 	if [[ $(uname) == "Linux" ]] ; then
-		if ! touch /etc/adjtime 2>/dev/null ; then
+		if ! touch "${CLOCK_ADJTIME}" 2>/dev/null ; then
 			readonly="yes"
-		elif [[ ! -s /etc/adjtime ]] ; then
-			echo "0.0 0 0.0" > /etc/adjtime
+		elif [[ ! -s ${CLOCK_ADJTIME} ]] ; then
+			echo "0.0 0 0.0" > "${CLOCK_ADJTIME}"
 		fi
 	fi
 
