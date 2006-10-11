@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright 1999-2004 Gentoo Technologies, Inc.
+# Copyright 2006 Gentoo Technologies, Inc.
 # Distributed under the terms of the GNU General Public License v2
 
 # BSD's init works somewhat differently to sysvinit.
