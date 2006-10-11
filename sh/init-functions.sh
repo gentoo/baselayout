@@ -60,38 +60,4 @@ check_statedir() {
 	return 0
 }
 
-# void start_critical_service()
-#
-#   Start critical services needed for bootup
-#
-start_critical_service() {
-	(
-	local retval=
-	local service=$1
-	# Needed for some addons like dm-crypt that starts in critical services
-	local myservice=$1
-
-	profiling name "/etc/init.d/${service}"
-
-	source "/etc/init.d/${service}"
-	retval=$?
-	if [[ ${retval} -ne 0 ]]; then
-		eerror "Failed to source /etc/init.d/${service}"
-		return "${retval}"
-	fi
-
-	local conf=$(add_suffix /etc/conf.d/${service})
-	[[ -e ${conf} ]] && source "${conf}"
-	conf=$(add_suffix /etc/rc.conf)
-	[[ -e ${conf} ]] && source "${conf}"
-	
-	start
-	retval=$?
-	[[ ${retval} -ne 0 ]] && eerror "Failed to start /etc/init.d/${service}"
-
-	return "${retval}"
-	)
-}
-
-
-# vim:ts=4
+# vim: set ts=4 :

@@ -1,0 +1,9 @@
+#!/bin/sh
+# Copyright 1999-2004 Gentoo Technologies, Inc.
+# Distributed under the terms of the GNU General Public License v2
+
+# BSD's init works somewhat differently to sysvinit.
+# This block should 'translate' from the way init calls it to the way it would
+# be called by sysvinit on linux.
+
+/sbin/rc shutdown

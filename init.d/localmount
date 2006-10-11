@@ -9,7 +9,7 @@ depend() {
 start() {
 	# Mount local filesystems in /etc/fstab.
 	ebegin $"Mounting local filesystems"
-	mount -at noproc,shm${NET_FS_LIST:+,}${NET_FS_LIST// /,}
+	mount -at noproc,linproc,shm${NET_FS_LIST:+,}${NET_FS_LIST// /,}
 	eend $? $"Some local filesystem failed to mount"
 
 	# Sync bootlog now as /var should be mounted

@@ -66,22 +66,17 @@ else
 #  include <ps.h>
 #endif
 
-#if defined(OSOpenBSD) || defined(OSFreeBSD) || defined(OSNetBSD) || defined(OSDarwin)
-#include <sys/param.h>
-#include <sys/user.h>
-#include <sys/proc.h>
-#include <sys/stat.h>
-#include <sys/sysctl.h>
-#include <sys/types.h>
-
-#include <err.h>
-#include <kvm.h>
-#include <limits.h>
-#endif
-
 #if defined(OShpux)
 #include <sys/param.h>
 #include <sys/pstat.h>
+#endif
+
+#if defined(OSOpenBSD) || defined(OSFreeBSD) || defined(OSNetBSD) || defined(OSDarwin)
+#include <sys/param.h>
+#include <sys/user.h>
+#include <sys/sysctl.h>
+
+#include <kvm.h>
 #endif
 
 #include <errno.h>
@@ -107,7 +102,6 @@ else
 
 #ifdef HAVE_PAM
 #include <security/pam_appl.h>
-#include <security/pam_misc.h>
 #endif
 
 #include <stddef.h>

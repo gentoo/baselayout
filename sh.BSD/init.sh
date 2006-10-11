@@ -36,6 +36,18 @@ if [[ ${RC_INTERACTIVE} == "yes" ]] ; then
 	echo
 fi
 
+# Mount linprocfs if instructed
+mntcmd=$(get_mount_fstab /proc)
+if [[ -n ${mntcmd} ]] ; then
+	ebegin "Mounting linprocfs at /proc"
+	if [[ ! -d /proc ]] ; then
+		eend 1 "/proc does not exist"
+	else
+		mount ${mntcmd}
+		eend $?
+	fi
+fi
+
 # Start profiling init
 profiling start
 
