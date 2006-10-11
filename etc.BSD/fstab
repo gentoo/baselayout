@@ -18,4 +18,4 @@
 
 # Enable this line to mount /proc automatically.
 # Required for Linux emulation.
-none		/proc		linprocfs	rw,noexec,nosuid	0 0
+#none		/proc		linprocfs	rw,noexec,nosuid	0 0
