@@ -11,7 +11,7 @@
 SUBDIRS = awk bin conf.d etc init.d man net sbin sh src
 
 NAME = baselayout
-VERSION = 1.13.0_alpha1
+VERSION = 1.13.0_alpha2
 PKG = $(NAME)-$(VERSION)
 
 ARCH = x86
