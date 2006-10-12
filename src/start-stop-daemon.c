@@ -76,6 +76,7 @@ else
 #include <sys/user.h>
 #include <sys/sysctl.h>
 
+#include <err.h>
 #include <kvm.h>
 #endif
 
@@ -172,8 +173,8 @@ static void check(pid_t pid);
 static void do_pidfile(const char *name);
 static void do_stop(int signal_nr, int quietmode,
 		    int *n_killed, int *n_notkilled, int retry_nr);
-#if defined(OSLinux) || defined(OShpux)
-static int pid_is_exec(pid_t pid, const struct stat *esb);
+#if !(defined(OSHURD) || defined(OSDarwin))
+static int pid_is_exec(pid_t pid, const char *name, const struct stat *esb);
 #endif
 
 #ifdef __GNUC__
@@ -611,7 +612,7 @@ parse_options(int argc, char * const *argv)
 
 #if defined(OSLinux)
 static int
-pid_is_exec(pid_t pid, const struct stat *esb)
+pid_is_exec(pid_t pid, const char *name, const struct stat *esb)
 {
 	struct stat sb;
 	char buf[32];
@@ -749,12 +750,12 @@ pid_is_running(pid_t pid)
 static void
 check(pid_t pid)
 {
-#if defined(OSLinux) || defined(OShpux)
-	if (execname && !pid_is_exec(pid, &exec_stat))
-		return;
-#elif defined(OSHURD) || defined(OSFreeBSD) || defined(OSNetBSD) || defined(OSDarwin)
+#if defined(OSHURD) || defined(OSDarwin)
 	/* I will try this to see if it works */
-	if (execname && !pid_is_cmd(pid, execname))
+	if (execname && !pid_is_cmd(pid, execname, &exec_stat))
+		return;
+#else
+	if (execname && !pid_is_exec(pid, execname, &exec_stat))
 		return;
 #endif
 	if (userspec && !pid_is_user(pid, user_id))
@@ -906,7 +907,7 @@ pid_is_user(pid_t pid, uid_t uid)
 }
 
 static int
-pid_is_exec(pid_t pid, const char *name)
+pid_is_exec(pid_t pid, const char *name, const struct stat *esb)
 {
 	kvm_t *kd;
 	int nentries;
@@ -1028,7 +1029,7 @@ pid_is_cmd(pid_t pid, const char *name)
 }
 
 static int
-pid_is_exec(pid_t pid, const struct stat *esb)
+pid_is_exec(pid_t pid, const char *name, const struct stat *esb)
 {
 	struct pst_status pst;
 
