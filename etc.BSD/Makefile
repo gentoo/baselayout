@@ -1,5 +1,5 @@
 DIR   = /etc
-FILES = group issue issue.logo passwd rc rc.shutdown
+FILES = fstab group issue issue.logo passwd rc rc.shutdown
 
 TOPDIR = ..
 include $(TOPDIR)/default.mk
