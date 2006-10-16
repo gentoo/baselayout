@@ -8,7 +8,7 @@
 # It also has the added bonus of being easier to install on systems
 # without an ebuild style package manager.
 
-SUBDIRS = awk bin conf.d etc init.d man net sbin sh src
+SUBDIRS = awk bin conf.d etc init.d man net sbin sh share src
 
 NAME = baselayout
 VERSION = 1.13.0_alpha2
