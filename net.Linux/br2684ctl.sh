@@ -58,7 +58,8 @@ br2684ctl_post_stop() {
 	[[ -e ${pidfile} ]] || return 0
 	
 	einfo $"Stopping RFC 2684 Bridge control on" "${iface}"
-	start-stop-daemon --stop --exec /sbin/br2684ctl --pidfile "${pidfile}"
+	start-stop-daemon --stop --quiet \
+		--exec /sbin/br2684ctl --pidfile "${pidfile}"
 	eend $?
 }
 

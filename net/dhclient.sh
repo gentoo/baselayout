@@ -49,7 +49,8 @@ dhclient_stop() {
 	if [[ " ${!d} " == *" release "* ]] ; then
 		dhclient -q -r -pf "${pidfile}" "${iface}"
 	else
-		start-stop-daemon --stop --exec /sbin/dhclient --pidfile "${pidfile}"
+		start-stop-daemon --stop --quiet --exec /sbin/dhclient \
+			--pidfile "${pidfile}"
 	fi
 	eend $?
 }

@@ -78,6 +78,7 @@ else
 
 #include <err.h>
 #include <kvm.h>
+#include <libgen.h>
 #endif
 
 #include <errno.h>
@@ -912,17 +913,17 @@ pid_is_exec(pid_t pid, const char *name, const struct stat *esb)
 	kvm_t *kd;
 	int nentries;
 	struct _KINFO_PROC2 *kp;
-	char errbuf[_POSIX2_LINE_MAX], *pidexec;
+	char *pidexec;
+	char *bname = basename(name);
 
-	kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, errbuf);
-	if (kd == 0)
-		errx(1, "%s", errbuf);
-	if ((kp = kvm_getprocs(kd, KERN_PROC_PID, pid, &nentries)) == 0)
-		errx(1, "%s", kvm_geterr(kd));
-	pidexec = _GET_KINFO_COMM(kp);
-	if (strlen(name) != strlen(pidexec))
+	if ((kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, NULL)) == 0)
 		return 0;
-	return (strcmp(name, pidexec) == 0) ? 1 : 0;
+	if ((kp = kvm_getprocs(kd, KERN_PROC_PID, pid, &nentries)) == 0)
+		return 0;
+	pidexec = _GET_KINFO_COMM(kp);
+	if (strlen(bname) != strlen(pidexec))
+		return 0;
+	return (strcmp(bname, pidexec) == 0) ? 1 : 0;
 }
 
 
@@ -1128,14 +1129,14 @@ run_stop_schedule(void)
 		}
 	}
 
-	if (cmdname)
-		set_what_stop(cmdname);
-	else if (execname)
-		set_what_stop(execname);
-	else if (pidfile)
+	if (pidfile)
 		sprintf(what_stop, "process in pidfile `%.200s'", pidfile);
 	else if (userspec)
 		sprintf(what_stop, "process(es) owned by `%.200s'", userspec);
+	else if (cmdname)
+		set_what_stop(cmdname);
+	else if (execname)
+		set_what_stop(execname);
 	else
 		fatal("internal error, please report");
 

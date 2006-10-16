@@ -1,4 +1,4 @@
-BOOT = consolefont keymaps modules net.lo rmnologin
+BOOT = consolefont keymaps modules net.lo
 DEFAULT = hdparm
 
 install:

@@ -51,12 +51,18 @@ mount_svcdir() {
 		echo
 		single_user
 	fi
-	
-	try mount -t "${fs}" "${devtmp}" "${svclib}"/tmp -o rw
-	try cp -apR "${svcdir}"/depcache "${svcdir}"/deptree "${svclib}"/tmp
+
+	local dotmp=false
+	if [[ -e "${svcdir}"/deptree ]] ; then
+		dotmp=true
+		try mount -t "${fs}" "${devtmp}" "${svclib}"/tmp -o rw
+		try cp -p "${svcdir}"/{depcache,deptree} "${svclib}"/tmp
+	fi
 	try mount -t "${fs}" "${devdir}" "${svcdir}" -o rw
-	try cp -apR "${svclib}"/tmp/* "${svcdir}"
-	try umount "${svclib}"/tmp
+	if ${dotmp} ; then
+		try cp -p "${svclib}"/tmp/* "${svcdir}"
+		try umount "${svclib}"/tmp
+	fi
 }
 
 source "${svclib}"/sh/init-functions.sh

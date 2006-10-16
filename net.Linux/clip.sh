@@ -45,7 +45,7 @@ atmclip_svcs_start() {
 #
 atmclip_svc_stop() {
     ebegin $"Stopping" "$2" $"Daemon" "($1)"
-    start-stop-daemon --stop \
+    start-stop-daemon --stop --quiet \
 		--retry \
 		--pidfile "/var/run/$1.pid" \
 		--exec "/usr/sbin/$1"

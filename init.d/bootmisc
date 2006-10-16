@@ -12,15 +12,15 @@ depend() {
 start() {
 	[[ ${BOOT} != "yes" ]] && return 0
 
-	if [[ $(uname) == "Linux" ]] ; then
-		# Put a nologin file in /etc to prevent people from logging
-		# in before system startup is complete.
-		if [[ ${DELAYLOGIN} == "yes" ]] ; then
-			echo $"System bootup in progress - please wait" \
-				> /etc/nologin
-			cp /etc/nologin /etc/nologin.boot &> /dev/null
-		fi
+	# Put a nologin file in /etc to prevent people from logging
+	# in before system startup is complete.
+	if [[ ${DELAYLOGIN} == "yes" ]] ; then
+		echo $"System bootup in progress - please wait" \
+			> /etc/nologin
+		cp /etc/nologin /etc/nologin.boot
+	fi
 
+	if [[ $(uname) == "Linux" ]] ; then
 		# BSD has it's own sysctl init script
 		if [[ -e /etc/sysctl.conf ]] ; then
 			ebegin $"Configuring kernel parameters"

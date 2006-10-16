@@ -1,4 +1,4 @@
-BOOT = bootmisc checkroot checkfs clock hostname localmount urandom 
+BOOT = bootmisc checkroot checkfs clock hostname localmount rmnologin urandom
 DEFAULT = local netmount
 
 install:

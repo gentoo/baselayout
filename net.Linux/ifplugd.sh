@@ -138,7 +138,7 @@ ifplugd_stop() {
 	[[ ! -e ${pidfile} ]] && return 0
 	
 	ebegin $"Stopping ifplugd on" "${iface}"
-	start-stop-daemon --stop --exec /usr/sbin/ifplugd \
+	start-stop-daemon --stop --quiet --exec /usr/sbin/ifplugd \
 		--pidfile "${pidfile}" --signal 3
 	eend $?
 }

@@ -29,8 +29,13 @@ export BOOT="yes"
 
 # Coldplug any net devices found in /dev/
 if [[ ${RC_COLDPLUG:-yes} == "yes" ]] ; then
-	for n in $(dolisting /dev/net) ; do
-		n="net.${n##*/}"
+	for n in /dev/psm[0-9]* /dev/ums[0-9]* /dev/net/*; do
+		[[ -e ${n} ]] || continue
+		if [[ ${n} == "/dev/net/"* ]] ; then
+			n="net.${n#/dev/net/*}"
+		else
+			n="moused.${n#/dev/*}"
+		fi
 		[[ -e /etc/init.d/"${n}" ]] || continue
 		doit=0
 		set -f

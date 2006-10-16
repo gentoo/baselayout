@@ -97,7 +97,7 @@ wpa_supplicant_kill() {
 	pidfile="/var/run/wpa_cli-${iface}.pid"
 	if [[ -f ${pidfile} ]] ; then
 		${report} && ebegin $"Stopping wpa_cli on" "${iface}"
-		start-stop-daemon --stop --exec /bin/wpa_cli \
+		start-stop-daemon --stop --quiet --exec /bin/wpa_cli \
 			--pidfile "${pidfile}"
 		${report} && eend "$?"
 	fi
@@ -106,7 +106,7 @@ wpa_supplicant_kill() {
 	pidfile="/var/run/wpa_supplicant-${iface}.pid"
 	if [[ -f ${pidfile} ]] ; then
 		${report} && ebegin $"Stopping wpa_supplicant on" "${iface}"
-		start-stop-daemon --stop --exec /sbin/wpa_supplicant \
+		start-stop-daemon --stop --quiet --exec /sbin/wpa_supplicant \
 			--pidfile "${pidfile}"
 		${report} && eend "$?"
 	fi

@@ -1,6 +1,15 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  16 Oct 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Trim bash code from rc-daemon now that s-s-d works entirely on BSD.
+    Add default BSD files - master.passwd, login.conf.
+    Don't mount svcdir/tmp if we don't need to.
+    depscan.sh now updates if deptree isn't readable by bash.
+    Move SPARC fixes back to the ebuild.
+    rmnologin is used on BSD too.
+
   12 Oct 2006; Roy Marples <uberlord@gentoo.org>:
 
     Ensure that pid_is_exec is consistent in start-stop-daemon.

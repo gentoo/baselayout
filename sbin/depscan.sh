@@ -118,7 +118,8 @@ if ! ${update} ; then
 	shift
 fi
 
-! ${update} && [[ -e "${mysvcdir}/deptree" ]] && exit 0
+# If we not updating, check that deptree is sane for bash loading too
+! ${update} && bash -n "${mysvcdir}/deptree" && exit 0
 
 ebegin "Caching service dependencies"
 
@@ -139,17 +140,21 @@ awk \
 	-f /lib/rcscripts/awk/cachedepends.awk || \
 	retval=1
 
-bash "${mysvcdir}/depcache" | \
-awk \
-	-f /lib/rcscripts/awk/functions.awk \
-	-f /lib/rcscripts/awk/gendepends.awk || \
-	retval=1
+if [[ ${retval} == "0" ]] ; then
+	bash "${mysvcdir}/depcache" | \
+		awk \
+			-f /lib/rcscripts/awk/functions.awk \
+			-f /lib/rcscripts/awk/gendepends.awk || \
+			retval=1
+fi
 
-touch "${mysvcdir}"/dep{cache,tree}
-chmod 0644 "${mysvcdir}"/dep{cache,tree}
+if [[ ${retval} == "0" ]] ; then
+	touch "${mysvcdir}"/dep{cache,tree}
+	chmod 0644 "${mysvcdir}"/dep{cache,tree}
+fi
 
 eend ${retval} "Failed to cache service dependencies"
 
 exit ${retval}
 
-# vim:ts=4
+# vim: set ts=4 :

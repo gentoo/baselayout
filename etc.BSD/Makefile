@@ -1,5 +1,6 @@
 DIR   = /etc
-FILES = fstab group issue issue.logo passwd rc rc.shutdown
+FILES = COPYRIGHT fstab group issue issue.logo login.conf master.passwd \
+	rc rc.shutdown services
 
 TOPDIR = ..
 include $(TOPDIR)/default.mk

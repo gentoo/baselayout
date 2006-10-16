@@ -63,7 +63,7 @@ ipppd_stop() {
 	[[ ! -f ${pidfile} ]] && return 0
 
 	einfo $"Stopping ipppd for" "${iface}"
-	start-stop-daemon --stop --exec /usr/sbin/ippd \
+	start-stop-daemon --stop --quiet --exec /usr/sbin/ippd \
 		--pidfile "${pidfile}"
 	eend $?
 }

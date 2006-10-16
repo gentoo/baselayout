@@ -20,7 +20,7 @@ OS = Linux
 BASE_DIRS = /$(LIB)/rcscripts/init.d /$(LIB)/rcscripts/tmp
 KEEP_DIRS = /boot /proc /home /mnt \
 	/usr/local/bin /usr/local/sbin /usr/local/share/doc /usr/local/share/man \
-	/var/run
+	/var/lock /var/run
 
 ifeq ($(OS),Linux)
 	KEEP_DIRS += /dev /sys
@@ -56,13 +56,6 @@ install::
 		for x in cachedepends.awk genenviron.awk ; do \
 			sed -i 's,/lib/,/$(LIB)/,g' $(DESTDIR)/$(LIB)/rcscripts/awk/$$x || exit $$? ; \
 		done ; \
-	fi
-	# SPARC fixes
-	# SPARC does not like stty, so we disable RC_INTERACTIVE which requires it
-	# see Gentoo bug #104067.
-	if test $(ARCH) = "sparc" ; then \
-		sed -i -e  '/^KEYMAP=/s:us:sunkeymap:' $(DESTDIR)/etc/conf.d/keymaps || exit $$? ; \
-		sed -i -e '/^RC_INTERACTIVE=/s:yes:no:' $(DESTDIR)/etc/conf.d/rc || exit $$? ; \
 	fi
 
 .PHONY: all clean install

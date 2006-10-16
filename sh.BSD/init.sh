@@ -15,16 +15,22 @@ single_user() {
 # be fairly small and we unmount them after the boot level is done anyway
 # NOTE we don't set a size for Linux either
 mount_svcdir() {
-	try mdconfig -a -t malloc -s 1m -u 1 
-	try newfs -U /dev/md1
-	try mount /dev/md1 "${svclib}"/tmp
-	try cp -p "${svcdir}/"{depcache,deptree} "${svclib}"/tmp
+	local dotmp=false
+	if [[ -e "${svcdir}"/deptree ]] ; then
+		dotmp=true
+		try mdconfig -a -t malloc -s 1m -u 1
+		try newfs -U /dev/md1
+		try mount /dev/md1 "${svclib}"/tmp
+		try cp -p "${svcdir}/"{depcache,deptree} "${svclib}"/tmp
+	fi
 	try mdconfig -a -t malloc -s 2m -u 0
 	try newfs -U /dev/md0
 	try mount /dev/md0 "${svcdir}"
-	try cp -p "${svclib}"/tmp/* "${svcdir}"
-	try umount "${svclib}"/tmp
-	try mdconfig -d -u 1
+	if ${dotmp} ; then
+		try cp -p "${svclib}"/tmp/* "${svcdir}"
+		try umount "${svclib}"/tmp
+		try mdconfig -d -u 1
+	fi
 }
 
 echo

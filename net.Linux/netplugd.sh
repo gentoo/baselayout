@@ -117,7 +117,7 @@ netplugd_stop() {
 	[[ ! -e ${pidfile} ]] && return 0
 	
 	ebegin $"Stopping netplug on" "${iface}"
-	start-stop-daemon --stop --exec /sbin/netplugd \
+	start-stop-daemon --stop --quiet --exec /sbin/netplugd \
 		--pidfile "${pidfile}"
 	eend $?
 }

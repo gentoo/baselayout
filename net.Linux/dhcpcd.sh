@@ -49,7 +49,8 @@ dhcpcd_stop() {
 	if [[ ${d} == *" release "* ]] ; then
 		/sbin/dhcpcd -k "${iface}"
 	else
-		start-stop-daemon --stop --exec /sbin/dhcpcd --pidfile "${pidfile}"
+		start-stop-daemon --stop --quiet \
+			--exec /sbin/dhcpcd --pidfile "${pidfile}"
 	fi
 	eend $?
 }

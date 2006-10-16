@@ -55,7 +55,8 @@ udhcpc_stop() {
 			&& rm "/var/cache/udhcpc-${iface}.lease"
 	fi
 
-	start-stop-daemon --stop --exec /sbin/udhcpc --pidfile "${pidfile}"
+	start-stop-daemon --stop --quiet \
+		--exec /sbin/udhcpc --pidfile "${pidfile}"
 	eend $? || return 1
 
 	[[ -e /var/run/udhcpc-"${iface}".conf ]] \
