@@ -139,10 +139,10 @@ show() {
 	myscripts=$(cd "${ROOT}"etc/init.d; ls)
 
 	# Sanity check to make sure everything is kosher ...
-	for x in $(find "${ROOT}"etc/runlevels -xtype l) ; do
-		ewarn "Broken runlevel entry: ${x}"
+	for x in $(find "${ROOT}"etc/runlevels -type l) ; do
+		[[ -e ${x} ]] || ewarn "Broken runlevel entry: ${x}"
 	done
-	for x in $(find "${ROOT}"etc/runlevels ! -type l -a ! -type d) ; do
+	for x in $(find "${ROOT}"etc/runlevels -maxdepth 1 ! -type l -a ! -type d) ; do
 		ewarn "Invalid runlevel entry: ${x}"
 	done
 
