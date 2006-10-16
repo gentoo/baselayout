@@ -122,7 +122,7 @@ arridx=0
 for level in ${runlevelidxs} ; do
 	if [[ ${level} == ${runlevel} || -n ${ALL} ]] ; then
 		runlevels[${arridx}]=
-		for f in $(find ${runleveldir}/${level} -maxdepth 1 -type l); do
+		for f in $(find ${runleveldir}/${level} -maxdepth 1 -type l | sort); do
 			runlevels[${arridx}]="${runlevels[${arridx}]} ${f##*/}"
 		done
 		let "arridx += 1"

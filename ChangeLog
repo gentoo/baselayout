@@ -3,6 +3,7 @@
 
   16 Oct 2006; Roy Marples <uberlord@gentoo.org>:
 
+    rc-status now sorts services.
     If we haven't begun a service ourselves, begin it so that other services
     can wait on us if needed.
     Trim bash code from rc-daemon now that s-s-d works entirely on BSD.
