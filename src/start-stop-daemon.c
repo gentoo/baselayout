@@ -76,7 +76,6 @@ else
 #include <sys/user.h>
 #include <sys/sysctl.h>
 
-#include <err.h>
 #include <kvm.h>
 #include <libgen.h>
 #endif
@@ -101,6 +100,7 @@ else
 #include <limits.h>
 #include <assert.h>
 #include <ctype.h>
+#include <err.h>
 
 #ifdef HAVE_PAM
 #include <security/pam_appl.h>
@@ -179,12 +179,9 @@ static int pid_is_exec(pid_t pid, const char *name, const struct stat *esb);
 #endif
 
 #ifdef __GNUC__
-static void fatal(const char *format, ...)
-	NONRETURNPRINTFFORMAT(1, 2);
 static void badusage(const char *msg)
 	NONRETURNING;
 #else
-static void fatal(const char *format, ...);
 static void badusage(const char *msg);
 #endif
 
@@ -219,20 +216,6 @@ do { \
 } while(0)
 
 
-static void
-fatal(const char *format, ...)
-{
-	va_list arglist;
-
-	fprintf(stderr, "%s: ", progname);
-	va_start(arglist, format);
-	vfprintf(stderr, format, arglist);
-	va_end(arglist);
-	fprintf(stderr, " (%s)\n", strerror (errno));
-	exit(2);
-}
-
-
 static void *
 xmalloc(int size)
 {
@@ -241,17 +224,15 @@ xmalloc(int size)
 	ptr = malloc(size);
 	if (ptr)
 		return ptr;
-	fatal("malloc(%d) failed", size);
+	errx(2, "malloc(%d) failed", size);
 }
-
 
 static void
 xgettimeofday(struct timeval *tv)
 {
 	if (gettimeofday(tv,0) != 0)
-		fatal("gettimeofday failed: %s", strerror(errno));
+		errx(2, "gettimeofday failed: %s", strerror(errno));
 }
-
 
 static void
 push(struct pid_list **list, pid_t pid)
@@ -739,7 +720,7 @@ pid_is_running(pid_t pid)
 	sprintf(buf, "/proc/%d", pid);
 	if (stat(buf, &sb) != 0) {
 		if (errno!=ENOENT)
-			fatal("Error stating %s: %s", buf, strerror(errno));
+			errx(2, "Error stating %s: %s", buf, strerror(errno));
 		return 0;
 	}
 
@@ -779,8 +760,8 @@ do_pidfile(const char *name)
 		if (fscanf(f, "%d", &pid) == 1)
 			check(pid);
 		fclose(f);
-	} else if (errno != ENOENT)
-		fatal("open pidfile %s: %s", name, strerror(errno));
+	} else if (errno != ENOENT || stop != 0)
+		errx(2, "open pidfile %s: %s", name, strerror(errno));
 
 }
 
@@ -798,7 +779,7 @@ do_procinit(void)
 
 	procdir = opendir("/proc");
 	if (!procdir)
-		fatal("opendir /proc: %s", strerror(errno));
+		errx(2, "opendir /proc: %s", strerror(errno));
 
 	foundany = 0;
 	while ((entry = readdir(procdir)) != NULL) {
@@ -809,7 +790,7 @@ do_procinit(void)
 	}
 	closedir(procdir);
 	if (!foundany)
-		fatal("nothing in /proc - not mounted?");
+		errx(2, "nothing in /proc - not mounted?");
 }
 #endif /* OSLinux */
 
@@ -1138,7 +1119,7 @@ run_stop_schedule(void)
 	else if (execname)
 		set_what_stop(execname);
 	else
-		fatal("internal error, please report");
+		errx(2, "internal error, please report");
 
 	anykilled = 0;
 	retry_nr = 0;
@@ -1224,7 +1205,7 @@ run_stop_schedule(void)
 
 				r = select(0,0,0,0,&interval);
 				if (r < 0 && errno != EINTR)
-					fatal("select() failed for pause: %s",
+					errx(2, "select() failed for pause: %s",
 					      strerror(errno));
 			}
 
@@ -1278,7 +1259,7 @@ main(int argc, char **argv)
 
 	if (changeroot == NULL) {
 		if (execname && stat(execname, &exec_stat))
-			fatal("stat %s: %s", execname, strerror(errno));
+			errx(2, "stat %s: %s", execname, strerror(errno));
 	} else {
 		if (execname) {
 			char *tmp = NULL;
@@ -1288,7 +1269,7 @@ main(int argc, char **argv)
 			strncat(tmp, execname, strlen(execname));
 
 			if (stat(tmp, &exec_stat)) {
-				fatal("stat %s: %s", tmp, strerror(errno));
+				errx(2, "stat %s: %s", tmp, strerror(errno));
 				free(tmp);
 			} else {
 				free(tmp);
@@ -1301,7 +1282,7 @@ main(int argc, char **argv)
 
 		pw = getpwnam(userspec);
 		if (!pw)
-			fatal("user `%s' not found\n", userspec);
+			errx(2, "user `%s' not found\n", userspec);
 
 		user_id = pw->pw_uid;
 	}
@@ -1309,13 +1290,13 @@ main(int argc, char **argv)
 	if (changegroup && sscanf(changegroup, "%d", &runas_gid) != 1) {
 		struct group *gr = getgrnam(changegroup);
 		if (!gr)
-			fatal("group `%s' not found\n", changegroup);
+			errx(2, "group `%s' not found\n", changegroup);
 		runas_gid = gr->gr_gid;
 	}
 	if (changeuser && sscanf(changeuser, "%d", &runas_uid) != 1) {
 		struct passwd *pw = getpwnam(changeuser);
 		if (!pw)
-			fatal("user `%s' not found\n", changeuser);
+			errx(2, "user `%s' not found\n", changeuser);
 		runas_uid = pw->pw_uid;
 		if (changegroup == NULL) { /* pass the default group of this user */
 			changegroup = ""; /* just empty */
@@ -1362,7 +1343,7 @@ main(int argc, char **argv)
 			printf("Detaching to start %s...", startas);
 		i = fork();
 		if (i<0) {
-			fatal("Unable to fork.\n");
+			errx(2, "Unable to fork.\n");
 		}
 		if (i) { /* parent */
 			if (quietmode < 0)
@@ -1379,22 +1360,22 @@ main(int argc, char **argv)
 	if (nicelevel) {
 		errno=0;
 		if ((nice(nicelevel)==-1) && (errno!=0))
-			fatal("Unable to alter nice level by %i: %s", nicelevel,
+			errx(2, "Unable to alter nice level by %i: %s", nicelevel,
 				strerror(errno));
 	}
 	if (changeroot != NULL) {
 		if (chdir(changeroot) < 0)
-			fatal("Unable to chdir() to %s", changeroot);
+			errx(2, "Unable to chdir() to %s", changeroot);
 		if (chroot(changeroot) < 0)
-			fatal("Unable to chroot() to %s", changeroot);
+			errx(2, "Unable to chroot() to %s", changeroot);
 	}
 	if (chdir(changedir) < 0)
-		fatal("Unable to chdir() to %s", changedir);
+		errx(2, "Unable to chdir() to %s", changedir);
         if (mpidfile && pidfile != NULL) { /* user wants _us_ to make the pidfile :) */
                 FILE *pidf = fopen(pidfile, "w");
                 pid_t pidt = getpid();
                 if (pidf == NULL)
-                        fatal("Unable to open pidfile `%s' for writing: %s", pidfile,
+                        errx(2, "Unable to open pidfile `%s' for writing: %s", pidfile,
                                 strerror(errno));
                 fprintf(pidf, "%d\n", pidt);
                 fclose(pidf);
@@ -1419,15 +1400,15 @@ main(int argc, char **argv)
 #endif
 	if (changeuser != NULL) {
 		if (setgid(runas_gid))
-			fatal("Unable to set gid to %d", runas_gid);
+			errx(2, "Unable to set gid to %d", runas_gid);
 		if (initgroups(changeuser, runas_gid))
-			fatal("Unable to set initgroups() with gid %d", runas_gid);
+			errx(2, "Unable to set initgroups() with gid %d", runas_gid);
 		if (setuid(runas_uid))
-			fatal("Unable to set uid to %s", changeuser);
+			errx(2, "Unable to set uid to %s", changeuser);
 	}
 	if (env != NULL) {
 		if(putenv(env))
-			fatal("Unable to set variable: %s", env);
+			errx(2, "Unable to set variable: %s", env);
 	}
 	if (background) { /* continue background setup */
 		int i;
@@ -1460,5 +1441,5 @@ main(int argc, char **argv)
 	if (pamr == PAM_SUCCESS)
 		pam_close_session(pamh, PAM_SILENT);
 #endif
-	fatal("Unable to start %s: %s", startas, strerror(errno));
+	errx(2, "Unable to start %s: %s", startas, strerror(errno));
 }

@@ -203,7 +203,14 @@ rc_start_daemon() {
 rc_stop_daemon() {
 	local retval=
 	
-	eval /sbin/start-stop-daemon "${args}" 
+	eval /sbin/start-stop-daemon "${args}"
+
+	# Don't wait around if the pidfile does not exist
+	if [[ -n ${pidfile} && ! -e ${pidfile} ]] ; then
+		# If no daemons are running, return 0
+		! is_daemon_running ${cmd}
+		return $?
+	fi
 	
 	local timeout=$((${RC_WAIT_ON_STOP} * 10))
 	while [[ ${timeout} -gt 0 ]] ; do

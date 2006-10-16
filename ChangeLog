@@ -3,6 +3,9 @@
 
   16 Oct 2006; Roy Marples <uberlord@gentoo.org>:
 
+    start-stop-daemon now complains when pidfile is missing when stopping.
+    Fixes #72145 thanks to Eldad Zack.
+
     rc-status now sorts services.
     If we haven't begun a service ourselves, begin it so that other services
     can wait on us if needed.
