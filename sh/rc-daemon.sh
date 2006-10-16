@@ -201,24 +201,24 @@ rc_start_daemon() {
 # kill the process ourselves and any children left over
 # Returns 0 if everything was successful otherwise 1
 rc_stop_daemon() {
-	local retval=
-	
 	eval /sbin/start-stop-daemon "${args}"
 
 	# Don't wait around if the pidfile does not exist
-	if [[ -n ${pidfile} && ! -e ${pidfile} ]] ; then
+	if [[ -n ${pidfile} && ! -e ${pidfile} && -n ${cmd} ]] ; then
 		# If no daemons are running, return 0
 		! is_daemon_running ${cmd}
 		return $?
 	fi
 	
-	local timeout=$((${RC_WAIT_ON_STOP} * 10))
-	while [[ ${timeout} -gt 0 ]] ; do
-		is_daemon_running ${cmd} "${pidfile}" || break
-		LC_ALL=C sleep 0.1
-		((timeout--))
-	done
-	[[ ${timeout} -le 0 ]] && return 1
+	if [[ -n ${cmd} ]] ; then
+		local timeout=$((${RC_WAIT_ON_STOP} * 10))
+		while [[ ${timeout} -gt 0 ]] ; do
+			is_daemon_running ${cmd} "${pidfile}" || break
+			LC_ALL=C sleep 0.1
+			((timeout--))
+		done
+		[[ ${timeout} -le 0 ]] && return 1
+	fi
 	
 	# Remove the pidfile if the process didn't
 	[[ -f ${pidfile} ]] && rm -f "${pidfile}"
