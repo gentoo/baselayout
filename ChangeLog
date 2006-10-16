@@ -6,6 +6,9 @@
     start-stop-daemon now complains when pidfile is missing when stopping.
     Fixes #72145 thanks to Eldad Zack.
 
+    Stop rc-update descending into SCM directories.
+    Fixes #138188 thanks to Daniele Varrazzo.
+
     rc-status now sorts services.
     If we haven't begun a service ourselves, begin it so that other services
     can wait on us if needed.
