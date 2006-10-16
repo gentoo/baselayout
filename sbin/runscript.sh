@@ -129,6 +129,7 @@ service_started "${SVCNAME}"
 svcstarted="$?"
 service_inactive "${SVCNAME}"
 svcinactive="$?"
+svcbegin=false
 svc_quit() {
 	eerror $"ERROR:" " ${SVCNAME}" $"caught an interrupt"
 	eflush
@@ -139,6 +140,7 @@ svc_quit() {
 	else
 		mark_service_stopped "${SVCNAME}"
 	fi
+	${svcbegin} && end_service "${SVCNAME}" 1
 	exit 1
 }
 
@@ -236,6 +238,11 @@ svc_stop() {
 	trap "svc_quit" INT QUIT TSTP
 
 	mark_service_starting "${SVCNAME}"
+	if begin_service "${SVCNAME}" ; then
+		svcbegin=true
+	else
+		svcbegin=false
+	fi
 	
 	# Store our e* messages in a buffer so we pretty print when parallel
 	[[ ${RC_PARALLEL_STARTUP} == "yes" && ${RC_QUIET} != "yes" ]] \
@@ -346,6 +353,11 @@ svc_stop() {
 		ebuffer ""
 	fi
 
+	if ${svcbegin} ; then
+		svcbegin=false
+		end_service "${SVCNAME}"
+	fi
+
 	# Reset the trap
 	svc_trap
 	
@@ -376,6 +388,12 @@ svc_start() {
 			eerror $"ERROR: "" ${SVCNAME}" $"is already starting."
 		fi
 		return 1
+	fi
+
+	if begin_service "${SVCNAME}" ; then
+		svcbegin=true
+	else
+		svcbegin=false
 	fi
 
 	# Ensure that we clean up if we abort for any reason
@@ -498,6 +516,11 @@ svc_start() {
 	if [[ ${RC_PARALLEL_STARTUP} == "yes" && ${RC_QUIET} != "yes" ]] ; then
 		eflush
 		ebuffer ""
+	fi
+
+	if ${svcbegin} ; then
+		svcbegin=false
+		end_service "${SVCNAME}"
 	fi
 
 	# Reset the trap

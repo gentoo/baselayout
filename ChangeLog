@@ -3,6 +3,8 @@
 
   16 Oct 2006; Roy Marples <uberlord@gentoo.org>:
 
+    If we haven't begun a service ourselves, begin it so that other services
+    can wait on us if needed.
     Trim bash code from rc-daemon now that s-s-d works entirely on BSD.
     Add default BSD files - master.passwd, login.conf.
     Don't mount svcdir/tmp if we don't need to.

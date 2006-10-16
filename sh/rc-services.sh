@@ -561,6 +561,8 @@ mark_service_inactive() {
 	
 	rm -f "${svcdir}/started/$1" "${svcdir}/wasinactive/$1" \
 		"${svcdir}/starting/$1" "${svcdir}/stopping/$1"
+	
+	end_service "$1"
 
 	return 0
 }

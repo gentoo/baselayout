@@ -34,15 +34,17 @@ install:: $(SUBDIRS_INSTALL)
 # Install rules
 #
 
-INSTALL_DIR  = install -m 0755 -d
-INSTALL_EXE  = install -m 0755
-INSTALL_FILE = install -m 0644
+INSTALL_DIR    = install -m 0755 -d
+INSTALL_EXE    = install -m 0755
+INSTALL_FILE   = install -m 0644
+INSTALL_SECURE = install -m 0600
 
 install:: $(EXES) $(FILES) $(FILES_NOEXIST) $(MANS)
 	$(INSTALL_DIR) $(DESTDIR)$(DIR)
 	for x in $(EXES)  ; do $(INSTALL_EXE)  $$x $(DESTDIR)$(DIR) || exit $$? ; done
 	for x in $(FILES) ; do $(INSTALL_FILE) $$x $(DESTDIR)$(DIR) || exit $$? ; done
 	for x in $(FILES_NOEXIST) ; do if ! test -e $(DESTDIR)$(DIR)/$$x ; then $(INSTALL_FILE) $$x $(DESTDIR)$(DIR) || exit $$? ; fi ; done
+	for x in $(FILES_SECURE) ; do $(INSTALL_SECURE) $$x $(DESTDIR)$(DIR) || exit $$? ; done
 	for x in $(MANS)  ; do \
 	    ext=`echo $$x | sed -e 's/^.*\\.//'` ; \
 	    $(INSTALL_DIR) $(DESTDIR)$(DIR)/man$$ext || exit $$? ; \
