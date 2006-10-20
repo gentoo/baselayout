@@ -11,6 +11,7 @@ man:*:9:
 smmsp:*:25:
 guest:*:31:
 uucp:*:66:
+network:*:69:
 portage:*:250:
 nogroup:*:65533:
 nobody:*:65534:
