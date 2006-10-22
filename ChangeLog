@@ -1,6 +1,20 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  22 Oct 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Added new C program rc-depend which calculates init script dependencies,
+    provides and ordering based on the deptree made by our awk scripts.
+    This solves the big pause seen when running rc or changing runlevels.
+
+    RC_STRICT_NET_CHECKING has been punted in favour of a more generic
+    framework where we check runlevel, running (only if nothing in runlevel)
+    and then boot runlevel.
+
+    Service configs are now dot seperated, so net.eth0 will load conf.d/net
+    and then conf.d/net.eth0. As such, openvpn.work will also load
+    conf.d/openvpn and then conf.d/openvpn.work
+
   19 Oct 2006; Roy Marples <uberlord@gentoo.org>:
 
     start-stop-daemon now stops correctly on FreeBSD is /proc is not

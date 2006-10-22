@@ -1,0 +1,51 @@
+.TH "BASELAYOUT" "8" "Oct 2006" "baselayout" "baselayout"
+.SH NAME
+rc-depend \ - resolve init script dependencies
+.SH SYNOPSIS
+\fBrc-depend\fR \fI-ineed\fR \fI-iuse\fR \fI<service>\fR ...
+.br
+\fBrc-depend\fR \fI--notrace\fR \fI-iprovide\fR \fI<service>\fR ...
+.br
+\fBrc-depend\fR \fI-needsme\fR \fI<service>\fR ...
+.SH DESCRIPTION
+Gentoos init system uses service dependencies to depend on other services.
+Rather than just starting in a set order, we start and stop in the order
+defined by the services themselves.
+For example, most services require local disks to be mounted and as such can
+depend on the localmount service. Others depend on and net and dns and will
+only start when those dependencies have been satisfied.
+
+One issue of note is that a service can provide another service, which is more
+generic. A good example of this is that net.lo and any service linked to it 
+provide "net", which a few services depend on. You can of course have a few
+network interfaces: modern laptops have 3 being loopback, wired and wireless.
+What makes this more interesting is that it could be setup so that both wired
+and wireless are optional. So we work out provided services like so :-
+
+1) Always use any services in the runlevel.
+.br
+2) If no services are defined in the runlevel then use any running services
+that satisfy the provide.
+.br
+3) Append any services in the boot runlevel.
+
+\fBrc-order\fR is primarily used internally by Gentoo and is not meant as an
+end-user or admin tool. This man page is purely to describe its function.
+.SH OPTIONS
+.TP
+\fB--notrace\fR
+Just show the dependencies for the specified services without working out
+anything extra.
+.TP
+\fB-<dependency type>\fR
+Work with the specified dependency type, such as ineed, iafter, needsme.
+If none are supplied we default to ineed and iuse. If the the runlevel is
+starting or stopping we use iafter by default too.
+
+.SH "REPORTING BUGS"
+Please report bugs via http://bugs.gentoo.org/
+.SH "SEE ALSO"
+.BR rc-update (8),
+.BR rc-status (8)
+.SH AUTHORS
+Roy Marples <uberlord@gentoo.org>

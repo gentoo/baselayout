@@ -8,7 +8,7 @@ DESTDIR =
 LIB = lib
 
 BIN_TARGETS =
-SBIN_TARGETS = consoletype runscript start-stop-daemon
+SBIN_TARGETS = consoletype rc-depend runscript start-stop-daemon
 SYS_WHITELIST = env_whitelist
 
 TARGET = $(BIN_TARGETS) $(SBIN_TARGETS)

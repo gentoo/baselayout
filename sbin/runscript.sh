@@ -104,14 +104,16 @@ search_lang="${LC_ALL:-${LC_MESSAGES:-${LANG}}}"
 	&& TEXTDOMAIN="${myservice}"
 
 # Source configuration files.
-# (1) Source /etc/conf.d/net if it is a net.* service
+# (1) Source /etc/conf.d/${PREFIX} where ${PREFIX} is the first part of
+#     ${SVCNAME} dot seperated. For example if net.eth0 then load net.
 # (2) Source /etc/conf.d/${SVCNAME} to get initscript-specific
 #     configuration (if it exists).
 # (3) Source /etc/rc.conf to pick up potentially overriding
 #     configuration, if the system administrator chose to put it
 #     there (if it exists).
-if net_service "${SVCNAME}" ; then
-	conf=$(add_suffix /etc/conf.d/net)
+conf="${SVCNAME%%.*}"
+if [[ -n ${conf} && ${conf} != "${SVCNAME}" ]] ; then
+	conf=$(add_suffix "/etc/conf.d/${conf}")
 	[[ -e ${conf} ]] && source "${conf}"
 fi
 conf=$(add_suffix "/etc/conf.d/${SVCNAME}")
@@ -181,11 +183,14 @@ svc_schedule_start() {
 	ln -snf "/etc/init.d/${service}" \
 		"${svcdir}/scheduled/${service}/${start}"
 
-	for x in $(iprovide "${service}" ) ; do
+	for x in $(rc-depend --notrace -iprovide "${service}" ) ; do
 		[[ ! -d "${svcdir}/scheduled/${x}" ]] \
 			&& mkdir -p "${svcdir}/scheduled/${x}"
 		touch "${svcdir}/scheduled/${x}/${start}"
 	done
+
+	mark_service_stopped "${start}"
+	end_service "${start}" 1
 }
 
 svc_start_scheduled() {
@@ -198,20 +203,22 @@ svc_start_scheduled() {
 		return
 	fi
 
-	local x= y= services= provides=$(iprovide "${SVCNAME}")
+	local x= y= services= provides=$(rc-depend --notrace -iprovide "${SVCNAME}")
 	for x in "${SVCNAME}" ${provides} ; do
 		for y in $(dolisting "${svcdir}/scheduled/${x}/") ; do
 			services="${services} ${y##*/}"
 		done
 	done
-	
-	for x in $(trace_dependencies ${services}) ; do
-		service_stopped "${x}" && start_service "${x}"
-		rm -f "${svcdir}/scheduled/${SVCNAME}/${x}"
-		for y in ${provides} ; do
-			rm -f "${svcdir}/scheduled/${y}/${x}"
+
+	if [[ -n ${services} ]] ; then
+		for x in $(rc-depend ${services}) ; do
+			service_stopped "${x}" && start_service "${x}"
+			rm -f "${svcdir}/scheduled/${SVCNAME}/${x}"
+			for y in ${provides} ; do
+				rm -f "${svcdir}/scheduled/${y}/${x}"
+			done
 		done
-	done
+	fi
 
 	for x in "${SVCNAME}" ${provides} ; do
 		rmdir "${svcdir}/scheduled/${x}" 2>/dev/null
@@ -219,7 +226,7 @@ svc_start_scheduled() {
 }
 
 svc_stop() {
-	local x= mydep= mydeps= retval=0
+	local x= retval=0
 	local -a servicelist=()
 
 	# Do not try to stop if it had already failed to do so
@@ -256,32 +263,27 @@ svc_stop() {
 		ewarn $"WARNING: you are stopping a boot service."
 	fi
 
-	if [[ ${svcpause} != "yes" && ${RC_NO_DEPS} != "yes" ]] \
-		&& ! service_wasinactive "${SVCNAME}" ; then
-		if net_service "${SVCNAME}" ; then 
-			if is_runlevel_stop || ! is_net_up "${SVCNAME}" ; then
-				mydeps="net"
-			fi
-		fi
-		mydeps="${mydeps} ${SVCNAME}"
-	fi
-
 	# Save the IN_BACKGROUND var as we need to clear it for stopping depends
 	local ib_save="${IN_BACKGROUND}"
 	unset IN_BACKGROUND
 
-	for mydep in ${mydeps} ; do
-		for x in $(needsme "${mydep}") ; do
+	if [[ ${svcpause} != "yes" && ${RC_NO_DEPS} != "yes" ]] \
+		&& ! service_wasinactive "${SVCNAME}" ; then
+		for x in $(reverse_list $(rc-depend -needsme "${SVCNAME}")) ; do
 			if service_started "${x}" || service_inactive "${x}" ; then
 				stop_service "${x}"
 			fi
 			service_list=( "${service_list[@]}" "${x}" )
 		done
-	done
+	fi
 
 	for x in "${service_list[@]}" ; do
-		service_stopped "${x}" && continue
-		wait_service "${x}"
+		local retry=3
+		while [[ ${retry} -gt 0 ]] ; do
+			service_stopped "${x}" && break
+			wait_service "${x}"
+			((retry--))
+		done
 		if ! service_stopped "${x}" ; then
 			eerror $"ERROR:" $"cannot stop" "${SVCNAME}" $"as" "${x}" $"is still up."
 			retval=1
@@ -355,7 +357,7 @@ svc_stop() {
 
 	if ${svcbegin} ; then
 		svcbegin=false
-		end_service "${SVCNAME}"
+		end_service "${SVCNAME}" "${retval}"
 	fi
 
 	# Reset the trap
@@ -405,7 +407,7 @@ svc_start() {
 
 	veinfo $"Service" "${SVCNAME}" $"starting"
 
-	if broken "${SVCNAME}" ; then
+	if [[ -n $(rc-depend --notrace -broken "${SVCNAME}") ]] ; then
 		eerror $"ERROR:  Some services needed are missing.  Run"
 		eerror "        ""'./${SVCNAME}" $"broken' for a list of those"
 		eerror "        " $"services."  "${SVCNAME}" $"was not started."
@@ -417,36 +419,40 @@ svc_start() {
 	unset IN_BACKGROUND
 
 	if [[ ${retval} == "0" && ${RC_NO_DEPS} != "yes" ]] ; then
-		local startupservices="$(ineed "${SVCNAME}") $(valid_iuse "${SVCNAME}")"
 		# Start dependencies, if any.
 		if ! is_runlevel_start ; then
-			for x in ${startupservices} ; do
+			for x in $(rc-depend -ineed -iuse "${SVCNAME}") ; do
 				service_stopped "${x}" && start_service "${x}"
 			done
 		fi
 
 		# Wait for dependencies to finish.
-		for x in ${startupservices} $(valid_iafter "${SVCNAME}") ; do
-			service_started "${x}" && continue
-			! service_inactive "${x}" && wait_service "${x}"
-			if ! service_started "${x}" ; then
-				# A 'need' dependency is critical for startup
-				if ineed -t "${SVCNAME}" "${x}" >/dev/null \
-					|| ( net_service "${x}" && ineed -t "${SVCNAME}" net \
-					&& ! is_net_up ) ; then
-					if service_inactive "${x}" || service_wasinactive "${x}" || \
-						[[ -n $(dolisting "${svcdir}"/scheduled/*/"${x}") ]] ; then
+		local ineed=$(rc-depend --notrace -ineed "${SVCNAME}")
+		for x in $(rc-depend "${SVCNAME}") ; do
+			local timeout=3
+			while [[ ${timeout} -gt 0 ]] ; do
+				wait_service "${x}"
+				service_started "${x}" && continue 2
+				service_stopped "${x}" && break
+				if service_inactive "${x}" ; then
+					if [[ " ${ineed} " == *" ${x} "* ||
+						" ${ineed} " == *" $(rc-depend --notrace -iprovide "${x}") " ]] ; then
 						svc_schedule_start "${x}" "${SVCNAME}"
-
-					[[ -n ${startinactive} ]] && startinactive="${startinactive}, "
+						[[ -n ${startinactive} ]] && startinactive="${startinactive}, "
 						startinactive="${startinactive}${x}"
-					else
-						eerror "ERROR:" $"cannot start" "${SVCNAME}" $"as" "${x}" $"could not start"
-						retval=1
-						break
 					fi
+
+					continue 2
 				fi
-			fi
+				
+				((timeout--))
+			done
+
+			[[ " ${ineed} " != *" ${x} "*  ]] && continue
+		
+			eerror "ERROR:" $"cannot start" "${SVCNAME}" $"as" "${x}" $"could not start"
+			retval=1
+			break
 		done
 
 		if [[ -n ${startinactive} && ${retval} == "0" ]] ; then
@@ -498,11 +504,8 @@ svc_start() {
 	if [[ ${retval} != "0" ]] ; then
 		if [[ ${svcinactive} == "0" ]] ; then
 			mark_service_inactive "${SVCNAME}"
-		else
+		elif [[ -z ${startinactive} ]] ; then
 			mark_service_stopped "${SVCNAME}"
-		fi
-
-		if [[ -z ${startinactive} ]] ; then
 			is_runlevel_start && mark_service_failed "${SVCNAME}"
 			eerror $"ERROR:" " ${SVCNAME}" $"failed to start"
 		fi
@@ -520,7 +523,7 @@ svc_start() {
 
 	if ${svcbegin} ; then
 		svcbegin=false
-		end_service "${SVCNAME}"
+		end_service "${SVCNAME}" "${retval}"
 	fi
 
 	# Reset the trap
@@ -672,7 +675,7 @@ for arg in $* ; do
 		service_started "${SVCNAME}" && svc_start_scheduled
 		;;
 	needsme|ineed|usesme|iuse|broken|iafter|iprovide)
-		trace_dependencies "-${arg}"
+		rc-depend "-${arg}" "${SVCNAME}"
 		;;
 	status)
 		svc_status

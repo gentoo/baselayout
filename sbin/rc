@@ -263,20 +263,28 @@ for x in ${myscripts} ; do
 done
 
 get_stop_services() {
-	local x list
+	local x= list=
 
 	for x in $(dolisting "${svcdir}/inactive/") \
 	         $(dolisting "${svcdir}/started/") ; do
 		list="${list} ${x##*/}"
 	done
 
-	reverse_list $(trace_dependencies ${list})
+	[[ -n ${list} ]] && reverse_list $(rc-depend ${list})
 }
 
 dep_stop() {
 	local dep= needsme= service="${1##*/}"
 
 	service_stopped "${service}" && return 0
+
+	# Stop everything
+	if [[ ${SOFTLEVEL} == "reboot" \
+	|| ${SOFTLEVEL} == "shutdown" \
+	|| ${SOFTLEVEL} == "single" ]] ; then
+		stop_service "${service}"
+		return 0
+	fi
 
 	# If service is in the new runlevel stop it if the config
 	# file it will use changes due to config profile
@@ -294,20 +302,12 @@ dep_stop() {
 		return 0
 	fi
 
-	if [[ ${SOFTLEVEL} != "reboot" \
-	      && ${SOFTLEVEL} != "shutdown" \
-	      && ${SOFTLEVEL} != "single" ]] ; then
-	      	service_coldplugged "${service}" && return 0
-		if net_service "${service}" ; then
-			[[ -z ${OLDSOFTLEVEL} ]] \
-			|| ! in_runlevel "${service}" "${OLDSOFTLEVEL}" \
-				&& return 0
-		fi
-	fi
+
+	service_coldplugged "${service}" && return 0
 
 	# Something may depend on me
 	needsme=0
-	for dep in $(needsme "${service}") ; do
+	for dep in $(rc-depend --notrace -needsme "${service}") ; do
 		if [[ -L "${svcdir}/softscripts.new/${dep}" ]] \
 		|| service_coldplugged "${dep}" ; then
 			# This dep is valid
@@ -328,7 +328,7 @@ done
 # First stop non critical services
 for i in $(get_stop_services) ; do
 	[[ " ${RC_CRITICAL_SERVICES} " == *" ${i} "* ]] && continue
-	[[ $(iprovide "${i}") == "logger" ]] && continue
+	[[ $(rc-depend --notrace -iprovide "${i}") == "logger" ]] && continue
 	dep_stop "${i}"
 done
 
@@ -343,6 +343,7 @@ done
 # Only change softlevel AFTER all the services have been stopped,
 # else they will not get the depend's right (wrong SOFTLEVEL)
 echo "${SOFTLEVEL}" > "${svcdir}/softlevel"
+unset OLDSOFTLEVEL
 
 if [[ ${SOFTLEVEL} == "reboot" || ${SOFTLEVEL} == "shutdown" ]] ; then
     	# Set LC_ALL=C so that bash doesn't load any locales
@@ -384,7 +385,7 @@ get_start_services() {
 		list="${list} ${x##*/}"
 	done
 
-	trace_dependencies ${list}
+	[[ -n ${list} ]] && rc-depend ${list}
 }
 
 check_critical_failed() {
@@ -471,7 +472,7 @@ if [[ $'\n'$(mount) =~ $'\n'"* ${svcdir} " ]] ; then
 	# Lock svcdir
 	touch "${svcdir}/.locked"
 	# Wait for processes to finish
-	while [ 1 ] ; do
+	while true ; do
 		while [[ -n $(fuser -m "${svcdir}" 2>/dev/null) ]] ; do
 			do_timeout || break
 		done
