@@ -4,7 +4,7 @@
 # RC Dependency and misc service functions
 if [[ ${RC_GOT_SERVICES} != "yes" ]] ; then
 	RC_GOT_SERVICES="yes"
-	depscan.sh
+	[[ ${EUID} == "0" ]] && depscan.sh
 fi
 
 [[ ${RC_GOT_FUNCTIONS} != "yes" ]] && source /sbin/functions.sh
