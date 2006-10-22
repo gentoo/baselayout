@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 
 function print_start() {
-	print "source /sbin/functions.sh" >> TMPCACHE
+	print ". /sbin/functions.sh" >> TMPCACHE
 	print "" >> TMPCACHE
 	print "need() {" >> TMPCACHE
 	print "	echo \"NEED $*\"; return 0" >> TMPCACHE
@@ -43,13 +43,12 @@ function print_header2() {
 	print "(" >> TMPCACHE
 	print "  # Get settings for rc-script ..." >> TMPCACHE
 	print "" >> TMPCACHE
-	print "  [ -e /etc/conf.d/net ]                   && \\" >> TMPCACHE
-	print "  [ \"${SVCNAME%%.*}\" = \"net\" ]           && \\" >> TMPCACHE
-	print "  [ \"${SVCNAME#*.}\" != \"${SVCNAME}\" ] && source /etc/conf.d/net" >> TMPCACHE
+	print "  [ -e \"/etc/conf.d/${SVCNAME%%.*}\" ]    && \\" >> TMPCACHE
+	print "  [ \"${SVCNAME%%.*}\" != \"${SVCNAME}\" ] && . \"/etc/conf.d/${SVCNAME%%.*}\"" >> TMPCACHE
 	print "" >> TMPCACHE
-	print "  [ -e \"/etc/conf.d/${SVCNAME}\" ]        && source \"/etc/conf.d/${SVCNAME}\"" >> TMPCACHE
+	print "  [ -e \"/etc/conf.d/${SVCNAME}\" ]        && . \"/etc/conf.d/${SVCNAME}\"" >> TMPCACHE
 	print "" >> TMPCACHE
-	print "  [ -e /etc/rc.conf ]                      && source /etc/rc.conf" >> TMPCACHE
+	print "  [ -e /etc/rc.conf ]                      && . /etc/rc.conf" >> TMPCACHE
 	print "" >> TMPCACHE
 	print "  depend() {" >> TMPCACHE
 	print "    return 0" >> TMPCACHE
