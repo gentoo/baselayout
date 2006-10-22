@@ -417,7 +417,7 @@ bool valid_service (const char *service)
 {
   return (exists_dir_dir_file (RUNLEVELDIR, bootlevel, service)
 	  || exists_dir_dir_file (RUNLEVELDIR, softlevel, service)
-	  || service_coldplugged (service));
+	  || service_coldplugged (service) || service_started (service));
 }
 
 /* Work out if a service is provided by another service.
@@ -462,14 +462,13 @@ struct linkedlist *get_provided (struct depinfo *deptree,
   bool r_stop = is_runlevel_stop ();
   if (r_start || r_stop || ! providers->item)
     {
-      p = strdup (dt->services);
-      op = p;
+      op = p = strdup (dt->services);
       while ((service = strsep (&p, " ")))
 	{
 	  bool ok = false;
 	  if (r_stop)
 	    {
-	      if (service_stopping (service) || service_stopped (service))
+	      // if (service_stopping (service) || service_stopped (service))
 		ok = true;
 	    }
 	  else
@@ -478,6 +477,19 @@ struct linkedlist *get_provided (struct depinfo *deptree,
 		ok = true;
 	    }
 	  if (ok && get_depinfo (deptree, service))
+	    lp = add_linkedlist (lp, service);
+	}
+      free (op);
+    }
+
+  /* If we still have nothing, then see if anything is inactive. */
+  if (! providers->item)
+    {
+      op = p = strdup (dt->services);
+      while ((service = strsep (&p, " ")))
+	{
+	 if (service_inactive (service))
+	  if (get_depinfo (deptree, service))
 	    lp = add_linkedlist (lp, service);
 	}
       free (op);
@@ -526,14 +538,16 @@ void visit_service (struct depinfo *deptree,
   /* Add ourselves as a visited service */
   l = add_linkedlist(l, depinfo->service);
 
+  char *p, *op;
+  char *service;
+
   struct linkedlist *type;
+  struct depinfo *di;
   for (type = types; type; type = type->next)
     {
       struct deptype *dt = get_deptype (depinfo, type->item);
       if (dt)
 	{
-	  char *p, *op;
-	  char *service;
 	  op = p = strdup (dt->services);
 	  while ((service = strsep (&p, " ")))
 	    {
@@ -543,7 +557,7 @@ void visit_service (struct depinfo *deptree,
 		  continue;
 		}
 
-	      struct depinfo *di = get_depinfo (deptree, service);
+	      di = get_depinfo (deptree, service);
 	      if (strcmp (type->item, "iprovide") == 0)
 		{
 		  add_linkedlist (sorted, service);
@@ -570,6 +584,40 @@ void visit_service (struct depinfo *deptree,
 		  visit_service (deptree, types, sorted, visited, di, true);
 	    }
 	  free (op);
+	}
+
+      /* We give special attention to the needsme type as we can stop services
+	 that depend on us. As such, if we're the last provided service up
+	 then we need to stop the dependants. */
+      if (descend && strcmp (type->item, "needsme") == 0)
+	{
+	  dt = get_deptype (depinfo, "iprovide");
+	  if (dt)
+	    {
+	      op = p = strdup (dt->services);
+	      while ((service = strsep (&p, " ")))
+		{
+		  di = get_depinfo (deptree, service);
+		  struct deptype *dtt = get_deptype (di, "providedby");
+		  char *opp, *pp, *ss;
+		  opp = pp = strdup (dtt->services);
+		  bool visit = true;
+		  while ((ss = strsep (&pp, " ")))
+		    {
+		      if (service_started (ss) &&
+			  strcmp (ss, depinfo->service) != 0)
+			{
+			  visit = false;
+			  break;
+			}
+		    }
+		  free (opp);
+
+		  if (visit)
+		    visit_service (deptree, types, sorted, visited, di, true);
+		}
+	      free (op);
+	    }
 	}
     }
 
