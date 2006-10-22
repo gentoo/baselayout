@@ -107,12 +107,12 @@ void free_linkedlist (struct linkedlist *linkedlist)
     }
 }
 
-char *get_shell_value (const char *string)
+char *get_shell_value (char *string)
 {
   if (! string)
     return NULL;
 
-  char *p = strdup (string);
+  char *p = string;
   if (*p == '"')
     p++;
   char *e = p + strlen (p) - 1;
@@ -124,7 +124,6 @@ char *get_shell_value (const char *string)
   if (*p != 0)
     return p;
 
-  free (p);
   return NULL;
 }
 
@@ -218,17 +217,17 @@ void free_deptree (struct depinfo *deptree)
   struct depinfo *di = deptree;
   while (di)
     {
+      free (di->service);
       struct depinfo *dip = di->next;
       struct deptype *dt = di->deps;
       while (dt)
 	{
-	  struct deptype *dtp = dt->next;
 	  free (dt->type);  
 	  free (dt->services);
+	  struct deptype *dtp = dt->next;
 	  free (dt);
 	  dt = dtp;
 	}
-      free (di->service);
       free (di);
       di = dip;
     }
@@ -245,6 +244,7 @@ struct depinfo *load_deptree (char *file)
     err(-1, "Failed to open deptree `%s'", file);
 
   char *types[MAXTYPES];
+  memset (types, 0, MAXTYPES);
 
   struct depinfo *deptree = xmalloc (sizeof (struct depinfo));
   memset (deptree, 0, sizeof (struct depinfo));
@@ -383,6 +383,11 @@ struct depinfo *load_deptree (char *file)
       free (deptree);
       deptree = NULL;
     }
+
+  int i;
+  for (i = 0; i <= max_type; i++)
+    if (types[i])
+      free (types[i]);
 
   return deptree;
 }
