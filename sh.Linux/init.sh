@@ -73,23 +73,17 @@ source "${svclib}"/sh/init-common-pre.sh
 # logs, and that with dmesg can be used to check for problems
 ${RC_DMESG_LEVEL+/bin/dmesg -n ${RC_DMESG_LEVEL}}
 
-echo
-echo -e "${GOOD}Gentoo/Linux $(get_base_ver); ${BRACKET}http://www.gentoo.org/${NORMAL}"
-echo -e " Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2"
-echo
-if [[ ${RC_INTERACTIVE} == "yes" ]] ; then
-	echo -e "Press ${GOOD}I${NORMAL} to enter interactive boot mode"
-	echo
-fi
 check_statedir /proc
 
-ebegin "Mounting proc at /proc"
+procfs="proc"
+[[ $(uname) == "GNU/kFreeBSD" ]] && proc="linprocfs"
+ebegin "Mounting ${procfs} at /proc"
 if [[ ${RC_USE_FSTAB} = "yes" ]] ; then
 	mntcmd=$(get_mount_fstab /proc)
 else
-	unset mntcmd
+	mntcmd="-t ${procfs} proc /proc -o noexec,nosuid,nodev"
 fi
-try mount -n ${mntcmd:--t proc proc /proc -o noexec,nosuid,nodev}
+try mount -n ${mntcmd}
 eend $?
 
 # Start profiling init now we have /proc
@@ -100,7 +94,7 @@ profiling start
 # Note: /proc MUST be mounted
 [[ -f /sbin/livecd-functions.sh ]] && livecd_read_commandline
 
-if [[ $(get_KV) -ge "$(KV_to_int '2.6.0')" ]] ; then
+if [[ $(uname) != "GNU/kFreeBSD" && $(get_KV) -ge "$(KV_to_int '2.6.0')" ]] ; then
 	if [[ -d /sys ]] ; then
 		ebegin "Mounting sysfs at /sys"
 		if [[ ${RC_USE_FSTAB} == "yes" ]] ; then
@@ -130,6 +124,9 @@ fi
 #  - make sure the kernel has support
 if [[ ${RC_DEVICES} == "static" ]] ; then
 	ebegin "Using existing device nodes in /dev"
+	eend 0
+elif [[ $(uname) == "GNU/kFreeBSD" ]] ; then
+	ebegin "Using kFreeBSD devfs in /dev"
 	eend 0
 else
 	fellback_to_devfs="no"
@@ -188,7 +185,7 @@ else
 fi
 
 # From linux-2.5.68 we need to mount /dev/pts again ...
-if [[ "$(get_KV)" -ge "$(KV_to_int '2.5.68')" ]] ; then
+if [[ $(uname) != "GNU/kFreeBSD" && "$(get_KV)" -ge "$(KV_to_int '2.5.68')" ]] ; then
 	have_devpts=$(awk '($2 == "devpts") { print "yes"; exit 0 }' /proc/filesystems)
 
 	if [[ ${have_devpts} = "yes" ]] ; then

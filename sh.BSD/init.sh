@@ -33,15 +33,6 @@ mount_svcdir() {
 	fi
 }
 
-echo
-echo -e "${GOOD}Gentoo/FreeBSD $(get_base_ver); ${BRACKET}http://gentoo-alt.gentoo.org/${NORMAL}"
-echo -e " Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2"
-echo
-if [[ ${RC_INTERACTIVE} == "yes" ]] ; then
-	echo -e "Press ${GOOD}I${NORMAL} to enter interactive boot mode"
-	echo
-fi
-
 # Mount linprocfs if instructed
 mntcmd=$(get_mount_fstab /proc)
 if [[ -n ${mntcmd} ]] ; then
