@@ -420,17 +420,19 @@ svc_start() {
 
 	if [[ ${retval} == "0" && ${RC_NO_DEPS} != "yes" ]] ; then
 		# Start dependencies, if any.
+		local startsvc=$(rc-depend "${SVCNAME}")
 		if ! is_runlevel_start ; then
-			for x in $(rc-depend -ineed -iuse "${SVCNAME}") ; do
+			for x in ${startsvc} ; do
 				service_stopped "${x}" && start_service "${x}"
 			done
 		fi
 
 		# Wait for dependencies to finish.
 		local ineed=$(rc-depend --notrace -ineed "${SVCNAME}")
-		for x in $(rc-depend "${SVCNAME}") ; do
+		for x in ${startsvc} $(rc-depend -iafter "${SVCNAME}") ; do
 			local timeout=3
 			while [[ ${timeout} -gt 0 ]] ; do
+				service_started "${x}" && continue 2
 				wait_service "${x}"
 				service_started "${x}" && continue 2
 				service_stopped "${x}" && break

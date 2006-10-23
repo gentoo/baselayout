@@ -685,9 +685,6 @@ int main (int argc, char **argv)
     {
       lasttype = add_linkedlist (lasttype, "ineed");
       lasttype = add_linkedlist (lasttype, "iuse");
-      /* Include iafter if rc is starting or stopping */
-      if (is_runlevel_start () || is_runlevel_stop ())
-	lasttype = add_linkedlist (lasttype, "iafter");
     }
 
   /* Setup our runlevels */
