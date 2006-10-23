@@ -11,7 +11,6 @@
 # For pcmcia users. note that pcmcia must be added to the same
 # runlevel as the net.* script that needs it.
 depend() {
-	provide net
 	need localmount
 	after bootmisc modules hostname
 	use isapnp isdn pcmcia usb wlan
@@ -22,6 +21,7 @@ depend() {
 	[[ $(type -t "depend_${iface}") == "function" ]] && depend_${iface}
 
 	if [[ ${iface} != "lo" && ${iface} != "lo0" ]] ; then
+		provide net
 		after net.lo net.lo0
 
 		# Support new style RC_NEED and RC_USE in one net file
@@ -29,6 +29,9 @@ depend() {
 		[[ -n ${!x} ]] && need ${!x}
 		x="RC_USE_${iface}"
 		[[ -n ${!x} ]] && use ${!x}
+	else
+		# Support legacy setting
+		[[ ${RC_NET_STRICT_CHECKING} != "no" ]] && provide net
 	fi
 
 	return 0
@@ -233,7 +236,7 @@ module_load_minimum() {
 		return 1
 	fi
 
-	if ! source "${f}" ; then
+	if ! . "${f}" ; then
 		eerror "${MODULE}" $"failed a sanity check"
 		return 1
 	fi
@@ -285,7 +288,7 @@ modules_load_auto() {
 		)
 
 		if [[ $? == 0 ]] ; then
-			source "${MODULES[i]}.sh"
+			. "${MODULES[i]}.sh"
 			MODULES[i]="${MODULES[i]##*/}"
 		else
 			unset MODULES[i]
@@ -382,7 +385,7 @@ modules_check_user() {
 			# The function may not exist because the modules software is
 			# not installed. Load the module and report its error
 			if [[ -e "${MODULES_DIR}/${umods[i]}.sh" ]] ; then
-				source "${MODULES_DIR}/${umods[i]}.sh"
+				. "${MODULES_DIR}/${umods[i]}.sh"
 				is_function "${umods[i]}_check_installed" \
 					&& ${umods[i]}_check_installed true
 			else

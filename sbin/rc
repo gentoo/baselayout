@@ -4,18 +4,18 @@
 
 trap ":" INT QUIT TSTP
 
-source /sbin/functions.sh
-source "${svclib}/sh/rc-functions.sh"
+. /sbin/functions.sh
+. "${svclib}/sh/rc-functions.sh"
 
 # Cache some vars so our spawned subshells know our width and if we
 # can do colour
 export COLS CONSOLETYPE
 
 # Only source this when this is a livecd booting ...
-[[ -f /sbin/livecd-functions.sh ]] && source /sbin/livecd-functions.sh
+[[ -f /sbin/livecd-functions.sh ]] && . /sbin/livecd-functions.sh
 
 # Silly users
-[[ -f /etc/conf.d/rc-extra ]] && source /etc/conf.d/rc-extra
+[[ -f /etc/conf.d/rc-extra ]] && . /etc/conf.d/rc-extra
 
 umask 022
 
@@ -114,7 +114,7 @@ argv1=$1
 # directly ...
 if [[ ( ${RUNLEVEL} == "S" || ${RUNLEVEL} == "1" ) && ${argv1} = "sysinit" ]]
 then
-	source "${svclib}"/sh/init.sh || {
+	. "${svclib}"/sh/init.sh || {
 		echo "Could not source init.sh !?"
 		exit 1
 	}
@@ -166,7 +166,7 @@ then
 fi
 
 # Ensure all critical services have are in the boot runlevel
-source "${svclib}/sh/rc-services.sh"
+. "${svclib}/sh/rc-services.sh"
 
 if [[ -f "${svcdir}/softlevel" ]] ; then
 	# Set OLDSOFTLEVEL if we had a valid SOFTLEVEL

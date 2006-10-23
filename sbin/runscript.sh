@@ -10,7 +10,7 @@ fi
 cd /
 
 # Common functions
-[[ ${RC_GOT_FUNCTIONS} != "yes" ]] && source /sbin/functions.sh
+[[ ${RC_GOT_FUNCTIONS} != "yes" ]] && . /sbin/functions.sh
 
 # Sleep until svcdir is unlocked
 while [[ -e ${svcdir}/.locked ]] ; do
@@ -94,9 +94,9 @@ svcpause="no"
 svcrestart="no"
 
 # Functions to handle dependencies and services
-[[ ${RC_GOT_SERVICES} != "yes" ]] && source "${svclib}/sh/rc-services.sh"
+[[ ${RC_GOT_SERVICES} != "yes" ]] && . "${svclib}/sh/rc-services.sh"
 # Functions to control daemons
-[[ ${RC_GOT_DAEMON} != "yes" ]] && source "${svclib}/sh/rc-daemon.sh"
+[[ ${RC_GOT_DAEMON} != "yes" ]] && . "${svclib}/sh/rc-daemon.sh"
 
 # Check if the textdomain is non-default
 search_lang="${LC_ALL:-${LC_MESSAGES:-${LANG}}}"
@@ -114,12 +114,12 @@ search_lang="${LC_ALL:-${LC_MESSAGES:-${LANG}}}"
 conf="${SVCNAME%%.*}"
 if [[ -n ${conf} && ${conf} != "${SVCNAME}" ]] ; then
 	conf=$(add_suffix "/etc/conf.d/${conf}")
-	[[ -e ${conf} ]] && source "${conf}"
+	[[ -e ${conf} ]] && . "${conf}"
 fi
 conf=$(add_suffix "/etc/conf.d/${SVCNAME}")
-[[ -e ${conf} ]] && source "${conf}"
+[[ -e ${conf} ]] && . "${conf}"
 conf=$(add_suffix /etc/rc.conf)
-[[ -e ${conf} ]] && source "${conf}"
+[[ -e ${conf} ]] && . "${conf}"
 
 mylevel="${SOFTLEVEL}"
 [[ ${SOFTLEVEL} == "${BOOTLEVEL}" \
@@ -578,7 +578,7 @@ svc_status() {
 # set *after* wrap_rcscript, else we get duplicates.
 opts="start stop restart"
 
-source "${myscript}"
+. "${myscript}"
 
 # make sure whe have valid $opts
 if [[ -z ${opts} ]] ; then

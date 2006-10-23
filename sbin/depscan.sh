@@ -7,7 +7,7 @@ if [[ ${BOOT} == "yes" ]] ; then
 fi
 
 argv0=${0##*/}
-source /etc/init.d/functions.sh || {
+. /etc/init.d/functions.sh || {
 	echo "${argv0}: Could not source /etc/init.d/functions.sh!" 1>&2
 	exit 1
 }
