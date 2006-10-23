@@ -83,6 +83,8 @@ if ! touch "${mysvcdir}/.test" 2>/dev/null ; then
 fi
 rm -f "${mysvcdir}/.test"
 
+[[ ! -e "${mysvcdir}/depcache" || ! -e "${mysvcdir}/deptree" ]] && update=true
+
 # Only update if files have actually changed
 if ! ${update} ; then
 	clock_screw=0
@@ -119,12 +121,19 @@ if ! ${update} ; then
 fi
 
 # If we not updating, check that deptree is sane for bash loading too
-! ${update} && bash -n "${mysvcdir}/deptree" && exit 0
+if ! ${update} ; then
+	if ! bash -n "${mysvcdir}/deptree" ; then
+		eerror "${mysvcdir}/deptree is not valid - recreating it"
+		update=true
+	else
+		exit 0
+	fi
+fi
 
 ebegin "Caching service dependencies"
 
 # Clean out the non volatile directories ...
-rm -rf "${mysvcdir}"/dep{cache,tree} "${mysvcdir}"/{broken,snapshot}/*
+rm -rf "${mysvcdir}"/depcache "${mysvcdir}"/{broken,snapshot}/*
 
 retval=0
 SVCDIR="${mysvcdir}"
