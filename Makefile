@@ -18,7 +18,7 @@ ARCH = x86
 OS = Linux
 
 BASE_DIRS = /$(LIB)/rcscripts/init.d /$(LIB)/rcscripts/tmp
-KEEP_DIRS = /boot /proc /home /mnt \
+KEEP_DIRS = /boot /proc /home /mnt /root \
 	/usr/local/bin /usr/local/sbin /usr/local/share/doc /usr/local/share/man \
 	/var/lock /var/run
 
