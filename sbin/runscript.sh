@@ -211,7 +211,7 @@ svc_start_scheduled() {
 	done
 
 	if [[ -n ${services} ]] ; then
-		for x in $(rc-depend ${services}) ; do
+		for x in $(rc-depend -ineed -iuse ${services}) ; do
 			service_stopped "${x}" && start_service "${x}"
 			rm -f "${svcdir}/scheduled/${SVCNAME}/${x}"
 			for y in ${provides} ; do
@@ -289,6 +289,14 @@ svc_stop() {
 			retval=1
 			break
 		fi
+	done
+
+	# Work with before and after deps too, but as they are not need
+	# we cannot explicitly stop them.
+	# We use --notrace with -ibefore to stop circular deps.
+	for x in $(rc-depend -usesme "${SVCNAME}") \
+		$(rc-depend --notrace -ibefore "${SVCNAME}"); do
+		service_stopping "${x}" && wait_service "${x}"
 	done
 
 	IN_BACKGROUND="${ib_save}"
@@ -420,7 +428,7 @@ svc_start() {
 
 	if [[ ${retval} == "0" && ${RC_NO_DEPS} != "yes" ]] ; then
 		# Start dependencies, if any.
-		local startsvc=$(rc-depend "${SVCNAME}")
+		local startsvc=$(rc-depend -ineed -iuse "${SVCNAME}")
 		if ! is_runlevel_start ; then
 			for x in ${startsvc} ; do
 				service_stopped "${x}" && start_service "${x}"
