@@ -478,7 +478,8 @@ struct linkedlist *get_provided (struct depinfo *deptree,
 	    }
 	  else
 	    {
-	      if (service_starting (service) || service_started (service))
+	      if (service_starting (service) || service_started (service)
+	          || service_coldplugged (service))
 		ok = true;
 	    }
 	  if (ok && get_depinfo (deptree, service))
