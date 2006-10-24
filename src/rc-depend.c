@@ -476,7 +476,7 @@ struct linkedlist *get_provided (struct depinfo *deptree,
 	  bool ok = false;
 	  if (r_stop)
 	    {
-	      // if (service_stopping (service) || service_stopped (service))
+	      if (service_started(service) || service_stopping (service))
 		ok = true;
 	    }
 	  else
