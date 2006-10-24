@@ -445,7 +445,7 @@ svc_start() {
 				service_started "${x}" && continue 2
 				service_stopped "${x}" && break
 				if service_inactive "${x}" ; then
-					if [[ " ${ineed} " == *" ${x} "* ||
+					if [[ " ${startsvc} " == *" ${x} "* ||
 						" ${ineed} " == *" $(rc-depend --notrace -iprovide "${x}") " ]] ; then
 						svc_schedule_start "${x}" "${SVCNAME}"
 						[[ -n ${startinactive} ]] && startinactive="${startinactive}, "

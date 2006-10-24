@@ -450,7 +450,10 @@ struct linkedlist *get_provided (struct depinfo *deptree,
   op = p = strdup (dt->services);
   while ((service = strsep (&p, " ")))
     {
-      if (in_runlevel (softlevel, service))
+      if (in_runlevel (softlevel, service) ||
+      	  (strcmp (softlevel, bootlevel) == 0 
+	   && service_coldplugged (service))
+	 )
 	if (get_depinfo (deptree, service))
 	  if (exists_dir_file (INITDIR, service))
 	      lp = add_linkedlist (lp, service);
@@ -478,8 +481,7 @@ struct linkedlist *get_provided (struct depinfo *deptree,
 	    }
 	  else
 	    {
-	      if (service_starting (service) || service_started (service)
-	          || service_coldplugged (service))
+	      if (service_started (service))
 		ok = true;
 	    }
 	  if (ok && get_depinfo (deptree, service))
