@@ -232,7 +232,7 @@ rc_stop_daemon() {
 # If not, we stop the service
 update_service_status() {
 	local service="$1" daemonfile="${svcdir}/daemons/$1" i=
-	local -a RC_DAEMONS= RC_PIDFILES=
+	local -a RC_DAEMONS=() RC_PIDFILES=()
 
 	# We only care about marking started services as stopped if the daemon(s)
 	# for it are no longer running
@@ -262,7 +262,7 @@ start-stop-daemon() {
 	local cmd= name= pidfile= pid= stopping= signal= nothing=false
 	local background=false makepidfile=false
 	local daemonfile=
-	local -a RC_DAEMONS= RC_PIDFILES=
+	local -a RC_DAEMONS=() RC_PIDFILES=()
 
 	if [[ -n ${SVCNAME} ]] ; then
 		daemonfile="${svcdir}/daemons/${SVCNAME}"
@@ -303,7 +303,7 @@ start-stop-daemon() {
 			# so we add it to our state
 			local max="${#RC_DAEMONS[@]}"
 			for (( i=0; i<${max}; i++ )); do
-				if [[ ${RC_DAEMONS[i]} == "{cmd}" \
+				if [[ ${RC_DAEMONS[i]} == "${cmd}" \
 					&& ${RC_PIDFILES[i]} == "${pidfile}" ]]; then
 					break
 				fi
