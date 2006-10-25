@@ -286,7 +286,7 @@ start-stop-daemon() {
 			for (( i=0; i<${#RC_DAEMONS[@]}; i++ )); do
 				# We should really check for valid cmd AND pidfile
 				# But most called to --stop only set the pidfile
-				if [[ ${RC_DAEMONS[i]} == "{cmd}" \
+				if [[ ${RC_DAEMONS[i]} == "${cmd}" \
 					|| ${RC_PIDFILES[i]} == "${pidfile}" ]]; then
 					unset RC_DAEMONS[i] RC_PIDFILES[i]
 					RC_DAEMONS=( "${RC_DAEMONS[@]}" )
