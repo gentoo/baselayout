@@ -21,7 +21,7 @@ mount_svcdir() {
 		try mdconfig -a -t malloc -s 1m -u 1
 		try newfs -U /dev/md1
 		try mount /dev/md1 "${svclib}"/tmp
-		try cp -p "${svcdir}/"{depcache,deptree} "${svclib}"/tmp
+		try cp -p "${svcdir}/"*{depcache,deptree} "${svclib}"/tmp
 	fi
 	try mdconfig -a -t malloc -s 2m -u 0
 	try newfs -U /dev/md0

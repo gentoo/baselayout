@@ -2,11 +2,11 @@
 .SH NAME
 rc-depend \ - resolve init script dependencies
 .SH SYNOPSIS
-\fBrc-depend\fR \fI-ineed\fR \fI-iuse\fR \fI<service>\fR ...
+\fBrc-depend\fR \fI-ineed\fR \fI-iuse\fR \fIservice\fR ...
 .br
-\fBrc-depend\fR \fI--notrace\fR \fI-iprovide\fR \fI<service>\fR ...
+\fBrc-depend\fR \fI--notrace\fR \fI-iprovide\fR \fIservice\fR ...
 .br
-\fBrc-depend\fR \fI-needsme\fR \fI<service>\fR ...
+\fBrc-depend\fR \fI-needsme\fR \fIservice\fR ...
 .SH DESCRIPTION
 Gentoos init system uses service dependencies to depend on other services.
 Rather than just starting in a set order, we start and stop in the order
@@ -33,13 +33,22 @@ that satisfy the provide.
 end-user or admin tool. This man page is purely to describe its function.
 .SH OPTIONS
 .TP
+\fB--alwaysvalid\fR
+Every service is valid. This is a needed option if the deptree is generated
+from Gentoo network modules.
+.TP
+\fB--deptree \fIdeptree\fR
+Use this \fIdeptree\fR instead of the default one,
+\fI/lib/rcscripts/init.d/deptree\fR.
+.TP
 \fB--notrace\fR
 Just show the dependencies for the specified services without working out
 anything extra.
 .TP
-\fB-<dependency type>\fR
-Work with the specified dependency type, such as ineed, iafter, needsme.
-If none are supplied we default to ineed and iuse.
+\fB-dependency_type\fR
+Work with the specified dependency type, such as \fIineed\fR, \fIiafter\fR,
+\fIneedsme\fR.
+If none are supplied we default to \fIineed\fR and \fIiuse\fR.
 .SH NOTES
 When needsme depends on a provided service, like net, we don't do any
 mapping to an actual service unless it's the last one up. So if net.lo and
@@ -48,8 +57,9 @@ every service that needs net then has net.lo in its needsme list so that
 we net.lo stops it brings down all services that depend on net.
 .SH BUGS
 \fBrc-depend\fR relies on \fI/lib/rcscripts/init.d/deptree\fR being up-to-date.
-Every time a service is run in /etc/init.d or when \fBrc\fR runs then the deptree
-is updated by \fBdepscan.sh\fR if any config files are newer than the deptree.
+Every time a service is run in /etc/init.d or when \fBrc\fR runs then the
+\fIdeptree\fR is updated by \fBdepscan.sh\fR if any config files are newer
+than the \fIdeptree\fR.
 So in theory we should never have a problem with this.
 .SH "REPORTING BUGS"
 Please report bugs via http://bugs.gentoo.org/

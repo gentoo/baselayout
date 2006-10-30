@@ -56,7 +56,7 @@ mount_svcdir() {
 	if [[ -e "${svcdir}"/deptree ]] ; then
 		dotmp=true
 		try mount -t "${fs}" "${devtmp}" "${svclib}"/tmp -o rw
-		try cp -p "${svcdir}"/{depcache,deptree} "${svclib}"/tmp
+		try cp -p "${svcdir}"/*{depcache,deptree} "${svclib}"/tmp
 	fi
 	try mount -t "${fs}" "${devdir}" "${svcdir}" -o rw
 	if ${dotmp} ; then
