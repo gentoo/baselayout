@@ -114,7 +114,7 @@ RC_USE_FSTAB="no"
 #  auto   - let the scripts figure out what's best at boot
 #  devfs  - use devfs (requires sys-fs/devfsd)
 #  udev   - use udev (requires sys-fs/udev)
-#  static - let the user manage /dev
+#  static - let the user manage /dev (YOU need to create ALL device nodes)
 
 RC_DEVICES="auto"
 
