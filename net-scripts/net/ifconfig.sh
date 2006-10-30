@@ -182,7 +182,7 @@ ifconfig_set_name() {
 # Outputs a space-separated list on stdout, in reverse order, for
 # example "eth0:2 eth0:1"
 ifconfig_get_aliases_rev() {
-	ifconfig | grep -o "^$1:[0-9]* " | tac
+	ifconfig | grep -Eo "^$1:[^ ]+" | tac
 }
 
 # bool ifconfig_del_addresses(char *interface, bool onlyinet)
