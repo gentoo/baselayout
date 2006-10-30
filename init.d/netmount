@@ -87,14 +87,13 @@ stop() {
 	# We will gradually use harsher kill signals so that the 
 	# processes know we aren't screwing around here ;).
 	declare -a siglist=( "TERM" "KILL" "KILL" )
-	local retry=0 fs= node= point= l= retval=0
+	local retry=0 fs= node= point= l= retval=0 foo=
 	eindent
 
-	get_mounts | sort -ur | while read l ; do
-		fs=${l##* }
-		l=${l% *}
-		node=${l##* }
-		point=${l% *}
+	get_mounts | sort -ur | while read point node fs foo ; do
+		point=${point//\040/ }
+		node=${node//\040/ }
+		fs=${fs//\040/ }
 		[[ ${fs} =~ "^(${NET_FS_LIST// /|})$" ]] || continue
 		[[ ${point} == "/" ]] && continue
 

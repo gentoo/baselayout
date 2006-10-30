@@ -46,13 +46,12 @@ fi
 # get_mounts is our portable function to get mount information
 do_unmount() {
 	local cmd="$1" no_unmounts="$2" nodes="$3"
-	local l= fs= node= point=
+	local l= fs= node= point= foo=
 
-	get_mounts | sort -ur | while read l ; do
-		fs=${l##* }
-		l=${l% *}
-		node=${l##* }
-		point=${l% *}
+	get_mounts | sort -ur | while read point node fs foo ; do
+		point=${point//\040/ }
+		node=${node//\040/ }
+		fs=${fs//\040/ }
 		[[ ${fs} =~ "${RC_NO_UMOUNT_FS}" ]] && continue
 		[[ -n ${no_unmounts} && ${point} =~ "${no_unmounts}" ]] && continue
 		[[ -z ${nodes} && ${node} =~ "${nodes}" ]] || continue

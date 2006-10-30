@@ -751,16 +751,31 @@ get_base_ver() {
 
 # char get_mounts(void)
 #
-# The mount command, whilst having unportable output always exists
-# We try to make it portable here, making out scripts easier to work with
-# Ouput is mount point, node, fs. Provided that we never have a space in a
-# node we will never break.
+# Portable method of getting mount names and points.
+# Returns as "point node fs"
+# Remember to convert 040 back to a space.
 get_mounts() {
-	local sedfoo='s/^\([^ ]*\) on \(.*\) (\([^,)]*\).*)$/\2 \1 \3/g'
-	if [[ $(uname) == "Linux" ]] ;then
-		sedfoo='s/^\([^ ]*\) on \(.*\) type \([^ ]*\) (.*)$/\2 \1 \3/g'
+	local point= node= fs= foo=
+
+	# Linux has /proc/mounts which should always exist
+	if [[ $(uname) == "Linux" ]] ; then
+    		while read node point fs foo ; do
+			echo "${point} ${node} ${fs}" 
+    		done < /proc/mounts
+		return 
 	fi
-	LC_ALL=C mount | sed -e "${sedfoo}"
+
+	# OK, pray we have a -p option that outputs mounts in fstab format
+	# using tabs as the seperator.
+	# Then pray that there are no tabs in the either.
+	# Currently only FreeBSD supports this and the other BSDs will
+	# have to be patched.
+	# Athough the BSD's may support /proc, they do NOT put \040 in place
+	# of the spaces and we should not force a /proc either.
+	local IFS=$'\t'
+	LC_ALL=C mount -p | while read node point fs foo ; do
+		echo "${point// /\040} ${node// /\040} ${fs%% *}"
+	done
 }
 
 # Network filesystems list for common use in rc-scripts.
