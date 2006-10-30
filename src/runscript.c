@@ -24,6 +24,7 @@
 # define LIBDIR		"lib"
 #endif
 
+#define SHELL		"/bin/bash"
 #define SBIN_RC		"/sbin/rc"
 #define PROFILE_ENV	"/etc/profile.env"
 #define RCSCRIPTS_LIB	"/" LIBDIR "/rcscripts"
@@ -181,7 +182,7 @@ main (int argc, char *argv[])
   int new = 1;
 
   /* Need to be /bin/bash, else BASH is invalid */
-  myargs[0] = "/bin/bash";
+  myargs[0] = SHELL;
   while (argv[new] != 0)
     {
       myargs[new] = argv[new];
@@ -218,7 +219,7 @@ main (int argc, char *argv[])
     }
   else
     {
-      if (execve ("/bin/bash", myargs, myenv) < 0)
+      if (execve (SHELL, myargs, myenv) < 0)
 	exit (1);
     }
 

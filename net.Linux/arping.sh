@@ -6,7 +6,7 @@
 #
 # Sets up the dependancies for the module
 arping_depend() {
-	functions interface_exists interface_up
+	before interface
 }
 
 # bool arping_check_installed(void)

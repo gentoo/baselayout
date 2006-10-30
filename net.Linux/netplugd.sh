@@ -9,7 +9,6 @@ netplugd_depend() {
 	after macnet rename
 	before interface
 	provide plug
-	functions interface_exists interface_get_mac_address
 }
 
 # void netplugd_expose(void)

@@ -12,7 +12,6 @@ brctl() {
 # Sets up the dependancies for the module
 bridge_depend() {
 	before interface macnet
-	functions interface_down interface_del_addresses interface_set_flag
 }
 
 # void bridge_expose(void)

@@ -14,7 +14,6 @@ pump() {
 pump_depend() {
 	after interface
 	provide dhcp
-	functions interface_exists interface_get_address
 }
 
 # void pump_expose(void)

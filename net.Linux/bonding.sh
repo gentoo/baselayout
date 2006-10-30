@@ -7,8 +7,6 @@
 # Sets up the dependancies for the module
 bonding_depend() {
 	before interface macchanger
-	functions interface_exists interface_up interface_down \
-		interface_del_addresses
 }
 
 # void bonding_expose(void)

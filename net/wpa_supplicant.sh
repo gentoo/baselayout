@@ -23,7 +23,6 @@ wpa_supplicant_depend() {
 	after macnet plug
 	before interface
 	provide wireless
-	functions interface_exists
 }
 
 # void wpa_supplicant_expose(void)

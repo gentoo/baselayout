@@ -663,7 +663,7 @@ get_bootparam() {
 	[[ ! -r /proc/cmdline ]] && return 1
 
 	for copt in $(< /proc/cmdline) ; do
-		if [[ ${copt%=*} == "gentoo" ]] ; then
+		if [[ ${copt%\=*} == "gentoo" ]] ; then
 			params=$(awk -v PARAMS="${copt##*=}" '
 				BEGIN {
 					split(PARAMS, nodes, ",")

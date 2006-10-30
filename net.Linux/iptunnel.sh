@@ -7,7 +7,6 @@
 # Sets up the dependancies for the module
 iptunnel_depend() {
 	before interface
-	functions interface_exists interface_tunnel
 }
 
 # void iptunnel_expose(void)

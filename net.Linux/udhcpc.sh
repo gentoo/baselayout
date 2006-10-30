@@ -14,7 +14,6 @@ udhcpc() {
 udhcpc_depend() {
 	after interface
 	provide dhcp
-	functions interface_exists interface_get_address
 }
 
 # void udhcpc_expose(void)

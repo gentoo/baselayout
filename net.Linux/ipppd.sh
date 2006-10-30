@@ -11,7 +11,6 @@ ipppd_depend() {
 	after macnet
 	before interface
 	provide isdn
-	functions interface_exists interface_type
 	variables ipppd
 }
 

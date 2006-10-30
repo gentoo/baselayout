@@ -14,7 +14,6 @@ vconfig() {
 vlan_depend() {
 	after interface
 	before dhcp
-	functions iface_start iface_stop
 }
 
 # void vlan_expose(void)

@@ -7,7 +7,6 @@
 # Sets up the dependancies for the module
 apipa_depend() {
 	installed arping
-	functions interface_exists
 }
 
 # bool apipa_start(char *iface)

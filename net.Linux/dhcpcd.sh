@@ -9,7 +9,6 @@
 dhcpcd_depend() {
 	after interface
 	provide dhcp
-	functions interface_exists interface_get_address
 }
 
 # void dhcpcd_expose(void)

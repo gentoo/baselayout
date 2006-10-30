@@ -48,19 +48,11 @@ after() {
 before() {
 	eval "${MODULE}_before() { echo \"$*\"; }"
 }
-need() {
-	eval "${MODULE}_need() { echo \"$*\"; }"
-}
 installed() {
-	# We deliberately misspell this as _installed will probably be used
-	# at some point
 	eval "${MODULE}_instlled() { echo \"$*\"; }"
 }
 provide() {
 	eval "${MODULE}_provide() { echo \"$*\"; }"
-}
-functions() {
-	eval "${MODULE}_functions() { echo \"$*\"; }"
 }
 variables() {
 	eval "${MODULE}_variables() { echo \"$*\"; }"
@@ -172,11 +164,13 @@ is_function() {
 function_wrap() {
 	local i=
 
-	is_function "${2}_depend" && return
+	is_function "${2}_depend" && return 1
 
 	for i in $(typeset -f | grep -o '^'"${1}"'_[^ ]*'); do
 		eval "${2}${i#${1}}() { ${i} \"\$@\"; }"
 	done
+
+	return 0
 }
 
 # char[] * expand_parameters(char *cmd)
@@ -225,351 +219,18 @@ configure_variables() {
 
 	return 0
 }
-# bool module_load_minimum(char *module)
-#
-# Does the minimum checking on a module - even when forcing
-module_load_minimum() {
-	local f="$1.sh" MODULE="${1##*/}"
-
-	if [[ ! -f ${f} ]] ; then
-		eerror "${f}" $"does not exist"
-		return 1
-	fi
-
-	if ! . "${f}" ; then
-		eerror "${MODULE}" $"failed a sanity check"
-		return 1
-	fi
-
-	for f in depend; do
-		is_function "${MODULE}_${f}" && continue
-		eerror "${MODULE}.sh" $"does not support the required function" "${f}"
-		return 1
-	done
-
-	return 0
-}
-
-# bool modules_load_auto()
-#
-# Load and check each module for sanity
-# If the module is not installed, the functions are to be removed
-modules_load_auto() {
-	local i j inst
-
-	# Populate the MODULES array
-	# Basically we treat evey file .sh in ${MODULES_DIR} as a module
-	MODULES=( $(dolisting "${MODULES_DIR}") )
-	j="${#MODULES[@]}"
-
-	# Each of these sources into the global namespace, so it's
-	# important that module functions and variables are prefixed with
-	# the module name, for example iproute2_
-
-	j="${#MODULES[@]}"
-	loaded_interface=false
-	for (( i=0; i<j; i++ )); do
-		MODULES[i]="${MODULES[i]%.sh*}"
-		if [[ ${MODULES[i]##*/} == "interface" ]] ; then
-			eerror $"interface is a reserved name - cannot load a module called interface"
-			return 1
-		fi
-		
-		(
-		u=0;
-		module_load_minimum "${MODULES[i]}" || u=1;
-		if [[ ${u} == 0 ]] ; then
-			inst="${MODULES[i]##*/}_check_installed";
-			if is_function "${inst}" ; then
-				${inst} false || u=1;
-			fi
-		fi
-		exit "${u}";
-		)
-
-		if [[ $? == 0 ]] ; then
-			. "${MODULES[i]}.sh"
-			MODULES[i]="${MODULES[i]##*/}"
-		else
-			unset MODULES[i]
-		fi
-	done
-
-	MODULES=( "${MODULES[@]}" )
-	return 0
-}
-
-# bool modules_check_installed(void)
-#
-# Ensure that all modules have the required modules loaded
-# This enables us to remove modules from the MODULES array
-# Whilst other modules can still explicitly call them
-# One example of this is essidnet which configures network
-# settings for the specific ESSID connected to as the user
-# may be using a daemon to configure wireless instead of our
-# iwconfig module
-modules_check_installed() {
-	local i j missingdeps nmods="${#MODULES[@]}"
-
-	for (( i=0; i<nmods; i++ )); do
-		is_function "${MODULES[i]}_instlled" || continue
-		for j in $( ${MODULES[i]}_instlled ); do
-			missingdeps=true
-			if is_function "${j}_check_installed" ; then
-				${j}_check_installed && missingdeps=false
-			elif is_function "${j}_depend" ; then
-				missingdeps=false
-			fi
-			${missingdeps} && unset MODULES[i] && unset PROVIDES[i] && break
-		done
-	done
-
-	MODULES=( "${MODULES[@]}" )
-	PROVIDES=( "${PROVIDES[@]}" )
-}
-
-# bool modules_check_user(void)
-modules_check_user() {
-	local iface="$1" ifvar=$(bash_variable "${IFACE}")
-	local i= j= k= l= nmods="${#MODULES[@]}"
-	local -a umods=()
-
-	# Has the interface got any specific modules?
-	umods="modules_${ifvar}[@]"
-	umods=( "${!umods}" )
-
-	# Global setting follows interface-specific setting
-	umods=( "${umods[@]}" "${modules[@]}" )
-
-	# Add our preferred modules
-	local -a pmods=( "iproute2" "dhcpcd" "wpa_supplicant" "netplugd" )
-	umods=( "${umods[@]}" "${pmods[@]}" )
-
-	# First we strip any modules that conflict from user settings
-	# So if the user specifies pump then we don't use dhcpcd
-	for (( i=0; i<${#umods[@]}; i++ )); do
-		# Some users will inevitably put "dhcp" in their modules
-		# list.  To keep users from screwing up their system this
-		# way, ignore this setting so that the default dhcp
-		# module will be used.
-		[[ ${umods[i]} == "dhcp" ]] && continue
-
-		# We remove any modules we explicitly don't want
-		if [[ ${umods[i]} == "!"* ]] ; then
-			for (( j=0; j<nmods; j++ )); do
-				[[ -z ${MODULES[j]} ]] && continue
-				if [[ ${umods[i]:1} == "${MODULES[j]}" \
-					|| ${umods[i]:1} == "${PROVIDES[j]}" ]] ; then
-					# We may need to setup a class wrapper for it even though
-					# we don't use it directly
-					# However, we put it into an array and wrap later as
-					# another module may provide the same thing
-					${MODULES[j]}_check_installed \
-						&& WRAP_MODULES=(
-							"${WRAP_MODULES[@]}"
-							"${MODULES[j]} ${PROVIDES[j]}"
-						)
-					unset MODULES[j]
-					unset PROVIDES[j]
-				fi
-			done
-			continue
-		fi
-
-		if ! is_function "${umods[i]}_depend" ; then
-			# If the module is one of our preferred modules, then
-			# ignore this error; whatever is available will be
-			# used instead.
-			(( i < ${#umods[@]} - ${#pmods[@]} )) || continue
-
-			# The function may not exist because the modules software is
-			# not installed. Load the module and report its error
-			if [[ -e "${MODULES_DIR}/${umods[i]}.sh" ]] ; then
-				. "${MODULES_DIR}/${umods[i]}.sh"
-				is_function "${umods[i]}_check_installed" \
-					&& ${umods[i]}_check_installed true
-			else
-				eerror $"The module" "\"${umods[i]}\"" $"does not exist"
-			fi
-			return 1
-		fi
-
-		if is_function "${umods[i]}_provide" ; then
-			mod=$(${umods[i]}_provide)
-		else
-			mod="${umods[i]}"
-		fi
-		for (( j=0; j<nmods; j++ )); do
-			[[ -z ${MODULES[j]} ]] && continue
-			if [[ ${PROVIDES[j]} == "${mod}" && ${umods[i]} != "${MODULES[j]}" ]] ; then
-				# We don't have a match - now ensure that we still provide an
-				# alternative. This is to handle our preferred modules.
-				for (( l=0; l<nmods; l++ )); do
-					[[ ${l} == "${j}" || -z ${MODULES[l]} ]] && continue
-					if [[ ${PROVIDES[l]} == "${mod}" ]] ; then
-						unset MODULES[j]
-						unset PROVIDES[j]
-						break
-					fi
-				done
-			fi
-		done
-	done
-
-	# Then we strip conflicting modules.
-	# We only need to do this for 3rd party modules that conflict with
-	# our own modules and the preferred list AND the user modules
-	# list doesn't specify a preference.
-	for (( i=0; i<nmods-1; i++ )); do
-		[[ -z ${MODULES[i]} ]] && continue			
-		for (( j=i+1; j<nmods; j++)); do
-			[[ -z ${MODULES[j]} ]] && continue
-			[[ ${PROVIDES[i]} == "${PROVIDES[j]}" ]] \
-			&& unset MODULES[j] && unset PROVIDES[j]
-		done
-	done
-
-	MODULES=( "${MODULES[@]}" )
-	PROVIDES=( "${PROVIDES[@]}" )
-	return 0
-}
-
-# void modules_sort(void)
-#
-# Sort our modules
-modules_sort() {
-	local i= j= nmods=${#MODULES[@]} m=
-	local -a provide=() provide_list=() after=() dead=() sorted=() sortedp=()
-
-	# Make our provide list
-	for ((i=0; i<nmods; i++)); do
-		dead[i]="false"
-		if [[ ${MODULES[i]} != "${PROVIDES[i]}" ]] ; then
-			local provided=false
-			for ((j=0; j<${#provide[@]}; j++)); do
-				if [[ ${provide[j]} == "${PROVIDES[i]}" ]] ; then
-					provide_list[j]="${provide_list[j]} ${MODULES[i]}"
-					provided=true
-				fi
-			done
-			if ! ${provided}; then
-				provide[j]="${PROVIDES[i]}"
-				provide_list[j]="${MODULES[i]}"
-			fi
-		fi
-	done
-
-	# Create an after array, which holds which modules the module at
-	# index i must be after
-	for ((i=0; i<nmods; i++)); do
-		if is_function "${MODULES[i]}_after" ; then
-			after[i]=" ${after[i]} $(${MODULES[i]}_after) "
-		fi
-		if is_function "${MODULES[i]}_before" ; then
-			for m in $(${MODULES[i]}_before); do
-				for ((j=0; j<nmods; j++)) ; do
-					if [[ ${PROVIDES[j]} == "${m}" ]] ; then
-						after[j]=" ${after[j]} ${MODULES[i]} "
-						break
-					fi
-				done
-			done
-		fi
-	done
-
-	# Replace the after list modules with real modules
-	for ((i=0; i<nmods; i++)); do
-		if [[ -n ${after[i]} ]] ; then
-			for ((j=0; j<${#provide[@]}; j++)); do
-				after[i]="${after[i]// ${provide[j]} / ${provide_list[j]} }"
-			done
-		fi
-	done
-	
-	# We then use the below code to provide a topologial sort
-    module_after_visit() {
-        local name="$1" i= x=
-
-		for ((i=0; i<nmods; i++)); do
-			[[ ${MODULES[i]} == "$1" ]] && break
-		done
-
-        ${dead[i]} && return
-        dead[i]="true"
-
-        for x in ${after[i]} ; do
-            module_after_visit "${x}"
-        done
-
-        sorted=( "${sorted[@]}" "${MODULES[i]}" )
-		sortedp=( "${sortedp[@]}" "${PROVIDES[i]}" )
-    }
-
-	for x in ${MODULES[@]}; do
-		module_after_visit "${x}"
-	done
-
-	MODULES=( "${sorted[@]}" )
-	PROVIDES=( "${sortedp[@]}" )
-}
-
-# bool modules_check_depends(bool showprovides)
-modules_check_depends() {
-	local showprovides="${1:-false}" nmods="${#MODULES[@]}" i= j= needmod=
-	local missingdeps= p= interface=false
-
-	for (( i=0; i<nmods; i++ )); do
-		if is_function "${MODULES[i]}_need" ; then
-			for needmod in $(${MODULES[i]}_need); do
-				missingdeps=true
-				for (( j=0; j<nmods; j++ )); do
-					if [[ ${needmod} == "${MODULES[j]}" \
-						|| ${needmod} == "${PROVIDES[j]}" ]] ; then
-						missingdeps=false
-						break
-					fi
-				done
-				if ${missingdeps} ; then
-					eerror "${MODULES[i]} needs ${needmod} (dependency failure)"
-					return 1
-				fi
-			done
-		fi
-
-		if is_function "${MODULES[i]}_functions" ; then
-			for f in $(${MODULES[i]}_functions); do
-				if ! is_function "${f}" ; then
-					eerror "${MODULES[i]}:" $"missing required function" "\"${f}\""
-					return 1
-				fi
-			done
-		fi
-
-		[[ ${PROVIDES[i]} == "interface" ]] && interface=true
-
-		if ${showprovides} ; then
-			[[ ${PROVIDES[i]} != "${MODULES[i]}" ]] \
-			&& veinfo "${MODULES[i]}" $"provides" "${PROVIDES[i]}"
-		fi
-	done
-
-	if ! ${interface} ; then
-		eerror $"no interface module has been loaded"
-		return 1
-	fi
-
-	return 0
-}
 
 # bool modules_load(char *iface, bool starting)
 #
 # Loads the defined handler and modules for the interface
 # Returns 0 on success, otherwise 1
 modules_load()  {
-	local iface="$1" starting="${2:-true}" MODULE= p=false i= j= k=
-	local -a x=()
+	local iface=$1 starting=${2:-true} MODULE= i= j= x=
+	local ifvar=$(bash_variable "${iface}")
 	local RC_INDENTATION="${RC_INDENTATION}"
-	local -a PROVIDES=() WRAP_MODULES=()
+	local -a provides=() wrapped=()
+	# These are our preferred modules
+	local -a umods=() pmods=( iproute2 dhcpcd wpa_supplicant netplugd )
 
 	veinfo "Loading networking modules for" "${iface}"
 
@@ -583,91 +244,168 @@ modules_load()  {
 		fi
 	fi
 
+	if ${starting} ; then
+		x="modules_${ifvar}[@]"
+		umods=( "${!x}" "${modules[@]}" )
+	fi
+
 	if [[ -z ${modules_force} ]] ; then
-		modules_load_auto || return 1
-	else
-		j="${#modules_force[@]}"
+		MODULES=( $(dolisting "${MODULES_DIR}") )
+		j="${#MODULES[@]}"
 		for (( i=0; i<j; i++ )); do
-			module_load_minimum "${MODULES_DIR}/${modules_force[i]}" || return 1
-			if is_function "${modules_force[i]}_check_installed" ; then
-				${modules_force[i]}_check_installed || unset modules_force[i]
+			if [[ ${MODULES[i]} != *.sh ]] ; then
+				unset MODULES[i]
+				continue
 			fi
+			MODULES[i]="${MODULES[i]##*/}"
+			MODULES[i]="${MODULES[i]%.sh*}"
 		done
+
+		MODULES=( $(rc-depend --deptree "${svcdir}/netdeptree" \
+					--alwaysvalid -iafter ${MODULES[@]}) )
+	else
 		MODULES=( "${modules_force[@]}" )
 	fi
 
+	# Each of these sources load into the global namespace, so it's
+	# important that module functions and variables are prefixed with
+	# the module name, for example iproute2_
 	j="${#MODULES[@]}"
-	for (( i=0; i<j; i++ )); do
+	for ((i=0; i<j; i++)); do
+		(
+		u=0; report=false;
+		f="${svclib}/net/${MODULES[i]}.sh"
+		if [[ ! -f ${f} ]] ; then
+			is_loopback "${iface}" || eerror "${f}" $"does not exist"
+			exit 1
+		fi
+		if ! . "${f}" ; then
+			eerror "${f}" $"failed a sanity check"
+			exit 1
+		fi
+
+		if ! is_function "${MODULES[i]}_depend" ; then 
+			eerror "${f}" $"does not support the required function" "depend"
+			exit 1
+		fi
+
+		if [[ ${u} == 0 ]] ; then
+			inst="${MODULES[i]}_check_installed";
+			[[ " ${umods} " == *" ${MODULES[i]} "* ]] && report=true
+			if is_function "${inst}" ; then
+				${inst} ${report} || u=1;
+			fi
+			if [[ " ${umods} " == *" !${MODULES[i]} "* ]] ; then
+				u=1
+			else
+				MODULE="${MODULES[i]}"
+				${MODULES[i]}_depend
+				if is_function "${MODULES[i]}_provide" && [[ -n ${umods} ]] ; then
+					[[ " ${umods} " == *" !$(${MODULES[i]}_provide) "* ]] && u=1
+				fi
+			fi
+		fi
+		exit "${u}";
+		)
+
+		if [[ $? != 0 || " ${umods}" == *" !${MODULES[i]} "* ]] ; then
+			unset MODULES[i]
+			continue
+		fi
+
+		# We can use this module
+		. "${svclib}/net/${MODULES[i]}.sh"
+
 		# Now load our dependencies - we need to use the MODULE variable
 		# here as the after/before/need functions use it
 		MODULE="${MODULES[i]}"
 		${MODULE}_depend
 
+		# If no provide is given, assume module name
+		if is_function "${MODULES[i]}_provide" ; then
+			provides[i]=$(${MODULES[i]}_provide)
+		else
+			provides[i]="${MODULES[i]}"
+		fi
+
 		# expose does exactly the same thing as depend
 		# However it is more "correct" as it exposes things to other modules
 		# instead of depending on them ;)
 		is_function "${MODULES[i]}_expose" && ${MODULES[i]}_expose
-
-		# If no provide is given, assume module name
-		if is_function "${MODULES[i]}_provide" ; then
-			PROVIDES[i]=$(${MODULES[i]}_provide)
-		else
-			PROVIDES[i]="${MODULES[i]}"
-		fi
 	done
 
-	if [[ -n ${modules_force[@]} ]] ; then
-		# Strip any duplicate modules providing the same thing
-		j="${#MODULES[@]}"
-		for (( i=0; i<j-1; i++ )); do
-			[[ -z ${MODULES[i]} ]] && continue
-			for (( k=i+1; k<j; k++ )); do
-				if [[ ${PROVIDES[i]} == ${PROVIDES[k]} ]] ; then
-					unset MODULES[k]
-					unset PROVIDES[k]
+	# Squash our arrays
+	MODULES=( "${MODULES[@]}" )
+	provides=( "${provides[@]}" )
+
+	# Wrap our preferred modules
+	umods=( "${umods[@]}" "${pmods[@]}" )
+	for i in ${umods[@]} ; do
+		if [[ " ${MODULES[@]} " == *" ${i} "* ]] ; then
+			if is_function "${i}_provide" ; then
+				j=$(${i}_provide)
+				if function_wrap "${i}" "${j}" ; then
+					wrapped=( "${wrapped[@]}" "${i}" )
 				fi
-			done
-		done
-		MODULES=( "${MODULES[@]}" )
-		PROVIDES=( "${PROVIDES[@]}" )
-	else
-		if ${starting}; then
-			modules_check_user "${iface}" || return 1
-		else
-			# Always prefer iproute2 for taking down interfaces
-			if is_function iproute2_provide ; then
-				function_wrap iproute2 "$(iproute2_provide)"
 			fi
 		fi
-	fi
-	
-	# Wrap our modules
-	j="${#MODULES[@]}"
-	for (( i=0; i<j; i++ )); do
-		function_wrap "${MODULES[i]}" "${PROVIDES[i]}"
-	done
-	j="${#WRAP_MODULES[@]}"
-	for (( i=0; i<j; i++ )); do
-		function_wrap ${WRAP_MODULES[i]}
 	done
 	
-	if [[ -z ${modules_force[@]} ]] ; then
-		modules_check_installed || return 1
-		modules_sort || return 1
-	fi
+	# Now wrap everything else
+	# If something is already provided, then remove it if we're starting
+	j=${#MODULES[@]}
+	for ((i=0; i<j; i++)) ; do
+		if [[ ${MODULES[i]} != "${provides[i]}" \
+			&& " ${wrapped[@]} " != *" ${MODULES[i]} "* ]] ; then
+			if ! function_wrap "${MODULES[i]}" "${provides[i]}" ; then
+				${starting} && unset MODULES[i] && unset provides[i]
+			fi
+		fi
+	done
+	MODULES=( "${MODULES[@]}" )
+	provides=( "${provides[@]}" )
+
+	# Now check we have everthing we need
+	j=${#MODULES[@]}
+	for (( i=0; i<j; i++ )); do
+		[[ -n ${MODULES[i]} ]] || continue
+		if is_function "${MODULES[i]}_instlled" ; then
+			for x in $( ${MODULES[i]}_instlled ); do
+				if [[ " ${MODULES[@]} " != *" ${x} "* ]] ; then
+					if [[ " ${umods} " == *" ${MODULES[i]} "* ]] ; then
+						eerror "${MODULES[i]}" $"needs" "${x}"
+						return 1
+					fi
+					unset MODULES[i]
+					unset provides[i]
+					break
+				fi
+			done
+		fi
+	done
+	MODULES=( "${MODULES[@]}" )
+	provides=( "${provides[@]}" )
 
 	veindent
 	veinfo "modules: ${MODULES[@]}"
 	veindent
 
-	i=0
-	${starting} && p=true
-	modules_check_depends "${p}"
-	i="$?"
+	j=${#MODULES[@]}
+	x=false
+	for (( i=0; i<j; i++ )); do
+		if [[ -n ${MODULES[i]} && ${MODULES[i]} != "${provides[i]}" ]] ; then
+			[[ ${provides[i]} == "interface" ]] && x=true
+			${starting} && veinfo "${MODULES[i]}" $"provides" "${provides[i]}"
+		fi
+	done
+	if ! ${x} ; then
+		eerror $"No loaded module provides interface"
+		return 1
+	fi
 
 	veoutdent
 	veoutdent
-	return "${i}"
+	return 0 
 }
 
 # bool iface_start(char *interface)

@@ -79,11 +79,11 @@ layout:
 
 basedev-Linux:
 	if ! test -d $(DESTDIR)/dev ; then $(INSTALL_DIR) $(DESTDIR)/dev ; fi
-	( curdir=`pwd` ; cd $(DESTDIR)/dev ; $$curdir/sbin/MAKEDEV generic-base ) 
+	( curdir=`pwd` ; cd $(DESTDIR)/dev ; ../sbin/MAKEDEV generic-base ) 
 
 dev-Linux:
 	$(INSTALL_DIR) $(DESTDIR)/dev
-	ln -snf ../sbin/MAKEDEV $(DESTDIR)/dev/MAKEDEV \
+	ln -snf ../sbin/MAKEDEV $(DESTDIR)/dev/MAKEDEV 
 	( curdir=`pwd` ; cd $(DESTDIR)/dev ; \
 		suffix= ; \
 		case $(ARCH) in \
@@ -100,9 +100,9 @@ dev-Linux:
 			sparc*)  suffix=-sparc ;; \
 			x86)     suffix=-i386 ;; \
 		esac ; \
-		$$curdir/sbin/MAKEDEV generic$$suffix ; \
-		$$curdir/sbin/MAKEDEV sg scd rtc hde hdf hdg hdh ; \
-		$$curdir/sbin/MAKEDEV input audio video ; \
+		../sbin/MAKEDEV generic$$suffix ; \
+		../sbin/MAKEDEV sg scd rtc hde hdf hdg hdh ; \
+		../sbin/MAKEDEV input audio video ; \
 	)
 
 basedev-BSD:

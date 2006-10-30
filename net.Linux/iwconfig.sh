@@ -26,7 +26,6 @@ iwconfig_depend() {
 	after plug
 	before interface
 	provide wireless
-	functions interface_up interface_down interface_exists
 }
 
 # void iwconfig_expose(void)

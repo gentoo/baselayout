@@ -33,6 +33,7 @@ usage() {
 
 mysvcdir=${svcdir}
 update=false
+nupdate=false
 
 while [[ -n $1 ]] ; do
 	case "$1" in
@@ -49,6 +50,7 @@ while [[ -n $1 ]] ; do
 			;;
 		--update|-u)
 			update=true
+			nupdate=true
 			;;
 		--help|-h)
 			usage
@@ -83,87 +85,124 @@ if ! touch "${mysvcdir}/.test" 2>/dev/null ; then
 fi
 rm -f "${mysvcdir}/.test"
 
-[[ ! -e "${mysvcdir}/depcache" || ! -e "${mysvcdir}/deptree" ]] && update=true
-
-# Only update if files have actually changed
-if ! ${update} ; then
-	clock_screw=0
-	mtime_test="${mysvcdir}/mtime-test.$$"
-
-	# If its not there, we have to update, and make sure its present
-	# for next mtime testing
-	if [[ ! -e "${mysvcdir}/depcache" ]] ; then
-		update=true
-		touch "${mysvcdir}/depcache" 2>/dev/null
-	fi
-
-	touch "${mtime_test}"
-	for config in /etc/conf.d/* /etc/init.d/* /etc/rc.conf
-	do
-		! ${update} \
-			&& is_older_than "${mysvcdir}/depcache" "${config}" \
-			&& update=true
-		
-		if is_older_than "${mtime_test}" "${config}" ; then
-			# Update the file modification time
-			touch "${config}" &>/dev/null
-			clock_screw=1
-		fi
-	done
-	rm -f "${mtime_test}"
-
-	if [[ ${clock_screw} == 1 ]] ; then
-		ewarn "One of the files in /etc/{conf.d,init.d} or /etc/rc.conf"
-		ewarn "has a modification time in the future!"
-	fi
+check_files() {
+	local testfile=$1 clock_skew= f= retval=0
+	local mtime_test="${mysvcdir}/mtime-test.$$"
+	[[ -e ${testfile} ]] || return 1
 
 	shift
-fi
+	mtime_test="${mysvcdir}/mtime-test.$$"
 
-# If we not updating, check that deptree is sane for bash loading too
+	touch "${mtime_test}"
+
+	for f in "$@" ; do
+		if [[ ${retval} == 0 ]] ; then
+			is_older_than "${testfile}" "${f}" && retval=1
+		fi
+		if is_older_than "${mtime_test}" "${f}" ; then
+			touch "${f}" &>/dev/null
+			clock_skew="${clock_skew} ${f}"
+		fi
+	done
+
+	if [[ -n ${clock_skew} ]] ; then
+		ewarn $"These files have future mtimes :-"
+		eindent
+		for f in ${clock_skew} ; do
+			ewarn "${f}"
+		done
+	fi
+
+	rm -f "${mtime_test}"
+
+	return ${retval}
+}
+
+SVCDIR="${mysvcdir}"
+SVCLIB="${svclib}"
+export SVCDIR SVCLIB
+
+[[ -e "${mysvcdir}/deptree" ]] || update=true
 if ! ${update} ; then
-	if ! bash -n "${mysvcdir}/deptree" ; then
-		eerror "${mysvcdir}/deptree is not valid - recreating it"
-		update=true
-	else
-		exit 0
+	check_files "${mysvcdir}/depcache" /etc/conf.d/* /etc/init.d/* \
+		/etc/rc.conf || update=true
+	if ${!update} ; then
+		if ! bash -n "${mysvcdir}/deptree" ; then
+			eerror "${mysvcdir}/deptree is not valid - recreating it"
+			update=true
+		fi
 	fi
 fi
 
-ebegin "Caching service dependencies"
+if ${update} ; then
+	ebegin "Caching service dependencies"
 
-# Clean out the non volatile directories ...
-rm -rf "${mysvcdir}"/depcache "${mysvcdir}"/{broken,snapshot}/*
+	# Clean out the non volatile directories ...
+	rm -rf "${mysvcdir}"/{broken,snapshot}/*
+	retval=0
 
-retval=0
-SVCDIR="${mysvcdir}"
-DEPTYPES="${deptypes}"
-ORDTYPES="${ordtypes}"
+	awk \
+		-f /lib/rcscripts/awk/functions.awk \
+		-f /lib/rcscripts/awk/cachedepends.awk || \
+		retval=1
 
-export SVCDIR DEPTYPES ORDTYPES
+	if [[ ${retval} == "0" ]] ; then
+		DEPTREE="deptree"
+		export DEPTREE
+		bash "${mysvcdir}/depcache" | \
+			awk \
+				-f /lib/rcscripts/awk/functions.awk \
+				-f /lib/rcscripts/awk/gendepends.awk || \
+				retval=1
+	fi
 
-cd /etc/init.d
+	if [[ ${retval} == "0" ]] ; then
+		touch "${mysvcdir}"/dep{cache,tree}
+		chmod 0644 "${mysvcdir}"/dep{cache,tree}
+	fi
 
-awk \
-	-f /lib/rcscripts/awk/functions.awk \
-	-f /lib/rcscripts/awk/cachedepends.awk || \
-	retval=1
-
-if [[ ${retval} == "0" ]] ; then
-	bash "${mysvcdir}/depcache" | \
-		awk \
-			-f /lib/rcscripts/awk/functions.awk \
-			-f /lib/rcscripts/awk/gendepends.awk || \
-			retval=1
+	eend ${retval} "Failed to cache service dependencies"
+	[[ ${retval} != "0" ]] && exit ${retval}
 fi
 
-if [[ ${retval} == "0" ]] ; then
-	touch "${mysvcdir}"/dep{cache,tree}
-	chmod 0644 "${mysvcdir}"/dep{cache,tree}
+[[ -e "${mysvcdir}/netdeptree" ]] || nupdate=true
+if ! ${nupdate} ; then
+	check_files "${mysvcdir}/netdepcache" "${svclib}"/net/* || nupdate=true
+	if ${!nupdate} ; then
+		if ! bash -n "${mysvcdir}/netdeptree" ; then
+			eerror "${mysvcdir}/netdeptree is not valid - recreating it"
+			nupdate=true
+		fi
+	fi
+fi
+if ${nupdate} ; then
+	ebegin "Caching network dependencies"
+	retval=0
+
+	awk \
+		-f /lib/rcscripts/awk/functions.awk \
+		-f /lib/rcscripts/awk/cachenetdepends.awk || \
+		retval=1
+
+	if [[ ${retval} == "0" ]] ; then
+		DEPTREE="netdeptree"
+		export DEPTREE
+		bash "${mysvcdir}/netdepcache" | \
+			awk \
+				-f /lib/rcscripts/awk/functions.awk \
+				-f /lib/rcscripts/awk/gendepends.awk || \
+				retval=1
+	fi
+
+	if [[ ${retval} == "0" ]] ; then
+		touch "${mysvcdir}"/netdep{cache,tree}
+		chmod 0644 "${mysvcdir}"/netdep{cache,tree}
+	fi
+
+	eend ${retval} "Failed to cache network dependencies"
+	[[ ${retval} != "0" ]] && exit ${retval}
 fi
 
-eend ${retval} "Failed to cache service dependencies"
-
-exit ${retval}
+exit 0
 
 # vim: set ts=4 :

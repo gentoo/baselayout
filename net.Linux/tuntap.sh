@@ -18,7 +18,6 @@ tunctl() {
 # Sets up the dependancies for the module
 tuntap_depend() {
 	before interface macchanger
-	functions interface_exists interface_type
 	variables tunctl
 }
 

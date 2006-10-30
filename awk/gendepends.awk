@@ -401,13 +401,19 @@ BEGIN {
 		eerror("Could not get SVCDIR!")
 		exit 1
 	}
+	# Get our environment variables
+	DEPTREEFILE = ENVIRON["DEPTREE"]
+	if (DEPTREEFILE == "") {
+		eerror("Could not get DEPTREE!")
+		exit 1
+	}
 
 	# There we do not really use yet
 	DEPTYPES = ENVIRON["DEPTYPES"]
 	ORDTYPES = ENVIRON["ORDTYPES"]
 
 	#CACHEDTREE = SVCDIR "/deptree"
-	ORIGCACHEDTREE = SVCDIR "/deptree"
+	ORIGCACHEDTREE = SVCDIR "/" DEPTREEFILE
 	
 	# Since this could be called more than once simultaneously, use a
 	# temporary cache and rename when finished.  See bug 48303

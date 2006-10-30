@@ -9,7 +9,6 @@
 # Sets up the dependancies for the module
 ip6to4_depend() {
 	after interface
-	functions interface_exists interface_get_address interface_tunnel
 }
 
 # void ip6to4_expose(void)

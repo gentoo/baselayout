@@ -11,7 +11,6 @@ macnet_depend() {
 	before rename interface wireless
 	after macchanger
 	installed macchanger
-	functions interface_get_mac_address
 }
 
 # bool macnet_start(char *iface)

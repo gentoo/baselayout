@@ -8,7 +8,6 @@
 rename_depend() {
 	after macchanger
 	before wireless interface
-	functions interface_exists interface_down interface_del_addresses
 }
 
 # void rename_expose(void)

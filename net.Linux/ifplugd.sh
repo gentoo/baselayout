@@ -8,7 +8,6 @@
 ifplugd_depend() {
 	after macnet rename
 	before interface
-	functions interface_exists interface_get_mac_address
 	provide plug
 }
 

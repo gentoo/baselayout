@@ -92,8 +92,6 @@ atmarp() {
 # Sets up the dependancies for this module
 clip_depend() {
     before interface
-    provide clip
-    functions interface_down interface_up interface_exists is_daemon_running
     variables clip
 }
 

@@ -9,6 +9,9 @@
    running rc-order :-
       SOFTLEVEL
       BOOTLEVEL
+
+   We can also handle other dependency files and types, like Gentoos
+   net modules. These are used with the --deptree and --awlaysvalid flags.
    */
 
 #define SVCDIR 		"/lib/rcscripts/init.d"
@@ -37,6 +40,7 @@
 char *bootlevel;
 char *softlevel;
 char *svcname;
+bool always_valid = false;
 
 struct linkedlist
 {
@@ -420,7 +424,8 @@ struct deptype *get_deptype (struct depinfo *depinfo, const char *type)
 
 bool valid_service (const char *service)
 {
-  return (exists_dir_dir_file (RUNLEVELDIR, bootlevel, service)
+  return (always_valid
+	  || exists_dir_dir_file (RUNLEVELDIR, bootlevel, service)
 	  || exists_dir_dir_file (RUNLEVELDIR, softlevel, service)
 	  || service_coldplugged (service) || service_started (service));
 }
@@ -450,6 +455,12 @@ struct linkedlist *get_provided (struct depinfo *deptree,
   op = p = strdup (dt->services);
   while ((service = strsep (&p, " ")))
     {
+      if (always_valid)
+	{
+	  lp = add_linkedlist (lp, service);
+	  continue;
+	}
+
       if (in_runlevel (softlevel, service) ||
       	  (strcmp (softlevel, bootlevel) == 0 
 	   && service_coldplugged (service))
@@ -459,6 +470,13 @@ struct linkedlist *get_provided (struct depinfo *deptree,
 	      lp = add_linkedlist (lp, service);
     }
   free (op);
+
+  if (always_valid)
+    {
+      if (providers->item)
+	return (providers);
+      return NULL;
+    }
 
   /* Check running only if runlevel is stopping or starting.
      Should we also check running if no provides are in runlevels?
@@ -551,27 +569,22 @@ void visit_service (struct depinfo *deptree,
 
   struct linkedlist *type;
   struct depinfo *di;
+  struct deptype *dt;
+
   for (type = types; type; type = type->next)
     {
-      struct deptype *dt = get_deptype (depinfo, type->item);
-      if (dt)
+      if ((dt = get_deptype (depinfo, type->item)))
 	{
 	  op = p = strdup (dt->services);
 	  while ((service = strsep (&p, " ")))
 	    {
-	      if (! descend)
+	      if (! descend || strcmp (type->item, "iprovide") == 0)
 		{
 		  add_linkedlist (sorted, service);
 		  continue;
 		}
 
 	      di = get_depinfo (deptree, service);
-	      if (strcmp (type->item, "iprovide") == 0)
-		{
-		  add_linkedlist (sorted, service);
-		  continue;
-		}
-
 	      struct linkedlist *provides = get_provided (deptree, di);
 	      if (provides)
 		{
@@ -605,8 +618,13 @@ void visit_service (struct depinfo *deptree,
 	      op = p = strdup (dt->services);
 	      while ((service = strsep (&p, " ")))
 		{
-		  di = get_depinfo (deptree, service);
+		  if (! (di = get_depinfo (deptree, service)))
+		    continue;
+
 		  struct deptype *dtt = get_deptype (di, "providedby");
+		  if (! dtt)
+		    continue;
+
 		  char *opp, *pp, *ss;
 		  opp = pp = strdup (dtt->services);
 		  bool visit = true;
@@ -625,21 +643,31 @@ void visit_service (struct depinfo *deptree,
 		    visit_service (deptree, types, sorted, visited, di, true);
 		}
 	      free (op);
-	    }
+	    } 
+	} 
+    }
+
+  /* Now visit the stuff we provide for */
+  if ((dt = get_deptype (depinfo, "iprovide")) && descend && always_valid)
+    {
+      op = p = strdup (dt->services);
+      while ((service = strsep (&p, " ")))
+	{
+	  if ((di = get_depinfo (deptree, service)));
+	    visit_service (deptree, types, sorted, visited, di, descend);
 	}
+      free (op);
     }
 
   /* We've visited everything we need, so add ourselves unless we
-     are also the service calling us */
+     are also the service calling us or we are provided by something */
   if (! svcname || strcmp (svcname, depinfo->service) != 0)
-    add_linkedlist (sorted, depinfo->service);
+    if (! get_deptype (depinfo, "providedby"))
+	add_linkedlist (sorted, depinfo->service);
 }
 
 int main (int argc, char **argv)
 {
-  struct depinfo *deptree;
-  if ((deptree = load_deptree (DEPTREE)) == NULL)
-    errx (EXIT_FAILURE, "failed to load deptree");
 
   int i;
   struct linkedlist *types = xmalloc (sizeof (struct linkedlist));
@@ -652,8 +680,31 @@ int main (int argc, char **argv)
   struct depinfo *di = NULL;
   bool trace = true;
 
+  struct depinfo *deptree = NULL;
   for (i = 1; i < argc; i++)
     {
+      if (strcmp (argv[i], "--alwaysvalid") == 0)
+	{
+	  always_valid = true;
+	  continue;
+	}
+
+      if (strcmp (argv[i], "--deptree") == 0)
+	{
+	  i++;
+	  if (i == argc)
+	    errx (EXIT_FAILURE, "no deptree specified");
+
+	  if ((deptree = load_deptree (argv[i])) == NULL)
+	    {
+	      free_linkedlist (types);
+	      free_linkedlist (services);
+	      errx (EXIT_FAILURE, "failed to load deptree `%s'", argv[i]);
+	    }
+
+	  continue;
+	}
+
       if (strcmp (argv[i], "--notrace") == 0)
 	{
 	  trace = false;
@@ -667,6 +718,13 @@ int main (int argc, char **argv)
       }
       else
 	{
+	  if (! deptree && ((deptree = load_deptree (DEPTREE)) == NULL))
+	    {
+	      free_linkedlist (types);
+	      free_linkedlist (services);
+	      errx (EXIT_FAILURE, "failed to load deptree `%s'", DEPTREE);
+	    }
+
 	  di = get_depinfo (deptree, argv[i]);
 	  if (! di)
 	    warnx ("no dependency info for service `%s'", argv[i]);

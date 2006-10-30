@@ -7,7 +7,6 @@
 # Sets up the dependancies for the module
 macchanger_depend() {
 	before macnet
-	functions interface_get_mac_address interface_set_mac_address
 }
 
 # void macchanger_expose(void)

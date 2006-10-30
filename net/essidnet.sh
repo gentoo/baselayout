@@ -15,7 +15,6 @@ essidnet_depend() {
 	before interface system
 	after wireless
 	installed wireless
-	functions wireless_exists wireless_get_essid wireless_get_ap_mac_address
 }
 
 # bool essidnet_start(char *iface)

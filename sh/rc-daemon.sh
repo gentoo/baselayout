@@ -204,12 +204,15 @@ rc_stop_daemon() {
 	eval /sbin/start-stop-daemon "${args}"
 
 	# Don't wait around if the pidfile does not exist
-	if [[ -n ${pidfile} && ! -e ${pidfile} && -n ${cmd} ]] ; then
-		# If no daemons are running, return 0
+	[[ -n ${pidfile} && ! -e ${pidfile} ]] && return 0
+
+	# If no daemons are running, return 0
+	if [[ -z ${pidfile} ]] ; then
 		! is_daemon_running ${cmd}
 		return $?
 	fi
-	
+
+	# OK, if we have a cmd and a pidfile we can wait for em to stop :)
 	if [[ -n ${cmd} ]] ; then
 		local timeout=$((${RC_WAIT_ON_STOP} * 10))
 		while [[ ${timeout} -gt 0 ]] ; do
