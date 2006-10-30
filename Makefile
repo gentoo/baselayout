@@ -18,12 +18,12 @@ ARCH = x86
 OS = Linux
 
 BASE_DIRS = /$(LIB)/rcscripts/init.d /$(LIB)/rcscripts/tmp
-KEEP_DIRS = /boot /proc /home /mnt /root \
+KEEP_DIRS = /boot /home /mnt /root \
 	/usr/local/bin /usr/local/sbin /usr/local/share/doc /usr/local/share/man \
 	/var/lock /var/run
 
 ifeq ($(OS),Linux)
-	KEEP_DIRS += /dev /sys
+	KEEP_DIRS += /dev /proc /sys
 	NET_LO = net.lo
 endif
 ifneq ($(OS),Linux)
