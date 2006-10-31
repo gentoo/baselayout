@@ -1,6 +1,8 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+* baselayout-1.13.0_alpha4 (31 Oct 2006)
+
   30 Oct 2006; Roy Marples <uberlord@gentoo.org>:
 
     depscan.sh and rc-depend can now handle other deptrees as we now create
@@ -38,7 +40,7 @@
 
   19 Oct 2006; Roy Marples <uberlord@gentoo.org>:
 
-    start-stop-daemon now stops correctly on FreeBSD is /proc is not
+    start-stop-daemon now stops correctly on FreeBSD when /proc is not
     mounted.
 
 * baselayout-1.13.0_alpha2 (16 Oct 2006)
