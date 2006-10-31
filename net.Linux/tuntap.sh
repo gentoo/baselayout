@@ -17,7 +17,7 @@ tunctl() {
 #
 # Sets up the dependancies for the module
 tuntap_depend() {
-	before interface macchanger
+	before bridge interface macchanger
 	variables tunctl
 }
 
