@@ -5,9 +5,11 @@
 bootlog start
 
 # mount $svcdir as something we can write to if it's not rw
-# On vservers, / is always rw at this point
+# On vservers, / is always rw at this point, so we need to clean out
+# the old service state data
 if touch "${svcdir}/.test" 2>/dev/null ; then
-	rm -f "${svcdir}/.test"
+	rm -rf "${svcdir}/.test" \
+		$(ls -d1 "${svcdir}"/* 2>/dev/null | grep -Ev "(depcache|deptree)$")
 else
 	mount_svcdir
 fi
