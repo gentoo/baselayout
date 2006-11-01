@@ -440,7 +440,7 @@
 # and may seem daunting, it is recommended that you read the pppd man page
 # before enabling any of them
 #pppd_ppp0=(
-#	"maxfail 0"	# WARNING: It's not recommended you use change this
+#	"maxfail 0"	# WARNING: It's not recommended you use this
 #			# if you don't specify maxfail then we assume 0
 #	"updetach" 	# If not set, "/etc/init.d/net.ppp0 start" will return
 #			# immediately,  without waiting the link to come up

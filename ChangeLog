@@ -3,6 +3,8 @@
 
   01 Nov 2006; Roy Marples <uberlord@gentoo.org>:
 
+    Clarified pppd maxfail usage, #153657 thanks to Toralf Förster.
+
     checkfs now has an FSCK_SHUTDOWN variable which triggers an fsck
     of local disks at shutdown to save on long startup delays when
     doing a full fsck. Fixes #152983, thanks to Daniel Drake.
