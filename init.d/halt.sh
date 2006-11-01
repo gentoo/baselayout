@@ -86,6 +86,20 @@ ebegin $"Unmounting filesystems"
 do_unmount "umount" "${RC_NO_UMOUNTS}"
 eend $?
 
+# Conditionally run filesystem checks. Note that /forcefsck skips this and
+# causes the forced checks to run upon boot. This is because doing forced
+# checks then removing /forcefsck is not practical at this point.
+conf=$(add_suffix /etc/conf.d/checkfs)
+if [[ -e ${conf} ]] ; then
+	(
+		. ${conf}
+		if [[ ${FSCK_SHUTDOWN} == "yes" && ! -f /forcefsck ]]; then
+			. /etc/init.d/checkfs
+			start
+		fi
+	)
+fi
+
 # Try to remove any dm-crypt mappings
 stop_addon dm-crypt
 

@@ -1,6 +1,12 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  01 Nov 2006; Roy Marples <uberlord@gentoo.org>:
+
+    checkfs now has an FSCK_SHUTDOWN variable which triggers an fsck
+    of local disks at shutdown to save on long startup delays when
+    doing a full fsck. Fixes #152983, thanks to Daniel Drake.
+
   31 Oct 2006; Roy Marples <uberlord@gentoo.org>:
 
     tuntap should come before bridge, #150520.
