@@ -33,6 +33,9 @@ mount_svcdir() {
 	fi
 }
 
+source "${svclib}"/sh/init-functions.sh
+source "${svclib}"/sh/init-common-pre.sh
+
 # Mount linprocfs if instructed
 mntcmd=$(get_mount_fstab /proc)
 if [[ -n ${mntcmd} ]] ; then
@@ -51,8 +54,6 @@ profiling start
 # Disable devd until we need it
 sysctl hw.bus.devctl_disable=1 >/dev/null
 
-source "${svclib}"/sh/init-functions.sh
-source "${svclib}"/sh/init-common-pre.sh
 source "${svclib}"/sh/init-common-post.sh
 
 # vim: set ts=4 :
