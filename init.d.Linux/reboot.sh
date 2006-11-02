@@ -3,7 +3,7 @@
 
 # In certain VServer configurations we don't have an init process ..
 # so we just force a reboot, the utils on the host take care of everything else
-if [[ is_vps_sys && ! -e /dev/initctl ]] ; then
+if [[ ! -e /dev/initctl ]] && is_vps_sys ; then
     /sbin/reboot -f
     exit 0
 fi

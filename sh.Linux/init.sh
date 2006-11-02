@@ -97,7 +97,8 @@ profiling start
 # Note: /proc MUST be mounted
 [[ -f /sbin/livecd-functions.sh ]] && livecd_read_commandline
 
-if [[ ! is_vps_sys && $(uname) != "GNU/kFreeBSD" && $(get_KV) -ge "$(KV_to_int '2.6.0')" ]] ; then
+if [[ $(uname) != "GNU/kFreeBSD" && $(get_KV) -ge "$(KV_to_int '2.6.0')" ]] \
+	&& ! is_vps_sys ; then
 	if [[ -d /sys ]] ; then
 		ebegin "Mounting sysfs at /sys"
 		if [[ ${RC_USE_FSTAB} == "yes" ]] ; then
@@ -125,7 +126,7 @@ fi
 #  - check boot parameters
 #  - make sure the required binaries exist
 #  - make sure the kernel has support
-if [[ ${RC_DEVICES} == "static" || is_vps_sys ]] ; then
+if [[ ${RC_DEVICES} == "static" ]] || is_vps_sys ; then
 	ebegin "Using existing device nodes in /dev"
 	eend 0
 elif [[ $(uname) == "GNU/kFreeBSD" ]] ; then

@@ -3,7 +3,7 @@
 
 # In certain VServer configurations we don't have an init process ...
 # so we just exit here, the utils on the host take care of everything else
-[[ is_vps_sys && ! -e /dev/initctl ]] && exit 0
+[[ ! -e /dev/initctl ]] && is_vps_sys && exit 0
 
 opts="-d"
 [[ ${INIT_HALT} != "HALT" ]] && opts="${opts}p"
