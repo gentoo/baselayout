@@ -82,7 +82,7 @@ udhcpc_start() {
 	[[ -z ${!d} ]] && d="dhcp"
 
 	if [[ " ${!d} " != *" nosendhost "* ]]; then
-		if [[ ! " ${opts}" =~ " -([hH] |-hostname=)" ]]; then
+		if [[ " ${opts} " != *" -"[hH]" "* && " ${opts} " != *" --hostname="* ]] ; then
 			local hname=$(hostname)
 			[[ -n ${hname} && ${hname} != "(none)" && ${hname} != "localhost" ]] \
 				&& opts="${opts} --hostname=${hname}"

@@ -591,7 +591,7 @@ for arg in $* ; do
 			rm -rf "${svcdir}/snapshot/$$"
 			mkdir -p "${svcdir}/snapshot/$$"
 			cp -pP "${svcdir}"/started/* "${svcdir}"/inactive/* \
-				"${svcdir}/snapshot/$$/"
+				"${svcdir}/snapshot/$$/" 2>/dev/null
 			rm -f "${svcdir}/snapshot/$$/${SVCNAME}"
 		fi
 	
@@ -637,7 +637,7 @@ for arg in $* ; do
 		rm -rf "${svcdir}/snapshot/$$"
 		mkdir -p "${svcdir}/snapshot/$$"
 		cp -pP "${svcdir}"/started/* "${svcdir}"/inactive/* \
-			"${svcdir}/snapshot/$$/"
+			"${svcdir}/snapshot/$$/" 2>/dev/null
 		rm -f "${svcdir}/snapshot/$$/${SVCNAME}"
 
 		# Simple way to try and detect if the service use svc_{start,stop}

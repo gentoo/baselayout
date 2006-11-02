@@ -14,7 +14,7 @@
 # set, else the default one should be used for normal boots.
 # say:  RC_NO_UMOUNTS="/mnt/livecd|/newroot"
 RC_NO_UMOUNTS=${RC_NO_UMOUNTS:-/mnt/livecd|/newroot}
-RC_NO_UMOUNT_FS="^(proc|devpts|sysfs|devfs|tmpfs|usb(dev)?fs|unionfs|rootfs)$"
+RC_NO_UMOUNT_FS="^(proc|devpts|sysfs|devfs|ramfs|tmpfs|usb(dev)?fs|unionfs|rootfs)$"
 
 # Reset pam_console permissions if we are actually using it
 if [[ -x /sbin/pam_console_apply && ! -c /dev/.devfsd && \

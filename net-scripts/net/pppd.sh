@@ -177,7 +177,8 @@ pppd_start() {
 	fi
 
 	if [[ " ${opts} " == *" plugin pppoatm.so "* ]] ; then
-		if [[ ${!link} =~ '^[ \t]*([1-9]*[0-9]\.){1,2}[1-9]*[0-9][ \t]*$' ]] ; then
+		#if [[ ${!link} =~ '^[ \t]*([1-9]*[0-9]\.){1,2}[1-9]*[0-9][ \t]*$' ]] ; then
+		if echo "${!link}" | grep -qE '^[ \t]*([1-9]*[0-9]\.){1,2}[1-9]*[0-9][ \t]*$' ; then
 			insert_link_in_opts=0
 		else
 			ewarn "WARNING: An [itf.]vpi.vci ATM address was expected in ${link}"
