@@ -20,7 +20,7 @@ start() {
 		cp /etc/nologin /etc/nologin.boot
 	fi
 
-	if [[ $(uname) == "Linux" ]] ; then
+	if [[ $(uname) == "Linux" ]]  && ! is_vps_sys ; then
 		# BSD has it's own sysctl init script
 		if [[ -e /etc/sysctl.conf ]] ; then
 			ebegin $"Configuring kernel parameters"

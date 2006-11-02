@@ -74,7 +74,7 @@ start() {
 
 	# Should not fail if kernel do not have module
 	# support compiled in ...
-	[[ -f /proc/modules ]] || return 0
+	[[ ! -f /proc/modules || is_vps_sys ]] && return 0
 
 	# Make sure depmod from modutils do not whine, but do not bother if
 	# we are on a 2.6 kernel without modprobe.old

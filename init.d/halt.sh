@@ -76,6 +76,17 @@ do_unmount() {
 # Flush all pending disk writes now
 sync ; sync
 
+# If we are in a VPS, we don't need anything below here, because
+#   1) we don't need (and by default can't) umount anything (VServer) or
+#   2) the host utils take care of all umounting stuff (OpenVZ)
+if is_vps_sys ; then
+	if [[ -e /etc/init.d/"$1".sh ]] ; then
+		. /etc/init.d/"$1".sh
+	else
+		exit 0
+	fi
+fi
+
 # Umount loopback devies
 ebegin $"Unmounting loopback devices"
 do_unmount "umount -d" "${RC_NO_UMOUNTS}" "^/dev/loop"

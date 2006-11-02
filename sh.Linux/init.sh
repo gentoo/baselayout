@@ -75,16 +75,19 @@ ${RC_DMESG_LEVEL+/bin/dmesg -n ${RC_DMESG_LEVEL}}
 
 check_statedir /proc
 
-procfs="proc"
-[[ $(uname) == "GNU/kFreeBSD" ]] && proc="linprocfs"
-ebegin "Mounting ${procfs} at /proc"
-if [[ ${RC_USE_FSTAB} = "yes" ]] ; then
-	mntcmd=$(get_mount_fstab /proc)
-else
-	mntcmd="-t ${procfs} proc /proc -o noexec,nosuid,nodev"
+# By default VServer already has /proc mounted, but OpenVZ does not!
+if [[ ! -e /proc/self/stat ]] ; then
+	procfs="proc"
+	[[ $(uname) == "GNU/kFreeBSD" ]] && proc="linprocfs"
+	ebegin "Mounting ${procfs} at /proc"
+	if [[ ${RC_USE_FSTAB} = "yes" ]] ; then
+		mntcmd=$(get_mount_fstab /proc)
+	else
+		mntcmd="-t ${procfs} proc /proc -o noexec,nosuid,nodev"
+	fi
+	try mount -n ${mntcmd}
+	eend $?
 fi
-try mount -n ${mntcmd}
-eend $?
 
 # Start profiling init now we have /proc
 profiling start
@@ -94,7 +97,7 @@ profiling start
 # Note: /proc MUST be mounted
 [[ -f /sbin/livecd-functions.sh ]] && livecd_read_commandline
 
-if [[ $(uname) != "GNU/kFreeBSD" && $(get_KV) -ge "$(KV_to_int '2.6.0')" ]] ; then
+if [[ ! is_vps_sys && $(uname) != "GNU/kFreeBSD" && $(get_KV) -ge "$(KV_to_int '2.6.0')" ]] ; then
 	if [[ -d /sys ]] ; then
 		ebegin "Mounting sysfs at /sys"
 		if [[ ${RC_USE_FSTAB} == "yes" ]] ; then
@@ -122,7 +125,7 @@ fi
 #  - check boot parameters
 #  - make sure the required binaries exist
 #  - make sure the kernel has support
-if [[ ${RC_DEVICES} == "static" ]] ; then
+if [[ ${RC_DEVICES} == "static" || is_vps_sys ]] ; then
 	ebegin "Using existing device nodes in /dev"
 	eend 0
 elif [[ $(uname) == "GNU/kFreeBSD" ]] ; then
@@ -188,6 +191,9 @@ fi
 if [[ $(uname) != "GNU/kFreeBSD" && "$(get_KV)" -ge "$(KV_to_int '2.5.68')" ]] ; then
 	have_devpts=$(awk '($2 == "devpts") { print "yes"; exit 0 }' /proc/filesystems)
 
+	# By default VServer already has /dev/pts mounted, but OpenVZ does not!
+	devpts_mounted=$(awk '($3 == "devpts") { print "yes"; exit 0 }' /proc/mounts)
+
 	if [[ ${have_devpts} = "yes" ]] ; then
 		# Only try to create /dev/pts if we have /dev mounted dynamically,
 		# else it might fail as / might be still mounted readonly.
@@ -198,7 +204,7 @@ if [[ $(uname) != "GNU/kFreeBSD" && "$(get_KV)" -ge "$(KV_to_int '2.5.68')" ]] ;
 				ewarn "Could not create /dev/pts!"
 		fi
 
-		if [[ -d /dev/pts ]] ; then
+		if [[ -d /dev/pts && ${devpts_mounted} != "yes" ]] ; then
 			ebegin "Mounting devpts at /dev/pts"
 			if [[ ${RC_USE_FSTAB} == "yes" ]] ; then
 				mntcmd=$(get_mount_fstab /dev/pts)

@@ -3,6 +3,8 @@
 
   02 Nov 2006; Roy Marples <uberlord@gentoo.org>:
 
+    Add more vserver fixes from Hollow.
+
     Add ramfs to the don't unmount this fs type list, #151128.
     We now use the bash 3.2 =~ semantic, #151108.
 
