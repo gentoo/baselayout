@@ -714,8 +714,8 @@ for arg in $* ; do
 		svcres=$(sed -ne '/[[:space:]]*restart[[:space:]]*()/,/}/ p' \
 			"${myscript}" )
 		if [[ -n ${svcres} ]] ; then
-			if [[ ! ${svcres} =~ "svc_stop" \
-				|| ! ${svcres} =~ "svc_start" ]] ; then
+			if [[ ! ${svcres} =~ svc_stop \
+				|| ! ${svcres} =~ svc_start ]] ; then
 				echo
 				ewarn $"Please use 'svc_stop; svc_start' and not 'stop; start' to"
 				ewarn $"restart the service in its custom 'restart()' function."

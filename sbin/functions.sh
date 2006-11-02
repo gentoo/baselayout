@@ -825,9 +825,9 @@ is_uml_sys() {
 #   return 0 if the currently running system is a Linux VServer or OpenVZ
 is_vps_sys() {
     [[ -e /proc/self/status ]] || return 1
-    [[ $'\n'$(</proc/self/status) =~ $'\n''s_context:[[:space:]]*[1-9]' \
-	|| $'\n'$(</proc/self/status) =~ $'\n''VxID:[[:space:]]*[1-9]' \
-    || $'\n'$(</proc/self/status) =~ $'\n''envID:[[:space:]]*[1-9]' ]]
+    [[ $'\n'$(</proc/self/status) =~ $'\n's_context:[[:space:]]*[1-9] \
+	|| $'\n'$(</proc/self/status) =~ $'\n'VxID:[[:space:]]*[1-9] \
+    || $'\n'$(</proc/self/status) =~ $'\n'envID:[[:space:]]*[1-9] ]]
 }
 
 # bool is_xenU_sys()

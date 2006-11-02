@@ -33,7 +33,7 @@ iwconfig_check_installed() {
 # Checks to see if wireless extensions are enabled on the interface
 iwconfig_exists() {
 	[[ $(ifconfig "$1") \
-	=~ $'\n'"[[:space:]]*media: IEEE 802.11 Wireless" ]] \
+	=~ $'\n'[[:space:]]*media:\ IEEE\ 802.11\ Wireless ]] \
 	&& return 0
 }
 
@@ -57,7 +57,7 @@ iwconfig_get_wep_status() {
 # Gets the current ESSID of the iface
 iwconfig_get_essid() {
 	[[ $(ifconfig "$1") =~ \
-	$'\n'"[[:space:]]ssid (.*) channel [0-9]* bssid *" ]] \
+	$'\n'[[:space:]]ssid\ (.*)\ channel\ [0-9]*\ bssid\ * ]] \
 	|| return 1
 	echo "${BASH_REMATCH[1]}"
 }
@@ -68,7 +68,7 @@ iwconfig_get_essid() {
 # the interface is connected to
 iwconfig_get_ap_mac_address() {
 	[[ $(ifconfig "$1") =~ \
-	$'\n'"[[:space:]]ssid (.*) channel [0-9]* bssid ([^"$'\n'"]*)" ]] \
+	$'\n'[[:space:]]ssid\ (.*)\ channel\ [0-9]*\ bssid\ ([^$'\n']*) ]] \
 	|| return 1
 	echo "${BASH_REMATCH[2]}" | tr '[:lower:]' '[:upper:]'
 
@@ -83,7 +83,7 @@ iwconfig_report() {
 	essid=$(iwconfig_get_essid "${iface}")
 
 	local wep_status=$(iwconfig_get_wep_status "${iface}") channel=
-	if [[ $(ifconfig "${iface}") =~ $'\n'"[[:space:]]ssid (.*) channel ([0-9])*" ]] ; then
+	if [[ $(ifconfig "${iface}") =~ $'\n'[[:space:]]ssid\ (.*)\ channel\ ([0-9])* ]] ; then
 		channel=$"on channel"" ${BASH_REMATCH[2]} "
 	fi
 
@@ -281,7 +281,7 @@ iwconfig_scan() {
 
 	einfo $"Scanning for access points"
 
-	local first=true i=0 j= k= x=
+	local first=true i=0 j= k= x= unseti=
 	local -a mac=() essid=() qual=() chan=() caps=()
 
 	while read line ; do
@@ -292,10 +292,17 @@ iwconfig_scan() {
 
 		set -- ${line}
 
+		unset essid[i]
 		while [[ $1 != *:*:*:*:*:* ]] ; do
 			essid[i]="$1"
 			shift
 		done
+		# If we don't have an essid we need to give a dummy one
+		# otherwise we get lost when squashing the array
+		if [[ -z ${essid[i]} ]] ; then
+			essid[i]="foo"
+			unseti="${unseti} ${i}"
+		fi
 		mac[i]=$(echo "$1" | tr '[:lower:]' '[:upper:]')
 		chan[i]="$2"
 		qual[i]="${4%:*}"
@@ -339,7 +346,9 @@ iwconfig_scan() {
 	for (( i=0; i<${#mac[@]}; i++ )); do
 		(( x=(i * 2) + 1 ))
 		mac_APs[i]="${mac[${sortline[x]}]}"
-		essid_APs[i]="${essid[${sortline[x]}]}"
+		if [[ " ${unseti} " != *" ${sortline[x]} "* ]] ; then
+			essid_APs[i]="${essid[${sortline[x]}]}"
+		fi
 		chan_APs[i]="${chan[${sortline[x]}]}"
 		caps_APs[i]="${caps[${sortline[x]}]}"
 	done
@@ -390,6 +399,7 @@ iwconfig_scan_report() {
 		# If we don't know the essid then we cannot connect to them
 		# so we remove them from our array
 		if [[ -z ${essid_APs[i]} ]]; then
+			ewarn "ESSID not mapped from mac - not connecting"
 			remove=true
 		elif [[ ${caps_APs[i]} == *" WPA" ]];then
 			ewarn "\"${d}\"" $"requires WPA - not connecting" 

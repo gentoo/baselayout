@@ -108,7 +108,7 @@ ifconfig_down() {
 ifconfig_is_up() {
 	local check="\<UP\>" addr="${2:-false}"
 	${addr} && check="\<inet addr:.*${check}"
-	[[ $(ifconfig "$1") =~ "${check}" ]]
+	[[ $(ifconfig "$1") =~ ${check} ]]
 }
 
 # bool ifconfig_has_carrier(char *iface)

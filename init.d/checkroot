@@ -70,7 +70,7 @@ start() {
 			# - find the / entry
 			# - make sure we have 6 fields
 			# - see if fs_passno is something other than 0
-			if [[ $'\n'$(</etc/fstab) =~ $'\n'".*[[:space:]]/[[:space:]].*[[:space:]].*[[:space:]](.*)[[:space:]]" ]] \
+			if [[ $'\n'$(</etc/fstab) =~ $'\n'.*[[:space:]]/[[:space:]].*[[:space:]].*[[:space:]](.*)[[:space:]] ]] \
 			&& [[ ${BASH_REMATCH[1]} == "0" ]] ; then
 				ebegin $"Checking root filesystem"
 				if [[ $(uname) == "Linux" ]] ; then

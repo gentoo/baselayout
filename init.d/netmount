@@ -94,7 +94,7 @@ stop() {
 		point=${point//\040/ }
 		node=${node//\040/ }
 		fs=${fs//\040/ }
-		[[ ${fs} =~ "^(${NET_FS_LIST// /|})$" ]] || continue
+		[[ ${fs} =~ ^(${NET_FS_LIST// /|})$ ]] || continue
 		[[ ${point} == "/" ]] && continue
 
 		retry=0

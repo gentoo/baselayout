@@ -94,7 +94,7 @@ calculate_metric() {
 		m=$(awk '$1=="'${iface}'" && $2=="00000000" { print $7 }' \
 		/proc/net/route)
 	else
-		[[ $(ifconfig "${iface}" 2>/dev/null) =~ "metric ([^ ]*)" ]] \
+		[[ $(ifconfig "${iface}" 2>/dev/null) =~ metric\ ([^\ ]*) ]] \
 			&& m="${BASH_REMATCH[1]}"
 	fi
 	if [[ -n ${m} ]] ; then

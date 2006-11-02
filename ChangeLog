@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  02 Nov 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Add ramfs to the don't unmount this fs type list, #151128.
+    We now use the bash 3.2 =~ semantic, #151108.
+
   01 Nov 2006; Roy Marples <uberlord@gentoo.org>:
 
     Clarified pppd maxfail usage, #153657 thanks to Toralf Förster.

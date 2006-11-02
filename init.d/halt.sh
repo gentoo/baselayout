@@ -5,8 +5,8 @@
 [[ ${RC_GOT_FUNCTIONS} != "yes" ]] && source /sbin/functions.sh
 
 # livecd-functions.sh should _ONLY_ set this differently
-RC_NO_UMOUNTS="${RC_NO_UMOUNTS:-^(/|/lib/rcscripts/init.d)$}"
-RC_NO_UMOUNT_FS="${RC_NO_UMOUNT_FS:-^(devfs|devpts|linprocfs|proc|rootfs|swap|sysfs|tmpfs|unionfs|usb(dev)?fs)$}"
+RC_NO_UMOUNTS="${RC_NO_UMOUNTS:-^(/|/dev|/lib/rcscripts/init.d|/proc)$}"
+RC_NO_UMOUNT_FS="${RC_NO_UMOUNT_FS:-^(devfs|devpts|linprocfs|proc|rootfs|ramfs|swap|sysfs|tmpfs|unionfs|usb(dev)?fs)$}"
 
 # Check to see if this is a livecd, if it is read the commandline
 # this mainly makes sure $CDBOOT is defined if it's a livecd
@@ -52,9 +52,9 @@ do_unmount() {
 		point=${point//\040/ }
 		node=${node//\040/ }
 		fs=${fs//\040/ }
-		[[ ${fs} =~ "${RC_NO_UMOUNT_FS}" ]] && continue
-		[[ -n ${no_unmounts} && ${point} =~ "${no_unmounts}" ]] && continue
-		[[ -z ${nodes} && ${node} =~ "${nodes}" ]] || continue
+		[[ ${fs} =~ ${RC_NO_UMOUNT_FS} ]] && continue
+		[[ -n ${no_unmounts} && ${point} =~ ${no_unmounts} ]] && continue
+		[[ -z ${nodes} && ${node} =~ ${nodes} ]] || continue
 
 		retry=2
 		while ! ${cmd} "${point}" &>/dev/null ; do

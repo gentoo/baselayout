@@ -63,7 +63,7 @@ iwconfig_exists() {
 		&& return 0
 
 	[[ ! -e /proc/net/wireless ]] && return 1
-	[[ $(</proc/net/wireless) =~ $'\n'"[ \t]*$1:" ]]
+	[[ $(</proc/net/wireless) =~ $'\n'[\ \t]*$1: ]]
 }
 
 # char* iwconfig_get_wep_status(char *interface)

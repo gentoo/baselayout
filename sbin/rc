@@ -21,7 +21,7 @@ umask 022
 
 # Quick test to see if we can be interactive or not
 if [[ ${RC_INTERACTIVE:-yes} == "yes" ]] ; then
-	if tty -s && [[ $(stty -a) =~ " icanon" ]] ; then
+	if tty -s && [[ $(stty -a) == *" icanon "*  ]] ; then
 		RC_INTERACTIVE="yes"
 	else
 		RC_INTERACTIVE="no"
@@ -442,7 +442,7 @@ fi
 rm -rf "${svcdir}/failed" &>/dev/null
 
 # If $svcdir is mounted in ram, save it back to disk and unmount
-if [[ $'\n'$(mount) =~ $'\n'"* ${svcdir} " ]] ; then
+if [[ $'\n'$(get_mounts) =~ $'\n'"${svcdir} " ]] ; then
 	# Function to show the timeout message
 	timeout=
 	do_timeout() {

@@ -323,12 +323,12 @@ start-stop-daemon() {
 	if [[ ${#RC_DAEMONS[@]} == "0" ]]; then
 		[[ -f ${daemonfile} ]] && rm -f "${daemonfile}"
 	elif [[ -n ${daemonfile} ]] ; then
-		echo "RC_DAEMONS[0]=\"${RC_DAEMONS[0]}\"" > "${daemonfile}"
-		echo "RC_PIDFILES[0]=\"${RC_PIDFILES[0]}\"" >> "${daemonfile}"
+		echo "RC_DAEMONS[0]='${RC_DAEMONS[0]}'" > "${daemonfile}"
+		echo "RC_PIDFILES[0]='${RC_PIDFILES[0]}'" >> "${daemonfile}"
 
 		for (( i=1; i<${#RC_DAEMONS[@]}; i++ )); do
-			echo "RC_DAEMONS[${i}]=\"${RC_DAEMONS[i]}\"" >> "${daemonfile}"
-			echo "RC_PIDFILES[${i}]=\"${RC_PIDFILES[i]}\"" >> "${daemonfile}"
+			echo "RC_DAEMONS[${i}]='${RC_DAEMONS[i]}'" >> "${daemonfile}"
+			echo "RC_PIDFILES[${i}]='${RC_PIDFILES[i]}'" >> "${daemonfile}"
 		done
 	fi
 

@@ -31,12 +31,12 @@ mount_svcdir() {
 	local filesystems=$(</proc/filesystems)$'\n'
 	local fs= devdir="none" devtmp="none" x=
 	
-	if [[ ${filesystems} =~ "[[:space:]]tmpfs"$'\n' ]] ; then
+	if [[ ${filesystems} =~ [[:space:]]tmpfs$'\n' ]] ; then
 		fs="tmpfs"
-	elif [[ ${filesystems} =~ "[[:space:]]ramfs"$'\n' ]] ; then
+	elif [[ ${filesystems} =~ [[:space:]]ramfs$'\n' ]] ; then
 		fs="ramfs"
 	elif [[ -e /dev/ram0 && -e /dev/ram1 \
-		&& ${filesystems} =~ "[[:space:]]ext2"$'\n' ]] ; then
+		&& ${filesystems} =~ [[:space:]]ext2$'\n' ]] ; then
 		devdir="/dev/ram0"
 		devtmp="/dev/ram1"
 		fs="ext2"
@@ -157,7 +157,7 @@ else
 		if get_bootparam "nodevfs" || ! has_addon devfs-start.sh ||
 		   [[ ${udev} == "yes" || ! -r /proc/filesystems ]] ; then
 			devfs="no"
-		elif [[ ! $(</proc/filesystems)$'\n' =~ '[[:space:]]devfs'$'\n' ]]; then
+		elif [[ ! $(</proc/filesystems)$'\n' =~ [[:space:]]devfs$'\n' ]]; then
 			devfs="no"
 		fi
 	fi
