@@ -442,7 +442,7 @@ fi
 rm -rf "${svcdir}/failed" &>/dev/null
 
 # If $svcdir is mounted in ram, save it back to disk and unmount
-if [[ $'\n'$(get_mounts) =~ $'\n'"${svcdir} " ]] ; then
+if [[ $'\n'$(get_mounts) =~ $'\n'${svcdir}\  ]] ; then
 	# Function to show the timeout message
 	timeout=
 	do_timeout() {
