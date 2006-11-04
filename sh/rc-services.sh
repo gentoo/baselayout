@@ -125,7 +125,7 @@ wait_service() {
 	# Otheriwse we don't block
 	# FreeBSD has numerous FIFO issues, so wait in a loop
 	# http://www.freebsd.org/cgi/query-pr.cgi?pr=kern/94772
-	if [[ $(uname) == "FreeBSD" ]] || is_vps_sys ; then
+	if [[ $(uname) == "FreeBSD" ]] ; then
 		while [[ -e ${fifo} ]] ; do
 			sleep 1 
 		done
