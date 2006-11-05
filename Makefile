@@ -23,7 +23,7 @@ KEEP_DIRS = /boot /home /mnt /root \
 	/var/lock /var/run
 
 ifeq ($(OS),Linux)
-	KEEP_DIRS += /dev /proc /sys
+	KEEP_DIRS += /dev /sys
 	NET_LO = net.lo
 endif
 ifneq ($(OS),Linux)
