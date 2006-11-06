@@ -149,6 +149,7 @@ if ${update} ; then
 	if [[ ${retval} == "0" ]] ; then
 		DEPTREE="deptree"
 		export DEPTREE
+		cd /etc/init.d
 		bash "${mysvcdir}/depcache" | \
 			awk \
 				-f /lib/rcscripts/awk/functions.awk \
@@ -187,6 +188,7 @@ if ${nupdate} ; then
 	if [[ ${retval} == "0" ]] ; then
 		DEPTREE="netdeptree"
 		export DEPTREE
+		cd "${svclib}/net"
 		bash "${mysvcdir}/netdepcache" | \
 			awk \
 				-f /lib/rcscripts/awk/functions.awk \

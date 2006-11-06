@@ -267,7 +267,7 @@ get_stop_services() {
 
 	for x in $(dolisting "${svcdir}/inactive/") \
 	         $(dolisting "${svcdir}/started/") ; do
-		list="${list} ${x##*/}"
+		list="${x##*/} ${list}"
 	done
 
 	[[ -n ${list} ]] && reverse_list $(rc-depend -ineed -iuse -iafter ${list})
