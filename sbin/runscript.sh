@@ -763,7 +763,7 @@ for arg in $* ; do
 		retval="$?"
 		svcpause="no"
 		;;
-	--quiet|--nocolor|--nodeps|--verbose)
+	--quiet|--nocolor|--nocolour|--nodeps|--verbose)
 		;;
 	help)
 		exec "${svclib}"/sh/rc-help.sh "${myscript}" help

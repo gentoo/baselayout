@@ -790,18 +790,20 @@ NET_FS_LIST="afs cifs coda davfs fuse gfs ncpfs nfs nfs4 ocfs2 shfs smbfs"
 #   EXAMPLE:  if is_net_fs / ; then ...
 #
 is_net_fs() {
-	local fstype
-	# /proc/mounts is always accurate but may not always be available
-	if [[ -e /proc/mounts ]] ; then
-		fstype=$(sed -n -e '/^rootfs/!s:.* '"$1"' \([^ ]*\).*:\1:p' /proc/mounts)
-	else
-		fstype=$(mount | sed -n -e 's:.* on '"$1"' type \([^ ]*\).*:\1:p')
-	fi
-	[[ " ${NET_FS_LIST} " == *" ${fstype} "* ]]
-	return $?
+	local point= mount= fs= foo=
+	get_mounts | while read point node fs foo ; do
+		point=${point//\040/ }
+		[[ $1 == "${point}" ]] || continue
+		[[ " ${NET_FS_LIST} " != *" ${fs//\040/ } "* ]]
+		return $?
+	done
+
+	# We always get here as the get_mounts call puts us in a subshell
+	# so just reverse the return code
+	[[ $? == 1 ]]
 }
 
-# bool is_net_fs(path)
+# bool is_union_fs(path)
 #
 #   return 0 if path is under unionfs control 
 #
@@ -950,54 +952,36 @@ uniqify() {
 #                                                                            #
 ##############################################################################
 
-if [[ -z ${EBUILD} ]] ; then
-	# Setup a basic $PATH.  Just add system default to existing.
-	# This should solve both /sbin and /usr/sbin not present when
-	# doing 'su -c foo', or for something like:  PATH= rcscript start
-	PATH="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/sbin:${PATH}"
+# Setup a basic $PATH.  Just add system default to existing.
+# This should solve both /sbin and /usr/sbin not present when
+# doing 'su -c foo', or for something like:  PATH= rcscript start
+PATH="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/sbin:${PATH}"
 
-	if [[ -z ${CONSOLETYPE} ]] ; then
-		export CONSOLETYPE=$(/sbin/consoletype 2>/dev/null)
-	fi
-	if [[ ${CONSOLETYPE} == "serial" ]] ; then
-		RC_NOCOLOR="yes"
-		RC_ENDCOL="no"
-	fi
-
-	for arg in "$@" ; do
-		case "${arg}" in
-			# Lastly check if the user disabled it with --nocolor argument
-			--nocolor|-nc)
-				RC_NOCOLOR="yes"
-				;;
-		esac
-	done
-
-	setup_defaultlevels
-
-	# If we are not /sbin/rc then ensure that we cannot change level variables
-	if [[ -n ${BASH_SOURCE} \
-		&& ${BASH_SOURCE[${#BASH_SOURCE[@]}-1]} != "/sbin/rc" ]] ; then
-		declare -r BOOTLEVEL DEFAULTLEVEL SOFTLEVEL
-	fi
-else
-	# Should we use colors ?
-	if [[ $* != *depend* ]] ; then
-		# Check user pref in portage
-		RC_NOCOLOR=$(portageq envvar NOCOLOR 2>/dev/null)
-		[[ ${RC_NOCOLOR} == "true" ]] && RC_NOCOLOR="yes"
-	else
-		# We do not want colors during emerge depend
-		RC_NOCOLOR="yes"
-		# No output is seen during emerge depend, so this is not needed.
-		RC_ENDCOL="no"
-	fi
+if [[ -z ${CONSOLETYPE} ]] ; then
+	export CONSOLETYPE=$(/sbin/consoletype 2>/dev/null)
+fi
+if [[ ${CONSOLETYPE} == "serial" ]] ; then
+	RC_NOCOLOR="yes"
+	RC_ENDCOL="no"
 fi
 
-if [[ -n ${EBUILD} && $* == *depend* ]] ; then
-	# We do not want stty to run during emerge depend
-	COLS=80
-elif [[ -z ${COLS} || -n ${COLUMNS} ]] ; then
+for arg in "$@" ; do
+	case "${arg}" in
+		--nocolor|--nocolour)
+			RC_NOCOLOR="yes"
+			;;
+	esac
+done
+
+setup_defaultlevels
+
+# If we are not /sbin/rc then ensure that we cannot change level variables
+if [[ -n ${BASH_SOURCE} \
+	&& ${BASH_SOURCE[${#BASH_SOURCE[@]}-1]} != "/sbin/rc" ]] ; then
+		declare -r BOOTLEVEL DEFAULTLEVEL SOFTLEVEL
+fi
+
+if [[ -z ${COLS} || -n ${COLUMNS} ]] ; then
 	# Setup COLS and ENDCOL so eend can line up the [ ok ]
 	COLS="${COLUMNS:-0}"		# bash's internal COLUMNS variable
 	(( COLS == 0 )) && COLS=$(set -- `stty size 2>/dev/null` ; echo "$2")
