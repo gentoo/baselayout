@@ -29,7 +29,7 @@ start() {
 			fi
 			retval=$?
 		else
-			parts=$(awk '$1 ~ /^\/dev\// && $6 > 1 {print $2}' \
+			parts=$(awk '$1 ~ /^\/dev\// && $2 != "none" && $3 != "none" && $6 > 1 {print $2}' \
 				/etc/fstab)
 			if [[ -n ${parts} ]] ; then
 				fsck -p ${parts}
