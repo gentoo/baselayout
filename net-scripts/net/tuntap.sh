@@ -91,7 +91,7 @@ tuntap_stop() {
 			--dev-type "$(get_options tuntap)" \
 			--dev "${iface}" > /dev/null
 	else
-		tunctl -d "${fiace}" >/dev/null
+		tunctl -d "${iface}" >/dev/null
 	fi
 	eend $?
 }
