@@ -13,8 +13,7 @@
 # livecd-functions.sh should _ONLY_ set this differently if CDBOOT is
 # set, else the default one should be used for normal boots.
 # say:  RC_NO_UMOUNTS="/mnt/livecd|/newroot"
-RC_NO_UMOUNTS=${RC_NO_UMOUNTS:-/mnt/livecd|/newroot}
-RC_NO_UMOUNT_FS="^(proc|devpts|sysfs|devfs|ramfs|tmpfs|usb(dev)?fs|unionfs|rootfs)$"
+RC_NO_UMOUNTS=${RC_NO_UMOUNTS:-^(/|/dev|/dev/pts|/lib/rcscripts/init.d|/proc)$}
 
 # Reset pam_console permissions if we are actually using it
 if [[ -x /sbin/pam_console_apply && ! -c /dev/.devfsd && \
@@ -69,7 +68,7 @@ halt -w &>/dev/null
 # Remove loopback devices started by dm-crypt
 
 remaining=$(awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts | \
-            sort -r | egrep -v "^(${RC_NO_UMOUNTS})$")
+            sort -r | egrep -v "${RC_NO_UMOUNTS}")
 [[ -n ${remaining} ]] && {
 	sig=
 	retry=3
@@ -86,7 +85,7 @@ remaining=$(awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mou
 		fi
 
 		remaining=$(awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mounts | \
-		            sort -r | egrep -v "^(${RC_NO_UMOUNTS})$")
+		            sort -r | egrep -v "${RC_NO_UMOUNTS}")
 		[[ -z ${remaining} ]] && break
 		
 		/bin/fuser -s -k ${sig} -m ${remaining}
@@ -100,21 +99,13 @@ remaining=$(awk '!/^#/ && $1 ~ /^\/dev\/loop/ && $2 != "/" {print $2}' /proc/mou
 # This is needed to make sure we dont have a mounted filesystem 
 # on a LVM volume when shutting LVM down ...
 ebegin "Unmounting filesystems"
-unmounts=$(awk -v NO_UMOUNT_FS="${RC_NO_UMOUNT_FS}" \
-	'{ \
-	    if (($3 !~ NO_UMOUNT_FS) && \
-	        ($1 != "none") && \
-	        ($1 !~ /^(rootfs|\/dev\/root)$/) && \
-	        ($2 != "/")) \
-	      print $2 \
-	}' /proc/mounts | sort -ur)
-for x in ${unmounts}; do
+for x in $(awk '{print $2}' /proc/mounts | sort -ur) ; do
+	x=${x//\\040/ }
 	# Do not umount these ... will be different depending on value of CDBOOT
-	if [[ -n $(echo "${x}" | egrep "^(${RC_NO_UMOUNTS})$") ]] ; then
+	if [[ -n $(echo "${x}" | egrep "${RC_NO_UMOUNTS}") ]] ; then
 		continue
 	fi
 
-	x=${x//\\040/ }
 	if ! umount "${x}" &>/dev/null; then
 		# Kill processes still using this mount
 		/bin/fuser -s -k -9 -m "${x}"
@@ -163,13 +154,9 @@ mount_readonly() {
 	sync; sync
 	sleep 1
 
-	for x in $(awk -v NO_UMOUNT_FS="${RC_NO_UMOUNT_FS}" \
-	           	'{ \
-	           		if (($1 != "none") && ($3 !~ NO_UMOUNT_FS)) \
-	           			print $2 \
-	           	}' /proc/mounts | sort -ur) ; do
+	for x in $(awk '{print $2}' /proc/mounts | sort -ur) ; do
 		x=${x//\\040/ }
-		if [[ -n $(echo "${x}" | egrep "^(${RC_NO_UMOUNTS})$") ]] ; then
+		if [[ -n $(echo "${x}" | egrep "${RC_NO_UMOUNTS}") ]] ; then
 			continue
 		fi
 		if [[ ${cmd} == "u" ]]; then
