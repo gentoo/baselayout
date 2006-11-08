@@ -44,7 +44,7 @@ ifconfig_check_installed() {
 #
 # Returns 1 if the interface exists, otherwise 0
 ifconfig_exists() {
-	[[ $'\n'$(ifconfig -a) =~ $'\n'"$1 " ]] && return 0
+	[[ $'\n'$(ifconfig -a) == *$'\n'"$1 "* ]] && return 0
 
 	if ${report} ; then
 		eerror $"network interface" "$1" $"does not exist"
@@ -143,8 +143,7 @@ ifconfig_get_address() {
 #
 # Return 0 if the link is ethernet, otherwise 1.
 ifconfig_is_ethernet() {
-	[[ $'\n'$(ifconfig "$1") \
-		=~ $'\n'"$1[[:space:]]*Link encap:Ethernet[[:space:]]" ]]
+	[[ $(ifconfig "$1") == *" Link encap:Ethernet "* ]]
 }
 
 # void ifconfig_get_mac_address(char *interface)

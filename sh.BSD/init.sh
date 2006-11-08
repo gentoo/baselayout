@@ -19,15 +19,15 @@ mount_svcdir() {
 	if [[ -e "${svcdir}"/deptree ]] ; then
 		dotmp=true
 		try mdconfig -a -t malloc -s 1m -u 1
-		try newfs -U /dev/md1
+		try newfs /dev/md1
 		try mount /dev/md1 "${svclib}"/tmp
 		try cp -p "${svcdir}/"*{depcache,deptree} "${svclib}"/tmp
 	fi
-	try mdconfig -a -t malloc -s 2m -u 0
-	try newfs -U /dev/md0
-	try mount /dev/md0 "${svcdir}"
+	try mdconfig -a -t malloc -s "${svcsize}"k -u 0
+	try newfs /dev/md0
+	try mount -o rw,noexec,nosuid /dev/md0 "${svcdir}"
 	if ${dotmp} ; then
-		try cp -p "${svclib}"/tmp/* "${svcdir}"
+		try cp -p "${svclib}"/tmp/*{depcache,deptree} "${svcdir}"
 		try umount "${svclib}"/tmp
 		try mdconfig -d -u 1
 	fi

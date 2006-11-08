@@ -32,9 +32,7 @@ iwconfig_check_installed() {
 #
 # Checks to see if wireless extensions are enabled on the interface
 iwconfig_exists() {
-	[[ $(ifconfig "$1") \
-	=~ $'\n'[[:space:]]*media:\ IEEE\ 802.11\ Wireless ]] \
-	&& return 0
+	[[ $(ifconfig "$1") =~ $'\n'[[:space:]]+"media: IEEE 802.11 Wireless" ]]
 }
 
 # char* iwconfig_get_wep_status(char *interface)

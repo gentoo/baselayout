@@ -29,14 +29,17 @@ single_user() {
 # tmpfs and ramfs are easy, so force one or the other
 mount_svcdir() {
 	local filesystems=$(</proc/filesystems)$'\n'
-	local fs= devdir="none" devtmp="none" x=
-	
-	if [[ ${filesystems} =~ [[:space:]]tmpfs$'\n' ]] ; then
+	local fs= fsopts="-o rw,noexec,nodev,nosuid" devdir="none" devtmp="none" x=
+	local mntcmd=$(get_mount_fstab "${svcdir}")
+
+	if [[ ${filesystems} == *[[:space:]]"tmpfs"$'\n'* ]] ; then
 		fs="tmpfs"
-	elif [[ ${filesystems} =~ [[:space:]]ramfs$'\n' ]] ; then
+		fsopts="${fsopts},mode=0755,size=${svcsize}k"
+	elif [[ ${filesystems} == *[[:space:]]"ramfs"$'\n'* ]] ; then
 		fs="ramfs"
+		fsopts="${fsopts},mode=0755,size=${svcsize}k"
 	elif [[ -e /dev/ram0 && -e /dev/ram1 \
-		&& ${filesystems} =~ [[:space:]]ext2$'\n' ]] ; then
+		&& ${filesystems} == *[[:space:]]"ext2"$'\n'* ]] ; then
 		devdir="/dev/ram0"
 		devtmp="/dev/ram1"
 		fs="ext2"
@@ -52,15 +55,20 @@ mount_svcdir() {
 		single_user
 	fi
 
+	# If we have no entry in fstab for $svcdir, provide our own
+	if [[ -z ${mntcmd} ]] ; then
+		mntcmd="-t ${fs} ${devdir} ${svcdir} ${fsopts}"
+	fi
+
 	local dotmp=false
 	if [[ -e "${svcdir}"/deptree ]] ; then
 		dotmp=true
 		try mount -t "${fs}" "${devtmp}" "${svclib}"/tmp -o rw
 		try cp -p "${svcdir}"/*{depcache,deptree} "${svclib}"/tmp
 	fi
-	try mount -t "${fs}" "${devdir}" "${svcdir}" -o rw
+	try mount -n ${mntcmd}
 	if ${dotmp} ; then
-		try cp -p "${svclib}"/tmp/* "${svcdir}"
+		try cp -p "${svclib}"/tmp/*{depcache,deptree} "${svcdir}"
 		try umount "${svclib}"/tmp
 	fi
 }
@@ -161,7 +169,7 @@ else
 		if get_bootparam "nodevfs" || ! has_addon devfs-start.sh ||
 		   [[ ${udev} == "yes" || ! -r /proc/filesystems ]] ; then
 			devfs="no"
-		elif [[ ! $(</proc/filesystems)$'\n' =~ [[:space:]]devfs$'\n' ]]; then
+		elif [[ ! $(</proc/filesystems)$'\n' == *[[:space:]]"devfs"$'\n'* ]]; then
 			devfs="no"
 		fi
 	fi

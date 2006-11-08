@@ -102,7 +102,7 @@ iproute2_get_address() {
 #
 # Return 0 if the link is ethernet, otherwise 1.
 iproute2_is_ethernet() {
-	[[ $(ip link show "$1") =~ $'\n'[[:space:]]*link/ether[[:space:]]* ]]
+	[[ $(ip link show "$1") == *" link/ether "* ]]
 }
 
 # void iproute2_get_mac_address(char *interface)

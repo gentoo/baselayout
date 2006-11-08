@@ -84,18 +84,14 @@ begin_service() {
 	mkfifo "${svcdir}/exclusive/${service}" 2> /dev/null
 }
 
-# void end_service(service, exitcode)
+# void end_service(service)
 #
 #   stops executing a exclusive region and
 #   wakes up anybody who is waiting for the exclusive region
 #
 end_service() {
-	local service="$1" exitstatus="$2"
+	local service="$1"
 	[[ -z ${service} ]] && return
-
-	if [[ -n ${exitstatus} ]] ; then
-		echo "${exitstatus}" > "${svcdir}/exitcodes/${service}"
-	fi
 
 	# move the fifo to a unique name so no-one is waiting for it
 	local fifo="${svcdir}/exclusive/${service}"
@@ -110,16 +106,14 @@ end_service() {
 	fi
 }
 
-# int wait_service(service)
+# void wait_service(service)
 #
-# If a service has started, or a fifo does not exist return 0
-# Otherwise, wait until we get an exit code via the fifo and return
-# that instead.
+# Wait until the given service has finished
 wait_service() {
 	local service="$1"
 	local fifo="${svcdir}/exclusive/${service}"
 	
-	[[ ! -e ${fifo} ]] && return 0
+	[[ ! -e ${fifo} ]] && return
 
 	# This will block until the service fifo is touched
 	# Otheriwse we don't block
@@ -134,9 +128,6 @@ wait_service() {
 		# Use cat as bash internals always throw errors to console
 		cat "${fifo}" &>/dev/null
 	fi
-
-	local exitstatus=$(<"${svcdir}/exitcodes/${service}")
-	return "${exitstatus}"
 }
 
 
@@ -172,7 +163,7 @@ start_service() {
 			|| service_scheduled "${service}"
 		retval=$?
 		
-		end_service "${service}" "${retval}"
+		end_service "${service}"
 		splash "svc_started" "${service}" "${retval}"
 		
 		return "${retval}"
@@ -186,7 +177,7 @@ start_service() {
 				|| service_scheduled "${service}"
 			retval=$?
 			
-			end_service "${service}" "${retval}"
+			end_service "${service}"
 			splash "svc_started" "${service}" "${retval}"
 		) &
 		return 0
@@ -221,7 +212,7 @@ stop_service() {
 		( "/etc/init.d/${service}" stop )
 		service_stopped "${service}"
 		retval=$?
-		end_service "${service}" "${retval}"
+		end_service "${service}"
 		splash "svc_stopped" "${service}" "${retval}"
 		return "${retval}"
 	else
@@ -230,7 +221,7 @@ stop_service() {
 			( "/etc/init.d/${service}" stop )
 			service_stopped "${service}"
 			retval=$?
-			end_service "${service}" "${retval}"
+			end_service "${service}"
 			splash "svc_stopped" "${service}" "${retval}"
 		) &
 		return 0
@@ -291,7 +282,7 @@ mark_service_inactive() {
 	rm -f "${svcdir}/started/$1" "${svcdir}/wasinactive/$1" \
 		"${svcdir}/starting/$1" "${svcdir}/stopping/$1"
 	
-	end_service "$1" 1
+	end_service "$1"
 
 	return 0
 }

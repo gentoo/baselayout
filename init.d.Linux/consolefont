@@ -26,7 +26,10 @@ start() {
 
 	# Get additional parameters
 	if [[ -n ${CONSOLETRANSLATION} ]] ; then
-		param="-m ${CONSOLETRANSLATION}"
+		param="${param} -m ${CONSOLETRANSLATION}"
+	fi
+	if [[ -n ${UNICODEMAP} ]] ; then
+		param="${param} -u ${UNICODEMAP}"
 	fi
 
 	# Set the console font
@@ -64,5 +67,4 @@ start() {
 	eend ${retval} "${errmsg}"
 }
 
-
-# vim:ts=4
+# vim: set ts=4 :

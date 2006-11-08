@@ -248,7 +248,7 @@ fi
 # runlevel specified in ${svcdir}/softlevel
 # It needs to be a new directory, else when stopping the services
 # and the old directory is not intact, things get broken
-
+rm -rf "${svcdir}/softscripts.new"
 mkdir -p -m 0755 "${svcdir}/softscripts.new"
 
 for x in ${myscripts} ; do
@@ -440,55 +440,6 @@ fi
 
 # Runlevel end, so clear stale fail list
 rm -rf "${svcdir}/failed" &>/dev/null
-
-# If $svcdir is mounted in ram, save it back to disk and unmount
-# but only if $svclib is writeable.
-if [[ $'\n'$(get_mounts) =~ $'\n'${svcdir}\  && -w ${svclib} ]] ; then
-	# Function to show the timeout message
-	timeout=
-	do_timeout() {
-		if [[ -z ${timeout} ]] ; then
-			timeout=60
-		else
-			[[ -n ${ENDCOL} ]] && echo -n $'\e[A'
-		fi
-
-		ewarn $"Waiting for services to finish, timeout in" \
-		    "${timeout}" $"seconds" "  "
-		sleep 1
-		((timeout--))
-		[[ ${timeout} -gt 0 ]] && return 0
-	
-		eerror $"Timed out! Killing some services"
-		echo
-		fuser -k -m "${svcdir}"
-		return 1
-	}
-
-	while [[ -n $(fuser -m "${svcdir}" 2>/dev/null) ]] ; do
-		do_timeout || break
-	done
-	[[ ${timeout} -le 10 ]] && timeout=10
-
-	# Lock svcdir
-	touch "${svcdir}/.locked"
-	# Wait for processes to finish
-	while true ; do
-		while [[ -n $(fuser -m "${svcdir}" 2>/dev/null) ]] ; do
-			do_timeout || break
-		done
-		tar cpf "/tmp/init.d.$$.tar.bz2" -C "${svcdir}" .
-		umount "${svcdir}" 2>/dev/null && break
-		do_timeout
-	done
-	touch "${svcdir}/.locked"
-	rm -rf "${svcdir}"/*
-	# Pipe errors to /dev/null as we may have future timestamps
-	tar xpf "/tmp/init.d.$$.tar.bz2" -C "${svcdir}" 2>/dev/null
-	rm -f "${svcdir}/.locked" "/tmp/init.d.$$.tar.bz2"
-
-	[[ $(uname) == "FreeBSD" ]] && mdconfig -d -u 0
-fi
 
 # If we were in the boot runlevel, it is done now ...
 if [[ -n ${BOOT} ]] ; then

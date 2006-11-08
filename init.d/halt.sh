@@ -5,8 +5,7 @@
 [[ ${RC_GOT_FUNCTIONS} != "yes" ]] && source /sbin/functions.sh
 
 # livecd-functions.sh should _ONLY_ set this differently
-RC_NO_UMOUNTS="${RC_NO_UMOUNTS:-^(/|/dev|/lib/rcscripts/init.d|/proc)$}"
-RC_NO_UMOUNT_FS="${RC_NO_UMOUNT_FS:-^(devfs|devpts|linprocfs|proc|rootfs|ramfs|swap|sysfs|tmpfs|unionfs|usb(dev)?fs)$}"
+RC_NO_UMOUNTS=${RC_NO_UMOUNTS:-^(/|/dev|/dev/pts|/proc)$}
 
 # Check to see if this is a livecd, if it is read the commandline
 # this mainly makes sure $CDBOOT is defined if it's a livecd
@@ -23,11 +22,43 @@ fi
 stop_addon devfs
 stop_addon udev
 
+# Write a reboot record to /var/log/wtmp before unmounting
+[[ $(uname) == "Linux" ]] && halt -w &>/dev/null
+
+# Flush all pending disk writes now
+sync ; sync
+
+# If we are in a VPS, we don't need anything below here, because
+#   1) we don't need (and by default can't) umount anything (VServer) or
+#   2) the host utils take care of all umounting stuff (OpenVZ)
+if is_vps_sys ; then
+	if [[ -e /etc/init.d/"$1".sh ]] ; then
+		. /etc/init.d/"$1".sh
+	else
+		exit 0
+	fi
+fi
+
+# If $svcdir is still mounted, preserve it if we can
+if [[ -w ${svclib} ]] && [[ $'\n'$(get_mounts) == *$'\n'"${svcdir} "*  ]] ; then
+	if [[ -n $(fuser -m "${svcdir}" 2>/dev/null) ]] ; then
+		fuser -k -m "${svcdir}" &>/dev/null
+		sleep 2
+	fi
+	tar cpf "${svclib}/init.d.$$.tar" -C "${svcdir}" \
+		depcache deptree netdepcache netdeptree
+	umount "${svcdir}"
+	rm -rf "${svcdir}"/*
+	# Pipe errors to /dev/null as we may have future timestamps
+	tar xpf "${svclib}/init.d.$$.tar" -C "${svcdir}" 2>/dev/null
+	rm -f "${svclib}/init.d.$$.tar"
+fi
+
 # Try to unmount all tmpfs filesystems not in use, else a deadlock may
 # occure, bug #13599.
 umount -a -t tmpfs &>/dev/null
 
-# Turn off swap and perhaps zero it out for fun
+# Turn off swap
 if [[ -x /sbin/swapctl ]] ; then
 	swap_list=$(swapctl -l 2>/dev/null | sed -e '1d')
 else
@@ -39,9 +70,6 @@ if [[ -n ${swap_list} ]] ; then
 	eend $?
 fi
 
-# Write a reboot record to /var/log/wtmp before unmounting
-[[ $(uname) == "Linux" ]] && halt -w &>/dev/null
-
 # Handy function to handle all our unmounting needs
 # get_mounts is our portable function to get mount information
 do_unmount() {
@@ -52,7 +80,6 @@ do_unmount() {
 		point=${point//\040/ }
 		node=${node//\040/ }
 		fs=${fs//\040/ }
-		[[ ${fs} =~ ${RC_NO_UMOUNT_FS} ]] && continue
 		[[ -n ${no_unmounts} && ${point} =~ ${no_unmounts} ]] && continue
 		[[ -z ${nodes} && ${node} =~ ${nodes} ]] || continue
 
@@ -72,20 +99,6 @@ do_unmount() {
 	done
 	return ${retval}
 }
-
-# Flush all pending disk writes now
-sync ; sync
-
-# If we are in a VPS, we don't need anything below here, because
-#   1) we don't need (and by default can't) umount anything (VServer) or
-#   2) the host utils take care of all umounting stuff (OpenVZ)
-if is_vps_sys ; then
-	if [[ -e /etc/init.d/"$1".sh ]] ; then
-		. /etc/init.d/"$1".sh
-	else
-		exit 0
-	fi
-fi
 
 # Umount loopback devies
 ebegin $"Unmounting loopback devices"

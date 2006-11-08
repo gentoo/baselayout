@@ -70,7 +70,7 @@ fi
 
 for x in softscripts snapshot options daemons \
 	started starting inactive wasinactive stopping failed \
-	exclusive exitcodes scheduled coldplugged ebuffer ; do
+	exclusive scheduled coldplugged ebuffer ; do
 	if [[ ! -d "${mysvcdir}/${x}" ]] ; then
 		if ! mkdir -p -m 0755 "${mysvcdir}/${x}" 2>/dev/null ; then
 			eerror "Could not create needed directory '${mysvcdir}/${x}'!"
@@ -79,11 +79,10 @@ for x in softscripts snapshot options daemons \
 	fi
 done
 
-if ! touch "${mysvcdir}/.test" 2>/dev/null ; then
+if [[ ! -w ${mysvcdir} ]] ; then 
 	eerror "${mysvcdir} is read-only, cannot update deptree"
 	exit 1
 fi
-rm -f "${mysvcdir}/.test"
 
 check_files() {
 	local testfile=$1 clock_skew= f= retval=0

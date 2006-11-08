@@ -648,7 +648,7 @@ void visit_service (struct depinfo *deptree,
     }
 
   /* Now visit the stuff we provide for */
-  if ((dt = get_deptype (depinfo, "iprovide")) && descend && always_valid)
+  if ((dt = get_deptype (depinfo, "iprovide")) && descend)
     {
       op = p = strdup (dt->services);
       while ((service = strsep (&p, " ")))

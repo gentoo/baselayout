@@ -99,10 +99,19 @@ start() {
 	if [[ -f /etc/modules.autoload && ! -L /etc/modules.autoload ]]; then
 		autoload=/etc/modules.autoload
 	else
-		local x
+		local x= f="/etc/modules.autoload.d/kernel"
+		[[ ${lvl} == "${BOOTLEVEL}" && ${lvl} == "${DEFAULTLEVEL}" ]]
 		for x in "${KV}" ${KV_MAJOR}.${KV_MINOR}.${KV_MICRO} ${KV_MAJOR}.${KV_MINOR} ; do
-			if [[ -f /etc/modules.autoload.d/kernel-"${x}" ]] ; then
-				autoload="/etc/modules.autoload.d/kernel-${x}"
+			if [[ -f "${f}-${x}-${SOFTLEVEL}" ]] ; then
+				autoload="${f}-${x}.${SOFTLEVEL}"
+				break
+			fi
+			if [[ ${SOFTLEVEL} == "${BOOTLEVEL}" && -f "${f}-${x}-${DEFAULTLEVEL}" ]] ; then
+				autoload="${f}-${x}.${DEFAULTLEVEL}"
+				break
+			fi
+			if [[ -f "${f}-${x}" ]] ; then
+				autoload="${f}-${x}"
 				break
 			fi
 		done

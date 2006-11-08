@@ -1,6 +1,23 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  08 Nov 2006; Roy Marples <uberlord@gentoo.org>:
+
+    We now keep $svcdir mounted in a ramdisk all the time as discussed
+    on gentoo-dev. Dropped the exitcodes folder (useless really) to save
+    on a fair chunk of space.
+    
+    Credit to trudefx for finding a way to use == instead of =~.
+    Replaced a few instances of =~ to == as a result.
+
+    halt.sh no longer matches fstype as mounting --bind makes that
+    redundant. Instead we just avoid unmounting / /dev /dev/pts and /proc.
+
+    consolefont now supports UNICODEMAP variable, #144938.
+
+    modules now supports config files based on $SOFTLEVEL, #149568
+    thanks to Vincent Poinot.
+
   06 Nov 2006; Roy Marples <uberlord@gentoo.org>:
 
     Ensure that we only move $svcdir from tmpfs to disk if $svclib is rw.

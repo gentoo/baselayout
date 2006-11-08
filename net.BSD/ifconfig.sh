@@ -105,7 +105,7 @@ ifconfig_down() {
 # If withaddress is true then the interface has to have an IPv4 address
 # assigned as well
 ifconfig_is_up() {
-	[[ $(ifconfig "$1") =~ UP ]] || return 1
+	[[ $(ifconfig "$1") == *"<UP"* ]] || return 1
 	[[ ${2:-false} != "true" ]] || return 0
 	[[ -n $(ifconfig_get_address "$1") ]]
 }
@@ -134,8 +134,7 @@ ifconfig_get_address() {
 #
 # Return 0 if the link is ethernet, otherwise 1.
 ifconfig_is_ethernet() {
-	[[ $(ifconfig "$1") \
-		=~ $'\n'[[:space:]]*media:\ Ethernet\  ]]
+	[[ $(ifconfig "$1") == *$'\n'[[:space:]]+"media: Ethernet "* ]]
 }
 
 # bool ifconfig_has_carrier(char *iface)
@@ -143,7 +142,7 @@ ifconfig_is_ethernet() {
 # Return 0 if we have a carrier
 ifconfig_has_carrier() {
 	local s=$(ifconfig "$1" | sed -ne 's/^[[:space:]]status: \(.*\)$/\1/p')
-	[[ -z ${s} || ${s} =~ ^(active|associated)$ ]]
+	[[ -z ${s} || ${s} == "active" || ${s} == "associated" ]] 
 }
 
 # void ifconfig_get_mac_address(char *interface)

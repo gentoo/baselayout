@@ -50,11 +50,11 @@ wpa_supplicant_exists() {
 		&& return 0
 
 	[[ $(ifconfig "$1") \
-	=~ $'\n'[[:space:]]*media:\ IEEE\ 802.11\ Wireless ]] \
-	&& return 0
+	=~ $'\n'[[:space:]]+"media: IEEE 802.11 Wireless" ]] \
+	&& return 0 
 
 	[[ ! -e /proc/net/wireless ]] && return 1
-	[[ $(</proc/net/wireless) =~ $'\n'[\ \t]*$1: ]]
+	[[ $(</proc/net/wireless) == $'\n'[\ \t]*$1: ]]
 }
 
 # char* wpa_supplicant_get_essid(char *interface)

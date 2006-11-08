@@ -12,15 +12,6 @@ cd /
 # Common functions
 [[ ${RC_GOT_FUNCTIONS} != "yes" ]] && . /sbin/functions.sh
 
-# Sleep until svcdir is unlocked
-while [[ -e ${svcdir}/.locked ]] ; do
-	eerror "$0:" $"Sleeping while svcdir is locked"
-	sleep 1
-done
-
-# Change dir to $svcdir so we lock it for fuser until we finish
-cd "${svcdir}"
-
 # User must be root to run most script stuff (except status)
 if [[ ${EUID} != "0" ]] && ! [[ $2 == "status" && $# -eq 2 ]] ; then
 	eerror "$0:" $"must be root to run init scripts"
@@ -142,7 +133,7 @@ svc_quit() {
 	else
 		mark_service_stopped "${SVCNAME}"
 	fi
-	${svcbegin} && end_service "${SVCNAME}" 1
+	${svcbegin} && end_service "${SVCNAME}"
 	exit 1
 }
 
@@ -186,11 +177,11 @@ svc_schedule_start() {
 	for x in $(rc-depend --notrace -iprovide "${service}" ) ; do
 		[[ ! -d "${svcdir}/scheduled/${x}" ]] \
 			&& mkdir -p "${svcdir}/scheduled/${x}"
-		touch "${svcdir}/scheduled/${x}/${start}"
+		ln -snf "/etc/init.d/${service}" "${svcdir}/scheduled/${x}/${start}"
 	done
 
 	mark_service_stopped "${start}"
-	end_service "${start}" 1
+	end_service "${start}"
 }
 
 svc_start_scheduled() {
@@ -305,7 +296,6 @@ svc_stop() {
 		# Now that deps are stopped, stop our service
 		veindent
 		(
-		cd /
 		[[ ${RC_QUIET} == "yes" ]] && RC_QUIET_STDOUT="yes"
 		exit() {
 			eerror $"DO NOT USE EXIT IN INIT.D SCRIPTS"
@@ -365,7 +355,7 @@ svc_stop() {
 
 	if ${svcbegin} ; then
 		svcbegin=false
-		end_service "${SVCNAME}" "${retval}"
+		end_service "${SVCNAME}"
 	fi
 
 	# Reset the trap
@@ -478,7 +468,6 @@ svc_start() {
 		IN_BACKGROUND="${ib_save}"
 		veindent
 		(
-		cd /
 		[[ ${RC_QUIET} == "yes" ]] && RC_QUIET_STDOUT="yes"
 		exit() {
 			eerror $"DO NOT USE EXIT IN INIT.D SCRIPTS"
@@ -533,7 +522,7 @@ svc_start() {
 
 	if ${svcbegin} ; then
 		svcbegin=false
-		end_service "${SVCNAME}" "${retval}"
+		end_service "${SVCNAME}"
 	fi
 
 	# Reset the trap

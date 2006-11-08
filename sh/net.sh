@@ -291,24 +291,24 @@ modules_load()  {
 
 		if [[ ${u} == 0 ]] ; then
 			inst="${MODULES[i]}_check_installed";
-			[[ " ${umods} " == *" ${MODULES[i]} "* ]] && report=true
+			[[ " ${umods[@]} " == *" ${MODULES[i]} "* ]] && report=true
 			if is_function "${inst}" ; then
 				${inst} ${report} || u=1;
 			fi
-			if [[ " ${umods} " == *" !${MODULES[i]} "* ]] ; then
+			if [[ " ${umods[@]} " == *" !${MODULES[i]} "* ]] ; then
 				u=1
 			else
 				MODULE="${MODULES[i]}"
 				${MODULES[i]}_depend
 				if is_function "${MODULES[i]}_provide" && [[ -n ${umods} ]] ; then
-					[[ " ${umods} " == *" !$(${MODULES[i]}_provide) "* ]] && u=1
+					[[ " ${umods[@]} " == *" !$(${MODULES[i]}_provide) "* ]] && u=1
 				fi
 			fi
 		fi
 		exit "${u}";
 		)
 
-		if [[ $? != 0 || " ${umods}" == *" !${MODULES[i]} "* ]] ; then
+		if [[ $? != 0 ]] ; then
 			unset MODULES[i]
 			continue
 		fi
@@ -372,7 +372,7 @@ modules_load()  {
 		if is_function "${MODULES[i]}_instlled" ; then
 			for x in $( ${MODULES[i]}_instlled ); do
 				if [[ " ${MODULES[@]} " != *" ${x} "* ]] ; then
-					if [[ " ${umods} " == *" ${MODULES[i]} "* ]] ; then
+					if [[ " ${umods[@]} " == *" ${MODULES[i]} "* ]] ; then
 						eerror "${MODULES[i]}" $"needs" "${x}"
 						return 1
 					fi
@@ -736,7 +736,7 @@ run_start() {
 		# We need to mark the service as started incase a
 		# postdown function wants to restart services that depend on us
 		mark_service_started "net.${iface}"
-		end_service "net.${iface}" 0
+		end_service "net.${iface}"
 		einfo $"Running postup function"
 		eindent
 		( postup "${iface}" )
@@ -792,7 +792,7 @@ run_stop() {
 		# We need to mark the service as stopped incase a
 		# postdown function wants to restart services that depend on us
 		[[ ${IN_BACKGROUND} != "true" ]] && mark_service_stopped "net.${iface}"
-		end_service "net.${iface}" 0
+		end_service "net.${iface}"
 		einfo $"Running postdown function"
 		eindent
 		( postdown "${iface}" )
