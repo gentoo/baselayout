@@ -5,6 +5,8 @@
 
   08 Nov 2006; Roy Marples <uberlord@gentoo.org>:
 
+    tuntap interface is now destroyed correctly, #154509 thanks to Andrew Lambe.
+
     We now keep $svcdir mounted in a ramdisk all the time as discussed
     on gentoo-dev. Dropped the exitcodes folder (useless really) to save
     on a fair chunk of space.
