@@ -570,6 +570,7 @@ void visit_service (struct depinfo *deptree,
   struct linkedlist *type;
   struct depinfo *di;
   struct deptype *dt;
+  bool needsme = false;
 
   for (type = types; type; type = type->next)
     {
@@ -612,6 +613,7 @@ void visit_service (struct depinfo *deptree,
 	 then we need to stop the dependants. */
       if (descend && strcmp (type->item, "needsme") == 0)
 	{
+	  needsme = true;
 	  dt = get_deptype (depinfo, "iprovide");
 	  if (dt)
 	    {
@@ -648,7 +650,7 @@ void visit_service (struct depinfo *deptree,
     }
 
   /* Now visit the stuff we provide for */
-  if ((dt = get_deptype (depinfo, "iprovide")) && descend)
+  if ((dt = get_deptype (depinfo, "iprovide")) && descend && ! needsme)
     {
       op = p = strdup (dt->services);
       while ((service = strsep (&p, " ")))
