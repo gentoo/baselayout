@@ -1,6 +1,8 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+* baselayout-1.13.0_alpha6 (02 Nov 2006)
+
   08 Nov 2006; Roy Marples <uberlord@gentoo.org>:
 
     We now keep $svcdir mounted in a ramdisk all the time as discussed
