@@ -18,56 +18,58 @@ start() {
 	# Setup dm-crypt mappings if any
 	start_addon dm-crypt
 
-	if [[ -z ${CDBOOT} ]] ; then
-		ebegin $"Checking all filesystems"
-		if [[ $(uname) == "Linux" ]] ; then
-			if get_bootparam "forcefsck" ; then
-				ewarn $"A full fsck has been forced"
-				fsck -C -T -R -A -a -f
+	[[ -n ${CDBOOT} ]] && return 0
+
+	ebegin $"Checking all filesystems"
+	if [[ $(uname) == "Linux" ]] ; then
+		if get_bootparam "forcefsck" ; then
+			ewarn $"A full fsck has been forced"
+			fsck -C -T -R -A -a -f
+		else
+			fsck -C -T -R -A -a
+		fi
+		retval=$?
+	else
+		parts=$(awk '$1 ~ /^\/dev\// && $2 != "none" && $3 != "none" && $6 > 1 {print $2}' \
+			/etc/fstab)
+		if [[ -n ${parts} ]] ; then
+			fsck -p ${parts}
+			retval=$?
+		fi
+	fi
+	if [[ ${retval} -eq 0 ]] ; then
+		eend 0
+	elif [[ ${retval} -eq 1 ]] ; then
+		ewend 1 $"Filesystem errors corrected."
+		retval=0
+	elif [[ ${retval} -eq 2 ]] ; then
+		ewend 1 $"System should be rebooted"
+	elif [[ ${retval} -eq 8 ]] ; then
+		ewend 1 $"Operational error, continuing"
+	else
+		if [[ ${RC_FORCE_AUTO} == "yes" ]] ; then
+			eend 2 $"Fsck could not correct all errors, rerunning"
+			if [[ $(uname) == "Linux" ]] ; then
+				fsck -C -T -R -A -y
 			else
-				fsck -C -T -R -A -a
+				fsck -y
 			fi
 			retval=$?
-		else
-			parts=$(awk '$1 ~ /^\/dev\// && $2 != "none" && $3 != "none" && $6 > 1 {print $2}' \
-				/etc/fstab)
-			if [[ -n ${parts} ]] ; then
-				fsck -p ${parts}
-				retval=$?
-			fi
+			eend $?
 		fi
-		if [[ ${retval} -eq 0 ]] ; then
-			eend 0
-		elif [[ ${retval} -eq 1 ]] ; then
-			eend 1 $"Filesystem errors corrected."
-			retval=0
-		elif [[ ${retval} -eq 2 ]] ; then
-			eend 1 $"System should be rebooted"
-		else
-			if [[ ${RC_FORCE_AUTO} == "yes" ]] ; then
-				eend 2 $"Fsck could not correct all errors, rerunning"
-				if [[ $(uname) == "Linux" ]] ; then
-					fsck -C -T -R -A -y
-				else
-					fsck -y
-				fi
-				retval=$?
-				eend $?
-			fi
 
-			if [[ ${retval} -gt 3 ]] ; then
-				eend 2 $"Fsck could not correct all errors, manual repair needed"
-				if is_vps_sys ; then
-					halt -f
-				elif [[ -x /sbin/sulogin ]] ; then
-					/sbin/sulogin "${CONSOLE}"
-				else
-					return 1
-				fi
+		if [[ ${retval} -gt 3 ]] ; then
+			eend 2 $"Fsck could not correct all errors, manual repair needed"
+			if is_vps_sys ; then
+				halt -f
+			elif [[ -x /sbin/sulogin ]] ; then
+				/sbin/sulogin "${CONSOLE}"
+			else
+				return 1
 			fi
 		fi
 	fi
-
+	
 	return ${retval}
 }
 

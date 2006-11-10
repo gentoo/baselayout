@@ -7,8 +7,8 @@
    For optimum operation, we need to get several variables.
    The easiest way is via the environment, so these should be set before
    running rc-order :-
-      SOFTLEVEL
-      BOOTLEVEL
+   SOFTLEVEL
+   BOOTLEVEL
 
    We can also handle other dependency files and types, like Gentoos
    net modules. These are used with the --deptree and --awlaysvalid flags.
@@ -462,12 +462,12 @@ struct linkedlist *get_provided (struct depinfo *deptree,
 	}
 
       if (in_runlevel (softlevel, service) ||
-      	  (strcmp (softlevel, bootlevel) == 0 
+	  (strcmp (softlevel, bootlevel) == 0 
 	   && service_coldplugged (service))
 	 )
 	if (get_depinfo (deptree, service))
 	  if (exists_dir_file (INITDIR, service))
-	      lp = add_linkedlist (lp, service);
+	    lp = add_linkedlist (lp, service);
     }
   free (op);
 
@@ -514,9 +514,9 @@ struct linkedlist *get_provided (struct depinfo *deptree,
       op = p = strdup (dt->services);
       while ((service = strsep (&p, " ")))
 	{
-	 if (service_inactive (service))
-	  if (get_depinfo (deptree, service))
-	    lp = add_linkedlist (lp, service);
+	  if (service_inactive (service))
+	    if (get_depinfo (deptree, service))
+	      lp = add_linkedlist (lp, service);
 	}
       free (op);
     }
@@ -530,7 +530,7 @@ struct linkedlist *get_provided (struct depinfo *deptree,
 	  if (in_runlevel (bootlevel, service))
 	    if (get_depinfo (deptree, service))
 	      if (exists_dir_file (INITDIR, service))
-		  lp = add_linkedlist (lp, service);
+		lp = add_linkedlist (lp, service);
 	}
       free (op);
     }
@@ -610,7 +610,7 @@ void visit_service (struct depinfo *deptree,
 
       /* We give special attention to the needsme type as we can stop services
 	 that depend on us. As such, if we're the last provided service up
-	 then we need to stop the dependants. */
+	 or we're in the runlevel then we need to stop the dependants. */
       if (descend && strcmp (type->item, "needsme") == 0)
 	{
 	  needsme = true;
@@ -627,19 +627,22 @@ void visit_service (struct depinfo *deptree,
 		  if (! dtt)
 		    continue;
 
-		  char *opp, *pp, *ss;
-		  opp = pp = strdup (dtt->services);
 		  bool visit = true;
-		  while ((ss = strsep (&pp, " ")))
+		  if (! in_runlevel (softlevel, depinfo->service))
 		    {
-		      if (service_started (ss) &&
-			  strcmp (ss, depinfo->service) != 0)
+		      char *opp, *pp, *ss;
+		      opp = pp = strdup (dtt->services);
+		      while ((ss = strsep (&pp, " ")))
 			{
-			  visit = false;
-			  break;
+			  if (service_started (ss) &&
+			      strcmp (ss, depinfo->service) != 0)
+			    {
+			      visit = false;
+			      break;
+			    }
 			}
+		      free (opp);
 		    }
-		  free (opp);
 
 		  if (visit)
 		    visit_service (deptree, types, sorted, visited, di, true);
@@ -656,7 +659,7 @@ void visit_service (struct depinfo *deptree,
       while ((service = strsep (&p, " ")))
 	{
 	  if ((di = get_depinfo (deptree, service)));
-	    visit_service (deptree, types, sorted, visited, di, descend);
+	  visit_service (deptree, types, sorted, visited, di, descend);
 	}
       free (op);
     }
@@ -665,7 +668,7 @@ void visit_service (struct depinfo *deptree,
      are also the service calling us or we are provided by something */
   if (! svcname || strcmp (svcname, depinfo->service) != 0)
     if (! get_deptype (depinfo, "providedby"))
-	add_linkedlist (sorted, depinfo->service);
+      add_linkedlist (sorted, depinfo->service);
 }
 
 int main (int argc, char **argv)
@@ -714,10 +717,10 @@ int main (int argc, char **argv)
 	}
 
       if (argv[i][0] == '-')
-      {
-	argv[i]++;
-	lasttype = add_linkedlist (lasttype, argv[i]);
-      }
+	{
+	  argv[i]++;
+	  lasttype = add_linkedlist (lasttype, argv[i]);
+	}
       else
 	{
 	  if (! deptree && ((deptree = load_deptree (DEPTREE)) == NULL))

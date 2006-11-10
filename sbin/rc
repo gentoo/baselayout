@@ -185,7 +185,8 @@ else
 	export SOFTLEVEL="${argv1}"
 fi
 
-if [[ ! -f "${svcdir}/softlevel" ]] ; then
+if [[ ! -f "${svcdir}/softlevel" || ${SOFTLEVEL} == "single"
+	|| ${SOFTLEVEL} == "shutdown" || ${SOFTLEVEL} == "reboot" ]] ; then
 	echo "${SOFTLEVEL}" > "${svcdir}/softlevel"
 fi
 

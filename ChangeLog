@@ -1,6 +1,19 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  10 Nov 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Re-wrote chunks of checkfs and checkroot to tidy things up and more
+    importantly return 0 when fsck returns 8 (operational error) which allows
+    us to switch seemlessly from single user to multi user on FreeBSD.
+
+    Enforce SOFTLEVEL from the file and not from the environment.
+
+    Don't allow services to start or restart shutdown, reboot or single
+    runlevels.
+
+    rc-status now shows services that are scheduled to be started by something.
+
 * baselayout-1.13.0_alpha6 (02 Nov 2006)
 
   08 Nov 2006; Roy Marples <uberlord@gentoo.org>:

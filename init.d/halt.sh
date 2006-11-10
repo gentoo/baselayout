@@ -5,7 +5,9 @@
 [[ ${RC_GOT_FUNCTIONS} != "yes" ]] && source /sbin/functions.sh
 
 # livecd-functions.sh should _ONLY_ set this differently
-RC_NO_UMOUNTS=${RC_NO_UMOUNTS:-^(/|/dev|/dev/pts|/proc)$}
+RC_NO_UMOUNTS="/|/dev${RC_NO_UMOUNTS:+|}${RC_NO_UMOUNTS}"
+[[ $(uname) == "Linux" ]] && RC_NO_UMOUNTS="/proc|${RC_NO_UMOUNTS}"
+RC_NO_UMOUNTS="^(${RC_NO_UMOUNTS})$"
 
 # Check to see if this is a livecd, if it is read the commandline
 # this mainly makes sure $CDBOOT is defined if it's a livecd
@@ -40,18 +42,23 @@ if is_vps_sys ; then
 fi
 
 # If $svcdir is still mounted, preserve it if we can
-if [[ -w ${svclib} ]] && [[ $'\n'$(get_mounts) == *$'\n'"${svcdir} "*  ]] ; then
-	if [[ -n $(fuser -m "${svcdir}" 2>/dev/null) ]] ; then
-		fuser -k -m "${svcdir}" &>/dev/null
-		sleep 2
-	fi
-	tar cpf "${svclib}/init.d.$$.tar" -C "${svcdir}" \
-		depcache deptree netdepcache netdeptree
-	umount "${svcdir}"
-	rm -rf "${svcdir}"/*
-	# Pipe errors to /dev/null as we may have future timestamps
-	tar xpf "${svclib}/init.d.$$.tar" -C "${svcdir}" 2>/dev/null
-	rm -f "${svclib}/init.d.$$.tar"
+if [[ -w ${svclib} ]] ; then
+	get_mounts | while read point node x ; do
+		[[ ${point} == ${svcdir} ]] || continue
+		if [[ -n $(fuser -m "${svcdir}" 2>/dev/null) ]] ; then
+			fuser -k -m "${svcdir}" &>/dev/null
+			sleep 2
+		fi
+		tar cpf "${svclib}/init.d.$$.tar" -C "${svcdir}" \
+			depcache deptree netdepcache netdeptree softlevel
+		umount "${svcdir}"
+		rm -rf "${svcdir}"/*
+		# Pipe errors to /dev/null as we may have future timestamps
+		tar xpf "${svclib}/init.d.$$.tar" -C "${svcdir}" 2>/dev/null
+		rm -f "${svclib}/init.d.$$.tar"
+		# Release the memory disk if we used it
+		[[ ${node} == "/dev/md"[0-9]* ]] && mdconfig -d -u "${node#/dev/md*}"
+	done
 fi
 
 # Try to unmount all tmpfs filesystems not in use, else a deadlock may
@@ -81,7 +88,7 @@ do_unmount() {
 		node=${node//\040/ }
 		fs=${fs//\040/ }
 		[[ -n ${no_unmounts} && ${point} =~ ${no_unmounts} ]] && continue
-		[[ -z ${nodes} && ${node} =~ ${nodes} ]] || continue
+		[[ -n ${nodes} && ! ${node} =~ ${nodes} ]] && continue
 
 		retry=2
 		while ! ${cmd} "${point}" &>/dev/null ; do
@@ -135,9 +142,9 @@ done
 # Remount the rest read-only
 ebegin $"Remounting remaining filesystems readonly"
 if [[ $(uname) == "Linux" ]] ; then
-	do_unmount "mount -n -o remount,ro"
+	do_unmount "mount -n -o remount,ro" "^(/dev|/dev/pts|/proc)$"
 else
-	do_unmount "mount -u -o ro"
+	do_unmount "mount -u -o ro" "^/dev$"
 fi
 unmounted=$?
 eend ${unmounted}

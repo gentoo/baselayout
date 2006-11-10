@@ -379,6 +379,12 @@ svc_start() {
 			ewarn $"WARNING:" " ${SVCNAME}" $"has already been started."
 			return 0
 		fi
+	elif [[ ${SOFTLEVEL} == "shutdown" || ${SOFTLEVEL} == "reboot" ]] ; then
+		ewarn $"WARNING:  system shutting down, will not start" "${SVCNAME}"
+		return 1
+	elif [[ ${SOFTLEVEL} == "single" ]] ; then
+		eerror $"ERROR:  system is in single user mode, will not start" "${SVCNAME}"
+		return 1
 	fi
 
 	if ! mark_service_starting "${SVCNAME}" ; then
@@ -433,8 +439,7 @@ svc_start() {
 				service_started "${x}" && continue 2
 				wait_service "${x}"
 				service_started "${x}" && continue 2
-				service_stopped "${x}" && break
-				if service_inactive "${x}" ; then
+				if service_inactive "${x}" || service_scheduled "${x}" ; then
 					if [[ " ${startsvc} " == *" ${x} "* ||
 						" ${ineed} " == *" $(rc-depend --notrace -iprovide "${x}") " ]] ; then
 						svc_schedule_start "${x}" "${SVCNAME}"
@@ -444,7 +449,8 @@ svc_start() {
 
 					continue 2
 				fi
-				
+				service_stopped "${x}" && break
+	
 				((timeout--))
 			done
 
@@ -687,7 +693,15 @@ for arg in $* ; do
 	restart)
 		svcrestart="yes"
 
-        	# We don't kill child processes if we're restarting
+		if [[ ${SOFTLEVEL} == "shutdown" || ${SOFTLEVEL} == "reboot" ]] ; then
+			ewarn $"WARNING:  system shutting down, will not restart" "${SVCNAME}"
+			exit 1 
+		elif [[ ${SOFTLEVEL} == "single" ]] ; then
+			eerror $"ERROR:  system is in single user mode, will not restart" "${SVCNAME}"
+			exit 1
+		fi
+
+        # We don't kill child processes if we're restarting
 		# This is especically important for sshd ....
 		RC_KILL_CHILDREN="no"				
 		

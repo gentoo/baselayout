@@ -163,12 +163,10 @@ setup_defaultlevels() {
 		export BOOTLEVEL="${BOOTLEVEL}.${DEFAULTLEVEL}"
 	fi
 
-	if [[ -z ${SOFTLEVEL} ]] ; then
-		if [[ -f "${svcdir}/softlevel" ]] ; then
-			export SOFTLEVEL=$(< "${svcdir}/softlevel")
-		else
-			export SOFTLEVEL="${BOOTLEVEL}"
-		fi
+	if [[ -f "${svcdir}/softlevel" ]] ; then
+		export SOFTLEVEL=$(< "${svcdir}/softlevel")
+	else
+		export SOFTLEVEL="${BOOTLEVEL}"
 	fi
 
 	return 0
@@ -752,15 +750,15 @@ get_base_ver() {
 # char get_mounts(void)
 #
 # Portable method of getting mount names and points.
-# Returns as "point node fs"
+# Returns as "point node fs options"
 # Remember to convert 040 back to a space.
 get_mounts() {
-	local point= node= fs= foo=
+	local point= node= fs= opts= foo=
 
 	# Linux has /proc/mounts which should always exist
 	if [[ $(uname) == "Linux" ]] ; then
-    		while read node point fs foo ; do
-			echo "${point} ${node} ${fs}" 
+    		while read node point fs opts foo ; do
+			echo "${point} ${node} ${fs} ${opts}" 
     		done < /proc/mounts
 		return 
 	fi
@@ -774,7 +772,9 @@ get_mounts() {
 	# of the spaces and we should not force a /proc either.
 	local IFS=$'\t'
 	LC_ALL=C mount -p | while read node point fs foo ; do
-		echo "${point// /\040} ${node// /\040} ${fs%% *}"
+		opts=${fs#* }
+		fs=${fs%% *}
+		echo "${point// /\040} ${node// /\040} ${fs} ${opts// /\040}"
 	done
 }
 
