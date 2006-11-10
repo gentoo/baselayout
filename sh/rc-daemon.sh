@@ -39,42 +39,50 @@ rc_shift_args() {
 			continue
 		fi
 		unset addvar
+
+		# Try and seperate = out
+		if [[ $1 == *"="* ]] ; then
+			local x1=${1%%=*} x2=${1#*=}
+			shift
+			set -- "${x1}" "${x2}" "$@"
+		fi
+
+		# s-s-d uses getopt_long, so it could match against any
+		# unqiue abbreviation ..... which sucks!
 		case "$1" in
 			-S|--start)
 				stopping=false
 				;;
-			-K|--stop)
+			-K|--sto*)
 				stopping=true
 				;;
-			-n|--name)
+			-n|--n*)
 				addvar="name"
+				name=
 				;;
-			-x|--exec|-a|--startas)
+			-x|--e*|-a|--starta*)
 				addvar="cmd"
+				cmd=
 				;;
-			-p|--pidfile)
+			-p|--p*)
 				addvar="pidfile"
+				pidfile=
 				;;
-			--pidfile=*)
-				pidfile="${1##--pidfile=}"
-				;;
-			--pid=*)
-				pidfile="${1##--pid=}"
-				;;
-			-b|--background)
+			-b|--b*)
 				background=true
 				;;
-			-m|--make-pidfile)
+			-m|--m*)
 				makepidfile=true
 				;;
-			-R|--retry)
-				unset RC_RETRY_COUNT
+			-R|--r*)
 				addvar="RC_RETRY_COUNT"
+				RC_RETRY_COUNT=
 				;;
-			-s|--signal)
+			-s|--si*)
 				addvar="signal"
+				signal=
 				;;
-			-t|--test|-o|--oknodo)
+			-t|--t*|-o|--o*)
 				nothing=true
 				;;
 		esac
