@@ -1,6 +1,8 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+* baselayout-1.13.0_alpha7 (10 Nov 2006)
+
   10 Nov 2006; Roy Marples <uberlord@gentoo.org>:
 
     s-s-d wrapper now works with all perumations of the options, #154649.
@@ -16,7 +18,7 @@
 
     rc-status now shows services that are scheduled to be started by something.
 
-* baselayout-1.13.0_alpha6 (02 Nov 2006)
+* baselayout-1.13.0_alpha6 (08 Nov 2006)
 
   08 Nov 2006; Roy Marples <uberlord@gentoo.org>:
 
