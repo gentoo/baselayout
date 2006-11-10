@@ -24,7 +24,7 @@ mount_svcdir() {
 		try cp -p "${svcdir}/"*{depcache,deptree} "${svclib}"/tmp
 	fi
 	try mdconfig -a -t malloc -s "${svcsize}"k -u 0
-	try newfs /dev/md0
+	try newfs -b 4096 -i 30 -n /dev/md0
 	try mount -o rw,noexec,nosuid /dev/md0 "${svcdir}"
 	if ${dotmp} ; then
 		try cp -p "${svclib}"/tmp/*{depcache,deptree} "${svcdir}"
