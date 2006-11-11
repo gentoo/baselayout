@@ -701,7 +701,7 @@ for arg in $* ; do
 			exit 1
 		fi
 
-        # We don't kill child processes if we're restarting
+		# We don't kill child processes if we're restarting
 		# This is especically important for sshd ....
 		RC_KILL_CHILDREN="no"				
 		
@@ -714,7 +714,7 @@ for arg in $* ; do
 
 		# Simple way to try and detect if the service use svc_{start,stop}
 		# to restart if it have a custom restart() funtion.
-		svcres=$(sed -ne '/[[:space:]]*restart[[:space:]]*()/,/}/ p' \
+		svcres=$(sed -ne '/^[[:space:]]*restart[[:space:]]*()/,/}/ p' \
 			"${myscript}" )
 		if [[ -n ${svcres} ]] ; then
 			if [[ ! ${svcres} =~ svc_stop \
