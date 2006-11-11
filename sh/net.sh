@@ -430,6 +430,10 @@ iface_start() {
 		fi
 	done
 
+	# Bring the interface up if we exist
+	# We do this again as we may have been created in pre_up
+	interface_exists "${iface}" && interface_up "${iface}"
+
 	x="metric_${ifvar}"
 	# If we don't have a metric then calculate one
 	# Our modules will set the metric variable to a suitable base
