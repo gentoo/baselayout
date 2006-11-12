@@ -6,7 +6,7 @@
 
 # livecd-functions.sh should _ONLY_ set this differently
 RC_NO_UMOUNTS="/|/dev${RC_NO_UMOUNTS:+|}${RC_NO_UMOUNTS}"
-[[ $(uname) == "Linux" ]] && RC_NO_UMOUNTS="${RC_NO_UMOUNTS}|/proc"
+[[ $(uname) == "Linux" ]] && RC_NO_UMOUNTS="${RC_NO_UMOUNTS}|/dev/pts|/proc|/sys"
 RC_NO_UMOUNTS="^(${RC_NO_UMOUNTS})$"
 
 # Check to see if this is a livecd, if it is read the commandline
