@@ -209,27 +209,34 @@ rc_start_daemon() {
 # kill the process ourselves and any children left over
 # Returns 0 if everything was successful otherwise 1
 rc_stop_daemon() {
-	eval /sbin/start-stop-daemon "${args}"
+	eval /sbin/start-stop-daemon "${args}" || return $?
 
+	local pid=
 	# Don't wait around if the pidfile does not exist
-	[[ -n ${pidfile} && ! -e ${pidfile} ]] && return 0
-
-	# If no daemons are running, return 0
-	if [[ -z ${pidfile} ]] ; then
-		! is_daemon_running ${cmd}
-		return $?
+	if [[ -n ${pidfile} ]] ; then
+		[[ -e ${pidfile} ]] || return 0
+		# We use cat as the file may have disappeared and we can pipe
+		# errors to /dev/null.
+		pid=$(cat "${pidfile}" 2>/dev/null)
+		[[ -z ${pid} ]] && return 0
 	fi
 
-	# OK, if we have a cmd and a pidfile we can wait for em to stop :)
-	if [[ -n ${cmd} ]] ; then
-		local timeout=$((${RC_WAIT_ON_STOP} * 10))
-		while [[ ${timeout} -gt 0 ]] ; do
+	local timeout=$((${RC_WAIT_ON_STOP} * 10))
+	while [[ ${timeout} -gt 0 ]] ; do
+		((timeout--))
+		if [[ -n ${cmd} ]] ; then
 			is_daemon_running ${cmd} "${pidfile}" || break
-			LC_ALL=C sleep 0.1
-			((timeout--))
-		done
-		[[ ${timeout} -le 0 ]] && return 1
-	fi
+		else
+			# Use proc if we can
+			if [[ -e /proc/self ]] ; then
+				[[ ! -e /proc/${pid} ]] && break
+			else
+				ps -p "${pid}" &>/dev/null || break
+			fi
+		fi
+		LC_ALL=C sleep 0.1
+	done
+	[[ ${timeout} -le 0 ]] && return 1
 	
 	# Remove the pidfile if the process didn't
 	[[ -f ${pidfile} ]] && rm -f "${pidfile}"

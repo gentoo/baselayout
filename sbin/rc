@@ -112,57 +112,54 @@ argv1=$1
 # First time boot stuff goes here.  Note that 'sysinit' is an internal runlevel
 # used to bring up local filesystems, and should not be started with /sbin/rc
 # directly ...
-if [[ ( ${RUNLEVEL} == "S" || ${RUNLEVEL} == "1" ) && ${argv1} = "sysinit" ]]
-then
-	. "${svclib}"/sh/init.sh || {
-		echo "Could not source init.sh !?"
-		exit 1
-	}
-	
-	exit 0
-fi # Sysinit ends here
+if [[ ${RUNLEVEL} == "S" || ${RUNLEVEL} == "1" ]] ; then
+	case "${argv1}" in
+		sysinit)
+			if ! . "${svclib}"/sh/init.sh ; then
+				eerror "Could not source init.sh !?"
+				exit 1
+			fi
+			exit 0
+			;;
+		boot)
+			setup_defaultlevels
 
-if [[ ( ${RUNLEVEL} == "S" || ${RUNLEVEL} == "1" ) && ${argv1} == "boot" ]]
-then
-	setup_defaultlevels
-
-	if [[ -n ${DEFAULTLEVEL} && ${DEFAULTLEVEL} != "default" ]] ; then
-		# Setup our default runlevel runlevel that will be run
-		# the first time /sbin/rc is called with argv1 != sysinit|boot
-		echo "${DEFAULTLEVEL}" > "${svcdir}/ksoftlevel"
-	fi
+			if [[ -n ${DEFAULTLEVEL} && ${DEFAULTLEVEL} != "default" ]] ; then
+				# Setup our default runlevel runlevel that will be run
+				# the first time /sbin/rc is called with argv1 != sysinit|boot
+				echo "${DEFAULTLEVEL}" > "${svcdir}/ksoftlevel"
+			fi
 	
-	# $BOOT can be used by rc-scripts to test if it is the first time
-	# the 'boot' runlevel is executed
-	export BOOT="yes"
+			# $BOOT can be used by rc-scripts to test if it is the first time
+			# the 'boot' runlevel is executed
+			export BOOT="yes"
 
-	# We reset argv1 to the bootlevel given on the kernel command line
-	# if there is one
-	argv1="${BOOTLEVEL}"
-	
-elif [[ ${RUNLEVEL} != "S" && ${RUNLEVEL} != "1" && -e "${svcdir}/ksoftlevel" ]]
-then
+			# We reset argv1 to the bootlevel given on the kernel command line
+			# if there is one
+			argv1="${BOOTLEVEL}"
+			;;
+		single)
+			# Continue as normal
+			;;
+		*)
+			if [[ -x /sbin/telinit ]] ; then
+				level=$(sed -n -e 's,l\([0-9]\):.*:/sbin/rc '"${argv1}"',\1,p' \
+					/etc/inittab 2>/dev/null)
+				if [[ -n ${level} ]] ; then
+					/sbin/telinit "${level}"
+					exit 0
+				fi
+			fi
+			;;
+	esac
+elif [[ -e "${svcdir}/ksoftlevel" ]] ; then
 	argv1=$(<"${svcdir}"/ksoftlevel)
 	rm -f "${svcdir}/ksoftlevel"
-elif [[ ${RUNLEVEL} != "S" && ${RUNLEVEL} != "1" && ${argv1} == "single" ]]
-then
+elif [[ ${argv1} == "single" ]] ; then
 	if [[ -x /sbin/telinit ]] ; then
 		/sbin/telinit S
 		exit 0
 	fi
-elif [[ ( ${RUNLEVEL} == "S" || ${RUNLEVEL} == "1" ) && ${argv1} != "single" ]]
-then
-	if [[ -x /sbin/telinit ]] ; then
-		level=$(awk -v level="${argv1}" '
-			$2 == level {
-				split($0, fields, ":")
-				print fields[2]
-				exit
-			}' /etc/inittab 2>/dev/null)
-		[[ -z ${level} ]] && level=3
-		/sbin/telinit "${level}"
-		exit 0
-	fi	
 fi
 
 # Ensure all critical services have are in the boot runlevel
@@ -202,10 +199,8 @@ fi
 
 splash "rc_init" "${argv1}"
 
-if [[ ${SOFTLEVEL} == "reboot" || ${SOFTLEVEL} == "shutdown" ]] ; then
+if [[ ${SOFTLEVEL} == "reboot" || ${SOFTLEVEL} == "shutdown" || ${SOFTLEVEL} == "single" ]] ; then
 	myscripts=
-elif [[ ${SOFTLEVEL} = "single" ]] ; then
-	myscripts="${RC_CRITICAL_SERVICES}"
 elif [[ ! -d "/etc/runlevels/${SOFTLEVEL}" ]] ; then
 	eerror $"ERROR:" $"runlevel" "${SOFTLEVEL}" $"does not exist; exiting ..."
 	exit 1
@@ -361,11 +356,11 @@ if [[ ${SOFTLEVEL} == "reboot" || ${SOFTLEVEL} == "shutdown" ]] ; then
 fi
 
 if [[ ${SOFTLEVEL} == "single" ]] ; then
-	rm -rf "${svcdir}/softscripts.new"
+	rm -rf "${svcdir}/softscripts" "${svcdir}/softscripts.new"
 	if is_vps_sys ; then
 		halt -f
-	elif [[ -x sulogin ]] ; then
-		sulogin "${CONSOLE}"
+	elif [[ -x /sbin/sulogin ]] ; then
+		/sbin/sulogin "${CONSOLE}"
 	fi
 	exit 0
 fi

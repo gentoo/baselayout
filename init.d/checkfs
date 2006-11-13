@@ -46,6 +46,7 @@ start() {
 		ewend 1 $"System should be rebooted"
 	elif [[ ${retval} -eq 8 ]] ; then
 		ewend 1 $"Operational error, continuing"
+		retval=0
 	else
 		if [[ ${RC_FORCE_AUTO} == "yes" ]] ; then
 			eend 2 $"Fsck could not correct all errors, rerunning"

@@ -61,6 +61,10 @@ Every time a service is run in /etc/init.d or when \fBrc\fR runs then the
 \fIdeptree\fR is updated by \fBdepscan.sh\fR if any config files are newer
 than the \fIdeptree\fR.
 So in theory we should never have a problem with this.
+.br
+Provided services are calculated at runtime. The current downside of this
+approach means that if you do "after net; before net.lo" and net.lo provides
+net then you can get into an sticky loop where services hang.
 .SH "REPORTING BUGS"
 Please report bugs via http://bugs.gentoo.org/
 .SH "SEE ALSO"

@@ -669,8 +669,11 @@ for arg in $* ; do
 				fi
 			done
 			rm -rf "${svcdir}/snapshot/$$"
-		else
+		elif service_stopped "${SVCNAME}" ; then
 			rm -f "${svcdir}"/scheduled/*/"${SVCNAME}"
+			if [[ ${SOFTLEVEL} != "single" ]] ; then
+				rm -f "${svcdir}/coldplugged/${SVCNAME}"
+			fi
 		fi
 
 		;;
