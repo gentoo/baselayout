@@ -158,8 +158,10 @@ elif [[ -e "${svcdir}/ksoftlevel" ]] ; then
 elif [[ ${argv1} == "single" ]] ; then
 	if [[ -x /sbin/telinit ]] ; then
 		/sbin/telinit S
-		exit 0
+	else
+		kill -TERM 1	
 	fi
+	exit 0
 fi
 
 # Ensure all critical services have are in the boot runlevel
@@ -342,13 +344,6 @@ echo "${SOFTLEVEL}" > "${svcdir}/softlevel"
 unset OLDSOFTLEVEL
 
 if [[ ${SOFTLEVEL} == "reboot" || ${SOFTLEVEL} == "shutdown" ]] ; then
-    	# Set LC_ALL=C so that bash doesn't load any locales
-    	# which could interfere with unmounting /usr
-	export LC_ALL="C"
-
-	# Prefix LD_LIBRARY_PATH with /lib so that libgcc_s.so is used
-	# from there if anything requires it when unmounting /usr
-	export LD_LIBRARY_PATH="/lib:${LD_LIBRARY_PATH}"
 	exec /etc/init.d/halt.sh "${SOFTLEVEL}"
 
 	# BSD's get here, so exit 0

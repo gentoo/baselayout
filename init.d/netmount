@@ -105,7 +105,7 @@ stop() {
 			if [[ $(uname) == "Linux" ]] ; then
 				fuser -k -"${siglist[${retry}]}" -m "${point}" &>/dev/null
 			else
-				fuser -k -s "${siglist[${retry}]}" -m "${point}" &>/dev/null
+				fuser -k -s "${siglist[${retry}]}" -c -m "${point}" &>/dev/null
 			fi
 			sleep 2
 			((retry++))

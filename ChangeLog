@@ -3,6 +3,11 @@
 
   13 Nov 2006; Roy Marples <uberlord@gentoo.org>:
 
+    localmount won't unmount any partitions that the current process is using.
+
+    Punt cruft from halt.sh to the correct init script so we've a lot more
+    modular.
+
     Fix single user mode, #154961
 
 * baselayout-1.13.0_alpha7 (10 Nov 2006)

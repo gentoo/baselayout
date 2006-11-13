@@ -4,28 +4,8 @@
 
 [[ ${RC_GOT_FUNCTIONS} != "yes" ]] && source /sbin/functions.sh
 
-# livecd-functions.sh should _ONLY_ set this differently
-RC_NO_UMOUNTS="/|/dev${RC_NO_UMOUNTS:+|}${RC_NO_UMOUNTS}"
-[[ $(uname) == "Linux" ]] && RC_NO_UMOUNTS="${RC_NO_UMOUNTS}|/dev/pts|/proc|/sys"
-RC_NO_UMOUNTS="^(${RC_NO_UMOUNTS})$"
-
-# Check to see if this is a livecd, if it is read the commandline
-# this mainly makes sure $CDBOOT is defined if it's a livecd
-[[ -f /sbin/livecd-functions.sh ]] && \
-	source /sbin/livecd-functions.sh && \
-	livecd_read_commandline
-
-# Reset pam_console permissions if we are actually using it
-if [[ -x /sbin/pam_console_apply && ! -c /dev/.devfsd && \
-      -n $(grep -v -e '^[[:space:]]*#' /etc/pam.d/* | grep 'pam_console') ]]; then
-	/sbin/pam_console_apply -r
-fi
-
 stop_addon devfs
 stop_addon udev
-
-# Write a reboot record to /var/log/wtmp before unmounting
-[[ $(uname) == "Linux" ]] && halt -w &>/dev/null
 
 # Flush all pending disk writes now
 sync ; sync
@@ -44,9 +24,11 @@ fi
 # If $svcdir is still mounted, preserve it if we can
 if [[ -w ${svclib} ]] ; then
 	get_mounts | while read point node x ; do
-		[[ ${point} == ${svcdir} ]] || continue
-		if [[ -n $(fuser -m "${svcdir}" 2>/dev/null) ]] ; then
-			fuser -k -m "${svcdir}" &>/dev/null
+		[[ ${point} == "${svcdir}" ]] || continue
+		fuser_opts="-m -c"
+		[[ $(uname) == "Linux" ]] && fuser_opts="-c"
+		if [[ -n $(fuser ${fuser_opts} "${svcdir}" 2>/dev/null) ]] ; then
+			fuser -k ${fuser_opts} "${svcdir}" &>/dev/null
 			sleep 2
 		fi
 		tar cpf "${svclib}/init.d.$$.tar" -C "${svcdir}" \
@@ -61,93 +43,18 @@ if [[ -w ${svclib} ]] ; then
 	done
 fi
 
-# Try to unmount all tmpfs filesystems not in use, else a deadlock may
-# occure, bug #13599.
-umount -a -t tmpfs &>/dev/null
-
-# Turn off swap
-if [[ -x /sbin/swapctl ]] ; then
-	swap_list=$(swapctl -l 2>/dev/null | sed -e '1d')
-else
-	swap_list=$(swapon -s 2>/dev/null | sed -e '1d')
-fi
-if [[ -n ${swap_list} ]] ; then
-	ebegin $"Deactivating swap"
-	swapoff -a >/dev/null
+# Remount the remaining filesystems read-only
+# We ge the do_unmount function from the localmount init script
+( . /etc/init.d/localmount
+	ebegin $"Remounting remaining filesystems readonly"
+	if [[ $(uname) == "Linux" ]] ; then
+		do_unmount "mount -n -o remount,ro" "^(/dev|/dev/pts|/proc|/sys)$"
+	else
+		do_unmount "mount -u -o ro" "^/dev$"
+	fi
 	eend $?
-fi
-
-# Handy function to handle all our unmounting needs
-# get_mounts is our portable function to get mount information
-do_unmount() {
-	local cmd="$1" no_unmounts="$2" nodes="$3"
-	local l= fs= node= point= foo=
-
-	get_mounts | sort -ur | while read point node fs foo ; do
-		point=${point//\040/ }
-		node=${node//\040/ }
-		fs=${fs//\040/ }
-		[[ -n ${no_unmounts} && ${point} =~ ${no_unmounts} ]] && continue
-		[[ -n ${nodes} && ! ${node} =~ ${nodes} ]] && continue
-
-		retry=2
-		while ! ${cmd} "${point}" &>/dev/null ; do
-			# Kill processes still using this mount
-			fuser -k -m "${point}" &>/dev/null
-			sleep 2
-			((retry--))
-
-			# OK, try forcing things
-			if [[ ${retry} -le 0 ]] ; then
-				${cmd} -f "${point}" || retval=1
-				break
-			fi
-		done
-	done
-	return ${retval}
-}
-
-# Umount loopback devies
-ebegin $"Unmounting loopback devices"
-do_unmount "umount -d" "${RC_NO_UMOUNTS}" "^/dev/loop"
-eend $?
-
-# Now everything else
-ebegin $"Unmounting filesystems"
-do_unmount "umount" "${RC_NO_UMOUNTS}"
-eend $?
-
-# Conditionally run filesystem checks. Note that /forcefsck skips this and
-# causes the forced checks to run upon boot. This is because doing forced
-# checks then removing /forcefsck is not practical at this point.
-conf=$(add_suffix /etc/conf.d/checkfs)
-if [[ -e ${conf} ]] ; then
-	(
-		. ${conf}
-		if [[ ${FSCK_SHUTDOWN} == "yes" && ! -f /forcefsck ]]; then
-			. /etc/init.d/checkfs
-			start
-		fi
-	)
-fi
-
-# Try to remove any dm-crypt mappings
-stop_addon dm-crypt
-
-# Stop LVM, etc
-for x in $(reverse_list ${RC_VOLUME_ORDER}) ; do
-	stop_addon "${x}"
-done
-
-# Remount the rest read-only
-ebegin $"Remounting remaining filesystems readonly"
-if [[ $(uname) == "Linux" ]] ; then
-	do_unmount "mount -n -o remount,ro" "^(/dev|/dev/pts|/proc)$"
-else
-	do_unmount "mount -u -o ro" "^/dev$"
-fi
+)
 unmounted=$?
-eend ${unmounted}
 
 # This UPS code should be moved to out of here and to an addon
 if [[ -f /etc/killpower ]] ; then

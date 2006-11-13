@@ -133,10 +133,8 @@ start() {
 	fi
 	eend $? $"Root filesystem could not be mounted read/write :("
 
-	if [[ ${BOOT} == "yes" ]] ; then
-		# Only Linux has mtab
-		[[ $(uname) == "Linux" ]] && do_mtab
-	fi
+	# Only Linux has mtab
+	[[ $(uname) == "Linux" ]] && do_mtab
 
 	# We got here, so return 0
 	return 0

@@ -7,17 +7,9 @@ depend() {
 	after modules
 }
 
-start() {
-	local retval=0 x=
 
-	# Start our volumes, RAID, LVM, etc
-   	for x in ${RC_VOLUME_ORDER} ; do
-		start_addon "${x}"
-   	done
-
-	# Setup dm-crypt mappings if any
-	start_addon dm-crypt
-
+do_checkfs() {
+	local retval=0
 	[[ -n ${CDBOOT} ]] && return 0
 
 	ebegin $"Checking all filesystems"
@@ -30,7 +22,7 @@ start() {
 		fi
 		retval=$?
 	else
-		parts=$(awk '$1 ~ /^\/dev\// && $2 != "none" && $3 != "none" && $6 > 1 {print $2}' \
+		local parts=$(awk '$1 ~ /^\/dev\// && $2 != "none" && $3 != "none" && $6 > 1 {print $2}' \
 			/etc/fstab)
 		if [[ -n ${parts} ]] ; then
 			fsck -p ${parts}
@@ -72,6 +64,35 @@ start() {
 	fi
 	
 	return ${retval}
+}
+
+start() {
+	local retval=0 x=
+
+	# Start our volumes, RAID, LVM, etc
+   	for x in ${RC_VOLUME_ORDER} ; do
+		start_addon "${x}"
+   	done
+
+	# Setup dm-crypt mappings if any
+	start_addon dm-crypt
+
+	do_checkfs
+}
+
+stop() {
+	# fsck on shutdown if we need to
+	[[ ${FSCK_SHUTDOWN} == "yes" && ! -f /forcefsck ]] && do_checkfs
+
+	# Stop dm-crypt mappings if any
+	stop_addon dm-crypt
+
+	# Stop our volumes, RAID, LVM, etc
+   	for x in $(reverse_list ${RC_VOLUME_ORDER}) ; do
+		stop_addon "${x}"
+   	done
+
+	return 0
 }
 
 # vim: set ts=4 :

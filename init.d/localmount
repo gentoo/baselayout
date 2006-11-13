@@ -61,4 +61,85 @@ start() {
 	return 0
 }
 
+# Handy function to handle all our unmounting needs
+# get_mounts is our portable function to get mount information
+do_unmount() {
+	local cmd="$1" no_unmounts="$2" nodes="$3"
+	local l= fs= node= point= foo= fuser_opts="-m -c"
+	[[ $(uname) == "Linux" ]] && fuser_opts="-c"
+
+	get_mounts | sort -ur | while read point node fs foo ; do
+		point=${point//\040/ }
+		node=${node//\040/ }
+		fs=${fs//\040/ }
+		[[ -n ${no_unmounts} && ${point} =~ ${no_unmounts} ]] && continue
+		[[ -n ${nodes} && ! ${node} =~ ${nodes} ]] && continue
+
+		if [[ ${cmd} == "umount"* ]] ; then
+			# If we're using the mount (probably /usr) then don't unmount us
+			if [[ " $(fuser ${fuser_opts} "${point}" 2>/dev/null) " == *" $$ "* ]] ; then
+				ewarn "We are using ${point}, not unmounting"
+				continue
+			fi
+		fi
+
+		retry=
+		while ! ${cmd} "${point}" &>/dev/null ; do
+			# Kill processes still using this mount
+			fuser -k ${fuser_opts} "${point}" &>/dev/null
+			sleep 2
+			((retry--))
+
+			# OK, try forcing things
+			if [[ ${retry} -le 0 ]] ; then
+				${cmd} -f "${point}" || retval=1
+				break
+			fi
+		done
+	done
+	return ${retval}
+}
+
+stop() {
+	# We never unmount / or /dev or $svcdir
+	NO_UMOUNTS="/|/dev|${svcdir}${NO_UMOUNTS:+|}${NO_UMOUNTS// /|}"
+	[[ $(uname) == "Linux" ]] && NO_UMOUNTS="${NO_UMOUNTS}|/dev/pts|/proc|/sys"
+	NO_UMOUNTS="^(${NO_UMOUNTS})$"
+
+	# Flush all pending disk writes now
+	sync ; sync
+
+	# Try to unmount all tmpfs filesystems not in use, else a deadlock may
+	# occure, bug #13599.
+	# As $svcdir may also be tmpfs we cd to it to lock it
+	cd "${svcdir}"
+	umount -a -t tmpfs &>/dev/null
+
+	# Turn off swap
+	if [[ -x /sbin/swapctl ]] ; then
+		swap_list=$(swapctl -l 2>/dev/null | sed -e '1d')
+	else
+		swap_list=$(swapon -s 2>/dev/null | sed -e '1d')
+	fi
+	if [[ -n ${swap_list} ]] ; then
+		ebegin $"Deactivating swap"
+		swapoff -a >/dev/null
+		eend $?
+	fi
+
+	# Umount loopback devices
+	ebegin $"Unmounting loopback devices"
+	do_unmount "umount -d" "${NO_UMOUNTS}" "^/dev/loop"
+	eend $?
+
+	# Now everything else
+	ebegin $"Unmounting filesystems"
+	eindent
+	do_unmount "umount" "${NO_UMOUNTS}"
+	eoutdent
+	eend $?
+
+	return 0
+}
+
 # vim: set ts=4 :

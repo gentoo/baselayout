@@ -10,8 +10,6 @@ depend() {
 }
 
 start() {
-	[[ ${BOOT} != "yes" ]] && return 0
-
 	# Put a nologin file in /etc to prevent people from logging
 	# in before system startup is complete.
 	if [[ ${DELAYLOGIN} == "yes" ]] ; then
@@ -48,10 +46,7 @@ start() {
 		eend $?
 	fi
 
-	#
 	# Take care of random stuff [ /var/lock | /var/run | pam ]
-	#
-
 	ebegin $"Cleaning" /var/lock, /var/run
 	rm -rf /var/run/console.lock /var/run/console/*
 
@@ -89,9 +84,7 @@ start() {
 	> /var/lock/.keep
 	eend 0
 
-	#
 	# Clean up /tmp directory
-	#
 	if [[ -z ${CDBOOT} && -d /tmp ]] ; then
 		cd /tmp
 		if [[ ${WIPE_TMP} == "yes" ]] ; then
@@ -138,17 +131,28 @@ start() {
 		) &> /dev/null
 	fi
 
-	#
 	# Create an 'after-boot' dmesg log
-	#
 	touch /var/log/dmesg
 	chmod 640 /var/log/dmesg
 	dmesg > /var/log/dmesg
 
-	#
 	# Check for /etc/resolv.conf, and create if missing
-	#
 	[[ -f /etc/resolv.conf ]] || touch /etc/resolv.conf &> /dev/null
+}
+
+stop() {
+	# Reset pam_console permissions if we are actually using it
+	if [[ -x /sbin/pam_console_apply && ! -c /dev/.devfsd && \
+    	-n $(grep -v -e '^[[:space:]]*#' /etc/pam.d/* | grep 'pam_console') ]] ; then
+		/sbin/pam_console_apply -r
+	fi
+
+	# Write a halt record if we're shutting down 
+	if [[ ${SOFTLEVEL} == "shutdown" || ${SOFTLEVEL} == "reboot" ]] ; then
+		[[ $(uname) == "Linux" ]] && halt -w
+	fi
+	
+	return 0
 }
 
 # vim: set ts=4 :
