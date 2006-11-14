@@ -814,7 +814,7 @@ do_procinit(void)
 #endif /* OSHURD */
 
 
-#if defined(OSFreeBSD) || defined(OSFreeBSD) || defined(OSOpenBSD)
+#if defined(OSFreeBSD) || defined(OSNetBSD) || defined(OSOpenBSD)
 
 # if defined(OSFreeBSD) || defined(OSOpenBSD)
 #  define _KINFO_PROC kinfo_proc

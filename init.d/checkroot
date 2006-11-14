@@ -2,8 +2,10 @@
 # Copyright 1999-2006 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
+# Everything should depend on either by localmount, bootmisc or directly
+# We have this blank function so our cache uses any RC_NEED variables defined
 depend() {
-	before *
+	: 
 }
 
 do_mtab() {

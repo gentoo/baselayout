@@ -48,7 +48,7 @@ fi
 ( . /etc/init.d/localmount
 	ebegin $"Remounting remaining filesystems readonly"
 	if [[ $(uname) == "Linux" ]] ; then
-		do_unmount "mount -n -o remount,ro" "^(/dev|/dev/pts|/proc|/sys)$"
+		do_unmount "mount -n -o remount,ro" "^(/dev|/dev/pts|/proc|/proc/bus/usb|/sys)$"
 	else
 		do_unmount "mount -u -o ro" "^/dev$"
 	fi

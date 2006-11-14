@@ -1,6 +1,17 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  14 Nov 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Don't mount /proc/bus/usb readonly, #103133 thanks to Niels Laukens.
+
+    Added volumes init script (Linux only) to start your volumes.
+    Using RC_NEED/USE/AFTER you can define when it starts,
+    even before checkroot if you need it to.
+
+    Move RC_VOLUME_ORDER to conf.d/volumes as VOLUME_ORDER.
+    Old var is still supported.
+
   13 Nov 2006; Roy Marples <uberlord@gentoo.org>:
 
     localmount won't unmount any partitions that the current process is using.

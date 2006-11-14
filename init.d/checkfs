@@ -4,9 +4,9 @@
 
 depend() {
 	need checkroot
+	use volumes
 	after modules
 }
-
 
 do_checkfs() {
 	local retval=0
@@ -67,31 +67,12 @@ do_checkfs() {
 }
 
 start() {
-	local retval=0 x=
-
-	# Start our volumes, RAID, LVM, etc
-   	for x in ${RC_VOLUME_ORDER} ; do
-		start_addon "${x}"
-   	done
-
-	# Setup dm-crypt mappings if any
-	start_addon dm-crypt
-
 	do_checkfs
 }
 
 stop() {
 	# fsck on shutdown if we need to
 	[[ ${FSCK_SHUTDOWN} == "yes" && ! -f /forcefsck ]] && do_checkfs
-
-	# Stop dm-crypt mappings if any
-	stop_addon dm-crypt
-
-	# Stop our volumes, RAID, LVM, etc
-   	for x in $(reverse_list ${RC_VOLUME_ORDER}) ; do
-		stop_addon "${x}"
-   	done
-
 	return 0
 }
 
