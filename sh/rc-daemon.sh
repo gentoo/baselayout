@@ -209,7 +209,7 @@ rc_start_daemon() {
 # kill the process ourselves and any children left over
 # Returns 0 if everything was successful otherwise 1
 rc_stop_daemon() {
-	eval /sbin/start-stop-daemon "${args}" || return $?
+	eval /sbin/start-stop-daemon "${args}"
 
 	local pid=
 	# Don't wait around if the pidfile does not exist
@@ -217,8 +217,10 @@ rc_stop_daemon() {
 		[[ -e ${pidfile} ]] || return 0
 		# We use cat as the file may have disappeared and we can pipe
 		# errors to /dev/null.
-		pid=$(cat "${pidfile}" 2>/dev/null)
-		[[ -z ${pid} ]] && return 0
+		if [[ -z ${cmd} ]] ; then
+			pid=$(cat "${pidfile}" 2>/dev/null)
+			[[ -z ${pid} ]] && return 0
+		fi
 	fi
 
 	local timeout=$((${RC_WAIT_ON_STOP} * 10))
