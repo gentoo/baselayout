@@ -667,12 +667,16 @@ iface_start() {
 	local -a config=() fallback=() fallback_route=() conf=() a=() b=()
 	local ifvar=$(bash_variable "$1") i= j= metric=0
 
+	interface_exists "${iface}" && interface_up "${iface}"
+
 	# pre Start any modules with
 	for mod in ${MODULES[@]}; do
 		if is_function "${mod}_pre_start" ; then
 			${mod}_pre_start "${iface}" || { eend 1; return 1; }
 		fi
 	done
+
+	interface_exists "${iface}" && interface_up "${iface}"
 
 	x="metric_${ifvar}"
 	# If we don't have a metric then calculate one
