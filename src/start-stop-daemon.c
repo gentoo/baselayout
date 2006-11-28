@@ -596,13 +596,17 @@ parse_options(int argc, char * const *argv)
 static int
 pid_is_exec(pid_t pid, const char *name, const struct stat *esb)
 {
-	struct stat sb;
-	char buf[32];
+	char link[32];
+	char buf[PATH_MAX];
 
-	sprintf(buf, "/proc/%d/exe", pid);
-	if (stat(buf, &sb) != 0)
-		return 0;
-	return (sb.st_dev == esb->st_dev && sb.st_ino == esb->st_ino);
+	/* We no longer use stat inodes as we may have upgraded the program
+	   so it will no longer work. As such we need to use the actual exe
+	   path instead. */
+	sprintf(link, "/proc/%d/exe", pid);
+	if (readlink (link, buf, sizeof (buf)) < 0)
+	  errx(2, "readlink %s", link);
+
+	return (strcmp (buf, name) == 0);
 }
 
 

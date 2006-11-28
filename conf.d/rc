@@ -76,7 +76,7 @@ RC_FORCE_AUTO="no"
 RC_TTY_NUMBER=11
 
 # RC_DOWN_INTERFACE allows you to specify if RC will bring the interface
-# compeletly down when it stops. The default is yes, but there are some
+# completely down when it stops. The default is yes, but there are some
 # instances where you may not want this to happen such as using Wake On LAN.
 
 RC_DOWN_INTERFACE="yes"
