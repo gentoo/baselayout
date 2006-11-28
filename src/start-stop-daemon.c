@@ -602,11 +602,19 @@ pid_is_exec(pid_t pid, const char *name, const struct stat *esb)
 	/* We no longer use stat inodes as we may have upgraded the program
 	   so it will no longer work. As such we need to use the actual exe
 	   path instead. */
+	memset (link, 0, sizeof (link));
+	memset (buf, 0, sizeof (buf));
 	sprintf(link, "/proc/%d/exe", pid);
-	if (readlink (link, buf, sizeof (buf)) < 0)
-	  errx(2, "readlink %s", link);
 
-	return (strcmp (buf, name) == 0);
+	if (readlink (link, buf, sizeof (buf)) < 0)
+	  {
+	    if (errno == ENOENT)
+	      return 0;
+	    else
+	      errx(2, "readlink %s: %s", link, strerror (errno));
+	  }
+
+	return (strcmp (name, buf) == 0);
 }
 
 
