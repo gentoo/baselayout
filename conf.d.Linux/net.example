@@ -670,6 +670,14 @@
 #nis_domain_eth0="domain"
 #nis_servers_eth0="192.168.0.2 192.168.0.3"
 
+# NOTE: Setting any of these will stamp on the files in question. So if you
+# don't specify dns_servers but you do specify dns_domain then no nameservers
+# will be listed in /etc/resolv.conf even if there were any there to start
+# with.
+# If this is an issue for you then maybe you should look into a resolv.conf
+# manager like resolvconf-gentoo to manage this file for you. All packages
+# that baselayout supports use resolvconf-gentoo if installed.
+
 #-----------------------------------------------------------------------------
 # Cable in/out detection
 # Sometimes the cable is in, others it's out. Obviously you don't want to

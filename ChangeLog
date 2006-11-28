@@ -3,6 +3,9 @@
 
   28 Nov 2006; Roy Marples <uberlord@gentoo.org>:
 
+    Add a note about any system settings such as dns_domain_ stamping
+    on reslov.conf and how to manage it properly, #156478.
+
     dhcpcd now works on FreeBSD :)
 
   14 Nov 2006; Roy Marples <uberlord@gentoo.org>:
