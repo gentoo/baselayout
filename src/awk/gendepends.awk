@@ -154,7 +154,7 @@ function add_provide(service, provide)
 		
 	if (check_provide(provide)) {
 		# We cannot have more than one service Providing a virtual ...
-		ewarn(" Service '" get_provide(provide) "' already provided by '" provide "'!;")
+		ewarn(" Service '" get_provide(provide) "' already provides '" provide "'!;")
 		ewarn(" Not adding service '" service "'...")
 		# Do not fail here as we do have a service that resolves the virtual
 	} else {
