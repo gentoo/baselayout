@@ -296,7 +296,7 @@ _ewarn() {
 		echo -e " ${WARN}*${NORMAL} ${RC_INDENTATION}$*"
 	fi
 
-	local name="rc-scripts"
+	local name="/etc/init.d/${SVCNAME}"
 	[[ $0 != "/sbin/runscript.sh" ]] && name="${0##*/}"
 	# Log warnings to system log
 	esyslog "daemon.warning" "${name}" "$*"
@@ -317,7 +317,7 @@ _eerror() {
 		echo -e " ${BAD}*${NORMAL} ${RC_INDENTATION}$*"
 	fi
 
-	local name="rc-scripts"
+	local name="/etc/init.d/${SVCNAME}"
 	[[ $0 != "/sbin/runscript.sh" ]] && name="${0##*/}"
 	# Log errors to system log
 	esyslog "daemon.err" "${name}" "$*"
@@ -757,10 +757,10 @@ get_mounts() {
 
 	# Linux has /proc/mounts which should always exist
 	if [[ $(uname) == "Linux" ]] ; then
-    		while read node point fs opts foo ; do
-				[[ ${node} == "rootfs" && ${point} == "/" ]] && continue
-				echo "${point} ${node} ${fs} ${opts}" 
-    		done < /proc/mounts
+		while read node point fs opts foo ; do
+			[[ ${node} == "rootfs" && ${point} == "/" ]] && continue
+			echo "${point} ${node} ${fs} ${opts}" 
+		done < /proc/mounts
 		return 
 	fi
 
