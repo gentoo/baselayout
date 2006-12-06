@@ -3,6 +3,8 @@
 
   06 Dec 2006; Roy Marples <uberlord@gentoo.org>:
 
+    Warn about things stamping on /etc/resolv.conf a little better, #156840.
+
     Replace checkroot bash regex with a while read and parse each option
     as the regex was complex and error prone, #157115.
 
