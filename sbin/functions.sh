@@ -758,7 +758,8 @@ get_mounts() {
 	# Linux has /proc/mounts which should always exist
 	if [[ $(uname) == "Linux" ]] ; then
     		while read node point fs opts foo ; do
-			echo "${point} ${node} ${fs} ${opts}" 
+				[[ ${node} == "rootfs" && ${point} == "/" ]] && continue
+				echo "${point} ${node} ${fs} ${opts}" 
     		done < /proc/mounts
 		return 
 	fi

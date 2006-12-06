@@ -2,6 +2,15 @@
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
   06 Dec 2006; Roy Marples <uberlord@gentoo.org>:
+   
+    Fix single on the kernel command line again, #154961.
+
+    Turns out s-s-d using /proc/pid/exe doesn't work when the symlink has
+    been moved elsewhere as the file has been deleted during an upgrade.
+    /proc/pid/cmdline remains constant, so just check that instead.
+
+    Fix do_unmount in localmount not to kill stuff when remounting ro
+    if that would kill us too, fixes #156766.
 
     Fix dhcp client variables, as pointed out by John Major.
 

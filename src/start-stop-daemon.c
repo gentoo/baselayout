@@ -596,23 +596,23 @@ parse_options(int argc, char * const *argv)
 static int
 pid_is_exec(pid_t pid, const char *name, const struct stat *esb)
 {
-	char link[32];
+	char cmdline[32];
 	char buf[PATH_MAX];
+	int fd = -1;
 
 	/* We no longer use stat inodes as we may have upgraded the program
-	   so it will no longer work. As such we need to use the actual exe
-	   path instead. */
-	memset (link, 0, sizeof (link));
-	memset (buf, 0, sizeof (buf));
-	sprintf(link, "/proc/%d/exe", pid);
+	   so it will no longer work. We cannot use the exe link either for
+	   the same reason. */
+	snprintf (cmdline, sizeof (cmdline), "/proc/%u/cmdline", pid);
+	if ((fd = open (cmdline, O_RDONLY)) < 0)
+	  return 0;
 
-	if (readlink (link, buf, sizeof (buf)) < 0)
-	  {
-	    if (errno == ENOENT)
-	      return 0;
-	    else
-	      errx(2, "readlink %s: %s", link, strerror (errno));
-	  }
+	memset (buf, 0, sizeof (buf));
+	size_t r = read(fd, buf, sizeof (buf));
+	close (fd);
+
+	if (r == -1)
+	    return 0;
 
 	return (strcmp (name, buf) == 0);
 }
