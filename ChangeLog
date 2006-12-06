@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  06 Dec 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Fix dhcp client variables, as pointed out by John Major.
+
   05 Dec 2006; Roy Marples <uberlord@gentoo.org>:
 
     Obey the pppd noauth option, #104869 thanks to Bram Verweij.

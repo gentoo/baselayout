@@ -67,7 +67,7 @@ pump_start() {
 	interface_exists "${iface}" true || return 1
 
 	opts="pump_${ifvar}"
-	opts="${!opts} ${pump}"
+	opts="${pump} ${!opts}"
 
 	# Map some generic options to pump
 	d="dhcp_${ifvar}"

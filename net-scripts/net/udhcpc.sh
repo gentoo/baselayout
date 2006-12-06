@@ -75,8 +75,8 @@ udhcpc_start() {
 	interface_exists "${iface}" true || return 1
 
 	local ifvar=$(bash_variable "${iface}" ) opts= 
-	opts="udhcpc_${ifvar} ${udhcpc}"
-	opts="${!opts}"
+	opts="udhcpc_${ifvar}"
+	opts="${udhcpc} ${!opts}"
 
 	d="dhcp_${ifvar}"
 	[[ -z ${!d} ]] && d="dhcp"
