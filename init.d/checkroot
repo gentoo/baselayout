@@ -74,7 +74,7 @@ start() {
 			-e 's,^[[:space:]]*,,g' -n \
     			-e 's,^\([^[:space:]]*\)[[:space:]][[:space:]]*/[[:space:]][[:space:]]*\([^[:space:]]*\)[[:space:]]*\([^[:space:]]*\)[[:space:]]*\([[:digit:]]*\)[[:space:]]*\([[:digit:]]*\).*,\5,p' \
     			/etc/fstab)
-		if [[ ${pass} != "0" ]] ; then
+		if [[ ${pass:-0} != "0" ]] ; then
 			ebegin $"Checking root filesystem"
 			if [[ $(uname) == "Linux" ]] ; then
 				fsck -C -T -a /
