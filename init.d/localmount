@@ -71,7 +71,7 @@ start() {
 # Handy function to handle all our unmounting needs
 # get_mounts is our portable function to get mount information
 do_unmount() {
-	local cmd="$1" no_unmounts="$2" nodes="$3"
+	local cmd="$1" no_unmounts="$2" nodes="$3" retval=0 retry=
 	local l= fs= node= point= foo= fuser_opts="-m -c" pids= pid=
 	[[ $(uname) == "Linux" ]] && fuser_opts="-c"
 
@@ -85,7 +85,7 @@ do_unmount() {
 		if [[ ${cmd} == "umount"* ]] ; then
 			# If we're using the mount (probably /usr) then don't unmount us
 			if [[ " $(fuser ${fuser_opts} "${point}" 2>/dev/null) " == *" $$ "* ]] ; then
-				ewarn $"We are using" "${point}," $"not unmounting"
+				ewend 1 $"We are using" "${point}," $"not unmounting"
 				continue
 			fi
 		fi
@@ -93,7 +93,7 @@ do_unmount() {
 		if [[ ${cmd} == "umount"* ]] ; then
 			ebegin $"Unmounting" "${point}"
 		else
-			ebegin $"Remounting" "${point}" $"read-only"
+			ebegin $"Remounting" "${point}"
 		fi
 		declare -a siglist=( "TERM" "KILL" "KILL" )
 		retry=0
@@ -110,12 +110,17 @@ do_unmount() {
 
 			# OK, try forcing things
 			if [[ ${retry} -ge 2 ]] ; then
-				${cmd} -f "${point}" || retval=1
+				${cmd} -f "${point}" || retry=999
 				break
 			fi
 		done
+		if [[ ${retry} == 999 ]] ; then
+			eend 1
+			retval=1
+		else
+			eend 0
+		fi
 	done
-	eend ${retval}
 	return ${retval}
 }
 

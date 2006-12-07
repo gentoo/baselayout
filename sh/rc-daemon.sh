@@ -163,12 +163,15 @@ is_daemon_running() {
 		pidfile="$1"
 	fi
 
-	# If the pidfile vanishes, we have stopped
-	[[ -n ${pidfile} && ! -s ${pidfile} ]] && return 1
-
 	pids=$(pidof ${cmd})
 	[[ -z ${pids} ]] && return 1
 
+	# If the pidfile vanishes, we have stopped
+	if [[ ! -s ${pidfile} ]] ; then
+		[[ -z ${pidfile} ]]
+		return $?
+	fi
+	
 	pid=$(cat "${pidfile}" 2>/dev/null)
 	[[ -n ${pid} && " ${pids} " == *" ${pid} "* ]]
 }
