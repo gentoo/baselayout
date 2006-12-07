@@ -163,13 +163,15 @@ is_daemon_running() {
 		pidfile="$1"
 	fi
 
+	# If the pidfile vanishes, we have stopped
+	[[ -n ${pidfile} && ! -s ${pidfile} ]] && return 1
+
 	pids=$(pidof ${cmd})
 	[[ -z ${pids} ]] && return 1
-	[[ -s ${pidfile} ]] || return 0
 
-	read pid < "${pidfile}"
+	read pid < "${pidfile}" 2>/dev/null
 	pids=" ${pids} "
-	[[ ${pids// ${pid} /} != "${pids}" ]]
+	[[ ${pids// ${pid} /} != "${pids}" && -n ${pid} ]]
 }
 
 # int rc_start_daemon(void)
