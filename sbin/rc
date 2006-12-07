@@ -300,12 +300,11 @@ dep_stop() {
 		return 0
 	fi
 
-
 	service_coldplugged "${service}" && return 0
 
 	# Something may depend on me
 	needsme=0
-	for dep in $(rc-depend --notrace -needsme "${service}") ; do
+	for dep in $(rc-depend --notrace -needsme -usesme "${service}") ; do
 		if [[ -L "${svcdir}/softscripts.new/${dep}" ]] \
 		|| service_coldplugged "${dep}" ; then
 			# This dep is valid

@@ -265,7 +265,7 @@ struct depinfo *load_deptree (char *file)
       /* Grab our types first */
       if (strncmp (buffer, "declare -r rc_type_", rc_type_len) == 0)
 	{
-	  p = (char *) buffer + rc_type_len;
+	  p = buffer + rc_type_len;
 	  if (! (e = strchr(p, '=')))
 	    continue;
 
@@ -289,7 +289,7 @@ struct depinfo *load_deptree (char *file)
       if (strncmp (buffer, "RC_DEPEND_TREE[", rc_depend_tree_len))
 	continue;
 
-      p = (char *) buffer + rc_depend_tree_len;
+      p = buffer + rc_depend_tree_len;
       e = NULL;
 
       errno = 0;
