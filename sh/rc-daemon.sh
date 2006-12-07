@@ -169,9 +169,8 @@ is_daemon_running() {
 	pids=$(pidof ${cmd})
 	[[ -z ${pids} ]] && return 1
 
-	read pid < "${pidfile}" 2>/dev/null
-	pids=" ${pids} "
-	[[ ${pids// ${pid} /} != "${pids}" && -n ${pid} ]]
+	pid=$(cat "${pidfile}" 2>/dev/null)
+	[[ -n ${pid} && " ${pids} " == *" ${pid} "* ]]
 }
 
 # int rc_start_daemon(void)
