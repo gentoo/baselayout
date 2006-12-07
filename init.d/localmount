@@ -8,9 +8,16 @@ depend() {
 
 start() {
 	# Mount local filesystems in /etc/fstab.
+	local types="noproc,linproc,shm${NET_FS_LIST:+,}${NET_FS_LIST// /,}"
 	ebegin $"Mounting local filesystems"
-	mount -at noproc,linproc,shm${NET_FS_LIST:+,}${NET_FS_LIST// /,}
+	mount -at "${types}"
 	eend $? $"Some local filesystem failed to mount"
+
+	# Change the mount options of already mounted paritions
+	# This is needed when /usr is separate and coming back from single user
+	if [[ $(uname) != "Linux" ]] ; then
+		mount -uao fstab -t "${types}"
+	fi
 
 	# Sync bootlog now as /var should be mounted
 	bootlog sync 2>/dev/null

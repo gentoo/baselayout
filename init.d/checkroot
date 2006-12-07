@@ -70,22 +70,22 @@ start() {
 		# - find the / entry
 		# - make sure we have 6 fields
 		# - see if fs_passno is something other than 0
-		local node= point= fs= opts= dump= pass= foo=
-		while read node point fs opts dump pass foo ; do
-			[[ ${node} == "#"* || ${point} != "/" || -z ${fs} ]] && continue
-			if [[ ${pass:-0} == "0" ]] ; then
-				ebegin $"Skipping root filesystem check" "(fstab's passno == 0)"
-				retval=0
+		local pass=$(sed -e '/^[[:space:]]*#/ d' \
+			-e 's,^[[:space:]]*,,g' -n \
+    			-e 's,^\([^[:space:]]*\)[[:space:]][[:space:]]*/[[:space:]][[:space:]]*\([^[:space:]]*\)[[:space:]]*\([^[:space:]]*\)[[:space:]]*\([[:digit:]]*\)[[:space:]]*\([[:digit:]]*\).*,\5,p' \
+    			/etc/fstab)
+		if [[ ${pass} != "0" ]] ; then
+			ebegin $"Checking root filesystem"
+			if [[ $(uname) == "Linux" ]] ; then
+				fsck -C -T -a /
 			else
-				ebegin $"Checking root filesystem"
-				if [[ $(uname) == "Linux" ]] ; then
-					fsck -C -T -a /
-				else
-					fsck -p -F /
-				fi
-				retval=$?
+				fsck -p -F /
 			fi
-		done < /etc/fstab
+			retval=$?
+		else
+			ebegin $"Skipping root filesystem check" "(fstab's passno == 0)"
+			retval=0
+		fi
 	fi
 
 	if [[ ${retval} -eq 0 ]] ; then

@@ -1,12 +1,15 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  07 Dec 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Replace checkroot bash regex with a sed regex so we're more robust, #157115.
+
+    Install /etc/COPYRIGHT and /etc/protocols for BSD.
+
   06 Dec 2006; Roy Marples <uberlord@gentoo.org>:
 
     Warn about things stamping on /etc/resolv.conf a little better, #156840.
-
-    Replace checkroot bash regex with a while read and parse each option
-    as the regex was complex and error prone, #157115.
 
     Report /etc/init.d/$SVCNAME in syslog instead of rcscripts,
     #156138 thanks to Wolfram Schlich.
