@@ -85,12 +85,16 @@ do_unmount() {
 		if [[ ${cmd} == "umount"* ]] ; then
 			# If we're using the mount (probably /usr) then don't unmount us
 			if [[ " $(fuser ${fuser_opts} "${point}" 2>/dev/null) " == *" $$ "* ]] ; then
-				ewarn "We are using ${point}, not unmounting"
+				ewarn $"We are using" "${point}," $"not unmounting"
 				continue
 			fi
 		fi
 
-		ebegin "Unmounting ${point}"
+		if [[ ${cmd} == "umount"* ]] ; then
+			ebegin $"Unmounting" "${point}"
+		else
+			ebegin $"Remounting" "${point}" $"read-only"
+		fi
 		declare -a siglist=( "TERM" "KILL" "KILL" )
 		retry=0
 		while ! ${cmd} "${point}" &>/dev/null ; do

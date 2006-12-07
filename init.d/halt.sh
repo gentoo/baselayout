@@ -46,12 +46,14 @@ fi
 # Remount the remaining filesystems read-only
 # We ge the do_unmount function from the localmount init script
 ( . /etc/init.d/localmount
-	ebegin $"Remounting remaining filesystems readonly"
+	ebegin $"Remounting remaining filesystems read-only"
+	eindent
 	if [[ $(uname) == "Linux" ]] ; then
 		do_unmount "mount -n -o remount,ro" "^(/dev|/dev/pts|/proc|/proc/bus/usb|/sys)$"
 	else
 		do_unmount "mount -u -o ro" "^/dev$"
 	fi
+	eoutdent
 	eend $?
 )
 unmounted=$?
