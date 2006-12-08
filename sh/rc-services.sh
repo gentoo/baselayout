@@ -4,7 +4,7 @@
 # RC Dependency and misc service functions
 if [[ ${RC_GOT_SERVICES} != "yes" ]] ; then
 	RC_GOT_SERVICES="yes"
-	[[ ${EUID} == "0" ]] && depscan.sh
+	[[ ${EUID} == "0" && $0 != "/etc/init.d/halt.sh" ]] && depscan.sh
 fi
 
 [[ ${RC_GOT_FUNCTIONS} != "yes" ]] && source /sbin/functions.sh
@@ -453,6 +453,63 @@ service_started_daemon() {
 	[[ ! -e ${daemonfile} ]] && return 1
 	[[ $'\n'$(<"${daemonfile}")$'\n' \
 		=~ $'\n'RC_DAEMONS\[${index}\]=${daemon}$'\n' ]]
+}
+
+# bool do_unmount(char *cmd, char *no_unmounts, char *nodes)
+# Handy function to handle all our unmounting needs
+# get_mounts is our portable function to get mount information
+do_unmount() {
+	local cmd="$1" no_unmounts="$2" nodes="$3" retval=0 retry=
+	local l= fs= node= point= foo= fuser_opts="-m -c" pids= pid=
+	[[ $(uname) == "Linux" ]] && fuser_opts="-c"
+
+	get_mounts | sort -ur | while read point node fs foo ; do
+		point=${point//\040/ }
+		node=${node//\040/ }
+		fs=${fs//\040/ }
+		[[ -n ${no_unmounts} && ${point} =~ ${no_unmounts} ]] && continue
+		[[ -n ${nodes} && ! ${node} =~ ${nodes} ]] && continue
+
+		if [[ ${cmd} == "umount"* ]] ; then
+			# If we're using the mount (probably /usr) then don't unmount us
+			if [[ " $(fuser ${fuser_opts} "${point}" 2>/dev/null) " == *" $$ "* ]] ; then
+				ewend 1 $"We are using" "${point}," $"not unmounting"
+				continue
+			fi
+		fi
+
+		if [[ ${cmd} == "umount"* ]] ; then
+			ebegin $"Unmounting" "${point}"
+		else
+			ebegin $"Remounting" "${point}"
+		fi
+		declare -a siglist=( "TERM" "KILL" "KILL" )
+		retry=0
+		while ! ${cmd} "${point}" &>/dev/null ; do
+			# Don't kill if it's us (/ and possibly /usr)
+			if [[ " $(fuser ${fuser_opts} "${point}" 2>/dev/null) " != *" $$ "* ]] ; then
+				fuser -"${siglist[${retry}]}" -k ${fuser_opts} "${point}" &>/dev/null
+				sleep 2
+			else
+				# No point in trying again, save time
+				retry=3
+			fi
+			((retry++))
+
+			# OK, try forcing things
+			if [[ ${retry} -ge 2 ]] ; then
+				${cmd} -f "${point}" || retry=999
+				break
+			fi
+		done
+		if [[ ${retry} == 999 ]] ; then
+			eend 1
+			retval=1
+		else
+			eend 0
+		fi
+	done
+	return ${retval}
 }
 
 # vim: set ts=4 :

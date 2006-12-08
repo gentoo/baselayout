@@ -2,7 +2,7 @@
 # Copyright 1999-2006 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
-[[ ${RC_GOT_FUNCTIONS} != "yes" ]] && source /sbin/functions.sh
+[[ ${RC_GOT_FUNCTIONS} != "yes" ]] && . /sbin/functions.sh
 
 stop_addon devfs
 stop_addon udev
@@ -44,18 +44,17 @@ if [[ -w ${svclib} ]] ; then
 fi
 
 # Remount the remaining filesystems read-only
-# We ge the do_unmount function from the localmount init script
-( . /etc/init.d/localmount
-	ebegin $"Remounting remaining filesystems read-only"
-	eindent
-	if [[ $(uname) == "Linux" ]] ; then
-		do_unmount "mount -n -o remount,ro" "^(/dev|/dev/pts|/proc|/proc/bus/usb|/sys)$"
-	else
-		do_unmount "mount -u -o ro" "^/dev$"
-	fi
-	eoutdent
-	eend $?
-)
+ebegin $"Remounting remaining filesystems read-only"
+# We need the do_unmount function from rc-services.sh
+[[ ${RC_GOT_SERVICES} != yes ]] && . "${svclib}"/sh/rc-services.sh
+eindent
+if [[ $(uname) == "Linux" ]] ; then
+	do_unmount "mount -n -o remount,ro" "^(/dev|/dev/pts|/proc|/proc/bus/usb|/sys)$"
+else
+	do_unmount "mount -u -o ro" "^/dev$"
+fi
+eoutdent
+eend $?
 unmounted=$?
 
 # This UPS code should be moved to out of here and to an addon
