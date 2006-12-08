@@ -51,7 +51,7 @@ start() {
 	rcfilesystems=${rcfilesystems// /,}   # convert to comma-separated
 
 	ebegin $"Mounting network filesystems"
-	mount -at ${rcfilesystems} >/dev/null
+	mount -at ${rcfilesystems}
 
 	if [[ $? != 0 ]] ; then
 		ewend 1 "Could not mount all network filesystems!"
@@ -76,50 +76,14 @@ stop() {
 
 	local ret
 	ebegin $"Unmounting network filesystems"
-	[[ -z $(umount -at ${rcfilesystems} 2>&1) ]]
+	umount -at ${rcfilesystems}
 	ret=$?
 	eend ${ret} $"Failed to simply unmount filesystems"
 	[[ ${ret} == 0 ]] && return 0
 
-	# `umount -a` will fail if the filesystems are in use.
-	# Here we use fuser to kill off processes that are using 
-	# the filesystems so that we can unmount properly.
-	# We will gradually use harsher kill signals so that the 
-	# processes know we aren't screwing around here ;).
-	declare -a siglist=( "TERM" "KILL" "KILL" )
-	local retry=0 fs= node= point= l= retval=0 foo=
+	# Nice function in rc-services.sh do handle the grunt work
 	eindent
-
-	get_mounts | sort -ur | while read point node fs foo ; do
-		point=${point//\040/ }
-		node=${node//\040/ }
-		fs=${fs//\040/ }
-		[[ ${fs} =~ ^(${NET_FS_LIST// /|})$ ]] || continue
-		[[ ${point} == "/" ]] && continue
-
-		retry=0
-		retval=0
-		ebegin "Attempting to unmount ${point}"
-		while ! umount "${point}" &>/dev/null ; do
-			# Kill processes still using this mount
-			if [[ $(uname) == "Linux" ]] ; then
-				fuser -k -"${siglist[${retry}]}" -m "${point}" &>/dev/null
-			else
-				fuser -k -s "${siglist[${retry}]}" -c -m "${point}" &>/dev/null
-			fi
-			sleep 2
-			((retry++))
-
-			# OK, try forcing things
-			if [[ ${retry} -gt 2 ]] ; then
-				umount -f "${point}" || retval=1
-				break
-			fi
-		done
-		[[ ${retry} -le 2 ]]
-		eend $? "Failed to unmount ${point}"
-	done
-	
+	do_unmount "umount" "" "" "^(${NET_FS_LIST// /|})$"
 	eoutdent
 	return ${retval}
 }

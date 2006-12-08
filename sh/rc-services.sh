@@ -455,13 +455,17 @@ service_started_daemon() {
 		=~ $'\n'RC_DAEMONS\[${index}\]=${daemon}$'\n' ]]
 }
 
-# bool do_unmount(char *cmd, char *no_unmounts, char *nodes)
+# bool do_unmount(char *cmd, char *no_unmounts, char *nodes, char *fslist)
 # Handy function to handle all our unmounting needs
 # get_mounts is our portable function to get mount information
 do_unmount() {
-	local cmd="$1" no_unmounts="$2" nodes="$3" retval=0 retry=
-	local l= fs= node= point= foo= fuser_opts="-m -c" pids= pid=
-	[[ $(uname) == "Linux" ]] && fuser_opts="-c"
+	local cmd="$1" no_unmounts="$2" nodes="$3" fslist="$4" retval=0 retry=
+	local l= fs= node= point= foo= fuser_opts="-m -c" fuser_kill="-s "
+	local pids= pid=
+	if [[ $(uname) == "Linux" ]] ; then
+		fuser_opts="-c"
+		fuser_kill="-"
+	fi
 
 	get_mounts | sort -ur | while read point node fs foo ; do
 		point=${point//\040/ }
@@ -469,6 +473,7 @@ do_unmount() {
 		fs=${fs//\040/ }
 		[[ -n ${no_unmounts} && ${point} =~ ${no_unmounts} ]] && continue
 		[[ -n ${nodes} && ! ${node} =~ ${nodes} ]] && continue
+		[[ -n ${fslist} && ! ${fs} =~ ${fslist} ]] && continue
 
 		if [[ ${cmd} == "umount"* ]] ; then
 			# If we're using the mount (probably /usr) then don't unmount us
@@ -483,12 +488,14 @@ do_unmount() {
 		else
 			ebegin $"Remounting" "${point}"
 		fi
+
 		declare -a siglist=( "TERM" "KILL" "KILL" )
 		retry=0
 		while ! ${cmd} "${point}" &>/dev/null ; do
 			# Don't kill if it's us (/ and possibly /usr)
 			if [[ " $(fuser ${fuser_opts} "${point}" 2>/dev/null) " != *" $$ "* ]] ; then
-				fuser -"${siglist[${retry}]}" -k ${fuser_opts} "${point}" &>/dev/null
+				fuser "${fuser_kill}${siglist[${retry}]}" -k ${fuser_opts} \
+					"${point}" &>/dev/null
 				sleep 2
 			else
 				# No point in trying again, save time
