@@ -3,6 +3,10 @@
 
   09 Dec 2006; Roy Marples <uberlord@gentoo.org>:
 
+    Fix the stopping of services when using --name or --retry.
+
+    Don't unmount anything inside of /proc like nfs or usb.
+
     Don't start USE services unless they are in the runlevel, #157589.
 
   09 Dec 2006; Mike Frysinger <vapier@gentoo.org>:

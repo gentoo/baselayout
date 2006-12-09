@@ -601,8 +601,14 @@ pid_is_exec(pid_t pid, const char *name, const struct stat *esb)
 	int fd = -1;
 
 	/* We no longer use stat inodes as we may have upgraded the program
-	   so it will no longer work. We cannot use the exe link either for
-	   the same reason. */
+	   so it will no longer work. We test the exe link first, then the
+	   cmdline. */
+	snprintf (cmdline, sizeof (cmdline), "/proc/%u/exe", pid);
+	memset (buf, 0, sizeof (buf));
+	if (readlink (cmdline, buf, sizeof (buf)) != -1
+	    && strcmp (name, buf) == 0)
+	  return 1;
+
 	snprintf (cmdline, sizeof (cmdline), "/proc/%u/cmdline", pid);
 	if ((fd = open (cmdline, O_RDONLY)) < 0)
 	  return 0;
@@ -772,7 +778,7 @@ do_pidfile(const char *name)
 		if (fscanf(f, "%d", &pid) == 1)
 			check(pid);
 		fclose(f);
-	} else if (errno != ENOENT || stop != 0)
+	} else if (errno != ENOENT || (stop != 0 && schedule == NULL))
 		errx(2, "open pidfile %s: %s", name, strerror(errno));
 
 }

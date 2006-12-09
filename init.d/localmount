@@ -71,7 +71,7 @@ start() {
 stop() {
 	# We never unmount / or /dev or $svcdir
 	NO_UMOUNTS="/|/dev|${svcdir}${NO_UMOUNTS:+|}${NO_UMOUNTS// /|}"
-	[[ $(uname) == "Linux" ]] && NO_UMOUNTS="${NO_UMOUNTS}|/dev/pts|/proc|/sys"
+	[[ $(uname) == "Linux" ]] && NO_UMOUNTS="${NO_UMOUNTS}|/dev/pts|/proc|/proc/.*|/sys"
 	NO_UMOUNTS="^(${NO_UMOUNTS})$"
 
 	# Flush all pending disk writes now

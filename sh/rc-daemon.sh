@@ -227,6 +227,8 @@ rc_stop_daemon() {
 		fi
 	fi
 
+	[[ -n ${name} ]] && cmd="${name}"
+
 	local timeout=$((${RC_WAIT_ON_STOP} * 10))
 	while [[ ${timeout} -gt 0 ]] ; do
 		((timeout--))

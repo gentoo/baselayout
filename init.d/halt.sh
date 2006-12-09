@@ -49,7 +49,7 @@ ebegin $"Remounting remaining filesystems read-only"
 [[ ${RC_GOT_SERVICES} != yes ]] && . "${svclib}"/sh/rc-services.sh
 eindent
 if [[ $(uname) == "Linux" ]] ; then
-	do_unmount "mount -n -o remount,ro" "^(/dev|/dev/pts|/proc|/proc/bus/usb|/sys)$"
+	do_unmount "mount -n -o remount,ro" "^(/dev|/dev/pts|/proc|/proc/.*|/sys)$"
 else
 	do_unmount "mount -u -o ro" "^/dev$"
 fi
