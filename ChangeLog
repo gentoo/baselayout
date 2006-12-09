@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  09 Dec 2006; Mike Frysinger <vapier@gentoo.org>:
+
+    Add a new TIMEZONE variable to /etc/conf.d/clock so we can track the
+    timezone setting of /etc/localtime properly.
+
 * baselayout-1.13.0_alpha8 (07 Dec 2006)
 
   07 Dec 2006; Roy Marples <uberlord@gentoo.org>:
@@ -15,7 +20,7 @@
 
     Report /etc/init.d/$SVCNAME in syslog instead of rcscripts,
     #156138 thanks to Wolfram Schlich.
-   
+
     Fix single on the kernel command line again, #154961.
 
     Turns out s-s-d using /proc/pid/exe doesn't work when the symlink has
