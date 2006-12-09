@@ -11,7 +11,7 @@ CLOCK="UTC"
 # /usr/share/zoneinfo/ directory.  For example, some common values are
 # "America/New_York" or "EST5EDT" or "Europe/Berlin".
 
-TIMEZONE="Factory"
+#TIMEZONE="Factory"
 
 # If you wish to pass any other arguments to hwclock during bootup, 
 # you may do so here.
