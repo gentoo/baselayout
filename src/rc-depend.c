@@ -597,7 +597,6 @@ void visit_service (struct depinfo *deptree,
 		    {
 		      di = get_depinfo (deptree, lp->item);
 		      if (di && (strcmp (type->item, "ineed") == 0 ||
-				 strcmp (type->item, "iuse") == 0 ||
 				 valid_service (di->service)))
 			visit_service (deptree, types, sorted, visited, di,
 				       true);
@@ -606,7 +605,6 @@ void visit_service (struct depinfo *deptree,
 		}
 	      else
 		if (di && (strcmp (type->item, "ineed") == 0 ||
-			   strcmp (type->item, "iuse") == 0 ||
 			   valid_service (service)))
 		  visit_service (deptree, types, sorted, visited, di, true);
 	    }
