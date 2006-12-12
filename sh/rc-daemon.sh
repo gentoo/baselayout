@@ -56,7 +56,7 @@ rc_shift_args() {
 			-K|--sto*)
 				stopping=true
 				;;
-			-n|--n*)
+			-n|--na*)
 				addvar="name"
 				name=
 				;;
@@ -74,10 +74,6 @@ rc_shift_args() {
 			-m|--m*)
 				makepidfile=true
 				;;
-			-R|--r*)
-				addvar="RC_RETRY_COUNT"
-				RC_RETRY_COUNT=
-				;;
 			-s|--si*)
 				addvar="signal"
 				signal=
@@ -88,8 +84,6 @@ rc_shift_args() {
 		esac
 		shift
 	done
-
-	[[ -z ${RC_RETRY_COUNT} ]] && RC_RETRY_COUNT=5
 }	
 
 # void rc_setup_daemon_vars(void)

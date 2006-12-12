@@ -140,6 +140,8 @@ static char what_stop[1024];
 static const char *schedule_str = NULL;
 static const char *progname = "";
 static int nicelevel = 0;
+static const char *redirect_stderr = NULL;
+static const char *redirect_stdout = NULL;
 
 static struct stat exec_stat;
 #if defined(OSHURD)
@@ -290,6 +292,8 @@ do_help(void)
 "  -r|--chroot <path>            chroot process to given directory\n"
 "  -t|--test                     test mode, don't do anything\n"
 "  -o|--oknodo                   exit status 0 (not 1) if nothing done\n"
+"  -1|--stdout <logfile>         redirect stdout to logfile\n"
+"  -2|--stderr <logfile>         redirect stderr to logfile\n"
 "  -q|--quiet                    be more quiet\n"
 "  -v|--verbose                  be more verbose\n"
 "Retry <schedule> is <item>|/<item>/... where <item> is one of\n"
@@ -474,12 +478,14 @@ parse_options(int argc, char * const *argv)
 		{ "make-pidfile", 0, NULL, 'm'},
 		{ "retry",        1, NULL, 'R'},
 		{ "chdir",        1, NULL, 'd'},
+		{ "stderr",       1, NULL, '2'},
+		{ "stdout",       1, NULL, '1'},
 		{ NULL,           0, NULL, 0}
 	};
 	int c;
 
 	for (;;) {
-		c = getopt_long(argc, argv, "HKSVa:n:op:qr:e:s:tu:vx:c:N:bmR:g:d:",
+		c = getopt_long(argc, argv, "HKSVa:n:op:qr:e:s:tu:vx:c:N:bmR:g:d:1:2:",
 				longopts, (int *) 0);
 		if (c == -1)
 			break;
@@ -557,6 +563,12 @@ parse_options(int argc, char * const *argv)
 		case 'd':  /* --chdir /new/dir */
 			changedir = optarg;
 			break;
+		case '2':  /* --stderr /path/to/stderr.logfile */
+			redirect_stderr = optarg;
+			break;
+		case '1':   /* --stdout /path/to/stdout.lgfile */
+			redirect_stdout = optarg;
+			break;
 		default:
 			badusage(NULL);  /* message printed by getopt */
 		}
@@ -590,6 +602,9 @@ parse_options(int argc, char * const *argv)
 	if (background && !start)
 		badusage("--background is only relevant with --start");
 
+	if ((redirect_stderr != NULL || redirect_stderr != NULL)
+	    && ! background)
+		badusage("--stdout and --stderr only relevant with --background");
 }
 
 #if defined(OSLinux)
@@ -1275,6 +1290,7 @@ int
 main(int argc, char **argv)
 {
 	int devnull_fd = -1;
+
 #ifdef HAVE_TIOCNOTTY
 	int tty_fd = -1;
 #endif
@@ -1443,15 +1459,41 @@ main(int argc, char **argv)
 	}
 	if (background) { /* continue background setup */
 		int i;
+
 #ifdef HAVE_TIOCNOTTY
 		 /* change tty */
 		ioctl(tty_fd, TIOCNOTTY, 0);
 		close(tty_fd);
 #endif
+
 		umask(022); /* set a default for dumb programs */
-		dup2(devnull_fd,0); /* stdin */
-		dup2(devnull_fd,1); /* stdout */
-		dup2(devnull_fd,2); /* stderr */
+
+		int stdout_fd;
+		int stderr_fd;
+		int flags = O_WRONLY | O_CREAT | O_APPEND;
+		int mode = S_IRUSR | S_IWUSR;
+		stdout_fd = devnull_fd;
+		stderr_fd = devnull_fd;
+
+		if (redirect_stdout != NULL)
+		  {
+		    stdout_fd = open(redirect_stdout, flags, mode);
+		    if (stdout_fd == -1)
+		      errx (2, "Unable to open the logfile for stdout '%s': %s",
+			    redirect_stdout, strerror (errno));
+		  }
+		if (redirect_stderr != NULL)
+		  {
+		    stderr_fd = open (redirect_stderr, flags, mode);
+		    if (stderr_fd == -1)
+		      errx (2, "Unable to open the logfile for stderr '%s': %s",
+			    redirect_stderr, strerror (errno));
+		  }
+
+		dup2(devnull_fd, STDIN_FILENO);
+		dup2(stdout_fd, STDOUT_FILENO);
+		dup2(stderr_fd, STDERR_FILENO);
+
 #if defined(OShpux)
 		 /* now close all extra fds */
 		for (i=sysconf(_SC_OPEN_MAX)-1; i>=3; --i) close(i);

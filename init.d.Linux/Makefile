@@ -1,5 +1,5 @@
 DIR   = /etc/init.d
-EXES  = consolefont keymaps modules numlock volumes shutdown.sh reboot.sh
+EXES  = consolefont keymaps modules numlock volumes
 
 TOPDIR = ..
 include $(TOPDIR)/default.mk
