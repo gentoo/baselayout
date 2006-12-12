@@ -1,6 +1,15 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+* baselayout-1.12.7 (12 Dec 2006)
+
+  12 Dec 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Assume all routes are host routes unless we have a valid netmask,
+    #157418 thanks to Alexander Zubkov.
+
+    sysvinit now provides shutdown.sh and reboot.sh, #112991.
+
   06 Dec 2006; Roy Marples <uberlord@gentoo.org>:
 
     Fix dhcp client variables, as pointed out by John Major.
