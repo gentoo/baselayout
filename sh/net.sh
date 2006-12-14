@@ -371,7 +371,8 @@ modules_load()  {
 		[[ -n ${MODULES[i]} ]] || continue
 		if is_function "${MODULES[i]}_instlled" ; then
 			for x in $( ${MODULES[i]}_instlled ); do
-				if [[ " ${MODULES[@]} " != *" ${x} "* ]] ; then
+				if [[ " ${MODULES[@]} " != *" ${x} "* \
+				&& " ${provides[@]} " != *" ${x} "* ]] ; then
 					if [[ " ${umods[@]} " == *" ${MODULES[i]} "* ]] ; then
 						eerror "${MODULES[i]}" $"needs" "${x}"
 						return 1

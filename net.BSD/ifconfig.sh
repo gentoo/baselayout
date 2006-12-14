@@ -287,9 +287,6 @@ ifconfig_post_start() {
 
 	ifconfig_exists "${iface}" || return 0
 	
-	# Make sure interface is marked UP
-	ifconfig_up "${iface}"
-
 	# Apply metric and MTU if required
 	[[ -n ${!metric} ]] && ifconfig "${iface}" metric "${!metric}"
 	[[ -n ${!mtu} ]] && ifconfig "${iface}" mtu "${!mtu}"

@@ -341,9 +341,6 @@ ifconfig_post_start() {
 
 	ifconfig_exists "${iface}" || return 0
 	
-	# Make sure interface is marked UP
-	ifconfig_up "${iface}"
-
 	# MTU support
 	mtu="mtu_${ifvar}"
 	[[ -n ${!mtu} ]] && ifconfig "${iface}" mtu "${!mtu}"
@@ -438,8 +435,11 @@ ifconfig_add_address() {
 	fi
 
 	# Some kernels like to apply lo with an address when they are brought up
-	if [[ ${config[@]} == "127.0.0.1/8 brd 127.255.255.255" ]]; then
-		is_loopback "${real_iface}" && ifconfig "${real_iface}" 0.0.0.0
+	if [[ ${config[@]} == "127.0.0.1 netmask 255.0.0.0 broadcast 127.255.255.255" ]]; then
+		if is_loopback "${real_iface}" ; then
+			ifconfig "${real_iface}" ${config[@]}
+			return 0
+		fi
 	fi
 
 	ifconfig "${iface}" ${config[@]}
