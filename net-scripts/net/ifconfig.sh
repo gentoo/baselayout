@@ -364,7 +364,7 @@ ifconfig_post_start() {
 				x="-net ${x}"
 			elif [[ ${y} == *.*.*.*/32 ]] ; then
 				x="-host ${x}"
-			elif [[ ${y} == *.*.*.*/* ]] ; then
+			elif [[ ${y} == *.*.*.*/* || ${y} == "default" || ${y} == "0.0.0.0" ]] ; then
 				x="-net ${x}"
 			else
 				# Given the lack of a netmask, we assume a host
@@ -434,7 +434,7 @@ ifconfig_add_address() {
 	interface_up "${real_iface}"
 
 	# Some kernels like to apply lo with an address when they are brought up
-	if [[ ${config[@]} == "127.0.0.1 netmask 255.0.0.0 broadcast 127.255.255.255" ]]; then
+	if [[ ${config[@]} == "127.0.0.1/8 brd 127.255.255.255" ]]; then
 		is_loopback "${iface}" && ifconfig "${iface}" 0.0.0.0
 	fi
 
