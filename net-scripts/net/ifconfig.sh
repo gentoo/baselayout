@@ -430,12 +430,12 @@ ifconfig_add_address() {
 		config=( "${config[@]//peer/pointopoint}" )
 	fi
 
-	# Ensure that the interface is up so we can add IPv6 addresses
-	interface_up "${real_iface}"
-
 	# Some kernels like to apply lo with an address when they are brought up
-	if [[ ${config[@]} == "127.0.0.1/8 brd 127.255.255.255" ]]; then
-		is_loopback "${iface}" && ifconfig "${iface}" 0.0.0.0
+	if [[ ${config[@]} == "127.0.0.1 netmask 255.0.0.0 broadcast 127.255.255.255" ]]; then
+		if is_loopback "${real_iface}" ; then
+			ifconfig "${real_iface}" ${config[@]}
+			return 0
+		fi
 	fi
 
 	ifconfig "${iface}" ${config[@]}
