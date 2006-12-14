@@ -28,6 +28,8 @@
     Add a new TIMEZONE variable to /etc/conf.d/clock so we can track the
     timezone setting of /etc/localtime properly.
 
+    Punt /etc/init.d/{reboot,shutdown}.sh to the sysvinit package.
+
 * baselayout-1.13.0_alpha8 (07 Dec 2006)
 
   07 Dec 2006; Roy Marples <uberlord@gentoo.org>:
