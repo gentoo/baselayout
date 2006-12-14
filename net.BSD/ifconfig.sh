@@ -268,9 +268,6 @@ ifconfig_add_address() {
 		config[0]="inet add ${config[0]}"
 	fi
 
-	# Ensure that the interface is up so we can add IPv6 addresses
-	interface_up "${iface}"
-
 	# Finally add the address
 	ifconfig "${iface}" ${config[@]}
 }
@@ -319,7 +316,8 @@ ifconfig_post_start() {
 				x="-net ${x}"
 			elif [[ ${y} == *.*.*.*/32 ]] ; then
 				x="-host ${x}"
-			elif [[ ${y} == *.*.*.*/* ]] ; then
+			elif [[ ${y} == *.*.*.*/* || ${y} == "0.0.0.0" \
+				|| ${y} == "default" ]] ; then
 				x="-net ${x}"
 			else
 				# Given the lack of a netmask, we assume a host
