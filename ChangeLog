@@ -3,6 +3,8 @@
 
   14 Dec 2006; Roy Marples <uberlord@gentoo.org>:
 
+    Stop providing the NVdriver alias, #158099.
+
     Fix routes and lo correctly, #157965.
 
   13 Dec 2006; Mike Frysinger <vapier@gentoo.org>:
