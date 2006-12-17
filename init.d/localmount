@@ -36,7 +36,7 @@ start() {
 			grep -Fow usbdevfs /proc/filesystems)
 
 		if [[ -n ${usbfs} ]] && \
-		   [[ -e /proc/bus/usb && ! -e /proc/bus/usb/devices ]] ; then
+		   [[ -d /proc/bus/usb && ! -e /proc/bus/usb/devices ]] ; then
 			ebegin $"Mounting USB device filesystem" "(${usbfs})"
 			usbgid=$(echo $(getent group usb) | awk -F: '{print $3}')
 			mount -t ${usbfs} usbfs /proc/bus/usb \
@@ -46,7 +46,7 @@ start() {
 
 		# Setup Kernel Support for miscellaneous Binary Formats
 		local binfmt=$(grep -Fow binfmt_misc /proc/filesystems)
-		if [[ -n ${binfmt} && -e /proc/sys/fs/binfmt_misc ]] ; then
+		if [[ -n ${binfmt} && -d /proc/sys/fs/binfmt_misc ]] ; then
 			ebegin $"Mounting misc binary format filesystem"
 			mount -t binfmt_misc binfmt_misc \
 				/proc/sys/fs/binfmt_misc \
