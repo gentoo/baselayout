@@ -339,7 +339,7 @@ iwconfig_scan() {
 		[[ ${caps[i]} == "I"* ]] && (( qual[i]-=10000 ))
 		sortline="${sortline}${qual[i]} ${i}\n"
 	done
-	sortline=( $(echo -e "${sortline}" | sort -nr) )
+	sortline=( $(echo -e "${sortline}" | sort -nr -k1,1) )
 
 	for (( i=0; i<${#mac[@]}; i++ )); do
 		(( x=(i * 2) + 1 ))

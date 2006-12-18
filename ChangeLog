@@ -3,6 +3,8 @@
 
   18 Dec 2006; Roy Marples <uberlord@gentoo.org>:
 
+    Specify the sort key, #158328 thanks to Petteri Räty.
+
     Match wireless encryption key reported against *, #158319 thanks to
     Robert Wolf.
 
