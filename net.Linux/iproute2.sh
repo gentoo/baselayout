@@ -139,7 +139,7 @@ iproute2_set_name() {
 # example "eth0:2 eth0:1"
 iproute2_get_aliases_rev() {
 	local iface=$( interface_device "$1" )
-	ip addr show dev "${iface}" | grep -Eo "${iface}:[^ ]+" | tac
+	ip addr show dev "${iface}" | grep -Eo "${iface}:[^ ]+" | sed '1!G;h;$!d'
 }
 
 # bool iproute2_del_addresses(char *interface, bool onlyinet)

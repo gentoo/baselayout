@@ -1,6 +1,15 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  18 Dec 2006; Roy Marples <uberlord@gentoo.org>:
+
+    Match wireless encryption key reported against *, #158319 thanks to
+    Robert Wolf.
+
+    Replace tac with sed '1!G;h;$!d' as tac is in /usr, #158312.
+
+    Use the FreeBSD protcols file on Linux as it's a lot more descriptive.
+
   14 Dec 2006; Roy Marples <uberlord@gentoo.org>:
 
     Stop providing the NVdriver alias, #158099.

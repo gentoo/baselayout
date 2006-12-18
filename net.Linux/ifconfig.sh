@@ -188,7 +188,7 @@ ifconfig_set_name() {
 # Outputs a space-separated list on stdout, in reverse order, for
 # example "eth0:2 eth0:1"
 ifconfig_get_aliases_rev() {
-	ifconfig | grep -Eo "^$1:[^ ]+" | tac
+	ifconfig | grep -Eo "^$1:[^ ]+" | sed '1!G;h;$!d' 
 }
 
 # bool ifconfig_del_addresses(char *interface, bool onlyinet)
@@ -413,7 +413,7 @@ ifconfig_add_address() {
 		# for multiple addresses
 		if ifconfig "${iface}" | grep -Eq "\<inet addr:.*" ; then
 			# Get the last alias made for the interface and add 1 to it
-			i=$(ifconfig | tac | grep -m 1 -o "^${iface}:[0-9]*" \
+			i=$(ifconfig | sed '1!G;h;$!d' | grep -m 1 -o "^${iface}:[0-9]*" \
 				| sed -n -e 's/'"${iface}"'://p')
 			i="${i:-0}"
 			(( i++ ))

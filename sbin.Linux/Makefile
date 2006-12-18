@@ -1,5 +1,5 @@
 DIR   = /sbin 
-EXES  = MAKEDEV modules-update
+EXES  = MAKEDEV
 
 TOPDIR = ..
 include $(TOPDIR)/default.mk
