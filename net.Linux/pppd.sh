@@ -110,10 +110,8 @@ pppd_start() {
 	opts="linkname ${iface} ${opts}"
 
 	# Setup auth info
-	if [[ " ${opts} " != *" noauth "* ]] ; then
-		[[ -n ${!username} ]] && opts="user '"${!username}"' ${opts}"
-		opts="remotename ${iface} ${opts}"
-	fi
+	[[ -n ${!username} ]] && opts="user '"${!username}"' ${opts}"
+	opts="remotename ${iface} ${opts}"
 
 	# Load a custom interface configuration file if it exists
 	[[ -f "/etc/ppp/options.${iface}" ]] \
