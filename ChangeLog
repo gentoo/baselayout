@@ -1,6 +1,8 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+* baselayout-1.13.0_alpha10 (12 Dec 2006)
+
   18 Dec 2006; Roy Marples <uberlord@gentoo.org>:
 
     Reverted patch for #104869 as it's silly. Fixes #158174.
