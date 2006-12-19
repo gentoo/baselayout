@@ -74,7 +74,7 @@ iwconfig_exists() {
 iwconfig_get_wep_status() {
 	local mode= status="disabled"
 
-	if iwconfig "$1" | grep -qE "^ +Encryption key:[0-9,A-F]" ; then
+	if iwconfig "$1" | grep -qE "^ +Encryption key:[*0-9,A-F]" ; then
 		status="enabled"
 		mode=$(iwconfig "$1" | sed -n -e 's/^.*Security mode:\(.*[^ ]\).*/\1/p')
 		[[ -n ${mode} ]] && mode=" - ${mode}"
