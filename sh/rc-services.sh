@@ -467,7 +467,7 @@ do_unmount() {
 		fuser_kill="-"
 	fi
 
-	get_mounts | sort -ur -k1,1 | while read point node fs foo ; do
+	get_mounts | LC_ALL=C sort -ur | while read point node fs foo ; do
 		point=${point//\040/ }
 		node=${node//\040/ }
 		fs=${fs//\040/ }

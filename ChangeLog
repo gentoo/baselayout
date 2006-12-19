@@ -5,7 +5,7 @@
 
     Reverted patch for #104869 as it's silly. Fixes #158174.
 
-    Specify the sort key, #158328 thanks to Petteri Räty.
+    Use LC_ALL=C for sort, #158328 thanks to Mike Frysinger.
 
     Match wireless encryption key reported against *, #158319 thanks to
     Robert Wolf.
