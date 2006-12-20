@@ -3,6 +3,9 @@
 
   19 Dec 2006; Roy Marples <uberlord@gentoo.org>:
 
+    start-stop-daemon now works with pidfiles that put extra data after the pid
+    like postgresql.
+
     Only set remotename if we have a username, #104869 thanks to Alin Nastac.
 
     Use the mtime of /etc/{conf,init}.d directories too so depscan.sh works
