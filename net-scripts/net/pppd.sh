@@ -110,8 +110,9 @@ pppd_start() {
 	opts="linkname ${iface} ${opts}"
 
 	# Setup auth info
-	[[ -n ${!username} ]] && opts="user '"${!username}"' ${opts}"
-	opts="remotename ${iface} ${opts}"
+	if [[ -n ${!username} ]] ; then
+		opts="user '"${!username}"' remotename ${iface} ${opts}"
+	fi
 
 	# Load a custom interface configuration file if it exists
 	[[ -f "/etc/ppp/options.${iface}" ]] \

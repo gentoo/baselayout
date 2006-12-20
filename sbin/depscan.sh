@@ -89,7 +89,7 @@ if ! ${update} ; then
 	fi
 
 	touch "${mtime_test}"
-	for config in /etc/conf.d/* /etc/init.d/* /etc/rc.conf
+	for config in /etc/conf.d /etc/init.d /etc/rc.conf
 	do
 		! ${update} \
 			&& is_older_than "${mysvcdir}/depcache" "${config}" \
