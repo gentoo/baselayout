@@ -832,7 +832,7 @@ fi
 
 if [[ ${SOFTLEVEL} == "single" ]] ; then
 	rm -rf "${svcdir}/softscripts.new"
-	/sbin/sulogin ${CONSOLE}
+	[[ ${RUNLEVEL} == "S" ]] && /sbin/sulogin ${CONSOLE}
 	exit 0
 fi
 
