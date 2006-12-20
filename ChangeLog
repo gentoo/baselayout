@@ -3,6 +3,11 @@
 
   19 Dec 2006; Roy Marples <uberlord@gentoo.org>:
 
+    Only set remotename if we have a username, #104869 thanks to Alin Nastac.
+
+    Use the mtime of /etc/{conf,init}.d directories too so depscan.sh works
+    for newly added files. Partial fix for #158548.
+
     Only launch sulogin if we are actually in single user mode, #158615.
 
 * baselayout-1.13.0_alpha10 (12 Dec 2006)

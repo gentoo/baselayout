@@ -898,11 +898,8 @@ is_older_than() {
 	shift
 
 	for x in "$@" ; do
-		if [[ -d ${x} ]] ; then
-			is_older_than "${ref}" "${x}"/* && return 0
-		elif [[ ${x} -nt ${ref} ]] ; then
-			return 0
-		fi
+		[[ ${x} -nt ${ref} ]] && return 0
+		[[ -d ${x} ]] && is_older_than "${ref}" "${x}"/* && return 0
 	done
 
 	return 1

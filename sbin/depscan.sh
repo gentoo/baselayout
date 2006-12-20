@@ -123,7 +123,7 @@ export SVCDIR SVCLIB
 
 [[ -e "${mysvcdir}/deptree" ]] || update=true
 if ! ${update} ; then
-	check_files "${mysvcdir}/depcache" /etc/conf.d/* /etc/init.d/* \
+	check_files "${mysvcdir}/depcache" /etc/conf.d /etc/init.d \
 		/etc/rc.conf || update=true
 	if ${!update} ; then
 		if ! bash -n "${mysvcdir}/deptree" ; then
@@ -167,7 +167,7 @@ fi
 
 [[ -e "${mysvcdir}/netdeptree" ]] || nupdate=true
 if ! ${nupdate} ; then
-	check_files "${mysvcdir}/netdepcache" "${svclib}"/net/* || nupdate=true
+	check_files "${mysvcdir}/netdepcache" "${svclib}"/net || nupdate=true
 	if ${!nupdate} ; then
 		if ! bash -n "${mysvcdir}/netdeptree" ; then
 			eerror "${mysvcdir}/netdeptree is not valid - recreating it"
