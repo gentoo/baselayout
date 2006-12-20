@@ -898,6 +898,8 @@ is_older_than() {
 	shift
 
 	for x in "$@" ; do
+		# We need to check the mtime if it's a directory too as the
+		# contents may have changed.
 		[[ ${x} -nt ${ref} ]] && return 0
 		[[ -d ${x} ]] && is_older_than "${ref}" "${x}"/* && return 0
 	done
