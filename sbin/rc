@@ -351,10 +351,12 @@ fi
 
 if [[ ${SOFTLEVEL} == "single" ]] ; then
 	rm -rf "${svcdir}/softscripts" "${svcdir}/softscripts.new"
-	if is_vps_sys ; then
-		halt -f
-	elif [[ -x /sbin/sulogin ]] ; then
-		/sbin/sulogin "${CONSOLE}"
+	if [[ ${RUNLEVEL} == "S" ]] ; then
+		if is_vps_sys ; then
+			halt -f
+		elif [[ -x /sbin/sulogin ]] ; then
+			/sbin/sulogin "${CONSOLE}"
+		fi
 	fi
 	exit 0
 fi
