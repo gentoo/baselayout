@@ -567,7 +567,7 @@
 # You must specify if we're a tun or tap device. Then you can give it any
 # name you like - such as vpn
 #tuntap_vpn="tun"
-#config_tun1=( "192.168.0.1/24")
+#config_vpn=( "192.168.0.1/24")
 
 # Or stick wit the generic names - like tap0
 #tuntap_tap0="tap"
