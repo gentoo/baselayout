@@ -77,20 +77,6 @@ layout:
 	ln -snf /var/tmp $(DESTDIR)/usr/tmp || exit $$?
 	ln -snf share/man $(DESTDIR)/usr/local/man || exit $$?
 
-basedev-Linux:
-
-dev-Linux:
-	$(INSTALL_DIR) $(DESTDIR)/dev
-
-basedev-BSD:
-
-dev-BSD:
-	$(INSTALL_DIR) $(DESTDIR)/dev
-
-basedev: basedev-$(OS)
-
-dev: dev-$(OS)
-
 distcheck:
 	svnfiles=`svn status 2>&1 | egrep -v '^(U|P)'` ; \
 	if test "x$$svnfiles" != "x" ; then \
