@@ -22,8 +22,6 @@ video::27:root
 cdrw::80:
 usb::85:
 users::100:games
-nofiles:x:200:
-smmsp:x:209:smmsp
 portage::250:portage
 utmp:x:406:
 nogroup::65533:

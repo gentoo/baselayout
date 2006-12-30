@@ -1797,9 +1797,9 @@
 
   19 Jul 2005; Mike Frysinger <vapier@gentoo.org>:
 
-    Punt the at/bind/cron/cyrus/ftp/games/gdm/man/mysql/nut/postfix/postgres/
-    qmail/slocate/squid/sshd/vpopmail/xfs users/groups to the respective
-    ebuilds.
+    Punt the at/bind/cron/cyrus/dialout/ftp/games/gdm/man/mysql/nofiles/nut/
+    postfix/postgres/qmail/slocate/smmsp/squid/sshd/vpopmail/xfs users/groups
+    to the respective ebuilds.
 
   19 Jul 2005; Roy Marples <uberlord@gentoo.org>:
 
