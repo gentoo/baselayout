@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  30 Dec 2006; Mike Frysinger <vapier@gentoo.org>:
+
+    Punt the old MAKEDEV script and move to MAKEDEV package from Fedora.
+
   29 Dec 2006; Roy Marples <uberlord@gentoo.org>:
 
     Use correct interface in example, #159396.

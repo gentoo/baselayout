@@ -78,32 +78,9 @@ layout:
 	ln -snf share/man $(DESTDIR)/usr/local/man || exit $$?
 
 basedev-Linux:
-	if ! test -d $(DESTDIR)/dev ; then $(INSTALL_DIR) $(DESTDIR)/dev ; fi
-	( curdir=`pwd` ; cd $(DESTDIR)/dev ; ../sbin/MAKEDEV generic-base ) 
 
 dev-Linux:
 	$(INSTALL_DIR) $(DESTDIR)/dev
-	ln -snf ../sbin/MAKEDEV $(DESTDIR)/dev/MAKEDEV 
-	( curdir=`pwd` ; cd $(DESTDIR)/dev ; \
-		suffix= ; \
-		case $(ARCH) in \
-			arm*)    suffix=-arm ;; \
-			alpha)   suffix=-alpha ;; \
-			amd64)   suffix=-i386 ;; \
-			hppa)    suffix=-hppa ;; \
-			ia64)    suffix=-ia64 ;; \
-			m68k)    suffix=-m68k ;; \
-			mips*)   suffix=-mips ;; \
-			ppc*)    suffix=-powerpc ;; \
-			s390*)   suffix=-s390 ;; \
-			sh*)     suffix=-sh ;; \
-			sparc*)  suffix=-sparc ;; \
-			x86)     suffix=-i386 ;; \
-		esac ; \
-		../sbin/MAKEDEV generic$$suffix ; \
-		../sbin/MAKEDEV sg scd rtc hde hdf hdg hdh ; \
-		../sbin/MAKEDEV input audio video ; \
-	)
 
 basedev-BSD:
 
@@ -128,7 +105,7 @@ distforce:
 	cp -PRp . /tmp/$(PKG)
 	find /tmp/$(PKG) -depth -path "*/.svn/*" -delete
 	find /tmp/$(PKG) -depth -path "*/.svn" -delete
-	rm -rf /tmp/$(PKG)/sbin.Linux/MAKEDEV-gentoo.patch /tmp/$(PKG)/src/core /tmp/$(PKG)/po
+	rm -rf /tmp/$(PKG)/src/core /tmp/$(PKG)/po
 	$(MAKE) -C /tmp/$(PKG) clean
 	tar -C /tmp -cvjpf /tmp/$(PKG).tar.bz2 $(PKG)
 	rm -Rf /tmp/$(PKG)
