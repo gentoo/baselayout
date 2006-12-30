@@ -17,7 +17,6 @@ man::15:man
 console::17:
 audio::18:
 cdrom::19:
-dialout::20:root
 tape::26:root
 video::27:root
 cdrw::80:
