@@ -9,9 +9,10 @@ depend() {
 }
 
 start() {
+	# Forget about any font until we are successful
+	rm -rf /lib/rcscripts/console
+
 	if is_uml_sys || is_xenU_sys || is_vps_sys ; then
-		ebegin $"Setting user font"
-		eend 0
 		return 0
 	elif [[ -z ${CONSOLEFONT} ]] ; then
 		ebegin $"Using the default console font"
@@ -65,6 +66,21 @@ start() {
 		errmsg="/bin/setfont not found"
 	fi
 	eend ${retval} "${errmsg}"
+
+	# Store the last font so we can use it ASAP on boot
+	if [[ ${retval} == 0 && -w /lib/rcscripts ]] ; then
+		mkdir -p /lib/rcscripts/console
+
+		# Pipe errors to null as maps may not be in use
+		/bin/setfont -o /lib/rcscripts/console/font 2>/dev/null \
+			|| rm -f /lib/rcscripts/console/font
+		/bin/setfont -om /lib/rcscripts/console/map 2>/dev/null \
+			|| rm -f /lib/rcscripts/console/map
+		/bin/setfont -ou /lib/rcscripts/console/unimap 2>/dev/null \
+			|| rm -f /lib/rcscripts/console/unimap
+	fi
+
+	return ${retval}
 }
 
 # vim: set ts=4 :

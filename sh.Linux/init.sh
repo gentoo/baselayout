@@ -73,6 +73,14 @@ mount_svcdir() {
 	fi
 }
 
+# Try and set a font as early as we can
+[[ -r /lib/rcscripts/console/font ]] \
+	&& /bin/setfont /lib/rcscripts/console/font
+[[ -r /lib/rcscripts/console/map ]] \
+	&& /bin/setfont -m /lib/rcscripts/console/map
+[[ -r /lib/rcscripts/console/unimap ]] \
+	&& /bin/setfont -u /lib/rcscripts/console/unimap
+
 source "${svclib}"/sh/init-functions.sh
 source "${svclib}"/sh/init-common-pre.sh
 
