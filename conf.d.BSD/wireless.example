@@ -58,7 +58,7 @@
 #key_ESSID="foobar"
 
 # WEP key for the AP with MAC address 001122334455
-#key_001122334455="foobar"
+#mac_key_001122334455="foobar"
 
 # You can also override the interface settings found in /etc/conf.d/net
 # per ESSID - which is very handy if you use different networks a lot
@@ -90,7 +90,7 @@
 # not to!
 # Change 001122334455 to the MAC address and ESSID to the ESSID
 # it should map to
-#essid_001122334455="ESSID"
+#mac_essid_001122334455="ESSID"
 
 # This lists the preferred ESSIDs to connect to in order
 # ESSID's can contain any characters here as they must match the broadcast
