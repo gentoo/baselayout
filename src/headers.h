@@ -2,7 +2,7 @@
  * header.h
  * Dirty little file to include header files w/out autotools.
  *
- * Copyright 1999-2004 Gentoo Foundation
+ * Copyright 1999-2007 Gentoo Foundation
  * Distributed under the terms of the GNU General Public License v2
  * $Header$
  */

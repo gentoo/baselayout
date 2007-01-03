@@ -1,4 +1,4 @@
-# Copyright (c) 2005-2006 Gentoo Foundation
+# Copyright 2005-2007 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 # Contributed by Alin Nastac (mrness@gentoo.org)

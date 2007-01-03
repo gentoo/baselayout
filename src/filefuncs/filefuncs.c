@@ -6,7 +6,7 @@
  */
 
 /*
- * Copyright (C) 2001 the Free Software Foundation, Inc.
+ * Copyright 2001 the Free Software Foundation, Inc.
  * 
  * This file is part of GAWK, the GNU implementation of the
  * AWK Programming Language.
@@ -27,7 +27,7 @@
  */
 
 /*
- * Copyright 1999-2004 Gentoo Foundation
+ * Copyright 1999-2007 Gentoo Foundation
  * Distributed under the terms of the GNU General Public License v2
  * Author:  Martin Schlemmer <azarah@gentoo.org>, Nov 2002
  * $Header$
