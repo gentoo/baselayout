@@ -3,6 +3,9 @@
 
   03 Jan 2007; Roy Marples <uberlord@gentoo.org>:
 
+    FreeBSD users can now specify a kernel dump device in conf.d/localmount
+    Fixes #159643, thanks to Diego Pettenò.
+
     Save last used consolefont in /lib/rcscripts/console and apply
     in init.sh, #156604.
 
