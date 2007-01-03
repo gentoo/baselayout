@@ -116,8 +116,9 @@ ${CYAN}Flags:${OFF}${NL}
       Suppress output to stdout, except if:${NL}
       1) It is a warning, then output to stdout
       2) It is an error, then output to stderr${NL}
-    ${GREEN}--nocolor${OFF}
-      Suppress the use of colors."
+    ${GREEN}--verbose${OFF}   Output extra information
+    ${GREEN}--debug${OFF}     Output debug information
+    ${GREEN}--nocolor${OFF}   Suppress the use of colors"
 
 if [[ ${BE_VERBOSE} == "yes" ]] ; then
 echo -e "
