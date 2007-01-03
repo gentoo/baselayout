@@ -2,6 +2,8 @@
 # Copyright 1999-2006 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
+[[ " $* " == *" --debug "* ]] && set -x
+
 if [[ $1 == "/"* ]] ; then
 	myscript="$1"
 else
@@ -622,7 +624,7 @@ if [[ $# -lt 1 ]] ; then
 	usage ${opts}
 	exit 1
 fi
-for arg in $* ; do
+for arg in "$@" ; do
 	case "${arg}" in
 	--quiet)
 		RC_QUIET="yes"
@@ -642,7 +644,7 @@ for arg in $* ; do
 done
 
 retval=0
-for arg in $* ; do
+for arg in "$@" ; do
 	case "${arg}" in
 	stop)
 		if [[ -e "${svcdir}/scheduled/${SVCNAME}" ]] ; then
@@ -769,9 +771,13 @@ for arg in $* ; do
 		retval="$?"
 		svcpause="no"
 		;;
-	--quiet|--nocolor|--nocolour|--nodeps|--verbose)
+	--quiet|--nocolor|--nocolour|--nodeps|--verbose|--debug)
 		;;
-	help)
+	-V|--version)
+		exec cat "${ROOT}"/etc/gentoo-release
+		exit 1
+		;;
+	help|-h|--help)
 		exec "${svclib}"/sh/rc-help.sh "${myscript}" help
 		;;
 	*)

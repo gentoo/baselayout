@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2
 
+  03 Jan 2007; Mike Frysinger <vapier@gentoo.org>:
+
+    Add some more useful flags to rcscripts and document them (--debug/--help).
+
   30 Dec 2006; Mike Frysinger <vapier@gentoo.org>:
 
     Punt the old MAKEDEV script and move to MAKEDEV package from Fedora.
