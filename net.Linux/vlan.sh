@@ -1,4 +1,4 @@
-# Copyright (c) 2004-2006 Gentoo Foundation
+# Copyright 2004-2007 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # Contributed by Roy Marples (uberlord@gentoo.org)
 

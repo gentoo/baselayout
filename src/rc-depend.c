@@ -1,7 +1,7 @@
 /*
    rc-depend
    rc service dependency and ordering
-   Copyright (C) 2006 Gentoo Foundation
+   Copyright 2006-2007 Gentoo Foundation
    Written by Roy Marples <uberlord@gentoo.org>
 
    For optimum operation, we need to get several variables.

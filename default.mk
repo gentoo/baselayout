@@ -1,5 +1,5 @@
 # Common makefile settings
-# Copyright (c) 2006 Gentoo Foundation
+# Copyright 2006-2007 Gentoo Foundation
 
 DESTDIR =
 ROOT = /

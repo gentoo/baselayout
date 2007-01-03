@@ -1,4 +1,4 @@
-# Copyright 1999-2006 Gentoo Foundation
+# Copyright 1999-2007 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 # Setup initial $PATH just in case
@@ -10,7 +10,7 @@ export PATH="/bin:/sbin:/usr/bin:/usr/sbin:${PATH}"
 
 echo
 echo -e "${GOOD}Gentoo/$(uname) $(get_base_ver); ${BRACKET}http://www.gentoo.org/${NORMAL}"
-echo -e " Copyright 1999-2006 Gentoo Foundation; Distributed under the GPLv2"
+echo -e " Copyright 1999-2007 Gentoo Foundation; Distributed under the GPLv2"
 echo
 if [[ ${RC_INTERACTIVE} == "yes" ]] ; then
 	echo -e "Press ${GOOD}I${NORMAL} to enter interactive boot mode"

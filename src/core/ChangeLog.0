@@ -1,0 +1,234 @@
+# ChangeLog for Gentoo System Intialization core utilities.
+# Copyright 1999-2007 Gentoo Foundation; Distributed under the GPLv2
+# $Header$
+
+20 Sep 2005 Martin Schlemmer <azarah@gentoo.org>
+
+        * parse.c: Hopefully handle interrupted reads/writes properly.
+
+13 Sep 2005 Martin Schlemmer <azarah@gentoo.org>
+
+        * parse.c: Cleanup the pipe usage and naming in generate_stage2() for
+        better readibility.
+
+        * parse.c: Remove unused tmp_pid from generate_stage2(), also fixing
+        waitpid() not getting called.
+
+        * parse.c: Make sure we do not close the pipes twice if the child
+        returns with error exit status.
+
+        * parse.c: Remove label 'cont_do_read' in favour of just a simple break.
+        No need to jump to the error label if the child did not exit cleanly,
+        as we already cleaned up.
+
+        * parse.c: Cleanup parse_cache().  Do not parse MTIME - we have it
+        already.
+
+07 Sep 2005 Martin Schlemmer <azarah@gentoo.org>
+
+        * debug.h
+        * depend.c
+        * misc.c
+        * misc.h
+        * parse.c
+        * simple-regex.c
+        * simple-regex.h: Misc style and other cleanups.
+
+        * TODO: New file.
+
+06 Sep 2005 Martin Schlemmer <azarah@gentoo.org>
+
+        * parse.c
+        * misc.c: Try to cleanup error handling a bit (debug messages, return
+        value, etc).
+
+        * parse.c: Fix output of write_legacy_stage3() after removing the
+        parallel dependency type.
+
+        * Makefile: Do not enable bounds checking with DEBUG=1.
+
+        * misc.h: Add MIN/MAX macro's.
+
+        * parse.c: Cleanup and merge parse_print_*() functions.  Move need(),
+        etc functions to after sourcing of script, else we run into issues
+        with net.* scripts that redefine them.  Better checking if scripts
+        have issues or not.
+
+        * parse.c: Use poll() rather than select() and some other cleanups.
+
+        * parse.c: Remove the waitpid() call in the read/write loop of our
+        generate_stage2(), as its very slow on amd64.
+
+        * parse.c: Remove some redundent variables and other cleanups.
+
+        * parse.c: Reset tmp_count between writing and reading.
+
+        * depend.c: Also add mtime for 'net' service if we need to add it.
+
+05 Sep 2005 Martin Schlemmer <azarah@gentoo.org>
+
+        * parse.c: Make sure field in parse_cache() is not used uninitialized.
+
+        * misc.h: Remove the unused COUNT_CHAR_* macro's.
+
+        * depend.c: Add missing debugging info.
+
+26 Jul 2005 Martin Schlemmer <azarah@gentoo.org>
+
+        * depend.c
+        * depend.h
+        * parse.c
+        * parse.h: Remove the "parallel" stuff, as we do not use it anymore.
+
+15 Apr 2005 Martin Schlemmer <azarah@gentoo.org>
+
+        * parse.c: Do not source rc.conf for every script - once is enough.
+
+14 Apr 2005 Martin Schlemmer <azarah@gentoo.org>
+
+        * depscan.c: Update error comments for stage name changes some time
+        back.
+
+        * parse.c,
+        * parse.h: Do not try to extract the depend() function from the
+        scripts, but rather source the whole file.  This way we can detect
+        syntax errors, etc.  Little bit slower, but not much.
+
+07 Apr 2005 Martin Schlemmer <azarah@gentoo.org>
+
+        * test-regex.c: Add two more tests.
+
+        * depscan.c
+        * misc.c
+        * misc.h: Add basic klibc support.  I need to add a mkstemp
+        implementation to get it done properly.
+
+12 Mar 2005 Martin Schlemmer <azarah@gentoo.org>
+
+        * Makefile: Also remove the tests in the clean target.
+
+11 Mar 2005 Martin Schlemmer <azarah@gentoo.org>
+
+        * test-regex.c: Add a few strings and patterns.  Enable tests to
+        specify if they should fail or pass.
+
+10 Mar 2005 Martin Schlemmer <azarah@gentoo.org>
+
+        * test-regex.c: New file
+        * Makefile: Add check target to compile and run tests
+        * simple-regex.c (__match_wildcard): Get recursion right so that we
+        do not match a wildcard _and_ inc data_p if there are still other
+        wildcards (?, *) that could match.
+
+        * Makefile
+        * depend.c
+        * simple-regex.c: Override the debug/warning CFLAGS.  Kill a few
+        warnings.
+
+23 Feb 2005 Martin Schlemmer <azarah@gentoo.org>
+
+        * misc.c: Fix memory leak in mktree().
+
+18 Feb 2005 Martin Schlemmer <azarah@gentoo.org>
+
+        * Makefile: Add -fbounds-checking support when DEBUG=1.
+        
+        * misc.h: Scrap STRING_LIST_FOR_EACH_SAFE() and recode from scratch
+        fixing invalid pointer operations.
+        
+        * misc.c: Remove the last strlen() from strndup() that caused an
+        overrun.
+
+17 Feb 2005 Martin Schlemmer <azarah@gentoo.org>:
+
+        * misc.c: Fix overrun in strndup(), thanks to report from
+        Ned Ludd <solar@gentoo.org>.
+
+        * debug.h
+        * misc.h
+        * simple-regex.c: Print debug/errors to stderr, patch from
+        Ned Ludd <solar@gentoo.org>.
+
+        * debug.h: Replace invalid EXIT_FAILSTATUS with EXIT_FAILURE.
+        
+        * parse.c: Modify parse_print_body() to be more ash friendly.
+        Suggestions from Ned Ludd <solar@gentoo.org>.
+
+        * debug.h: Remove the 'errno = ESPIPE' in DBG_MSG() for now, as it
+        seems to be fixed by the select() changes.
+
+        * parse.c: Disable write select() for now, as it is not needed.
+
+        * depscan.c: Only print EINFO msg if we actually update the cache.
+        
+        * parse.c: Rename write_output() macro to PRINT_TO_BUFFER().
+
+        * parse.c
+        * parse.h: Rewrote large parts of generate_stage[12]() and their
+        machanics to use select() when writing to the pipes.  This fixes a
+        buffering issue where too much data would cause the write to be
+        truncated, and the read pipe would then wait forever.
+
+        * misc.c: Fix gbasename() to compile under gcc-2.95.3.
+        
+        * parse.c: Switch to stdio based io for reading pipes in
+        generate_stage2().
+
+        * misc.c
+        * misc.h: Add gbasename() that is similar to GNU's basename().
+        
+        * parse.c: Use gbasename() instead of POSIX version.
+
+        * parse.c: Fix write_legacy_stage3() to quote the mtime in its output.
+
+        * misc.c
+        * parse.c: Change type of length from int to size_t to avoid warnings
+        when compiled for darwin.
+
+        * misc.c
+        misc.h: Add strndup() instead of relying on glibc's implementation
+        (should fix some issues on bsd and darwin).
+
+        * depend.c
+        * simple-regex.c: Do not define _GNU_SOURCE, but rather use our
+        strndup() from misc.h.
+
+        * parse.c: Do not define _GNU_SOURCE, but rather use our strndup() from
+        misc.h.  Also change all usage of basename() to conform to POSIX, and
+        do not use the GNU variants.
+
+16 Feb 2005; Martin Schlemmer <azarah@gentoo.org>:
+
+        * depscan.c: Add uid check and quit if user is not root.
+
+        * depend.c
+        * depend.h: Change service_type_names declaration in depend.h to extern
+        and move the definition to depend.c to avoid warnings.
+
+        * README: New file.
+
+        * depscan.c: Add delete_var_dirs() to delete volatile directories in
+        svcdir.  Change 'char *' declarations for create_directory() and
+        create_var_dirs() to 'const char*'.
+        
+        * misc.h
+        * misc.c: Add rmtree() function.  Fix ls_dir() not to include '.' and
+        '..' in its listing.  Fix segfault in ls_dir() if the file list is
+        empty.
+
+        Add Header tags to all source files and Makefile.
+
+        * debug.h: perror() set errno to ESPIPE for some reason - restore errno
+        after calling perror().
+        
+        * depscan.c: Add code to create svcdir and co if missing.
+        
+        * misc.c: Add missing '\n' to DBG_MSG in mktree().
+        
+        * misc.h: Add a comment about strcatpaths() allocating the memory needed.
+
+        Initial checkin.  Still rough in some parts, but should be 100% similar
+        in output to depscan.sh and co.
+
+
+# vim:expandtab

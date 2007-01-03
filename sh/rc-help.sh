@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright 1999-2006 Gentoo Foundation
+# Copyright 1999-2007 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 source /sbin/functions.sh
@@ -40,7 +40,7 @@ extra_opts=$(source "${myscript}" 2>/dev/null ; echo ${opts})
 if [[ ${BE_VERBOSE} == "yes" ]] ; then
 echo -e "
 ${GREEN}Gentoo RC-Scripts; ${BLUE}http://www.gentoo.org/${OFF}
- Copyright 1999-2006 Gentoo Foundation; Distributed under the GPL
+ Copyright 1999-2007 Gentoo Foundation; Distributed under the GPL
 "
 fi
 
