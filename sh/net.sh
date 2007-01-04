@@ -1,5 +1,5 @@
 #!/sbin/runscript
-# Copyright 2004-2007 Gentoo Foundation
+# Copyright (c) 2004-2006 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 # Contributed by Roy Marples (uberlord@gentoo.org)
@@ -511,22 +511,25 @@ iface_start() {
 		if [[ ${config_counter} == 0 ]] \
 		&& interface_exists "${iface}" \
 		&& ! interface_has_carrier "${iface}" ; then
-			ebegin "Waiting for carrier"
-			local timeout=3
-			while [[ ${timeout} -gt 0 ]] ; do
-				((timeout--))
-				sleep 1
-				interface_has_carrier "${iface}" && break
-			done
-			if [[ ${timeout} -gt 0 ]] ; then
-				eend 0 
-			elif is_runlevel_start && [[ -e ${svcdir}/softscripts/devd ]] ; then
-				ewend 1 "No carrier - but devd will restart us when we get one"
-				mark_service_inactive "net.${iface}"
-				exit 0
-			else
-				eend 1 "No carrier - giving up"
-				return 1
+			local timeout="carrier_timeout_${ifvar}"
+			timeout=${!timeout:-3}
+			if [[ ${timeout} -gt -1 ]] ; then
+				ebegin "Waiting for carrier"
+				while [[ ${timeout} -gt 0 ]] ; do
+					((timeout--))
+					sleep 1
+					interface_has_carrier "${iface}" && break
+				done
+				if [[ ${timeout} -gt 0 ]] ; then
+					eend 0 
+				elif is_runlevel_start && [[ -e ${svcdir}/softscripts/devd ]] ; then
+					ewend 1 "No carrier - but devd will restart us when we get one"
+					mark_service_inactive "net.${iface}"
+					exit 0
+				else
+					eend 1 "No carrier - giving up"
+					return 1
+				fi
 			fi
 		fi
 

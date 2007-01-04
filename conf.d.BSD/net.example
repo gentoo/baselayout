@@ -99,6 +99,13 @@
 # Some users may need to alter the MTU - here's how
 #mtu_eth0="1500"
 
+# Most drivers that report carrier status function correctly, but some do not
+# One of these faulty drivers is for the Intel e1000 network card, but only
+# at boot time. To get around this you may alter the carrier_timeout value for
+# the interface. -1 is disable, 0 is infinite and any other number of seconds
+# is how long we wait for carrier. The current default is 3 seconds
+#carrier_timeout_eth0=-1
+
 ##############################################################################
 # OPTIONAL MODULES
 
