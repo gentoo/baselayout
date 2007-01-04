@@ -166,6 +166,7 @@ wpa_supplicant_pre_start() {
 	fi
 
 	save_options "ESSID" ""
+	interface_exists "${iface}" || return 0
 
 	local ifvar=$(bash_variable "${iface}")
 	opts="wpa_supplicant_${ifvar}"
