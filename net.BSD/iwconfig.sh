@@ -279,38 +279,44 @@ iwconfig_scan() {
 
 	einfo $"Scanning for access points"
 
-	local first=true i=0 j= k= x= unseti=
+	ifconfig "${iface}" up
+
+	local first= i=0 j="scans_${ifvar}" k= x= y= unseti=
 	local -a mac=() essid=() qual=() chan=() caps=()
 
-	while read line ; do
-		if ${first} ; then
-			first=false
-			continue
-		fi
+	j=${!j:-1}
+	for ((k=0; k<j; k++)); do
+		first=true
+		while read line ; do
+			if ${first} ; then
+				first=false
+				continue
+			fi
 
-		set -- ${line}
+			set -- ${line}
 
-		unset essid[i]
-		while [[ $1 != *:*:*:*:*:* ]] ; do
-			essid[i]="$1"
-			shift
-		done
-		# If we don't have an essid we need to give a dummy one
-		# otherwise we get lost when squashing the array
-		if [[ -z ${essid[i]} ]] ; then
-			essid[i]="foo"
-			unseti="${unseti} ${i}"
-		fi
-		mac[i]=$(echo "$1" | tr '[:lower:]' '[:upper:]')
-		chan[i]="$2"
-		qual[i]="${4%:*}"
-		shift ; shift ; shift ; shift ; shift
-		caps[i]="$*"
-		((i++))
-	done < <(ifconfig "${iface}" up scan)
+			unset essid[i]
+			while [[ $1 != *:*:*:*:*:* ]] ; do
+				essid[i]="$1"
+				shift
+			done
+			# If we don't have an essid we need to give a dummy one
+			# otherwise we get lost when squashing the array
+			if [[ -z ${essid[i]} ]] ; then
+				essid[i]="foo"
+				unseti="${unseti} ${i}"
+			fi
+			mac[i]=$(echo "$1" | tr '[:lower:]' '[:upper:]')
+			chan[i]="$2"
+			qual[i]="${4%:*}"
+			shift ; shift ; shift ; shift ; shift
+			caps[i]="$*"
+			((i++))
+		done < <(ifconfig "${iface}" scan)
+	done	
 
 	# Strip any duplicates
-	local i= j= x="${#mac[@]}" y=
+	x="${#mac[@]}"
 	for (( i=0; i<x-1; i++ )) ; do
 		[[ -z ${mac[i]} ]] && continue
 		for (( j=i+1; j<x; j++)) ; do

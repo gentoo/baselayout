@@ -453,45 +453,49 @@ iwconfig_scan() {
 	x="sleep_scan_${ifvar}"
 	[[ -z ${!x} || ${!x} -gt 0 ]] && sleep "${!x:-2}"
 
-	local error=true i=-1 line=
+	local error=true i=-1 line= j="scans_${ifvar}" k= x= y=
 	local -a mac=() essid=() enc=() qual=() mode=() freq=() chan=()
 
-	while read line; do
-		error=false
-		case "${line}" in
-			*Address:*)
-				(( i++ ))
-				mac[i]=$(echo "${line#*: }" | tr '[:lower:]' '[:upper:]')
-				qual[i]=0
-				;;
-			*ESSID:*)
-				essid[i]="${line#*\"}"
-				essid[i]="${essid[i]%*\"}"
-				;;
-			*Mode:*)
-				mode[i]=$(echo "${line#*:}" | tr '[:upper:]' '[:lower:]')
-				[[ ${mode[i]} == "master" ]] && mode[i]="managed"
-				;;
-			*'Encryption key:'*)
-				enc[i]="${line#*:}"
-				;;
-			*Frequency:*)
-				freq[i]="${line#*:}"
-				x="${freq[i]#* }"
-				freq[i]="${freq[i]%% *}${x:0:1}"
-				;;
-			*Channel:*)
-				chan[i]="${line#*:}"
-				chan[i]="${chan[i]%% *}"
-				;;
-			*Quality*)
-				qual[i]="${line#*:}"
-				qual[i]="${qual[i]%/*}"
-				qual[i]="${qual[i]//[![:digit:]]/}"
-				qual[i]="${qual[i]:-0}"
-				;;
-		esac
-	done < <(iwlist "${iface}" scan 2>/dev/null)
+	j=${!j:-1}
+	for ((k=0; k<j; k++)) ; do
+		while read line; do
+			error=false
+			case "${line}" in
+				*Address:*)
+					(( i++ ))
+					mac[i]=$(echo "${line#*: }" | tr '[:lower:]' '[:upper:]')
+					qual[i]=0
+					;;
+				*ESSID:*)
+					essid[i]="${line#*\"}"
+					essid[i]="${essid[i]%*\"}"
+					;;
+				*Mode:*)
+					mode[i]=$(echo "${line#*:}" | tr '[:upper:]' '[:lower:]')
+					[[ ${mode[i]} == "master" ]] && mode[i]="managed"
+					;;
+				*'Encryption key:'*)
+					enc[i]="${line#*:}"
+					;;
+				*Frequency:*)
+					freq[i]="${line#*:}"
+					x="${freq[i]#* }"
+					freq[i]="${freq[i]%% *}${x:0:1}"
+					;;
+				*Channel:*)
+					chan[i]="${line#*:}"
+					chan[i]="${chan[i]%% *}"
+					;;
+				*Quality*)
+					qual[i]="${line#*:}"
+					qual[i]="${qual[i]%/*}"
+					qual[i]="${qual[i]//[![:digit:]]/}"
+					qual[i]="${qual[i]:-0}"
+					;;
+			esac
+		done < <(iwlist "${iface}" scan 2>/dev/null)
+		${error} && break
+	done
 
 	if ${error}; then
 		ewarn "${iface} does not support scanning"
@@ -524,7 +528,7 @@ iwconfig_scan() {
 	fi
 
 	# Strip any duplicates
-	local i= j= x="${#mac[@]}" y=
+	x="${#mac[@]}"
 	for (( i=0; i<x-1; i++ )) ; do
 		[[ -z ${mac[i]} ]] && continue
 		for (( j=i+1; j<x; j++)) ; do

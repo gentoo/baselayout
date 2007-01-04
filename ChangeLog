@@ -3,6 +3,9 @@
 
   04 Jan 2007; Roy Marples <uberlord@gentoo.org>:
 
+    scans_eth0 now states how many times we will run a scan before using
+    the results, default 1. Fixes #159723.
+
     Add a new carrier_timeout_eth0 setting just for Intel e1000 users on
     FreeBSD where the carrier takes far too long to come up at boot.
     This is very likely a hardware problem as Linux users have reported

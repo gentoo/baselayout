@@ -46,6 +46,11 @@
 # If managed mode fails, drop to ad-hoc mode with the below ESSID?
 #adhoc_essid_eth0="WLAN"
 
+# Some drivers/hardware don't scan all that well. We have no control over this
+# but we can say how many scans we want to do to try and get a better sweep of
+# the area. The default is 1.
+#scans_eth0="1"
+
 #Channel can be set (1-14), but defaults to 3 if not set.
 #
 # The below is taken verbatim from the BSD wavelan documentation found at
