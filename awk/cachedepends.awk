@@ -97,7 +97,7 @@ BEGIN {
 		exit 1
 	}
 
-	pipe = "ls /etc/init.d/*"
+	pipe = "ls -d /etc/init.d/*"
 	while ((pipe | getline tmpstring) > 0)
 		scripts = scripts " " tmpstring
 	close(pipe)
@@ -106,14 +106,27 @@ BEGIN {
 
 	# Make sure that its a file we are working with,
 	# and do not process scripts, source or backup files.
-	for (x in TMPRCSCRIPTS)
-		if (((isfile(TMPRCSCRIPTS[x])) || (islink(TMPRCSCRIPTS[x]))) &&
-		    (TMPRCSCRIPTS[x] !~ /((\.(c|bak))|\~)$/)) {
+	for (x in TMPRCSCRIPTS) {
+		if (TMPRCSCRIPTS[x] !~ /((\.(c|bak))|\~)$/) {
+			ok = 0
+			if (isfile(TMPRCSCRIPTS[x])) {
+				ok = 1
+			} else if (islink(TMPRCSCRIPTS[x])) {
+				# Make sure that the link isn't to something stupid
+				# like a directory #159999
+				data[1] = 1
+				ret = stat(TMPRCSCRIPTS[x], data)
+				if (ret == 0)
+					if (isfile(data["linkval"]))
+						ok = 1
+			}
 
-			RCCOUNT++
-
-			RCSCRIPTS[RCCOUNT] = TMPRCSCRIPTS[x]
+			if (ok) {
+				RCCOUNT++
+				RCSCRIPTS[RCCOUNT] = TMPRCSCRIPTS[x]
+			}
 		}
+	}
 
 	if (RCCOUNT == 0) {
 		eerror("No scripts to process!")
