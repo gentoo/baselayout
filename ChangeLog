@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2007 Gentoo Foundation; Distributed under the GPLv2
 
+  03 Jan 2007; Mike Frysinger <vapier@gentoo.org>:
+
+    Make sure symlinks to directories in /etc/init.d do not screw us up
+    when we run depscan.sh #159999 by Majin Sniper.
+
   04 Jan 2007; Roy Marples <uberlord@gentoo.org>:
 
     scans_eth0 now states how many times we will run a scan before using
