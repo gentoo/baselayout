@@ -75,7 +75,7 @@ BEGIN {
 		exit 1
 	}
 
-	pipe = "ls "SVCLIB"/net/*.sh"
+	pipe = "ls -d "SVCLIB"/net/*.sh"
 	while ((pipe | getline tmpstring) > 0)
 		scripts = scripts " " tmpstring
 	close(pipe)
@@ -85,7 +85,7 @@ BEGIN {
 	# Make sure that its a file we are working with,
 	# and do not process scripts, source or backup files.
 	for (x in TMPRCSCRIPTS)
-		if (isfile(TMPRCSCRIPTS[x]) || islink(TMPRCSCRIPTS[x])) {
+		if (isfile(TMPRCSCRIPTS[x])) {
 			RCCOUNT++
 			RCSCRIPTS[RCCOUNT] = TMPRCSCRIPTS[x]
 		}

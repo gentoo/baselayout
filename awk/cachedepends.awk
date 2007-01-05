@@ -106,25 +106,11 @@ BEGIN {
 
 	# Make sure that its a file we are working with,
 	# and do not process scripts, source or backup files.
+	# isfile also works on sylinks, so no need for other tests.
 	for (x in TMPRCSCRIPTS) {
-		if (TMPRCSCRIPTS[x] !~ /((\.(c|bak))|\~)$/) {
-			ok = 0
-			if (isfile(TMPRCSCRIPTS[x])) {
-				ok = 1
-			} else if (islink(TMPRCSCRIPTS[x])) {
-				# Make sure that the link isn't to something stupid
-				# like a directory #159999
-				data[1] = 1
-				ret = stat(TMPRCSCRIPTS[x], data)
-				if (ret == 0)
-					if (isfile(data["linkval"]))
-						ok = 1
-			}
-
-			if (ok) {
+		if ((isfile(TMPRCSCRIPTS[x])) && (TMPRCSCRIPTS[x] !~ /((\.(c|bak))|\~)$/)) {
 				RCCOUNT++
 				RCSCRIPTS[RCCOUNT] = TMPRCSCRIPTS[x]
-			}
 		}
 	}
 
