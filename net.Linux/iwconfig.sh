@@ -73,7 +73,8 @@ iwconfig_exists() {
 iwconfig_get_wep_status() {
 	local mode= status="disabled"
 
-	if [[ $(iwconfig "$1") =~ $'\n'" +Encryption key:[*0-9,A-F]" ]]; then
+	# No easy way of doing this grep in bash regex :/
+	if iwconfig "$1" | grep -qE "^ +Encryption key:[*0-9,A-F]" ; then
 		status="enabled"
 		mode=$(iwconfig "$1" | sed -n -e 's/^.*Security mode:\(.*[^ ]\).*/\1/p')
 		[[ -n ${mode} ]] && mode=" - ${mode}"
@@ -223,7 +224,7 @@ iwconfig_setup_specific() {
 	iwconfig_set_mode "${iface}" "${mode}"
 
 	# Now set the key
-	if ! iwconfig "${iface}" key ${key} ; then
+	if ! iwconfig "${iface}" enc open key ${key} ; then
 		if [[ ${key} != "off" ]]; then
 			ewarn "${iface} does not support setting keys"
 			ewarn "or the parameter \"mac_key_${ESSIDVAR}\" or \"key_${ESSIDVAR}\" is incorrect"
@@ -293,8 +294,14 @@ iwconfig_test_associated() {
 
 	# Use sysfs if we can
 	if [[ -e /sys/class/net/${iface}/carrier ]] ; then
-		[[ $(</sys/class/net/"${iface}"/carrier) == "1" ]]
-		return $?
+		if [[ $(</sys/class/net/"${iface}"/carrier) == "1" ]] ; then
+			# Double check we have an essid. This is mainly for buggy prism54
+			# drivers that always set their carrier on :/
+			[[ -n $(iwgetid --raw "${iface}") ]]
+			return $?
+		else
+			return 1
+		fi
 	fi
 	
 	x="associate_test_${ifvar}"
@@ -367,7 +374,7 @@ iwconfig_associate() {
 			ewarn "\"${dessid}\" is not WEP enabled - ignoring setting"
 		fi
 
-		if ! iwconfig "${iface}" key ${key} ; then
+		if ! iwconfig "${iface}" enc open key ${key} ; then
 			if [[ ${key} != "off" ]]; then
 				ewarn "${iface} does not support setting keys"
 				ewarn "or the parameter \"mac_key_${ESSIDVAR}\" or \"key_${ESSIDVAR}\" is incorrect"
@@ -451,13 +458,14 @@ iwconfig_scan() {
 
 	# Sleep if required
 	x="sleep_scan_${ifvar}"
-	[[ -z ${!x} || ${!x} -gt 0 ]] && sleep "${!x:-2}"
+	[[ ${!x} -gt 0 ]] && sleep "${!x}"
 
-	local error=true i=-1 line= j="scans_${ifvar}" k= x= y=
+	local error=true i=-1 line= j="scans_${ifvar}" k= n=3 x= y=
 	local -a mac=() essid=() enc=() qual=() mode=() freq=() chan=()
 
 	j=${!j:-1}
 	for ((k=0; k<j; k++)) ; do
+		[[ ${k} -gt 0 ]] && sleep 1
 		while read line; do
 			error=false
 			case "${line}" in
@@ -495,6 +503,14 @@ iwconfig_scan() {
 			esac
 		done < <(iwlist "${iface}" scan 2>/dev/null)
 		${error} && break
+
+		# OK, lets be cheaky here - if the scan returns nothing we will try
+		# again for another 2 times unless we do return something.
+		if [[ ${i} == -1 && ${j} == 1 && ${n} -gt 0 ]] ; then
+			sleep 1
+			k=-1
+			((n--))
+		fi
 	done
 
 	if ${error}; then
@@ -584,11 +600,15 @@ iwconfig_scan_report() {
 	local i= k= m= remove=
 	local -a u=()
 
-	[[ -z ${mac_APs} ]] && ewarn "  no access points found"
+	if [[ -z ${mac_APs} ]]; then
+		ewarn "no access points found"
+		return
+	fi
 
 	# We need to do the for loop like this so we can
 	# dynamically remove from the array
 	eindent
+
 	for ((i=0; i<${#mac_APs[@]}; i++)); do
 		k="(${mode_APs[i]}"
 		[[ ${enc_APs[i]} != "off" ]] && k="${k}, encrypted"

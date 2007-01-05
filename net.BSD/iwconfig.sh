@@ -312,7 +312,7 @@ iwconfig_scan() {
 			shift ; shift ; shift ; shift ; shift
 			caps[i]="$*"
 			((i++))
-		done < <(ifconfig "${iface}" scan)
+		done < <(ifconfig -v "${iface}" scan)
 	done	
 
 	# Strip any duplicates
@@ -368,7 +368,10 @@ iwconfig_scan_report() {
 	local i= k= m= remove= d=
 	local -a u=()
 
-	[[ -z ${mac_APs} ]] && ewarn $"no access points found"
+	if [[ -z ${mac_APs} ]]; then
+		ewarn "no access points found"
+		return
+	fi
 
 	# We need to do the for loop like this so we can
 	# dynamically remove from the array

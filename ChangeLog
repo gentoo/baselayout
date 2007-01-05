@@ -1,7 +1,19 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2007 Gentoo Foundation; Distributed under the GPLv2
 
-  03 Jan 2007; Mike Frysinger <vapier@gentoo.org>:
+  05 Jan 2007; Roy Marples <uberlord@gentoo.org>:
+
+    We now default to using WEP open unless specified.
+
+    prism54 drivers always report a carrier, which is wrong. Luckily
+    they don't report an essid when not assoicated, so we check that too.
+
+    If we don't find an access point in the first scan, sleep for a second
+    and try again. Do this another time by default for a total of 3 scans.
+    This is in addition to the scans_eth0 setting. BSD has decent drivers,
+    so no need for this there.
+
+  05 Jan 2007; Mike Frysinger <vapier@gentoo.org>:
 
     Make sure symlinks to directories in /etc/init.d do not screw us up
     when we run depscan.sh #159999 by Majin Sniper.
