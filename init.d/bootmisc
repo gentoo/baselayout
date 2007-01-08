@@ -51,22 +51,19 @@ start() {
 	rm -rf /var/run/console.lock /var/run/console/*
 
 	if [[ -z ${CDBOOT} ]] ; then
-		#
 		# Clean up any stale locks.
-		#
 		find /var/lock -type f -print0 | xargs -0 rm -f --
-		#
+		
 		# Clean up /var/run and create /var/run/utmp so we can login.
-		#
 		for x in $(find /var/run/ ! -type d ! -name utmp ! -name innd.pid ! -name random-seed ! -name ld-elf.so.hints); do
 			# Do not remove pidfiles of already running daemons
 			if [[ ${x} == *".pid" ]] ; then
-				[[ $(<"${x}") != \
-				$(pidof $(basename "${x}" .pid))* ]] \
-					&& continue
-				[[ $(<"${x}") != \
-				$(pidof $(basename "${x%%-*}" .pid))* ]] \
-					&& continue
+				local pid=$(sed -e '1q' "${x}")
+				if [[ -e /proc/self ]] ; then
+					[[ -e /proc/${pid} ]] && continue
+				else
+					ps -p "${pid}" >/dev/null && continue
+				fi
 			fi
 			[[ ! -f ${x} ]] && continue
 			rm -f "${x}"

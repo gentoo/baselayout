@@ -31,7 +31,7 @@ export SVCNAME
 myservice="${SVCNAME}"
 
 svc_trap() {
-	trap 'eerror $"ERROR:" " ${SVCNAME}" $"caught an interrupt"; eflush; exit 1' \
+	trap 'eerror $"ERROR:" " ${SVCNAME}" $"caught an interrupt"; eflush; rm -rf "${svcdir}/snapshot/$$"; exit 1' \
 		INT QUIT TSTP
 }
 
@@ -81,7 +81,6 @@ if [[ ${IN_HOTPLUG} == "1" ]] ; then
 	set +f
 fi
 
-
 # State variables
 svcpause="no"
 svcrestart="no"
@@ -124,10 +123,11 @@ service_started "${SVCNAME}"
 svcstarted="$?"
 service_inactive "${SVCNAME}"
 svcinactive="$?"
-svcbegin=false
+
 svc_quit() {
 	eerror $"ERROR:" " ${SVCNAME}" $"caught an interrupt"
 	eflush
+	rm -rf "${svcdir}/snapshot/$$" "${svcdir}/exclusive/${SVCNAME}.$$"
 	if service_inactive "${SVCNAME}" || [[ ${svcinactive} == "0" ]] ; then
 		mark_service_inactive "${SVCNAME}"
 	elif [[ ${svcstarted} == "0" ]] ; then
@@ -135,7 +135,7 @@ svc_quit() {
 	else
 		mark_service_stopped "${SVCNAME}"
 	fi
-	${svcbegin} && end_service "${SVCNAME}"
+	end_service "${SVCNAME}"
 	exit 1
 }
 
@@ -218,6 +218,17 @@ svc_start_scheduled() {
 	done
 }
 
+# Tests to see if we are still in control or not as we
+# could have re-entered instantly blocking our inactive check
+svc_in_control() {
+	local x
+	for x in starting started stopping ; do
+		[[ "${svcdir}/${x}/${SVCNAME}" -nt "${svcdir}/exclusive/${SVCNAME}.$$" ]] \
+				&& return 1
+	done
+	return 0
+}
+
 svc_stop() {
 	local x= retval=0
 	local -a servicelist=()
@@ -238,12 +249,11 @@ svc_stop() {
 	trap "svc_quit" INT QUIT TSTP
 
 	mark_service_starting "${SVCNAME}"
-	if begin_service "${SVCNAME}" ; then
-		svcbegin=true
-	else
-		svcbegin=false
-	fi
-	
+	begin_service "${SVCNAME}" 
+
+	# This is our mtime file to work out if we're still in control or not
+	touch "${svcdir}/exclusive/${SVCNAME}.$$"
+
 	# Store our e* messages in a buffer so we pretty print when parallel
 	[[ ${RC_PARALLEL_STARTUP} == "yes" && ${RC_QUIET} != "yes" ]] \
 		&& ebuffer "${svcdir}/ebuffer/${SVCNAME}"
@@ -284,10 +294,11 @@ svc_stop() {
 		fi
 	done
 
-	# Work with before and after deps too, but as they are not need
+	# Work with uses, before and after deps too, but as they are not needed
 	# we cannot explicitly stop them.
+	# We use -needsme with -usesme so we get the full dep list.
 	# We use --notrace with -ibefore to stop circular deps.
-	for x in $(rc-depend -usesme "${SVCNAME}") \
+	for x in $(rc-depend -needsme -usesme "${SVCNAME}") \
 		$(rc-depend --notrace -ibefore "${SVCNAME}"); do
 		service_stopping "${x}" && wait_service "${x}"
 	done
@@ -315,9 +326,12 @@ svc_stop() {
 
 		# If a service has been marked inactive, exit now as something
 		# may attempt to start it again later
-		if [[ ${retval} == "0" ]] && service_inactive "${SVCNAME}" ; then
-			svcinactive=0
-			return 0
+		if [[ ${retval} == "0" ]] ; then
+			if service_inactive "${SVCNAME}" || ! svc_in_control ; then
+				rm -f "${svcdir}/exclusive/${SVCNAME}.$$"
+				svcinactive=0
+				return 0
+			fi
 		fi
 	fi
 
@@ -355,10 +369,8 @@ svc_stop() {
 		ebuffer ""
 	fi
 
-	if ${svcbegin} ; then
-		svcbegin=false
-		end_service "${SVCNAME}"
-	fi
+	rm -f "${svcdir}/exclusive/${SVCNAME}.$$"
+	end_service "${SVCNAME}"
 
 	# Reset the trap
 	svc_trap
@@ -398,14 +410,12 @@ svc_start() {
 		return 1
 	fi
 
-	if begin_service "${SVCNAME}" ; then
-		svcbegin=true
-	else
-		svcbegin=false
-	fi
-
 	# Ensure that we clean up if we abort for any reason
 	trap "svc_quit" INT QUIT TSTP
+	begin_service "${SVCNAME}"
+
+	# This is our mtime file to work out if we're still in control or not
+	touch "${svcdir}/exclusive/${SVCNAME}.$$"
 
 	# Store our e* messages in a buffer so we pretty print when parallel
 	[[ ${RC_PARALLEL_STARTUP} == "yes" && ${RC_QUIET} != "yes" ]] \
@@ -497,14 +507,17 @@ svc_start() {
 
 		# If a service has been marked inactive, exit now as something
 		# may attempt to start it again later
-		if [[ ${retval} == "0" ]] && service_inactive "${SVCNAME}" ; then
-			svcinactive=0
-			ewarn $"WARNING:" " ${SVCNAME}" $"has started but is inactive"
-			if [[ ${RC_PARALLEL_STARTUP} == "yes" && ${RC_QUIET} != "yes" ]] ; then
-				eflush
-				ebuffer ""
+		if [[ ${retval} == "0" ]] ; then
+			if service_inactive "${SVCNAME}" || ! svc_in_control ; then
+				rm -f "${svcdir}/exclusive/${SVCNAME}.$$"
+				svcinactive=0
+				ewarn $"WARNING:" " ${SVCNAME}" $"has started but is inactive"
+				if [[ ${RC_PARALLEL_STARTUP} == "yes" && ${RC_QUIET} != "yes" ]] ; then
+					eflush
+					ebuffer ""
+				fi
+				return 1
 			fi
-			return 1
 		fi
 	fi
 
@@ -528,10 +541,8 @@ svc_start() {
 		ebuffer ""
 	fi
 
-	if ${svcbegin} ; then
-		svcbegin=false
-		end_service "${SVCNAME}"
-	fi
+	rm -f "${svcdir}/exclusive/${SVCNAME}.$$"
+	end_service "${SVCNAME}"
 
 	# Reset the trap
 	svc_trap

@@ -1,6 +1,15 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2007 Gentoo Foundation; Distributed under the GPLv2
 
+  08 Jan 2007; Roy Marples <uberlord@gentoo.org>:
+
+    Create a test file, and if the status is newer than that bail out
+    after running the service, #154670.
+
+    bootmisc now just checks to see if the pid exists for .pid files in
+    /var/run as we cannot rely on the pidfile name matching the process
+    name.
+
   05 Jan 2007; Roy Marples <uberlord@gentoo.org>:
 
     We now default to using WEP open unless specified.

@@ -163,7 +163,6 @@ start_service() {
 			|| service_scheduled "${service}"
 		retval=$?
 		
-		end_service "${service}"
 		splash "svc_started" "${service}" "${retval}"
 		
 		return "${retval}"
@@ -177,7 +176,6 @@ start_service() {
 				|| service_scheduled "${service}"
 			retval=$?
 			
-			end_service "${service}"
 			splash "svc_started" "${service}" "${retval}"
 		) &
 		return 0
@@ -199,10 +197,6 @@ stop_service() {
 
 	service_stopping "${service}" && return 0
 	service_stopped "${service}" && return 0
-	
-	local level="${SOFTLEVEL}"
-	is_runlevel_stop && level="${OLDSOFTLEVEL}"
-
 	begin_service "${service}" || return 0
 
 	splash "svc_stop" "${service}"
@@ -212,7 +206,6 @@ stop_service() {
 		( "/etc/init.d/${service}" stop )
 		service_stopped "${service}"
 		retval=$?
-		end_service "${service}"
 		splash "svc_stopped" "${service}" "${retval}"
 		return "${retval}"
 	else
@@ -221,7 +214,6 @@ stop_service() {
 			( "/etc/init.d/${service}" stop )
 			service_stopped "${service}"
 			retval=$?
-			end_service "${service}"
 			splash "svc_stopped" "${service}" "${retval}"
 		) &
 		return 0
