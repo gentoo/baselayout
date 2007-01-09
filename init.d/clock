@@ -5,7 +5,11 @@
 opts="save"
 
 depend() {
-	need localmount
+	case ${CLOCK_ADJTIME} in
+		"")     before *;;
+		/etc/*) need checkroot;;
+		*)      need localmount;;
+	esac
 }
 
 setupopts() {
@@ -18,8 +22,7 @@ setupopts() {
 	elif is_xenU_sys ; then
 		TBLURB="xen"
 		fakeit=1
-	elif [[ -e /proc/devices \
-	&& $(</proc/devices)$'\n' =~ ' cobd'$'\n' ]] ; then
+	elif [[ -e /proc/devices && $(</proc/devices)$'\n' =~ ' cobd'$'\n' ]] ; then
 		TBLURB="coLinux"
 		fakeit=1
 	elif [[ $(uname -m) == s390* ]] ; then
@@ -34,7 +37,7 @@ setupopts() {
 	fi
 	[[ ${fakeit} -eq 1 ]] && return 0
 
-	if [[ ${readonly} == "yes" ]] ; then
+	if [[ -z ${CLOCK_ADJTIME} ]] || [[ ${readonly} == "yes" ]] ; then
 		myadj="--noadjfile"
 	else
 		myadj="--adjust"
@@ -68,9 +71,7 @@ start() {
 	local readonly="no"
 	local ret=0
 
-	CLOCK_ADJTIME=${CLOCK_ADJTIME:-/etc/adjtime}
-
-	if [[ $(uname) == "Linux" ]] ; then
+	if [[ -n ${CLOCK_ADJTIME} ]] ; then
 		if ! touch "${CLOCK_ADJTIME}" 2>/dev/null ; then
 			readonly="yes"
 		elif [[ ! -s ${CLOCK_ADJTIME} ]] ; then
