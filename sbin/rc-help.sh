@@ -67,6 +67,9 @@ echo -e "
       can be handled correctly.  Refer to the portmap rc-script for an
       example.
 
+    ${GREEN}conditionalrestart|condrestart${OFF}
+      Same as 'restart', but only if the service has already been started.
+
     ${GREEN}pause${OFF}
       Same as 'stop', but the services that depends on it, will not be
       stopped.  This is useful for stopping a network interface without
