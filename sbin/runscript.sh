@@ -83,7 +83,6 @@ fi
 
 # State variables
 svcpause="no"
-svcrestart="no"
 
 # Functions to handle dependencies and services
 [[ ${RC_GOT_SERVICES} != "yes" ]] && . "${svclib}/sh/rc-services.sh"
@@ -160,7 +159,10 @@ start() {
 }
 
 restart() {
-	svc_restart
+	if ! service_stopped "${SVCNAME}" ; then
+		svc_stop || return "$?"
+	fi
+	svc_start
 }
 
 status() {
@@ -551,10 +553,75 @@ svc_start() {
 }
 
 svc_restart() {
-	if ! service_stopped "${SVCNAME}" ; then
-		svc_stop || return "$?"
+	if [[ ${SOFTLEVEL} == "shutdown" || ${SOFTLEVEL} == "reboot" ]] ; then
+		ewarn $"WARNING:  system shutting down, will not restart" "${SVCNAME}"
+		return 1 
+	elif [[ ${SOFTLEVEL} == "single" ]] ; then
+		eerror $"ERROR:  system is in single user mode, will not restart" "${SVCNAME}"
+		return 1
 	fi
-	svc_start
+
+	# We don't kill child processes if we're restarting
+	# This is especically important for sshd ....
+	RC_KILL_CHILDREN="no"				
+
+	# Create a snapshot of started services
+	rm -rf "${svcdir}/snapshot/$$"
+	mkdir -p "${svcdir}/snapshot/$$"
+	cp -pP "${svcdir}"/started/* "${svcdir}"/inactive/* \
+		"${svcdir}/snapshot/$$/" 2>/dev/null
+	rm -f "${svcdir}/snapshot/$$/${SVCNAME}"
+
+	# Simple way to try and detect if the service use svc_{start,stop}
+	# to restart if it have a custom restart() funtion.
+	svcres=$(sed -ne '/^[[:space:]]*restart[[:space:]]*()/,/}/ p' "${myscript}")
+	if [[ -n ${svcres} ]] ; then
+		if [[ ! ${svcres} =~ svc_stop \
+			|| ! ${svcres} =~ svc_start ]] ; then
+			echo
+			ewarn $"Please use 'svc_stop; svc_start' and not 'stop; start' to"
+			ewarn $"restart the service in its custom 'restart()' function."
+			ewarn $"Run" "${SVCNAME}" $"without arguments for more info."
+			echo
+			if ! service_stopped "${SVCNAME}" ; then
+				svc_stop || return "$?"
+			fi
+			svc_start
+		else
+			restart
+		fi
+	else
+		restart
+	fi
+	retval="$?"
+
+	[[ -e "${svcdir}/scheduled/${SVCNAME}" ]] \
+		&& rm -Rf "${svcdir}/scheduled/${SVCNAME}"
+
+	# Restart dependencies as well
+	local x=
+	for x in $(dolisting "${svcdir}/snapshot/$$/") ; do
+		if [[ -x ${x} ]] && service_stopped "${x##*/}" ; then
+			if service_inactive "${SVCNAME}" \
+				|| service_wasinactive "${SVCNAME}" ; then
+				svc_schedule_start "${SVCNAME}" "${x##*/}"
+				ewarn $"WARNING:" " ${x##*/}" $"is scheduled to start when" "${SVCNAME}" $"has started."
+			elif service_started "${SVCNAME}" ; then
+				start_service "${x##*/}"
+			fi
+		fi
+	done
+	rm -rf "${svcdir}/snapshot/$$"
+
+	service_started "${SVCNAME}" && svc_start_scheduled
+
+	# Wait for services to come up
+	if [[ ${IN_BACKGROUND} != "true" \
+		&& ${IN_BACKGROUND} != "1" ]] ; then
+		[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && wait
+	fi
+
+	return 0
 }
 
 svc_status() {
@@ -707,74 +774,14 @@ for arg in "$@" ; do
 		mark_service_stopped "${SVCNAME}"
 		;;
 	restart)
-		svcrestart="yes"
-
-		if [[ ${SOFTLEVEL} == "shutdown" || ${SOFTLEVEL} == "reboot" ]] ; then
-			ewarn $"WARNING:  system shutting down, will not restart" "${SVCNAME}"
-			exit 1 
-		elif [[ ${SOFTLEVEL} == "single" ]] ; then
-			eerror $"ERROR:  system is in single user mode, will not restart" "${SVCNAME}"
-			exit 1
-		fi
-
-		# We don't kill child processes if we're restarting
-		# This is especically important for sshd ....
-		RC_KILL_CHILDREN="no"				
-		
-		# Create a snapshot of started services
-		rm -rf "${svcdir}/snapshot/$$"
-		mkdir -p "${svcdir}/snapshot/$$"
-		cp -pP "${svcdir}"/started/* "${svcdir}"/inactive/* \
-			"${svcdir}/snapshot/$$/" 2>/dev/null
-		rm -f "${svcdir}/snapshot/$$/${SVCNAME}"
-
-		# Simple way to try and detect if the service use svc_{start,stop}
-		# to restart if it have a custom restart() funtion.
-		svcres=$(sed -ne '/^[[:space:]]*restart[[:space:]]*()/,/}/ p' \
-			"${myscript}" )
-		if [[ -n ${svcres} ]] ; then
-			if [[ ! ${svcres} =~ svc_stop \
-				|| ! ${svcres} =~ svc_start ]] ; then
-				echo
-				ewarn $"Please use 'svc_stop; svc_start' and not 'stop; start' to"
-				ewarn $"restart the service in its custom 'restart()' function."
-				ewarn $"Run" "${SVCNAME}" $"without arguments for more info."
-				echo
-				svc_restart
-			else
-				restart
-			fi
-		else
-			restart
+		svc_restart
+		retval="$?"
+		;;
+	condrestart|conditionalrestart)
+		if service_started "${SVCNAME}" ; then
+			svc_restart
 		fi
 		retval="$?"
-
-		[[ -e "${svcdir}/scheduled/${SVCNAME}" ]] \
-			&& rm -Rf "${svcdir}/scheduled/${SVCNAME}"
-	
-		# Restart dependencies as well
-		for x in $(dolisting "${svcdir}/snapshot/$$/") ; do
-			if [[ -x ${x} ]] && service_stopped "${x##*/}" ; then
-				if service_inactive "${SVCNAME}" \
-					|| service_wasinactive "${SVCNAME}" ; then
-					svc_schedule_start "${SVCNAME}" "${x##*/}"
-					ewarn $"WARNING:" " ${x##*/}" $"is scheduled to start when" "${SVCNAME}" $"has started."
-				elif service_started "${SVCNAME}" ; then
-					start_service "${x##*/}"
-				fi
-			fi
-		done
-		rm -rf "${svcdir}/snapshot/$$"
-	
-		service_started "${SVCNAME}" && svc_start_scheduled
-
-		# Wait for services to come up
-		if [[ ${IN_BACKGROUND} != "true" \
-		&& ${IN_BACKGROUND} != "1" ]] ; then
-			[[ ${RC_PARALLEL_STARTUP} == "yes" ]] && wait
-		fi
-
-		svcrestart="no"
 		;;
 	pause)
 		svcpause="yes"

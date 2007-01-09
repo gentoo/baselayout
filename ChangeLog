@@ -1,6 +1,13 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2007 Gentoo Foundation; Distributed under the GPLv2
 
+  09 Jan 2007; Roy Marples <uberlord@gentoo.org>:
+
+    Add conditionalrestart action, which is the same as restart but the service
+    is only restarted if it is already started. This means that anything that
+    whats this only has to use one command instead of two, making them more
+    efficient.
+
   08 Jan 2007; Roy Marples <uberlord@gentoo.org>:
 
     Create a test file, and if the status is newer than that bail out
