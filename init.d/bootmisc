@@ -59,8 +59,8 @@ start() {
 			# Do not remove pidfiles of already running daemons
 			if [[ ${x} == *".pid" ]] ; then
 				local pid=$(sed -e '1q' "${x}")
-				if [[ -e /proc/self ]] ; then
-					[[ -e /proc/${pid} ]] && continue
+				if [[ -e /proc/${pid}/cmdline ]] ; then
+					continue
 				else
 					ps -p "${pid}" >/dev/null && continue
 				fi
