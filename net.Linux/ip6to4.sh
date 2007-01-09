@@ -15,7 +15,7 @@ ip6to4_depend() {
 #
 # Expose variables that can be configured
 ip6to4_expose() {
-	variables link
+	variables link suffix relay
 }
 
 # bool ip6to4_start(char *interface)
@@ -29,7 +29,7 @@ ip6to4_start() {
 
 	# Ensure the interface is sit0 if we're using ifconfig
 	if [[ " ${MODULES[@]} " == *" ifconfig "* && ${iface} != "sit0" ]] ; then
-		eerror $"ip6to4 can only on interface sit0 using ifconfig"
+		eerror $"ip6to4 can only work on interface sit0 using ifconfig"
 		eerror $"emerge sys-apps/iproute2 to use other interfaces"
 		return 1
 	fi
@@ -39,7 +39,13 @@ ip6to4_start() {
 		eerror "link_${ifvar}" $"is not set"
 		return 1
 	fi
-	
+
+	local suffix="suffix_${ifvar}"
+	suffix=${!suffix:-:1}
+
+	local relay="relay_${ifvar}"
+	relay=${!relay:-192.88.99.1}
+
 	interface_exists "${!host}" true || return 1
 	
 	# An interface can have more than 1 ip address
@@ -65,7 +71,7 @@ ip6to4_start() {
 		[[ ${i} -lt 32 ]] && continue
 	
 		veinfo $"IPv4 address on" "${!host}: ${ip}"
-		local ip6=$(printf "2002:%02x%02x:%02x%02x::1" ${ip//./ })
+		local ip6=$(printf "2002:%02x%02x:%02x%02x:%s" ${ip//./ } ${suffix} )
 		veinfo $"Derived IPv6 address:" "${ip6}"
 
 		# Now apply our IPv6 address to our config
@@ -89,7 +95,7 @@ ip6to4_start() {
 	# Add a route for us, ensuring we don't delete anything else
 	local routes="routes_${ifvar}[@]"
 	eval "routes_${ifvar}=( \"\${!routes}\" \
-			\"2003::/3 via ::192.88.99.1 metric 2147483647\" )"
+			\"2003::/3 via ::${relay} metric 2147483647\" )"
 }
 	
 # vim: set ts=4 :

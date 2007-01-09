@@ -3,6 +3,9 @@
 
   09 Jan 2007; Roy Marples <uberlord@gentoo.org>:
 
+    You can now specify relay and suffix for ip6to4 interfaces, thanks
+    to Asfand Yar Qazi.
+
     Add conditionalrestart action, which is the same as restart but the service
     is only restarted if it is already started. This means that anything that
     whats this only has to use one command instead of two, making them more

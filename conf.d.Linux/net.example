@@ -646,6 +646,11 @@
 # NOTE: If you're not using iproute2 then your 6to4 tunnel has to be called
 # sit0 - otherwise use a different name like 6to4 in the example above.
 
+# You can also specify a relay and suffix if you like.
+# The default relay is 192.88.99.1 and the defualt suffix is :1
+#relay_6to4="192.168.3.2"
+#suffix_6to4=":ff"
+
 
 #-----------------------------------------------------------------------------
 # System
