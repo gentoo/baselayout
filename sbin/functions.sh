@@ -891,20 +891,35 @@ stop_addon() {
 #
 #   return 0 if any of the files/dirs are newer than
 #   the reference file
+#   If RC_FIX_FUTURE="yes" then we fix future mtimes
 #
 #   EXAMPLE: if is_older_than a.out *.o ; then ...
 is_older_than() {
-	local x= ref="$1"
+	local x= ref="$1" retval=1 future="${svcdir}/mtime.$$"
 	shift
 
+	[[ ${RC_FIX_FUTURE} == "yes" ]] && touch "${future}"
+
 	for x in "$@" ; do
+		[[ -e ${x} ]] || continue
 		# We need to check the mtime if it's a directory too as the
 		# contents may have changed.
-		[[ ${x} -nt ${ref} ]] && return 0
-		[[ -d ${x} ]] && is_older_than "${ref}" "${x}"/* && return 0
+		[[ ${x} -nt ${ref} ]] && retval=0
+		if [[ ${RC_FIX_FUTURE} == "yes" && ${x} -nt ${future} ]] ; then
+			vewarn "${x} has a future mtime - touching to fix"
+			touch "${x}"
+			retval=0
+		fi
+		[[ -d ${x} ]] && is_older_than "${ref}" "${x}"/* && retval=0
+
+		[[ ${retval} == 0 && ${RC_FIX_FUTURE} != "yes" ]] && break
 	done
 
-	return 1
+	# Only erase the future file if we're the last function in the chain
+	[[ ${RC_FIX_FUTURE} == "yes" && ${FUNCNAME[1]} != "is_older_than" ]] \
+		&& rm -f "${future}"
+
+	return ${retval}
 }
 
 # char* bash_variable(char *variable)

@@ -23,6 +23,7 @@ usage() {
 	  -d, --debug       Turn on debug output
 	  -s, --svcdir      Specify svcdir (default: ${svcdir})
 	  -u, --update      Force update even if mtimes are OK
+	  -v, --verbose     Show which files are being touched to fix future mtimes
 	  -h, --help        Show this help cruft
 	EOF
 	[[ -z $@ ]] && exit 0
@@ -51,6 +52,9 @@ while [[ -n $1 ]] ; do
 		--update|-u)
 			update=true
 			nupdate=true
+			;;
+		--verbose|-v)
+			RC_VERBOSE="yes"
 			;;
 		--help|-h)
 			usage
@@ -84,47 +88,17 @@ if [[ ! -w ${mysvcdir} ]] ; then
 	exit 1
 fi
 
-check_files() {
-	local testfile=$1 clock_skew= f= retval=0
-	local mtime_test="${mysvcdir}/mtime-test.$$"
-	[[ -e ${testfile} ]] || return 1
-
-	shift
-	mtime_test="${mysvcdir}/mtime-test.$$"
-
-	touch "${mtime_test}"
-
-	for f in "$@" ; do
-		if [[ ${retval} == 0 ]] ; then
-			is_older_than "${testfile}" "${f}" && retval=1
-		fi
-		if is_older_than "${mtime_test}" "${f}" ; then
-			touch "${f}" &>/dev/null
-			clock_skew="${clock_skew} ${f}"
-		fi
-	done
-
-	if [[ -n ${clock_skew} ]] ; then
-		ewarn $"These files have future mtimes :-"
-		eindent
-		for f in ${clock_skew} ; do
-			ewarn "${f}"
-		done
-	fi
-
-	rm -f "${mtime_test}"
-
-	return ${retval}
-}
-
 SVCDIR="${mysvcdir}"
 SVCLIB="${svclib}"
 export SVCDIR SVCLIB
 
+# This makes is_older_than fix future mtimes
+RC_FIX_FUTURE=${RC_FIX_FUTURE:-yes}
+
 [[ -e "${mysvcdir}/deptree" ]] || update=true
 if ! ${update} ; then
-	check_files "${mysvcdir}/depcache" /etc/conf.d /etc/init.d \
-		/etc/rc.conf || update=true
+	is_older_than "${mysvcdir}/depcache" /etc/conf.d /etc/init.d \
+		/etc/rc.conf && update=true
 	if ${!update} ; then
 		if ! bash -n "${mysvcdir}/deptree" ; then
 			eerror "${mysvcdir}/deptree is not valid - recreating it"
@@ -167,7 +141,7 @@ fi
 
 [[ -e "${mysvcdir}/netdeptree" ]] || nupdate=true
 if ! ${nupdate} ; then
-	check_files "${mysvcdir}/netdepcache" "${svclib}"/net || nupdate=true
+	is_older_than "${mysvcdir}/netdepcache" "${svclib}"/net && nupdate=true
 	if ${!nupdate} ; then
 		if ! bash -n "${mysvcdir}/netdeptree" ; then
 			eerror "${mysvcdir}/netdeptree is not valid - recreating it"

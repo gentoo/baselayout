@@ -3,10 +3,16 @@
 
   09 Jan 2007; Mike Frysinger <vapier@gentoo.org>:
 
-    If the adjtime file is not specified, then bother trying to use its facilities
-    so that we can run clock as early as possible in the boot process.
+    If the adjtime file is not specified, then don't bother trying to use its
+    facilities so that we can run clock as early as possible in the boot
+    process.
 
   09 Jan 2007; Roy Marples <uberlord@gentoo.org>:
+
+    depscan.sh will correctly adjust future mtimes in /etc/conf.d and
+    /etc/init.d, #157432 hopefully for the last time.
+
+    Split clock configs into BSD and Linux - we share the same init file though.
 
     You can now specify relay and suffix for ip6to4 interfaces, thanks
     to Asfand Yar Qazi.
