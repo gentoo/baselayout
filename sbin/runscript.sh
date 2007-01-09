@@ -126,6 +126,7 @@ svcinactive="$?"
 svc_quit() {
 	eerror $"ERROR:" " ${SVCNAME}" $"caught an interrupt"
 	eflush
+	svc_in_control || exit 1
 	rm -rf "${svcdir}/snapshot/$$" "${svcdir}/exclusive/${SVCNAME}.$$"
 	if service_inactive "${SVCNAME}" || [[ ${svcinactive} == "0" ]] ; then
 		mark_service_inactive "${SVCNAME}"
