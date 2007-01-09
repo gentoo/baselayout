@@ -171,7 +171,22 @@ iwconfig_get_wep_key() {
 	local mac="$1" key=
 	key="mac_key_${mac//:/}"
 	[[ -z ${!key} ]] && key="key_${ESSIDVAR}"
-	echo "${!key:-off}"
+	key=${!key}
+
+	if [[ -z ${key} ]] ; then
+		echo "off"
+	else
+		set -- ${key}
+		local x= e=false
+		for x in $@ ; do
+			if [[ ${x} == "enc" ]] ; then
+				e=true
+				break
+			fi
+		done
+		${e} || key="${key} enc open"
+		echo "${key}"
+	fi
 }
 
 # void iwconfig_user_config(char *iface, char *ifvar)
@@ -222,9 +237,9 @@ iwconfig_setup_specific() {
 	key=$(iwconfig_get_wep_key)
 
 	iwconfig_set_mode "${iface}" "${mode}"
-
+	
 	# Now set the key
-	if ! iwconfig "${iface}" enc open key ${key} ; then
+	if ! iwconfig "${iface}" key ${key} ; then
 		if [[ ${key} != "off" ]]; then
 			ewarn "${iface} does not support setting keys"
 			ewarn "or the parameter \"mac_key_${ESSIDVAR}\" or \"key_${ESSIDVAR}\" is incorrect"
@@ -374,7 +389,7 @@ iwconfig_associate() {
 			ewarn "\"${dessid}\" is not WEP enabled - ignoring setting"
 		fi
 
-		if ! iwconfig "${iface}" enc open key ${key} ; then
+		if ! iwconfig "${iface}" key ${key} ; then
 			if [[ ${key} != "off" ]]; then
 				ewarn "${iface} does not support setting keys"
 				ewarn "or the parameter \"mac_key_${ESSIDVAR}\" or \"key_${ESSIDVAR}\" is incorrect"
@@ -504,12 +519,15 @@ iwconfig_scan() {
 		done < <(iwlist "${iface}" scan 2>/dev/null)
 		${error} && break
 
-		# OK, lets be cheaky here - if the scan returns nothing we will try
-		# again for another 2 times unless we do return something.
-		if [[ ${i} == -1 && ${j} == 1 && ${n} -gt 0 ]] ; then
-			sleep 1
-			k=-1
-			((n--))
+		# OK, lets be cheaky here. By default we will sleep for a second
+		# and scan again. If don't have anything in those two scans then
+		# we try for a final time.
+		if [[ ${j} == 1 ]] ; then
+			if [[ ${i} == -1 && ${n} -gt 0 ]] || [[ ${n} == 3 ]] ; then
+				sleep 1
+				k=-1
+				((n--))
+			fi
 		fi
 	done
 
