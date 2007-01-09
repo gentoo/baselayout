@@ -103,7 +103,7 @@ end_service() {
 	# move the fifo to a unique name so no-one is waiting for it
 	local fifo="${svcdir}/exclusive/${service}"
 	if [[ -e ${fifo} ]] ; then
-		local tempname="${fifo}.$$"
+		local tempname="${fifo}.$$.fifo-end"
 		mv -f "${fifo}" "${tempname}"
 		# wake up anybody that was waiting for the fifo
 		# Linux requires using touch, otherwise things go wrong

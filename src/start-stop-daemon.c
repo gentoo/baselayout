@@ -142,6 +142,7 @@ static const char *progname = "";
 static int nicelevel = 0;
 static const char *redirect_stderr = NULL;
 static const char *redirect_stdout = NULL;
+static int anykilled = 0;
 
 static struct stat exec_stat;
 #if defined(OSHURD)
@@ -793,7 +794,7 @@ do_pidfile(const char *name)
 		if (fscanf(f, "%d", &pid) == 1)
 			check(pid);
 		fclose(f);
-	} else if (errno != ENOENT || (stop != 0 && schedule == NULL))
+	} else if (errno != ENOENT || (stop != 0 && anykilled == 0))
 		errx(2, "open pidfile %s: %s", name, strerror(errno));
 
 }
@@ -1118,7 +1119,7 @@ do_stop(int signal_nr, int quietmode, int *n_killed, int *n_notkilled, int retry
 		} else if (kill(p->pid, signal_nr) == 0) {
 			push(&killed, p->pid);
 			(*n_killed)++;
-		} else {
+		} else if (errno != ESRCH) {
 			printf("%s: warning: failed to kill %d: %s\n",
 			       progname, p->pid, strerror(errno));
 			(*n_notkilled)++;
@@ -1146,7 +1147,7 @@ set_what_stop(const char *str)
 static int
 run_stop_schedule(void)
 {
-	int r, position, n_killed, n_notkilled, value, ratio, anykilled, retry_nr;
+	int r, position, n_killed, n_notkilled, value, ratio, retry_nr;
 	struct timeval stopat, before, after, interval, maxinterval;
 
 	if (testmode) {
@@ -1213,7 +1214,7 @@ run_stop_schedule(void)
   * to do one poll(), and wait a multiple of this time for the next
   * poll.  However, if that would put us past the end of the timeout
   * period we wait only as long as the timeout period, but in any case
-  * we always wait at least MIN_POLL_INTERVAL (20ms).  The multiple
+  * we always wait at least MIN_POLL_INTERVAL.  The multiple
   * (`ratio') starts out as 2, and increases by 1 for each poll to a
   * maximum of 10; so we use up to between 30% and 10% of the
   * machine's resources (assuming a few reasonable things about system

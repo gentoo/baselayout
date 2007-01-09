@@ -42,7 +42,7 @@ pump_stop() {
 
 	# We check for a pump process first as querying for status
 	# causes pump to spawn a process
-	pidof /sbin/pump &>/dev/null || return 0
+	start-stop-daemon --test --stop --exec /sbin/pump >/dev/null || return 0
 
 	# Check that pump is running on the interface
 	[[ $(pump --status --interface "${iface}" 2>/dev/null) \

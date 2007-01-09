@@ -9,6 +9,10 @@
 
   09 Jan 2007; Roy Marples <uberlord@gentoo.org>:
 
+    Removed lots of rc-daemon.sh cruft. We now rely pretty much entirely on
+    start-stop-daemon. This has the benefit of being smaller, no more
+    dependency on pidof and more consistent and effcient.
+
     depscan.sh will correctly adjust future mtimes in /etc/conf.d and
     /etc/init.d, #157432 hopefully for the last time.
 

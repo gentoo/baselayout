@@ -426,7 +426,8 @@ rm -rf "${svcdir}/softscripts.old" &>/dev/null
 # from runlevel 'single')
 if [[ -d /proc/mounts ]] ; then
 	if grep -q "/dev devfs" /proc/mounts ; then
-		pidof /sbin/devfsd >/dev/null || /sbin/devfsd /dev
+		start-stop-daemon --test --stop --exec /sbin/devfsd >/dev/null \
+			|| /sbin/devfsd /dev
 	fi
 fi
 
