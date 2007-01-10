@@ -116,16 +116,19 @@ conf=$(add_suffix /etc/rc.conf)
 svc_quit() {
 	eerror $"ERROR:" " ${SVCNAME}" $"caught an interrupt"
 	eflush
-	svc_in_control || exit 1
+	svc_in_control
+	local in_control=$?
 	rm -rf "${svcdir}/snapshot/$$" "${svcdir}/exclusive/${SVCNAME}.$$"
-	if service_wasinactive "${SVCNAME}" ; then
-		mark_service_inactive "${SVCNAME}"
-	elif [[ ${svcstarted} == "0" ]] ; then
-		mark_service_started "${SVCNAME}"
-	else
-		mark_service_stopped "${SVCNAME}"
+	if [[ ${in_control} == 0 ]] ; then
+		if service_wasinactive "${SVCNAME}" ; then
+			mark_service_inactive "${SVCNAME}"
+		elif [[ ${svcstarted} == "0" ]] ; then
+			mark_service_started "${SVCNAME}"
+		else
+			mark_service_stopped "${SVCNAME}"
+		fi
+		end_service "${SVCNAME}"
 	fi
-	end_service "${SVCNAME}"
 	exit 1
 }
 
@@ -272,30 +275,30 @@ svc_stop() {
 			fi
 			service_list=( "${service_list[@]}" "${x}" )
 		done
-	fi
 
-	for x in "${service_list[@]}" ; do
-		local retry=3
-		while [[ ${retry} -gt 0 ]] ; do
-			service_stopped "${x}" && break
-			wait_service "${x}"
-			((retry--))
+		for x in "${service_list[@]}" ; do
+			local retry=3
+			while [[ ${retry} -gt 0 ]] ; do
+				service_stopped "${x}" && break
+				wait_service "${x}"
+				((retry--))
+			done
+			if ! service_stopped "${x}" ; then
+				eerror $"ERROR:" $"cannot stop" "${SVCNAME}" $"as" "${x}" $"is still up."
+				retval=1
+				break
+			fi
 		done
-		if ! service_stopped "${x}" ; then
-			eerror $"ERROR:" $"cannot stop" "${SVCNAME}" $"as" "${x}" $"is still up."
-			retval=1
-			break
-		fi
-	done
 
-	# Work with uses, before and after deps too, but as they are not needed
-	# we cannot explicitly stop them.
-	# We use -needsme with -usesme so we get the full dep list.
-	# We use --notrace with -ibefore to stop circular deps.
-	for x in $(rc-depend -needsme -usesme "${SVCNAME}") \
-		$(rc-depend --notrace -ibefore "${SVCNAME}"); do
-		service_stopping "${x}" && wait_service "${x}"
-	done
+		# Work with uses, before and after deps too, but as they are not needed
+		# we cannot explicitly stop them.
+		# We use -needsme with -usesme so we get the full dep list.
+		# We use --notrace with -ibefore to stop circular deps.
+		for x in $(rc-depend -needsme -usesme "${SVCNAME}") \
+			$(rc-depend --notrace -ibefore "${SVCNAME}"); do
+			service_stopping "${x}" && wait_service "${x}"
+		done
+	fi
 
 	IN_BACKGROUND="${ib_save}"
 
@@ -339,7 +342,7 @@ svc_stop() {
 				mark_service_stopped "${SVCNAME}"
 				;;
 			*)
-				if svc_wasinactive "${SVCNAME}" ; then
+				if service_wasinactive "${SVCNAME}" ; then
 					mark_service_inactive "${SVCNAME}"
 				else
 					mark_service_started "${SVCNAME}"
@@ -455,7 +458,10 @@ svc_start() {
 					continue 2
 				fi
 				service_stopped "${x}" && break
-	
+
+				# Small pause before trying again as it should be starting
+				# if we get here
+				sleep 1
 				((timeout--))
 			done
 
@@ -553,7 +559,7 @@ svc_restart() {
 	# Create a snapshot of started services
 	rm -rf "${svcdir}/snapshot/$$"
 	mkdir -p "${svcdir}/snapshot/$$"
-	cp -pP "${svcdir}"/started/* "${svcdir}"/inactive/* \
+	cp -pPR "${svcdir}"/started/* "${svcdir}"/inactive/* \
 		"${svcdir}/snapshot/$$/" 2>/dev/null
 	rm -f "${svcdir}/snapshot/$$/${SVCNAME}"
 
@@ -718,7 +724,7 @@ for arg in "$@" ; do
 		if [[ ${IN_BACKGROUND} == "true" || ${IN_BACKGROUND} == "1" ]] ; then
 			rm -rf "${svcdir}/snapshot/$$"
 			mkdir -p "${svcdir}/snapshot/$$"
-			cp -pP "${svcdir}"/started/* "${svcdir}"/inactive/* \
+			cp -pPR "${svcdir}"/started/* "${svcdir}"/inactive/* \
 				"${svcdir}/snapshot/$$/" 2>/dev/null
 			rm -f "${svcdir}/snapshot/$$/${SVCNAME}"
 		fi

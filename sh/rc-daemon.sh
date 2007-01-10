@@ -155,10 +155,10 @@ rc_start_daemon() {
 # If we are successful, then we clean up the pidfile if the daemon didn't.
 rc_stop_daemon() {
 	local retryargs=
-	[[ -z ${retry} && ${RC_wAIT_ON_STOP:-5} -gt 0 ]] \
-		&& retryargs="--retry ${signal:--TERM}/${RC_WAIT_ON_STOP:-5}"
+	[[ -z ${retry} && ${RC_WAIT_ON_STOP} -gt 0 ]] \
+		&& retryargs="--retry ${signal:--TERM}/${RC_WAIT_ON_STOP}"
 
-	eval /sbin/start-stop-daemon ${retryargs} "${args}"
+	eval /sbin/start-stop-daemon --oknodo ${retryargs} "${args}"
 	local retval=$?
 	[[ ${retval} != 0 ]] && return ${retval}
 

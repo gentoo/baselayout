@@ -795,7 +795,7 @@ do_pidfile(const char *name)
 			check(pid);
 		fclose(f);
 	} else if (errno != ENOENT || (stop != 0 && anykilled == 0))
-		errx(2, "open pidfile %s: %s", name, strerror(errno));
+		errx(exitnodo, "open pidfile %s: %s", name, strerror(errno));
 
 }
 
