@@ -83,6 +83,7 @@ fi
 
 # State variables
 svcpause="no"
+svcrestart="no"
 
 # Functions to handle dependencies and services
 [[ ${RC_GOT_SERVICES} != "yes" ]] && . "${svclib}/sh/rc-services.sh"
@@ -160,9 +161,7 @@ start() {
 }
 
 restart() {
-	if ! service_stopped "${SVCNAME}" ; then
-		svc_stop || return "$?"
-	fi
+	svc_stop || return $?
 	svc_start
 }
 
@@ -240,7 +239,8 @@ svc_stop() {
 	if is_runlevel_stop && service_failed "${SVCNAME}" ; then
 		return 1
 	elif service_stopped "${SVCNAME}" ; then
-		ewarn $"WARNING:" " ${SVCNAME}" $"has not yet been started."
+		[[ ${svcrestart} != "yes" ]] \
+		&& ewarn $"WARNING:" " ${SVCNAME}" $"has not yet been started."
 		return 0
 	fi
 	if ! mark_service_stopping "${SVCNAME}" ; then
@@ -561,11 +561,7 @@ svc_restart() {
 		eerror $"ERROR:  system is in single user mode, will not restart" "${SVCNAME}"
 		return 1
 	fi
-
-	# We don't kill child processes if we're restarting
-	# This is especically important for sshd ....
-	RC_KILL_CHILDREN="no"				
-
+	
 	# Create a snapshot of started services
 	rm -rf "${svcdir}/snapshot/$$"
 	mkdir -p "${svcdir}/snapshot/$$"
@@ -573,20 +569,19 @@ svc_restart() {
 		"${svcdir}/snapshot/$$/" 2>/dev/null
 	rm -f "${svcdir}/snapshot/$$/${SVCNAME}"
 
+	svcrestart="yes"
 	# Simple way to try and detect if the service use svc_{start,stop}
 	# to restart if it have a custom restart() funtion.
 	svcres=$(sed -ne '/^[[:space:]]*restart[[:space:]]*()/,/}/ p' "${myscript}")
 	if [[ -n ${svcres} ]] ; then
 		if [[ ! ${svcres} =~ svc_stop \
 			|| ! ${svcres} =~ svc_start ]] ; then
-			echo
+			echo ${svcres}
 			ewarn $"Please use 'svc_stop; svc_start' and not 'stop; start' to"
 			ewarn $"restart the service in its custom 'restart()' function."
 			ewarn $"Run" "${SVCNAME}" $"without arguments for more info."
 			echo
-			if ! service_stopped "${SVCNAME}" ; then
-				svc_stop || return "$?"
-			fi
+			svc_stop || return $?
 			svc_start
 		else
 			restart
@@ -594,7 +589,8 @@ svc_restart() {
 	else
 		restart
 	fi
-	retval="$?"
+	retval=$?
+	svcrestart="no"
 
 	[[ -e "${svcdir}/scheduled/${SVCNAME}" ]] \
 		&& rm -Rf "${svcdir}/scheduled/${SVCNAME}"
