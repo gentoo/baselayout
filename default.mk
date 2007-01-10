@@ -43,6 +43,7 @@ install:: $(EXES) $(FILES) $(FILES_NOEXIST) $(MANS)
 	$(INSTALL_DIR) $(DESTDIR)$(DIR)
 	for x in $(EXES)  ; do $(INSTALL_EXE)  $$x $(DESTDIR)$(DIR) || exit $$? ; done
 	for x in $(FILES) ; do $(INSTALL_FILE) $$x $(DESTDIR)$(DIR) || exit $$? ; done
+	for x in $(FILES_APPEND) ; do if test -e $(DESTDIR)$(DIR)/$$x ; then cat $$x >> $(DESTDIR)$(DIR)/$$x || exit $$? ; else $(INSTALL_FILE) $$x $(DESTDIR)$(DIR) || exit $$? ; fi ; done
 	for x in $(FILES_NOEXIST) ; do if ! test -e $(DESTDIR)$(DIR)/$$x ; then $(INSTALL_FILE) $$x $(DESTDIR)$(DIR) || exit $$? ; fi ; done
 	for x in $(FILES_SECURE) ; do $(INSTALL_SECURE) $$x $(DESTDIR)$(DIR) || exit $$? ; done
 	for x in $(MANS)  ; do \

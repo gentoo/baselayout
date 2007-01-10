@@ -1,6 +1,13 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2007 Gentoo Foundation; Distributed under the GPLv2
 
+* baselayout-1.13.0_alpha11 (10 Jan 2006)
+
+  10 Jan 2007; Roy Marples <uberlord@gentoo.org>:
+
+    New Makefile directive FILES_APPEND so we can have a base config
+    which OS specific configs can append to.
+
   09 Jan 2007; Mike Frysinger <vapier@gentoo.org>:
 
     If the adjtime file is not specified, then don't bother trying to use its

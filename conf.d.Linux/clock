@@ -1,17 +1,3 @@
-# /etc/conf.d/clock
-
-# Set CLOCK to "UTC" if your system clock is set to UTC (also known as
-# Greenwich Mean Time).  If your clock is set to the local time, then 
-# set CLOCK to "local".  Note that if you dual boot with Windows, then 
-# you should set it to "local".
-
-CLOCK="UTC"
-
-# Select the proper timezone.  For valid values, peek inside of the
-# /usr/share/zoneinfo/ directory.  For example, some common values are
-# "America/New_York" or "EST5EDT" or "Europe/Berlin".
-
-#TIMEZONE="Factory"
 
 # If you wish to pass any other arguments to hwclock during bootup, 
 # you may do so here.
