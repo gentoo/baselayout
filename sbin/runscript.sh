@@ -118,18 +118,12 @@ mylevel="${SOFTLEVEL}"
 	|| ${SOFTLEVEL} == "reboot" || ${SOFTLEVEL} == "shutdown" ]] \
 	&& mylevel="${DEFAULTLEVEL}"
 
-# Call svc_quit if we abort AND we have obtained a lock
-service_started "${SVCNAME}"
-svcstarted="$?"
-service_inactive "${SVCNAME}"
-svcinactive="$?"
-
 svc_quit() {
 	eerror $"ERROR:" " ${SVCNAME}" $"caught an interrupt"
 	eflush
 	svc_in_control || exit 1
 	rm -rf "${svcdir}/snapshot/$$" "${svcdir}/exclusive/${SVCNAME}.$$"
-	if service_inactive "${SVCNAME}" || [[ ${svcinactive} == "0" ]] ; then
+	if service_wasinactive "${SVCNAME}" ; then
 		mark_service_inactive "${SVCNAME}"
 	elif [[ ${svcstarted} == "0" ]] ; then
 		mark_service_started "${SVCNAME}"
@@ -243,11 +237,13 @@ svc_stop() {
 		&& ewarn $"WARNING:" " ${SVCNAME}" $"has not yet been started."
 		return 0
 	fi
+
 	if ! mark_service_stopping "${SVCNAME}" ; then
 		eerror $"ERROR:" " ${SVCNAME}" $"is already stopping."
 		return 1
 	fi
-	
+
+	svcstarted=0
 	# Ensure that we clean up if we abort for any reason
 	trap "svc_quit" INT QUIT TSTP
 
@@ -332,7 +328,6 @@ svc_stop() {
 		if [[ ${retval} == "0" ]] ; then
 			if service_inactive "${SVCNAME}" || ! svc_in_control ; then
 				rm -f "${svcdir}/exclusive/${SVCNAME}.$$"
-				svcinactive=0
 				return 0
 			fi
 		fi
@@ -347,7 +342,7 @@ svc_stop() {
 		if [[ ${SOFTLEVEL} == "reboot" || ${SOFTLEVEL} == "shutdown" ]] ; then
 			mark_service_stopped "${SVCNAME}"
 		else
-			if [[ ${svcinactive} == "0" ]] ; then
+			if svc_wasinactive "${SVCNAME}" ; then
 				mark_service_inactive "${SVCNAME}"
 			else
 				mark_service_started "${SVCNAME}"
@@ -357,12 +352,7 @@ svc_stop() {
 		eerror $"ERROR:" " ${SVCNAME}" $"failed to stop"
 	else
 		svcstarted=1
-		if service_inactive "${SVCNAME}" ; then
-			svcinactive=0
-		else
-			mark_service_stopped "${SVCNAME}"
-		fi
-
+		service_inactive "${SVCNAME}" || mark_service_stopped "${SVCNAME}"
 		veinfo $"Service" "${SVCNAME}" $"stopped"
 	fi
 
@@ -382,7 +372,7 @@ svc_stop() {
 }
 
 svc_start() {
-	local x= y= retval=0 startinactive=
+	local x= y= retval=0 startinactive= 
 
 	# Do not try to start if i have done so already on runlevel change
 	if is_runlevel_start && service_failed "${SVCNAME}" ; then
@@ -391,6 +381,7 @@ svc_start() {
 		ewarn $"WARNING:" " ${SVCNAME}" $"has already been started."
 		return 0
 	elif service_inactive "${SVCNAME}" ; then
+		aminactive=0
 		if [[ ${IN_BACKGROUND} != "true" \
 		&& ${IN_BACKGROUND} != "1" ]] ; then
 			ewarn $"WARNING:" " ${SVCNAME}" $"has already been started."
@@ -413,6 +404,7 @@ svc_start() {
 		return 1
 	fi
 
+	svcstarted=1
 	# Ensure that we clean up if we abort for any reason
 	trap "svc_quit" INT QUIT TSTP
 	begin_service "${SVCNAME}"
@@ -513,7 +505,6 @@ svc_start() {
 		if [[ ${retval} == "0" ]] ; then
 			if service_inactive "${SVCNAME}" || ! svc_in_control ; then
 				rm -f "${svcdir}/exclusive/${SVCNAME}.$$"
-				svcinactive=0
 				ewarn $"WARNING:" " ${SVCNAME}" $"has started but is inactive"
 				if [[ ${RC_PARALLEL_STARTUP} == "yes" && ${RC_QUIET} != "yes" ]] ; then
 					eflush
@@ -525,7 +516,7 @@ svc_start() {
 	fi
 
 	if [[ ${retval} != "0" ]] ; then
-		if [[ ${svcinactive} == "0" ]] ; then
+		if service_wasinactive "${SVCNAME}" ; then
 			mark_service_inactive "${SVCNAME}"
 		elif [[ -z ${startinactive} ]] ; then
 			mark_service_stopped "${SVCNAME}"
@@ -572,7 +563,7 @@ svc_restart() {
 	svcrestart="yes"
 	# Simple way to try and detect if the service use svc_{start,stop}
 	# to restart if it have a custom restart() funtion.
-	svcres=$(sed -ne '/^[[:space:]]*restart[[:space:]]*()/,/}/ p' "${myscript}")
+	svcres=$(sed -ne '/^[[:space:]]*restart[[:space:]]*()/,/^[[:space:]]*}/ p' "${myscript}")
 	if [[ -n ${svcres} ]] ; then
 		if [[ ! ${svcres} =~ svc_stop \
 			|| ! ${svcres} =~ svc_start ]] ; then
