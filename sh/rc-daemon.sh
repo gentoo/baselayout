@@ -186,7 +186,7 @@ update_service_status() {
 	. "${daemonfile}"
 	for (( i=0; i<${#RC_DAEMONS[@]}; i++ )); do
 		local opts="--test --stop"
-		[[ -n ${RC_DAEMONS[i]} && -n ${RC_NAMES[i]} ]] \
+		[[ -n ${RC_DAEMONS[i]} && -z ${RC_NAMES[i]} ]] \
 			&& opts="${opts} --exec \"${RC_DAEMONS[i]}"\"
 		[[ -n ${RC_PIDFILES[i]} ]] \
 			&& opts="${opts} --pidfile \"${RC_PIDFILES[i]}\""
