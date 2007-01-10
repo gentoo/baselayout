@@ -140,7 +140,7 @@ rc_start_daemon() {
 	LC_ALL=C sleep "${RC_WAIT_ON_START}"
 
 	local opts="--test --stop"
-	[[ -n ${cmd} ]] && opts="${opts} --exec \"${cmd}\""
+	[[ -n ${cmd} && -z ${name} ]] && opts="${opts} --exec \"${cmd}\""
 	[[ -n ${pidfile} ]] && opts="${opts} --pidfile \"${pidfile}\""
 	[[ -n ${name} ]] && opts="${opts} --name \"${name}\""
 	eval /sbin/start-stop-daemon ${opts} >/dev/null && return 0
@@ -186,9 +186,12 @@ update_service_status() {
 	. "${daemonfile}"
 	for (( i=0; i<${#RC_DAEMONS[@]}; i++ )); do
 		local opts="--test --stop"
-		[[ -n ${RC_DAEMONS[i]} ]] && opts="${opts} --exec \"${RC_DAEMONS[i]}"\"
-		[[ -n ${RC_PIDFILES[i]} ]] && opts="${opts} --pidfile \"${RC_PIDFILES[i]}\""
-		[[ -n ${RC_NAMES[i]} ]] && opts="${opts} --name \"${RC_NAMES[i]}\""
+		[[ -n ${RC_DAEMONS[i]} && -n ${RC_NAMES[i]} ]] \
+			&& opts="${opts} --exec \"${RC_DAEMONS[i]}"\"
+		[[ -n ${RC_PIDFILES[i]} ]] \
+			&& opts="${opts} --pidfile \"${RC_PIDFILES[i]}\""
+		[[ -n ${RC_NAMES[i]} ]] \
+			&& opts="${opts} --name \"${RC_NAMES[i]}\""
 		if ! eval /sbin/start-stop-daemon ${opts} >/dev/null ; then
 			if [[ -e "/etc/init.d/${service}" ]]; then
 				( /etc/init.d/"${service}" stop &>/dev/null )
