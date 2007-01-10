@@ -133,9 +133,6 @@ rc_start_daemon() {
 	[[ ${retval} != 0 ]] && return ${retval}
 	[[ ${RC_WAIT_ON_START} == "0" ]] && return ${retval}
 
-	# Now we are started, check the process name if requested
-	[[ -n ${name} ]] && cmd="${name}"
-
 	# We pause for RC_WAIT_ON_START seconds and then
 	# check if the daemon is still running - this is mainly
 	# to handle daemons who launch and then fail due to invalid
