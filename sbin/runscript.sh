@@ -581,8 +581,7 @@ svc_restart() {
 			ewarn $"restart the service in its custom 'restart()' function."
 			ewarn $"Run" "${SVCNAME}" $"without arguments for more info."
 			echo
-			svc_stop || return $?
-			svc_start
+			svc_stop && svc_start 
 		else
 			restart
 		fi
