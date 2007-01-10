@@ -22,7 +22,7 @@ usage() {
 	Options:
 	  -d, --debug       Turn on debug output
 	  -s, --svcdir      Specify svcdir (default: ${svcdir})
-	  -u, --update      Force update even if mtimes are OK
+	  -f, --force       Force update even if mtimes are OK
 	  -v, --verbose     Show which files are being touched to fix future mtimes
 	  -h, --help        Show this help cruft
 	EOF
@@ -33,8 +33,8 @@ usage() {
 }
 
 mysvcdir=${svcdir}
-update=false
-nupdate=false
+force=false
+force_net=false
 
 while [[ -n $1 ]] ; do
 	case "$1" in
@@ -49,9 +49,9 @@ while [[ -n $1 ]] ; do
 				mysvcdir="$1"
 			fi
 			;;
-		--update|-u)
-			update=true
-			nupdate=true
+		--force|-f)
+			force=true
+			force_net=true
 			;;
 		--verbose|-v)
 			RC_VERBOSE="yes"
@@ -95,19 +95,19 @@ export SVCDIR SVCLIB
 # This makes is_older_than fix future mtimes
 RC_FIX_FUTURE=${RC_FIX_FUTURE:-yes}
 
-[[ -e "${mysvcdir}/deptree" ]] || update=true
-if ! ${update} ; then
+[[ -e "${mysvcdir}/deptree" ]] || force=true
+if ! ${force} ; then
 	is_older_than "${mysvcdir}/depcache" /etc/conf.d /etc/init.d \
-		/etc/rc.conf && update=true
-	if ${!update} ; then
+		/etc/rc.conf && force=true
+	if ${!force} ; then
 		if ! bash -n "${mysvcdir}/deptree" ; then
 			eerror "${mysvcdir}/deptree is not valid - recreating it"
-			update=true
+			force=true
 		fi
 	fi
 fi
 
-if ${update} ; then
+if ${force} ; then
 	ebegin "Caching service dependencies"
 
 	# Clean out the non volatile directories ...
@@ -139,17 +139,17 @@ if ${update} ; then
 	[[ ${retval} != "0" ]] && exit ${retval}
 fi
 
-[[ -e "${mysvcdir}/netdeptree" ]] || nupdate=true
-if ! ${nupdate} ; then
-	is_older_than "${mysvcdir}/netdepcache" "${svclib}"/net && nupdate=true
-	if ${!nupdate} ; then
+[[ -e "${mysvcdir}/netdeptree" ]] || force_net=true
+if ! ${force_net} ; then
+	is_older_than "${mysvcdir}/netdepcache" "${svclib}"/net && force_net=true
+	if ${!force_net} ; then
 		if ! bash -n "${mysvcdir}/netdeptree" ; then
 			eerror "${mysvcdir}/netdeptree is not valid - recreating it"
-			nupdate=true
+			force_net=true
 		fi
 	fi
 fi
-if ${nupdate} ; then
+if ${force_net} ; then
 	ebegin "Caching network dependencies"
 	retval=0
 
