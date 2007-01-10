@@ -7,7 +7,7 @@
 if [[ $1 == "/"* ]] ; then
 	myscript="$1"
 else
-	myscript="$(pwd)/$1"
+	myscript="${PWD}/$1"
 fi
 cd /
 
@@ -112,11 +112,6 @@ conf=$(add_suffix "/etc/conf.d/${SVCNAME}")
 [[ -e ${conf} ]] && . "${conf}"
 conf=$(add_suffix /etc/rc.conf)
 [[ -e ${conf} ]] && . "${conf}"
-
-mylevel="${SOFTLEVEL}"
-[[ ${SOFTLEVEL} == "${BOOTLEVEL}" \
-	|| ${SOFTLEVEL} == "reboot" || ${SOFTLEVEL} == "shutdown" ]] \
-	&& mylevel="${DEFAULTLEVEL}"
 
 svc_quit() {
 	eerror $"ERROR:" " ${SVCNAME}" $"caught an interrupt"
@@ -317,7 +312,7 @@ svc_stop() {
 		}
 		stop
 		)
-		retval="$?"
+		retval=$?
 
 		# Don't trust init scripts to reset indentation properly
 		# Needed for ebuffer
@@ -339,15 +334,18 @@ svc_stop() {
 		is_runlevel_stop && mark_service_failed "${SVCNAME}"
 		
 		# If we are halting the system, do it as cleanly as possible
-		if [[ ${SOFTLEVEL} == "reboot" || ${SOFTLEVEL} == "shutdown" ]] ; then
-			mark_service_stopped "${SVCNAME}"
-		else
-			if svc_wasinactive "${SVCNAME}" ; then
-				mark_service_inactive "${SVCNAME}"
-			else
-				mark_service_started "${SVCNAME}"
-			fi
-		fi
+		case ${SOFTLEVEL} in
+			reboot|shutdown|single)
+				mark_service_stopped "${SVCNAME}"
+				;;
+			*)
+				if svc_wasinactive "${SVCNAME}" ; then
+					mark_service_inactive "${SVCNAME}"
+				else
+					mark_service_started "${SVCNAME}"
+				fi
+				;;
+		esac
 
 		eerror $"ERROR:" " ${SVCNAME}" $"failed to stop"
 	else
@@ -381,18 +379,18 @@ svc_start() {
 		ewarn $"WARNING:" " ${SVCNAME}" $"has already been started."
 		return 0
 	elif service_inactive "${SVCNAME}" ; then
-		aminactive=0
 		if [[ ${IN_BACKGROUND} != "true" \
 		&& ${IN_BACKGROUND} != "1" ]] ; then
 			ewarn $"WARNING:" " ${SVCNAME}" $"has already been started."
 			return 0
 		fi
-	elif [[ ${SOFTLEVEL} == "shutdown" || ${SOFTLEVEL} == "reboot" ]] ; then
-		ewarn $"WARNING:  system shutting down, will not start" "${SVCNAME}"
-		return 1
-	elif [[ ${SOFTLEVEL} == "single" ]] ; then
-		eerror $"ERROR:  system is in single user mode, will not start" "${SVCNAME}"
-		return 1
+	else
+		case ${SOFTLEVEL} in
+			reboot|shutdown|single)
+				ewarn $"WARNING:  system shutting down, will not start" "${SVCNAME}"
+				return 1
+				;;
+		esac
 	fi
 
 	if ! mark_service_starting "${SVCNAME}" ; then
@@ -494,7 +492,7 @@ svc_start() {
 		
 		start
 		)
-		retval="$?"
+		retval=$?
 
 		# Don't trust init scripts to reset indentation properly
 		# Needed for ebuffer
@@ -545,13 +543,12 @@ svc_start() {
 }
 
 svc_restart() {
-	if [[ ${SOFTLEVEL} == "shutdown" || ${SOFTLEVEL} == "reboot" ]] ; then
-		ewarn $"WARNING:  system shutting down, will not restart" "${SVCNAME}"
-		return 1 
-	elif [[ ${SOFTLEVEL} == "single" ]] ; then
-		eerror $"ERROR:  system is in single user mode, will not restart" "${SVCNAME}"
-		return 1
-	fi
+	case ${SOFTLEVEL} in
+		reboot|shutdown|single)
+			ewarn $"WARNING:  system shutting down, will not restart" "${SVCNAME}"
+			return 1
+			;;
+	esac
 	
 	# Create a snapshot of started services
 	rm -rf "${svcdir}/snapshot/$$"
@@ -690,7 +687,7 @@ if [[ $# -lt 1 ]] ; then
 	exit 1
 fi
 for arg in "$@" ; do
-	case "${arg}" in
+	case ${arg} in
 	--quiet)
 		RC_QUIET="yes"
 		RC_QUIET_STDOUT="yes"
@@ -710,7 +707,7 @@ done
 
 retval=0
 for arg in "$@" ; do
-	case "${arg}" in
+	case ${arg} in
 	stop)
 		if [[ -e "${svcdir}/scheduled/${SVCNAME}" ]] ; then
 			rm -Rf "${svcdir}/scheduled/${SVCNAME}"
@@ -727,7 +724,7 @@ for arg in "$@" ; do
 		fi
 	
 		svc_stop
-		retval="$?"
+		retval=$?
 		
 		if [[ ${IN_BACKGROUND} == "true" || ${IN_BACKGROUND} == "1" ]] ; then
 			for x in $(dolisting "${svcdir}/snapshot/$$/") ; do
@@ -746,7 +743,7 @@ for arg in "$@" ; do
 		;;
 	start)
 		svc_start
-		retval="$?"
+		retval=$?
 		service_started "${SVCNAME}" && svc_start_scheduled
 		;;
 	needsme|ineed|usesme|iuse|broken|iafter|iprovide)
@@ -762,18 +759,18 @@ for arg in "$@" ; do
 		;;
 	restart)
 		svc_restart
-		retval="$?"
+		retval=$?
 		;;
 	condrestart|conditionalrestart)
 		if service_started "${SVCNAME}" ; then
 			svc_restart
 		fi
-		retval="$?"
+		retval=$?
 		;;
 	pause)
 		svcpause="yes"
 		svc_stop
-		retval="$?"
+		retval=$?
 		svcpause="no"
 		;;
 	--quiet|--nocolor|--nocolour|--nodeps|--verbose|--debug)
@@ -788,11 +785,11 @@ for arg in "$@" ; do
 	*)
 		# Allow for homegrown functions
 		svc_homegrown ${arg}
-		retval="$?"
+		retval=$?
 		;;
 	esac
 done
 
-exit "${retval}"
+exit ${retval}
 
 # vim: set ts=4 :
