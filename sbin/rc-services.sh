@@ -707,11 +707,11 @@ service_failed() {
 # If index is emtpy, then we don't care what the first daemon launched
 # was, otherwise the daemon must also be at that index
 service_started_daemon() {
-	local service="$1" daemon="$2" index="${3:-[0-9]*}"
+	local service="$1" daemon="'$2'" index="${3:-[0-9]*}"
 	local daemonfile="${svcdir}/daemons/${service}"
 
 	[[ ! -e ${daemonfile} ]] && return 1
-	grep -q '^RC_DAEMONS\['"${index}"'\]="'${daemon}'"$' "${daemonfile}"
+	grep -q '^RC_DAEMONS\['"${index}"'\]='"${daemon}"'$' "${daemonfile}"
 }
 
 # bool net_service(service)
