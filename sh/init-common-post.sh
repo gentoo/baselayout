@@ -15,7 +15,7 @@ else
 fi
 
 # Update init dependencies if needed
-depscan.sh
+RC_FIX_FUTURE="no" depscan.sh
 
 # We set the forced softlevel from the kernel command line
 # It needs to be run right after proc is mounted for the

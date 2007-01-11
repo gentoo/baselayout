@@ -32,6 +32,9 @@ usage() {
 	exit 1
 }
 
+# This makes is_older_than fix future mtimes
+RC_FIX_FUTURE=${RC_FIX_FUTURE:-yes}
+
 mysvcdir=${svcdir}
 force=false
 force_net=false
@@ -91,9 +94,6 @@ fi
 SVCDIR="${mysvcdir}"
 SVCLIB="${svclib}"
 export SVCDIR SVCLIB
-
-# This makes is_older_than fix future mtimes
-RC_FIX_FUTURE=${RC_FIX_FUTURE:-yes}
 
 [[ -e "${mysvcdir}/deptree" ]] || force=true
 if ! ${force} ; then

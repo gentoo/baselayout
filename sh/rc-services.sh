@@ -6,7 +6,7 @@ if [[ ${RC_GOT_SERVICES} != "yes" ]] ; then
 	RC_GOT_SERVICES="yes"
 	if [[ ${EUID} == "0" && $0 != "/etc/init.d/halt.sh" ]] ; then
 		# If the clock service hasn't started, don't fix future mtimes
-		if [[ -e "${svcdir}/started/clock" ]] ; then
+		if [[ -L "${svcdir}"/started/clock && -w /etc ]] ; then
 			depscan.sh
 		else
 			RC_FIX_FUTURE="no" depscan.sh
