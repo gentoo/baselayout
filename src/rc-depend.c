@@ -245,7 +245,7 @@ struct depinfo *load_deptree (char *file)
 {
   FILE *fp;
   if (! (fp = fopen (file, "r")))
-    err(-1, "Failed to open deptree `%s'", file);
+    err (EXIT_FAILURE, "Failed to open deptree `%s'", file);
 
   char *types[MAXTYPES];
   memset (types, 0, MAXTYPES);
