@@ -123,11 +123,16 @@ if ${force} ; then
 		DEPTREE="deptree"
 		export DEPTREE
 		cd /etc/init.d
-		bash "${mysvcdir}/depcache" | \
-			awk \
-				-f /lib/rcscripts/awk/functions.awk \
-				-f /lib/rcscripts/awk/gendepends.awk || \
-				retval=1
+		if bash -n "${mysvcdir}/depcache" ; then
+			bash "${mysvcdir}/depcache" | \
+				awk \
+					-f /lib/rcscripts/awk/functions.awk \
+					-f /lib/rcscripts/awk/gendepends.awk || \
+					retval=1
+		else
+			rm -f "${mysvcdir}/depcache"
+			retval=1
+		fi
 	fi
 
 	if [[ ${retval} == "0" ]] ; then
@@ -162,11 +167,16 @@ if ${force_net} ; then
 		DEPTREE="netdeptree"
 		export DEPTREE
 		cd "${svclib}/net"
-		bash "${mysvcdir}/netdepcache" | \
-			awk \
-				-f /lib/rcscripts/awk/functions.awk \
-				-f /lib/rcscripts/awk/gendepends.awk || \
-				retval=1
+		if bash -n "${mysvcdir}/netdepcache" ; then
+			bash "${mysvcdir}/netdepcache" | \
+				awk \
+					-f /lib/rcscripts/awk/functions.awk \
+					-f /lib/rcscripts/awk/gendepends.awk || \
+					retval=1
+		else
+			rm -f "${mysvcdir}/netdepcache"
+			retval=1
+		fi
 	fi
 
 	if [[ ${retval} == "0" ]] ; then
