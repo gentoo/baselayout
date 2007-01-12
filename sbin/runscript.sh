@@ -85,8 +85,8 @@ svcrestart="no"
 
 # Check if the textdomain is non-default
 search_lang="${LC_ALL:-${LC_MESSAGES:-${LANG}}}"
-[[ -f ${TEXTDOMAINDIR}/${search_lang%.*}/LC_MESSAGES/${myservice}.mo ]] \
-	&& TEXTDOMAIN="${myservice}"
+[[ -f ${TEXTDOMAINDIR}/${search_lang%.*}/LC_MESSAGES/${SVCNAME}.mo ]] \
+	&& TEXTDOMAIN="${SVCNAME}"
 
 # Now check script for syntax errors
 rcscript_errors=$(bash -n "${myscript}" 2>&1) || {
