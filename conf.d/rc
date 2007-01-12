@@ -3,30 +3,34 @@
 # Set to "yes" if you want the rc system to try and start services
 # in parallel for a slight speed improvement. NOTE: When enabled
 # init script output is buffered and displayed in one go when finished.
-
 RC_PARALLEL_STARTUP="no"
 
 # Set RC_INTERACTIVE to "yes" and you'll be able to press the I key during
 # boot so you can choose to start specific services. Set to "no" to disable
 # this feature.
-
 RC_INTERACTIVE="yes"
 
 # RC_VERBOSE will make init scripts more verbose and adds
 # "Service FOO starting/started/stopping/stopped" messages around each
 # init script.
-
 RC_VERBOSE="no"
 
 # RC_QUIET on the other hand will make init scripts quiet and produce no
 # output.
-
 RC_QUIET="no"
+
+
+# Do we allow any started service in the runlevel to satisfy the depedency
+# or do we want all of them regardless of state? For example, if net.eth0
+# and net.eth0 are in the default runlevel then with RC_STRICT_DEPEND="no"
+# both will be started, but services that depend on 'net' will work if either
+# one comes up. With RC_STRICT_DEPEND="yes" we would require them both to
+# come up.
+RC_STRICT_DEPEND="no"
 
 # Do we allow services to be hotplugged? If not, set to RC_HOTPLUG="no"
 # NOTE: This does not affect anything hotplug/udev/devd related, just the
 # starting/stopping of the init.d service triggered by it.
-
 RC_HOTPLUG="yes"
 
 # Dynamic /dev managers can trigger coldplug events which cause services to
@@ -36,7 +40,6 @@ RC_HOTPLUG="yes"
 # NOTE: This also affects module coldplugging in udev-096 and higher
 # If you want module coldplugging but not coldplugging of services then you
 # can set RC_COLDPLUG="yes" and RC_PLUG_SERVICES="!*"
-
 RC_COLDPLUG="yes"
 
 # Some people want a finer grain over hotplug/coldplug. RC_PLUG_SERVICES is a
@@ -45,7 +48,6 @@ RC_COLDPLUG="yes"
 # anyway.
 # Example - RC_PLUG_SERVICES="net.wlan !net.*"
 # This allows net.wlan and any service not matching net.* to be plugged.
-
 RC_PLUG_SERVICES=""
 
 # RC_USE_CONFIG_PROFILE allows you to have different /etc/conf.d files 
@@ -55,7 +57,6 @@ RC_PLUG_SERVICES=""
 # kernel line to change to the foobar runlevel.  Here we would search for
 # /etc/conf.d/<service>.foobar config files before trying to use the default
 # /etc/conf.d/<service>.
-
 RC_USE_CONFIG_PROFILE="yes"
 
 # RC_FORCE_AUTO tries its best to prevent user interaction during the boot and 
@@ -63,7 +64,6 @@ RC_USE_CONFIG_PROFILE="yes"
 # remounted to create proper directory trees.  This feature can be dangerous 
 # and is meant ONLY for headless machines where getting a physical console 
 # hooked up is a huge pita.
-
 RC_FORCE_AUTO="no"
 
 

@@ -32,7 +32,7 @@ myservice="${SVCNAME}"
 
 svc_trap() {
 	trap 'eerror $"ERROR:" " ${SVCNAME}" $"caught an interrupt"; eflush; rm -rf "${svcdir}/snapshot/$$"; exit 1' \
-		INT QUIT TSTP
+		INT QUIT TERM TSTP
 }
 
 # Setup a default trap
@@ -112,6 +112,11 @@ conf=$(add_suffix "/etc/conf.d/${SVCNAME}")
 [[ -e ${conf} ]] && . "${conf}"
 conf=$(add_suffix /etc/rc.conf)
 [[ -e ${conf} ]] && . "${conf}"
+
+# If we're using strict dependencies, setup an easy to use function
+if [[ ${RC_STRICT_DEPEND} == "yes" ]] ; then
+	rc-depend() { /sbin/rc-depend --strict "$@"; }
+fi
 
 svc_quit() {
 	eerror $"ERROR:" " ${SVCNAME}" $"caught an interrupt"
@@ -243,7 +248,7 @@ svc_stop() {
 
 	svcstarted=0
 	# Ensure that we clean up if we abort for any reason
-	trap "svc_quit" INT QUIT TSTP
+	trap "svc_quit" INT QUIT TERM TSTP
 
 	mark_service_starting "${SVCNAME}"
 	begin_service "${SVCNAME}" 
@@ -407,7 +412,7 @@ svc_start() {
 
 	svcstarted=1
 	# Ensure that we clean up if we abort for any reason
-	trap "svc_quit" INT QUIT TSTP
+	trap "svc_quit" INT QUIT TERM TSTP
 	begin_service "${SVCNAME}"
 
 	# This is our mtime file to work out if we're still in control or not

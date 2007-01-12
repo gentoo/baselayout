@@ -41,6 +41,7 @@ char *bootlevel;
 char *softlevel;
 char *svcname;
 bool always_valid = false;
+bool strict = false;
 
 struct linkedlist
 {
@@ -450,8 +451,31 @@ struct linkedlist *get_provided (struct depinfo *deptree,
   struct linkedlist *lp = providers;
   memset (providers, 0, sizeof (struct linkedlist));
   char *p, *op, *service;
+  bool r_start = is_runlevel_start ();
+  bool r_stop = is_runlevel_stop ();
 
-  /* Check runlevels */
+  /* If we're not strict then the first started service in our runlevel
+     will do */
+  if (! strict)
+    {
+      op = p = strdup (dt->services);
+      int i = 0;
+      while ((service = strsep (&p, " ")))
+	if (in_runlevel (softlevel, service) && service_started (service))
+	  {
+	    if (i++ == 1)
+	      {
+		free_linkedlist (providers);
+		return NULL;
+	      }
+	    lp = add_linkedlist (lp, service);
+	  }
+      free (op);
+
+      if (providers->item)
+	return (providers);
+    }
+
   op = p = strdup (dt->services);
   while ((service = strsep (&p, " ")))
     {
@@ -461,9 +485,9 @@ struct linkedlist *get_provided (struct depinfo *deptree,
 	  continue;
 	}
 
-      if (in_runlevel (softlevel, service) ||
-	  (strcmp (softlevel, bootlevel) == 0 
-	   && service_coldplugged (service))
+      if (in_runlevel (softlevel, service)
+	  || (strcmp (softlevel, bootlevel) == 0
+	      && service_coldplugged (service))
 	 )
 	if (get_depinfo (deptree, service))
 	  if (exists_dir_file (INITDIR, service))
@@ -486,9 +510,7 @@ struct linkedlist *get_provided (struct depinfo *deptree,
      as a laptop could have wired and wireless, neither being in the runlevel
      as both are optional. However, things like openvpn, netmount etc will
      require at least one up. */
-  bool r_start = is_runlevel_start ();
-  bool r_stop = is_runlevel_stop ();
-  if (r_start || r_stop || ! providers->item)
+  if (r_start || r_stop || (! providers->item && strict))
     {
       op = p = strdup (dt->services);
       while ((service = strsep (&p, " ")))
@@ -496,7 +518,7 @@ struct linkedlist *get_provided (struct depinfo *deptree,
 	  bool ok = false;
 	  if (r_stop)
 	    {
-	      if (service_started(service) || service_stopping (service))
+	      if (service_started (service) || service_stopping (service))
 		ok = true;
 	    }
 	  else
@@ -570,10 +592,11 @@ void visit_service (struct depinfo *deptree,
   char *p, *op;
   char *service;
 
+  struct linkedlist *provides;
   struct linkedlist *type;
+  struct linkedlist *lp;
   struct depinfo *di;
   struct deptype *dt;
-  bool needsme = false;
 
   for (type = types; type; type = type->next)
     {
@@ -589,80 +612,44 @@ void visit_service (struct depinfo *deptree,
 		}
 
 	      di = get_depinfo (deptree, service);
-	      struct linkedlist *provides = get_provided (deptree, di);
-	      if (provides)
+	      if ((provides = get_provided (deptree, di)))
 		{
-		  struct linkedlist *lp;
 		  for (lp = provides; lp; lp = lp->next)
 		    {
 		      di = get_depinfo (deptree, lp->item);
-		      if (di && (strcmp (type->item, "ineed") == 0 ||
-				 valid_service (di->service)))
+		      if (di && (strcmp (type->item, "ineed") == 0
+				 || valid_service (di->service)))
 			visit_service (deptree, types, sorted, visited, di,
 				       true);
 		    }
 		  free_linkedlist (provides);
 		}
 	      else
-		if (di && (strcmp (type->item, "ineed") == 0 ||
-			   valid_service (service)))
+		if (di && (strcmp (type->item, "ineed") == 0
+			   || valid_service (service)))
 		  visit_service (deptree, types, sorted, visited, di, true);
 	    }
 	  free (op);
 	}
-
-      /* We give special attention to the needsme type as we can stop services
-	 that depend on us. As such, if we're the last provided service up
-	 or we're in the runlevel then we need to stop the dependants. */
-      if (descend && strcmp (type->item, "needsme") == 0)
-	{
-	  needsme = true;
-	  dt = get_deptype (depinfo, "iprovide");
-	  if (dt)
-	    {
-	      op = p = strdup (dt->services);
-	      while ((service = strsep (&p, " ")))
-		{
-		  if (! (di = get_depinfo (deptree, service)))
-		    continue;
-
-		  struct deptype *dtt = get_deptype (di, "providedby");
-		  if (! dtt)
-		    continue;
-
-		  bool visit = true;
-		  if (! in_runlevel (softlevel, depinfo->service))
-		    {
-		      char *opp, *pp, *ss;
-		      opp = pp = strdup (dtt->services);
-		      while ((ss = strsep (&pp, " ")))
-			{
-			  if (service_started (ss) &&
-			      strcmp (ss, depinfo->service) != 0)
-			    {
-			      visit = false;
-			      break;
-			    }
-			}
-		      free (opp);
-		    }
-
-		  if (visit)
-		    visit_service (deptree, types, sorted, visited, di, true);
-		}
-	      free (op);
-	    } 
-	} 
     }
 
   /* Now visit the stuff we provide for */
-  if ((dt = get_deptype (depinfo, "iprovide")) && descend && ! needsme)
+  if ((dt = get_deptype (depinfo, "iprovide")) && descend)
     {
       op = p = strdup (dt->services);
       while ((service = strsep (&p, " ")))
 	{
-	  if ((di = get_depinfo (deptree, service)));
-	  visit_service (deptree, types, sorted, visited, di, descend);
+	  if ((di = get_depinfo (deptree, service)))
+	    if ((provides = get_provided (deptree, di)))
+	      {
+		for (lp = provides; lp; lp = lp->next)
+		  if (strcmp (lp->item, depinfo->service) == 0)
+		    {
+		      visit_service (deptree, types, sorted, visited, di, true);
+		      break;
+		    }
+		free_linkedlist (provides);
+	      }
 	}
       free (op);
     }
@@ -694,6 +681,12 @@ int main (int argc, char **argv)
       if (strcmp (argv[i], "--alwaysvalid") == 0)
 	{
 	  always_valid = true;
+	  continue;
+	}
+
+      if (strcmp (argv[i], "--strict") == 0)
+	{
+	  strict = true;
 	  continue;
 	}
 

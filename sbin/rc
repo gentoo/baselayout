@@ -268,7 +268,9 @@ get_stop_services() {
 		list="${x##*/} ${list}"
 	done
 
-	[[ -n ${list} ]] && reverse_list $(rc-depend -ineed -iuse -iafter ${list})
+	if [[ -n ${list} ]] ; then
+		reverse_list $(rc-depend --strict -ineed -iuse -iafter ${list})
+	fi
 }
 
 dep_stop() {
@@ -377,7 +379,7 @@ get_start_services() {
 		list="${list} ${x##*/}"
 	done
 
-	[[ -n ${list} ]] && rc-depend -ineed -iuse -iafter ${list}
+	[[ -n ${list} ]] && rc-depend --strict -ineed -iuse -iafter ${list}
 }
 
 check_critical_failed() {

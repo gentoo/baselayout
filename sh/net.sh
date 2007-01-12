@@ -17,21 +17,21 @@ depend() {
 
 	# Load any custom depend functions for the given interface
 	# For example, br0 may need eth0 and eth1
-	local iface="${SVCNAME#*.}"
+	local iface=${SVCNAME#*.}
+	local ifvar=${iface//[![:word:]]/_}
 	[[ $(type -t "depend_${iface}") == "function" ]] && depend_${iface}
 
+	local p="RC_PROVIDE_${ifvar}"
+	[[ -n ${!p-net} ]] && provide ${!p-net}
+
 	if [[ ${iface} != "lo" && ${iface} != "lo0" ]] ; then
-		provide net
 		after net.lo net.lo0
 
 		# Support new style RC_NEED and RC_USE in one net file
-		local x="RC_NEED_${iface}"
+		local x="RC_NEED_${ifvar}"
 		[[ -n ${!x} ]] && need ${!x}
-		x="RC_USE_${iface}"
+		x="RC_USE_${ifvar}"
 		[[ -n ${!x} ]] && use ${!x}
-	else
-		# Support legacy setting
-		[[ ${RC_NET_STRICT_CHECKING} != "no" ]] && provide net
 	fi
 
 	return 0

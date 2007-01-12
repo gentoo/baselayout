@@ -3,7 +3,10 @@
 
   12 Jan 2007; Roy Marples <uberlord@gentoo.org>:
 
-    Fix bootmisc, #161328
+    Revive old default behaviour of network scripts, #161510.
+    This is toggled throught the use of RC_STRICT_DEPEND.
+
+    Fix bootmisc, #161328.
 
   10 Jan 2007; Roy Marples <uberlord@gentoo.org>:
 
