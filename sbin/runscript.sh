@@ -38,13 +38,6 @@ svc_trap() {
 # Setup a default trap
 svc_trap
 
-# Now check script for syntax errors
-rcscript_errors=$(bash -n "${myscript}" 2>&1) || {
-	[[ -n ${rcscript_errors} ]] && echo "${rcscript_errors}" >&2
-	eerror $"ERROR:" " $1" $"has syntax errors in it; aborting ..."
-	exit 1
-}
-
 # coldplug events can trigger init scripts, but we don't want to run them
 # until after rc sysinit has completed so we punt them to the boot runlevel
 if [[ -e /dev/.rcsysinit ]] ; then
@@ -94,6 +87,14 @@ svcrestart="no"
 search_lang="${LC_ALL:-${LC_MESSAGES:-${LANG}}}"
 [[ -f ${TEXTDOMAINDIR}/${search_lang%.*}/LC_MESSAGES/${myservice}.mo ]] \
 	&& TEXTDOMAIN="${myservice}"
+
+# Now check script for syntax errors
+rcscript_errors=$(bash -n "${myscript}" 2>&1) || {
+	[[ -n ${rcscript_errors} ]] && echo "${rcscript_errors}" >&2
+	eerror $"ERROR:" " $1" $"has syntax errors in it; aborting ..."
+	end_service "${SVCNAME}"
+	exit 1
+}
 
 # Source configuration files.
 # (1) Source /etc/conf.d/${PREFIX} where ${PREFIX} is the first part of
