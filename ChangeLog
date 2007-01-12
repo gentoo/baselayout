@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2007 Gentoo Foundation; Distributed under the GPLv2
 
+  12 Jan 2007; Roy Marples <uberlord@gentoo.org>:
+
+    Fix bootmisc, #161328
+
   10 Jan 2007; Roy Marples <uberlord@gentoo.org>:
 
     Fix some restarting issues when --nodeps is used.

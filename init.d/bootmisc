@@ -56,16 +56,20 @@ start() {
 		
 		# Clean up /var/run and create /var/run/utmp so we can login.
 		for x in $(find /var/run/ ! -type d ! -name utmp ! -name innd.pid ! -name random-seed ! -name ld-elf.so.hints); do
+			[[ ! -f ${x} ]] && continue
 			# Do not remove pidfiles of already running daemons
-			if [[ ${x} == *".pid" ]] ; then
+			if [[ ${x} == *".pid" && -s ${x} ]] ; then
 				local pid=$(sed -e '1q' "${x}")
-				if [[ -e /proc/${pid}/cmdline ]] ; then
-					continue
-				else
-					ps -p "${pid}" >/dev/null && continue
+				pid=${pid%% *}
+				if [[ -n ${pid} ]] ; then
+					# BSD doesn't have /proc mounted by default
+					if [[ -e /proc/self ]] ; then
+						[[ -e /proc/"${pid}"/cmdline ]] && continue
+					else
+						ps -p "${pid}" >/dev/null && continue
+					fi
 				fi
 			fi
-			[[ ! -f ${x} ]] && continue
 			rm -f "${x}"
 		done
 	fi
