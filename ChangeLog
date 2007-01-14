@@ -3,6 +3,8 @@
 
   14 Jan 2007; Roy Marples <uberlord@gentoo.org>:
 
+    Fix ip6 routes when iproute2 isn't installed, #161959.
+
     Allow the setting of a global metric, #161822.
 
   12 Jan 2007; Roy Marples <uberlord@gentoo.org>:

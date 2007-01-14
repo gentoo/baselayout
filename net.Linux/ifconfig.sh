@@ -360,26 +360,26 @@ ifconfig_post_start() {
 		x="${x//via/gw} "
 		x="${x//scope * / }"
 
-		# Work out if we're a host or a net if not told
-		if [[ " ${x} " != *" -net "* && " ${x} " != *" -host "* ]] ; then
-			y="${x%% *}"
-			if [[ ${x} == *" netmask "* ]] ; then
-				x="-net ${x}"
-			elif [[ ${y} == *.*.*.*/32 ]] ; then
-				x="-host ${x}"
-			elif [[ ${y} == *.*.*.*/* || ${y} == "0.0.0.0" \
-				|| ${y} == "default" ]] ; then
-				x="-net ${x}"
-			else
-				# Given the lack of a netmask, we assume a host
-				x="-host ${x}"
-			fi
-		fi
-
 		# Support adding IPv6 addresses easily
 		if [[ ${x} == *:* ]]; then
 			[[ ${x} != *"-A inet6"* ]] && x="-A inet6 ${x}"
 			x="${x// -net / }"
+		else
+			# Work out if we're a host or a net if not told
+			if [[ " ${x} " != *" -net "* && " ${x} " != *" -host "* ]] ; then
+				y="${x%% *}"
+				if [[ ${x} == *" netmask "* ]] ; then
+					x="-net ${x}"
+				elif [[ ${y} == *.*.*.*/32 ]] ; then
+					x="-host ${x}"
+				elif [[ ${y} == *.*.*.*/* || ${y} == "0.0.0.0" \
+					|| ${y} == "default" ]] ; then
+					x="-net ${x}"
+				else
+					# Given the lack of a netmask, we assume a host
+					x="-host ${x}"
+				fi
+			fi
 		fi
 
 		# Add a metric if we don't have one
