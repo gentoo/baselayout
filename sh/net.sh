@@ -686,6 +686,8 @@ run_start() {
 		metric_lo0="0"
 		config_lo0=( "127.0.0.1/8 brd 127.255.255.255" "${config_lo[@]}" )
 		routes_lo0=( "127.0.0.0/8 via 127.0.0.1" "${routes_lo[@]}" )
+	elif [[ -n ${metric} ]] ; then
+		eval "metric_${IFVAR}=\"${metric}\""
 	fi
 
 	# We may not have a loaded module for ${iface}
