@@ -257,7 +257,7 @@ svc_stop() {
 
 	# Store our e* messages in a buffer so we pretty print when parallel
 	[[ ${RC_PARALLEL_STARTUP} == "yes" && ${RC_QUIET} != "yes" ]] \
-		&& ebuffer "${svcdir}/ebuffer/${SVCNAME}"
+		&& ebuffer "${svcdir}/ebuffer/${SVCNAME}.$$"
 
 	veinfo $"Service" "${SVCNAME}" $"stopping"
 
@@ -417,7 +417,7 @@ svc_start() {
 
 	# Store our e* messages in a buffer so we pretty print when parallel
 	[[ ${RC_PARALLEL_STARTUP} == "yes" && ${RC_QUIET} != "yes" ]] \
-		&& ebuffer "${svcdir}/ebuffer/${SVCNAME}"
+		&& ebuffer "${svcdir}/ebuffer/${SVCNAME}.$$"
 
 	veinfo $"Service" "${SVCNAME}" $"starting"
 
