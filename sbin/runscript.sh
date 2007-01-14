@@ -14,12 +14,6 @@ cd /
 # Common functions
 [[ ${RC_GOT_FUNCTIONS} != "yes" ]] && . /sbin/functions.sh
 
-# User must be root to run most script stuff (except status)
-if [[ ${EUID} != "0" ]] && ! [[ $2 == "status" && $# -eq 2 ]] ; then
-	eerror "$0:" $"must be root to run init scripts"
-	exit 1
-fi
-
 if [[ -L $1 && ! -L "/etc/init.d/${1##*/}" ]] ; then
 	SVCNAME=$(readlink "$1")
 else
@@ -27,8 +21,17 @@ else
 fi
 declare -r SVCNAME="${SVCNAME##*/}"
 export SVCNAME
-# Support deprecated myservice variable
-myservice="${SVCNAME}"
+
+# Check if the textdomain is non-default
+search_lang="${LC_ALL:-${LC_MESSAGES:-${LANG}}}"
+[[ -f ${TEXTDOMAINDIR}/${search_lang%.*}/LC_MESSAGES/${SVCNAME}.mo ]] \
+	&& TEXTDOMAIN="${SVCNAME}"
+
+# User must be root to run most script stuff (except status)
+if [[ ${EUID} != "0" ]] && ! [[ $2 == "status" && $# == "2" ]] ; then
+	eerror "$0:" $"must be root to run init scripts"
+	exit 1
+fi
 
 svc_trap() {
 	trap 'eerror $"ERROR:" " ${SVCNAME}" $"caught an interrupt"; eflush; rm -rf "${svcdir}/snapshot/$$"; exit 1' \
@@ -49,9 +52,9 @@ if [[ -e /dev/.rcsysinit ]] ; then
 		[[ "!${SVCNAME}" == ${x} ]] && exit 1
 	done
 	eerror "${SVCNAME}" $"will be started in the" "${BOOTLEVEL}" $"runlevel"
-	if [[ ! -L /dev/.rcboot/"${SVCNAME}" ]] ; then
+	if [[ ! -e /dev/.rcboot/"${SVCNAME}" ]] ; then
 		[[ ! -d /dev/.rcboot ]] && mkdir /dev/.rcboot
-		ln -snf "$1" /dev/.rcboot/"${SVCNAME}"
+		touch /dev/.rcboot/"${SVCNAME}"
 	fi
 	exit 1
 fi
@@ -82,11 +85,6 @@ svcrestart="no"
 [[ ${RC_GOT_SERVICES} != "yes" ]] && . "${svclib}/sh/rc-services.sh"
 # Functions to control daemons
 [[ ${RC_GOT_DAEMON} != "yes" ]] && . "${svclib}/sh/rc-daemon.sh"
-
-# Check if the textdomain is non-default
-search_lang="${LC_ALL:-${LC_MESSAGES:-${LANG}}}"
-[[ -f ${TEXTDOMAINDIR}/${search_lang%.*}/LC_MESSAGES/${SVCNAME}.mo ]] \
-	&& TEXTDOMAIN="${SVCNAME}"
 
 # Now check script for syntax errors
 rcscript_errors=$(bash -n "${myscript}" 2>&1) || {
@@ -224,7 +222,7 @@ svc_in_control() {
 	local x
 	for x in starting started stopping ; do
 		[[ "${svcdir}/${x}/${SVCNAME}" -nt "${svcdir}/exclusive/${SVCNAME}.$$" ]] \
-				&& return 1
+			&& return 1
 	done
 	return 0
 }
@@ -329,11 +327,9 @@ svc_stop() {
 
 		# If a service has been marked inactive, exit now as something
 		# may attempt to start it again later
-		if [[ ${retval} == "0" ]] ; then
-			if service_inactive "${SVCNAME}" || ! svc_in_control ; then
-				rm -f "${svcdir}/exclusive/${SVCNAME}.$$"
-				return 0
-			fi
+		if service_inactive "${SVCNAME}" || ! svc_in_control ; then
+			rm -f "${svcdir}/exclusive/${SVCNAME}.$$"
+			return 1 
 		fi
 	fi
 
@@ -512,16 +508,14 @@ svc_start() {
 
 		# If a service has been marked inactive, exit now as something
 		# may attempt to start it again later
-		if [[ ${retval} == "0" ]] ; then
-			if service_inactive "${SVCNAME}" || ! svc_in_control ; then
-				rm -f "${svcdir}/exclusive/${SVCNAME}.$$"
-				ewarn $"WARNING:" " ${SVCNAME}" $"has started but is inactive"
-				if [[ ${RC_PARALLEL_STARTUP} == "yes" && ${RC_QUIET} != "yes" ]] ; then
-					eflush
-					ebuffer ""
-				fi
-				return 1
+		if service_inactive "${SVCNAME}" || ! svc_in_control ; then
+			rm -f "${svcdir}/exclusive/${SVCNAME}.$$"
+			ewarn $"WARNING:" " ${SVCNAME}" $"has started but is inactive"
+			if [[ ${RC_PARALLEL_STARTUP} == "yes" && ${RC_QUIET} != "yes" ]] ; then
+				eflush
+				ebuffer ""
 			fi
+			return 1
 		fi
 	fi
 

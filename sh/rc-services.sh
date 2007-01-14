@@ -6,7 +6,9 @@ if [[ ${RC_GOT_SERVICES} != "yes" ]] ; then
 	RC_GOT_SERVICES="yes"
 	if [[ ${EUID} == "0" && $0 != "/etc/init.d/halt.sh" ]] ; then
 		# If the clock service hasn't started, don't fix future mtimes
-		if [[ -L "${svcdir}"/started/clock && -w /etc ]] ; then
+		if [[ -e /etc/init.d/clock \
+			&& -e "${svcdir}"/started/clock
+			&& -w /etc ]] ; then
 			depscan.sh
 		else
 			RC_FIX_FUTURE="no" depscan.sh
@@ -22,10 +24,7 @@ fi
 #
 in_runlevel() {
 	[[ -z $1 || -z $2 ]] && return 1
-
-	[[ -L "/etc/runlevels/$2/$1" ]] && return 0
-
-	return 1
+	[[ -L "/etc/runlevels/$2/$1" ]]
 }
 
 # bool is_runlevel_start()
@@ -234,7 +233,7 @@ stop_service() {
 mark_service_coldplugged() {
 	[[ -z $1 ]] && return 1
 
-	ln -snf "/etc/init.d/$1" "${svcdir}/coldplugged/$1"
+	touch "${svcdir}/coldplugged/$1"
 	return 0
 }
 
@@ -245,7 +244,7 @@ mark_service_coldplugged() {
 mark_service_starting() {
 	[[ -z $1 ]] && return 1
 
-	ln -sn "/etc/init.d/$1" "${svcdir}/starting/$1" 2>/dev/null || return 1
+	mkfifo "${svcdir}/starting/$1" 2>/dev/null || return 1
 
 	[[ -f "${svcdir}/started/$1" ]] && rm -f "${svcdir}/started/$1"
 	[[ -f "${svcdir}/inactive/$1" ]] \
@@ -260,12 +259,11 @@ mark_service_starting() {
 mark_service_started() {
 	[[ -z $1 ]] && return 1
 
-	ln -snf "/etc/init.d/$1" "${svcdir}/started/$1"
+	touch "${svcdir}/started/$1"
 	
 	rm -f "${svcdir}/starting/$1" "${svcdir}/inactive/$1" \
 		"${svcdir}/wasinactive/$1" "${svcdir}/stopping/$1" \
 		"${svcdir}"/scheduled/*/"$1"
-
 	return 0 
 }
 
@@ -276,13 +274,11 @@ mark_service_started() {
 mark_service_inactive() {
 	[[ -z $1 ]] && return 1
 
-	ln -snf "/etc/init.d/$1" "${svcdir}/inactive/$1"
+	touch "${svcdir}/inactive/$1"
 	
 	rm -f "${svcdir}/started/$1" "${svcdir}/wasinactive/$1" \
 		"${svcdir}/starting/$1" "${svcdir}/stopping/$1"
-	
 	end_service "$1"
-
 	return 0
 }
 
@@ -293,12 +289,11 @@ mark_service_inactive() {
 mark_service_stopping() {
 	[[ -z $1 ]] && return 1
 
-	ln -sn "/etc/init.d/$1" "${svcdir}/stopping/$1" 2>/dev/null || return 1
+	mkfifo "${svcdir}/stopping/$1" 2>/dev/null || return 1
 
 	rm -f "${svcdir}/started/$1"
 	[[ -f "${svcdir}/inactive/$1" ]] \
 		&& mv "${svcdir}/inactive/$1" "${svcdir}/wasinactive/$1"
-		
 	return 0
 }
 
@@ -325,12 +320,13 @@ test_service_state() {
 	[[ -z $1 || -z $2 ]] && return 1
 
 	local f="${svcdir}/$2/$1"
-	
+	if [[ ! -e "/etc/init.d/$1" ]] ; then
+		rm -f "${f}"
+		return 1
+	fi
+
 	# Service is in the state requested
-	[[ -L ${f} ]] && return 0
-	
-	[[ ! -e ${f} ]] && rm -f "${f}"
-	return 1
+	[[ -e ${f} ]]
 }
 
 # bool service_coldplugged(service)
@@ -429,7 +425,7 @@ service_scheduled() {
 mark_service_failed() {
 	[[ -z $1 || ! -d "${svcdir}/failed" ]] && return 1
 
-	ln -snf "/etc/init.d/$1" "${svcdir}/failed/$1"
+	touch "${svcdir}/failed/$1"
 }
 
 # bool service_failed(service)
@@ -437,7 +433,7 @@ mark_service_failed() {
 #   Return true if 'service' have failed during this runlevel.
 #
 service_failed() {
-	[[ -n $1 && -L "${svcdir}/failed/$1" ]]
+	[[ -n $1 && -e "${svcdir}/failed/$1" ]]
 }
 
 # bool service_started_daemon(char *interface, char *daemon, int index)
@@ -446,7 +442,7 @@ service_failed() {
 # If index is emtpy, then we don't care what the first daemon launched
 # was, otherwise the daemon must also be at that index
 service_started_daemon() {
-	local service="$1" daemon="'$2'" index="${3:-[0-9]*}"
+	local service=$1 daemon="'$2'" index="${3:-[0-9]*}"
 	local daemonfile="${svcdir}/daemons/${service}"
 
 	[[ ! -e ${daemonfile} ]] && return 1
@@ -458,7 +454,7 @@ service_started_daemon() {
 # Handy function to handle all our unmounting needs
 # get_mounts is our portable function to get mount information
 do_unmount() {
-	local cmd="$1" no_unmounts="$2" nodes="$3" fslist="$4" retval=0 retry=
+	local cmd=$1 no_unmounts=$2 nodes=$3 fslist=$4 retval=0 retry=
 	local l= fs= node= point= foo= fuser_opts="-m -c" fuser_kill="-s "
 	local pids= pid=
 	if [[ $(uname) == "Linux" ]] ; then

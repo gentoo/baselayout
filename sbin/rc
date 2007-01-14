@@ -221,7 +221,7 @@ else
 		# to /dev/.rcsysinit existing to the list
 		if [[ -d /dev/.rcboot ]] ; then
 			for x in $(dolisting /dev/.rcboot/) ; do
-				[[ -L ${x} ]] && mark_service_coldplugged "${x##*/}"
+				[[ -e ${x} ]] && mark_service_coldplugged "${x##*/}"
 			done
 			rm -rf /dev/.rcboot
 		fi
