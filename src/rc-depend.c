@@ -255,7 +255,7 @@ struct depinfo *load_deptree (char *file)
   memset (deptree, 0, sizeof (struct depinfo));
   struct depinfo *depinfo = NULL;
   struct deptype *deptype = NULL;
-  char buffer [2048];
+  char buffer [LINEBUFFER];
   int rc_type_len = strlen ("declare -r rc_type_");
   int rc_depend_tree_len = strlen ("RC_DEPEND_TREE[");
   int max_type = 0;
@@ -510,7 +510,7 @@ struct linkedlist *get_provided (struct depinfo *deptree,
      as a laptop could have wired and wireless, neither being in the runlevel
      as both are optional. However, things like openvpn, netmount etc will
      require at least one up. */
-  if (r_start || r_stop || (! providers->item && strict))
+  if (r_start || r_stop || (! providers->item && ! strict))
     {
       op = p = strdup (dt->services);
       while ((service = strsep (&p, " ")))
@@ -533,7 +533,7 @@ struct linkedlist *get_provided (struct depinfo *deptree,
     }
 
   /* If we still have nothing, then see if anything is inactive. */
-  if (! providers->item)
+  if (! providers->item && ! strict)
     {
       op = p = strdup (dt->services);
       while ((service = strsep (&p, " ")))
