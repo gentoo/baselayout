@@ -49,10 +49,7 @@ if [[ ${RC_COLDPLUG:-yes} == "yes" ]] ; then
 			fi
 		done
 		set +f
-		if [[ ${doit} == "0" ]] ; then
-			ln -snf "/etc/init.d/${n}" \
-				"${svcdir}"/coldplugged/"${n}"
-		fi
+		[[ ${doit} == "0" ]] && touch "${svcdir}"/coldplugged/"${n}"
 	done
 fi
 
