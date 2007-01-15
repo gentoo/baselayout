@@ -3,6 +3,8 @@
 
   15 Jan 2007; Roy Marples <uberlord@gentoo.org>:
 
+    Fix ifplugd stopping.
+
     rc-status no longer errors when in single user on FreeBSD.
 
     rc-depend has a much saner calculates which services provide what
