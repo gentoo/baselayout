@@ -431,11 +431,55 @@ bool valid_service (const char *service)
 	  || service_coldplugged (service) || service_started (service));
 }
 
+bool get_provided1 (struct linkedlist *providers,
+		    struct deptype *deptype,
+		    char *level, bool coldplugged,
+		    bool started, bool inactive)
+{
+  char *service;
+  char *p;
+  char *op;
+  struct linkedlist *lp = providers;
+  bool retval = false;
+
+  op = p = strdup (deptype->services);
+  while ((service = strsep (&p, " ")))
+    {
+      bool ok = true;
+      if (level)
+	ok = in_runlevel (level, service);
+      else if (coldplugged)
+	ok = (service_coldplugged (service)
+	      && ! in_runlevel (softlevel, service)
+	      && ! in_runlevel (bootlevel, service));
+
+      if (! ok)
+	continue;
+
+      if (started)
+	ok = service_started (service);
+      else if (inactive)
+	ok = service_inactive (service);
+
+      if (! ok)
+	continue;
+    
+      retval = true;
+      lp = add_linkedlist (lp, service);
+    }
+  free (op);
+
+  return retval;
+}
+
 /* Work out if a service is provided by another service.
    For example metalog provides logger.
    We need to be able to handle syslogd providing logger too.
    We do this by checking whats running, then what's starting/stopping,
    then what's run in the runlevels and finally alphabetical order.
+
+   If there are any bugs in rc-depend, they will probably be here as
+   provided dependancy can change depending on runlevel state.
    */
 struct linkedlist *get_provided (struct depinfo *deptree,
 				 struct depinfo *depinfo)
@@ -451,52 +495,17 @@ struct linkedlist *get_provided (struct depinfo *deptree,
   struct linkedlist *lp = providers;
   memset (providers, 0, sizeof (struct linkedlist));
   char *p, *op, *service;
-  bool r_start = is_runlevel_start ();
-  bool r_stop = is_runlevel_stop ();
 
-  /* If we're not strict then the first started service in our runlevel
-     will do */
-  if (! strict && ! r_stop)
+  /* If we are stopping then all depends are true, regardless of state.
+     This is especially true for net services as they could force a restart
+     of the local dns resolver which may depend on net. */
+  if (is_runlevel_stop () || always_valid)
     {
       op = p = strdup (dt->services);
-      int i = 0;
       while ((service = strsep (&p, " ")))
-	if (in_runlevel (softlevel, service) && service_started (service))
-	  {
-	    if (i++ == 1)
-	      {
-		free_linkedlist (providers);
-		return NULL;
-	      }
-	    lp = add_linkedlist (lp, service);
-	  }
+	lp = add_linkedlist (lp, service);
       free (op);
 
-      if (providers->item)
-	return (providers);
-    }
-
-  op = p = strdup (dt->services);
-  while ((service = strsep (&p, " ")))
-    {
-      if (always_valid)
-	{
-	  lp = add_linkedlist (lp, service);
-	  continue;
-	}
-
-      if (in_runlevel (softlevel, service)
-	  || (strcmp (softlevel, bootlevel) == 0
-	      && service_coldplugged (service))
-	 )
-	if (get_depinfo (deptree, service))
-	  if (exists_dir_file (INITDIR, service))
-	    lp = add_linkedlist (lp, service);
-    }
-  free (op);
-
-  if (always_valid)
-    {
       if (providers->item)
 	return (providers);
 
@@ -504,66 +513,81 @@ struct linkedlist *get_provided (struct depinfo *deptree,
       return NULL;
     }
 
-  /* Check running only if runlevel is stopping or starting.
-     Should we also check running if no provides are in runlevels?
-     Well, I think that we should provide only if one service is running
-     as a laptop could have wired and wireless, neither being in the runlevel
-     as both are optional. However, things like openvpn, netmount etc will
-     require at least one up. */
-  if (r_start || r_stop || (! providers->item && ! strict))
+  /* If we're strict, then only use what we have in our runlevel */
+  if (strict)
     {
       op = p = strdup (dt->services);
       while ((service = strsep (&p, " ")))
-	{
-	  bool ok = false;
-	  if (r_stop)
-	    {
-	      // if (service_started (service) || service_stopping (service))
-		ok = true;
-	    }
-	  else
-	    {
-	      if (service_started (service))
-		ok = true;
-	    }
-	  if (ok && get_depinfo (deptree, service))
-	    lp = add_linkedlist (lp, service);
-	}
+	if (in_runlevel (softlevel, service))
+	  lp = add_linkedlist (lp, service);
       free (op);
+
+      if (providers->item)
+	return (providers);
     }
 
-  /* If we still have nothing, then see if anything is inactive. */
-  if (! providers->item && ! strict)
-    {
-      op = p = strdup (dt->services);
-      while ((service = strsep (&p, " ")))
-	{
-	  if (service_inactive (service))
-	    if (get_depinfo (deptree, service))
-	      lp = add_linkedlist (lp, service);
-	}
-      free (op);
-    }
+  /* OK, we're not strict or there were no services in our runlevel.
+     This is now where the logic gets a little fuzzy :)
+     If there is >1 running service then we return NULL.
+     We do this so we don't hang around waiting for inactive services and
+     our need has already been satisfied as it's not strict.
+     We apply this to our runlevel, coldplugged services, then bootlevel
+     and finally any running.*/
+#define DO \
+  if (providers->next && providers->next->item) \
+    { \
+      free_linkedlist (providers); \
+      return NULL; \
+    } \
+  else \
+  return providers; \
 
-  /* Lastly, check the boot runlevel if we're not in it. */
+  if (get_provided1 (providers, dt, softlevel, false, true, false))
+    { DO }
+  if (get_provided1 (providers, dt, softlevel, false, false, true))
+    { DO }
+
+  /* Check coldplugged services */
+  if (get_provided1 (providers, dt, NULL, true, true, false))
+    { DO }
+  if (get_provided1 (providers, dt, NULL, true, false, true))
+    { DO }
+
+  /* Check bootlevel if we're not in it */
   if (strcmp (softlevel, bootlevel) != 0)
     {
-      op = p = strdup (dt->services);
-      while ((service = strsep (&p, " ")))
-	{
-	  if (in_runlevel (bootlevel, service)
-	      || (service_coldplugged (service) && ! providers->item))
-	    if (get_depinfo (deptree, service))
-	      if (exists_dir_file (INITDIR, service))
-		lp = add_linkedlist (lp, service);
-	}
-      free (op);
+      if (get_provided1 (providers, dt, bootlevel, false, true, false))
+	{ DO }
+      if (get_provided1 (providers, dt, bootlevel, false, false, true))
+	{ DO }
     }
+
+  /* Check manually started */
+  if (get_provided1 (providers, dt, NULL, false, true, false))
+    { DO }
+  if (get_provided1 (providers, dt, NULL, false, false, true))
+    { DO }
+
+  /* Nothing started then. OK, lets get the stopped services */
+  if (get_provided1 (providers, dt, softlevel, false, false, false))
+    return providers;
+  if (get_provided1 (providers, dt, NULL, true, false, false))
+    return providers;
+  if ((strcmp (softlevel, bootlevel) != 0)
+      && (get_provided1 (providers, dt, bootlevel, false, false, false)))
+    return providers;
+
+  /* Still nothing? OK, list all services */
+  op = p = strdup (dt->services);
+  while ((service = strsep (&p, " ")))
+    lp = add_linkedlist (lp, service);
+  free (op);
 
   if (providers->item)
     return (providers);
 
-  free (providers);
+  /* Nothing provides us then */
+  free_linkedlist (providers);
   return NULL;
 }
 

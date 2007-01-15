@@ -49,4 +49,4 @@ install: $(TARGET)
 
 clean:
 	rm -f $(TARGET)
-	rm -f *.o *~
+	rm -f *.o *~ *.core

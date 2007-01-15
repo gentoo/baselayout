@@ -29,6 +29,12 @@
 source /sbin/functions.sh
 runleveldir=/etc/runlevels
 
+# We fully unmount when we are in single user on BSD, so cater for this
+if [[ ! -d ${svcdir}/started ]] ; then
+    echo "Runlevel: ${HILITE}single${NORMAL}"
+    exit 0
+fi
+
 # grab settings from conf.d/rc
 source "${svclib}/sh/rc-daemon.sh"
 

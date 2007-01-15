@@ -1,6 +1,14 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2007 Gentoo Foundation; Distributed under the GPLv2
 
+  15 Jan 2007; Roy Marples <uberlord@gentoo.org>:
+
+    rc-status no longer errors when in single user on FreeBSD.
+
+    rc-depend has a much saner calculates which services provide what
+    in a much saner way. Hopefully this now works for all situations of
+    how you want the net depend to be fulfilled!
+
   14 Jan 2007; Roy Marples <uberlord@gentoo.org>:
 
     Change from using symlinks to real files so we can test mtimes

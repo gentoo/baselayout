@@ -296,10 +296,7 @@ svc_stop() {
 
 		# Work with uses, before and after deps too, but as they are not needed
 		# we cannot explicitly stop them.
-		# We use -needsme with -usesme so we get the full dep list.
-		# We use --notrace with -ibefore to stop circular deps.
-		for x in $(rc-depend -needsme -usesme "${SVCNAME}") \
-			$(rc-depend --notrace -ibefore "${SVCNAME}"); do
+		for x in $(rc-depend -needsme -usesme -ibefore "${SVCNAME}") ; do 
 			service_stopping "${x}" && wait_service "${x}"
 		done
 	fi
@@ -443,7 +440,7 @@ svc_start() {
 
 		# Wait for dependencies to finish.
 		local ineed=$(rc-depend --notrace -ineed "${SVCNAME}")
-		for x in ${startsvc} $(rc-depend -iafter "${SVCNAME}") ; do
+		for x in $(rc-depend -ineed -iuse -iafter "${SVCNAME}") ; do
 			local timeout=3
 			while [[ ${timeout} -gt 0 ]] ; do
 				service_started "${x}" && continue 2
