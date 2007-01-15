@@ -118,6 +118,17 @@
 # Some users may need to alter the MTU - here's how
 #mtu_eth0="1500"
 
+# Each module described below can set a default base metric, lower is
+# preferred over higher. This is so we can prefer a wired route over a
+# wireless route automaticaly. You can override this by setting
+#metric_eth0="100"
+# or on a global basis
+#metric="100"
+# The only downside of the global setting is that you have to ensure that
+# there are no conflicting routes yourself. For users with large routing
+# tables you may have to set a global metric as the due to a simple read of
+# the routing table taking over a minute at a time.
+
 ##############################################################################
 # OPTIONAL MODULES
 
