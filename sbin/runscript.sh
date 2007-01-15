@@ -460,10 +460,6 @@ svc_start() {
 					continue 2
 				fi
 				service_stopped "${x}" && break
-
-				# Small pause before trying again as it should be starting
-				# if we get here
-				sleep 1
 				((timeout--))
 			done
 

@@ -456,7 +456,7 @@ struct linkedlist *get_provided (struct depinfo *deptree,
 
   /* If we're not strict then the first started service in our runlevel
      will do */
-  if (! strict)
+  if (! strict && ! r_stop)
     {
       op = p = strdup (dt->services);
       int i = 0;
@@ -518,7 +518,7 @@ struct linkedlist *get_provided (struct depinfo *deptree,
 	  bool ok = false;
 	  if (r_stop)
 	    {
-	      if (service_started (service) || service_stopping (service))
+	      // if (service_started (service) || service_stopping (service))
 		ok = true;
 	    }
 	  else
@@ -551,7 +551,8 @@ struct linkedlist *get_provided (struct depinfo *deptree,
       op = p = strdup (dt->services);
       while ((service = strsep (&p, " ")))
 	{
-	  if (in_runlevel (bootlevel, service))
+	  if (in_runlevel (bootlevel, service)
+	      || (service_coldplugged (service) && ! providers->item))
 	    if (get_depinfo (deptree, service))
 	      if (exists_dir_file (INITDIR, service))
 		lp = add_linkedlist (lp, service);

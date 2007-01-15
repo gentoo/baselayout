@@ -127,7 +127,7 @@ wait_service() {
 	# http://www.freebsd.org/cgi/query-pr.cgi?pr=kern/94772
 	if [[ $(uname) == "FreeBSD" ]] ; then
 		while [[ -e ${fifo} ]] ; do
-			sleep 1
+			LC_ALL=C sleep 0.2
 		done
 		sync # Things don't work unless we sync
 	else
