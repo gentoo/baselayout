@@ -139,7 +139,7 @@ ifplugd_stop() {
 	
 	ebegin "Stopping ifplugd on ${iface}"
 	start-stop-daemon --stop --exec /usr/sbin/ifplugd \
-		--pidfile "${pidfile}" --signal 3
+		--pidfile "${pidfile}" --signal QUIT 
 	eend $?
 }
 
