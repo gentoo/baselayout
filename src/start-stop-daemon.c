@@ -1113,8 +1113,9 @@ do_stop(int signal_nr, int quietmode, int *n_killed, int *n_notkilled, int retry
 
 	for (p = found; p; p = p->next) {
 		if (testmode) {
-			printf("Would send signal %d to %d.\n",
-			       signal_nr, p->pid);
+			if (quietmode < 0)
+				printf("Would send signal %d to %d.\n",
+				       signal_nr, p->pid);
 			(*n_killed)++;
 		} else if (kill(p->pid, signal_nr) == 0) {
 			push(&killed, p->pid);
@@ -1365,6 +1366,8 @@ main(int argc, char **argv)
 		exit(exitnodo);
 	}
 	if (testmode) {
+		if (quietmode > 0)
+			exit(0);
 		printf("Would start %s ", startas);
 		while (argc-- > 0)
 			printf("%s ", *argv++);

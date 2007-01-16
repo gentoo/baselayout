@@ -143,7 +143,7 @@ rc_start_daemon() {
 	[[ -n ${cmd} && -z ${name} ]] && opts="${opts} --exec '${cmd}'"
 	[[ -n ${pidfile} ]] && opts="${opts} --pidfile '${pidfile}'"
 	[[ -n ${name} ]] && opts="${opts} --name '${name}'"
-	eval /sbin/start-stop-daemon ${opts} >/dev/null && return 0
+	eval /sbin/start-stop-daemon ${opts} && return 0
 
 	[[ -f ${pidfile} ]] && rm -f "${pidfile}"
 	return 1 
@@ -195,7 +195,7 @@ update_service_status() {
 			&& opts="${opts} --pidfile '${RC_PIDFILES[i]}'"
 		[[ -n ${RC_NAMES[i]} ]] \
 			&& opts="${opts} --name '${RC_NAMES[i]}'"
-		if ! eval /sbin/start-stop-daemon ${opts} >/dev/null ; then
+		if ! eval /sbin/start-stop-daemon ${opts} ; then
 			if [[ -e "/etc/init.d/${service}" ]]; then
 				( /etc/init.d/"${service}" stop &>/dev/null )
 				break
