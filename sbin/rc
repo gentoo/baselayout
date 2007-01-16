@@ -263,8 +263,9 @@ done
 get_stop_services() {
 	local x= list=
 
-	for x in $(dolisting "${svcdir}/inactive/") \
-	         $(dolisting "${svcdir}/started/") ; do
+	for x in $(dolisting "${svcdir}/starting/") \
+			 $(dolisting "${svcdir}/inactive/") \
+			 $(dolisting "${svcdir}/started/") ; do
 		list="${x##*/} ${list}"
 	done
 

@@ -3,6 +3,8 @@
 
   16 Jan 2007; Roy Marples <uberlord@gentoo.org>:
 
+    rc now stops services that are "starting" when in the stopping phase.
+
     Stop start-stop-daemon --quiet --test from spamming stdout.
 
     Stop hotplug events from spamming log files.

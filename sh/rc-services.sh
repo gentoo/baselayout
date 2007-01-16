@@ -203,6 +203,7 @@ stop_service() {
 
 	service_stopping "${service}" && return 0
 	service_stopped "${service}" && return 0
+	service_starting "${service}" && end_service "${service}"
 	begin_service "${service}" || return 0
 
 	splash "svc_stop" "${service}"
