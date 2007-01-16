@@ -568,7 +568,7 @@ svc_restart() {
 			ewarn $"restart the service in its custom 'restart()' function."
 			ewarn $"Run" "${SVCNAME}" $"without arguments for more info."
 			echo
-			svc_stop && svc_start 
+			svc_stop && svc_start
 		else
 			restart
 		fi
@@ -584,13 +584,14 @@ svc_restart() {
 	# Restart dependencies as well
 	local x=
 	for x in $(dolisting "${svcdir}/snapshot/$$/") ; do
-		if [[ -x ${x} ]] && service_stopped "${x##*/}" ; then
+		x="${x##*/}"
+		if [[ -x /etc/init.d/"${x}" ]] && service_stopped "${x}" ; then
 			if service_inactive "${SVCNAME}" \
 				|| service_wasinactive "${SVCNAME}" ; then
-				svc_schedule_start "${SVCNAME}" "${x##*/}"
-				ewarn $"WARNING:" " ${x##*/}" $"is scheduled to start when" "${SVCNAME}" $"has started."
+				svc_schedule_start "${SVCNAME}" "${x}"
+				ewarn $"WARNING:" " ${x}" $"is scheduled to start when" "${SVCNAME}" $"has started."
 			elif service_started "${SVCNAME}" ; then
-				start_service "${x##*/}"
+				start_service "${x}"
 			fi
 		fi
 	done
@@ -727,8 +728,9 @@ for arg in "$@" ; do
 		
 		if [[ ${IN_BACKGROUND} == "true" || ${IN_BACKGROUND} == "1" ]] ; then
 			for x in $(dolisting "${svcdir}/snapshot/$$/") ; do
-				if [[ -x ${x} ]] && service_stopped "${x##*/}" ; then
-					svc_schedule_start "${SVCNAME}" "${x##*/}"
+				x="${x##*/}"
+				if [[ -x /etc/init.d/"${x}" ]] && service_stopped "${x}" ; then
+					svc_schedule_start "${SVCNAME}" "${x}"
 				fi
 			done
 			rm -rf "${svcdir}/snapshot/$$"
