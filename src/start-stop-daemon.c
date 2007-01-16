@@ -878,7 +878,7 @@ pid_is_cmd(pid_t pid, const char *name)
 	if ((kp = kvm_getprocs(kd, KERN_PROC_PID, pid, &nentries)) == 0)
 		errx(1, "%s", kvm_geterr(kd));
 	if ((pid_argv_p = kvm_getargv(kd, kp, argv_len)) == 0)
-		errx(1, "%s", kvm_geterr(kd));
+		return 0;
 
 	start_argv_0_p = *pid_argv_p;
 	/* find and compare string */
@@ -1113,7 +1113,7 @@ do_stop(int signal_nr, int quietmode, int *n_killed, int *n_notkilled, int retry
 
 	for (p = found; p; p = p->next) {
 		if (testmode) {
-			if (quietmode < 0)
+			if (quietmode < 1)
 				printf("Would send signal %d to %d.\n",
 				       signal_nr, p->pid);
 			(*n_killed)++;
