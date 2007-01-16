@@ -235,7 +235,7 @@ svc_stop() {
 	if is_runlevel_stop && service_failed "${SVCNAME}" ; then
 		return 1
 	elif service_stopped "${SVCNAME}" ; then
-		[[ ${svcrestart} != "yes" ]] \
+		[[ ${svcrestart} != "yes" && ${IN_HOTPLUG} != "1" ]] \
 		&& ewarn $"WARNING:" " ${SVCNAME}" $"has not yet been started."
 		return 0
 	fi
@@ -378,12 +378,16 @@ svc_start() {
 	if is_runlevel_start && service_failed "${SVCNAME}" ; then
 		return 1
 	elif service_started "${SVCNAME}" ; then
-		ewarn $"WARNING:" " ${SVCNAME}" $"has already been started."
+		if [[ ${IN_HOTPLUG} != "1" ]] ; then
+			ewarn $"WARNING:" " ${SVCNAME}" $"has already been started."
+		fi
 		return 0
 	elif service_inactive "${SVCNAME}" ; then
 		if [[ ${IN_BACKGROUND} != "true" \
 		&& ${IN_BACKGROUND} != "1" ]] ; then
-			ewarn $"WARNING:" " ${SVCNAME}" $"has already been started."
+			if [[ ${IN_HOTPLUG} != "1" ]] ; then
+				ewarn $"WARNING:" " ${SVCNAME}" $"has already been started."
+			fi
 			return 0
 		fi
 	else
