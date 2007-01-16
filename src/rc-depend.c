@@ -457,7 +457,9 @@ bool get_provided1 (struct linkedlist *providers,
 	continue;
 
       if (started)
-	ok = service_started (service);
+	ok = (service_starting (service)
+	      || service_started (service)
+	      || service_stopping (service));
       else if (inactive)
 	ok = service_inactive (service);
 
@@ -542,15 +544,16 @@ struct linkedlist *get_provided (struct depinfo *deptree,
   else \
   return providers; \
 
+  /* Anything in the runlevel has to come first */
   if (get_provided1 (providers, dt, softlevel, false, true, false))
     { DO }
   if (get_provided1 (providers, dt, softlevel, false, false, true))
     { DO }
+  if (get_provided1 (providers, dt, softlevel, false, false, false))
+    return providers;
 
-  /* Check coldplugged services */
+  /* Check coldplugged started services */
   if (get_provided1 (providers, dt, NULL, true, true, false))
-    { DO }
-  if (get_provided1 (providers, dt, NULL, true, false, true))
     { DO }
 
   /* Check bootlevel if we're not in it */
@@ -562,6 +565,10 @@ struct linkedlist *get_provided (struct depinfo *deptree,
 	{ DO }
     }
 
+  /* Check coldplugged inactive services */
+  if (get_provided1 (providers, dt, NULL, true, false, true))
+    { DO }
+
   /* Check manually started */
   if (get_provided1 (providers, dt, NULL, false, true, false))
     { DO }
@@ -569,8 +576,6 @@ struct linkedlist *get_provided (struct depinfo *deptree,
     { DO }
 
   /* Nothing started then. OK, lets get the stopped services */
-  if (get_provided1 (providers, dt, softlevel, false, false, false))
-    return providers;
   if (get_provided1 (providers, dt, NULL, true, false, false))
     return providers;
   if ((strcmp (softlevel, bootlevel) != 0)
