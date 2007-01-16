@@ -479,7 +479,7 @@ svc_restart() {
 	# Create a snapshot of started services
 	rm -rf "${svcdir}/snapshot/$$"
 	mkdir -p "${svcdir}/snapshot/$$"
-	cp -pP "${svcdir}"/started/* "${svcdir}"/inactive/* \
+	cp -pPR "${svcdir}"/started/* "${svcdir}"/inactive/* \
 	"${svcdir}/snapshot/$$/" 2>/dev/null
 	rm -f "${svcdir}/snapshot/$$/${SVCNAME}"
 
@@ -510,13 +510,14 @@ svc_restart() {
 
 	# Restart dependencies as well
 	for x in $(dolisting "${svcdir}/snapshot/$$/") ; do
-		if [[ -x ${x} ]] && service_stopped "${x##*/}" ; then
+		x="${x##*/}"
+		if [[ -x /etc/init.d/"${x}" ]] && service_stopped "${x}" ; then
 			if service_inactive "${SVCNAME}" \
 			|| service_wasinactive "${SVCNAME}" ; then
-				svc_schedule_start "${SVCNAME}" "${x##*/}"
-				ewarn "WARNING:  ${x##*/} is scheduled to start when ${SVCNAME} has started."
+				svc_schedule_start "${SVCNAME}" "${x}"
+				ewarn "WARNING:  ${x} is scheduled to start when ${SVCNAME} has started."
 			elif service_started "${SVCNAME}" ; then
-				start_service "${x##*/}"
+				start_service "${x}"
 			fi
 		fi
 	done
@@ -649,7 +650,7 @@ for arg in "$@" ; do
 		if [[ ${IN_BACKGROUND} == "true" ]] ; then
 			rm -rf "${svcdir}/snapshot/$$"
 			mkdir -p "${svcdir}/snapshot/$$"
-			cp -pP "${svcdir}"/started/* "${svcdir}"/inactive/* \
+			cp -pPR "${svcdir}"/started/* "${svcdir}"/inactive/* \
 				"${svcdir}/snapshot/$$/" 2>/dev/null
 			rm -f "${svcdir}/snapshot/$$/${SVCNAME}"
 		fi
@@ -659,8 +660,9 @@ for arg in "$@" ; do
 		
 		if [[ ${IN_BACKGROUND} == "true" ]] ; then
 			for x in $(dolisting "${svcdir}/snapshot/$$/") ; do
-				if [[ -x ${x} ]] && service_stopped "${x##*/}" ; then
-					svc_schedule_start "${SVCNAME}" "${x##*/}"
+				x="${x##*/}"
+				if [[ -x /etc/init.d/"${x}" ]] && service_stopped "${x}" ; then
+					svc_schedule_start "${SVCNAME}" "${x}"
 				fi
 			done
 			rm -rf "${svcdir}/snapshot/$$"
