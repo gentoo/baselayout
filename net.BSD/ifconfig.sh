@@ -134,7 +134,7 @@ ifconfig_get_address() {
 #
 # Return 0 if the link is ethernet, otherwise 1.
 ifconfig_is_ethernet() {
-	[[ $(ifconfig "$1") == *$'\n'[[:space:]]+"media: Ethernet "* ]]
+	ifconfig "$1" | grep -q "media:.* Ethernet"
 }
 
 # bool ifconfig_has_carrier(char *iface)

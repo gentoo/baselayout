@@ -46,6 +46,19 @@ bonding_pre_start() {
 	# Support space seperated slaves
 	[[ ${#slaves[@]} == 1 ]] && slaves=( ${slaves} )
 
+	# Load the kernel module if required
+	if [[ ! -d /proc/net/bonding ]] ; then
+		if ! modprobe bonding ; then
+			eerror "Cannot load the bonding module"
+			return 1
+		fi
+	fi
+
+	# We can create the interface name we like now, but this
+	# requires sysfs
+	if ! interface_exists "${iface}" && [[ -d /sys/class/net ]] ; then
+		echo "+${iface}" > /sys/class/net/bonding_masters
+	fi
 	interface_exists "${iface}" true || return 1
 
 	if ! bonding_exists "${iface}" ; then
