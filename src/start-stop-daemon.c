@@ -863,7 +863,7 @@ do_procinit(void)
 # endif
 
 static int
-pid_is_cmd(pid_t pid, const char *name)
+pid_is_exec(pid_t pid, const char *name, const struct stat *esb)
 {
 	kvm_t *kd = 0;
 	int nentries, argv_len=0, retval=0;
@@ -931,13 +931,12 @@ pid_is_user(pid_t pid, uid_t uid)
 }
 
 static int
-pid_is_exec(pid_t pid, const char *name, const struct stat *esb)
+pid_is_cmd(pid_t pid, const char *name)
 {
 	kvm_t *kd;
 	int nentries;
 	struct _KINFO_PROC *kp;
 	char *pidexec;
-	char *bname = basename(name);
 	int retval = 0;
 
 	if ((kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, NULL)) == 0)
@@ -947,8 +946,8 @@ pid_is_exec(pid_t pid, const char *name, const struct stat *esb)
 		return 0;
 	}
 	pidexec = _GET_KINFO_COMM(kp);
-	if (strlen(bname) == strlen(pidexec))
-		retval = (strcmp(bname, pidexec) == 0 ? 1 : 0);
+	if (strlen(name) == strlen(pidexec))
+		retval = (strcmp(name, pidexec) == 0 ? 1 : 0);
 	kvm_close(kd);
 	return retval;
 }
