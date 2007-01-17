@@ -586,12 +586,13 @@ test_service_state() {
 	[[ -z $1 || -z $2 ]] && return 1
 
 	local f="${svcdir}/$2/$1"
+	if [[ ! -x /etc/init.d/"$1" ]] ; then
+		rm -f "${f}"
+		return 1
+	fi
 	
 	# Service is in the state requested
-	[[ -L ${f} ]] && return 0
-	
-	[[ ! -e ${f} ]] && rm -f "${f}"
-	return 1
+	[[ -e ${f} ]]
 }
 
 # bool service_coldplugged(service)

@@ -80,6 +80,8 @@ rc_shift_args() {
 	done
 
 	[[ -z ${RC_RETRY_COUNT} ]] && RC_RETRY_COUNT=5
+	[[ ${RC_RETRY_COUNT} != "${RC_RETRY_COUNT//[![:digit:]]/}" ]] \
+		&& RC_RETRY_COUNT=5
 }	
 
 # void rc_setup_daemon_vars(void)
