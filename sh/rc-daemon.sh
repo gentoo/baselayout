@@ -139,7 +139,7 @@ rc_start_daemon() {
 	# configuration files
 	LC_ALL=C sleep "${RC_WAIT_ON_START}"
 
-	local opts="--test --stop"
+	local opts="--quiet --test --stop"
 	[[ -n ${cmd} && -z ${name} ]] && opts="${opts} --exec '${cmd}'"
 	[[ -n ${pidfile} ]] && opts="${opts} --pidfile '${pidfile}'"
 	[[ -n ${name} ]] && opts="${opts} --name '${name}'"
