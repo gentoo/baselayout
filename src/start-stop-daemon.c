@@ -865,8 +865,8 @@ do_procinit(void)
 static int
 pid_is_cmd(pid_t pid, const char *name)
 {
-	kvm_t *kd;
-	int nentries, argv_len=0;
+	kvm_t *kd = 0;
+	int nentries, argv_len=0, retval=0;
 	struct kinfo_proc *kp;
 	char  errbuf[_POSIX2_LINE_MAX], buf[_POSIX2_LINE_MAX];
 	char  **pid_argv_p;
@@ -875,10 +875,14 @@ pid_is_cmd(pid_t pid, const char *name)
 	kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, errbuf);
 	if (kd == 0)
 		errx(1, "%s", errbuf);
-	if ((kp = kvm_getprocs(kd, KERN_PROC_PID, pid, &nentries)) == 0)
-		errx(1, "%s", kvm_geterr(kd));
-	if ((pid_argv_p = kvm_getargv(kd, kp, argv_len)) == 0)
+	if ((kp = kvm_getprocs(kd, KERN_PROC_PID, pid, &nentries)) == 0) {
+		kvm_close(kd);
 		return 0;
+	}
+	if ((pid_argv_p = kvm_getargv(kd, kp, argv_len)) == 0) {
+		kvm_close(kd);
+		return 0;
+	}
 
 	start_argv_0_p = *pid_argv_p;
 	/* find and compare string */
@@ -897,9 +901,10 @@ pid_is_cmd(pid_t pid, const char *name)
 		start_argv_0_p = buf;
 	}
 
-	if (strlen(name) != strlen(start_argv_0_p))
-		return 0;
-	return (strcmp(name, start_argv_0_p) == 0) ? 1 : 0;
+	if (strlen(name) == strlen(start_argv_0_p))
+		retval = (strcmp(name, start_argv_0_p) == 0 ? 1 : 0);
+	kvm_close (kd);
+	return retval;
 }
 
 static int
@@ -907,20 +912,21 @@ pid_is_user(pid_t pid, uid_t uid)
 {
 	kvm_t *kd;
 	int nentries;   /* Value not used */
-	uid_t proc_uid;
+	uid_t proc_uid = 0;
 	struct _KINFO_PROC *kp;
 	char  errbuf[_POSIX2_LINE_MAX];
 
 	kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, errbuf);
 	if (kd == 0)
 		errx(1, "%s", errbuf);
-	if ((kp = kvm_getprocs(kd, KERN_PROC_PID, pid, &nentries)) == 0)
-		errx(1, "%s", kvm_geterr(kd));
+	if ((kp = kvm_getprocs(kd, KERN_PROC_PID, pid, &nentries)) == 0) {
+		kvm_close(kd);
+		return 0;
+	}
 	if (_GET_KINFO_UID(kp))
 		kvm_read(kd, (u_long)&(_GET_KINFO_UID(kp)),
 			&proc_uid, sizeof(uid_t));
-	else
-		return 0;
+	kvm_close(kd);
 	return (proc_uid == (uid_t)uid);
 }
 
@@ -932,15 +938,19 @@ pid_is_exec(pid_t pid, const char *name, const struct stat *esb)
 	struct _KINFO_PROC *kp;
 	char *pidexec;
 	char *bname = basename(name);
+	int retval = 0;
 
 	if ((kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, NULL)) == 0)
 		return 0;
-	if ((kp = kvm_getprocs(kd, KERN_PROC_PID, pid, &nentries)) == 0)
+	if ((kp = kvm_getprocs(kd, KERN_PROC_PID, pid, &nentries)) == 0) {
+		kvm_close(kd);
 		return 0;
+	}
 	pidexec = _GET_KINFO_COMM(kp);
-	if (strlen(bname) != strlen(pidexec))
-		return 0;
-	return (strcmp(bname, pidexec) == 0) ? 1 : 0;
+	if (strlen(bname) == strlen(pidexec))
+		retval = (strcmp(bname, pidexec) == 0 ? 1 : 0);
+	kvm_close(kd);
+	return retval;
 }
 
 
