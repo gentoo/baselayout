@@ -236,12 +236,13 @@ svc_stop() {
 		return 1
 	elif service_stopped "${SVCNAME}" ; then
 		[[ ${svcrestart} != "yes" && ${IN_HOTPLUG} != "1" ]] \
-		&& ewarn $"WARNING:" " ${SVCNAME}" $"has not yet been started."
+			&& ewarn $"WARNING:" " ${SVCNAME}" $"has not yet been started."
 		return 0
 	fi
 
 	if ! mark_service_stopping "${SVCNAME}" ; then
-		eerror $"ERROR:" " ${SVCNAME}" $"is already stopping."
+		[[ ${IN_HOTPLUG} != "1" ]] \
+			&& eerror $"ERROR:" " ${SVCNAME}" $"is already stopping."
 		return 1
 	fi
 
@@ -400,10 +401,12 @@ svc_start() {
 	fi
 
 	if ! mark_service_starting "${SVCNAME}" ; then
-		if service_stopping "${SVCNAME}" ; then
-			eerror $"ERROR:" " ${SVCNAME}" $"is already stopping."
-		else
-			eerror $"ERROR: "" ${SVCNAME}" $"is already starting."
+		if [[ ${IN_HOTPLUG} != "1" ]] ; then
+			if service_stopping "${SVCNAME}" ; then
+				eerror $"ERROR:" " ${SVCNAME}" $"is already stopping."
+			else
+				eerror $"ERROR: "" ${SVCNAME}" $"is already starting."
+			fi
 		fi
 		return 1
 	fi
