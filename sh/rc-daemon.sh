@@ -185,7 +185,7 @@ update_service_status() {
 	# If the --start command was any good a pidfile was specified too
 	. "${daemonfile}"
 	for (( i=0; i<${#RC_DAEMONS[@]}; i++ )); do
-		local opts="--test --stop"
+		local opts="--quiet --test --stop"
 		# Handle 1.12 formats without a RC_NAME entry
 		[[ -n ${RC_DAEMONS[i]} && -z ${RC_NAMES[i]} && ${RC_DAEMONS[i]} != /* ]] \
 			&& RC_NAMES[i]=${RC_DAEMONS[i]}
