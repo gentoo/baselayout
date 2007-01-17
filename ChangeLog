@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2007 Gentoo Foundation; Distributed under the GPLv2
 
+* baselayout-1.12.9 (17 Jan 2006)
+
+    Misc fixes and compatible with baselayout-1.13.0_alpha12.
+
 * baselayout-1.12.8 (12 Dec 2006)
 
   18 Dec 2006; Roy Marples <uberlord@gentoo.org>:
