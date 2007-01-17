@@ -474,7 +474,7 @@ do_unmount() {
 		if [[ ${cmd} == "umount"* ]] ; then
 			# If we're using the mount (probably /usr) then don't unmount us
 			if [[ " $(fuser ${fuser_opts} "${point}" 2>/dev/null) " == *" $$ "* ]] ; then
-				ewend 1 $"We are using" "${point}," $"not unmounting"
+				ewarn $"We are using" "${point}," $"not unmounting"
 				continue
 			fi
 		fi
