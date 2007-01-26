@@ -114,8 +114,9 @@ start() {
 		else
 			ebegin $"Cleaning /tmp directory"
 			(
-				rm -f /tmp/.X*-lock /tmp/esrv* /tmp/kio* /tmp/jpsock.* /tmp/.fam*
-				rm -rf /tmp/.esd* /tmp/orbit-* /tmp/ssh-* /tmp/ksocket-* /tmp/.*-unix
+				cd /tmp || exit 1
+				rm -f .X*-lock esrv* kio* jpsock.* .fam* wpa_ctrl_* gpg-*
+				rm -rf .esd* orbit-* ssh-* ksocket-* .*-unix
 			) &> /dev/null
 			eend 0
 		fi

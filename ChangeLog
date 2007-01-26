@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2007 Gentoo Foundation; Distributed under the GPLv2
 
+  26 Jan 2007; Mike Frysinger <vapier@gentoo.org>:
+
+    Clean gpg/wpa tmp files #163807 by Pat Double.
+
   18 Jan 2007; Mike Frysinger <vapier@gentoo.org>:
 
     Add /bin/fish to /etc/shells #162673 by Donnie Berkholz.
