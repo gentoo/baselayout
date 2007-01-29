@@ -212,7 +212,7 @@ iwconfig_associate() {
 		ewarn $"WEP key is not set for" "\"${dessid}\"" $"- not connecting"
 		return 1
 	fi
-	if [[ ${caps} != [EI]P* && ${key} != "-" ]]; then
+	if [[ -n ${channel} && ${caps} != [EI]P* && ${key} != "-" ]]; then
 		key="-"
 		ewarn "\"${dessid}\"" $"is not WEP enabled - ignoring setting"
 	fi

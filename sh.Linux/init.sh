@@ -63,13 +63,13 @@ mount_svcdir() {
 	local dotmp=false
 	if [[ -e "${svcdir}"/deptree ]] ; then
 		dotmp=true
-		try mount -t "${fs}" "${devtmp}" "${svclib}"/tmp -o rw
+		try mount -n -t "${fs}" "${devtmp}" "${svclib}"/tmp -o rw
 		try cp -p "${svcdir}"/*{depcache,deptree} "${svclib}"/tmp
 	fi
 	try mount -n ${mntcmd}
 	if ${dotmp} ; then
 		try cp -p "${svclib}"/tmp/*{depcache,deptree} "${svcdir}"
-		try umount "${svclib}"/tmp
+		try umount -n "${svclib}"/tmp
 	fi
 }
 

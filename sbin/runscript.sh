@@ -524,6 +524,7 @@ svc_start() {
 			mark_service_inactive "${SVCNAME}"
 		elif [[ -z ${startinactive} ]] ; then
 			mark_service_stopped "${SVCNAME}"
+			rm -f "${svcdir}/coldplugged/${SVCNAME}"
 			is_runlevel_start && mark_service_failed "${SVCNAME}"
 			eerror $"ERROR:" " ${SVCNAME}" $"failed to start"
 		fi

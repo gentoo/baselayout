@@ -11,7 +11,7 @@
 SUBDIRS = awk bin conf.d etc init.d man net sbin sh share src
 
 NAME = baselayout
-VERSION = 1.13.0_alpha12
+VERSION = 1.13.0_alpha13
 PKG = $(NAME)-$(VERSION)
 
 ARCH = x86
@@ -93,6 +93,8 @@ distforce:
 	find /tmp/$(PKG) -depth -path "*/.svn" -delete
 	rm -rf /tmp/$(PKG)/src/core /tmp/$(PKG)/po
 	$(MAKE) -C /tmp/$(PKG) clean
+	sed -i '.bak' -e '/-Wl,-rpath ./ s/^/#/g' /tmp/$(PKG)/src/Makefile
+	rm -f /tmp/$(PKG)/src/Makefile.bak
 	tar -C /tmp -cvjpf /tmp/$(PKG).tar.bz2 $(PKG)
 	rm -Rf /tmp/$(PKG)
 	du /tmp/$(PKG).tar.bz2

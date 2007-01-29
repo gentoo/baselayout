@@ -221,17 +221,14 @@ else
 		# to /dev/.rcsysinit existing to the list
 		if [[ -d /dev/.rcboot ]] ; then
 			for x in $(dolisting /dev/.rcboot/) ; do
-				[[ -e ${x} ]] && mark_service_coldplugged "${x##*/}"
+				if [[ -e ${x} ]] ; then
+					x="${x##*/}"
+					mark_service_coldplugged "${x}"
+					myscripts="${myscripts} ${x}"
+				fi
 			done
 			rm -rf /dev/.rcboot
 		fi
-		for x in $(dolisting "${svcdir}"/coldplugged) ; do
-			x="${x##*/}"
-			[[ ! -e /etc/runlevels/"${BOOTLEVEL}"/"${x}" \
-			&& ! -e /etc/runlevels/"${DEFAULTLEVEL}"/"${x}" \
-			&& -x /etc/init.d/"${x}" ]] \
-				&& myscripts="${myscripts} ${x}"
-		done
 		if [[ -n ${myscripts} ]] ; then
 			einfo $"Device initiated services:" "${myscripts}"
 		fi

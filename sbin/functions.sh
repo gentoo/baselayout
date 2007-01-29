@@ -791,7 +791,7 @@ NET_FS_LIST="afs cifs coda davfs fuse gfs ncpfs nfs nfs4 ocfs2 shfs smbfs"
 #   EXAMPLE:  if is_net_fs / ; then ...
 #
 is_net_fs() {
-	local point= mount= fs= foo=
+	local point= node= fs= foo=
 	get_mounts | while read point node fs foo ; do
 		point=${point//\040/ }
 		[[ $1 == "${point}" ]] || continue

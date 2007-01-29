@@ -14,6 +14,7 @@ depend() {
 	need localmount
 	after bootmisc modules hostname
 	use isapnp isdn pcmcia usb wlan
+	before devd
 
 	# Load any custom depend functions for the given interface
 	# For example, br0 may need eth0 and eth1
@@ -507,7 +508,7 @@ iface_start() {
 			config_worked=true
 			continue
 		fi
-
+		
 		if [[ ${config_counter} == 0 ]] \
 		&& interface_exists "${iface}" \
 		&& ! interface_has_carrier "${iface}" ; then
@@ -522,7 +523,9 @@ iface_start() {
 				done
 				if [[ ${timeout} -gt 0 ]] ; then
 					eend 0 
-				elif is_runlevel_start && [[ -e ${svcdir}/softscripts/devd ]] ; then
+				elif service_started "devd" || \
+					is_runlevel_start && \
+					[[ -e /etc/runlevels/"${SOFTLEVEL}"/devd ]] ; then 
 					ewend 1 "No carrier - but devd will restart us when we get one"
 					mark_service_inactive "net.${iface}"
 					exit 0
