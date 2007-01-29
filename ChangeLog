@@ -3,6 +3,8 @@
 
   29 Jan 2007; Roy Marples <uberlord@gentoo.org>:
 
+    Default bootmisc behaviour is now to wipe /tmp completely.
+
     Fix a few initial mounting problems, thanks to Daniel Drake.
 
     coldplugged devices that are in the default runlevel now start in the
