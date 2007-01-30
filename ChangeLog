@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2007 Gentoo Foundation; Distributed under the GPLv2
 
+  30 Jan 2007; Roy Marples <uberlord@gentoo.org>:
+
+    Support new style wpa_supplicant ctrl_interface directive, #164551.
+
   29 Jan 2007; Roy Marples <uberlord@gentoo.org>:
 
     Default bootmisc behaviour is now to wipe /tmp completely.

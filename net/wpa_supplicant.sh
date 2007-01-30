@@ -244,6 +244,13 @@ wpa_supplicant_pre_start() {
 			opts="${opts} -C${ctrl_dir}"
 		fi
 	fi
+
+	# Support the new style config
+	if [[ ${ctrl_dir} == "DIR"* ]] ; then
+		ctrl_dir=${ctrl_dir##*DIR=}
+		ctrl_dir=${ctrl_dir%% GROUP=*}
+	fi
+
 	save_options ctrl_dir "${ctrl_dir}"
 
 	# Some drivers require the interface to be up
