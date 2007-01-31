@@ -28,11 +28,17 @@ depend() {
 	if [[ ${iface} != "lo" && ${iface} != "lo0" ]] ; then
 		after net.lo net.lo0
 
-		# Support new style RC_NEED and RC_USE in one net file
+		# Support new style RC_NEED, RC_USE, etc in one net file
 		local x="RC_NEED_${ifvar}"
 		[[ -n ${!x} ]] && need ${!x}
 		x="RC_USE_${ifvar}"
 		[[ -n ${!x} ]] && use ${!x}
+		x="RC_AFTER_${ifvar}"
+		[[ -n ${!x} ]] && after ${!x}
+		x="RC_BEFORE_${ifvar}"
+		[[ -n ${!x} ]] && before ${!x}
+		x="RC_PROVIDE_${ifvar}"
+		[[ -n ${!x} ]] && provide ${!x}
 	fi
 
 	return 0

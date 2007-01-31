@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2007 Gentoo Foundation; Distributed under the GPLv2
 
+  31 Jan 2007; Roy Marples <uberlord@gentoo.org>:
+
+    Support RC_BEFORE/AFTER/PROVIDE_$iface in net.lo too, thanks to
+    Robin Johnson.
+
   30 Jan 2007; Roy Marples <uberlord@gentoo.org>:
 
     Support new style wpa_supplicant ctrl_interface directive, #164551.
