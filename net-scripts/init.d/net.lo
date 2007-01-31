@@ -28,6 +28,12 @@ depend() {
 		[[ -n ${!x} ]] && need ${!x}
 		x="RC_USE_${iface}"
 		[[ -n ${!x} ]] && use ${!x}
+		x="RC_AFTER_${iface}"
+		[[ -n ${!x} ]] && after ${!x}
+		x="RC_BEFORE_${iface}"
+		[[ -n ${!x} ]] && before ${!x}
+		x="RC_PROVIDE_${iface}"
+		[[ -n ${!x} ]] && provide ${!x}
 	fi
 
 	return 0
