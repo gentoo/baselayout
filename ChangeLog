@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2007 Gentoo Foundation; Distributed under the GPLv2
 
+  17 Feb 2007; Mike Frysinger <vapier@gentoo.org>:
+
+    Do not bother sleeping in checkroot if RC_FORCE_AUTO is enabled.
+
   31 Jan 2007; Roy Marples <uberlord@gentoo.org>:
 
     Support RC_BEFORE/AFTER/PROVIDE_$iface in net.lo too, thanks to
