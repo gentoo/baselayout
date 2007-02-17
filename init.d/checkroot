@@ -46,10 +46,12 @@ start() {
 			ewend 1 "Filesystem repaired"
 		elif [[ ${retval} -eq 2 || ${retval} -eq 3 ]] ; then
 			ewend 1 "Filesystem repaired, but reboot needed!"
-			echo -ne "\a"; sleep 1; echo -ne "\a"; sleep 1
-			echo -ne "\a"; sleep 1; echo -ne "\a"; sleep 1
-			ewarn "Rebooting in 10 seconds ..."
-			sleep 10
+			if [[ ${RC_FORCE_AUTO} != "yes" ]] ; then
+				echo -ne "\a"; sleep 1; echo -ne "\a"; sleep 1
+				echo -ne "\a"; sleep 1; echo -ne "\a"; sleep 1
+				ewarn "Rebooting in 10 seconds ..."
+				sleep 10
+			fi
 			einfo "Rebooting"
 			/sbin/reboot -f
 		else
