@@ -135,12 +135,6 @@ RC_DEVICES="auto"
 
 RC_DEVICE_TARBALL="no"
 
-# RC_SWAP_ERASE controls erasing of swap partitions at shutdown.
-# Useful for all those paranoid peeps to nuke their memory.  Note
-# that this destroys labels so if you use them, do not use this.
-
-RC_SWAP_ERASE="no"
-
 # RC_DMESG_LEVEL sets the level at which logging of messages is done to the
 # console.  See dmesg(8) for more info.
 
