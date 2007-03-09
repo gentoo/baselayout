@@ -74,7 +74,7 @@ if [[ -x ${UPS_CTL} ]] ; then
 fi
 
 if [[ ${unmounted} != 0 ]] ; then
-	[[ -x /sbin/sulogin ]] && /sbin/sulogin -t 10 /dev/console
+	[[ -x /sbin/sulogin ]] && sulogin -t 10 /dev/console
 	exit 1
 fi
 

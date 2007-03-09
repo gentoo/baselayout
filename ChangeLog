@@ -5,6 +5,9 @@
 
     Default svcdir when deleting it, just incase it's unset, #170117.
 
+    Don't call sulogin by absolute path, so splash-utils can intercept it,
+    #169949 thanks to Daniel Drake.
+
   17 Feb 2007; Mike Frysinger <vapier@gentoo.org>:
 
     Do not bother sleeping in checkroot if RC_FORCE_AUTO is enabled.

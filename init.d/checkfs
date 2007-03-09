@@ -56,7 +56,7 @@ do_checkfs() {
 			if is_vps_sys ; then
 				halt -f
 			elif [[ -x /sbin/sulogin ]] ; then
-				/sbin/sulogin "${CONSOLE}"
+				sulogin "${CONSOLE}"
 			else
 				return 1
 			fi
