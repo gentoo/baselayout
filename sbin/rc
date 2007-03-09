@@ -41,7 +41,7 @@ try() {
 		echo
 		eerror "Since this is a critical task, startup cannot continue."
 		echo
-		/sbin/sulogin ${CONSOLE}
+		sulogin ${CONSOLE}
 		einfo "Unmounting filesystems"
 		if [ -c /dev/null ]; then
 			/bin/mount -a -o remount,ro &>/dev/null
@@ -73,7 +73,7 @@ check_statedir() {
 				echo
 				eerror "  # mkdir -p $1"
 				echo; echo
-				/sbin/sulogin ${CONSOLE}
+				sulogin ${CONSOLE}
 			fi
 			einfo "Unmounting filesystems"
 			/bin/mount -a -o remount,ro &>/dev/null
@@ -411,7 +411,7 @@ then
 		eerror "One or more critical startup scripts failed to start!"
 		eerror "Please correct this, and reboot ..."
 		echo; echo
-		/sbin/sulogin ${CONSOLE}
+		sulogin ${CONSOLE}
 		einfo "Unmounting filesystems"
 		/bin/mount -a -o remount,ro &>/dev/null
 		einfo "Rebooting"
@@ -832,7 +832,7 @@ fi
 
 if [[ ${SOFTLEVEL} == "single" ]] ; then
 	rm -rf "${svcdir}/softscripts.new"
-	[[ ${RUNLEVEL} == "S" ]] && /sbin/sulogin ${CONSOLE}
+	[[ ${RUNLEVEL} == "S" ]] && sulogin ${CONSOLE}
 	exit 0
 fi
 

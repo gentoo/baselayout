@@ -60,7 +60,7 @@ start() {
 				fsck -y -C -T /
 			else
 				eend 2 "Filesystem couldn't be fixed :("
-				/sbin/sulogin ${CONSOLE}
+				sulogin ${CONSOLE}
 			fi
 			einfo "Unmounting filesystems"
 			/bin/mount -a -o remount,ro &> /dev/null
@@ -80,7 +80,7 @@ start() {
 		if [[ $? -ne 0 ]] ; then
 			eend 2 "Root filesystem could not be mounted read/write :("
 			if [[ ${RC_FORCE_AUTO} != "yes" ]] ; then
-				/sbin/sulogin ${CONSOLE}
+				sulogin ${CONSOLE}
 			fi
 		else
 			eend 0
