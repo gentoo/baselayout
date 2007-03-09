@@ -506,7 +506,7 @@ then
 
 	# Clear $svcdir from stale entries, but leave the caches around, as it
 	# should help speed things up a bit
-	rm -rf $(ls -d1 "${svcdir}/"* 2>/dev/null | \
+	rm -rf $(ls -d1 "${svcdir:-/lib/rcscripts/init.d}/"* 2>/dev/null | \
 	         grep -ve '\(depcache\|deptree\|envcache\)')
 
 	echo "sysinit" > "${svcdir}/softlevel"
