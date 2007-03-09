@@ -9,7 +9,7 @@ bootlog start
 # the old service state data
 if touch "${svcdir}/.test" 2>/dev/null ; then
 	rm -rf "${svcdir}/.test" \
-		$(ls -d1 "${svcdir}"/* 2>/dev/null | grep -Ev "(depcache|deptree)$")
+		$(ls -d1 "${svcdir:-/lib/rcscripts/init.d}"/* 2>/dev/null | grep -Ev "(depcache|deptree)$")
 else
 	mount_svcdir
 fi
