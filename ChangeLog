@@ -1,6 +1,11 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2007 Gentoo Foundation; Distributed under the GPLv2
 
+  13 Mar 2007; Mike Frysinger <vapier@gentoo.org>:
+
+    Allow people to set TIMEZONE="" to indicate they want to handle timezone
+    management themselves.
+
   09 Mar 2007; Roy Marples <uberlord@gentoo.org>:
 
     Default svcdir when deleting it, just incase it's unset, #170117.
