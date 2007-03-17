@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2007 Gentoo Foundation; Distributed under the GPLv2
 
+  16 Mar 2007; Mike Frysinger <vapier@gentoo.org>:
+
+    Also delete iceauth/xauth from /tmp in bootmisc #170643 by Pat Double.
+
   13 Mar 2007; Mike Frysinger <vapier@gentoo.org>:
 
     Allow people to set TIMEZONE="" to indicate they want to handle timezone

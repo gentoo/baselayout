@@ -115,7 +115,7 @@ start() {
 			ebegin $"Cleaning /tmp directory"
 			(
 				cd /tmp || exit 1
-				rm -f .X*-lock esrv* kio* jpsock.* .fam* wpa_ctrl_* gpg-*
+				rm -f .X*-lock esrv* kio* jpsock.* .fam* wpa_ctrl_* gpg-* iceauth.* xauth.*
 				rm -rf .esd* orbit-* ssh-* ksocket-* .*-unix
 			) &> /dev/null
 			eend 0
