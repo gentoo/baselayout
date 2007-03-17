@@ -103,7 +103,7 @@ start() {
 		else
 			ebegin "Cleaning /tmp directory"
 			(
-				rm -f /tmp/.X*-lock /tmp/esrv* /tmp/kio* /tmp/jpsock.* /tmp/.fam*
+				rm -f /tmp/.X*-lock /tmp/esrv* /tmp/kio* /tmp/jpsock.* /tmp/.fam* /tmp/iceauth.* /tmp/xauth.*
 				rm -rf /tmp/.esd* /tmp/orbit-* /tmp/ssh-* /tmp/ksocket-* /tmp/.*-unix
 			) &> /dev/null
 			eend 0
