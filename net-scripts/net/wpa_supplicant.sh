@@ -312,7 +312,7 @@ wpa_supplicant_pre_start() {
 
 	eval start-stop-daemon --start --exec /sbin/wpa_supplicant \
 		--pidfile "/var/run/wpa_supplicant-${iface}.pid" \
-		-- "${opts}" -B -i"${iface}" \
+		-- "${opts}" -W -B -i"${iface}" \
 		-P"/var/run/wpa_supplicant-${iface}.pid"
 	eend "$?" || return 1
 
