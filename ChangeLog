@@ -7,6 +7,8 @@
     uses more net-fs based init.d scripts.  This way, people can just use
     netmount in their init.d script and not worry about random net fs stuff.
 
+    Rewrite modules init.d to drop extended awk and simplify things a bit.
+
   16 Mar 2007; Mike Frysinger <vapier@gentoo.org>:
 
     Also delete iceauth/xauth from /tmp in bootmisc #170643 by Pat Double.

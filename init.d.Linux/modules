@@ -8,59 +8,30 @@ depend() {
 }
 
 load_modules() {
-	local x=
-	local i=0
-	local retval=0
-	local modules=
-	local modargs=
-	local modcount=0
+	local modules=""
 	local config="$1"
 
 	[[ -z ${config} || ! -r ${config} ]] && return 0
 
-	# Loop over every line in $config
-	eval $(awk '
-		BEGIN {
-			COUNT = 0 # Make sure COUNT is set
-		}
+	modules=$(sed -e 's:#.*::' -e '/^[[:space:]]*$/d' "${config}")
 
-		$0 !~ /(^[[:space:]]*(#|$))/ {
-			if (MODULES == "")
-				MODULES = $1
-			else
-				MODULES = MODULES " " $1
-
-			# Not the greatest method to remove $1 from $0, but it works
-			sub(/^[[:space:]]*[^[:space:]]*[[:space:]]*/, "")
-			# Trim trailing comments on the line
-			sub(/#.*$/, "")
-			ARGS[COUNT] = $0
-			COUNT++
-		}
-
-		END {
-			# 'eval' will make sure these are set to proper bash variables
-			print "modcount=" COUNT
-			print "modules=\"" MODULES "\""
-			for (x = 0;x < COUNT;x++)
-				print "modargs[" x "]=\"" ARGS[x] "\""
-		}
-	' "${config}")
-
-	if [[ ${modcount} -gt 0 ]]; then
+	if [[ -n ${modules} ]]; then
 		einfo $"Using ${config} as config:"
-		
-		for x in ${modules}; do
-			ebegin $"  Loading module" ${x}
-			modprobe -q ${x} ${modargs[${i}]} &>/dev/null
-			retval=$?
-			eend ${retval} $"  Failed to load" ${x}
-			
-			i=$((i+1))
-			[[ ${retval} -eq 0 ]] || modcount=$((modcount-1))
-		done
 
-		einfo $"Autoloaded ${modcount} module(s)"
+		local x
+		local cnt=0
+		local save_IFS=${IFS}
+		IFS=$'\n'
+		for x in ${modules} ; do
+			set -- ${x}
+			(unset IFS; ebegin $"  Loading module" $1)
+			modprobe -q "$@" >& /dev/null
+			(unset IFS; eend $? $"  Failed to load" $1)
+			[[ $? -eq 0 ]] && ((++cnt))
+		done
+		IFS=${save_IFS}
+
+		einfo $"Autoloaded ${cnt} module(s)"
 	fi
 
 	return 0
