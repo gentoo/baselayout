@@ -13,6 +13,8 @@
 # Each line describes one service, and is of the form:
 # service-name  port/protocol  [aliases ...]   [# comment]
 #
+# See services(5) for more info.
+#
 
 #
 # IANA Assignments [Well Known Ports]
