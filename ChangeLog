@@ -1,6 +1,12 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2007 Gentoo Foundation; Distributed under the GPLv2
 
+  25 Mar 2007; Mike Frysinger <vapier@gentoo.org>:
+
+    Rewrite netmount a bit so that it handles nfs/portmap better and so that it
+    uses more net-fs based init.d scripts.  This way, people can just use
+    netmount in their init.d script and not worry about random net fs stuff.
+
   16 Mar 2007; Mike Frysinger <vapier@gentoo.org>:
 
     Also delete iceauth/xauth from /tmp in bootmisc #170643 by Pat Double.
