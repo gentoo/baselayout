@@ -2,23 +2,21 @@
 # Copyright 1999-2007 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
+# Since NFS is so common and it's possible to mount it without needing
+# any additional daemon overhead, we'll account for it here.
+
 depend() {
-	local myneed="net"
-	local myuse=""
-
-	# Only have Portmap as a dependency if there is a nfs mount in fstab 
-	# that should be mounted at boot time.  Also filter out comments.
-	local nfsmounts=$(awk '!/^#/ && ($3=="nfs" || $3=="nfs4") && $4 !~ /noauto/ { print $0 }' /etc/fstab)
-
-	if [[ -n ${nfsmounts} ]] ; then
+	# We list so many filesystems here so that people can do "use netmount"
+	# in their init.d scripts and not worry about random net filesystem scripts.
+	local myneed="" myuse=""
+	local nfs_mounts=$(awk '!/^[[:space:]]*#/ && ($3=="nfs" || $3=="nfs4") && $4 !~ /\<(noauto|nolock)\>/ { print $0 }' /etc/fstab)
+	if [[ -n ${nfs_mounts} ]] ; then
 		myneed="${myneed} portmap"
-		myuse="${myuse} nfs nfsmount"
 	else
 		myuse="${myuse} portmap"
 	fi
-
-	need ${myneed}
-	use ${myuse}
+	need net ${myneed}
+	use afs-client amd autofs nfs nfsmount ${myuse}
 }
 
 remove_net_fs() {
@@ -34,22 +32,25 @@ remove_net_fs() {
 start() {
 	local rcfilesystems=${NET_FS_LIST}
 
-	# Only try to mount NFS filesystems if portmap was started.
-	# This is to fix "hang" problems for new users who do not
-	# add portmap to the default runlevel.
-	if ! service_started portmap ; then
+	# If the nfsmount script took care of the nfs filesystems,
+	# then there's no point in trying them twice
+	if service_started nfsmount ; then
 		remove_net_fs nfs nfs4
+	else
+		# Only try to mount NFS filesystems if portmap was started.
+		# This is to fix "hang" problems for new users who do not
+		# add portmap to the default runlevel.
+		local nfs_mounts=$(awk '!/^[[:space:]]*#/ && ($3=="nfs" || $3=="nfs4") && $4 !~ /\<(noauto|nolock)\>/ { print $0 }' /etc/fstab)
+		if ! service_started portmap && [[ -n ${nfs_mounts} ]] ; then
+			remove_net_fs nfs nfs4
+		fi
 	fi
+
 	rcfilesystems=${rcfilesystems// /,}   # convert to comma-separated
 
 	ebegin "Mounting network filesystems"
-	mount -at ${rcfilesystems} >/dev/null
-
-	if [[ $? != 0 ]] ; then
-		ewend 1 "Could not mount all network filesystems!"
-	else
-		eend 0
-	fi
+	mount -at ${rcfilesystems}
+	ewend $? "Could not mount all network filesystems!"
 
 	return 0
 }
@@ -57,21 +58,12 @@ start() {
 stop() {
 	local rcfilesystems=${NET_FS_LIST}
 
-	# We let the afs init script handle unmounting afs stuff
-	# because it requires special handling of the afs daemon
-	# and similar ugly cruft
-	if service_started afs-client ; then
-		remove_net_fs afs
-	fi
-
 	rcfilesystems=${rcfilesystems// /,}   # convert to comma-separated
 
-	local ret
 	ebegin "Unmounting network filesystems"
 	[[ -z $(umount -art ${rcfilesystems} 2>&1) ]]
-	ret=$?
-	eend ${ret} "Failed to simply unmount filesystems"
-	[[ ${ret} == 0 ]] && return 0
+	eend $? "Failed to simply unmount filesystems"
+	[[ $? == 0 ]] && return 0
 
 	# `umount -a` will fail if the filesystems are in use.
 	# Here we use fuser to kill off processes that are using 
@@ -101,6 +93,8 @@ stop() {
 		umount "$@" &>/dev/null
 		eend $? $'\t'"Failed to unmount filesystems"
 	done
+
+	return 0
 }
 
 # vim:ts=4
