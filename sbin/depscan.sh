@@ -111,7 +111,13 @@ if ! ${update} ; then
 	shift
 fi
 
-! ${update} && [[ -e "${mysvcdir}/deptree" ]] && exit 0
+if ! ${update} && [[ -s "${mysvcdir}/deptree" ]] ; then
+	if ! bash -n "${mysvcdir}/deptree" ; then
+		eerror "${mysvcdir}/deptree is not valid - recreating it"
+	else
+		exit 0
+	fi
+fi
 
 ebegin "Caching service dependencies"
 
