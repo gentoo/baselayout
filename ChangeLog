@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2007 Gentoo Foundation; Distributed under the GPLv2
 
+  28 Mar 2007; Mike Frysinger <vapier@gentoo.org>:
+
+    Force regen of deptree if it is only 0 bytes #172502 by Zhixu Liu.
+
   25 Mar 2007; Mike Frysinger <vapier@gentoo.org>:
 
     Rewrite netmount a bit so that it handles nfs/portmap better and so that it

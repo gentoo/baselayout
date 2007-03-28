@@ -95,7 +95,7 @@ SVCDIR="${mysvcdir}"
 SVCLIB="${svclib}"
 export SVCDIR SVCLIB
 
-[[ -e "${mysvcdir}/deptree" ]] || force=true
+[[ -s "${mysvcdir}/deptree" ]] || force=true
 if ! ${force} ; then
 	is_older_than "${mysvcdir}/depcache" /etc/conf.d /etc/init.d \
 		/etc/rc.conf && force=true
