@@ -14,14 +14,25 @@ ccwgroup_pre_start() {
 	local ccw="ccwgroup_${ifvar}[@]"
 	local -a ccwgroup=( "${!ccw}" )
 
+	local qeth_layer2="qeth_layer2_${ifvar}[@]"
+	local layer2=${!qeth_layer2:-0}
+
 	[[ -z ${!ccw} ]] && return 0
 	if [[ ! -d /sys/bus/ccwgroup ]] ; then
-		eerror $"ccwgroup support missing in kernel"
-		return 1
+		modprobe qeth >& /dev/null
+		if [[ ! -d /sys/bus/ccwgroup ]] ; then
+			eerror $"ccwgroup support missing in kernel"
+			return 1
+		fi
 	fi
 
 	einfo $"Enabling ccwgroup on" "${iface}"
-	echo "${!ccw// /,}" > /sys/bus/ccwgroup/drivers/qeth/group
+	if [[ -e /sys/devices/qeth/"${ccwgroup[0]}" ]] ; then
+		echo "0" > /sys/devices/qeth/"${ccwgroup[0]}"/online
+	else
+		echo "${!ccw// /,}" > /sys/bus/ccwgroup/drivers/qeth/group
+	fi
+	echo "${layer2}" > /sys/devices/qeth/"${ccwgroup[0]}"/layer2
 	echo "1" > /sys/devices/qeth/"${ccwgroup[0]}"/online
 	eend $?
 }
