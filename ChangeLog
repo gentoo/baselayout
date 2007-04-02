@@ -1,6 +1,10 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2007 Gentoo Foundation; Distributed under the GPLv2
 
+  02 Apr 2007; Roy Marples <uberlord@gentoo.org>:
+
+    Stop truecrypt, #168691 thanks to Alon Bar-Lev.
+
   28 Mar 2007; Mike Frysinger <vapier@gentoo.org>:
 
     Force regen of deptree if it is only 0 bytes #172502 by Zhixu Liu.

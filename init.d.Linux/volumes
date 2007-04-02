@@ -29,6 +29,7 @@ stop() {
 
 	# Stop dm-crypt mappings if any
 	stop_addon dm-crypt
+	stop_addon truecrypt
 
 	# Stop our volumes, RAID, LVM, etc
    	for x in $(reverse_list ${VOLUME_ORDER}) ; do
