@@ -111,6 +111,7 @@ eend 0
 
 # Try to remove any dm-crypt mappings
 stop_addon dm-crypt
+stop_addon truecrypt
 
 # Stop LVM, etc
 for x in $(reverse_list ${RC_VOLUME_ORDER}) ; do
