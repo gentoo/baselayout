@@ -1,6 +1,12 @@
 # ChangeLog for Gentoo System Intialization ("rc") scripts
 # Copyright 1999-2007 Gentoo Foundation; Distributed under the GPLv2
 
+  04 Apr 2007; Mike Frysinger <vapier@gentoo.org>:
+
+    Add support for auto mounting of securityfs on /sys/kernel/security.  Also
+    delay all grep checks of /proc/filesystems to after we verify the mount
+    point actually exists.
+
   02 Apr 2007; Mike Frysinger <vapier@gentoo.org>:
 
     Make ccwgroup restarting a little more robust and add support for layer2.
