@@ -224,7 +224,7 @@ iwconfig_setup_specific() {
 	iwconfig_set_mode "${iface}" "${mode}"
 
 	# Now set the key
-	if ! iwconfig "${iface}" key ${key} ; then
+	if ! eval iwconfig "${iface}" key "${key}" ; then
 		if [[ ${key} != "off" ]]; then
 			ewarn "${iface} does not support setting keys"
 			ewarn "or the parameter \"mac_key_${ESSIDVAR}\" or \"key_${ESSIDVAR}\" is incorrect"
@@ -232,7 +232,7 @@ iwconfig_setup_specific() {
 	fi
 
 	# Then set the ESSID
-	if ! iwconfig "${iface}" essid "${ESSID}" ; then
+	if ! eval iwconfig "${iface}" essid "${ESSID}" ; then
 		eerror "${iface} does not support setting ESSID to \"${dessid}\""
 		return 1
 	fi
@@ -368,7 +368,7 @@ iwconfig_associate() {
 			ewarn "\"${dessid}\" is not WEP enabled - ignoring setting"
 		fi
 
-		if ! iwconfig "${iface}" key ${key} ; then
+		if ! eval iwconfig "${iface}" key "${key}" ; then
 			if [[ ${key} != "off" ]]; then
 				ewarn "${iface} does not support setting keys"
 				ewarn "or the parameter \"mac_key_${ESSIDVAR}\" or \"key_${ESSIDVAR}\" is incorrect"
@@ -378,7 +378,7 @@ iwconfig_associate() {
 		[[ ${key} != "off" ]] && w=$(iwconfig_get_wep_status "${iface}")
 	fi
 
-	if ! iwconfig "${iface}" essid "${ESSID}" ; then
+	if ! eval iwconfig "${iface}" essid "${ESSID}" ; then
 		if [[ ${ESSID} != "any" ]]; then
 			ewarn "${iface} does not support setting ESSID to \"${dessid}\""
 		fi
