@@ -34,7 +34,7 @@ ipppd_pre_start() {
 	local pidfile="/var/run/ipppd-${iface}.pid"
 
 	# Check that we are a valid isdn interface
-	[[ ${itype} != "ippp" && ${itype} != "isdn" ]] && return 0
+	[[ ${itype} != "ippp" ]] && return 0
 
 	# Check that the interface exists
 	interface_exists "${iface}" true || return 1
