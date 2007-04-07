@@ -142,7 +142,7 @@ install:
 	install -m 0755 -d $(SBINDIR)
 	install -m 0644 sbin/functions.sh $(SBINDIR)
 	for x in depscan.sh env-update.sh runscript.sh rc rc-update \
-		modules-update MAKEDEV ; do \
+		MAKEDEV ; do \
 		install -m 0755 "sbin/$$x" $(SBINDIR) ; \
 	done
 	# lib
