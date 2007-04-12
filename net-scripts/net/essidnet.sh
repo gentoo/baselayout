@@ -5,8 +5,11 @@
 # motivation for me to make this and keep on improving it
 
 # Load our config if it exists
-[[ -f "$(add_suffix "/etc/conf.d/wireless" )" ]] \
-	&& source "$(add_suffix "/etc/conf.d/wireless" )"
+if [[ -f "$(add_suffix "/etc/conf.d/wireless" )" ]] ; then
+	ewarn "/etc/conf.d/wireless is deprecated"
+	ewarn "Please put all settings in /etc/conf.d/net"
+	source "$(add_suffix "/etc/conf.d/wireless" )"
+fi
 
 # void essidnet_depend(void)
 #
