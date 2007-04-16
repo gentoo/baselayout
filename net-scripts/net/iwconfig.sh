@@ -232,7 +232,7 @@ iwconfig_setup_specific() {
 	fi
 
 	# Then set the ESSID
-	if ! eval iwconfig "${iface}" essid "${ESSID}" ; then
+	if ! iwconfig "${iface}" essid "${ESSID}" ; then
 		eerror "${iface} does not support setting ESSID to \"${dessid}\""
 		return 1
 	fi
@@ -378,7 +378,7 @@ iwconfig_associate() {
 		[[ ${key} != "off" ]] && w=$(iwconfig_get_wep_status "${iface}")
 	fi
 
-	if ! eval iwconfig "${iface}" essid "${ESSID}" ; then
+	if ! iwconfig "${iface}" essid "${ESSID}" ; then
 		if [[ ${ESSID} != "any" ]]; then
 			ewarn "${iface} does not support setting ESSID to \"${dessid}\""
 		fi
