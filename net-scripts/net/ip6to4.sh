@@ -80,7 +80,7 @@ ip6to4_start() {
 
 	if [[ ${iface} != "sit0" ]] ; then
 		ebegin "Creating 6to4 tunnel on ${iface}"
-		interface_tunnel add "${iface}" mode sit ttl 255 remote any local "${ip}"
+		interface_tunnel add "${iface}" mode sit ttl 255 remote any local any 
 		eend $? || return 1
 	fi
 	
