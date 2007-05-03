@@ -25,7 +25,7 @@ ip6to4_expose() {
 # addresses on a pre-configured interface.
 # Returns 0 on success, otherwise 1.
 ip6to4_start() {
-	local iface="$1" addr=""
+	local iface="$1" addr="" localip=""
 	local ifvar=$(bash_variable "${iface}")
 
 	# Ensure the interface is sit0 if we're using ifconfig
@@ -71,6 +71,12 @@ ip6to4_start() {
 
 		# Now apply our IPv6 address to our config
 		new=( "${new[@]}" "${ip6}/16" )
+
+		if [[ -n ${localip} ]] ; then
+			localip="any"
+		else
+			localip="${ip}"
+		fi
 	done	
 
 	if [[ -z ${new} ]] ; then
@@ -80,7 +86,7 @@ ip6to4_start() {
 
 	if [[ ${iface} != "sit0" ]] ; then
 		ebegin "Creating 6to4 tunnel on ${iface}"
-		interface_tunnel add "${iface}" mode sit ttl 255 remote any local any 
+		interface_tunnel add "${iface}" mode sit ttl 255 remote any local "${localip}"
 		eend $? || return 1
 	fi
 	
