@@ -1,6 +1,12 @@
 # /etc/conf.d/wireless:
 # Global wireless config file for net.* rc-scripts
 
+#
+# Usage of /etc/conf.d/wireless is deprecated ... make sure you
+# put all settings in /etc/conf.d/net
+#
+
+
 ##############################################################################
 # IMPORTANT
 # linux-wlan-ng is not supported as they have their own configuration program
