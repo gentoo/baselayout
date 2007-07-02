@@ -326,7 +326,6 @@ then
 
 		# OK, if we got here, things are probably not right :)
 		if [[ ${devfs} == "no" && ${udev} == "no" ]] ; then
-			clear
 			echo
 			einfo "The Gentoo Linux system initialization scripts have detected that"
 			einfo "your system does not support UDEV.  Since Gentoo Linux has been"
