@@ -49,7 +49,7 @@ system_dns() {
 	done
 
 	[[ -n ${!sortlist} ]] && buffer="${buffer}sortlist ${!sortlist}\n"
-	[[ -n ${!options} ]] && buffer="${buffer}search ${!options}\n"
+	[[ -n ${!options} ]] && buffer="${buffer}options ${!options}\n"
 
 	# Support resolvconf if we have it.
 	if [[ -x /sbin/resolvconf ]] ; then

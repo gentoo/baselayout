@@ -531,7 +531,7 @@ iwconfig_scan() {
 		for (( j=i+1; j<x; j++)) ; do
 			if [[ ${mac[i]} == "${mac[j]}" ]] ; then
 				if [[ ${qual[i]} -gt ${qual[j]} ]] ; then
-					y="${j}"
+					y="${i}"
 				else
 					y="${j}"
 				fi
