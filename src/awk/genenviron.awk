@@ -87,12 +87,15 @@ BEGIN {
 
 				# strip variable name and '=' from data
 				sub("^[[:space:]]*" envnode[1] "[[:space:]]*=", "")
-				# strip all '"' and '\''
-				gsub(/\"/, "")
-				gsub(/\'/, "")
-				# strip leading and trailing spaces
-				gsub(/^[[:space:]]*/, "")
-				gsub(/[[:space:]]*$/, "")
+
+				if (envnode[1] ~ /^\$*/) {
+					# strip all '"' and '\''
+					gsub(/\"/, "")
+					gsub(/\'/, "")
+					# strip leading and trailing spaces
+					gsub(/^[[:space:]]*/, "")
+					gsub(/[[:space:]]*$/, "")
+				}
 
 				if (envnode[1] in ENVTREE) {
 
@@ -132,13 +135,19 @@ BEGIN {
 	}
 
 	for (x in ENVTREE)
-		print "export " x "=\"" ENVTREE[x] "\"" >> (ENVCACHE)
+		if (ENVTREE[x] ~ /^\$/)
+			print "export " x "=" ENVTREE[x] >> (ENVCACHE)
+		else
+			print "export " x "=\"" ENVTREE[x] "\"" >> (ENVCACHE)
 
 	for (x in ENVTREE) {
 	
 		# Print this a second time to make sure all variables
 		# are expanded ..
-		print "export " x "=\"" ENVTREE[x] "\"" >> (ENVCACHE)
+		if (ENVTREE[x] ~ /^\$/) 
+			print "export " x "=" ENVTREE[x] >> (ENVCACHE)
+		else
+			print "export " x "=\"" ENVTREE[x] "\"" >> (ENVCACHE)
 		print "echo \"" x "=${" x "}\"" >> (ENVCACHE)
 	}
 
