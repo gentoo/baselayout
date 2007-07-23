@@ -77,12 +77,15 @@ dhcpcd_start() {
 	[[ ${d} == *" nontp "* ]] && opts="${opts} -N"
 	[[ ${d} == *" nonis "* ]] && opts="${opts} -Y"
 	[[ ${d} == *" nogateway "* ]] && opts="${opts} -G"
-
-	# We transmit the hostname by default
-	if [[ " ${d} " != *" nosendhost "* && " ${opts} " != *" -h "* ]]; then
-		local hname=$(hostname)
-		[[ -n ${hname} && ${hname} != "(none)" && ${hname} != "localhost" ]] \
-			&& opts="-h \"${hname}\" ${opts}"
+	if [[ ${d} == *" nosendhost "* ]] ; then
+		opts="${opts} -h ''"
+	else
+		# We transmit the hostname by default
+		if [[ " ${opts} " != *" -h "* ]]; then
+			local hname=$(hostname)
+			[[ -n ${hname} && ${hname} != "(none)" && ${hname} != "localhost" ]] \
+				&& opts="-h \"${hname}\" ${opts}"
+		fi
 	fi
 
 	# Add our route metric
