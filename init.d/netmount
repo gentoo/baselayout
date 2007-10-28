@@ -16,7 +16,7 @@ depend() {
 		myuse="${myuse} portmap"
 	fi
 	need net ${myneed}
-	use afs-client amd autofs nfs nfsmount ${myuse}
+	use afs-client openafs-client amd autofs nfs nfsmount ${myuse}
 }
 
 remove_net_fs() {
