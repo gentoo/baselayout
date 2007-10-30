@@ -364,7 +364,8 @@ ifconfig_post_start() {
 		else
 			# Work out if we're a host or a net if not told
 			if [[ " ${x} " != *" -net "* && " ${x} " != *" -host "* ]] ; then
-				y="${x%% *}"
+				y="${x% *}"
+				y="${y##* }"
 				if [[ ${x} == *" netmask "* ]] ; then
 					x="-net ${x}"
 				elif [[ ${y} == *.*.*.*/32 ]] ; then

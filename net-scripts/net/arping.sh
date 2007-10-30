@@ -148,8 +148,8 @@ arping_start() {
 			# arping to avoid infinite recursion.
 			if [[ " ${!t} " != *" arping "* ]] ; then
 				config=( "${!t}" )
-				t="fallback_config_${ifvar}[@]"
-				fallback_config=( "${!t}" )
+				t="fallback_${ifvar}[@]"
+				fallback=( "${!t}" )
 				t="fallback_route_${ifvar}[@]"
 				fallback_route=( "${!t}" )
 				config_counter=-1
