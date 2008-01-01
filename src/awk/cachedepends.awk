@@ -4,6 +4,7 @@
 function print_start() {
 	print "source /sbin/functions.sh" >> TMPCACHE
 	print "" >> TMPCACHE
+	print "config() { :; }" >> TMPCACHE
 	print "need() {" >> TMPCACHE
 	print "	echo \"NEED $*\"; return 0" >> TMPCACHE
 	print "}" >> TMPCACHE
