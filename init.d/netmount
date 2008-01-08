@@ -11,9 +11,9 @@ depend() {
 	local myneed="" myuse=""
 	local nfs_mounts=$(awk '!/^[[:space:]]*#/ && ($3=="nfs" || $3=="nfs4") && $4 !~ /\<(noauto|nolock)\>/ { print $0 }' /etc/fstab)
 	if [[ -n ${nfs_mounts} ]] ; then
-		myneed="${myneed} portmap"
+		myneed="${myneed} portmap rpc.statd"
 	else
-		myuse="${myuse} portmap"
+		myuse="${myuse} portmap rpc.statd"
 	fi
 	need net ${myneed}
 	use afs-client openafs-client amd autofs nfs nfsmount ${myuse}
