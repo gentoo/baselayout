@@ -1,8 +1,15 @@
 #!/bin/bash
 export TMP="${TMP:-/tmp}"
-export V="1.12.10"
+export V="$1"
 export NAME="baselayout"
 export DEST="${TMP}/${NAME}-${V}"
+
+if [[ -z $1 ]] ; then
+	echo "Usage: ${0} <ver> [-f]" 1>&2
+	exit 1
+else
+	shift
+fi
 
 if [[ $1 != "-f" ]] ; then
 	echo "Performing sanity checks (run with -f to skip) ..."
