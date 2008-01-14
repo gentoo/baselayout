@@ -1,0 +1,97 @@
+#!/bin/bash
+
+argv0=${0##*/}
+source /etc/init.d/functions.sh || exit 1
+
+usage() {
+	cat <<-EOF
+	Usage: checkpath [options] dir1 dir2 ...
+	
+	Options: [fm:o:Chqv]
+	  -d, --directory                   Check if a directory
+	  -f, --file                        Check if a file
+	  -m, --mode <arg>                  Mode to check
+	  -o, --owner <arg>                 Owner to check (user:group)
+	  -h, --help                        Display this help output
+	  -C, --nocolor                     Disable color output
+	  -v, --verbose                     Run verbosely
+	  -q, --quiet                       Run quietly
+	EOF
+	exit ${1:-0}
+}
+
+PATH_TYPE="dir"
+MODE="0755"
+OWNER="root:root"
+VERBOSE=0
+QUIET=0
+
+long_opts="directory,file,mode:,owner:,help,nocolor,verbose,quiet"
+short_opts="dfm:o:hCvq"
+getopt -Q -l "${long_opts}" -o "${short_opts}" -- "$@" || usage 1
+eval set -- $(getopt -l "${long_opts}" -o "${short_opts}" -- "$@")
+while [[ -n $1 ]] ; do
+	case $1 in
+		-d|--directory) PATH_TYPE="dir";;
+		-f|--file)      PATH_TYPE="file";;
+		-m|--mode)      MODE=$2; shift;;
+		-o|--owner)     OWNER=$2; shift;;
+		-h|--help)      usage;;
+		-C|--nocolor)   RC_NOCOLOR="yes";;
+		-v|--verbose)   ((++VERBOSE));;
+		-q|--quiet)     ((++QUIET));;
+		--)             shift; break;;
+		*)              break;;
+	esac
+	shift
+done
+
+# only accept octal modes until openrc does better
+if ! ( ((01${MODE})) >& /dev/null ) ; then
+	eerror "${argv0}: invalid mode '${MODE}'"
+	exit 1
+fi
+
+[[ -z $* ]] && usage 1
+
+ret=0
+for path in "$@" ; do
+	if [[ ${PATH_TYPE} == "dir" ]] ; then
+		if [[ ! -e ${path} ]] ; then
+			if ! mkdir "${path}" ; then
+				((++ret))
+				continue
+			elif [[ ${QUIET} -eq 0 ]] ; then
+				einfo "${path}: creating directory"
+			fi
+		elif [[ ! -d ${path} ]] ; then
+			eerror "${path}: already exists but is not a directory"
+			((++ret))
+			continue
+		fi
+	else
+		if [[ ! -e ${path} ]] ; then
+			if ! touch "${path}" ; then
+				((++ret))
+				continue
+			elif [[ ${QUIET} -eq 0 ]] ; then
+				einfo "${path}: creating file"
+			fi
+		elif [[ ! -f ${path} ]] ; then
+			eerror "${path}: already exists but is not a file"
+			((++ret))
+			continue
+		fi
+	fi
+
+	if ! chmod ${MODE} "${path}" ; then
+		((++ret))
+		continue
+	fi
+
+	if ! chown ${OWNER} "${path}" ; then
+		((++ret))
+		continue
+	fi
+done
+exit ${ret}
