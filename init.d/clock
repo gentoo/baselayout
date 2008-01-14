@@ -18,7 +18,7 @@ setupopts() {
 	elif is_xenU_sys ; then
 		TBLURB="xen"
 		fakeit=1
-	elif [[ -d /proc/vz ]] ; then
+	elif is_vz_sys ; then
 		TBLURB="VZ"
 		fakeit=1
 	elif grep -q ' cobd$' /proc/devices ; then

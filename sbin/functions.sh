@@ -642,6 +642,16 @@ is_vserver_sys() {
 	grep -qs '^s_context:[[:space:]]*[1-9]' /proc/self/status
 }
 
+# bool is_vz_sys()
+#
+#   return 0 if the currently running system is OpenVZ container
+#
+#   EXAMPLE:  if is_vz_sys ; then ...
+#
+is_vz_sys() {
+	grep -qs '^envID:[[:space:]]*[1-9]' /proc/self/status
+}
+
 # bool is_xenU_sys()
 #
 #   return 0 if the currently running system is an unprivileged Xen domain
