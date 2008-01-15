@@ -362,21 +362,13 @@ ifconfig_post_start() {
 			[[ ${x} != *"-A inet6"* ]] && x="-A inet6 ${x}"
 			x="${x// -net / }"
 		else
-			# Work out if we're a host or a net if not told
-			if [[ " ${x} " != *" -net "* && " ${x} " != *" -host "* ]] ; then
-				y="${x% *}"
-				y="${y##* }"
-				if [[ ${x} == *" netmask "* ]] ; then
-					x="-net ${x}"
-				elif [[ ${y} == *.*.*.*/32 ]] ; then
-					x="-host ${x}"
-				elif [[ ${y} == *.*.*.*/* || ${y} == "default" || ${y} == "0.0.0.0" ]] ; then
-					x="-net ${x}"
-				else
-					# Given the lack of a netmask, we assume a host
-					x="-host ${x}"
-				fi
-			fi
+			case ${x} in
+				-net" "*|-host" "*);;
+				*" "netmask" "*) x="-net ${x}";;
+				*.*.*.*/32*)     x="-host ${x}";;
+				*.*.*.*/*|0.0.0.0" "*|default" "*) x="-net ${x}";;
+				*)               x="-host ${x}";;
+			esac
 		fi
 
 		# Add a metric if we don't have one
