@@ -57,6 +57,9 @@ do_opt() {
 			;;
 		--nocolor|-nc)
 			;;
+		--runlevel|-r)
+			exec echo ${SOFTLEVEL}
+			;;
 		--help|-h|-*)
 			echo "USAGE: $0 [command | <runlevel>]"
 			echo
@@ -65,6 +68,7 @@ do_opt() {
 			echo "  -l, --list         Show list of run levels"
 			echo "  -u, --unused       Show services not assigned to any run level"
 			echo "  -s, --servicelist  Show service list"
+			echo "  -r, --runlevel     Show current runlevel"
 			echo "  -nc,--nocolor      Monochrome output only"
 			echo "  <runlevel>         Show services assigned to <runlevel>"
 			echo
