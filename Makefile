@@ -237,25 +237,7 @@ install:
 		$(MAKE) install ; \
 	done
 
-distcheck:
-	svnfiles=`svn status 2>&1 | egrep -v '^(U|P)'` ; \
-	if test "x$$svnfiles" != "x" ; then \
-		echo "Refusing to package tarball until svn is in sync:" ; \
-		echo "$$svnfiles" ; \
-		echo "make distforce to force packaging" ; \
-		exit 1 ; \
-	fi 
-
-distforce:
-	install -d /tmp/$(PKG)
-	cp -axr . /tmp/$(PKG)
-	cd /tmp/$(PKG) ; \
-	rm -rf *.sh rc-lists `find . -iname .svn` sbin/MAKEDEV-gentoo.patch ; \
-	cd .. ; \
-	tar -cvjpf $(PKG).tar.bz2 $(PKG)
-	rm -rf /tmp/$(PKG)
-	du /tmp/$(PKG).tar.bz2
-
-dist: distcheck	distforce
+dist:
+	./tarball.sh $(VERSION)
 
 # vim: set ts=4 :
