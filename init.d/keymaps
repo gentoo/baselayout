@@ -36,17 +36,17 @@ start() {
 
 	# Turn on unicode if user wants it
 	if [[ ${UNICODE} == "yes" ]] ; then
-		/usr/bin/kbd_mode -u
+		kbd_mode -u
 	fi
 
 	ebegin "Loading key mappings"
-	if [[ -x /bin/loadkeys ]] ; then
+	if type -P loadkeys ; then
 		[[ ${SET_WINDOWKEYS} == "yes" ]] && WINDOWKEYS_KEYMAP="windowkeys"
-		/bin/loadkeys -q ${WINDOWKEYS_KEYMAP} ${KEYMAP} \
-		                 ${EXTENDED_KEYMAPS} > /dev/null
+		loadkeys -q ${WINDOWKEYS_KEYMAP} ${KEYMAP} \
+		            ${EXTENDED_KEYMAPS} > /dev/null
 		eend $? "Error loading key mappings"
 	else
-		eend 1 "/bin/loadkeys not found"
+		eend 1 "loadkeys not found"
 		return 1
 	fi
 
