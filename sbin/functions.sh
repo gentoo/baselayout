@@ -103,6 +103,14 @@ bootlog() {
 }
 [[ ${RC_BOOTLOG} == "yes" ]] && import_addon bootlogger.sh
 
+# char *softlevel()
+#
+#	Return current SOFTLEVEL
+#
+softlevel() {
+	echo $(rc-status --runlevel)
+}
+
 # void get_bootconfig()
 #
 #    Get the BOOTLEVEL and SOFTLEVEL by setting
