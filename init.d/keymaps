@@ -40,7 +40,7 @@ start() {
 	fi
 
 	ebegin "Loading key mappings"
-	if type -P loadkeys ; then
+	if type -P loadkeys >/dev/null ; then
 		[[ ${SET_WINDOWKEYS} == "yes" ]] && WINDOWKEYS_KEYMAP="windowkeys"
 		loadkeys -q ${WINDOWKEYS_KEYMAP} ${KEYMAP} \
 		            ${EXTENDED_KEYMAPS} > /dev/null

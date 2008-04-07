@@ -32,7 +32,7 @@ start() {
 	# Set the console font
 	local errmsg=""
 	ebegin "Setting user font"
-	if type -P setfont ; then
+	if type -P setfont >/dev/null ; then
 		# We patched setfont to have --tty support ...
 		if [[ -n $(setfont --help 2>&1 | grep -e '--tty') || \
 		      -n $(setfont --help 2>&1 | grep -e '-C') ]]
