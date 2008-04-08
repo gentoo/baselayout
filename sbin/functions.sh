@@ -103,11 +103,11 @@ bootlog() {
 }
 [[ ${RC_BOOTLOG} == "yes" ]] && import_addon bootlogger.sh
 
-# char *softlevel()
+# char *rc_runlevel()
 #
-#	Return current SOFTLEVEL
+#	Return current RUNLEVEL
 #
-softlevel() {
+rc_runlevel() {
 	echo $(rc-status --runlevel)
 }
 
@@ -128,7 +128,7 @@ get_bootconfig() {
 				bootlevel)
 					newbootlevel="${copt##*=}"
 					;;
-				softlevel)
+				rc_runlevel|softlevel)
 					newsoftlevel="${copt##*=}"
 					;;
 			esac
@@ -140,12 +140,16 @@ get_bootconfig() {
 	else
 		export BOOTLEVEL="boot"
 	fi
+	export RC_BOOTLEVEL=${BOOTLEVEL}
 
 	if [[ -n ${newsoftlevel} ]] ; then
 		export DEFAULTLEVEL="${newsoftlevel}"
 	else
 		export DEFAULTLEVEL="default"
 	fi
+	export RC_DEFAULTLEVEL=${DEFAULTLEVEL}
+
+	export RC_RUNLEVEL=$(rc_runlevel)
 
 	return 0
 }
@@ -165,6 +169,7 @@ setup_defaultlevels() {
 	      -L "/etc/runlevels/${BOOTLEVEL}.${DEFAULTLEVEL}" ]] ; then
 		export BOOTLEVEL="${BOOTLEVEL}.${DEFAULTLEVEL}"
 	fi
+	export RC_BOOTLEVEL=${BOOTLEVEL}
 
 	if [[ -z ${SOFTLEVEL} ]] ; then
 		if [[ -f "${svcdir}/softlevel" ]] ; then
@@ -173,6 +178,7 @@ setup_defaultlevels() {
 			export SOFTLEVEL="${BOOTLEVEL}"
 		fi
 	fi
+	export RC_DEFAULTLEVEL=${SOFTLEVEL}
 
 	return 0
 }
