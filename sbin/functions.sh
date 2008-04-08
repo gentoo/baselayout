@@ -149,8 +149,6 @@ get_bootconfig() {
 	fi
 	export RC_DEFAULTLEVEL=${DEFAULTLEVEL}
 
-	export RC_RUNLEVEL=$(rc_runlevel)
-
 	return 0
 }
 
@@ -178,7 +176,13 @@ setup_defaultlevels() {
 			export SOFTLEVEL="${BOOTLEVEL}"
 		fi
 	fi
-	export RC_DEFAULTLEVEL=${SOFTLEVEL}
+	if [[ -f "${svcdir}/softlevel" ]] ; then
+		export RC_DEFAULTLEVEL=$(< "${svcdir}/softlevel")
+	else
+		export RC_DEFAULTLEVEL=${SOFTLEVEL}
+	fi
+
+	export RC_RUNLEVEL=${SOFTLEVEL}
 
 	return 0
 }
