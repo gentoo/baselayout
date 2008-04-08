@@ -8,6 +8,7 @@ if [[ -z $1 ]] ; then
 	echo "Usage: ${0} <ver> [-f]" 1>&2
 	exit 1
 else
+	echo "Make sure to update VERSION in Makefile"
 	shift
 fi
 
@@ -52,7 +53,7 @@ chmod 0755 ${DEST}/sbin/*
 chmod 0755 ${DEST}/init.d/*
 ( cd $TMP/${NAME}-${V} ; rm -rf `find -iname .svn` )
 cd $TMP
-tar cjvf ${TMP}/${NAME}-${V}.tar.bz2 ${NAME}-${V}
+tar cjf ${TMP}/${NAME}-${V}.tar.bz2 ${NAME}-${V}
 rm -rf ${NAME}-${V}
 
 echo
