@@ -81,20 +81,26 @@ start() {
 		cd /tmp
 		if [[ ${WIPE_TMP} == "yes" ]] ; then
 			ebegin "Wiping /tmp directory"
-			# This eval stuff sucks, so if someone has a better *working*
-			# solution, please file a bug at http://bugs.gentoo.org/
-			# Originally ripped from Debian init scripts
 			local exceptions="
 				'!' -name . -a
 				'!' '(' -uid 0 -a
 					'('
 						-path './lost+found/*' -o
+						-path './quota.user' -o
 						-path './quota.user/*' -o
 						-path './aquota.user/*' -o
 						-path './quota.group/*' -o
 						-path './aquota.group/*' -o
 						-path './.journal/*'
-					')'
+					')' -o '(' -type d -a
+					'('
+						-path './lost+found' -o
+						-path './quota.user' -o
+						-path './aquota.user' -o
+						-path './quota.group' -o
+						-path './aquota.group' -o
+						-path './.journal'
+					')' ')'
 				')'"
 			# First kill most files, then kill empty dirs
 			eval find . -xdev -depth ${exceptions} ! -type d -print0 | xargs -0 rm -f --
