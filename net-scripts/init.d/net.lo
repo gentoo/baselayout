@@ -1004,7 +1004,7 @@ run_stop() {
 		eerror "root filesystem is network mounted -- can't stop ${iface}"
 		return 1
 	elif is_union_fs / ; then
-		for x in $(unionctl "${dir}" --list \
+		for x in $(unionctl / --list \
 		| sed -e 's/^\(.*\) .*/\1/') ; do
 			if is_net_fs "${x}" ; then
 				eerror "Part of the root filesystem is network mounted - cannot stop ${iface}"
