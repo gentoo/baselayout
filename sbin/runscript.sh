@@ -5,13 +5,10 @@
 [[ " $* " == *" --debug "* ]] && set -x
 
 # Common functions
-[[ ${RC_GOT_FUNCTIONS} != "yes" ]] && source /sbin/functions.sh
+[[ ${RC_GOT_FUNCTIONS} != "yes" ]] && source /etc/init.d/functions.sh
 
 # User must be root to run most script stuff (except status)
-if [[ ${EUID} != "0" ]] && ! [[ $2 == "status" && $# -eq 2 ]] && \
-		! [[ $2 == "--quiet" && $3 == "status" && $# -eq 3 ]] && \
-		! [[ $3 == "--quiet" && $2 == "status" && $# -eq 3 ]] \
-		; then
+if [[ ${EUID} != "0" ]] && [[ " $* " != " status " ]] ; then
 	eerror "$0: must be root to run init scripts"
 	exit 1
 fi
