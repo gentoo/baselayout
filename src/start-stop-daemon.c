@@ -556,6 +556,8 @@ parse_options(int argc, char * const *argv)
 			changeroot = optarg;
 			break;
 		case 'e':  /* --env <env-name> */
+			if (env)
+				badusage("Only one --env option is supported, use /usr/bin/env if you need more");
 			env = optarg;
 			break;
 		case 'N':  /* --nice */
