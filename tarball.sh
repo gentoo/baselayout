@@ -1,4 +1,6 @@
 #!/bin/bash
+[[ ${UID} -eq 0 ]] || exec sudo "$0" "$@"
+
 export TMP="${TMP:-/tmp}"
 export V="$1"
 export NAME="baselayout"
@@ -48,10 +50,10 @@ ln -sfn net.lo ${DEST}/init.d/net.eth0
 
 cp ChangeLog ${DEST}
 
+( cd $TMP/${NAME}-${V} ; rm -rf `find -iname .svn` )
 chown -R root:root ${DEST}
 chmod 0755 ${DEST}/sbin/*
 chmod 0755 ${DEST}/init.d/*
-( cd $TMP/${NAME}-${V} ; rm -rf `find -iname .svn` )
 cd $TMP
 tar cjf ${TMP}/${NAME}-${V}.tar.bz2 ${NAME}-${V}
 rm -rf ${NAME}-${V}
