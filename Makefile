@@ -9,7 +9,7 @@
 # without an ebuild style package manager.
 
 NAME = baselayout
-VERSION = 1.12.12
+VERSION = 1.12.13
 PKG = $(NAME)-$(VERSION)
 
 ARCH = x86
