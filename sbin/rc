@@ -208,7 +208,7 @@ then
 
 	echo
 	echo -e "${GOOD}Gentoo Linux${GENTOO_VERS}; ${BRACKET}http://www.gentoo.org/${NORMAL}"
-	echo -e " Copyright 1999-2007 Gentoo Foundation; Distributed under the GPLv2"
+	echo -e " Copyright 1999-2009 Gentoo Foundation; Distributed under the GPLv2"
 	echo
 	if [[ ${RC_INTERACTIVE} == "yes" ]] ; then
 		echo -e "Press ${GOOD}I${NORMAL} to enter interactive boot mode"
