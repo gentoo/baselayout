@@ -141,7 +141,7 @@ install:
 	# sbin
 	install -m 0755 -d $(SBINDIR)
 	install -m 0644 sbin/functions.sh $(SBINDIR)
-	for x in depscan.sh env-update.sh runscript.sh rc rc-update \
+	for x in depscan.sh runscript.sh rc rc-update \
 		MAKEDEV ; do \
 		install -m 0755 "sbin/$$x" $(SBINDIR) ; \
 	done

@@ -31,12 +31,6 @@ start() {
 		return 0
 	fi
 
-	if [[ -x /sbin/env-update.sh ]] ; then
-		ebegin "Updating environment"
-		/sbin/env-update.sh -u > /dev/null
-		eend 0
-	fi
-
 	#
 	# Take care of random stuff [ /var/lock | /var/run | pam ]
 	#
