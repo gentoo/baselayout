@@ -609,7 +609,7 @@ get_base_ver() {
 # Network filesystems list for common use in rc-scripts.
 # This variable is used in is_net_fs and other places such as
 # localmount.
-NET_FS_LIST="afs cifs coda davfs fuse fuse.sshfs gfs ncpfs nfs nfs4 ocfs2 shfs smbfs"
+NET_FS_LIST="afs cifs coda davfs fuse fuse.sshfs gfs glusterfs ncpfs nfs nfs4 ocfs2 shfs smbfs"
 
 # bool is_net_fs(path)
 #
