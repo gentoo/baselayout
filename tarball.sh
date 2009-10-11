@@ -48,7 +48,7 @@ cp -ax net-scripts/net ${DEST}/lib/rcscripts
 cp -ax net-scripts/conf.d ${DEST}/etc
 ln -sfn net.lo ${DEST}/init.d/net.eth0
 
-cp ChangeLog ${DEST}
+cp ChangeLog{,.svn} ${DEST}
 
 ( cd $TMP/${NAME}-${V} ; rm -rf `find -iname .svn` )
 chown -R root:root ${DEST}
