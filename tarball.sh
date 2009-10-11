@@ -18,7 +18,7 @@ if [[ $1 != "-f" ]] ; then
 	echo "Performing sanity checks (run with -f to skip) ..."
 
 	# Check that we're updated
-	svnfiles=$( svn status --no-ignore 2>&1 | egrep -v '^(U|P)' )
+	svnfiles=$( svn status --no-ignore 2>&1 | egrep -v '^(U|P)' | grep -v ChangeLog.svn )
 	if [[ -n ${svnfiles} ]] ; then
 		echo "Refusing to package tarball until svn is in sync:"
 		echo "$svnfiles"
