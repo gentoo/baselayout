@@ -134,14 +134,14 @@ export SVCDIR DEPTYPES ORDTYPES
 cd /etc/init.d
 
 /bin/gawk \
-	-f /lib/rcscripts/awk/functions.awk \
-	-f /lib/rcscripts/awk/cachedepends.awk || \
+	-f ${svclib}/awk/functions.awk \
+	-f ${svclib}/awk/cachedepends.awk || \
 	retval=1
 
 bash "${mysvcdir}/depcache" | \
 /bin/gawk \
-	-f /lib/rcscripts/awk/functions.awk \
-	-f /lib/rcscripts/awk/gendepends.awk || \
+	-f ${svclib}/awk/functions.awk \
+	-f ${svclib}/awk/gendepends.awk || \
 	retval=1
 
 touch "${mysvcdir}"/dep{cache,tree}
