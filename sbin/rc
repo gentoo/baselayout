@@ -216,14 +216,18 @@ then
     fi
 	check_statedir /proc
 
-	ebegin "Mounting proc at /proc"
-	if [[ ${RC_USE_FSTAB} = "yes" ]] ; then
-		mntcmd=$(get_mount_fstab /proc)
+	if [[ ! -e /proc/uptime ]] ; then
+		ebegin "Mounting proc at /proc"
+		if [[ ${RC_USE_FSTAB} = "yes" ]] ; then
+			mntcmd=$(get_mount_fstab /proc)
+		else
+			unset mntcmd
+		fi
+		try mount -n ${mntcmd:--t proc proc /proc -o noexec,nosuid,nodev}
+		eend $?
 	else
-		unset mntcmd
+		einfo "Skipping mount of /proc as /proc/uptime exists"
 	fi
-	try mount -n ${mntcmd:--t proc proc /proc -o noexec,nosuid,nodev}
-	eend $?
 
 	# Start profiling init now we have /proc
 	profiling start
@@ -235,14 +239,18 @@ then
 
 	if [ "$(get_KV)" -ge "$(KV_to_int '2.6.0')" ] ; then
 		if [[ -d /sys ]] ; then
-			ebegin "Mounting sysfs at /sys"
-			if [[ ${RC_USE_FSTAB} = "yes" ]] ; then
-				mntcmd=$(get_mount_fstab /sys)
+			if [[ ! -d /sys/kernel ]] ; then
+				ebegin "Mounting sysfs at /sys"
+				if [[ ${RC_USE_FSTAB} = "yes" ]] ; then
+					mntcmd=$(get_mount_fstab /sys)
+				else
+					unset mntcmd
+				fi
+				try mount -n ${mntcmd:--t sysfs sysfs /sys -o noexec,nosuid,nodev}
+				eend $?
 			else
-				unset mntcmd
+				einfo "Skipping mount of /sys as /sys/kernel exists"
 			fi
-			try mount -n ${mntcmd:--t sysfs sysfs /sys -o noexec,nosuid,nodev}
-			eend $?
 		else
 			ewarn "No /sys to mount sysfs needed in 2.6 and later kernels!"
 		fi
