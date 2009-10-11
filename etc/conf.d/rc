@@ -3,7 +3,7 @@
 # This is the number of tty's used in most of the rc-scripts (like
 # consolefont, numlock, etc ...)
 
-RC_TTY_NUMBER=11
+RC_TTY_NUMBER=12
 
 # Set to "yes" if you want the rc system to try and start services
 # in parallel for a slight speed improvement. NOTE: When RC_PARALLEL_STARTUP
