@@ -1,10 +1,12 @@
-# Copyright 1999-2007 Gentoo Foundation
+# Copyright 1999-2009 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 function print_start() {
 	print "source /sbin/functions.sh" >> TMPCACHE
 	print "" >> TMPCACHE
 	print "config() { :; }" >> TMPCACHE
+	print "get_options() { :; }" >> TMPCACHE
+	print "save_options() { :; }" >> TMPCACHE
 	print "need() {" >> TMPCACHE
 	print "	echo \"NEED $*\"; return 0" >> TMPCACHE
 	print "}" >> TMPCACHE
