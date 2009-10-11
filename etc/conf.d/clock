@@ -1,9 +1,10 @@
 # /etc/conf.d/clock
 
-# Set CLOCK to "UTC" if your system clock is set to UTC (also known as
-# Greenwich Mean Time).  If your clock is set to the local time, then 
-# set CLOCK to "local".  Note that if you dual boot with Windows, then 
-# you should set it to "local".
+# Set CLOCK to "UTC" if your hardware clock is set to UTC (also known as
+# Greenwich Mean Time).  If that clock is set to the local time, then 
+# set CLOCK to "local".
+# Note that if you dual boot with Windows, then you should set it to
+# "local" because Windows always sets the hardware clock to local time.
 
 CLOCK="UTC"
 
@@ -19,8 +20,8 @@ CLOCK="UTC"
 
 CLOCK_OPTS=""
 
-# If you want to set the Hardware Clock to the current System Time 
-# during shutdown, then say "yes" here.
+# If you want to set the Hardware Clock to the current System Time (software
+# clock) during shutdown, then say "yes" here.
 
 CLOCK_SYSTOHC="no"
 
