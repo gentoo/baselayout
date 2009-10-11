@@ -13,7 +13,7 @@ start() {
 	start_addon dm-crypt
 
 	if [[ -f /fastboot ]] || [[ -n ${CDBOOT} ]] ; then
-		rm -f /fastboot
+		rm -f /fastboot 2>/dev/null || : # ignore ro errors #267094
 	else
 		ebegin "Checking all filesystems"
 		if [[ -f /forcefsck ]] ; then
