@@ -609,6 +609,8 @@ webster		765/tcp				# Network dictionary
 webster		765/udp
 phonebook	767/tcp				# Network phonebook
 phonebook	767/udp
+domain-s	853/tcp				# DNS query-response protocol run over TLS/DTLS
+domain-s	853/udp
 rsync		873/tcp				# rsync
 rsync		873/udp
 ftps-data	989/tcp				# ftp protocol, data, over TLS/SSL
