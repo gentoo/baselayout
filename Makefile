@@ -33,16 +33,20 @@ KEEP_DIRS-Linux += \
 	/sys \
 	/usr/src
 KEEP_DIRS = $(KEEP_DIRS-$(OS)) \
+	/bin \
 	/boot \
 	/etc/profile.d \
 	/home \
 	/media \
 	/mnt \
-	/proc \
 	/opt \
+	/proc \
 	/root \
+	/sbin \
+	/usr/bin \
 	/usr/local/bin \
 	/usr/local/sbin \
+	/usr/sbin \
 	/var/cache \
 	/var/empty \
 	/var/lib \
@@ -92,6 +96,9 @@ layout: layout-dirs layout-$(OS)
 
 layout-usrmerge: layout
 ifeq ($(OS),Linux)
+	rm -fr ${DESTDIR}/bin
+	rm -fr ${DESTDIR}/sbin
+	rm -fr ${DESTDIR}/usr/sbin
 	ln -snf usr/bin ${DESTDIR}/bin
 	ln -snf usr/sbin ${DESTDIR}/sbin
 	ln -snf bin ${DESTDIR}/usr/sbin
