@@ -63,6 +63,7 @@ clean:
 install:
 	$(INSTALL_DIR) $(DESTDIR)/etc
 	cp -pPR etc/* etc.$(OS)/* $(DESTDIR)/etc/
+	echo "Gentoo Base System release ${PV}" > ${DESTDIR}/etc/gentoo-release
 	$(INSTALL_DIR) $(DESTDIR)/usr/share/baselayout
 	cp -pPR share.$(OS)/* $(DESTDIR)/usr/share/baselayout/
 
