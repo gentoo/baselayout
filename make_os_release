@@ -1,0 +1,15 @@
+#!/bin/sh
+if [ -z "${1}" ] || [ -z "${2}" ]; then
+	printf 'usage: %s [os] [version]' "${0##*/}" >&2
+	exit 1
+fi
+cat <<EOF
+NAME=Gentoo
+ID=gentoo
+PRETTY_NAME="Gentoo ${1}"
+ANSI_COLOR="1;32"
+HOME_URL="https://www.gentoo.org/"
+SUPPORT_URL="https://www.gentoo.org/support/"
+BUG_REPORT_URL="https://bugs.gentoo.org/"
+VERSION_ID="${2}"
+EOF
