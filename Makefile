@@ -64,9 +64,10 @@ install:
 	$(INSTALL_DIR) $(DESTDIR)/etc
 	cp -pPR etc/* etc.$(OS)/* $(DESTDIR)/etc/
 	echo "Gentoo Base System release ${PV}" > ${DESTDIR}/etc/gentoo-release
+	$(INSTALL_DIR) $(DESTDIR)/usr/lib
+	cp -pPR lib.$(OS)/* $(DESTDIR)/usr/lib/
 	$(INSTALL_DIR) $(DESTDIR)/usr/share/baselayout
 	cp -pPR share.$(OS)/* $(DESTDIR)/usr/share/baselayout/
-	$(INSTALL_DIR) $(DESTDIR)/usr/lib
 	./make_os_release $(OS) $(PV) > $(DESTDIR)/usr/lib/os-release
 	ln -snf ../usr/lib/os-release ${DESTDIR}/etc/os-release
 
