@@ -1,25 +1,108 @@
-commit 027ed4a8aec31f165bf224e92c193a261f3c13a9
+commit dec3056722dc215de60c7c02caf9bfb7111ef3b4
 Author: William Hubbs <williamh@gentoo.org>
 Commit: William Hubbs <williamh@gentoo.org>
 
-    update version to 2.7
+    typo fix
     
     Signed-off-by: William Hubbs <williamh@gentoo.org>
 
-commit 14c91b2c9dc77d6fc81746b999b92187bd9cac82
+commit a3e35578740551f78a8fa44b51143865ca16c4a9
 Author: William Hubbs <williamh@gentoo.org>
 Commit: William Hubbs <williamh@gentoo.org>
 
-    enable protected_symlinks and protected_hardlinks by default
+    clean up makefile
     
-    Bug:  https://bugs.gentoo.org/704914
     Signed-off-by: William Hubbs <williamh@gentoo.org>
 
-commit b46308e95323a243d976004118fb2a4f3b1e60b1
-Author: Mike Gilbert <floppym@gentoo.org>
+commit e32e4c117adf458a89e37f72ac8b06a5c1e6aa90
+Author: William Hubbs <williamh@gentoo.org>
 Commit: William Hubbs <williamh@gentoo.org>
 
-    services: add domain-s
+    drop lib directory installation from Makefile
     
-    Closes: https://bugs.gentoo.org/708130
+    Signed-off-by: William Hubbs <williamh@gentoo.org>
+
+commit 7edde65da31eb29ef2df4bed3ac62c1bc7c5651d
+Author: William Hubbs <williamh@gentoo.org>
+Commit: William Hubbs <williamh@gentoo.org>
+
+    move modprobe.d to lib location
+    
+    Signed-off-by: William Hubbs <williamh@gentoo.org>
+
+commit a2d4bbb4f23d9a91b41fad4f89f2c4cb7278cd30
+Author: William Hubbs <williamh@gentoo.org>
+Commit: William Hubbs <williamh@gentoo.org>
+
+    remove sysctl.d/README
+    
+    This is not needed since we install our files now in /usr/lib/sysctl.d
+    
+    Signed-off-by: William Hubbs <williamh@gentoo.org>
+
+commit 084c51c67b07562ff0cf0df0774dfaf5978dcffd
+Author: William Hubbs <williamh@gentoo.org>
+Commit: William Hubbs <williamh@gentoo.org>
+
+    move 00protected-links.conf to /usr/lib/sysctl.d
+    
+    Bug: https://bugs.gentoo.org/814664
+    Signed-off-by: William Hubbs <williamh@gentoo.org>
+
+commit 57c250e24c70f8f9581860654cdec0d049345292
+Author: William Hubbs <williamh@gentoo.org>
+Commit: William Hubbs <williamh@gentoo.org>
+
+    generate /usr/lib/os-release dynamically
+    
+    This allows the os name and version to be dynamic.
+    
+    Bug: https://bugs.gentoo.org/788190
+    
+    Signed-off-by: William Hubbs <williamh@gentoo.org>
+
+commit 6d78c865837a08b02a6b94ab280d413df8628dad
+Author: William Hubbs <williamh@gentoo.org>
+Commit: William Hubbs <williamh@gentoo.org>
+
+    create /etc/gentoo-release here instead of in the ebuild
+    
+    Signed-off-by: William Hubbs <williamh@gentoo.org>
+
+commit 782d0ded97da543c216baf2a9852423744e20549
+Author: William Hubbs <williamh@gentoo.org>
+Commit: William Hubbs <williamh@gentoo.org>
+
+    drop sysctl.conf for Linux systems
+    
+    This file is no longer needed. All of the settings are kernel defaults.
+    
+    Closes: https://bugs.gentoo.org/484796
+    Signed-off-by: William Hubbs <williamh@gentoo.org>
+
+commit 47686e5e438c57cd7ffc94b2d7f15abc03146442
+Author: William Hubbs <williamh@gentoo.org>
+Commit: William Hubbs <williamh@gentoo.org>
+
+    create bin and sbin directories
+    
+    Signed-off-by: William Hubbs <williamh@gentoo.org>
+
+commit a437fae9e64f4f6d810433ea73e834cd0caae962
+Author: William Hubbs <williamh@gentoo.org>
+Commit: William Hubbs <williamh@gentoo.org>
+
+    fix PRETTY_NAME
+    
+    Fixes: https://bugs.gentoo.org/772155
+    Signed-off-by: William Hubbs <williamh@gentoo.org>
+
+commit 54879ad8889c65b446e6d090ec1c855bbed22ff2
+Author: William Hubbs <williamh@gentoo.org>
+Commit: William Hubbs <williamh@gentoo.org>
+
+    etc/profile: remove umask setting
+    
+    Umask should be set via shadow in /etc/login.defs or via pam.
+    
     Signed-off-by: William Hubbs <williamh@gentoo.org>
