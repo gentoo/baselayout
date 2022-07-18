@@ -76,7 +76,7 @@ layout-dirs:
 	# Create base filesytem layout
 	for x in $(KEEP_DIRS) ; do \
 		test -e $(DESTDIR)$$x/.keep && continue ; \
-		$(INSTALL_DIR) $(DESTDIR)$$x || exit $$? ; \
+		$(INSTALL_DIR) $(DESTDIR)$$x ; \
 		touch $(DESTDIR)$$x/.keep || echo "ignoring touch failure; mounted fs?" ; \
 	done
 
