@@ -106,7 +106,7 @@ ifeq ($(OS),Linux)
 	rm -fr ${DESTDIR}/sbin
 	rm -fr ${DESTDIR}/usr/sbin
 	ln -snf usr/bin ${DESTDIR}/bin
-	ln -snf usr/sbin ${DESTDIR}/sbin
+	ln -snf usr/bin ${DESTDIR}/sbin
 	ln -snf bin ${DESTDIR}/usr/sbin
 endif
 
