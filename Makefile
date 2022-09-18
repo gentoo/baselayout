@@ -77,7 +77,7 @@ layout-dirs:
 	for x in $(KEEP_DIRS) ; do \
 		test -e $(DESTDIR)$$x/.keep && continue ; \
 		$(INSTALL_DIR) $(DESTDIR)$$x ; \
-		touch $(DESTDIR)$$x/.keep || echo "ignoring touch failure; mounted fs?" ; \
+		touch $(DESTDIR)$$x/.keep || true; \
 	done
 
 layout-BSD: layout-dirs
