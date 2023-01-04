@@ -17,24 +17,10 @@ INSTALL_EXE    = install -m 0755
 INSTALL_FILE   = install -m 0644
 INSTALL_SECURE = install -m 0600
 
-ifeq ($(OS),)
-OS=$(shell uname -s)
-ifneq ($(OS),Linux)
-OS=BSD
-endif
-endif
-
-KEEP_DIRS-BSD += \
-	/var/lock \
-	/var/run
-KEEP_DIRS-Linux += \
-	/dev \
-	/run \
-	/sys \
-	/usr/src
-KEEP_DIRS = $(KEEP_DIRS-$(OS)) \
+KEEP_DIRS = \
 	/bin \
 	/boot \
+	/dev \
 	/etc/profile.d \
 	/home \
 	/media \
@@ -42,11 +28,14 @@ KEEP_DIRS = $(KEEP_DIRS-$(OS)) \
 	/opt \
 	/proc \
 	/root \
+	/run \
 	/sbin \
+	/sys \
 	/usr/bin \
 	/usr/local/bin \
 	/usr/local/sbin \
 	/usr/sbin \
+	/usr/src \
 	/var/cache \
 	/var/empty \
 	/var/lib \
@@ -62,53 +51,40 @@ clean:
 
 install:
 	$(INSTALL_DIR) $(DESTDIR)/etc
-	cp -pPR etc/* etc.$(OS)/* $(DESTDIR)/etc/
+	cp -pPR etc/* $(DESTDIR)/etc/
 	echo "Gentoo Base System release ${PV}" > ${DESTDIR}/etc/gentoo-release
 	$(INSTALL_DIR) $(DESTDIR)/lib
-	cp -pPR lib.$(OS)/* $(DESTDIR)/lib/
+	cp -pPR lib/* $(DESTDIR)/lib/
 	$(INSTALL_DIR) $(DESTDIR)/usr/lib
 	ln -snf ../usr/lib/os-release ${DESTDIR}/etc/os-release
-	./make_os_release ${OS} ${PV} > $(DESTDIR)/usr/lib/os-release
+	./make_os_release ${PV} > $(DESTDIR)/usr/lib/os-release
 	$(INSTALL_DIR) $(DESTDIR)/usr/share/baselayout
-	cp -pPR share.$(OS)/* $(DESTDIR)/usr/share/baselayout/
+	cp -pPR share/* $(DESTDIR)/usr/share/baselayout/
 
-layout-dirs:
+layout:
 	# Create base filesytem layout
 	for x in $(KEEP_DIRS) ; do \
 		test -e $(DESTDIR)$$x/.keep && continue ; \
 		$(INSTALL_DIR) $(DESTDIR)$$x ; \
 		touch $(DESTDIR)$$x/.keep || true; \
 	done
-
-layout-BSD: layout-dirs
-	-chgrp uucp $(DESTDIR)/var/lock
-	install -m 0775 -d $(DESTDIR)/var/lock
-
-layout-Linux: layout-dirs
 	ln -snf /proc/self/mounts $(DESTDIR)/etc/mtab
 	ln -snf /run $(DESTDIR)/var/run
 	ln -snf /run/lock $(DESTDIR)/var/lock
-
-layout: layout-dirs layout-$(OS)
 	# Special dirs
-	install -m 0700 -d $(DESTDIR)/root
-	touch $(DESTDIR)/root/.keep
-	install -m 1777 -d $(DESTDIR)/var/tmp
-	touch $(DESTDIR)/var/tmp/.keep
-	install -m 1777 -d $(DESTDIR)/tmp
-	touch $(DESTDIR)/tmp/.keep
+	chmod 0700 $(DESTDIR)/root
+	chmod 1777 $(DESTDIR)/var/tmp
+	chmod 1777 $(DESTDIR)/tmp
 	# FHS compatibility symlinks stuff
 	ln -snf /var/tmp $(DESTDIR)/usr/tmp
 
 layout-usrmerge: layout
-ifeq ($(OS),Linux)
 	rm -fr ${DESTDIR}/bin
 	rm -fr ${DESTDIR}/sbin
 	rm -fr ${DESTDIR}/usr/sbin
 	ln -snf usr/bin ${DESTDIR}/bin
 	ln -snf usr/bin ${DESTDIR}/sbin
 	ln -snf bin ${DESTDIR}/usr/sbin
-endif
 
 live:
 	rm -rf /tmp/$(PKG)
