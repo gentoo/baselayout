@@ -64,9 +64,7 @@ install:
 layout:
 	# Create base filesytem layout
 	for x in $(KEEP_DIRS) ; do \
-		test -e $(DESTDIR)$$x/.keep && continue ; \
 		$(INSTALL_DIR) $(DESTDIR)$$x ; \
-		touch $(DESTDIR)$$x/.keep || true; \
 	done
 	ln -snf /proc/self/mounts $(DESTDIR)/etc/mtab
 	ln -snf /run $(DESTDIR)/var/run
