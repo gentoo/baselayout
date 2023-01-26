@@ -66,15 +66,10 @@ layout:
 	for x in $(KEEP_DIRS) ; do \
 		$(INSTALL_DIR) $(DESTDIR)$$x ; \
 	done
-	ln -snf /proc/self/mounts $(DESTDIR)/etc/mtab
-	ln -snf /run $(DESTDIR)/var/run
-	ln -snf /run/lock $(DESTDIR)/var/lock
 	# Special dirs
 	chmod 0700 $(DESTDIR)/root
 	chmod 1777 $(DESTDIR)/var/tmp
 	chmod 1777 $(DESTDIR)/tmp
-	# FHS compatibility symlinks stuff
-	ln -snf /var/tmp $(DESTDIR)/usr/tmp
 
 layout-usrmerge: layout
 	rm -fr ${DESTDIR}/bin
