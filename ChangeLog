@@ -1,8 +1,26 @@
-commit cfbb22a4f4608c39793b9f8942c9dfb9d5020c5e
+commit a48f2a886458ccdf1fdbfd9c106da4af732ea212
+Author: William Hubbs <williamh@gentoo.org>
+Commit: William Hubbs <williamh@gentoo.org>
+
+    drop /usr/tmp from makefile
+    
+    Signed-off-by: William Hubbs <williamh@gentoo.org>
+
+commit 25960d181b905a11ec4dd0c90d4740304c2c25ea
+Author: William Hubbs <williamh@gentoo.org>
+Commit: William Hubbs <williamh@gentoo.org>
+
+    update ChangeLog
+    
+    Signed-off-by: William Hubbs <williamh@gentoo.org>
+
+commit 201026f62b1fcbc05b58f38ae5a26ffccd098e32
 Author: William Hubbs <williamh@gentoo.org>
 Commit: William Hubbs <williamh@gentoo.org>
 
     update version to 2.10
+    
+    Signed-off-by: William Hubbs <williamh@gentoo.org>
 
 commit 8aa828d0ce8ea8822cb0ba6e26affbc2005281e6
 Author: William Hubbs <williamh@gentoo.org>
