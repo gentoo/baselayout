@@ -1,4 +1,111 @@
-commit dec3056722dc215de60c7c02caf9bfb7111ef3b4
+commit cfbb22a4f4608c39793b9f8942c9dfb9d5020c5e
+Author: William Hubbs <williamh@gentoo.org>
+Commit: William Hubbs <williamh@gentoo.org>
+
+    update version to 2.10
+
+commit 8aa828d0ce8ea8822cb0ba6e26affbc2005281e6
+Author: William Hubbs <williamh@gentoo.org>
+Commit: William Hubbs <williamh@gentoo.org>
+
+    add environment variables needed for assistive technology
+    
+    Bug: https://bugs.gentoo.org/853820
+    Signed-off-by: William Hubbs <williamh@gentoo.org>
+
+commit ff9fc523397858c2eaa927847570e6e679989ae6
+Author: William Hubbs <williamh@gentoo.org>
+Commit: William Hubbs <williamh@gentoo.org>
+
+    install the fhs compatible symlinks in the Makefile
+    
+    Signed-off-by: William Hubbs <williamh@gentoo.org>
+
+commit 6e9777bc736fb2e963865090c8ef36eddd5e597e
+Author: Mike Gilbert <floppym@gentoo.org>
+Commit: William Hubbs <williamh@gentoo.org>
+
+    etc/issue: remove DNS domain name
+    
+    It is very common for client systems to not have a valid DNS domain
+    name. This results in agetty printing "unknown_domain", which may
+    confuse new users.
+    
+    Closes: https://github.com/gentoo/baselayout/pull/3
+    Signed-off-by: Mike Gilbert <floppym@gentoo.org>
+    Signed-off-by: William Hubbs <williamh@gentoo.org>
+
+commit cd2a6014247b4a3b69b780a331e4d5a5f280c2d8
+Author: William Hubbs <williamh@gentoo.org>
+Commit: William Hubbs <williamh@gentoo.org>
+
+    drop fhs compatibility symlinks from the makefile
+    
+    This is necessary since we want baselayout to own these links.
+    To do that, we need to create them in the ebuild.
+    
+    Bug: https://bugs.gentoo.org/648880
+    Signed-off-by: William Hubbs <williamh@gentoo.org>
+
+commit 066c554b6c233ac2a99a5b7693eb67705b277a16
+Author: William Hubbs <williamh@gentoo.org>
+Commit: William Hubbs <williamh@gentoo.org>
+
+    drop .keep files in layout target
+    
+    Bug: https://bugs.gentoo.org/888807
+    Signed-off-by: William Hubbs <williamh@gentoo.org>
+
+commit e81dfb07f53e817a83e3c3a7c247cdb57a507fdf
+Author: William Hubbs <williamh@gentoo.org>
+Commit: William Hubbs <williamh@gentoo.org>
+
+    drop OS specific support
+    
+    This is no longer needed since we have dropped support for *BSD.
+    
+    Signed-off-by: William Hubbs <williamh@gentoo.org>
+
+commit 699f4857c59779581ca29ab245966830e537f2b2
+Author: William Hubbs <williamh@gentoo.org>
+Commit: William Hubbs <williamh@gentoo.org>
+
+    version 2.9
+    
+    Signed-off-by: William Hubbs <williamh@gentoo.org>
+
+commit 0ca11c8aa1a8c8e0b95987f19b778ecdce4c8c61
+Author: William Hubbs <williamh@gentoo.org>
+Commit: William Hubbs <williamh@gentoo.org>
+
+    silence message about ignoring the touch failure
+    
+    Signed-off-by: William Hubbs <williamh@gentoo.org>
+
+commit 63accc51997bc0433f2ce3c9f637a656eac649e7
+Author: Paymon <darwinskernel@gmail.com>
+Commit: Mike Gilbert <floppym@gentoo.org>
+
+    Relax checks on KEEPDIR when directories are mounted fs
+    
+    My use case for this is in containers (mkosi with systemd-nspawn in my
+    case)
+    
+    Closes: https://github.com/gentoo/baselayout/pull/2
+    Signed-off-by: Paymon <darwinskernel@gmail.com>
+    Signed-off-by: Mike Gilbert <floppym@gentoo.org>
+
+commit 625632955cec96baaaafc0dd83e8497cd55d9b9e
+Author: Mike Gilbert <floppym@gentoo.org>
+Commit: Mike Gilbert <floppym@gentoo.org>
+
+    Makefile: simplify /sbin symlink for usrmerge
+    
+    This matches the layout produced by sys-apps/merge-usr.
+    
+    Signed-off-by: Mike Gilbert <floppym@gentoo.org>
+
+commit e79dc5e1de040cf90e27ea849b0ac01091348b20
 Author: William Hubbs <williamh@gentoo.org>
 Commit: William Hubbs <williamh@gentoo.org>
 
@@ -6,103 +113,17 @@ Commit: William Hubbs <williamh@gentoo.org>
     
     Signed-off-by: William Hubbs <williamh@gentoo.org>
 
-commit a3e35578740551f78a8fa44b51143865ca16c4a9
-Author: William Hubbs <williamh@gentoo.org>
+commit ffb9e602847f4f196d6366dd1f982046853b29f4
+Author: orbea <orbea@riseup.net>
 Commit: William Hubbs <williamh@gentoo.org>
 
-    clean up makefile
+    etc/shells: Add yash to login shells
     
-    Signed-off-by: William Hubbs <williamh@gentoo.org>
-
-commit e32e4c117adf458a89e37f72ac8b06a5c1e6aa90
-Author: William Hubbs <williamh@gentoo.org>
-Commit: William Hubbs <williamh@gentoo.org>
-
-    drop lib directory installation from Makefile
+    Yash, yet another shell, is a POSIX-compliant command line shell
+    written in C99 (ISO/IEC 9899:1999). Yash is intended to be the most
+    POSIX-compliant shell in the world while supporting features for daily
+    interactive and scripting use.
     
-    Signed-off-by: William Hubbs <williamh@gentoo.org>
-
-commit 7edde65da31eb29ef2df4bed3ac62c1bc7c5651d
-Author: William Hubbs <williamh@gentoo.org>
-Commit: William Hubbs <williamh@gentoo.org>
-
-    move modprobe.d to lib location
-    
-    Signed-off-by: William Hubbs <williamh@gentoo.org>
-
-commit a2d4bbb4f23d9a91b41fad4f89f2c4cb7278cd30
-Author: William Hubbs <williamh@gentoo.org>
-Commit: William Hubbs <williamh@gentoo.org>
-
-    remove sysctl.d/README
-    
-    This is not needed since we install our files now in /usr/lib/sysctl.d
-    
-    Signed-off-by: William Hubbs <williamh@gentoo.org>
-
-commit 084c51c67b07562ff0cf0df0774dfaf5978dcffd
-Author: William Hubbs <williamh@gentoo.org>
-Commit: William Hubbs <williamh@gentoo.org>
-
-    move 00protected-links.conf to /usr/lib/sysctl.d
-    
-    Bug: https://bugs.gentoo.org/814664
-    Signed-off-by: William Hubbs <williamh@gentoo.org>
-
-commit 57c250e24c70f8f9581860654cdec0d049345292
-Author: William Hubbs <williamh@gentoo.org>
-Commit: William Hubbs <williamh@gentoo.org>
-
-    generate /usr/lib/os-release dynamically
-    
-    This allows the os name and version to be dynamic.
-    
-    Bug: https://bugs.gentoo.org/788190
-    
-    Signed-off-by: William Hubbs <williamh@gentoo.org>
-
-commit 6d78c865837a08b02a6b94ab280d413df8628dad
-Author: William Hubbs <williamh@gentoo.org>
-Commit: William Hubbs <williamh@gentoo.org>
-
-    create /etc/gentoo-release here instead of in the ebuild
-    
-    Signed-off-by: William Hubbs <williamh@gentoo.org>
-
-commit 782d0ded97da543c216baf2a9852423744e20549
-Author: William Hubbs <williamh@gentoo.org>
-Commit: William Hubbs <williamh@gentoo.org>
-
-    drop sysctl.conf for Linux systems
-    
-    This file is no longer needed. All of the settings are kernel defaults.
-    
-    Closes: https://bugs.gentoo.org/484796
-    Signed-off-by: William Hubbs <williamh@gentoo.org>
-
-commit 47686e5e438c57cd7ffc94b2d7f15abc03146442
-Author: William Hubbs <williamh@gentoo.org>
-Commit: William Hubbs <williamh@gentoo.org>
-
-    create bin and sbin directories
-    
-    Signed-off-by: William Hubbs <williamh@gentoo.org>
-
-commit a437fae9e64f4f6d810433ea73e834cd0caae962
-Author: William Hubbs <williamh@gentoo.org>
-Commit: William Hubbs <williamh@gentoo.org>
-
-    fix PRETTY_NAME
-    
-    Fixes: https://bugs.gentoo.org/772155
-    Signed-off-by: William Hubbs <williamh@gentoo.org>
-
-commit 54879ad8889c65b446e6d090ec1c855bbed22ff2
-Author: William Hubbs <williamh@gentoo.org>
-Commit: William Hubbs <williamh@gentoo.org>
-
-    etc/profile: remove umask setting
-    
-    Umask should be set via shadow in /etc/login.defs or via pam.
-    
+    Closes: https://github.com/gentoo/baselayout/pull/1
+    Signed-off-by: orbea <orbea@riseup.net>
     Signed-off-by: William Hubbs <williamh@gentoo.org>
