@@ -62,7 +62,6 @@ install:
 	cp -pPR share/* $(DESTDIR)/usr/share/baselayout/
 	# FHS compatibility symlinks
 	ln -snf ../proc/self/mounts $(DESTDIR)/etc/mtab
-	ln -snf ../var/tmp $(DESTDIR)/usr/tmp
 	$(INSTALL_DIR) $(DESTDIR)/var
 	ln -snf ../run $(DESTDIR)/var/run
 	ln -snf ../run/lock $(DESTDIR)/var/lock
