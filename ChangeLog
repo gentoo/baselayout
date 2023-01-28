@@ -1,3 +1,24 @@
+commit bc22069d1a41eeec6e22ba9bf391412a0244f5a7
+Author: Mike Gilbert <floppym@gentoo.org>
+Commit: Mike Gilbert <floppym@gentoo.org>
+
+    Move /var/run and /var/lock back to the layout target
+    
+    We need to ensure packages do not install things here and come up with a
+    better migration plan.
+    
+    Bug: https://bugs.gentoo.org/648880
+    Bug: https://bugs.gentoo.org/892267
+    Signed-off-by: Mike Gilbert <floppym@gentoo.org>
+
+commit 032633218070bf8c44961d05e286d5d1089779aa
+Author: Mike Gilbert <floppym@gentoo.org>
+Commit: Mike Gilbert <floppym@gentoo.org>
+
+    Update ChangeLog
+    
+    Signed-off-by: Mike Gilbert <floppym@gentoo.org>
+
 commit 9a6ccf129ecd9efb9f4b5cc98d55e6eab1d203be
 Author: Mike Gilbert <floppym@gentoo.org>
 Commit: Mike Gilbert <floppym@gentoo.org>
