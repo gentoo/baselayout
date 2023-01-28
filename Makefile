@@ -7,7 +7,7 @@
 # It also has the added bonus of being easier to install on systems
 # without an ebuild style package manager.
 
-PV = 2.11
+PV = 2.13
 PKG = baselayout-$(PV)
 DISTFILE = $(PKG).tar.bz2
 
@@ -60,17 +60,15 @@ install:
 	./make_os_release ${PV} > $(DESTDIR)/usr/lib/os-release
 	$(INSTALL_DIR) $(DESTDIR)/usr/share/baselayout
 	cp -pPR share/* $(DESTDIR)/usr/share/baselayout/
-	# FHS compatibility symlinks
 	ln -snf ../proc/self/mounts $(DESTDIR)/etc/mtab
-	$(INSTALL_DIR) $(DESTDIR)/var
-	ln -snf ../run $(DESTDIR)/var/run
-	ln -snf ../run/lock $(DESTDIR)/var/lock
 
 layout:
 	# Create base filesytem layout
 	for x in $(KEEP_DIRS) ; do \
 		$(INSTALL_DIR) $(DESTDIR)$$x ; \
 	done
+	ln -snf ../run $(DESTDIR)/var/run
+	ln -snf ../run/lock $(DESTDIR)/var/lock
 	# Special dirs
 	chmod 0700 $(DESTDIR)/root
 	chmod 1777 $(DESTDIR)/var/tmp
