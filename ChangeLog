@@ -1,3 +1,31 @@
+commit 9a6ccf129ecd9efb9f4b5cc98d55e6eab1d203be
+Author: Mike Gilbert <floppym@gentoo.org>
+Commit: Mike Gilbert <floppym@gentoo.org>
+
+    Revert "add environment variables needed for assistive technology"
+    
+    After discussion in IRC and some comments on the bug report, we decided
+    this was not such a good idea.
+    
+    Reverts: 8aa828d0ce8ea8822cb0ba6e26affbc2005281e6.
+    Signed-off-by: Mike Gilbert <floppym@gentoo.org>
+
+commit 8155400955d8a482bdac24c9356315fb0ad10ec9
+Author: William Hubbs <williamh@gentoo.org>
+Commit: William Hubbs <williamh@gentoo.org>
+
+    version 2.11
+    
+    Signed-off-by: William Hubbs <williamh@gentoo.org>
+
+commit e444dfe2f340552e7902ca9d9bf37c21c1fa486f
+Author: William Hubbs <williamh@gentoo.org>
+Commit: William Hubbs <williamh@gentoo.org>
+
+    update ChangeLog
+    
+    Signed-off-by: William Hubbs <williamh@gentoo.org>
+
 commit a48f2a886458ccdf1fdbfd9c106da4af732ea212
 Author: William Hubbs <williamh@gentoo.org>
 Commit: William Hubbs <williamh@gentoo.org>
