@@ -73,6 +73,10 @@ layout:
 	$(INSTALL) -d -m 0700 $(DESTDIR)/root
 	$(INSTALL) -d -m 1777 $(DESTDIR)/tmp
 	$(INSTALL) -d -m 1777 $(DESTDIR)/var/tmp
+	# Essential device nodes for init/openrc in early boot
+	# Nonfatal in case we are running as non-root
+	-mknod -m 0600 $(DESTDIR)/dev/console c 5 1
+	-mknod -m 0666 $(DESTDIR)/dev/null c 1 3
 
 layout-usrmerge: layout
 	rm -fr ${DESTDIR}/bin
