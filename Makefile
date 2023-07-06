@@ -1,5 +1,5 @@
 # baselayout Makefile
-# Copyright 2006-2011 Gentoo Foundation
+# Copyright 2006-2023 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 #
 # We've moved the installation logic from Gentoo ebuild into a generic
@@ -12,10 +12,11 @@ PKG = baselayout-$(PV)
 DISTFILE = $(PKG).tar.bz2
 
 CHANGELOG_LIMIT = --after="1 year ago"
-INSTALL_DIR    = install -m 0755 -d
-INSTALL_EXE    = install -m 0755
-INSTALL_FILE   = install -m 0644
-INSTALL_SECURE = install -m 0600
+INSTALL       ?= install
+INSTALL_DIR    = $(INSTALL) -m 0755 -d
+INSTALL_EXE    = $(INSTALL) -m 0755
+INSTALL_FILE   = $(INSTALL) -m 0644
+INSTALL_SECURE = $(INSTALL) -m 0600
 
 KEEP_DIRS = \
 	/bin \
@@ -27,7 +28,6 @@ KEEP_DIRS = \
 	/mnt \
 	/opt \
 	/proc \
-	/root \
 	/run \
 	/sbin \
 	/sys \
@@ -70,9 +70,9 @@ layout:
 	ln -snf ../run $(DESTDIR)/var/run
 	ln -snf ../run/lock $(DESTDIR)/var/lock
 	# Special dirs
-	chmod 0700 $(DESTDIR)/root
-	chmod 1777 $(DESTDIR)/var/tmp
-	chmod 1777 $(DESTDIR)/tmp
+	$(INSTALL) -d -m 0700 $(DESTDIR)/root
+	$(INSTALL) -d -m 1777 $(DESTDIR)/tmp
+	$(INSTALL) -d -m 1777 $(DESTDIR)/var/tmp
 
 layout-usrmerge: layout
 	rm -fr ${DESTDIR}/bin
