@@ -17,6 +17,6 @@
 # <fs>			<mountpoint>	<type>		<opts>		<dump> <pass>
 
 #LABEL=boot		/boot		ext4		defaults	1 2
-#UUID=58e72203-57d1-4497-81ad-97655bd56494		/		ext4		defaults		0 1
+#UUID=58e72203-57d1-4497-81ad-97655bd56494		/		xfs		defaults		0 1
 #LABEL=swap		none		swap		sw		0 0
 #/dev/cdrom		/mnt/cdrom	auto		noauto,ro	0 0
