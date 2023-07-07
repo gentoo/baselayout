@@ -4,9 +4,6 @@
 #
 # See the manpage fstab(5) for more information.
 #
-
-# <fs>			<mountpoint>	<type>		<opts>		<dump/pass>
-
 #
 # NOTE: Even though we list ext4 as the type here, it will work with ext2/ext3
 #       filesystems.  This just tells the kernel to use the ext4 driver.
@@ -15,6 +12,8 @@
 #       more reliable to use filesystem labels or UUIDs. See your filesystem
 #       documentation for details on setting a label. To obtain the UUID, use
 #       the blkid(8) command.
+
+# <fs>			<mountpoint>	<type>		<opts>		<dump> <pass>
 
 #LABEL=boot		/boot		ext4		defaults	1 2
 #UUID=58e72203-57d1-4497-81ad-97655bd56494		/		ext4		defaults		0 1
