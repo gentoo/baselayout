@@ -1,3 +1,120 @@
+commit 5c926abe03ba6e17ba58faa71a512b3f6db90b19
+Author: Mike Gilbert <floppym@gentoo.org>
+Commit: Mike Gilbert <floppym@gentoo.org>
+
+    Makefile: create /dev/console and /dev/null in the layout target
+    
+    Bug: https://bugs.gentoo.org/909664
+    Signed-off-by: Mike Gilbert <floppym@gentoo.org>
+
+commit 60664bef0aae2e1975a18a8cdecee02bcbf0a730
+Author: Mike Gilbert <floppym@gentoo.org>
+Commit: Mike Gilbert <floppym@gentoo.org>
+
+    Makefile: simplify creation of /root, /tmp, /var/tmp
+    
+    Signed-off-by: Mike Gilbert <floppym@gentoo.org>
+
+commit 8982430a505574a5d8869d45a5bee699fc2abebf
+Author: Sam James <sam@gentoo.org>
+Commit: Sam James <sam@gentoo.org>
+
+    share/issue.devfix: tweak whitespace, use HTTPS
+    
+    Signed-off-by: Sam James <sam@gentoo.org>
+
+commit 078b1b75dc5cc4595d835e3344ac6668ddf73f7f
+Author: Sam James <sam@gentoo.org>
+Commit: Sam James <sam@gentoo.org>
+
+    etc/profile: fix trailing whitespace
+    
+    Signed-off-by: Sam James <sam@gentoo.org>
+
+commit 77016216767358d9892b1736439ee60b9b197221
+Author: Sam James <sam@gentoo.org>
+Commit: Sam James <sam@gentoo.org>
+
+    share/fstab: fix whitespace
+    
+    As Matt pointed out on the PR.
+    
+    Fixes: aaf5ebb65b16fd41877a04cde82fdd3d8cc90cfb
+    Signed-off-by: Sam James <sam@gentoo.org>
+
+commit 4040300c749f6cab84bdfa9c12ec72b113568865
+Author: Florian Schmaus <flow@gentoo.org>
+Commit: Sam James <sam@gentoo.org>
+
+    share/fstab: make example root filesystem entry use xfs
+    
+    The new default of the handbook is xfs, so follow that in baselayout's
+    fstab.
+    
+    Suggested-by: Sam James <sam@gentoo.org>
+    Signed-off-by: Florian Schmaus <flow@gentoo.org>
+    Closes: https://github.com/gentoo/baselayout/pull/4
+    Signed-off-by: Sam James <sam@gentoo.org>
+
+commit 94aa297486ca7ace7fa3bcce2889bba6a892424c
+Author: Florian Schmaus <flow@gentoo.org>
+Commit: Sam James <sam@gentoo.org>
+
+    share/fstab: make comment regarding pass number a NOTE
+    
+    Signed-off-by: Florian Schmaus <flow@gentoo.org>
+    Signed-off-by: Sam James <sam@gentoo.org>
+
+commit 0979cb590cd99ecf298fc3de4b0c20d33251b717
+Author: Florian Schmaus <flow@gentoo.org>
+Commit: Sam James <sam@gentoo.org>
+
+    share/fstab: move fstable header right above example entries
+    
+    Move the fstable table header right above the commented-out example
+    fstab entries. Also split "<dump/pass>" into "<dump> <pass>", since
+    those are two different fields (see fstab(5)).
+    
+    Signed-off-by: Florian Schmaus <flow@gentoo.org>
+    Signed-off-by: Sam James <sam@gentoo.org>
+
+commit aaf5ebb65b16fd41877a04cde82fdd3d8cc90cfb
+Author: Florian Schmaus <flow@gentoo.org>
+Commit: Sam James <sam@gentoo.org>
+
+    share/fstab: drop reiserfs references and noatime, use defaults
+    
+    ReiserFS was deprecated in Linux 5.18 and slated for removal in 2025.
+    
+    Using 'noatime' does seldom really bring any noticeable performance
+    benefit. The default of 'relatime', which Linux supports for a long
+    time, is a good compromise. Having an (coarse-grained) atime allows
+    for certain use cases. For example, a tool that detects unused
+    packages in a system and suggest them for removal.
+    
+    A generic configuration file like this should simply use the
+    defaults. Especially if those are sane ones. No need to continue the
+    noatime cargo cult.
+    
+    Signed-off-by: Florian Schmaus <flow@gentoo.org>
+    Signed-off-by: Sam James <sam@gentoo.org>
+
+commit 0613954c3960f6d07f2550494480d38a0341cde2
+Author: Mike Gilbert <floppym@gentoo.org>
+Commit: Mike Gilbert <floppym@gentoo.org>
+
+    passwd: update home directory for portage user
+    
+    Signed-off-by: Mike Gilbert <floppym@gentoo.org>
+
+commit 3bfcd8238abf92146a7e17b44625ea1e5325230c
+Author: Mike Gilbert <floppym@gentoo.org>
+Commit: Mike Gilbert <floppym@gentoo.org>
+
+    Update ChangeLog
+    
+    Signed-off-by: Mike Gilbert <floppym@gentoo.org>
+
 commit bc22069d1a41eeec6e22ba9bf391412a0244f5a7
 Author: Mike Gilbert <floppym@gentoo.org>
 Commit: Mike Gilbert <floppym@gentoo.org>
@@ -178,19 +295,4 @@ Commit: William Hubbs <williamh@gentoo.org>
 
     typo fix
     
-    Signed-off-by: William Hubbs <williamh@gentoo.org>
-
-commit ffb9e602847f4f196d6366dd1f982046853b29f4
-Author: orbea <orbea@riseup.net>
-Commit: William Hubbs <williamh@gentoo.org>
-
-    etc/shells: Add yash to login shells
-    
-    Yash, yet another shell, is a POSIX-compliant command line shell
-    written in C99 (ISO/IEC 9899:1999). Yash is intended to be the most
-    POSIX-compliant shell in the world while supporting features for daily
-    interactive and scripting use.
-    
-    Closes: https://github.com/gentoo/baselayout/pull/1
-    Signed-off-by: orbea <orbea@riseup.net>
     Signed-off-by: William Hubbs <williamh@gentoo.org>
