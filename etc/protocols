@@ -143,6 +143,7 @@ sctp	132	SCTP		# Stream Control Transmission Protocol
 fc	133	FC		# Fibre Channel
 rsvp-e2e-ignore	134	RSVP-E2E-IGNORE		# RFC3175
 #	134			# Unassigned
+mobility-header	135	Mobility-Header	# Mobility Support for IPv6 [RFC3775]
 udplite	136	UDPLite		# RFC3828
 mpls-in-ip	137	MPLS-in-IP		# RFC4023
 manet	138	manet		# MANET Protocols
