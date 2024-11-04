@@ -23,4 +23,4 @@
 /usr/bin/tcsh
 /usr/bin/yash
 /usr/bin/zsh
-/usr/lib/systemd-home-fallback-shell
+/usr/bin/systemd-home-fallback-shell
