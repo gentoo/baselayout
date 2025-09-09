@@ -451,7 +451,7 @@ microsoft-ds	445/tcp		Microsoft-DS
 microsoft-ds	445/udp		Microsoft-DS
 kpasswd		464/tcp		kpwd		# Kerberos "passwd"
 kpasswd		464/udp		kpwd
-urd		465/tcp		smtps ssmtp	# URL Rendesvous Directory for SSM / smtp protocol over TLS/SSL
+submissions	465/tcp		urd smtps ssmtp	# Message Submission over TLS protocol / URL Rendesvous Directory for SSM
 igmpv3lite	465/udp		smtps ssmtp	# IGMP over UDP for SSM
 photuris	468/tcp
 photuris	468/udp
