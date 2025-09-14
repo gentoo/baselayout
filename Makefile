@@ -1,5 +1,5 @@
 # baselayout Makefile
-# Copyright 2006-2023 Gentoo Foundation
+# Copyright 2006-2025 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 #
 # We've moved the installation logic from Gentoo ebuild into a generic
@@ -9,7 +9,7 @@
 
 PV = 2.17
 PKG = baselayout-$(PV)
-DISTFILE = $(PKG).tar.bz2
+DISTFILE = $(PKG).tar.xz
 
 CHANGELOG_LIMIT = --after="1 year ago"
 INSTALL       ?= install
@@ -89,19 +89,19 @@ layout-usrmerge: layout
 live:
 	rm -rf /tmp/$(PKG)
 	cp -r . /tmp/$(PKG)
-	tar jcf /tmp/$(PKG).tar.bz2 -C /tmp $(PKG) --exclude=.git
+	tar acf /tmp/$(PKG).tar.xz -C /tmp $(PKG) --exclude=.git
 	rm -rf /tmp/$(PKG)
-	ls -l /tmp/$(PKG).tar.bz2
+	ls -l /tmp/$(PKG).tar.xz
 
 release:
 	git show-ref -q --tags $(PKG)
-	git archive --prefix=$(PKG)/ $(PKG) | bzip2 > $(DISTFILE)
+	git archive --prefix=$(PKG)/ $(PKG) | xz > $(DISTFILE)
 	ls -l $(DISTFILE)
 
 snapshot:
 	git show-ref -q $(GITREF)
-	git archive --prefix=$(PKG)/ $(GITREF) | bzip2 > $(PKG)-$(GITREF).tar.bz2
-	ls -l $(PKG)-$(GITREF).tar.bz2
+	git archive --prefix=$(PKG)/ $(GITREF) | xz > $(PKG)-$(GITREF).tar.xz
+	ls -l $(PKG)-$(GITREF).tar.xz
 
 .PHONY: all changelog clean install layout  live release snapshot
 
